@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة الدعوة السلفية الرقمية</title>
+<meta name="description" content="المكتبة الرقمية للدعوة السلفية بمصر: كتب المشايخ ومقالات صوت السلف وكتب التراث، مع البحث والقراءة والقبسات ومساعد بحثي.">
+<meta name="theme-color" content="#0f5c4d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/"><img src="assets/logo.jpg" alt="شعار الدعوة السلفية" class="off"><span>مكتبة الدعوة السلفية الرقمية</span></a>
+  <div class="tools">
+    <a class="ic" href="#/account" id="acctbtn">دخول</a>
+    <a class="ic" href="#/qabasat">قبسات</a>
+    <button class="ic" data-act="theme" aria-label="تبديل المظهر الليلي والنهاري">◐</button>
+  </div>
+  <nav aria-label="الأقسام">
+    <a href="#/library?c=dawah">مكتبة الدعوة</a><a href="#/articles">المقالات</a><a href="#/library?c=turath">تراث</a><a href="#/authors">المؤلفون</a><a href="#/search">البحث</a><a href="#/ask">اسأل المكتبة</a><a href="#/favs">المفضلة</a><a href="#/admin">الإدارة</a>
+  </nav>
+</header>
+<div id="ticker" hidden><span class="tl">جديد المكتبة</span><div class="tv" dir="ltr"><div class="tt" id="tt"></div></div></div>
+<div id="banner" hidden></div>
+<main id="app" tabindex="-1"><p class="mut" style="padding:30px 0;text-align:center">جارٍ تحميل المكتبة…</p></main>
+<footer><div class="cal"><img src="assets/cal.jpg" alt="الدعوة السلفية بمصر"></div><p>© 2026 مكتبة الدعوة السلفية الرقمية — جمعية الدعاة</p></footer>
+<button class="btn p" id="selq" hidden data-act="selq">اجعل المحدد قبسة</button>
+<dialog id="dlg"><div id="dlgb"></div><button class="btn" data-act="closeDlg">إغلاق</button></dialog>
+<script src="config.js"></script>
+<script src="search.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
