@@ -4,5 +4,6 @@ window.SDSL_CONFIG = {
   supabaseUrl: "",                        // مثال: https://xxxx.supabase.co
   supabaseAnonKey: "",                    // المفتاح العام anon (آمن للمتصفح)
   askEndpoint: "api/ask",
-  importEndpoint: "api/import"
+  importEndpoint: "api/import",
+  ocrEndpoint: "api/ocr"
 };

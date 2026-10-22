@@ -36,25 +36,18 @@
 2. في Vercel ← Settings ← Environment Variables أضف `ANTHROPIC_API_KEY`، و(اختياريًا) `SDSL_HOURLY_LIMIT` لعدد الأسئلة لكل عضو في الساعة (الافتراضي 30).
 3. Redeploy.
 
-## 5) الحسابات الحقيقية والدخول بحساب Google وApple (Supabase)
-بدونها تعمل الحسابات في «وضع تجريبي» على جهاز الزائر فقط.
-1. أنشئ مشروعًا مجانيًا في supabase.com، ثم من SQL Editor نفّذ:
-```sql
-create table conversations (
-  id text primary key,
-  user_id uuid not null default auth.uid() references auth.users on delete cascade,
-  title text, messages jsonb, mode text, col text,
-  updated_at timestamptz default now()
-);
-alter table conversations enable row level security;
-create policy "own conversations" on conversations for all
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
-```
-2. من Project Settings ← API انسخ `Project URL` و`anon public key`: ضعهما في `config.js`، وأضفهما في Vercel باسم `SUPABASE_URL` و`SUPABASE_ANON_KEY`.
-3. Authentication ← URL Configuration: ضع رابط موقعك في Site URL وRedirect URLs.
-4. **الدخول بحساب Google (مجاني):** في Google Cloud Console أنشئ «OAuth client ID» من نوع Web، وضع فيه رابط الرجوع الذي تعرضه Supabase في Authentication ← Providers ← Google، ثم الصق Client ID وSecret هناك وفعّله.
-5. **الدخول بحساب Apple:** يحتاج حساب Apple Developer (اشتراك سنوي مدفوع)؛ أنشئ Services ID ومفتاح Sign in with Apple، وأدخلها في Supabase ← Providers ← Apple.
-عند تفعيل المزوِّد يظهر للزائر اختيار حسابه المسجل على هاتفه بضغطة واحدة.
+## 5) الحسابات الحقيقية والإدارة من داخل الموقع (Supabase)
+بدونها تعمل الحسابات والتفاعل في «وضع تجريبي» على جهاز الزائر فقط، وتُنشر الإضافات بملف التحديث.
+1. أنشئ مشروعًا مجانيًا في supabase.com.
+2. SQL Editor ← New query ← الصق محتوى الملف `supabase/schema.sql` كاملًا ← Run.
+   ينشئ الجداول والصلاحيات: الملفات الشخصية، المحادثات، الإضافات والتعديلات وسجلها، التصحيحات، المنشورات والإعجاب والتعليق والحفظ.
+3. Project Settings ← API: انسخ `Project URL` و`anon public key`؛ ضعهما في `config.js`، وأضفهما في Vercel باسم `SUPABASE_URL` و`SUPABASE_ANON_KEY`.
+4. Authentication ← URL Configuration: ضع رابط موقعك في Site URL وRedirect URLs.
+5. سجّل الدخول في الموقع مرة، ثم نفّذ في SQL Editor السطر الأخير من `schema.sql` بعد وضع بريدك، فيصبح حسابك «مدير».
+   - المدير والمحرر: يضيفان الكتب والمقالات والمنشورات ويصححان النصوص ويربطان النسخ المصورة من صفحة «الإدارة»، وتُنشر للجميع مباشرة مع سجل لكل تعديل.
+   - العضو: يعجب ويعلّق ويحفظ ويشارك، ويقترح تصحيحات تظهر للمشرفين في تبويب «التصحيحات».
+6. **الدخول بحساب Google (مجاني):** في Google Cloud Console أنشئ «OAuth client ID» من نوع Web، وضع فيه رابط الرجوع الذي تعرضه Supabase في Authentication ← Providers ← Google، ثم الصق Client ID وSecret هناك وفعّله.
+7. **الدخول بحساب Apple:** يحتاج حساب Apple Developer (اشتراك سنوي مدفوع)؛ أنشئ Services ID ومفتاح Sign in with Apple، وأدخلها في Supabase ← Providers ← Apple.
 
 ## 6) الاستيراد اليومي الآلي لمقالات صوت السلف
 - يعمل تلقائيًا كل يوم عبر GitHub Actions (`.github/workflows/daily-import.yml`) فيستورد دفعة من المقالات **بدءًا من الأقدم** (رقم 1 فصاعدًا)، ثم يحفظ النتيجة في المستودع فيعيد Vercel النشر.
@@ -63,6 +56,19 @@ create policy "own conversations" on conversations for all
 - تُصنف المقالات بقسمها في صوت السلف؛ وما لم يُعرف قسمه يوضع في «غير مصنف»، والفتاوى في «فتاوى واستشارات».
 - التشغيل اليدوي (مثلًا لأول تجربة): المستودع ← Actions ← «الاستيراد اليومي لمقالات صوت السلف» ← Run workflow، واكتب عدد المقالات.
 - تُخزن المقالات في ملفات شهرية `data/articles/YYYY-MM.json` وفهرس `data/articles/index.json`. عند تجاوزها عشرات الآلاف يُنقل التخزين والبحث إلى قاعدة بيانات (Supabase).
+
+## 7) الكتب المصورة (PDF) والتحويل إلى نص
+- ارفع ملف الكتاب المصور إلى أرشيف الإنترنت (archive.org، مجاني) أو أي مكان يعطي رابطًا مباشرًا.
+- الإدارة ← «الكتب المصورة»: اختر الكتاب وضع الرابط وحدد المطابقة (برقم الصفحة في المطبوع أو بالترتيب) والإزاحة. فيظهر في شريط القراءة زر «المصورة»، وعلى الشاشات الواسعة تظهر الصفحتان جنبًا إلى جنب.
+- الإدارة ← «تحويل المصور إلى نص»: اختر ملف PDF أو صور الصفحات، وحدد الصفحات (حتى 50 في المرة)، ثم راجع النص وصححه واحفظه كتابًا مربوطًا بنسخته المصورة.
+  - الطريقة المجانية تعمل داخل المتصفح (Tesseract) ودقتها متوسطة.
+  - الطريقة الأدق بالذكاء الاصطناعي (`api/ocr.js`) تحتاج `ANTHROPIC_API_KEY`، وتقتصر على المشرفين عند تفعيل Supabase.
+
+## 8) المنشورات
+- صفحة «منشورات» تجمع منشورات المشايخ التي يضيفها المشرف (الإدارة ← «المنشورات») وجديد المكتبة تلقائيًا.
+- فيس بوك لا يسمح بجلب منشورات الحسابات الشخصية آليًا، فتُضاف يدويًا (نص المنشور وصوره ورابطه الأصلي).
+- الإعجاب والتعليق والحفظ والمشاركة للأعضاء المسجلين، والزوار يقرؤون فقط.
+- المنشورات المضافة دون Supabase تُحفظ في `data/posts.json` عبر ملف التحديث.
 
 ## المحتوى الحالي
 - **تراث (25 كتابًا بنصوص كاملة):** التفسير (السعدي)، علوم القرآن (مقدمة ابن تيمية، الإتقان)، الحديث (البخاري، مسلم، الموطأ، رياض الصالحين، الأربعون النووية)، علوم الحديث (مقدمة ابن الصلاح، البيقونية)، الفقه (عمدة الفقه، بلوغ المرام)، أصول الفقه (الورقات)، العقيدة (الطحاوية، الواسطية، لمعة الاعتقاد، شرح السنة، كتاب التوحيد)، اللغة (قطر الندى، ألفية ابن مالك، مختار الصحاح)، الأدب (أدب الدنيا والدين، الأدب المفرد)، التاريخ (تاريخ الخلفاء)، السيرة (الفصول لابن كثير).
