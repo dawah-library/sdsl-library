@@ -63,7 +63,7 @@ async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;le
  const w=async()=>{while(q.length){const b=q.shift();try{await loadBook(b.id)}catch(e){}onP&&onP(++i,n)}};await Promise.all([w(),w(),w()])}
 
 /* ---------- عرض عام ---------- */
-const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0)};
+const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered()};
 const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
 const artCard=b=>`<a class="bk ar" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':isStatement(b)?' • <em class="tag">بيان</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
 const anyCard=b=>isArt(b)?artCard(b):bookCard(b);
@@ -824,7 +824,7 @@ function postText(x){if(!x.act)return x.text||"";const b=x.b;if(!b.pages)return"
  const clean=t=>plain(t||"").replace(/-*\s*NO PAGE\s*NO\s*-*/gi," ").replace(/[ \t]+/g," ").trim();if(isArt(b))return clean(b.pages[0]);
  return b.pages.slice(0,25).map(clean).find(t=>t.length>350&&!/(ت|هاتف|فاكس)\s*:\s*\d{5}|رقم الإيداع|الطبعة|حقوق الطبع/.test(t.slice(0,300)))||clean(b.pages[0])}
 function postHtml(x,st){st=st||{stats:{},likes:new Set(),saves:new Set()};const s=st.stats[x.id]||{likes:0,comments:0},liked=st.likes.has(x.id),saved=st.saves.has(x.id),name=pName(x);
- const av=x.authorId?`<span class="av" data-author="${x.authorId}">${esc(name.replace(/^(الشيخ|الدكتور|د\.)\s*/,"")[0]||"")}</span>`:`<img class="av" src="assets/logo-sdsl-128.png" alt="">`;
+ const av=x.authorId?`<span class="av" data-author="${x.authorId}" style="${avHue(x.authorId)}">${esc(name.replace(/^(الشيخ|الدكتور|د\.)\s*/,"")[0]||"")}</span>`:`<img class="av" src="assets/logo-sdsl-128.png" alt="">`;
  let body;if(x.act){const ex=postText(x);body=`<a class="pcard" href="#/book/${x.b.id}/1"><b>${esc(x.b.title)}</b>${ex?`<p>${esc(ex.slice(0,360))}${ex.length>360?"…":""}</p>`:""}<span>${kindOf(x.b)==="book"?"افتح الكتاب":"اقرأ كاملًا"} ←</span></a>`}
  else{const long=(x.text||"").length>420;body=`<div class="ptext${long?" clip":""}">${linkify(esc(x.text||"")).replace(/\n/g,"<br>")}</div>${long?'<button class="more-t" data-act="pmore">عرض المزيد</button>':""}${x.image?`<img class="pimg" src="${esc(x.image)}" alt="" loading="lazy">`:""}${x.url?`<a class="plink" href="${esc(x.url)}" target="_blank" rel="noopener">المنشور الأصلي ↗</a>`:""}`}
  return`<article class="post" data-id="${esc(x.id)}"><header>${av}<div><b${x.authorId?` data-author="${x.authorId}"`:""}>${esc(name)}</b><span class="mut">${x.act?KINDN[kindOf(x.b)]+" • ":""}<a href="#/post/${encodeURIComponent(x.id)}">${esc(ago(x.date))}</a>${x.src?` • ${esc(x.src)}`:""}${x.demo?" • منشور تجريبي":""}</span></div><button class="pmenu" data-act="pmenu" aria-label="خيارات المنشور">⋯</button></header>
@@ -832,13 +832,14 @@ function postHtml(x,st){st=st||{stats:{},likes:new Set(),saves:new Set()};const 
  <div class="pstats"><span data-likes="${s.likes}">${s.likes?`♥ ${toAr(s.likes)}`:""}</span><button class="lnk" data-act="pcomm">${s.comments?`${toAr(s.comments)} تعليق`:""}</button></div>
  <div class="pact"><button data-act="plike" aria-pressed="${liked}">${liked?"♥":"♡"} إعجاب</button><button data-act="pcomm">💬 تعليق</button><button data-act="psave" aria-pressed="${saved}">${saved?"★ محفوظ":"☆ حفظ"}</button><button data-act="pshare">↗ مشاركة</button></div>
  <div class="pcomms" hidden></div></article>`}
+const avHue=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%360;return`background:linear-gradient(135deg,hsl(${h} 45% 38%),hsl(${(h+40)%360} 50% 28%));color:#fff`};
 const FEED={list:[],pos:0,busy:false,obs:null};
 async function vPosts(q){const k=q.k||"",tabs=[["","الكل"],["posts","منشورات المشايخ"],["lib","جديد المكتبة"],["saved","محفوظاتي"]];
  const url=o=>{const n=Object.assign({k,a:q.a||""},o),p=new URLSearchParams();if(n.k)p.set("k",n.k);if(n.a)p.set("a",n.a);return"#/posts"+(p.toString()?"?"+p:"")};
- await loadPosts();const authors=[...new Set(POSTS.map(x=>x.authorId).filter(Boolean))];
+ await loadPosts();const cnt={};POSTS.concat(actPosts()).forEach(x=>{if(x.authorId)cnt[x.authorId]=(cnt[x.authorId]||0)+(x.act?1:5)});const authors=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,24);if(q.a&&!authors.includes(q.a))authors.unshift(q.a);
  view(`<h2>منشورات</h2><p class="mut">منشورات مختارة لمشايخ الدعوة السلفية وكتّابها، وجديد المكتبة من كتب ومقالات وفتاوى وبيانات. ${Auth.user?"":'<a href="#/account?next=%23%2Fposts">سجّل الدخول</a> للإعجاب والتعليق والحفظ والمشاركة.'}</p>
  <div class="tabs" role="tablist">${tabs.map(([v,l])=>`<a role="tab" aria-selected="${k===v}" href="${url({k:v})}">${l}</a>`).join("")}</div>
- <div class="chips" style="margin:8px 0"><a class="chip${!q.a?" x":""}" href="${url({a:""})}">كل الكتّاب</a>${authors.map(id=>`<a class="chip${q.a===id?" x":""}" href="${url({a:id})}">${esc(A(id).name)}</a>`).join("")}</div>
+ <div class="pstrip" data-noswipe><a href="${url({a:""})}"${!q.a?' aria-current="true"':""}><span class="ring"><img src="assets/logo-sdsl-128.png" alt=""></span><small>الكل</small></a>${authors.map(id=>{const nm=A(id).name,sh=nm.replace(/^(الشيخ|الدكتور|د\.)\s*/,"");return`<a href="${url({a:id})}"${q.a===id?' aria-current="true"':""}><span class="ring"><span class="av" style="${avHue(id)}">${esc(sh[0]||"")}</span></span><small>${esc(sh.split(/\s+/).slice(0,2).join(" "))}</small></a>`}).join("")}</div>
  <div id="feed" class="feed"></div><div id="feedEnd" class="mut feedend">جارٍ التحميل…</div>`);
  let list;if(k==="saved"){if(!Auth.user){$("#feedEnd").innerHTML='<a href="#/account?next=%23%2Fposts%3Fk%3Dsaved">سجّل الدخول</a> لترى منشوراتك المحفوظة.';return}list=(await Social.savedIds()).map(findPost).filter(Boolean)}
  else{list=k==="lib"?actPosts():k==="posts"?POSTS.slice():POSTS.concat(actPosts());list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
@@ -899,12 +900,56 @@ async function corrDecide(el){const box=el.closest(".corr"),ok=el.dataset.act===
   const {error}=await Auth.sb.from("corrections").update({status:ok?"accepted":"rejected"}).eq("id",+box.dataset.cid);if(error)throw new Error(error.message);
   box.outerHTML=`<p class="mut">${ok?"✓ اعتُمد التصحيح ونُشر، ويظهر للجميع خلال دقيقة.":"رُفض التصحيح."}</p>`}catch(e){alert(e.message)}}
 
+/* ---------- التنقل بالسحب بين الأقسام الرئيسية ----------
+   الرئيسية ← كتب الدعوة ← كتب التراث ← منشورات. السحب من اليسار إلى اليمين ينقل إلى القسم التالي، وعكسه إلى السابق،
+   والصفحة تتبع الإصبع أثناء السحب ثم تنزلق إلى مكانها. وشريط الأقسام السفلي يدل على موضعك ويتحرك مع السحب. */
+const PG_ICON=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const SECS=[
+ {h:"#/",n:"الرئيسية",i:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',is:(p)=>!p[0]},
+ {h:"#/library?c=dawah",n:"كتب الدعوة",i:'<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',is:(p,q)=>p[0]==="library"&&q.c==="dawah"},
+ {h:"#/library?c=turath",n:"كتب التراث",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
+ {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"}];
+const Pager={idx:-1,dir:0,t:null,
+ reduce:()=>matchMedia("(prefers-reduced-motion: reduce)").matches,
+ at(){const{p,q}=parse();return SECS.findIndex(x=>x.is(p,q))},
+ // يُستدعى في بداية كل توجيه: يحدد اتجاه الانتقال إن كان بين قسمين متجاورين في الشريط
+ onRoute(){const n=this.at();if(n>=0&&!ls.get("swh",0)&&matchMedia("(pointer:coarse)").matches){ls.set("swh",1);setTimeout(()=>toast("اسحب الشاشة يمينًا أو يسارًا للتنقل بين الأقسام"),1500)}if(!this.dir&&this.idx>=0&&n>=0&&n!==this.idx)this.dir=n>this.idx?1:-1;this.idx=n;this.paint(n)},
+ // يُستدعى بعد رسم الصفحة: حركة دخول القسم الجديد من جهته
+ entered(){const d=this.dir;if(!d)return;this.dir=0;clearTimeout(this.t);const el=$("#app");el.getAnimations().forEach(a=>a.cancel());el.style.transform=el.style.opacity="";
+  if(this.reduce())return;el.animate([{transform:`translate3d(${-d*Math.min(innerWidth,700)*.32}px,0,0)`,opacity:0},{transform:"none",opacity:1}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"})},
+ go(n,fromX){if(n<0||n>=SECS.length||n===this.idx)return;const d=n>this.idx?1:-1,el=$("#app"),W=innerWidth;this.dir=d;
+  if(this.reduce()){location.hash=SECS[n].h;return}
+  const a=el.animate([{transform:`translate3d(${fromX||0}px,0,0)`,opacity:el.style.opacity||1},{transform:`translate3d(${d*W}px,0,0)`,opacity:0}],{duration:fromX?200:180,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
+  el.style.transform=el.style.opacity="";this.peek(null);
+  a.onfinish=()=>{location.hash=SECS[n].h;this.t=setTimeout(()=>{el.getAnimations().forEach(x=>x.cancel())},900)}},
+ dock(){let d=$("#dock");if(d)return d;document.body.insertAdjacentHTML("beforeend",`<nav id="dock" aria-label="الأقسام الرئيسية" hidden><span class="dk-ind"></span>${SECS.map((x,i)=>`<a href="${x.h}" data-pg="${i}">${PG_ICON(x.i)}<span>${x.n}</span></a>`).join("")}</nav><div id="peek" aria-hidden="true"></div>`);
+  d=$("#dock");d.addEventListener("click",e=>{const a=e.target.closest("[data-pg]");if(!a)return;e.preventDefault();this.go(+a.dataset.pg)});return d},
+ paint(n,pos){const d=this.dock(),on=n>=0;d.hidden=!on;document.body.classList.toggle("has-dock",on);if(!on)return;
+  d.style.setProperty("--pos",pos==null?n:pos);d.classList.toggle("drag",pos!=null);d.querySelectorAll("[data-pg]").forEach(a=>a.setAttribute("aria-current",+a.dataset.pg===n?"page":"false"))},
+ peek(x,k){const el=$("#peek");if(!el)return;if(!x){el.className="";el.style.cssText="";return}
+  el.innerHTML=`<span>${PG_ICON(x.i)}</span><b>${x.n}</b>`;el.className="on "+(k>0?"l":"r");el.style.setProperty("--k",Math.min(1,Math.abs(k)))}};
+(function swipe(){let s=null;const W=()=>innerWidth;
+ const blocked=t=>{if(t.closest("input,textarea,select,dialog,.sheet,.tabs,.chips,#ticker,#dock,.pdfv,canvas,[data-noswipe]"))return true;
+  for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.scrollWidth>e.clientWidth+4){const o=getComputedStyle(e).overflowX;if(o==="auto"||o==="scroll")return true}}return false};
+ document.addEventListener("touchstart",e=>{s=null;if(e.touches.length!==1||Pager.idx<0||document.body.classList.contains("reading"))return;const t=e.touches[0];
+  if(t.clientX<18||t.clientX>W()-18||blocked(e.target)||String(getSelection()).trim())return;s={x:t.clientX,y:t.clientY,t:Date.now(),lock:null,dx:0}},{passive:true});
+ document.addEventListener("touchmove",e=>{if(!s)return;const t=e.touches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
+  if(!s.lock){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;s.lock=Math.abs(dx)>Math.abs(dy)*1.3?"x":"y"}
+  if(s.lock!=="x")return;e.preventDefault();const n=Pager.idx+(dx>0?1:-1),ok=n>=0&&n<SECS.length,d=ok?dx:dx*.22,w=W(),k=d/w;s.dx=d;
+  const el=$("#app");el.style.transform=`translate3d(${d}px,0,0) scale(${1-Math.abs(k)*.05})`;el.style.opacity=1-Math.abs(k)*.45;
+  Pager.paint(Pager.idx,ok?Pager.idx+(dx>0?1:-1)*Math.min(1,Math.abs(k)*1.6):Pager.idx);Pager.peek(ok?SECS[n]:null,k*1.8)},{passive:false});
+ const end=()=>{if(!s||s.lock!=="x"){s=null;return}const dx=s.dx,v=Math.abs(dx)/Math.max(1,Date.now()-s.t),n=Pager.idx+(dx>0?1:-1),el=$("#app");s=null;
+  if(n>=0&&n<SECS.length&&(Math.abs(dx)>W()*.26||(v>.45&&Math.abs(dx)>40))){Pager.paint(n);Pager.go(n,dx);return}
+  const from=el.style.transform,op=el.style.opacity;el.style.transform=el.style.opacity="";Pager.peek(null);Pager.paint(Pager.idx);
+  if(from)el.animate([{transform:from,opacity:op},{transform:"none",opacity:1}],{duration:260,easing:"cubic-bezier(.2,.9,.3,1.2)"})};
+ document.addEventListener("touchend",end);document.addEventListener("touchcancel",end)})();
+
 /* ---------- الشريط والتوجيه والأحداث ---------- */
 function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||""),top=l=>l.filter(b=>!b.demo).sort((x,y)=>key(y).localeCompare(key(x))),ta=top(lib.books.filter(b=>kindOf(b)!=="book")).slice(0,8),tb=top(BOOKS()).slice(0,8),n=[];
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
-function route(){const{p,q}=parse(),v=p[0];$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
+function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="post")return vPost(p[1]);if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
