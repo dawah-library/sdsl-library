@@ -1,11 +1,11 @@
 {
- "next": 191,
+ "next": 212,
  "perRun": 150,
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 150,
- "lastRun": "2026-10-22T16:15:12.594Z",
+ "imported": 170,
+ "lastRun": "2026-10-22T16:16:52.796Z",
  "newAuthors": [
   "سعيد السواح",
   "محمد الباز",
@@ -20,5 +20,5 @@
   "محمد القاضي",
   "أحمد عبد السلام"
  ],
- "lastSeen": 190
+ "lastSeen": 211
 }
