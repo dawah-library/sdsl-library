@@ -580,7 +580,19 @@ async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr");err.te
 const AI={s:undefined,
  async sample(){if(this.s!==undefined)return this.s;try{this.s=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){this.s=null}return this.s},
  scopeLine(o){return o.bookId?"\nنطاق البحث: كتاب واحد معرفه "+o.bookId+" ("+((B(o.bookId)||{}).title||"")+").":o.col?"\nنطاق البحث: "+(o.col==="turath"?"كتب التراث فقط.":"كتب مشايخ الدعوة السلفية ومقالاتهم فقط."):""},
- async ask(o){const s=await this.sample();return s?this.viaSample(s,o):this.viaServer(o)},
+ async ask(o){const s=await this.sample();if(s)return this.viaSample(s,o);
+  try{return await this.viaServer(o)}catch(e){if(e&&(e.code==="nokey"||e.code==="quota"))return this.viaLocal(o,e.code);throw e}},
+ // البحث المجاني: يعمل في المتصفح دون أي خادم أو تكلفة، ويعرض نصوص المكتبة المطابقة مرتبة بالكتب
+ async viaLocal(o,why){o.onStatus("يبحث في نصوص المكتبة…");await this.ensure(o);
+  const q=o.turns[o.turns.length-1].content.split("\n\nالنص المطلوب")[0].replace(/^(اكتب بحثًا علميًا عن|قارن بين الأقوال في مسألة|اجمع ما ورد في المكتبة عن|لخّص كتاب|اشرح هذا النص|أريد أن أناقش|ضع لي منهجًا لدراسة|اختبرني في|عندي مشكلة)\s*:?/,"");
+  const wide=/research|gather|compare|summarize/.test(o.mode),hits=SS.search(lib,q,{col:o.col,bookId:o.bookId,k:wide?24:12,max:wide?600:800});o.searches=[q.trim()];
+  const head=why==="quota"?"نفدت الحصة المجانية للمساعد الذكي مؤقتًا، فهذه نتائج **البحث المباشر** في نصوص المكتبة:":"هذه نتائج **البحث المجاني** في نصوص المكتبة (دون ذكاء اصطناعي)، مرتبة حسب الكتب:";
+  let t;if(!hits.length)t=`لم أجد في نصوص المكتبة ما يطابق «${q.trim()}». جرّب كلمات أقل أو مرادفات أو لفظ الحديث نفسه.`;
+  else{const g=new Map();hits.forEach(h=>{const k=h.book+" — "+h.author;if(!g.has(k))g.set(k,[]);g.get(k).push(h)});
+   t=head+`\n\nوُجد ${toAr(hits.length)} موضعًا في ${toAr(g.size)} ${g.size>2&&g.size<11?"مصادر":"مصدرًا"}.\n`+[...g].map(([k,l])=>`\n## ${k}\n`+l.map(h=>`- «${h.text.replace(/\s+/g," ").trim()}» [[${h.ref}]]`).join("\n")).join("\n")}
+  const w=q.trim().split(/\s+/).slice(0,5).join(" ");
+  t+=`\n\n## للمتابعة\n- اجمع ما ورد في المكتبة عن ${w}\n- ${o.col==="turath"?"ابحث في كتب الدعوة عن "+w:"ابحث في كتب التراث عن "+w}`;
+  o.onText(t);return t},
  async ensure(o){const need=lib.books.filter(b=>!b.demo&&(!o.col||bc(b)===o.col)&&(!o.bookId||b.id===o.bookId));await loadMany(need,(i,n)=>o.onStatus(`يحمّل نصوص المكتبة للبحث (${toAr(i)} من ${toAr(n)})`))},
  async viaSample(sample,o){const scope={col:o.col,bookId:o.bookId};
   const head=SS.SYSTEM+"\n\nالمهمة: "+SS.MODES[o.mode]+this.scopeLine(o)+"\n\nفيما يلي أسئلة الباحث.";
@@ -594,14 +606,15 @@ const AI={s:undefined,
   try{r=await fetch(CFG.askEndpoint,{method:"POST",signal:o.signal,headers:Object.assign({"content-type":"application/json"},Auth.token?{Authorization:"Bearer "+Auth.token}:{}),body:JSON.stringify({messages:o.turns,mode:o.mode,col:o.col,bookId:o.bookId})})}
   catch(e){if(e.name==="AbortError")throw{code:"cancelled"};throw{code:"offline",message:"تعذر الوصول إلى خادم المساعد. تأكد من الاتصال بالإنترنت."}}
   if(!r.ok||!/ndjson/.test(r.headers.get("content-type")||"")){let j={};try{j=await r.json()}catch(e){}
+   if(j.code==="no_key"||r.status===404||r.status===405||r.status===501)throw{code:"nokey"};
    if(!r.ok)throw{code:"server",message:j.error||(r.status===404?"خدمة المساعد لم تُفعَّل على هذا الخادم بعد.":"تعذرت الإجابة، حاول لاحقًا.")};o.onText(j.text||"");o.searches=j.searches;return j.text||""}
   // بث الإجابة: يصل النص أولًا بأول مع خطوات البحث
   const rd=r.body.getReader(),dec=new TextDecoder();let buf="",acc="",err=null;
   try{for(;;){const {value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let nl;
    while((nl=buf.indexOf("\n"))>=0){const line=buf.slice(0,nl).trim();buf=buf.slice(nl+1);if(!line)continue;let ev;try{ev=JSON.parse(line)}catch(e){continue}
     if(ev.t==="text"){acc+=ev.v;o.onText(acc)}else if(ev.t==="reset"){if(acc.trim())o.onStatus(acc.trim().split("\n").pop().slice(0,140));acc=""}
-    else if(ev.t==="status")o.onStatus(ev.v);else if(ev.t==="done")o.searches=ev.searches||[];else if(ev.t==="error")err=ev.v}}}
-  catch(e){if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
+    else if(ev.t==="status")o.onStatus(ev.v);else if(ev.t==="done")o.searches=ev.searches||[];else if(ev.t==="error"){err=ev.v;if(ev.code==="quota"&&!acc.trim())throw{code:"quota"}}}}}
+  catch(e){if(e&&e.code==="quota")throw e;if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
   if(err){if(acc)throw{text:acc};throw{code:"server",message:err}}return acc}};
 const AIERR={not_granted:"لم يُسمح لهذه الصفحة باستخدام الذكاء الاصطناعي.",sampling_disabled:"الذكاء الاصطناعي غير متاح لهذا الحساب.",rate_limited:"كثرت الأسئلة، انتظر قليلًا ثم أعد المحاولة.",refused:"تعذرت الإجابة عن هذا السؤال، أعد صياغته.",prompt_too_large:"المحادثة طويلة، ابدأ محادثة جديدة.",session_expired:"انتهت الجلسة، سجّل الدخول من جديد."};
 function md(t){const lines=esc(t).split("\n");let h="",inList=false;
