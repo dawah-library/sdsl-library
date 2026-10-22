@@ -1,0 +1,9 @@
+{
+ "next": 1,
+ "perRun": 150,
+ "maxMisses": 60,
+ "delayMs": 1500,
+ "latestHint": 25750,
+ "imported": 0,
+ "newAuthors": []
+}

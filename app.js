@@ -35,12 +35,13 @@ function applyLook(){const r=document.documentElement;if(S.theme==="auto")r.remo
 /* ---------- البيانات ---------- */
 let CAT={version:0,authors:[],topics:[],books:[]},LOCAL={catalog:{authors:[],topics:[],books:[]},shards:{},deleted:[]};
 let lib={authors:[],topics:[],books:[]};
-const SH=new Map();
+const SH=new Map(),GROUPS=new Map();let ARTS_IDX=[];
+const artFromIdx=x=>({id:x.id,title:x.t,authorId:x.a,topicId:x.tp,date:x.d,url:x.u,f:x.f,n:x.n,added:x.ad,type:"article",col:"dawah"});
 const byId=(a,b)=>{const m=new Map();a.forEach(x=>m.set(x.id,x));b.forEach(x=>m.set(x.id,Object.assign({},m.get(x.id)||{},x)));return[...m.values()]};
 function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];if(sh.pl)b.pl=sh.pl;else delete b.pl;b.n=sh.pages.length}
 function merge(){const del=new Set(LOCAL.deleted||[]);
  lib={authors:byId(CAT.authors,LOCAL.catalog.authors),topics:byId(CAT.topics,LOCAL.catalog.topics),
-  books:byId(CAT.books,LOCAL.catalog.books).filter(b=>!del.has(b.id)).map(m=>{const b=Object.assign({},m);const sh=LOCAL.shards[b.id]||SH.get(b.id);if(sh)attach(b,sh);return b})}}
+  books:byId(CAT.books.concat(ARTS_IDX),LOCAL.catalog.books).filter(b=>!del.has(b.id)).map(m=>{const b=Object.assign({},m);const sh=LOCAL.shards[b.id]||SH.get(b.id);if(sh)attach(b,sh);return b})}}
 const A=id=>lib.authors.find(a=>a.id===id)||{name:"—"},T=id=>lib.topics.find(t=>t.id===id)||{name:"—"},B=id=>lib.books.find(b=>b.id===id);
 const bc=b=>b.col||"dawah",isArt=b=>b.type==="article",BOOKS=()=>lib.books.filter(b=>!isArt(b)),ARTS=()=>lib.books.filter(isArt);
 const COL={dawah:"مكتبة الدعوة السلفية",turath:"تراث"};
@@ -48,6 +49,8 @@ const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
 const PL=(b,i)=>SS.label(b,i);
 async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجود");if(b.pages)return b;
  let sh=LOCAL.shards[id]||SH.get(id)||(window.__SHARDS__&&window.__SHARDS__[id]);
+ if(!sh&&b.f){let g=GROUPS.get(b.f);if(!g){g=(window.__GROUPS__&&window.__GROUPS__[b.f])||fetch("data/articles/"+encodeURIComponent(b.f)+".json").then(r=>{if(!r.ok)throw new Error("تعذر تحميل المقال");return r.json()});GROUPS.set(b.f,g)}
+  const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[]}}
  if(!sh){const r=await fetch("data/books/"+encodeURIComponent(id)+".json");if(!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
  SH.set(id,sh);attach(b,sh);return b}
 async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;let i=0;if(!n)return;
@@ -125,11 +128,11 @@ function vArticles(q){
  const page=r.slice((f.pg-1)*PER,f.pg*PER);let list="";
  if(f.s==="author"){let last=null;page.forEach(b=>{if(b.authorId!==last){last=b.authorId;list+=`<h3 class="grp"><a href="#/author/${b.authorId}">${esc(an(b))}</a></h3>`}list+=artCard(b)})}else list=page.map(artCard).join("");
  const chips=[f.t&&`<a class="chip x" href="${url({t:"",pg:1})}">${esc(T(f.t).name)} ✕</a>`,f.a&&`<a class="chip x" href="${url({a:"",pg:1})}">${esc(A(f.a).name)} ✕</a>`,f.q&&`<a class="chip x" href="${url({q:"",pg:1})}">«${esc(f.q)}» ✕</a>`].filter(Boolean).join(" ");
- view(`<h2>المقالات <span class="mut">(${r.length})</span></h2><p class="mut">مقالات صوت السلف وبيانات الدعوة السلفية، مقسمة بالموضوع والكاتب.</p>${tabs}
+ view(`<h2>المقالات <span class="mut">(${r.length})</span></h2><p class="mut">مقالات صوت السلف وبيانات الدعوة السلفية، مقسمة بالموضوع والكاتب. تُضاف مقالات جديدة يوميًا بدءًا من الأقدم.</p>${tabs}
  <div class="lib"><aside class="side">${sideList("الموضوعات",lib.topics.filter(t=>t.for==="articles"),"t",f.t,url,cnt("t"),wide)}${sideList("الكُتّاب",lib.authors.filter(a=>bc(a)!=="turath"),"a",f.a,url,cnt("a"),wide)}</aside><section>
  <form class="sbox" style="margin:8px 0;max-width:none" data-form="artq">${["t","a","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين المقالات" aria-label="بحث في عناوين المقالات"><button class="btn">بحث</button></form>
  <div class="chips">${chips}</div>
- ${list||`<div class="note">${all.length?"لا توجد مقالات مطابقة.":"لم تُضف مقالات بعد. بعد نشر الموقع تُستورد مقالات صوت السلف بضغطة من صفحة «الإدارة»، أو تُضاف يدويًا."}</div>`}
+ ${list||`<div class="note">${all.length?"لا توجد مقالات مطابقة.":"لم تُضف مقالات بعد. يبدأ الاستيراد اليومي من صوت السلف تلقائيًا، ويمكن إضافة مقال يدويًا من صفحة «الإدارة»."}</div>`}
  ${np>1?`<div class="pgn"><a class="btn s" ${f.pg>1?`href="${url({pg:f.pg-1})}"`:'aria-disabled="true"'}>السابقة</a><span class="mut">صفحة ${f.pg} من ${np}</span><a class="btn s" ${f.pg<np?`href="${url({pg:f.pg+1})}"`:'aria-disabled="true"'}>التالية</a></div>`:""}</section></div>`)}
 
 /* ---------- المؤلفون ---------- */
@@ -541,12 +544,13 @@ function updatePayload(){return{format:"sdsl-update-1",created:new Date().toISOS
 async function applyUpdate(u){if(!u||u.format!=="sdsl-update-1")throw new Error("bad");LOCAL.catalog.authors=byId(LOCAL.catalog.authors,u.authors||[]);LOCAL.catalog.topics=byId(LOCAL.catalog.topics,u.topics||[]);
  LOCAL.catalog.books=byId(LOCAL.catalog.books,u.books||[]);Object.assign(LOCAL.shards,u.shards||{});await DB.set("local",LOCAL);SH.clear();merge();renderTicker()}
 async function offline(){const st=$("#offst");const all=lib.books;let i=0;
- try{const c=await caches.open("sdsl-data");for(const b of all){progress(st,++i,all.length,"جارٍ تنزيل النصوص");await c.add("data/books/"+b.id+".json").catch(()=>{})}
-  await c.addAll(["./","index.html","style.css","config.js","search.js","app.js","manifest.webmanifest","data/catalog.json","data/dict/mukhtar.json","assets/logo.jpg","assets/cal.jpg","assets/emblem.svg"]).catch(()=>{});
+ try{const c=await caches.open("sdsl-data");const urls=[...new Set(all.map(b=>b.f?"data/articles/"+b.f+".json":"data/books/"+b.id+".json"))];for(const u of urls){progress(st,++i,urls.length,"جارٍ تنزيل النصوص");await c.add(u).catch(()=>{})}
+  await c.addAll(["./","index.html","style.css","config.js","search.js","app.js","manifest.webmanifest","data/catalog.json","data/articles/index.json","data/dict/mukhtar.json","assets/logo.jpg","assets/cal.jpg","assets/emblem.svg"]).catch(()=>{});
   st.innerHTML='<p class="mut">تم التنزيل. المكتبة تعمل الآن دون إنترنت.</p>'}catch(e){st.innerHTML='<p class="note">تعذر التنزيل هنا. يعمل من الموقع المنشور.</p>'}}
 
 /* ---------- الشريط والتوجيه والأحداث ---------- */
-function renderTicker(){const t=$("#ticker"),n=[...lib.books].filter(b=>!b.demo).sort((x,y)=>(y.added||y.date||"").localeCompare(x.added||x.date||"")).slice(0,14);if(!n.length){t.hidden=true;return}
+function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||""),top=l=>l.filter(b=>!b.demo).sort((x,y)=>key(y).localeCompare(key(x))),ta=top(ARTS()).slice(0,8),tb=top(BOOKS()).slice(0,8),n=[];
+ for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
 function route(){const{p,q}=parse(),v=p[0];$("#selq").hidden=true;
@@ -583,7 +587,9 @@ document.addEventListener("keydown",e=>{if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.te
 
 /* ---------- الإقلاع ---------- */
 async function boot(){applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
+ const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
  try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}
+ ARTS_IDX=((await ai).items||[]).map(artFromIdx);
  merge();
  if(S.seen&&CAT.version&&S.seen!==CAT.version){const b=$("#banner");b.hidden=false;b.textContent="تم تحديث المكتبة بمحتوى جديد."}
  S.seen=CAT.version;saveS();
