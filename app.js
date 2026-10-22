@@ -533,6 +533,8 @@ const Auth={mode:"local",sb:null,user:null,token:null,
    }catch(e){console.warn("supabase",e)}
   }else this.user=ls.get("acct",null);
   paintAuth()},
+ // يعرض أزرار Google وApple فقط إذا فُعّل مزوّدها في Supabase
+ providers(){return this._pv||(this._pv=fetch(CFG.supabaseUrl+"/auth/v1/settings",{headers:{apikey:CFG.supabaseAnonKey}}).then(r=>r.ok?r.json():{}).then(j=>j.external||{}).catch(()=>({}))) },
  set(s){this.user=s&&s.user?{id:s.user.id,email:s.user.email,name:(s.user.user_metadata||{}).full_name||(s.user.user_metadata||{}).name||s.user.email}:null;this.token=s?s.access_token:null},
  async oauth(provider,next){if(this.mode!=="cloud")throw new Error("الدخول بحساب "+(provider==="google"?"Google":"Apple")+" يعمل بعد ربط الموقع بقاعدة بيانات الحسابات.");
   ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOAuth({provider,options:{redirectTo:location.origin+location.pathname}});if(error)throw error},
@@ -561,14 +563,16 @@ function vAccount(q){
  const signup=q.m==="signup",back=q.next||"#/ask",cloud=Auth.mode==="cloud";
  view(`<h2>${signup?"إنشاء حساب":"تسجيل الدخول"}</h2>
  <div class="perks"><b>مزايا الأعضاء</b><ul><li>«اسأل المكتبة»: مساعد بحثي يجيب من نصوص المكتبة ويحيل إلى الكتاب والصفحة.</li><li>إعداد بحث علمي موثق في أي مسألة.</li><li>شرح أي صفحة أو مقال بضغطة من القارئ.</li><li>حفظ محادثاتك والرجوع إليها من أي جهاز.</li></ul></div>
- ${cloud?`<div class="oauth"><button data-oauth="google">${GICON} المتابعة بحساب Google</button><button class="apple" data-oauth="apple">المتابعة بحساب Apple</button></div><div class="or">أو بالبريد الإلكتروني</div>`:'<p class="note" style="margin:10px 0">أنشئ حسابك بالاسم والبريد فقط، ويعمل فورًا. (الدخول بحساب Google وApple يُفعَّل قريبًا.)</p>'}
+ ${cloud?`<div id="oauthw"></div>`:'<p class="note" style="margin:10px 0">أنشئ حسابك بالاسم والبريد فقط، ويعمل فورًا. (الدخول بحساب Google وApple يُفعَّل قريبًا.)</p>'}
  <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>الاسم</label><input name="name" required autocomplete="name">':""}
  <label>البريد الإلكتروني</label><input name="email" type="email" required autocomplete="email">
  ${cloud?`<label>كلمة المرور</label><input name="pw" type="password" minlength="8" required autocomplete="${signup?"new-password":"current-password"}">`:""}
  <button class="btn p" style="margin-top:12px">${signup?"إنشاء الحساب":"دخول"}</button></form><p id="aerr" class="mut" role="alert"></p>
  <p>${signup?`لديك حساب؟ <a href="#/account?next=${encodeURIComponent(back)}">سجّل الدخول</a>`:`ليس لديك حساب؟ <a href="#/account?m=signup&next=${encodeURIComponent(back)}">أنشئ حسابًا مجانيًا</a>`}</p>
  ${cloud?"":'<p class="note">وضع تجريبي: لم تُربط قاعدة الحسابات بعد، فيُحفظ الحساب على هذا الجهاز فقط ودون كلمة مرور.</p>'}`);
- $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=e.message}})}
+ if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w||!(p.google||p.apple))return;
+  w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}</div><div class="or">أو بالبريد الإلكتروني</div>`;
+  $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=e.message}})})}
 async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr");err.textContent="";
  try{if(kind==="signup"){const r=await Auth.signUp(String(fd.get("name")).trim(),String(fd.get("email")).trim(),fd.get("pw")||"");if(r==="confirm"){err.textContent="أرسلنا رابط تأكيد إلى بريدك، افتحه ثم سجّل الدخول.";return}}
   else await Auth.signIn(String(fd.get("email")).trim(),fd.get("pw")||"");paintAuth();location.hash=f.dataset.next||"#/ask"}
