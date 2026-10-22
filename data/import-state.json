@@ -1,15 +1,10 @@
 {
- "next": 36,
+ "next": 1,
  "perRun": 150,
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 27,
+ "imported": 0,
  "lastRun": "2026-10-22T16:05:36.855Z",
- "newAuthors": [
-  "سعيد السواح",
-  "-حفظه الله- بعد ذلك.",
-  "عبد المنعم الشحات"
- ],
- "lastSeen": 35
+ "newAuthors": []
 }
