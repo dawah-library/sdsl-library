@@ -15,8 +15,10 @@ function extract(html, url) {
   html = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|noscript|svg|iframe|select|button)\b[\s\S]*?<\/\1>/gi, " ");
   const og = (html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) || [])[1];
   const tt = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1];
-  const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1];
-  let title = textOf(og || h1 || tt || "").replace(/\s*[-|–]\s*(صوت السلف|موقع أنا السلفي|أنا السلفي).*$/, "").replace(/^(صوت السلف|أنا السلفي)\s*[-|–]\s*/, "").trim();
+  const hs = [...html.matchAll(/<h[12][^>]*>([\s\S]*?)<\/h[12]>/gi)].map(m => m[1]);
+  const cand = [og, ...hs, tt].filter(Boolean).map(textOf).map(t => t.replace(/\s*[-|–]\s*(صوت السلف|موقع أنا السلفي|أنا السلفي).*$/, "").replace(/^(صوت السلف|أنا السلفي)\s*[-|–]\s*/, "").trim())
+    .filter(t => arabic(t) >= 4 && !/^(صوت السلف|أنا السلفي|الرئيسية)$/.test(t));
+  let title = (cand[0] || "").replace(/\s*[-|–]\s*(صوت السلف|موقع أنا السلفي|أنا السلفي).*$/, "").replace(/^(صوت السلف|أنا السلفي)\s*[-|–]\s*/, "").trim();
 
   // الكتل النصية: نقسم عند وسوم الكتل
   const body = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [, html])[1];
@@ -35,7 +37,18 @@ function extract(html, url) {
   // إزالة السطور المكررة وسطور الواجهة
   const seen = new Set();
   lines = lines.filter(l => { const k = l.slice(0, 80); if (seen.has(k)) return false; seen.add(k); return !/^(شارك|مشاركة|طباعة|أرسل لصديق|تعليقات|اقرأ أيضا|المزيد|كتبه|بقلم)/.test(l) && l !== title; });
-  const text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  const DATE_LINE = /^(السبت|الأحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الخميس|الجمعة)?\s*\d{1,2}\s+\S+\s+\d{4}/;
+  let text = lines.join("\n").replace(/\\r\\n|\\n|\r\n/g, "\n");
+  // يقطع ما بعد نهاية المقال: روابط الموقع وقوائم المقالات الأخرى
+  const cut = text.search(/www\.salafvoice\.com|salafvoice\.com|موقع أنا السلفي|\n\s*\d{4}-\d{2}-\d{2}\b/);
+  if (cut > 200) text = text.slice(0, cut);
+  let tl = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const okTitle = l => l && arabic(l) >= 4 && l.length < 110 && !/[.،؛:]\s*$/.test(l) && !(DATE_LINE.test(l) || /هـ\s*$/.test(l)) && !/^(صوت السلف|الرئيسية|المقالات)$/.test(l);
+  if (!title) title = tl.slice(0, 3).find(okTitle) || blocks.slice(Math.max(0, best[0] - 4), best[0]).reverse().find(okTitle) || "";
+  const isDate = l => (DATE_LINE.test(l) || /هـ\s*$/.test(l)) && l.length < 90;
+  while (tl.length && (tl[0] === title || isDate(tl[0]))) tl.shift();
+  while (tl.length && (/^(صوت السلف|موقع أنا السلفي|أنا السلفي)$/.test(tl[tl.length - 1]) || arabic(tl[tl.length - 1]) < 3)) tl.pop();
+  text = tl.join("\n").trim();
 
   // الكاتب والتاريخ والقسم من رأس الصفحة (قبل النص)
   const headText = blocks.slice(Math.max(0, best[0] - 25), best[0] + 1).join(" \n ");
@@ -50,7 +63,7 @@ function extract(html, url) {
   if (dm) date = `${dm[3]}-${String(MONTHS[dm[2]]).padStart(2, "0")}-${dm[1].padStart(2, "0")}`;
   else { const im = all.match(/(20\d\d)[-/](\d{1,2})[-/](\d{1,2})/); if (im) date = `${im[1]}-${im[2].padStart(2, "0")}-${im[3].padStart(2, "0")}`; }
   const cm = headText.match(/([^\n›»]{2,30})\s*[›»]\s*([^\n›»]{2,30})(?=\s|$)/);
-  const category = cm ? (cm[1].trim() + " › " + cm[2].trim()) : "";
+  const category = cm && arabic(cm[1]) >= 3 && arabic(cm[2]) >= 3 && !/الرئيسية/.test(cm[2]) ? (cm[1].trim() + " › " + cm[2].trim()) : "";
   return { url, title, author, date, category, text };
 }
 
