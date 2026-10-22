@@ -524,7 +524,7 @@ const loadScript=src=>new Promise((ok,no)=>{const s=document.createElement("scri
 const Auth={mode:"local",sb:null,user:null,token:null,
  async init(){
   if(CFG.supabaseUrl&&CFG.supabaseAnonKey){
-   try{await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js");
+   try{try{await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/dist/umd/supabase.js")}catch(e){await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js")}
     this.sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{flowType:"pkce",detectSessionInUrl:true,persistSession:true}});this.mode="cloud";
     const {data}=await this.sb.auth.getSession();this.set(data.session);
     this.sb.auth.onAuthStateChange((_e,s)=>{const was=this.user&&this.user.id;this.set(s);paintAuth();if((this.user&&this.user.id)!==was)Cloud.loadRole()});await Cloud.loadRole();
