@@ -13,7 +13,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const readJSON = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return d; } };
 const strip = s => String(s).replace(/[ً-ٰٟـ]/g, "");
 const norm = s => strip(s).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim();
-const bare = s => norm(s).replace(/^(الشيخ|الدكتور|دكتور|الأستاذ|الاستاذ|د[.\/]?|م[.\/]|أ[.\/]|ا[.\/])\s*/, "").replace(/\s*-?\s*(حفظه الله|رحمه الله)$/, "").trim();
+const bare = s => norm(s).replace(/^(الشيخ|الدكتور|دكتور|الأستاذ|الاستاذ|د[.\/]?|م[.\/]|أ[.\/]|ا[.\/])\s*/, "").replace(/\s*-?\s*(حفظه الله|رحمه الله)$/, "").replace(/(^|\s)(عبد|ابو|أبو)\s+/g, "$1$2").replace(/\s+/g, " ").trim();
 
 // خريطة أقسام صوت السلف إلى موضوعات المقالات في المكتبة
 const TOPIC_WORDS = [["المنهج السلفي", "at1"], ["قضايا معاصرة", "at2"], ["طالب العلم", "at3"], ["مذاهب فكرية", "at4"], ["التزكية", "at5"], ["السيرة", "at6"], ["التاريخ", "at6"],
@@ -69,7 +69,12 @@ async function main() {
     return id;
   };
 
-  let sampled = false;
+  const sampled = {};
+  // دمج الكتّاب المكررين (مثل «عبد المنعم» و«عبدالمنعم») مع إعادة ربط مقالاتهم
+  for (const w of cat.authors.filter(a => a.auto)) {
+    const twin = cat.authors.find(a => !a.auto && (a.col || "dawah") === "dawah" && bare(a.name).length >= 4 && (bare(a.name) === bare(w.name) || bare(a.name).includes(bare(w.name)) || bare(w.name).includes(bare(a.name))));
+    if (twin) { idx.items.forEach(x => { if (x.a === w.id) x.a = twin.id; }); cat.authors = cat.authors.filter(a => a !== w); log("  = دُمج الكاتب «" + w.name + "» في «" + twin.name + "»"); }
+  }
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
   let got = 0, tried = 0, misses = 0, errs = 0, id = st.next;
   let atEnd = false;
@@ -78,7 +83,8 @@ async function main() {
     if (have.has(sid)) { id++; continue; }
     try {
       const html = await getHtml(url);
-      if (html && !sampled) { sampled = true; fs.mkdirSync(path.join(ROOT, "tools", "samples"), { recursive: true }); fs.writeFileSync(path.join(ROOT, "tools", "samples", "last-article.html"), html); }
+      if (html) { const isF = /أسئلة|الاستفتاء/.test((html.match(/<ol class="breadcrumb">([\s\S]*?)<\/ol>/i) || [""])[0]); const key = isF ? "fatwa" : "article";
+        if (!sampled[key]) { sampled[key] = true; fs.mkdirSync(path.join(ROOT, "tools", "samples"), { recursive: true }); fs.writeFileSync(path.join(ROOT, "tools", "samples", "last-" + key + ".html"), html); } }
       const a = html ? extract(html, url) : null;
       if (!a || !a.text || a.text.length < 200 || !a.title) {
         misses++; log(`${id}: لا يوجد مقال`);
