@@ -1,11 +1,12 @@
 {
- "next": 212,
+ "next": 242,
  "perRun": 150,
+ "fatwaAuthor": "a2",
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 170,
- "lastRun": "2026-10-22T16:16:52.796Z",
+ "imported": 200,
+ "lastRun": "2026-10-22T16:18:41.349Z",
  "newAuthors": [
   "سعيد السواح",
   "محمد الباز",
@@ -20,6 +21,5 @@
   "محمد القاضي",
   "أحمد عبد السلام"
  ],
- "lastSeen": 211,
- "fatwaAuthor": "a2"
+ "lastSeen": 241
 }
