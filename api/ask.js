@@ -106,7 +106,7 @@ function clean(sc) { const o = JSON.parse(JSON.stringify(sc)); (function f(x) { 
 async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, toolLabel, runOne, used }) {
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   let model = models.shift();
-  let useQuery = false;
+  let useQuery = false; const retried = {};
   const contents = msgs.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   for (let round = 0; round < maxRounds; round++) {
     const last = round === maxRounds - 1 || Date.now() - t0 > budget * 0.6;
@@ -118,8 +118,13 @@ async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, tool
       const t = await r.text(); console.error("gemini", model, r.status, t.slice(0, 500));
       if ((r.status === 404 || r.status === 400 && /model/i.test(t)) && models.length) { model = models.shift(); round--; continue; }
       if ((r.status === 401 || r.status === 403) && !useQuery) { useQuery = true; round--; continue; }
+      // ضغط مؤقت على النموذج (503/500) أو نفاد حصة نموذج بعينه (429): أعد المحاولة ثم جرّب نموذجًا آخر
+      if (r.status === 503 || r.status === 500 || r.status === 429) {
+        if (r.status !== 429 && !retried[model]) { retried[model] = 1; send({ t: "status", v: "الخدمة مزدحمة، يعيد المحاولة…" }); await new Promise(z => setTimeout(z, 1500)); round--; continue; }
+        if (models.length) { model = models.shift(); send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); round--; continue; }
+      }
       let gm = ""; try { const e = JSON.parse(t).error || {}; gm = (e.status || "") + " " + String(e.message || "").slice(0, 160); } catch (x) { gm = t.slice(0, 160); }
-      send({ t: "error", code: r.status === 429 ? "quota" : "server", detail: "Gemini " + r.status + " " + gm.trim(), v: r.status === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل أو غدًا." : r.status === 401 || r.status === 403 ? "مفتاح Gemini غير مقبول." : "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return true;
+      send({ t: "error", code: r.status === 429 ? "quota" : r.status === 503 ? "busy" : "server", detail: "Gemini " + r.status + " " + gm.trim(), v: r.status === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل أو غدًا." : r.status === 503 ? "خدمة الذكاء الاصطناعي المجانية مزدحمة الآن." : r.status === 401 || r.status === 403 ? "مفتاح Gemini غير مقبول." : "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return true;
     }
     const parts = []; let buf = ""; const dec = new TextDecoder();
     for await (const chunk of r.body) {
