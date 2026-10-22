@@ -38,18 +38,7 @@
 
 ## 5) الحسابات الحقيقية والدخول بحساب Google وApple (Supabase)
 بدونها تعمل الحسابات في «وضع تجريبي» على جهاز الزائر فقط.
-1. أنشئ مشروعًا مجانيًا في supabase.com، ثم من SQL Editor نفّذ:
-```sql
-create table conversations (
-  id text primary key,
-  user_id uuid not null default auth.uid() references auth.users on delete cascade,
-  title text, messages jsonb, mode text, col text,
-  updated_at timestamptz default now()
-);
-alter table conversations enable row level security;
-create policy "own conversations" on conversations for all
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
-```
+1. أنشئ مشروعًا مجانيًا في supabase.com، ثم من SQL Editor ← New query الصق محتوى الملف `supabase/schema.sql` كاملًا واضغط Run. ينشئ: الحسابات وصلاحياتها (عضو، محرر، مدير)، ومحادثات «اسأل المكتبة»، وتصحيحات القراء، وتفاعل الأعضاء مع المنشورات (إعجاب، تعليق، حفظ). ثم سجّل الدخول في الموقع مرة، ونفّذ السطر الأخير في الملف ببريدك لتصير مديرًا (فيظهر لك تبويب «تصحيحات القراء» في الإدارة).
 2. من Project Settings ← API انسخ `Project URL` و`anon public key`: ضعهما في `config.js`، وأضفهما في Vercel باسم `SUPABASE_URL` و`SUPABASE_ANON_KEY`.
 3. Authentication ← URL Configuration: ضع رابط موقعك في Site URL وRedirect URLs.
 4. **الدخول بحساب Google (مجاني):** في Google Cloud Console أنشئ «OAuth client ID» من نوع Web، وضع فيه رابط الرجوع الذي تعرضه Supabase في Authentication ← Providers ← Google، ثم الصق Client ID وSecret هناك وفعّله.
