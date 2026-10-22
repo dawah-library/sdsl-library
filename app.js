@@ -36,7 +36,8 @@ function applyLook(){const r=document.documentElement;if(S.theme==="auto")r.remo
 let CAT={version:0,authors:[],topics:[],books:[]},LOCAL={catalog:{authors:[],topics:[],books:[]},shards:{},deleted:[]};
 let lib={authors:[],topics:[],books:[]};
 const SH=new Map(),GROUPS=new Map();let ARTS_IDX=[];
-const artFromIdx=x=>({id:x.id,title:x.t,authorId:x.a,topicId:x.tp,date:x.d,url:x.u,f:x.f,n:x.n,added:x.ad,type:"article",col:"dawah"});
+const artFromIdx=x=>({id:x.id,title:x.t,authorId:x.a,topicId:x.tp,date:x.d,url:x.u,f:x.f,n:x.n,added:x.ad,c:x.c,fa:x.fa,type:"article",col:"dawah"});
+const isFatwa=b=>!!(b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||""));
 const byId=(a,b)=>{const m=new Map();a.forEach(x=>m.set(x.id,x));b.forEach(x=>m.set(x.id,Object.assign({},m.get(x.id)||{},x)));return[...m.values()]};
 function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];if(sh.pl)b.pl=sh.pl;else delete b.pl;b.n=sh.pages.length}
 function merge(){const del=new Set(LOCAL.deleted||[]);
@@ -59,7 +60,7 @@ async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;le
 /* ---------- عرض عام ---------- */
 const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0)};
 const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)}${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
-const artCard=b=>`<a class="bk ar" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
+const artCard=b=>`<a class="bk ar" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)}${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
 const anyCard=b=>isArt(b)?artCard(b):bookCard(b);
 const progress=(el,i,n,label)=>{el.innerHTML=`<p class="mut">${label} (${toAr(i)} من ${toAr(n)})</p><div class="prog"><i style="width:${Math.round(i/n*100)}%"></i></div>`};
 
@@ -181,39 +182,77 @@ function pageHtml(text,h){const hs=norm(h||"").split(/\s+/).filter(Boolean);cons
   const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}">${esc(w)}</span>`:w).join("");
   return head?`<p class="ph">${inner}</p>`:`<p>${inner}</p>`}).join("")}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
-function lookPanel(){return`<div class="look" id="look"${S.look?"":" hidden"}>
- <div class="row"><div><label for="lf">الخط</label><select id="lf">${fontOpts(S.font)}</select></div>
- <div><label for="ls">حجم الخط</label><input id="ls" type="range" min="1" max="2.4" step=".05" value="${S.size}"></div>
- <div><label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}"></div></div>
+/* ---------- أدوات القراءة: الشريط الثابت واللوحات المنزلقة ---------- */
+const IC={toc:'<path d="M4 6h16M4 12h16M4 18h10"/>',prev:'<path d="M9 6l6 6-6 6"/>',next:'<path d="M15 6l-6 6 6 6"/>',look:'<path d="M4 18L9 6l5 12M5.8 14h6.4M15 18l3-7 3 7M16 16h4"/>',more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',exit:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'};
+const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط</label><select id="lf">${fontOpts(S.font)}</select></div>
+ <div><label for="lth">المظهر</label><select id="lth"><option value="auto"${S.theme==="auto"?" selected":""}>تلقائي</option><option value="light"${S.theme==="light"?" selected":""}>نهاري</option><option value="dark"${S.theme==="dark"?" selected":""}>ليلي</option></select></div></div>
+ <label>حجم الخط</label><div class="stepper"><button class="btn" data-sz="-1" aria-label="تصغير الخط">أ−</button><input id="ls" type="range" min="1" max="2.4" step=".05" value="${S.size}" aria-label="حجم الخط"><button class="btn" data-sz="1" aria-label="تكبير الخط">أ+</button></div>
+ <label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}">
  <label>لون الصفحة</label><div class="swatches">${PAGES.map(p=>`<button class="swc" data-pg="${p[0]}" title="${p[1]}" aria-label="لون الصفحة: ${p[1]}" aria-pressed="${S.pg===p[0]}" style="background:${p[2]}"></button>`).join("")}</div>
- <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label></div>`}
-function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;saveS();applyLook();refreshPage()};
- ["#lf","#ls","#ll","#lt"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
+ <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label>`}
+function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.theme=$("#lth").value;saveS();applyLook();refreshPage()};
+ ["#lf","#ls","#ll","#lt","#lth"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
+ $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))})}
 function refreshPage(){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h)}
+function ensureSheet(){if($("#sheet"))return;document.body.insertAdjacentHTML("beforeend",`<div class="sheet-bg" id="sheetbg" hidden data-act="closeSheet"></div><section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden><div class="sheet-h"><b id="sheetT"></b><button class="btn s" data-act="closeSheet" aria-label="إغلاق">✕</button></div><div class="sheet-b" id="sheetB"></div></section>`)}
+function openSheet(title,html,wire){ensureSheet();$("#sheetT").textContent=title;$("#sheetB").innerHTML=html;$("#sheet").hidden=false;$("#sheetbg").hidden=false;document.body.classList.add("sheet-open");if(wire)wire();const f=$("#sheet").querySelector("input,select,button:not([data-act=closeSheet])");if(f&&f.tagName!=="BUTTON")f.focus()}
+function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg").hidden=true;document.body.classList.remove("sheet-open")}
+function cur(){const rb=$("#rb");return rb?{b:B(rb.dataset.id),p:+rb.dataset.p}:null}
+function tocSheet(){const c=cur();if(!c)return;const b=c.b,ch=chapterOf(b,c.p);
+ openSheet("فهرس الكتاب",`<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
+ ()=>{$("#tocq").oninput=e=>{const q=norm(e.target.value);$$("#toclist a").forEach(a=>a.hidden=q&&!norm(a.textContent).includes(q))};const on=$("#toclist a.on");if(on)on.scrollIntoView({block:"center"})})}
+function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
+ openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="number" min="1" max="${n}" value="${c.p}" aria-label="رقم الصفحة"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p></form>`,
+ ()=>{const sync=v=>{$("#gp").value=v;$("#gr").value=v;$("#gl").textContent=(PL(c.b,v-1)||"")+" "+chapterOf(c.b,v)};$("#gr").oninput=e=>sync(+e.target.value);$("#gp").oninput=e=>sync(Math.max(1,Math.min(n,+e.target.value||1)))})}
+function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.favs.includes(b.id);
+ openSheet("أدوات القراءة",`${b.pages.length>1?`<form class="stepper" data-form="inbook" data-id="${b.id}"><input name="h" type="search" value="${esc(parse().q.h||"")}" placeholder="بحث داخل ${art?"المقال":"الكتاب"}" aria-label="بحث داخل الكتاب"><button class="btn p">بحث</button></form>`:""}
+ <div class="tools-grid">
+  <button data-act="fav">${fav?"★ إزالة من المفضلة":"☆ إضافة للمفضلة"}</button>
+  <button data-act="copyp">نسخ ${art?"المقال":"الصفحة"}</button>
+  <button data-act="tr">ترجمة</button>
+  <button data-act="exp">تصدير وطباعة</button>
+  <a href="#/ask?b=${b.id}&p=${c.p}" data-act="closeSheet">اسأل المكتبة عنها</a>
+  <button data-act="qhint">صمّم قبسة</button>
+  ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
+  <button data-act="share">مشاركة الرابط</button>
+  ${S.admin?'<button data-act="editp">تعديل النص</button>':""}
+ </div>
+ <p class="mut" style="margin-top:12px">${esc(b.title)} — ${esc(A(b.authorId).name)}${b.source?"<br>"+esc(b.source):""}${b.license?"<br>"+esc(b.license):""}</p>`)}
+function setFull(on){S.full=on;saveS();document.body.classList.toggle("reading-full",on&&document.body.classList.contains("reading"));
+ const fb=$("[data-act=full]");if(fb){fb.innerHTML=svg(on?"exit":"full")+`<span>${on?"خروج":"ملء الشاشة"}</span>`;fb.setAttribute("aria-pressed",on)}
+ try{const d=document,el=d.documentElement;if(on&&!d.fullscreenElement&&el.requestFullscreen)el.requestFullscreen().catch(()=>{});if(!on&&d.fullscreenElement&&d.exitFullscreen)d.exitFullscreen().catch(()=>{})}catch(e){}}
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&S.full&&document.body.classList.contains("reading")){S.full=false;saveS();document.body.classList.remove("reading-full");const fb=$("[data-act=full]");if(fb)fb.innerHTML=svg("full")+"<span>ملء الشاشة</span>"}});
 async function vBook(id,p,h){
  const b0=B(id);if(!b0)return view('<p class="note">الكتاب غير موجود.</p>');
  if(!b0.pages)view('<p class="mut" style="padding:30px 0;text-align:center">جارٍ تحميل النص…</p>');
  let b;try{b=await loadBook(id)}catch(e){return view(`<p class="note">${esc(e.message)}. تحقق من الاتصال وأعد المحاولة.</p>`)}
  if(parse().p[1]!==id)return;
- p=Math.max(1,Math.min(b.pages.length,p||1));const fav=S.favs.includes(id),art=isArt(b),hq=h?"?h="+encodeURIComponent(h):"";
+ const n=b.pages.length;p=Math.max(1,Math.min(n,p||1));const art=isArt(b);
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};saveS();
- const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p);
- const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a href="#/author/${b.authorId}">${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]}${b.source?" • "+esc(b.source):""}</div>${b.license?`<div class="mut" style="font-size:.78rem">${esc(b.license)}</div>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
- const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div></div>`:"";
+ const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
+ const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a href="#/author/${b.authorId}">${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]}</div>${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
+ const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div>${fatwa?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}</div>`:"";
+ const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
- <div class="rbar"><button class="btn s" data-act="look" aria-expanded="${S.look}">مظهر الصفحة</button><button class="btn s" data-act="fav">${fav?"إزالة من المفضلة":"مفضلة"}</button><button class="btn s" data-act="copyp">نسخ</button><button class="btn s" data-act="tr">ترجمة</button><button class="btn s" data-act="exp">تصدير</button><a class="btn s p" href="#/ask?b=${id}&p=${p}">اسأل عن هذه ${art?"المقالة":"الصفحة"}</a>${S.admin?'<button class="btn s" data-act="editp">تعديل النص</button>':""}</div>
- ${lookPanel()}
- ${b.pages.length>1?`<form class="rbar" data-form="inbook" data-id="${id}"><input name="h" type="search" value="${esc(h||"")}" placeholder="بحث داخل ${art?"المقال":"الكتاب"}" aria-label="بحث داخل الكتاب" style="flex:1"><button class="btn s">التالي</button></form>`:""}
- ${b.toc&&b.toc.length>1?`<details class="toc"><summary>فهرس الكتاب (${b.toc.length})</summary><div>${b.toc.map(x=>`<a href="#/book/${id}/${x.p}">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")}</div></details>`:""}
  <div class="desk"><article class="paper${art?" art":""} ${dir}" id="paper" aria-label="صفحة ${p}">
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}
   <div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h)}</div>
-  ${b.pages.length>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
+  ${n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
- ${b.pages.length>1?`<div class="turn"><a class="btn s" ${p>1?`href="#/book/${id}/${p-1}${hq}"`:'aria-disabled="true"'}>→ السابقة</a><form data-form="goto" data-id="${id}" class="row" style="flex:none;gap:6px"><input name="p" type="number" min="1" max="${b.pages.length}" value="${p}" aria-label="رقم الصفحة"><span class="mut">من ${b.pages.length}</span></form><a class="btn s" ${p<b.pages.length?`href="#/book/${id}/${p+1}${hq}"`:'aria-disabled="true"'}>التالية ←</a></div><p class="mut" style="text-align:center;font-size:.78rem">اسحب الصفحة يمينًا أو يسارًا للتقليب • اضغط أي كلمة لمعناها • حدّد نصًا لتجعله قبسة</p>`:""}`,same);
- wireLook();
- if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-110;if(window.scrollY>y)window.scrollTo(0,y)}}
+ <p class="mut hint">${n>1?"اسحب الصفحة للتقليب • ":""}اضغط أي كلمة لمعناها • حدّد نصًا لتجعله قبسة</p>
+ <nav class="rbar2" id="rbar" aria-label="أدوات القراءة">
+  ${B_("toc","toc","الفهرس",!(b.toc&&b.toc.length))}
+  ${B_("prev","prev","السابقة",p<=1)}
+  <button data-act="goto" class="pgb"${n>1?"":" disabled"}><b>${toAr(p)}</b><span>من ${toAr(n)}</span></button>
+  ${B_("next","next","التالية",p>=n)}
+  ${B_("look","look","المظهر")}
+  ${B_("more","more","المزيد")}
+  ${B_("full",S.full?"exit":"full",S.full?"خروج":"ملء الشاشة")}
+ </nav>`,same);
+ document.body.classList.toggle("reading-full",!!S.full);
+ if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
  const pp=$("#paper");let sx=0,sy=0;pp.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
  pp.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&!String(getSelection()))turn(dx>0?1:-1)},{passive:true})}
 function turn(d){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=+rb.dataset.p+d;if(p<1||p>b.pages.length)return;const h=parse().q.h;location.hash=`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`}
@@ -315,7 +354,7 @@ function quoteText(){const t=$("#qt").value.trim(),s=$("#qs").value.trim();const
  return`«${t}»`+(s?`\n— ${s}`:"")+`\n${SITENAME}`+(link?`\n${link}`:"")}
 async function vQabasat(q){const pq=pendingQ;
  view(`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
- <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">تراث</option></select><button class="btn" data-act="more">مقتطفات أخرى</button></div>
+ <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">تراث</option></select><button class="btn" data-act="moreSug">مقتطفات أخرى</button></div>
  <div id="sugl"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
  <h2>صمّم قبستك</h2><div class="studio">
  <label for="qt">النص</label><textarea id="qt"></textarea>
@@ -553,7 +592,7 @@ function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||"
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
-function route(){const{p,q}=parse(),v=p[0];$("#selq").hidden=true;
+function route(){const{p,q}=parse(),v=p[0];$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vArticles(q);if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
  if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask")return vAsk(q);if(v==="account")return vAccount(q);vHome()}
@@ -561,15 +600,20 @@ window.addEventListener("hashchange",route);
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  if(w&&!el){if(String(getSelection()).trim())return;return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
  if(a==="closeDlg")dlg().close();
+ else if(a==="closeSheet"){if(el.tagName!=="A")e.preventDefault();closeSheet()}
+ else if(a==="toc")tocSheet();else if(a==="goto")gotoSheet();else if(a==="more")moreSheet();else if(a==="prev")turn(-1);else if(a==="next")turn(1);
+ else if(a==="full")setFull(!S.full);
+ else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
+ else if(a==="share"){const c=cur(),u=siteLink(`#/book/${c.b.id}/${c.p}`)||location.href;try{if(navigator.share)await navigator.share({title:c.b.title,url:u});else{await navigator.clipboard.writeText(u);el.textContent="نُسخ الرابط"}}catch(x){}}
  else if(a==="theme"){S.theme=S.theme==="dark"?"light":S.theme==="light"?"dark":(matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");saveS();applyLook()}
- else if(a==="look"){S.look=!S.look;saveS();$("#look").hidden=!S.look;el.setAttribute("aria-expanded",S.look)}
- else if(a==="more")fillSug();
+ else if(a==="look")openSheet("مظهر الصفحة",lookHtml(),wireLook);
+ else if(a==="moreSug")fillSug();
  else if(a==="mkq"){const q=SUG[+el.dataset.i];if(!q)return;setQuote(q);if(parse().p[0]==="qabasat"){draw();$("#qt").scrollIntoView({behavior:"smooth",block:"center"})}else location.hash="#/qabasat"}
  else if(a==="selq"){const s=String(getSelection()).trim(),rb=$("#rb");if(s&&rb){const b=B(rb.dataset.id),i=+rb.dataset.p-1;pendingQ={t:s,src:A(b.authorId).name+" — "+b.title+(PL(b,i)?"، "+PL(b,i):""),ref:{b:b.id,p:i+1}};location.hash="#/qabasat"}}
  else if(a==="fav"){const id=parse().p[1];S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):[...S.favs,id];saveS();el.textContent=S.favs.includes(id)?"إزالة من المفضلة":"مفضلة"}
  else if(a==="copyp"){const rb=$("#rb"),b=B(rb.dataset.id),i=+rb.dataset.p-1;try{await navigator.clipboard.writeText(plain(b.pages[i])+"\n— "+b.title+"، "+A(b.authorId).name+(PL(b,i)?"، "+PL(b,i):"")+"\n"+SITENAME+(siteLink()?"\n"+siteLink(`#/book/${b.id}/${i+1}`):""));el.textContent="تم النسخ"}catch(x){}}
  else if(a==="logout"){await Auth.signOut();location.hash="#/"}
- else if(a==="tr")trDlg();else if(a==="exp")expDlg();else if(a==="editp")editDlg();else if(a==="offline")offline();
+ else if(a==="tr"){closeSheet();trDlg()}else if(a==="exp"){closeSheet();expDlg()}else if(a==="editp"){closeSheet();editDlg()}else if(a==="offline")offline();
  else if(a==="expUpd")dl("sdsl-update-"+today()+".json",JSON.stringify(updatePayload()),"application/json");
  else if(a==="delb"){if(confirm("حذف هذا العنصر من هذا الجهاز؟")){const id=el.dataset.id;LOCAL.catalog.books=LOCAL.catalog.books.filter(b=>b.id!==id);delete LOCAL.shards[id];await DB.set("local",LOCAL);SH.delete(id);merge();renderTicker();route()}}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const k=f.dataset.form,fd=new FormData(f);
@@ -577,13 +621,13 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  if(k==="quick"||k==="search")location.hash="#/search?"+qs();
  else if(k==="libq"){const s=qs(true);location.hash="#/library"+(s?"?"+s:"")}
  else if(k==="artq"){const s=qs(true);location.hash="#/articles"+(s?"?"+s:"")}
- else if(k==="goto")location.hash=`#/book/${f.dataset.id}/${fd.get("p")}`;
+ else if(k==="goto"){closeSheet();location.hash=`#/book/${f.dataset.id}/${fd.get("p")}`}
  else if(k==="inbook"){const b=B(f.dataset.id),h=String(fd.get("h")||"").trim();if(!h)return location.hash=`#/book/${b.id}/${parse().p[2]}`;const w=norm(h).split(/\s+/).filter(Boolean),cur=+parse().p[2]||1;
-  for(let j=1;j<=b.pages.length;j++){const x=(cur-1+j)%b.pages.length;const t=norm(plain(b.pages[x]));if(w.every(k2=>t.includes(k2)))return location.hash=`#/book/${b.id}/${x+1}?h=${encodeURIComponent(h)}`}alert("لا توجد نتائج في هذا الكتاب")}
+  closeSheet();for(let j=1;j<=b.pages.length;j++){const x=(cur-1+j)%b.pages.length;const t=norm(plain(b.pages[x]));if(w.every(k2=>t.includes(k2)))return location.hash=`#/book/${b.id}/${x+1}?h=${encodeURIComponent(h)}`}alert("لا توجد نتائج في هذا الكتاب")}
  else if(k==="addbook")addBook(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
  else if(k==="signin"||k==="signup")authSubmit(f,k);else if(k==="ask")askSubmit(f)});
 document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim(),rb=$("#rb");$("#selq").hidden=!(s.length>12&&rb&&getSelection().anchorNode&&rb.contains(getSelection().anchorNode))});
-document.addEventListener("keydown",e=>{if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#sheet").hidden){closeSheet();return}if($("#rb")&&e.key==="f"&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)){setFull(!S.full);return}if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
 
 /* ---------- الإقلاع ---------- */
 async function boot(){applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
