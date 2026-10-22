@@ -167,7 +167,7 @@ def source_of(meta):
                 if k in mk and v and v != "NODATA":
                     return v
         return ""
-    ed, pub, edn = g("المحقق"), g("الناشر"), g("الطبعة")
+    ed, pub, edn = g("المحقق", "EDITOR", "Editor", "EdEditor"), g("الناشر", "PUBLISHER", "Publisher", "PubPLACE"), g("الطبعة", "EDITION", "Edition", "PubYEAR", "PubYear")
     return " — ".join(x for x in [("تحقيق: " + ed) if ed else "", pub, edn] if x)
 
 
@@ -246,6 +246,8 @@ def main():
             log("  النسخة: %s (%d ك.ب)" % (ver["name"], ver.get("size", 0) // 1024))
             text = get(ver["download_url"], raw=True)
             meta, pages = parse(text)
+            if not source_of(meta):
+                log("  (بيانات الرأس: " + " | ".join("%s=%s" % (k, v[:50]) for k, v in list(meta.items())[:14]) + ")")
             entries, total = build(item, meta, pages, ver["name"], cat)
             ids = set(e["id"] for e in entries)
             cat["books"] = [x for x in cat["books"] if x["id"] not in ids and x.get("set") != item["id"]] + entries

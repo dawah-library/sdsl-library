@@ -23,7 +23,7 @@
 
     {"id": "zadmaad", "died": 751, "author": "IbnQayyim", "book": "ZadMacad|ZadMaad", "title": "زاد المعاد في هدي خير العباد", "authorName": "ابن قيم الجوزية", "topic": "t5"},
     {"id": "madarij", "died": 751, "author": "IbnQayyim", "book": "Madarij", "title": "مدارج السالكين", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "ilam", "died": 751, "author": "IbnQayyim", "book": "Iclam|Ilam", "title": "إعلام الموقعين عن رب العالمين", "authorName": "ابن قيم الجوزية", "topic": "t14"},
+    {"id": "ilam", "died": 751, "author": "IbnQayyim", "book": "AclamMuwaqqicin|Iclam|Ilam", "title": "إعلام الموقعين عن رب العالمين", "authorName": "ابن قيم الجوزية", "topic": "t14"},
     {"id": "jawabkafi", "died": 751, "author": "IbnQayyim", "book": "JawabKafi|Dawa", "title": "الجواب الكافي (الداء والدواء)", "authorName": "ابن قيم الجوزية", "topic": "t6"},
     {"id": "ighatha", "died": 751, "author": "IbnQayyim", "book": "Ighatha", "title": "إغاثة اللهفان من مصايد الشيطان", "authorName": "ابن قيم الجوزية", "topic": "t6"},
     {"id": "miftahsaada", "died": 751, "author": "IbnQayyim", "book": "Miftah", "title": "مفتاح دار السعادة", "authorName": "ابن قيم الجوزية", "topic": "t6"},
@@ -43,7 +43,7 @@
     {"id": "qawlsadid", "died": 1376, "author": "Sacdi|Sadi", "book": "QawlSadid", "title": "القول السديد شرح كتاب التوحيد", "authorName": "الشيخ عبد الرحمن السعدي", "topic": "t1"},
 
     {"id": "tankil", "died": 1386, "author": "Mucallimi|Muallimi", "book": "Tankil", "title": "التنكيل بما في تأنيب الكوثري من الأباطيل", "authorName": "عبد الرحمن المعلمي اليماني", "topic": "t13"},
-    {"id": "hilya", "died": 1429, "author": "BakrAbuZayd|AbuZayd", "book": "Hilya", "title": "حلية طالب العلم", "authorName": "الشيخ بكر أبو زيد", "topic": "t11"},
-    {"id": "manahi", "died": 1429, "author": "BakrAbuZayd|AbuZayd", "book": "Manahi", "title": "معجم المناهي اللفظية", "authorName": "الشيخ بكر أبو زيد", "topic": "t15"}
+    {"id": "hilya", "died": 1429, "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd", "book": "Hilya", "title": "حلية طالب العلم", "authorName": "الشيخ بكر أبو زيد", "topic": "t11"},
+    {"id": "manahi", "died": 1429, "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd", "book": "Manahi", "title": "معجم المناهي اللفظية", "authorName": "الشيخ بكر أبو زيد", "topic": "t15"}
   ]
 }
