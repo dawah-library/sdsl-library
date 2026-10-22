@@ -22,7 +22,7 @@ const TOPIC_WORDS = [["المنهج السلفي", "at1"], ["قضايا معاص
 
 async function getHtml(url) {
   const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (SDSL daily importer; dawah library)", "accept-language": "ar" }, redirect: "follow" });
-  if (r.status === 404) return null;
+  if (r.status === 404 || r.status === 500 || r.status === 410) return null; // رقم محذوف أو غير موجود
   if (!r.ok) throw new Error("HTTP " + r.status);
   const buf = await r.arrayBuffer();
   const cs = ((r.headers.get("content-type") || "").match(/charset=([\w-]+)/i) || [])[1];
@@ -58,28 +58,31 @@ async function main() {
     return "at0";
   };
 
+  const LOG = []; const log = m => { console.log(m); LOG.push(m); };
+  let sampled = false;
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
-  let got = 0, tried = 0, misses = 0, id = st.next;
+  let got = 0, tried = 0, misses = 0, errs = 0, id = st.next;
   let atEnd = false;
   while (got < want && tried < want * 4 && !atEnd) {
     const sid = "sv" + id, url = BASE + id; tried++;
     if (have.has(sid)) { id++; continue; }
     try {
       const html = await getHtml(url);
+      if (html && !sampled) { sampled = true; fs.mkdirSync(path.join(ROOT, "tools", "samples"), { recursive: true }); fs.writeFileSync(path.join(ROOT, "tools", "samples", "last-article.html"), html); }
       const a = html ? extract(html, url) : null;
       if (!a || !a.text || a.text.length < 200 || !a.title) {
-        misses++; console.log(`${id}: لا يوجد مقال`);
+        misses++; log(`${id}: لا يوجد مقال`);
         // بعد آخر مقال منشور: نتوقف ونعود غدًا لنفحص الجديد من بعد آخر مقال وُجد
         if (misses >= st.maxMisses && id > st.latestHint) { atEnd = true; id = (st.lastSeen || id - misses) ; console.log("وصلنا إلى آخر المقالات المنشورة."); break; }
       } else {
-        misses = 0; st.lastSeen = id; if (id > st.latestHint) st.latestHint = id;
+        misses = 0; errs = 0; st.lastSeen = id; if (id > st.latestHint) st.latestHint = id;
         const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
         const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
         loadGroup(g)[sid] = { pages: text };
         idx.items.push({ id: sid, t: a.title, a: authorId(a.author), tp: topicId(a.category, a.title, a.text), d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
-        have.add(sid); got++; console.log(`${id}: ✓ ${a.title} — ${a.author || "؟"}`);
+        have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
       }
-    } catch (e) { console.log(`${id}: خطأ ${e.message}`); if (/HTTP 4(03|29)|HTTP 5/.test(e.message)) { console.log("توقف مؤقتًا: الموقع يرفض الطلبات الآن."); break; } }
+    } catch (e) { log(`${id}: خطأ ${e.message}`); errs = (errs || 0) + 1; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); break; } }
     id++; await sleep(st.delayMs);
   }
   for (const [g, obj] of Object.entries(groups)) fs.writeFileSync(path.join(ADIR, g + ".json"), JSON.stringify(obj));
@@ -88,6 +91,7 @@ async function main() {
   cat.version = Date.now(); fs.writeFileSync(CAT, JSON.stringify(cat));
   Object.assign(st, { next: id, imported: (st.imported || 0) + got, lastRun: new Date().toISOString() });
   fs.writeFileSync(STATE, JSON.stringify(st, null, 1));
-  console.log(`\nاستُورد ${got} مقالًا. الموضع التالي: ${id}. المجموع: ${st.imported}.`);
+  log(`\nاستُورد ${got} مقالًا. الموضع التالي: ${id}. المجموع: ${st.imported}.`);
+  fs.writeFileSync(path.join(DATA, "import-log.txt"), `آخر تشغيل: ${st.lastRun}\n` + LOG.join("\n") + "\n");
 }
 main().catch(e => { console.error(e); process.exit(1); });
