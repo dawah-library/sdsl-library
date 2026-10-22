@@ -1,0 +1,6 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>إعداد قاعدة البيانات</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#f2f5f1;color:#14231f}h1{font-size:1.2rem}button{width:100%;padding:14px;font-size:1.05rem;border:0;border-radius:12px;background:#0f5c4d;color:#fff;margin:10px 0}textarea{width:100%;box-sizing:border-box;height:55vh;direction:ltr;font:12px/1.5 monospace;border:1px solid #ccd;border-radius:10px;padding:8px}#st{color:#0f5c4d;font-weight:700}</style></head>
+<body><h1>نص إنشاء جداول المكتبة في Supabase</h1><p>اضغط الزر لنسخ النص كله، ثم الصقه في Supabase ← SQL Editor ← New query ← Run.</p>
+<button id="cp">نسخ النص كاملًا</button><p id="st"></p><textarea id="t" readonly>جارٍ التحميل…</textarea>
+<script>fetch("supabase/schema.sql",{cache:"no-cache"}).then(r=>r.text()).then(x=>t.value=x);
+cp.onclick=async()=>{try{await navigator.clipboard.writeText(t.value)}catch(e){t.focus();t.select();document.execCommand("copy")}st.textContent="✓ نُسخ النص ("+t.value.length+" حرفًا). الصقه الآن في Supabase."}</script></body></html>
