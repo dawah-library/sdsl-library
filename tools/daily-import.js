@@ -33,7 +33,7 @@ async function getHtml(url) {
 }
 
 async function main() {
-  const st = Object.assign({ next: 1, perRun: 150, maxMisses: 60, delayMs: 1500, latestHint: 25750, imported: 0, lastRun: null, newAuthors: [] }, readJSON(STATE, {}));
+  const st = Object.assign({ next: 1, perRun: 150, fatwaAuthor: "a2", maxMisses: 60, delayMs: 1500, latestHint: 25750, imported: 0, lastRun: null, newAuthors: [] }, readJSON(STATE, {}));
   const want = +(process.argv[2] || process.env.IMPORT_COUNT || st.perRun);
   const cat = readJSON(CAT, null); if (!cat) throw new Error("catalog.json غير موجود");
   fs.mkdirSync(ADIR, { recursive: true });
@@ -75,6 +75,9 @@ async function main() {
     const twin = cat.authors.find(a => !a.auto && (a.col || "dawah") === "dawah" && bare(a.name).length >= 4 && (bare(a.name) === bare(w.name) || bare(a.name).includes(bare(w.name)) || bare(w.name).includes(bare(a.name))));
     if (twin) { idx.items.forEach(x => { if (x.a === w.id) x.a = twin.id; }); cat.authors = cat.authors.filter(a => a !== w); log("  = دُمج الكاتب «" + w.name + "» في «" + twin.name + "»"); }
   }
+  // فتاوى صوت السلف لا تذكر اسم المفتي، والموقع هو الموقع الرسمي للشيخ ياسر برهامي؛ تُنسب إليه افتراضيًا (fatwaAuthor في import-state.json، أو "" لإلغاء ذلك)
+  const isFatwa = c => /^(أسئلة|الاستفتاء|من فقه الواقع)/.test(c || "");
+  if (st.fatwaAuthor) idx.items.forEach(x => { if (x.a === "a8" && isFatwa(x.c)) { x.a = st.fatwaAuthor; x.fa = 1; } });
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
   let got = 0, tried = 0, misses = 0, errs = 0, id = st.next;
   let atEnd = false;
@@ -95,7 +98,8 @@ async function main() {
         const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
         const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
         loadGroup(g)[sid] = { pages: text };
-        idx.items.push({ id: sid, t: a.title, a: authorId(a.author), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
+        const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category);
+        idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : aid0, ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
         have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
       }
     } catch (e) { log(`${id}: خطأ ${e.message}`); errs = (errs || 0) + 1; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); break; } }
