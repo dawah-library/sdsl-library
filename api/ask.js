@@ -169,7 +169,15 @@ module.exports = async (req, res) => {
         if (out.tests.some(t => t.status === 200)) break;
       }
     }
-    return res.status(200).json(out);
+    const ok = out.tests.find(t => t.status === 200);
+    const esc = x => String(x == null ? "" : x).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فحص المساعد</title><style>body{font-family:system-ui;padding:16px;line-height:1.8;background:#f2f5f1}td,th{border:1px solid #ccd;padding:6px;font-size:13px;direction:ltr;text-align:left}table{border-collapse:collapse;width:100%;background:#fff}.ok{color:#0a7a3d;font-weight:700}.no{color:#b3261e;font-weight:700}</style></head><body>
+<h2>فحص اتصال المساعد</h2>
+<p>المزوّد: <b>${esc(out.provider)}</b><br>مفتاح Gemini: <b>${esc(out.gemini_key)}</b><br>مفتاح Anthropic: ${esc(out.anthropic_key)}<br>Supabase: ${esc(out.supabase)}</p>
+<p class="${ok ? "ok" : "no"}">${ok ? "✓ الاتصال بـ Gemini يعمل (" + esc(ok.model) + ")" : "✗ لم ينجح أي اتصال بـ Gemini"}</p>
+<table><tr><th>model</th><th>auth</th><th>status</th><th>message</th></tr>${out.tests.map(t => `<tr><td>${esc(t.model)}</td><td>${esc(t.auth)}</td><td>${esc(t.status || "")}</td><td>${esc(t.msg || t.error)}</td></tr>`).join("")}</table></body></html>`;
+    res.setHeader("content-type", "text/html; charset=utf-8"); res.setHeader("cache-control", "no-store");
+    return res.status(200).end(html);
   }
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
   const provider = PROVIDER();
