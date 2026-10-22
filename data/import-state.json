@@ -1,9 +1,13 @@
 {
- "next": 1,
+ "next": 3,
  "perRun": 150,
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 0,
- "newAuthors": []
+ "imported": 2,
+ "lastRun": "2026-10-22T16:03:29.950Z",
+ "newAuthors": [
+  "سعيد السواح"
+ ],
+ "lastSeen": 2
 }
