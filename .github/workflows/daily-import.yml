@@ -24,7 +24,7 @@ jobs:
       - run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"
-          git add -A data
+          git add -A data tools/samples
           git diff --cached --quiet || git commit -m "استيراد مقالات صوت السلف"
           git pull --rebase
           git push
