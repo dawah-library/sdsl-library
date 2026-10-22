@@ -102,7 +102,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  const seed=+today().replace(/-/g,"");suggest(3,seed,b=>(b.size||0)<1200000).then(s=>{SUG=s;const el=$("#sugg");if(el)el.innerHTML=s.map(qCard).join("")||'<p class="mut">لا توجد مقتطفات.</p>'})}
 
 /* ---------- المكتبة (الكتب) ---------- */
-function sideList(title,arr,key,cur,url,count,wide){return`<details${wide?" open":""}><summary>${title}</summary><div class="sidebox"><a class="fl${!cur?" on":""}" href="${url({[key]:"",pg:1})}">الكل <span>${count("")}</span></a>${arr.filter(x=>count(x.id)||x.id===cur).map(x=>`<a class="fl${x.id===cur?" on":""}" href="${url({[key]:x.id,pg:1})}">${esc(x.name)}${key==="a"?died(x):""} <span>${count(x.id)}</span></a>`).join("")}</div></details>`}
+function sideList(title,arr,key,cur,url,count,wide){return`<details${wide?" open":""}><summary>${title}</summary><div class="sidebox"><a class="fl${!cur?" on":""}" href="${url({[key]:"",pg:1})}">الكل <span>${count("")}</span></a>${arr.filter(x=>key==="t"||count(x.id)||x.id===cur).map(x=>`<a class="fl${x.id===cur?" on":""}${count(x.id)?"":" zero"}" href="${url({[key]:x.id,pg:1})}">${esc(x.name)}${key==="a"?died(x):""} <span>${count(x.id)}</span></a>`).join("")}</div></details>`}
 function vLibrary(q){
  const f={c:q.c||"",t:q.t||"",a:q.a||"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
  const inC=BOOKS().filter(b=>!f.c||bc(b)===f.c);
