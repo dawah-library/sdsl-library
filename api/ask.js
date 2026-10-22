@@ -16,6 +16,18 @@ function lib() {
     try { const sh = JSON.parse(fs.readFileSync(path.join(root, "books", b.id + ".json"), "utf8")); b.pages = sh.pages; if (sh.pl) b.pl = sh.pl; }
     catch (e) { console.warn("missing shard", b.id); }
   });
+  // المقالات المستوردة: فهرس + ملفات شهرية (الأحدث أولًا، بحد أقصى للذاكرة)
+  try {
+    const idx = JSON.parse(fs.readFileSync(path.join(root, "articles", "index.json"), "utf8")).items || [];
+    const byGroup = {}; idx.forEach(x => (byGroup[x.f] = byGroup[x.f] || []).push(x));
+    let budget = +(process.env.SDSL_ARTICLES_MB || 120) * 1048576;
+    for (const g of Object.keys(byGroup).sort().reverse()) {
+      const p = path.join(root, "articles", g + ".json"); if (!fs.existsSync(p)) continue;
+      const size = fs.statSync(p).size; if (size > budget) break; budget -= size;
+      const data = JSON.parse(fs.readFileSync(p, "utf8"));
+      byGroup[g].forEach(x => { if (data[x.id]) cat.books.push({ id: x.id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: "dawah", pages: data[x.id].pages }); });
+    }
+  } catch (e) { /* لا توجد مقالات بعد */ }
   return (LIB = cat);
 }
 const hits = new Map(); // حد بسيط للطلبات في الذاكرة (يُستبدل بجدول عند التوسع)

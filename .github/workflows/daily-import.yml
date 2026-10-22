@@ -1,0 +1,30 @@
+name: الاستيراد اليومي لمقالات صوت السلف
+on:
+  schedule:
+    - cron: "17 2 * * *"   # يوميًا الساعة 5:17 صباحًا بتوقيت الكويت ومصر الصيفي تقريبًا
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "عدد المقالات في هذه الدفعة"
+        default: "150"
+permissions:
+  contents: write
+concurrency:
+  group: library-data
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node tools/daily-import.js ${{ github.event.inputs.count }}
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add -A data
+          git diff --cached --quiet || git commit -m "استيراد مقالات صوت السلف"
+          git pull --rebase
+          git push

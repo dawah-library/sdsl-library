@@ -43,7 +43,7 @@ function extract(html, url) {
   const cut = text.search(/www\.salafvoice\.com|salafvoice\.com|موقع أنا السلفي|\n\s*\d{4}-\d{2}-\d{2}\b/);
   if (cut > 200) text = text.slice(0, cut);
   let tl = text.split("\n").map(l => l.trim()).filter(Boolean);
-  const okTitle = l => l && arabic(l) >= 4 && l.length < 110 && !/[.،؛:]\s*$/.test(l) && !(DATE_LINE.test(l) || /هـ\s*$/.test(l)) && !/^(صوت السلف|الرئيسية|المقالات)$/.test(l);
+  const okTitle = l => l && arabic(l) >= 4 && l.length < 110 && !/[.،؛:]\s*$/.test(l) && !(DATE_LINE.test(l) || /هـ\s*$/.test(l)) && !/^(صوت السلف|الرئيسية|المقالات)$/.test(l) && !/^(كتبه|بقلم|الكاتب|المؤلف)/.test(l);
   if (!title) title = tl.slice(0, 3).find(okTitle) || blocks.slice(Math.max(0, best[0] - 4), best[0]).reverse().find(okTitle) || "";
   const isDate = l => (DATE_LINE.test(l) || /هـ\s*$/.test(l)) && l.length < 90;
   while (tl.length && (tl[0] === title || isDate(tl[0]))) tl.shift();
@@ -57,7 +57,7 @@ function extract(html, url) {
   author = author.replace(/\s*(السبت|الأحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|\d).*$/, "").trim();
   const kn = KNOWN.find(n => author.includes(n)); if (kn) author = kn;
   if (!author) author = KNOWN.find(n => headText.includes(n)) || KNOWN.find(n => all.slice(0, 4000).includes(n)) || "";
-  author = author.replace(/^(الشيخ|د\.|الدكتور|م\.|أ\.)\s*/, "").trim();
+  author = author.replace(/^\s*[\/:：]\s*/, "").replace(/^(الشيخ|الدكتور|د[.\/]|م[.\/]|أ[.\/])\s*/, "").trim();
   let date = "";
   const dm = all.match(/(\d{1,2})\s+(يناير|فبراير|مارس|أبريل|ابريل|مايو|يونيو|يوليو|أغسطس|اغسطس|سبتمبر|أكتوبر|اكتوبر|نوفمبر|ديسمبر)\s+(\d{4})/);
   if (dm) date = `${dm[3]}-${String(MONTHS[dm[2]]).padStart(2, "0")}-${dm[1].padStart(2, "0")}`;
