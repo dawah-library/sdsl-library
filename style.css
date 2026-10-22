@@ -14,7 +14,7 @@ h2{font-size:1.5rem;margin:26px 0 8px}
 .top{position:sticky;top:0;z-index:20;background:var(--ac);color:var(--on);display:flex;align-items:center;gap:8px 10px;padding:6px 12px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:8px;text-decoration:none;font-family:Amiri,serif;font-weight:700;font-size:1.1rem;flex:1;min-width:0}
 .brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand img{height:40px;background:#fff;border-radius:8px;padding:2px 4px}
+.brand img{height:44px;width:44px;background:#fdfaf0;border-radius:10px;padding:3px;object-fit:contain}
 .tools{display:flex;gap:6px}
 .ic{background:rgba(255,255,255,.16);color:var(--on);border:0;border-radius:8px;padding:4px 10px;font:inherit;font-size:.92rem;cursor:pointer;text-decoration:none}
 .top nav{display:flex;gap:2px;overflow-x:auto;width:100%;scrollbar-width:none}
@@ -70,7 +70,7 @@ mark{background:var(--gold);color:#000;border-radius:3px;padding:0 2px}
 
 /* الرئيسية */
 .hero{text-align:center;padding:24px 0 6px}
-.hero .emb{width:76px;height:76px;margin:0 auto 4px;display:block}
+.hero .emb{width:120px;height:120px;margin:0 auto 2px;display:block;object-fit:contain}
 .hero h1{font-size:2.5rem;margin:0 0 8px;color:var(--ac)}
 .ayah{font-family:"Amiri Quran",Amiri,serif;font-size:1.3rem;line-height:2.3;max-width:640px;margin:0 auto 14px}
 .sbox{display:flex;gap:8px;max-width:580px;margin:10px auto}
@@ -219,3 +219,5 @@ body.sheet-open{overflow:hidden}
 .tj-h{display:flex;gap:14px;align-items:center;margin-top:16px}.tj-h h1{margin:0;font-size:2rem;color:var(--ac)}.tj-h p{margin:0}
 .tj-s{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:6px 16px 10px;margin:10px 0}
 .tj-s h3{margin:6px 0;color:var(--ac)}.tj-s ul{margin:0;padding-inline-start:20px;line-height:1.9}
+
+footer .dawah-logo{height:64px;width:auto;background:#fff;border-radius:10px;padding:4px 8px;margin:0 auto 8px;display:block}

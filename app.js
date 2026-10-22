@@ -80,7 +80,7 @@ const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q
 
 /* ---------- الرئيسية ---------- */
 function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
- view(`<section class="hero"><img class="emb" src="assets/emblem.svg" alt=""><h1>مكتبة الدعوة السلفية الرقمية</h1>
+ view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1>مكتبة الدعوة السلفية الرقمية</h1>
  <p class="ayah" lang="ar">قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ ٱلْمُشْرِكِينَ ﴿١٠٨﴾</p>
  <form class="sbox" data-form="quick"><input name="q" type="search" placeholder="ابحث في الكتب والمقالات والمؤلفين" aria-label="بحث"><button class="btn p">بحث</button></form></section>
  <div class="cols"><a class="col" href="#/library?c=dawah"><b>مكتبة الدعوة السلفية</b><span>كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور</span><em>${BOOKS().filter(b=>bc(b)==="dawah").length} كتاب</em></a>
@@ -331,7 +331,7 @@ function wrap(c,text,max){const o=[];text.split("\n").forEach(par=>{let l="";par
 let drawing=0;
 async function draw(){const cv=$("#cv");if(!cv)return;const my=++drawing;
  const[W,H]=Q.size.split("x").map(Number);await loadFont(Q.font);try{await document.fonts.load(`60px "${Q.font}"`);await document.fonts.load(`600 26px "IBM Plex Sans Arabic"`)}catch(e){}
- const[emb,logo]=await Promise.all([img("assets/emblem.svg"),img("assets/logo.jpg")]);if(my!==drawing)return;
+ const[emb,logo]=await Promise.all([img("assets/logo-sdsl.png"),img("assets/logo.jpg")]);if(my!==drawing)return;
  cv.width=W;cv.height=H;const c=cv.getContext("2d");c.direction="rtl";
  let st;
  if(Q.bg==="photo"&&QIMG){const s=Math.max(W/QIMG.width,H/QIMG.height);c.drawImage(QIMG,(W-QIMG.width*s)/2,(H-QIMG.height*s)/2,QIMG.width*s,QIMG.height*s);c.fillStyle=`rgba(0,0,0,${Q.dim})`;c.fillRect(0,0,W,H);st={ink:"#ffffff",acc:"#f0cf7f",area:{x:110,y:130,w:W-220,h:H-380}}}
@@ -346,9 +346,9 @@ async function draw(){const cv=$("#cv");if(!cv)return;const my=++drawing;
  if(src){y+=14;c.fillStyle=st.acc;c.font=`600 ${Math.round(fs*.55)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText("— "+src,W/2,y);y+=50}
  if(cm){c.fillStyle=st.ink;c.globalAlpha=.85;c.font=`${Math.round(fs*.5)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText(cm,W/2,y);c.globalAlpha=1}
  // العلامة المائية الثابتة: شعار المكتبة المرسوم + اسمها في الزاوية
- c.font=`600 25px "IBM Plex Sans Arabic", sans-serif`;const tw=c.measureText(SITENAME).width,ph=78,pw=tw+ph+36,px=34,py=H-ph-34;
+ c.font=`600 27px "IBM Plex Sans Arabic", sans-serif`;const tw=c.measureText(SITENAME).width,ph=100,pw=tw+ph+30,px=34,py=H-ph-34;
  c.fillStyle="rgba(255,255,255,.9)";c.beginPath();c.roundRect?c.roundRect(px,py,pw,ph,16):c.rect(px,py,pw,ph);c.fill();
- if(emb)c.drawImage(emb,px+pw-ph+8,py+8,ph-16,ph-16);c.fillStyle="#0f5c4d";c.textAlign="right";c.fillText(SITENAME,px+pw-ph,py+48);
+ if(emb)c.drawImage(emb,px+pw-ph+6,py+6,ph-12,ph-12);c.fillStyle="#0a4a50";c.textAlign="right";c.fillText(SITENAME,px+pw-ph+2,py+ph/2+10);
  if(Q.logo&&logo){const lw=92,lh2=lw*logo.height/logo.width;c.fillStyle="rgba(255,255,255,.92)";c.beginPath();c.roundRect?c.roundRect(W-lw-50,36,lw+16,lh2+16,12):c.rect(W-lw-50,36,lw+16,lh2+16);c.fill();c.drawImage(logo,W-lw-42,44,lw,lh2)}}
 function quoteText(){const t=$("#qt").value.trim(),s=$("#qs").value.trim();const link=siteLink(pendingQ&&pendingQ.ref?`#/book/${pendingQ.ref.b}/${pendingQ.ref.p}`:"");
  return`«${t}»`+(s?`\n— ${s}`:"")+`\n${SITENAME}`+(link?`\n${link}`:"")}
@@ -372,7 +372,7 @@ async function vQabasat(q){const pq=pendingQ;
  if(q&&q.f)$("#qf").value=q.f;
  $("#qt").value=pq?pq.t:"";$("#qs").value=pq?pq.src:"";$("#qz").value=Q.size;$("#qi").value=Q.ink;
  const ids=$("#qp-id");IDS.forEach((n,i)=>{const b=document.createElement("button");b.setAttribute("aria-pressed",Q.bg==="id"&&Q.idx===i);b.innerHTML=`<canvas width="216" height="216"></canvas><span>${n}</span>`;b.onclick=()=>{Q.bg="id";Q.idx=i;saveQ();sync();draw()};ids.appendChild(b);
-  img("assets/emblem.svg").then(emb=>{const c=b.querySelector("canvas").getContext("2d");c.scale(.2,.2);drawId(c,1080,1080,i,emb)})});
+  img("assets/logo-sdsl.png").then(emb=>{const c=b.querySelector("canvas").getContext("2d");c.scale(.2,.2);drawId(c,1080,1080,i,emb)})});
  const sync=()=>{$$("#qbt [data-bg]").forEach(t=>t.setAttribute("aria-selected",t.dataset.bg===Q.bg));["id","plain","photo"].forEach(k=>$("#qp-"+k).hidden=Q.bg!==k);
   $$("#qp-id button").forEach((b,i)=>b.setAttribute("aria-pressed",Q.bg==="id"&&Q.idx===i));$$("[data-plain]").forEach(b=>b.setAttribute("aria-pressed",Q.bg==="plain"&&b.dataset.plain===Q.plain))};
  $$("#qbt [data-bg]").forEach(t=>t.onclick=()=>{Q.bg=t.dataset.bg;saveQ();sync();draw()});
@@ -584,7 +584,7 @@ async function applyUpdate(u){if(!u||u.format!=="sdsl-update-1")throw new Error(
  LOCAL.catalog.books=byId(LOCAL.catalog.books,u.books||[]);Object.assign(LOCAL.shards,u.shards||{});await DB.set("local",LOCAL);SH.clear();merge();renderTicker()}
 async function offline(){const st=$("#offst");const all=lib.books;let i=0;
  try{const c=await caches.open("sdsl-data");const urls=[...new Set(all.map(b=>b.f?"data/articles/"+b.f+".json":"data/books/"+b.id+".json"))];for(const u of urls){progress(st,++i,urls.length,"جارٍ تنزيل النصوص");await c.add(u).catch(()=>{})}
-  await c.addAll(["./","index.html","style.css","config.js","search.js","app.js","manifest.webmanifest","data/catalog.json","data/articles/index.json","data/dict/mukhtar.json","assets/logo.jpg","assets/cal.jpg","assets/emblem.svg"]).catch(()=>{});
+  await c.addAll(["./","index.html","style.css","config.js","search.js","app.js","manifest.webmanifest","data/catalog.json","data/articles/index.json","data/dict/mukhtar.json","assets/logo.jpg","assets/cal.jpg","assets/logo-sdsl.png","assets/logo-sdsl-128.png"]).catch(()=>{});
   st.innerHTML='<p class="mut">تم التنزيل. المكتبة تعمل الآن دون إنترنت.</p>'}catch(e){st.innerHTML='<p class="note">تعذر التنزيل هنا. يعمل من الموقع المنشور.</p>'}}
 
 /* ---------- التعريف بالمؤلفين والتراجم ---------- */
