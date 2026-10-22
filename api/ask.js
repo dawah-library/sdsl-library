@@ -169,12 +169,21 @@ module.exports = async (req, res) => {
         if (out.tests.some(t => t.status === 200)) break;
       }
     }
+    // تجربة كاملة كما يعمل المساعد فعلًا (بحث في المكتبة ثم إجابة)
+    if (out.tests.some(t => t.status === 200)) {
+      const ev = [], used = [];
+      try {
+        const done = await runGemini({ system: S.SYSTEM + "\n\nالمهمة: " + S.MODES.ask, msgs: [{ role: "user", content: "ما شروط التوبة؟ أجب في ثلاثة أسطر." }], deep: false, maxRounds: 4, budget: 50000, t0: Date.now(), send: o => ev.push(o), toolLabel: c => "tool:" + c.name + " " + JSON.stringify(c.input).slice(0, 60), runOne: (n, i) => { const v = S.runTool(lib(), n, i, {}); if (n === "search_library") used.push(i.query); return v; }, used });
+        out.full = { done, events: ev.filter(e => e.t !== "text").map(e => e.t + ": " + (e.v || "") + (e.detail ? " | " + e.detail : "")).slice(0, 12), answer: ev.filter(e => e.t === "text").map(e => e.v).join("").slice(0, 400) };
+      } catch (e) { out.full = { crash: String(e.stack || e).slice(0, 400) }; }
+    }
     const ok = out.tests.find(t => t.status === 200);
     const esc = x => String(x == null ? "" : x).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فحص المساعد</title><style>body{font-family:system-ui;padding:16px;line-height:1.8;background:#f2f5f1}td,th{border:1px solid #ccd;padding:6px;font-size:13px;direction:ltr;text-align:left}table{border-collapse:collapse;width:100%;background:#fff}.ok{color:#0a7a3d;font-weight:700}.no{color:#b3261e;font-weight:700}</style></head><body>
 <h2>فحص اتصال المساعد</h2>
 <p>المزوّد: <b>${esc(out.provider)}</b><br>مفتاح Gemini: <b>${esc(out.gemini_key)}</b><br>مفتاح Anthropic: ${esc(out.anthropic_key)}<br>Supabase: ${esc(out.supabase)}</p>
 <p class="${ok ? "ok" : "no"}">${ok ? "✓ الاتصال بـ Gemini يعمل (" + esc(ok.model) + ")" : "✗ لم ينجح أي اتصال بـ Gemini"}</p>
+${out.full ? `<h3>تجربة كاملة للمساعد</h3><p>${out.full.crash ? '<span class="no">تعطل: ' + esc(out.full.crash) + '</span>' : ""}${(out.full.events || []).map(e => "<div dir=ltr style='font-size:12px'>" + esc(e) + "</div>").join("")}</p><p><b>الإجابة:</b> ${esc(out.full.answer || "(لا شيء)")}</p>` : ""}
 <table><tr><th>model</th><th>auth</th><th>status</th><th>message</th></tr>${out.tests.map(t => `<tr><td>${esc(t.model)}</td><td>${esc(t.auth)}</td><td>${esc(t.status || "")}</td><td>${esc(t.msg || t.error)}</td></tr>`).join("")}</table></body></html>`;
     res.setHeader("content-type", "text/html; charset=utf-8"); res.setHeader("cache-control", "no-store");
     return res.status(200).end(html);
