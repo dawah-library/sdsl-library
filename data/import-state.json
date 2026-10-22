@@ -1,13 +1,15 @@
 {
- "next": 3,
+ "next": 36,
  "perRun": 150,
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 2,
- "lastRun": "2026-10-22T16:03:29.950Z",
+ "imported": 27,
+ "lastRun": "2026-10-22T16:05:36.855Z",
  "newAuthors": [
-  "سعيد السواح"
+  "سعيد السواح",
+  "-حفظه الله- بعد ذلك.",
+  "عبد المنعم الشحات"
  ],
- "lastSeen": 2
+ "lastSeen": 35
 }
