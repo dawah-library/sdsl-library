@@ -12,7 +12,7 @@ const textOf = h => decode(h.replace(/<[^>]+>/g, " ")).replace(/[ \t ]+/g, " ")
 const arabic = s => (s.match(/[ء-ي]/g) || []).length;
 
 function extract(html, url) {
-  html = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|noscript|svg|iframe|form|select|button)\b[\s\S]*?<\/\1>/gi, " ");
+  html = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|noscript|svg|iframe|select|button)\b[\s\S]*?<\/\1>/gi, " ");
   const og = (html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) || [])[1];
   const tt = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1];
   const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1];
