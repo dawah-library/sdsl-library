@@ -221,3 +221,17 @@ body.sheet-open{overflow:hidden}
 .tj-s h3{margin:6px 0;color:var(--ac)}.tj-s ul{margin:0;padding-inline-start:20px;line-height:1.9}
 
 footer .dawah-logo{height:64px;width:auto;background:#fff;border-radius:10px;padding:4px 8px;margin:0 auto 8px;display:block}
+
+/* ===== الأقسام والصفحات التعريفية ===== */
+.cols{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))!important}
+.col.fw{background:#2d4a6b;color:#eef4fb}
+.page{max-width:760px;margin:0 auto}.page h3{color:var(--ac);margin:18px 0 6px}.page ul{line-height:1.9;padding-inline-start:22px}
+.page .paper{min-height:0;margin:10px 0}
+.timeline{list-style:none;padding:0;margin:14px 0;border-right:3px solid var(--gold)}
+.timeline li{position:relative;padding:4px 18px 10px 0}.timeline li::before{content:"";position:absolute;right:-9px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--ac);border:2px solid var(--bg)}
+.timeline b{color:var(--ac);font-family:Amiri,serif;font-size:1.15rem}.timeline p{margin:2px 0 0;line-height:1.8}
+.srcn{font-size:.75rem;text-decoration:none;color:var(--gold)}.srcs{font-size:.85rem;line-height:1.9}
+.wa{display:inline-flex;align-items:center;gap:10px;background:#1f9d55;color:#fff;text-decoration:none;border-radius:12px;padding:12px 20px;font-weight:600;font-size:1.05rem;margin:8px 0}
+.wa svg{width:26px;height:26px}
+.flinks a{color:var(--ac);text-decoration:none}
+.tabs a[aria-disabled=true]{opacity:.45;cursor:default}
