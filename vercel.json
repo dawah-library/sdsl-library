@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/ask.js": { "includeFiles": "data/**", "maxDuration": 60, "memory": 1024 },
+    "api/ask.js": { "includeFiles": "data/**", "maxDuration": 300, "memory": 1024 },
     "api/import.js": { "maxDuration": 30 }
   },
   "headers": [

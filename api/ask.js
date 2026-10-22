@@ -3,6 +3,7 @@
 //   ANTHROPIC_API_KEY  (إلزامي)
 //   SUPABASE_URL و SUPABASE_ANON_KEY  (لقصر الخدمة على المستخدمين المسجلين)
 //   SDSL_MODEL  (اختياري، الافتراضي claude-sonnet-5-5)
+//   SDSL_HOURLY_LIMIT  (اختياري، عدد الأسئلة لكل عضو في الساعة، الافتراضي 30)
 require("../search.js");
 const fs = require("fs"), path = require("path");
 const S = globalThis.SDSLSearch;
@@ -13,7 +14,7 @@ function lib() {
   const cat = JSON.parse(fs.readFileSync(path.join(root, "catalog.json"), "utf8"));
   cat.books.forEach(b => {
     if (b.demo) return;
-    try { const sh = JSON.parse(fs.readFileSync(path.join(root, "books", b.id + ".json"), "utf8")); b.pages = sh.pages; if (sh.pl) b.pl = sh.pl; }
+    try { const sh = JSON.parse(fs.readFileSync(path.join(root, "books", b.id + ".json"), "utf8")); b.pages = sh.pages; if (sh.pl) b.pl = sh.pl; if (sh.toc) b.toc = sh.toc; }
     catch (e) { console.warn("missing shard", b.id); }
   });
   // المقالات المستوردة: فهرس + ملفات شهرية (الأحدث أولًا، بحد أقصى للذاكرة)
@@ -67,36 +68,61 @@ module.exports = async (req, res) => {
     if (!turns.length || turns[turns.length - 1].role !== "user") return res.status(400).json({ error: "رسالة غير صالحة" });
     while (turns[0].role !== "user") turns.shift();
 
+    const deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(mode);
     const system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
       (scope.col ? "\nنطاق البحث: " + (scope.col === "turath" ? "كتب التراث فقط." : "كتب مشايخ الدعوة السلفية فقط.") : "") +
       (scope.bookId ? "\nنطاق البحث: كتاب واحد معرفه " + scope.bookId + "." : "");
-    const msgs = turns.slice();
-    const used = [];
-    for (let round = 0; round < 7; round++) {
-      const last = round === 6;
+    const msgs = turns.slice(), used = [], t0 = Date.now(), budget = (+process.env.SDSL_MAX_SECONDS || 240) * 1000;
+    const maxRounds = deep ? 14 : 8;
+    // بث الإجابة للمتصفح سطرًا سطرًا (JSON لكل سطر): status / text / reset / done / error
+    res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-cache, no-transform", "x-accel-buffering": "no" });
+    const send = o => res.write(JSON.stringify(o) + "\n");
+    const toolLabel = c => c.name === "search_library" ? "يبحث في المكتبة عن: «" + (c.input.query || "") + "»" : c.name === "get_page" ? "يقرأ " + (c.input.ref || "") : c.name === "book_outline" ? "يطالع فهرس كتاب " + (c.input.book_id || "") : c.name === "list_authors" ? "يستعرض المؤلفين" : "يستعرض الكتب";
+    send({ t: "status", v: "يفهم السؤال ويخطط للبحث…" });
+    for (let round = 0; round < maxRounds; round++) {
+      const last = round === maxRounds - 1 || Date.now() - t0 > budget * 0.6;
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: process.env.SDSL_MODEL || "claude-sonnet-5-5", max_tokens: 3000, system, messages: msgs, tools: last ? undefined : S.TOOLS })
+        body: JSON.stringify({ model: process.env.SDSL_MODEL || "claude-sonnet-5-5", max_tokens: deep ? 8000 : 3500, stream: true, system, messages: msgs, tools: last ? undefined : S.TOOLS })
       });
-      if (!r.ok) { console.error("anthropic", r.status, await r.text()); return res.status(502).json({ error: "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); }
-      const out = await r.json();
-      const calls = (out.content || []).filter(c => c.type === "tool_use");
-      if (out.stop_reason !== "tool_use" || !calls.length) {
-        const text = (out.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
-        return res.status(200).json({ text, searches: used });
+      if (!r.ok || !r.body) { console.error("anthropic", r.status, await r.text()); send({ t: "error", v: "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return res.end(); }
+      // قراءة بث Anthropic وإعادة بناء المحتوى
+      const blocks = []; let stop = null, buf = "";
+      const dec = new TextDecoder();
+      for await (const chunk of r.body) {
+        buf += dec.decode(chunk, { stream: true });
+        let nl; while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+          if (!line.startsWith("data:")) continue;
+          let ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { continue; }
+          if (ev.type === "content_block_start") { const cb = Object.assign({}, ev.content_block); if (cb.type === "tool_use") { cb.json = ""; cb.input = {}; } if (cb.type === "text") cb.text = ""; blocks[ev.index] = cb; }
+          else if (ev.type === "content_block_delta") {
+            const cb = blocks[ev.index]; if (!cb) continue;
+            if (ev.delta.type === "text_delta") { cb.text += ev.delta.text; send({ t: "text", v: ev.delta.text }); }
+            else if (ev.delta.type === "input_json_delta") cb.json += ev.delta.partial_json;
+          }
+          else if (ev.type === "content_block_stop") { const cb = blocks[ev.index]; if (cb && cb.type === "tool_use") { try { cb.input = cb.json ? JSON.parse(cb.json) : {}; } catch (e) { cb.input = {}; } delete cb.json; send({ t: "status", v: toolLabel(cb) }); } }
+          else if (ev.type === "message_delta" && ev.delta && ev.delta.stop_reason) stop = ev.delta.stop_reason;
+          else if (ev.type === "error") { send({ t: "error", v: "انقطعت خدمة الذكاء الاصطناعي، أعد المحاولة." }); return res.end(); }
+        }
       }
-      msgs.push({ role: "assistant", content: out.content });
+      const content = blocks.filter(Boolean), calls = content.filter(c => c.type === "tool_use");
+      if (stop !== "tool_use" || !calls.length) { send({ t: "done", searches: used }); return res.end(); }
+      send({ t: "reset" });
+      msgs.push({ role: "assistant", content });
       msgs.push({ role: "user", content: calls.map(c => {
-        let content;
-        try { const v = S.runTool(lib(), c.name, c.input, scope); content = JSON.stringify(v).slice(0, 30000); if (c.name === "search_library") used.push(String(c.input.query || "")); }
+        let out;
+        try { const v = S.runTool(lib(), c.name, c.input, scope); out = JSON.stringify(v).slice(0, 30000); if (c.name === "search_library") used.push(String(c.input.query || "")); }
         catch (e) { return { type: "tool_result", tool_use_id: c.id, content: "Error: " + e.message, is_error: true }; }
-        return { type: "tool_result", tool_use_id: c.id, content };
+        return { type: "tool_result", tool_use_id: c.id, content: out };
       }) });
+      send({ t: "status", v: "يحلل ما وجده (" + used.length + " بحثًا حتى الآن)…" });
     }
-    return res.status(200).json({ text: "تعذر إكمال الإجابة، جرّب سؤالًا أضيق.", searches: used });
+    send({ t: "text", v: "تعذر إكمال الإجابة، جرّب سؤالًا أضيق." }); send({ t: "done", searches: used }); return res.end();
   } catch (e) {
     console.error(e);
+    if (res.headersSent) { try { res.write(JSON.stringify({ t: "error", v: "خطأ في الخادم." }) + "\n"); } catch (x) {} return res.end(); }
     return res.status(500).json({ error: "خطأ في الخادم." });
   }
 };

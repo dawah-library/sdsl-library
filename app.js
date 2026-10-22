@@ -592,53 +592,99 @@ const AI={s:undefined,
   const r=await sample([{role:"user",content:head},...turns],tools?{tools,signal:o.signal,onText:({text})=>o.onText(text)}:{cache:false,signal:o.signal,onText:({text})=>o.onText(text)});return r.text},
  async viaServer(o){let r;
   try{r=await fetch(CFG.askEndpoint,{method:"POST",signal:o.signal,headers:Object.assign({"content-type":"application/json"},Auth.token?{Authorization:"Bearer "+Auth.token}:{}),body:JSON.stringify({messages:o.turns,mode:o.mode,col:o.col,bookId:o.bookId})})}
-  catch(e){if(e.name==="AbortError")throw{code:"cancelled"};throw{code:"offline",message:"تعذر الوصول إلى خادم المحادثة. تأكد من الاتصال بالإنترنت."}}
-  let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok)throw{code:"server",message:j.error||(r.status===404?"خدمة المحادثة لم تُفعَّل على هذا الخادم بعد.":"تعذرت الإجابة، حاول لاحقًا.")};
-  o.onText(j.text||"");return j.text||""}};
+  catch(e){if(e.name==="AbortError")throw{code:"cancelled"};throw{code:"offline",message:"تعذر الوصول إلى خادم المساعد. تأكد من الاتصال بالإنترنت."}}
+  if(!r.ok||!/ndjson/.test(r.headers.get("content-type")||"")){let j={};try{j=await r.json()}catch(e){}
+   if(!r.ok)throw{code:"server",message:j.error||(r.status===404?"خدمة المساعد لم تُفعَّل على هذا الخادم بعد.":"تعذرت الإجابة، حاول لاحقًا.")};o.onText(j.text||"");o.searches=j.searches;return j.text||""}
+  // بث الإجابة: يصل النص أولًا بأول مع خطوات البحث
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf="",acc="",err=null;
+  try{for(;;){const {value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let nl;
+   while((nl=buf.indexOf("\n"))>=0){const line=buf.slice(0,nl).trim();buf=buf.slice(nl+1);if(!line)continue;let ev;try{ev=JSON.parse(line)}catch(e){continue}
+    if(ev.t==="text"){acc+=ev.v;o.onText(acc)}else if(ev.t==="reset"){if(acc.trim())o.onStatus(acc.trim().split("\n").pop().slice(0,140));acc=""}
+    else if(ev.t==="status")o.onStatus(ev.v);else if(ev.t==="done")o.searches=ev.searches||[];else if(ev.t==="error")err=ev.v}}}
+  catch(e){if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
+  if(err){if(acc)throw{text:acc};throw{code:"server",message:err}}return acc}};
 const AIERR={not_granted:"لم يُسمح لهذه الصفحة باستخدام الذكاء الاصطناعي.",sampling_disabled:"الذكاء الاصطناعي غير متاح لهذا الحساب.",rate_limited:"كثرت الأسئلة، انتظر قليلًا ثم أعد المحاولة.",refused:"تعذرت الإجابة عن هذا السؤال، أعد صياغته.",prompt_too_large:"المحادثة طويلة، ابدأ محادثة جديدة.",session_expired:"انتهت الجلسة، سجّل الدخول من جديد."};
 function md(t){const lines=esc(t).split("\n");let h="",inList=false;
  const inline=x=>x.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(m,id,p)=>{const b=B(id);if(!b||+p<1||(b.n&&+p>b.n))return'<span class="mut">[مرجع غير موجود]</span>';return`<a class="cite" href="#/book/${id}/${p}">(${esc(b.title)}${PL(b,+p-1)?"، "+esc(PL(b,+p-1)):""})</a>`});
  for(const l of lines){const li=/^\s*[-*•]\s+(.*)/.exec(l)||/^\s*\d+[.)-]\s+(.*)/.exec(l);
   if(li){if(!inList){h+="<ul>";inList=true}h+="<li>"+inline(li[1])+"</li>";continue}
-  if(inList){h+="</ul>";inList=false}const hd=/^#{1,4}\s+(.*)/.exec(l);if(hd){h+="<h3>"+inline(hd[1])+"</h3>";continue}
+  if(inList){h+="</ul>";inList=false}
+  if(/^\s*\|.*\|\s*$/.test(l)){if(/^\s*\|[\s:|-]+\|\s*$/.test(l))continue;const cells=l.trim().slice(1,-1).split("|").map(c=>inline(c.trim()));if(!h.endsWith("</tr>"))h+='<div class="tblw"><table>';h+="<tr>"+cells.map(c=>"<td>"+c+"</td>").join("")+"</tr>";continue}
+  if(h.endsWith("</tr>"))h+="</table></div>";const hd=/^#{1,4}\s+(.*)/.exec(l);if(hd){h+="<h3>"+inline(hd[1])+"</h3>";continue}
   if(l.trim())h+="<p>"+inline(l)+"</p>"}
- return h+(inList?"</ul>":"")}
+ return h+(inList?"</ul>":"")+(h.endsWith("</tr>")?"</table></div>":"")}
 let CONV=null,ASKCTL=null;
 const newConv=()=>({id:"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:"",mode:"ask",col:"",bookId:"",messages:[]});
+const AISVC=[
+ ["ask","سؤال موثّق","إجابة مركزة من نصوص المكتبة مع الإحالة إلى الكتاب والصفحة.","",'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>'],
+ ["research","بحث علمي","بحث منظم: مقدمة ومسائل وأدلة ونقول موثقة وخلاصة ومراجع.","اكتب بحثًا علميًا عن: ",'<path d="M4 4h12l4 4v12H4z"/><path d="M8 10h8M8 14h8M8 18h5"/>'],
+ ["compare","دراسة تحليلية مقارنة","يحرر المسألة ويوازن بين الأقوال وأدلتها ويبيّن الراجح.","قارن بين الأقوال في مسألة: ",'<path d="M12 3v18M5 7h4l-2 6H3zM19 7h-4l2 6h4z"/>'],
+ ["gather","جامع النصوص","يجمع كل ما في المكتبة عن موضوع، مصنفًا تحت عناوين.","اجمع ما ورد في المكتبة عن: ",'<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/>'],
+ ["summarize","تلخيص كتاب","نبذة وتلخيص للأبواب وأهم المسائل والفوائد بالصفحات.","لخّص كتاب: ",'<path d="M4 5h16M4 10h10M4 15h16M4 20h8"/>'],
+ ["explain","شرح نص","الصق نصًا أو افتح صفحة من القارئ، فيشرح ألفاظه ومعناه وفوائده.","اشرح هذا النص: ",'<path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M9 7h6M9 11h4"/>'],
+ ["discuss","مناقشة وحوار","يناقشك في مسألة أو إشكال بالحجة والدليل خطوة بخطوة.","أريد أن أناقش: ",'<path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2h-6v-2"/>'],
+ ["plan","منهج تعلّم","خطة قراءة متدرجة من كتب المكتبة حسب مستواك ووقتك.","ضع لي منهجًا لدراسة ",'<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'],
+ ["quiz","اختبر فهمك","أسئلة متنوعة من كتاب أو موضوع مع الإجابات وتعليلها.","اختبرني في ",'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8h3M14 14h3"/>'],
+ ["solve","حلول عملية","يعرض مشكلتك على توجيهات العلماء ويقترح خطوات عملية (ليست فتوى).","عندي مشكلة: ",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>']];
+const AIEX=["ما شروط التوبة؟","اجمع ما ورد في المكتبة عن علو الهمة","قارن بين أقوال العلماء في حكم تارك الصلاة","ضع لي منهجًا لدراسة العقيدة وأنا مبتدئ","لخّص كتاب رياض الصالحين","كيف أنظّم وقتي لطلب العلم مع العمل؟"];
+const AISTEPS=["يفهم السؤال ويخطط للبحث…","يبحث في الكتب والمقالات…","يقرأ سياق النصوص…","يوازن بين النصوص ويحلّلها…","يرتّب الإجابة ويوثّقها…"];
+const svcIcon=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+function aiStats(){const books=lib.books.filter(b=>!b.demo),arts=books.filter(isArt).length;return`${toAr(books.length-arts)} كتابًا • ${toAr(arts)} مقالًا وفتوى وبيانًا • ${toAr(new Set(books.map(b=>b.authorId)).size)} مؤلفًا`}
 async function vAsk(q){
- if(!Auth.user){view(`<h2>اسأل المكتبة</h2><div class="askcta" style="cursor:default"><b>مساعد بحثي للأعضاء</b><span>اسأل عن أي مسألة أو نص، أو اطلب بحثًا علميًا، فيبحث المساعد في كتب المكتبة ومقالاتها ويجيبك مع الإحالة إلى الكتاب والصفحة.</span></div>
-  <div class="row" style="margin-top:12px"><a class="btn p nf" href="#/account?m=signup&next=${encodeURIComponent(location.hash)}">أنشئ حسابًا مجانيًا</a><a class="btn nf" href="#/account?next=${encodeURIComponent(location.hash)}">لدي حساب</a></div>`);return}
- if(q.id){try{CONV=(await Chats.get(q.id))||newConv()}catch(e){CONV=newConv()}}else if(!CONV||q.new||q.b||q.q||q.a)CONV=newConv();
+ if(q.id&&Auth.user){try{CONV=(await Chats.get(q.id))||newConv()}catch(e){CONV=newConv()}}else if(!CONV||q.new||q.b||q.q||q.a||q.m)CONV=newConv();
+ if(q.m&&SS.MODES[q.m])CONV.mode=q.m;
  let pre="";if(q.b&&B(q.b)){CONV.mode="explain";CONV.bookId=q.b;CONV.ctx={b:q.b,p:+q.p||1};pre=isArt(B(q.b))?"اشرح هذا المقال ولخّص أهم مسائله":"اشرح هذه الصفحة"}else if(q.q)pre=q.q;else if(q.a)pre=`ما أهم الموضوعات في كتب ${A(q.a).name}؟`;
- const so=(v,l,c)=>`<option value="${v}"${c===v?" selected":""}>${l}</option>`,cb=CONV.bookId&&B(CONV.bookId);
- view(`<div class="askhead"><h2>اسأل المكتبة</h2><div class="row" style="flex:none"><a class="btn s nf" href="#/ask?new=1">محادثة جديدة</a><a class="btn s nf" href="#/account">محادثاتي</a></div></div>
- <div class="row"><div><label for="am">نوع الطلب</label><select id="am">${so("ask","سؤال",CONV.mode)}${so("research","بحث علمي موسّع",CONV.mode)}${so("explain","شرح نص",CONV.mode)}</select></div>
- <div><label for="ac">نطاق البحث</label><select id="ac">${so("","كل المكتبة",CONV.bookId?"x":CONV.col)}${so("dawah",COL.dawah+" والمقالات",CONV.bookId?"x":CONV.col)}${so("turath",COL.turath,CONV.bookId?"x":CONV.col)}${cb?`<option value="book:${cb.id}" selected>${isArt(cb)?"هذا المقال":"هذا الكتاب"}: ${esc(cb.title)}</option>`:""}</select></div></div>
+ const so=(v,l,c)=>`<option value="${v}"${c===v?" selected":""}>${l}</option>`,cb=CONV.bookId&&B(CONV.bookId),fresh=!CONV.messages.length;
+ let recent="";if(fresh&&Auth.user){try{const l=(await Chats.list()).slice(0,4);if(l.length)recent=`<h3 class="aih">محادثاتك الأخيرة</h3><div class="airecent">${l.map(c=>`<a href="#/ask?id=${encodeURIComponent(c.id)}"><b>${esc(c.title||"محادثة")}</b><span>${esc(ago(c.updated_at))}</span></a>`).join("")}</div>`}catch(e){}}
+ if(parse().p[0]!=="ask"&&parse().p[0]!=="ai")return;
+ view(`<div class="aiwrap${fresh?" fresh":""}">
+ <section class="aihero" id="aihub"${fresh?"":" hidden"}><div class="orb" aria-hidden="true"><i></i><i></i><i></i></div>
+  <h2>المساعد العلمي</h2><p>نموذج ذكاء اصطناعي مرجعه كتب المكتبة ومقالاتها وفتاواها: يبحث ويجمع ويحلّل ويناقش ويقترح الحلول، ويوثّق كل نقل بالكتاب والصفحة.</p><span class="aistat">${aiStats()}</span></section>
+ <div id="aisvcw"${fresh?"":" hidden"}><h3 class="aih">الخدمات</h3><div class="aisvc">${AISVC.map(([m,t,d,,ic])=>`<button data-act="aisvc" data-m="${m}" aria-pressed="${CONV.mode===m}"><span class="ic">${svcIcon(ic)}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>
+  <h3 class="aih">جرّب أن تسأل</h3><div class="aiex">${AIEX.map(t=>`<button data-act="aiex">${esc(t)}</button>`).join("")}</div>${recent}</div>
+ ${fresh?"":`<div class="askhead"><h2>المساعد العلمي</h2><div class="row" style="flex:none"><a class="btn s nf" href="#/ask?new=1">محادثة جديدة</a>${Auth.user?'<a class="btn s nf" href="#/account">محادثاتي</a>':""}</div></div>`}
  ${CONV.ctx&&B(CONV.ctx.b)?`<p class="note">النص المرفق: ${esc(B(CONV.ctx.b).title)}${B(CONV.ctx.b).n>1?"، صفحة "+CONV.ctx.p:""}</p>`:""}
- <div id="msgs" aria-live="polite">${CONV.messages.length?"":`<div class="mut ex-wrap" style="padding:8px 0">أمثلة: <button class="btn s ex">ما شروط التوبة؟</button> <button class="btn s ex">ما فضل التوحيد؟</button> <button class="btn s ex">اكتب بحثًا عن علو الهمة في طلب العلم</button></div>`}</div>
- <form data-form="ask" class="askbox"><textarea name="m" rows="3" placeholder="اكتب سؤالك أو المسألة التي تبحث فيها" aria-label="سؤالك">${esc(pre)}</textarea>
- <div class="row"><button class="btn p nf" id="asend">إرسال</button><button type="button" class="btn nf" id="astop" hidden>إيقاف</button><span id="ast" class="mut" style="flex:1"></span></div></form>
- <p class="mut" style="font-size:.8rem">إجابات المساعد آلية وقد تخطئ؛ راجع المراجع المحال إليها بنفسك، وليست فتوى. النصوص التجريبية مستبعدة من البحث.</p>`);
+ <div id="msgs" aria-live="polite"></div>
+ <form data-form="ask" class="askbox"><div class="aiopts"><select id="am" aria-label="نوع الخدمة">${AISVC.map(([m,t])=>so(m,t,CONV.mode)).join("")}</select>
+  <select id="ac" aria-label="نطاق البحث">${so("","كل المكتبة",CONV.bookId?"x":CONV.col)}${so("dawah",COL.dawah+" والمقالات",CONV.bookId?"x":CONV.col)}${so("turath",COL.turath,CONV.bookId?"x":CONV.col)}${cb?`<option value="book:${cb.id}" selected>${isArt(cb)?"هذا المقال":"هذا الكتاب"}: ${esc(cb.title)}</option>`:""}<option value="pick">اختيار كتاب…</option></select></div>
+  <div class="aiin"><textarea name="m" rows="2" placeholder="اسأل، أو اطلب بحثًا أو دراسة أو خطة…" aria-label="رسالتك">${esc(pre)}</textarea><button class="aisend" id="asend" aria-label="إرسال">${svcIcon('<path d="M20 12H5M11 6l-6 6 6 6"/>')}</button><button type="button" class="aisend stop" id="astop" hidden aria-label="إيقاف">${svcIcon('<rect x="7" y="7" width="10" height="10" rx="1.5"/>')}</button></div>
+  <span id="ast" class="mut aist"></span></form>
+ <p class="mut aidisc">إجابات المساعد آلية وقد تخطئ، فراجع المراجع المحال إليها، وليست فتوى. ${Auth.user?"":'المساعد متاح للأعضاء: <a href="#/account?m=signup&next=%23%2Fask">أنشئ حسابًا مجانيًا</a>.'}</p></div>`);
  CONV.messages.forEach(m=>addMsg(m));
- $("#am").onchange=e=>{CONV.mode=e.target.value};$("#ac").onchange=e=>{const v=e.target.value;if(v.startsWith("book:")){CONV.bookId=v.slice(5);CONV.col=""}else{CONV.bookId="";CONV.col=v}};
- $$(".ex").forEach(b=>b.onclick=()=>{const t=document.querySelector('[name=m]');t.value=b.textContent;if(/بحث/.test(b.textContent)){CONV.mode="research";$("#am").value="research"}t.focus()});
- $("#astop").onclick=()=>ASKCTL&&ASKCTL.abort()}
+ const ta=$("[name=m]");ta.addEventListener("input",()=>{ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,220)+"px"});
+ ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&matchMedia("(pointer:fine)").matches){e.preventDefault();ta.form.requestSubmit()}});
+ $("#am").onchange=e=>{CONV.mode=e.target.value;$$("[data-act=aisvc]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===CONV.mode))};
+ $("#ac").onchange=e=>{const v=e.target.value;if(v==="pick"){e.target.value=CONV.bookId?"book:"+CONV.bookId:CONV.col;return pickBook()}if(v.startsWith("book:")){CONV.bookId=v.slice(5);CONV.col=""}else{CONV.bookId="";CONV.col=v}};
+ $("#astop").onclick=()=>ASKCTL&&ASKCTL.abort();if(!fresh)$("#msgs").lastElementChild&&window.scrollTo(0,document.body.scrollHeight)}
+function pickBook(){const all=lib.books.filter(b=>!b.demo&&!isArt(b)).sort((x,y)=>x.title.localeCompare(y.title,"ar"));
+ openSheet("اختر كتابًا",`<input id="pbq" type="search" placeholder="ابحث بالعنوان أو المؤلف"><div id="pbl" class="pbl"></div>`,()=>{const draw=()=>{const w=norm($("#pbq").value).split(/\s+/).filter(Boolean);$("#pbl").innerHTML=all.filter(b=>w.every(k=>norm(b.title+" "+A(b.authorId).name).includes(k))).slice(0,60).map(b=>`<button data-act="aipick" data-id="${b.id}"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)}</span></button>`).join("")||'<p class="mut">لا نتائج.</p>'};$("#pbq").oninput=draw;draw()})}
+function setBookScope(id){const b=B(id);if(!b)return;CONV.bookId=id;CONV.col="";const s=$("#ac");if(!s)return;let o=s.querySelector('option[value^="book:"]');if(!o){o=document.createElement("option");s.insertBefore(o,s.lastElementChild)}o.value="book:"+id;o.textContent=(isArt(b)?"هذا المقال":"الكتاب")+": "+b.title;s.value=o.value}
+function aiSplit(t){const m=/\n#{1,4}\s*للمتابعة\s*\n([\s\S]*)$/.exec(t||"");if(!m)return{body:t,follow:[]};return{body:t.slice(0,m.index),follow:m[1].split("\n").map(l=>l.replace(/^\s*[-*•\d.)]+\s*/,"").trim()).filter(l=>l.length>3).slice(0,4)}}
 function addMsg(m){const d=document.createElement("div");d.className="msg "+(m.role==="user"?"u":"a");
- if(m.role==="user")d.textContent=m.display||m.content;else{d.innerHTML=md(m.content);const c=document.createElement("button");c.className="btn s";c.textContent="نسخ";c.onclick=async()=>{try{await navigator.clipboard.writeText(m.content.replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(x,id,p)=>{const b=B(id);return b?`(${b.title}${PL(b,+p-1)?"، "+PL(b,+p-1):""})`:""}));c.textContent="تم النسخ"}catch(e){}};d.appendChild(c)}
- const box=$("#msgs");$$(".ex-wrap").forEach(x=>x.remove());box.appendChild(d);return d}
+ if(m.role==="user")d.textContent=m.display||m.content;else fillAnswer(d,m);
+ const box=$("#msgs");box.appendChild(d);return d}
+function fillAnswer(d,m){const {body,follow}=aiSplit(m.content);d.innerHTML=md(body)+(m.searches&&m.searches.length?`<details class="srch"><summary>بحث في المكتبة ${toAr(m.searches.length)} مرة</summary>${m.searches.map(s=>`<span>${esc(s)}</span>`).join("")}</details>`:"")+(follow.length?`<div class="aifollow">${follow.map(f=>`<button data-act="aifollow">${esc(f)}</button>`).join("")}</div>`:"");
+ const bar=document.createElement("div");bar.className="mact";const c=document.createElement("button");c.className="btn s";c.textContent="نسخ";
+ c.onclick=async()=>{try{await navigator.clipboard.writeText(body.replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(x,id,p)=>{const b=B(id);return b?`(${b.title}${PL(b,+p-1)?"، "+PL(b,+p-1):""})`:""})+"\n— "+SITENAME);c.textContent="تم النسخ"}catch(e){}};
+ const q=document.createElement("button");q.className="btn s";q.textContent="صمّم قبسة";q.onclick=()=>{const t=plain(body.replace(/\[\[[^\]]+\]\]/g,"").replace(/^#+\s*/gm,"").replace(/\*\*/g,"")).trim();pendingQ={t:t.length>600?t.slice(0,600)+"…":t,src:"المساعد العلمي — "+SITENAME};location.hash="#/qabasat"};
+ bar.append(c,q);d.appendChild(bar)}
 async function askSubmit(f){const ta=f.querySelector("[name=m]"),text=ta.value.trim();if(!text||ASKCTL)return;
+ if(!Auth.user)return needLogin("المساعد العلمي متاح لأعضاء المكتبة مجانًا. أنشئ حسابك أو سجّل الدخول، ثم اسأل ما شئت.");
+ ["aihub","aisvcw"].forEach(id=>{const e=$("#"+id);if(e)e.hidden=true});const w=$(".aiwrap");if(w)w.classList.remove("fresh");
  let content=text;if(CONV.ctx&&!CONV.messages.length){try{const b=await loadBook(CONV.ctx.b),i=CONV.ctx.p-1;content+=`\n\nالنص المطلوب (المرجع [[${b.id}:${i+1}]] — ${b.title}${PL(b,i)?"، "+PL(b,i):""}):\n«${plain(b.pages[i]).slice(0,6000)}»`}catch(e){}}
- const um={role:"user",content,display:text};CONV.messages.push(um);addMsg(um);ta.value="";if(!CONV.title)CONV.title=text.slice(0,70);
- const out=addMsg({role:"assistant",content:""});out.innerHTML='<span class="mut">يفكر…</span>';
- const st=$("#ast"),stop=$("#astop"),send=$("#asend");ASKCTL=new AbortController();stop.hidden=false;send.disabled=true;st.textContent="";
+ const um={role:"user",content,display:text};CONV.messages.push(um);addMsg(um);ta.value="";ta.style.height="";if(!CONV.title)CONV.title=text.slice(0,70);
+ const out=addMsg({role:"assistant",content:""});out.innerHTML=`<div class="think"><span class="dots"><i></i><i></i><i></i></span><span class="tl">${AISTEPS[0]}</span></div>`;out.scrollIntoView({behavior:"smooth",block:"center"});
+ const st=$("#ast"),stop=$("#astop"),send=$("#asend");ASKCTL=new AbortController();stop.hidden=false;send.hidden=true;st.textContent="";
+ let k=0,live=false;const tick=setInterval(()=>{const tl=out.querySelector(".tl");if(tl&&k<AISTEPS.length-1)tl.textContent=AISTEPS[++k]},4000);
+ const status=t=>{const tl=out.querySelector(".tl");if(tl)tl.textContent=t;else st.textContent=t};
  const turns=CONV.messages.slice(-10).map(m=>({role:m.role,content:m.content}));while(turns.length&&turns[0].role!=="user")turns.shift();
- try{const ans=await AI.ask({turns,mode:CONV.mode,col:CONV.col,bookId:CONV.bookId,signal:ASKCTL.signal,onText:t=>{out.innerHTML=md(t)},onStatus:t=>{st.textContent=t}});
-  const am={role:"assistant",content:ans};CONV.messages.push(am);out.replaceWith(addMsg(am));await Chats.save(CONV)}
- catch(e){const part=e&&e.text;if(part){const am={role:"assistant",content:part+"\n\n(انقطعت الإجابة)"};CONV.messages.push(am);out.innerHTML=md(am.content)}
+ const o={turns,mode:CONV.mode,col:CONV.col,bookId:CONV.bookId,signal:ASKCTL.signal,onStatus:status,
+  onText:t=>{if(!t.trim())return;live=true;clearInterval(tick);st.textContent="";out.innerHTML=md(aiSplit(t).body)+'<span class="caret"></span>'}};
+ try{const ans=await AI.ask(o);const am={role:"assistant",content:ans||"لم تصل إجابة، أعد المحاولة.",searches:o.searches||[]};CONV.messages.push(am);out.classList.add("done");fillAnswer(out,am);await Chats.save(CONV)}
+ catch(e){const part=e&&e.text;if(part){const am={role:"assistant",content:part+"\n\n(انقطعت الإجابة)"};CONV.messages.push(am);fillAnswer(out,am)}
   else if(e&&e.code==="cancelled")out.innerHTML='<span class="mut">أُوقفت الإجابة.</span>';
   else out.innerHTML=`<span class="mut">${esc((e&&(AIERR[e.code]||e.message))||"تعذرت الإجابة، حاول مرة أخرى.")}</span>`}
- finally{ASKCTL=null;stop.hidden=true;send.disabled=false;st.textContent=""}}
+ finally{clearInterval(tick);ASKCTL=null;stop.hidden=true;send.hidden=false;st.textContent=""}}
 
 /* ---------- الإدارة ---------- */
 const IMPORT_LIST=["https://salafvoice.com/article.aspx?a=25750","https://salafvoice.com/article.aspx?a=25749","https://salafvoice.com/article.aspx?a=25748","https://salafvoice.com/article.aspx?a=25747","https://salafvoice.com/article.aspx?a=25746","https://salafvoice.com/article.aspx?a=25745","https://salafvoice.com/article.aspx?a=25744","https://salafvoice.com/article.aspx?a=25743","https://salafvoice.com/article.aspx?a=25742","https://salafvoice.com/article.aspx?a=25741","https://salafvoice.com/article.aspx?a=22854","https://salafvoice.com/article.aspx?a=22910","https://salafvoice.com/article.aspx?a=22875","https://salafvoice.com/article.aspx?a=22902"];
@@ -908,7 +954,8 @@ const SECS=[
  {h:"#/",n:"الرئيسية",i:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',is:(p)=>!p[0]},
  {h:"#/library?c=dawah",n:"كتب الدعوة",i:'<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',is:(p,q)=>p[0]==="library"&&q.c==="dawah"},
  {h:"#/library?c=turath",n:"كتب التراث",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
- {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"}];
+ {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"},
+ {h:"#/ask",n:"المساعد",i:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',is:(p)=>p[0]==="ask"||p[0]==="ai"}];
 const Pager={idx:-1,dir:0,t:null,
  reduce:()=>matchMedia("(prefers-reduced-motion: reduce)").matches,
  at(){const{p,q}=parse();return SECS.findIndex(x=>x.is(p,q))},
@@ -953,7 +1000,7 @@ function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();$("#selq").hidden=tru
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="post")return vPost(p[1]);if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
- if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);vHome()}
+ if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);vHome()}
 window.addEventListener("hashchange",route);
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  if(w&&!el){if(String(getSelection()).trim())return;return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
@@ -962,7 +1009,10 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="toc")tocSheet();else if(a==="goto")gotoSheet();else if(a==="more")moreSheet();else if(a==="prev")turn(-1);else if(a==="next")turn(1);
  else if(a==="full")setFull(!S.full);
  else if(/^p(like|save|comm|copy|share|imgq|more|menu|delc|link|native|del)$/.test(a))postAct(a,el);
- else if(a==="feedMore")feedMore();else if(a==="corr")corrDlg();else if(a==="corrok"||a==="corrno")corrDecide(el);
+ else if(a==="feedMore")feedMore();
+ else if(a==="aisvc"){const sv=AISVC.find(x=>x[0]===el.dataset.m);CONV.mode=sv[0];$("#am").value=sv[0];$$("[data-act=aisvc]").forEach(b=>b.setAttribute("aria-pressed",b===el));const ta=$("[name=m]");if(sv[3]&&!ta.value.trim())ta.value=sv[3];if(sv[0]==="summarize"||sv[0]==="quiz")pickBook();else{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);ta.scrollIntoView({behavior:"smooth",block:"center"})}}
+ else if(a==="aiex"||a==="aifollow"){const ta=$("[name=m]");if(!ta)return;ta.value=el.textContent;if(a==="aiex"){const m=/^اجمع/.test(ta.value)?"gather":/^قارن/.test(ta.value)?"compare":/منهج/.test(ta.value)?"plan":/^لخ/.test(ta.value)?"summarize":/كيف أنظ/.test(ta.value)?"solve":"ask";CONV.mode=m;$("#am").value=m}ta.form.requestSubmit()}
+ else if(a==="aipick"){closeSheet();setBookScope(el.dataset.id);const ta=$("[name=m]");if(ta){const b=B(el.dataset.id);if(/^(لخّص كتاب|اختبرني في)\s*:?\s*$/.test(ta.value.trim())||!ta.value.trim())ta.value=(CONV.mode==="quiz"?"اختبرني في كتاب «":CONV.mode==="summarize"?"لخّص كتاب «":"«")+b.title+"»";ta.focus()}}else if(a==="corr")corrDlg();else if(a==="corrok"||a==="corrno")corrDecide(el);
  else if(a==="ghout"){GH.token="";toast("خرجت من وضع الإدارة المباشرة.");route()}
  else if(a==="pview"){S.pv=nextPv(S.pv&&S.pv!=="text"?(matchMedia("(min-width:1000px)").matches?S.pv:"pdf"):"text");saveS();route()}
  else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
