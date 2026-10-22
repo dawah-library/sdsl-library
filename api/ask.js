@@ -104,7 +104,8 @@ async function runAnthropic({ system, msgs, deep, maxRounds, budget, t0, send, t
 const gTools = () => [{ functionDeclarations: S.TOOLS.map(t => ({ name: t.name, description: t.description, parameters: clean(t.input_schema) })) }];
 function clean(sc) { const o = JSON.parse(JSON.stringify(sc)); (function f(x) { if (x && typeof x === "object") { if (Array.isArray(x.enum)) { x.enum = x.enum.filter(v => v !== ""); if (!x.enum.length) delete x.enum; } Object.values(x).forEach(f); } })(o); if (o.properties && !Object.keys(o.properties).length) delete o.properties; return o; }
 async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, toolLabel, runOne, used }) {
-  const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
+  const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+  let model = models.shift();
   const contents = msgs.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   for (let round = 0; round < maxRounds; round++) {
     const last = round === maxRounds - 1 || Date.now() - t0 > budget * 0.6;
@@ -113,8 +114,10 @@ async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, tool
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, tools: last ? undefined : gTools(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
     });
     if (!r.ok || !r.body) {
-      const t = await r.text(); console.error("gemini", r.status, t.slice(0, 500));
-      send({ t: "error", code: r.status === 429 ? "quota" : "server", v: r.status === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل أو غدًا." : "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return true;
+      const t = await r.text(); console.error("gemini", model, r.status, t.slice(0, 500));
+      if ((r.status === 404 || r.status === 400 && /model/i.test(t)) && models.length) { model = models.shift(); round--; continue; }
+      let gm = ""; try { const e = JSON.parse(t).error || {}; gm = (e.status || "") + " " + String(e.message || "").slice(0, 160); } catch (x) { gm = t.slice(0, 160); }
+      send({ t: "error", code: r.status === 429 ? "quota" : "server", detail: "Gemini " + r.status + " " + gm.trim(), v: r.status === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل أو غدًا." : r.status === 401 || r.status === 403 ? "مفتاح Gemini غير مقبول." : "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return true;
     }
     const parts = []; let buf = ""; const dec = new TextDecoder();
     for await (const chunk of r.body) {

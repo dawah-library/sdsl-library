@@ -583,12 +583,12 @@ const AI={s:undefined,
  async sample(){if(this.s!==undefined)return this.s;try{this.s=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){this.s=null}return this.s},
  scopeLine(o){return o.bookId?"\nنطاق البحث: كتاب واحد معرفه "+o.bookId+" ("+((B(o.bookId)||{}).title||"")+").":o.col?"\nنطاق البحث: "+(o.col==="turath"?"كتب التراث فقط.":"كتب مشايخ الدعوة السلفية ومقالاتهم فقط."):""},
  async ask(o){const s=await this.sample();if(s)return this.viaSample(s,o);
-  try{return await this.viaServer(o)}catch(e){if(e&&(e.code==="nokey"||e.code==="quota"))return this.viaLocal(o,e.code);throw e}},
+  try{return await this.viaServer(o)}catch(e){if(e&&(e.code==="nokey"||e.code==="quota"||e.code==="fallback"))return this.viaLocal(o,e.code,e.reason);throw e}},
  // البحث المجاني: يعمل في المتصفح دون أي خادم أو تكلفة، ويعرض نصوص المكتبة المطابقة مرتبة بالكتب
- async viaLocal(o,why){o.onStatus("يبحث في نصوص المكتبة…");await this.ensure(o);
+ async viaLocal(o,why,reason){o.onStatus("يبحث في نصوص المكتبة…");await this.ensure(o);
   const q=o.turns[o.turns.length-1].content.split("\n\nالنص المطلوب")[0].replace(/^(اكتب بحثًا علميًا عن|قارن بين الأقوال في مسألة|اجمع ما ورد في المكتبة عن|لخّص كتاب|اشرح هذا النص|أريد أن أناقش|ضع لي منهجًا لدراسة|اختبرني في|عندي مشكلة)\s*:?/,"");
   const wide=/research|gather|compare|summarize/.test(o.mode),hits=SS.search(lib,q,{col:o.col,bookId:o.bookId,k:wide?24:12,max:wide?600:800});o.searches=[q.trim()];
-  const head=why==="quota"?"نفدت الحصة المجانية للمساعد الذكي مؤقتًا، فهذه نتائج **البحث المباشر** في نصوص المكتبة:":"هذه نتائج **البحث المجاني** في نصوص المكتبة (دون ذكاء اصطناعي)، مرتبة حسب الكتب:";
+  const head=why==="fallback"?`تعذر الوصول إلى المساعد الذكي الآن${reason?" — "+reason:""}، فهذه نتائج **البحث المباشر** في نصوص المكتبة:`:why==="quota"?"نفدت الحصة المجانية للمساعد الذكي مؤقتًا، فهذه نتائج **البحث المباشر** في نصوص المكتبة:":"هذه نتائج **البحث المجاني** في نصوص المكتبة (دون ذكاء اصطناعي)، مرتبة حسب الكتب:";
   let t;if(!hits.length)t=`لم أجد في نصوص المكتبة ما يطابق «${q.trim()}». جرّب كلمات أقل أو مرادفات أو لفظ الحديث نفسه.`;
   else{const g=new Map();hits.forEach(h=>{const k=h.book+" — "+h.author;if(!g.has(k))g.set(k,[]);g.get(k).push(h)});
    t=head+`\n\nوُجد ${toAr(hits.length)} موضعًا في ${toAr(g.size)} ${g.size>2&&g.size<11?"مصادر":"مصدرًا"}.\n`+[...g].map(([k,l])=>`\n## ${k}\n`+l.map(h=>`- «${h.text.replace(/\s+/g," ").trim()}» [[${h.ref}]]`).join("\n")).join("\n")}
@@ -615,8 +615,8 @@ const AI={s:undefined,
   try{for(;;){const {value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let nl;
    while((nl=buf.indexOf("\n"))>=0){const line=buf.slice(0,nl).trim();buf=buf.slice(nl+1);if(!line)continue;let ev;try{ev=JSON.parse(line)}catch(e){continue}
     if(ev.t==="text"){acc+=ev.v;o.onText(acc)}else if(ev.t==="reset"){if(acc.trim())o.onStatus(acc.trim().split("\n").pop().slice(0,140));acc=""}
-    else if(ev.t==="status")o.onStatus(ev.v);else if(ev.t==="done")o.searches=ev.searches||[];else if(ev.t==="error"){err=ev.v;if(ev.code==="quota"&&!acc.trim())throw{code:"quota"}}}}}
-  catch(e){if(e&&e.code==="quota")throw e;if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
+    else if(ev.t==="status")o.onStatus(ev.v);else if(ev.t==="done")o.searches=ev.searches||[];else if(ev.t==="error"){err=ev.v;if(!acc.trim())throw{code:ev.code==="quota"?"quota":"fallback",reason:ev.v+(ev.detail?" ("+ev.detail+")":"")}}}}}
+  catch(e){if(e&&(e.code==="quota"||e.code==="fallback"))throw e;if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
   if(err){if(acc)throw{text:acc};throw{code:"server",message:err}}return acc}};
 const AIERR={not_granted:"لم يُسمح لهذه الصفحة باستخدام الذكاء الاصطناعي.",sampling_disabled:"الذكاء الاصطناعي غير متاح لهذا الحساب.",rate_limited:"كثرت الأسئلة، انتظر قليلًا ثم أعد المحاولة.",refused:"تعذرت الإجابة عن هذا السؤال، أعد صياغته.",prompt_too_large:"المحادثة طويلة، ابدأ محادثة جديدة.",session_expired:"انتهت الجلسة، سجّل الدخول من جديد."};
 function md(t){const lines=esc(t).split("\n");let h="",inList=false;
