@@ -1,10 +1,17 @@
 {
- "next": 1,
+ "next": 49,
  "perRun": 150,
  "maxMisses": 60,
  "delayMs": 1500,
  "latestHint": 25750,
- "imported": 0,
- "lastRun": "2026-10-22T16:05:36.855Z",
- "newAuthors": []
+ "imported": 40,
+ "lastRun": "2026-10-22T16:08:35.407Z",
+ "newAuthors": [
+  "سعيد السواح",
+  "محمد الباز",
+  "عبد المنعم الشحات",
+  "أحمد عبد الحميد",
+  "مصطفى دياب"
+ ],
+ "lastSeen": 48
 }
