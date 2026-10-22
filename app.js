@@ -335,7 +335,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
   <button data-act="qhint">صمّم قبسة</button>
   ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
   <button data-act="share">مشاركة الرابط</button>
-  ${S.admin||GH.on?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}
+  ${S.admin||GH.on?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button>':""}
  </div>
  <p class="mut" style="margin-top:12px">${esc(b.title)} — ${esc(A(b.authorId).name)}${b.source?"<br>"+esc(b.source):""}${b.license?"<br>"+esc(b.license):""}</p>`)}
 function setFull(on){S.full=on;saveS();document.body.classList.toggle("reading-full",on&&document.body.classList.contains("reading"));
@@ -705,6 +705,62 @@ async function askSubmit(f){const ta=f.querySelector("[name=m]"),text=ta.value.t
   else out.innerHTML=`<span class="mut">${esc((e&&(AIERR[e.code]||e.message))||"تعذرت الإجابة، حاول مرة أخرى.")}</span>`}
  finally{clearInterval(tick);ASKCTL=null;stop.hidden=true;send.hidden=false;st.textContent=""}}
 
+/* ---------- إدارة البنية: أسماء الأقسام والتقسيم الموضوعي والمؤلفون وبيانات الكتب ---------- */
+const NAVDEF=[...document.querySelectorAll("header nav a")].map(a=>[a.getAttribute("href"),a.textContent]);
+function applyLabels(){const L=CAT.labels||{};if(L.col_dawah)COL.dawah=L.col_dawah;if(L.col_turath)COL.turath=L.col_turath;
+ $$("header nav a").forEach(a=>{const k="nav:"+a.getAttribute("href");if(L[k])a.textContent=L[k]});
+ const adm=$('header nav a[href="#/admin"]');if(adm)adm.style.display=(GH.on||Cloud.staff()||S.admin)?"":"none"}
+const isAdmin=()=>GH.on||Cloud.staff();
+const needGH=()=>GH.on?"":`<p class="note">الحفظ للجميع يحتاج تفعيل «الإدارة المباشرة» على هذا الجهاز (مفتاح المشرف أعلى الصفحة).</p>`;
+const tCount=id=>lib.books.filter(b=>b.topicId===id&&!VOL2(b)).length;
+function topicRows(list,kind){return list.map(t=>{const n=tCount(t.id);return`<div class="trow" data-id="${esc(t.id)}" data-kind="${kind}"><input class="tn" value="${esc(t.name)}" aria-label="اسم القسم">${kind==="articles"?`<input class="tp" value="${esc(t.parent||"")}" placeholder="القسم الأعلى (اختياري)" aria-label="القسم الأعلى">`:""}<span class="mut tc">${toAr(n)}</span><button type="button" class="btn s" data-act="tup" aria-label="أعلى">▲</button><button type="button" class="btn s" data-act="tdown" aria-label="أسفل">▼</button><button type="button" class="btn s" data-act="tdel"${n?' disabled title="انقل ما فيه أولًا"':""}>حذف</button></div>`}).join("")}
+function structBody(){const L=CAT.labels||{};
+ return`${needGH()}<form data-form="struct">
+ <h3>الأقسام الرئيسية</h3><div class="row"><div><label>اسم مكتبة الدعوة</label><input name="col_dawah" value="${esc(COL.dawah)}"></div><div><label>اسم مكتبة التراث</label><input name="col_turath" value="${esc(COL.turath)}"></div></div>
+ <details><summary>أسماء روابط القائمة العليا</summary><div class="navl">${NAVDEF.map(([h,t])=>`<label>${esc(t)}</label><input name="nav:${esc(h)}" value="${esc(L["nav:"+h]||t)}">`).join("")}</div></details>
+ <h3>التقسيم الموضوعي للكتب</h3><p class="mut">غيّر الأسماء، ورتّبها بالأسهم، واحذف الفارغ منها. الرقم عدد الكتب في القسم.</p>
+ <div class="tlist" id="tl-books">${topicRows(lib.topics.filter(t=>t.for!=="articles"),"books")}</div><button type="button" class="btn s" data-act="tadd" data-kind="books">+ قسم جديد للكتب</button>
+ <h3>تصنيفات المقالات والفتاوى</h3>
+ <div class="tlist" id="tl-articles">${topicRows(lib.topics.filter(t=>t.for==="articles"),"articles")}</div><button type="button" class="btn s" data-act="tadd" data-kind="articles">+ تصنيف جديد للمقالات</button>
+ <div class="savebar"><button class="btn p">حفظ الأقسام والأسماء</button><span id="structst" class="mut" role="status"></span></div></form>
+ <h3>المؤلفون</h3><form data-form="authedit"><label>اختر المؤلف</label><select name="id" id="aesel"><option value="">— اختر —</option>${[...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")).map(a=>`<option value="${a.id}">${esc(a.name)} (${a.col==="turath"?"تراث":"الدعوة"})</option>`).join("")}</select>
+ <div id="aefields" hidden><div class="row"><div><label>الاسم</label><input name="name"></div><div><label>سنة الوفاة (هـ، للمتوفين)</label><input name="died" type="number"></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="turath">${esc(COL.turath)}</option></select></div></div>
+ <label>نبذة مختصرة</label><textarea name="bio" style="min-height:90px"></textarea><button class="btn p" style="margin-top:8px">حفظ بيانات المؤلف</button> <span id="aest" class="mut"></span></div></form>`}
+function wireStruct(){const sel=$("#aesel");if(!sel)return;sel.onchange=()=>{const a=lib.authors.find(x=>x.id===sel.value),f=sel.form,box=$("#aefields");box.hidden=!a;if(!a)return;f.name.value=a.name;f.died.value=a.died||"";f.col.value=a.col||"dawah";f.bio.value=a.bio||""}}
+async function saveStruct(f){const st=$("#structst"),btn=f.querySelector(".savebar .btn");if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
+ const fd=new FormData(f),labels={};["col_dawah","col_turath"].forEach(k=>{const v=String(fd.get(k)||"").trim();if(v)labels[k]=v});
+ NAVDEF.forEach(([h,t])=>{const v=String(fd.get("nav:"+h)||"").trim();if(v&&v!==t)labels["nav:"+h]=v});
+ const rows=kind=>[...$$("#tl-"+kind+" .trow")].map(r=>({id:r.dataset.id,name:r.querySelector(".tn").value.trim(),parent:r.querySelector(".tp")?r.querySelector(".tp").value.trim():undefined})).filter(x=>x.name);
+ const B=rows("books"),Ar=rows("articles");btn.disabled=true;st.textContent="جارٍ الحفظ…";
+ const apply=c=>{const old=new Map((c.topics||[]).map(t=>[t.id,t]));const mk=(x,kind)=>{const t=Object.assign({},old.get(x.id)||{id:x.id,for:kind},{name:x.name});if(kind==="articles"){if(x.parent)t.parent=x.parent;else delete t.parent}return t};
+  c.topics=B.map(x=>mk(x,"books")).concat(Ar.map(x=>mk(x,"articles")));c.labels=Object.assign({},c.labels||{},labels);
+  Object.keys(c.labels).forEach(k=>{if(k.startsWith("nav:")&&!labels[k])delete c.labels[k]});c.version=Date.now();return c};
+ try{await GH.editJSON("data/catalog.json",apply,"تعديل الأقسام والأسماء من صفحة الإدارة",true);apply(CAT);merge();applyLabels();renderTicker();toast("حُفظت الأقسام والأسماء، وتظهر للجميع خلال دقيقة.");vAdmin({t:"struct"})}
+ catch(e){st.textContent=e.message;btn.disabled=false}}
+async function saveAuthor(f){const st=$("#aest"),fd=new FormData(f),id=fd.get("id");if(!id)return;if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
+ const up={name:String(fd.get("name")).trim(),col:fd.get("col"),bio:String(fd.get("bio")||"").trim()},d=+fd.get("died");st.textContent="جارٍ الحفظ…";
+ const apply=c=>{const a=c.authors.find(x=>x.id===id);if(!a)throw new Error("المؤلف غير موجود في الفهرس المنشور (ربما أُضيف على هذا الجهاز فقط).");Object.assign(a,up);if(d)a.died=d;else delete a.died;c.version=Date.now();return c};
+ try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات مؤلف: "+up.name,true);try{apply(CAT)}catch(e){}merge();st.textContent="✓ حُفظ.";toast("حُفظت بيانات المؤلف")}catch(e){st.textContent=e.message}}
+/* بيانات الكتاب من القارئ */
+function metaDlg(){const c=cur();if(!c)return;closeSheet();const b=c.b;if(isArt(b)&&b.f)return alert("تعديل بيانات المقالات المستوردة يأتي لاحقًا؛ يمكنك تعديل نصها من «تعديل النص».");
+ const tags=b.tags||[],o=(arr,v)=>arr.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
+ openDlg(`<h3>بيانات الكتاب</h3>${needGH()}<form data-form="bookmeta" data-id="${b.id}"><label>العنوان</label><input name="title" value="${esc(b.set?b.setTitle||b.title:b.title)}">
+ <div class="row"><div><label>المؤلف</label><select name="aid">${o([...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")),b.authorId)}</select></div><div><label>القسم</label><select name="col"><option value="dawah"${bc(b)==="dawah"?" selected":""}>${esc(COL.dawah)}</option><option value="turath"${bc(b)==="turath"?" selected":""}>${esc(COL.turath)}</option></select></div><div><label>الموضوع</label><select name="tid">${o(lib.topics.filter(t=>t.for!=="articles"),b.topicId)}</select></div></div>
+ <label>بيانات الطبعة أو المصدر</label><input name="source" value="${esc(b.source||"")}">
+ <fieldset class="secs"><legend>يظهر أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"${tags.includes("tafrigh")?" checked":""}> التفريغات</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"${tags.includes("furqan:"+n)?" checked":""}> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
+ ${b.set?`<p class="mut">يُطبَّق التعديل على مجلدات الكتاب كلها (${toAr(b.vols)}).</p>`:""}
+ <div class="row" style="margin-top:8px"><button class="btn p nf">حفظ</button><button type="button" class="btn nf danger" data-act="bookdel" data-id="${b.id}">حذف الكتاب من المكتبة</button></div><p id="bmst" class="mut"></p></form>`)}
+async function saveBookMeta(f){const st=$("#bmst"),fd=new FormData(f),id=f.dataset.id,b=B(id);if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا من صفحة الإدارة.";return}
+ const tags=(b.tags||[]).filter(t=>t!=="tafrigh"&&!t.startsWith("furqan:"));if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
+ const title=String(fd.get("title")).trim(),up={authorId:fd.get("aid"),col:fd.get("col"),topicId:fd.get("tid"),source:String(fd.get("source")||"").trim(),tags};
+ const ids=b.set?lib.books.filter(x=>x.set===b.set).map(x=>x.id):[id];st.textContent="جارٍ الحفظ…";
+ const apply=c=>{let n=0;c.books.forEach(x=>{if(!ids.includes(x.id))return;n++;Object.assign(x,up);if(!x.tags.length)delete x.tags;if(x.set){x.setTitle=title;x.title=title+" — ج "+x.vol}else x.title=title});if(!n)throw new Error("الكتاب غير موجود في الفهرس المنشور.");c.version=Date.now();return c};
+ try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات كتاب: "+title,true);apply(CAT);merge();dlg().close();toast("حُفظت بيانات الكتاب، وتظهر للجميع خلال دقيقة.");route()}catch(e){st.textContent=e.message}}
+async function deleteBook(id){const b=B(id);if(!b||!GH.on)return alert("فعّل الإدارة المباشرة أولًا.");
+ const ids=b.set?lib.books.filter(x=>x.set===b.set).map(x=>x.id):[id];if(!confirm(`حذف «${b.setTitle||b.title}»${ids.length>1?" بمجلداته ("+toAr(ids.length)+")":""} من المكتبة؟ يُحذف من الفهرس فيختفي من الموقع.`))return;
+ const apply=c=>{c.books=c.books.filter(x=>!ids.includes(x.id));c.version=Date.now();return c};
+ try{await GH.editJSON("data/catalog.json",apply,"حذف كتاب: "+(b.setTitle||b.title),true);apply(CAT);merge();dlg().close();renderTicker();toast("حُذف الكتاب.");location.hash="#/library?c="+bc(b)}catch(e){alert(e.message)}}
+
 /* ---------- الإدارة ---------- */
 const IMPORT_LIST=["https://salafvoice.com/article.aspx?a=25750","https://salafvoice.com/article.aspx?a=25749","https://salafvoice.com/article.aspx?a=25748","https://salafvoice.com/article.aspx?a=25747","https://salafvoice.com/article.aspx?a=25746","https://salafvoice.com/article.aspx?a=25745","https://salafvoice.com/article.aspx?a=25744","https://salafvoice.com/article.aspx?a=25743","https://salafvoice.com/article.aspx?a=25742","https://salafvoice.com/article.aspx?a=25741","https://salafvoice.com/article.aspx?a=22854","https://salafvoice.com/article.aspx?a=22910","https://salafvoice.com/article.aspx?a=22875","https://salafvoice.com/article.aspx?a=22902"];
 function ghBox(){return GH.on?`<div class="ghbox on"><b>✓ وضع الإدارة المباشرة مفعّل</b><p>كل ما تضيفه أو تصححه يُحفظ في المكتبة مباشرة، ويظهر للجميع خلال دقيقة تقريبًا.</p><button class="btn s" data-act="ghout">خروج من هذا الجهاز</button></div>`
@@ -739,7 +795,7 @@ async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=St
   f.reset()}catch(e){st.textContent=e.message}}
 
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(Cloud.staff()?[["corr","تصحيحات القراء"]]:[]);
+ const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -773,6 +829,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  else if(tab==="update")body=`<p class="mut">كل ما تضيفه أو تعدّله هنا يُحفظ على هذا الجهاز. لنشره للجميع: نزّل «ملف التحديث» وارفعه إلى مجلد <code>updates</code> في مستودع GitHub، فيدمجه الموقع تلقائيًا ويُعاد نشره (التفاصيل في دليل التفعيل).</p>
   <div class="row"><button class="btn p nf" data-act="expUpd">تنزيل ملف التحديث</button><label class="btn nf" style="margin:0">استيراد ملف تحديث<input type="file" id="impf" accept=".json" hidden></label></div>
   <h3>المضاف والمعدَّل على هذا الجهاز</h3>${LOCAL.catalog.books.map(b=>`<div class="bk"><b>${esc(b.title||b.id)}</b><span>${isArt(b)?"مقال":"كتاب"}${b.edited?" • معدَّل "+b.edited:""}</span> <button class="btn s" data-act="delb" data-id="${b.id}">حذف من الجهاز</button></div>`).join("")||'<p class="mut">لا يوجد.</p>'}`;
+ else if(tab==="struct")body=structBody();
  else if(tab==="corr")body=`<p class="mut">تصحيحات أرسلها القراء. راجع النص المقترح وعدّله إن لزم، ثم اعتمده فيُنشر مباشرة (يحتاج مفتاح الإدارة المباشرة).</p><div id="corrs"><p class="mut">جارٍ التحميل…</p></div>`;
  else body=`<p class="mut">نزّل نصوص المكتبة كلها على هذا الجهاز لتعمل دون إنترنت، وتتحدث تلقائيًا عند الاتصال. الحجم الكلي نحو ${Math.round(lib.books.reduce((s,b)=>s+(b.size||0),0)/1048576)} ميجابايت.</p><button class="btn p" data-act="offline">تنزيل المكتبة للعمل دون إنترنت</button><div id="offst"></div>`;
  view(`<h2>الإدارة</h2>${ghBox()}<label class="inl"><input type="checkbox" id="adm"${S.admin?" checked":""}> وضع الإدارة (يظهر زر «تعديل النص» في القارئ)</label>
@@ -780,7 +837,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  <p class="note">${GH.on?"أنت في وضع الإدارة المباشرة: احذر، فالتعديلات تُنشر للجميع.":"بدون مفتاح المشرف لا يستطيع أحد تغيير المكتبة المنشورة من هذه الصفحة؛ ما يُضاف يبقى على هذا الجهاز حتى يُرفع ملف التحديث."}</p>`);
  $("#adm").onchange=e=>{S.admin=e.target.checked;saveS()};
  const impf=$("#impf");if(impf)impf.onchange=async e=>{try{await applyUpdate(JSON.parse(await e.target.files[0].text()));alert("تم الاستيراد");route()}catch(x){alert("ملف غير صالح")}};
- const ig=$("#impgo");if(ig)ig.onclick=importArticles;if(tab==="corr"&&Cloud.staff())corrList()}
+ const ig=$("#impgo");if(ig)ig.onclick=importArticles;if(tab==="corr"&&Cloud.staff())corrList();if(tab==="struct")wireStruct()}
 async function newAuthor(fd,key,col){let aid=fd.get(key);if(aid!=="__new")return aid;const n=String(fd.get(key+"new")||"").trim();if(!n)throw new Error("اكتب اسم المؤلف الجديد");
  const ex=lib.authors.find(a=>norm(a.name)===norm(n));if(ex)return ex.id;aid="u_a"+Date.now().toString(36);const au={id:aid,name:n,col:col||"dawah",bio:""};if(GH.on)await ghSaveAuthor(au);else LOCAL.catalog.authors.push(au);return aid}
 function splitPages(t,mode,size){t=t.replace(/\r/g,"").trim();if(mode==="mark")return t.split(/\n-{3,}\n|\f/).map(x=>x.trim()).filter(Boolean);
@@ -867,7 +924,8 @@ const actPosts=()=>lib.books.filter(b=>!b.demo&&bc(b)==="dawah").map(b=>({id:"ac
 const findPost=id=>(POSTS||[]).find(x=>x.id===id)||(/^act-/.test(id)?actPosts().find(x=>x.id===id):null);
 const pName=x=>x.authorId?A(x.authorId).name:(x.name||"مكتبة الدعوة السلفية الرقمية");
 const Cloud={role:"member",on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
- async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;try{const {data}=await Auth.sb.from("profiles").select("role").eq("id",Auth.user.id).maybeSingle();if(data&&data.role)this.role=data.role}catch(e){}}};
+ async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;try{const {data}=await Auth.sb.from("profiles").select("role").eq("id",Auth.user.id).maybeSingle();if(data&&data.role)this.role=data.role}catch(e){}
+  if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}}};
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
  async state(ids){const out={stats:{},likes:new Set(),saves:new Set()};if(!ids.length)return out;
@@ -1022,7 +1080,7 @@ function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||"
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
-function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
+function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();applyLabels();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="post")return vPost(p[1]);if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
@@ -1036,6 +1094,10 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="full")setFull(!S.full);
  else if(/^p(like|save|comm|copy|share|imgq|more|menu|delc|link|native|del)$/.test(a))postAct(a,el);
  else if(a==="feedMore")feedMore();
+ else if(a==="bookmeta")metaDlg();else if(a==="bookdel")deleteBook(el.dataset.id);
+ else if(a==="tup"||a==="tdown"){const r=el.closest(".trow"),o=a==="tup"?r.previousElementSibling:r.nextElementSibling;if(o)a==="tup"?o.before(r):o.after(r)}
+ else if(a==="tdel"){const r=el.closest(".trow");if(confirm("حذف القسم «"+r.querySelector(".tn").value+"»؟ (يُحذف عند الحفظ)"))r.remove()}
+ else if(a==="tadd"){const k=el.dataset.kind,box=$("#tl-"+k);box.insertAdjacentHTML("beforeend",topicRows([{id:(k==="articles"?"at":"t")+Date.now().toString(36),name:""}],k));const n=box.lastElementChild.querySelector(".tn");n.placeholder="اسم القسم الجديد";n.focus()}
  else if(a==="aisvc"){const sv=AISVC.find(x=>x[0]===el.dataset.m);CONV.mode=sv[0];$("#am").value=sv[0];$$("[data-act=aisvc]").forEach(b=>b.setAttribute("aria-pressed",b===el));const ta=$("[name=m]");if(sv[3]&&!ta.value.trim())ta.value=sv[3];if(sv[0]==="summarize"||sv[0]==="quiz")pickBook();else{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);ta.scrollIntoView({behavior:"smooth",block:"center"})}}
  else if(a==="aiex"||a==="aifollow"){const ta=$("[name=m]");if(!ta)return;ta.value=el.textContent;if(a==="aiex"){const m=/^اجمع/.test(ta.value)?"gather":/^قارن/.test(ta.value)?"compare":/منهج/.test(ta.value)?"plan":/^لخ/.test(ta.value)?"summarize":/كيف أنظ/.test(ta.value)?"solve":"ask";CONV.mode=m;$("#am").value=m}ta.form.requestSubmit()}
  else if(a==="aipick"){closeSheet();setBookScope(el.dataset.id);const ta=$("[name=m]");if(ta){const b=B(el.dataset.id);if(/^(لخّص كتاب|اختبرني في)\s*:?\s*$/.test(ta.value.trim())||!ta.value.trim())ta.value=(CONV.mode==="quiz"?"اختبرني في كتاب «":CONV.mode==="summarize"?"لخّص كتاب «":"«")+b.title+"»";ta.focus()}}else if(a==="corr")corrDlg();else if(a==="corrok"||a==="corrno")corrDecide(el);
@@ -1061,6 +1123,7 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  else if(k==="artq"||k==="listq"){const s=qs(true);location.hash="#/"+(f.dataset.route||"articles")+(s?"?"+s:"")}
  else if(k==="pcomment"){const t=String(fd.get("t")||"").trim();if(!t)return;const btn=f.querySelector("button");btn.disabled=true;Social.comment(f.dataset.id,t).then(()=>openComments(f.closest(".post"))).catch(x=>{alert(x.message);btn.disabled=false})}
  else if(k==="corrsend")corrSend(f);
+ else if(k==="struct")saveStruct(f);else if(k==="authedit")saveAuthor(f);else if(k==="bookmeta")saveBookMeta(f);
  else if(k==="ghlogin")ghLogin(f);else if(k==="ghpdf")ghPdf(f);else if(k==="addpost")addPost(f);
  else if(k==="contact"){window.open(waLink(`${fd.get("k")} — من: ${fd.get("n")}\n\n${fd.get("m")}\n\n(مرسلة من مكتبة الدعوة السلفية الرقمية)`),"_blank","noopener")}
  else if(k==="goto"){closeSheet();location.hash=`#/book/${f.dataset.id}/${fd.get("p")}`}

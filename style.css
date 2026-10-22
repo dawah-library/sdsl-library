@@ -345,3 +345,7 @@ html,body{overflow-x:clip}
 .secs{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:10px 0}.secs legend{font-size:.85rem;padding:0 6px}.secs .inl{display:block;margin:4px 0}
 .volbar{margin-bottom:10px}.volbar .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;max-height:120px;overflow:auto}
 .fl.zero{opacity:.55}
+.trow{display:flex;gap:6px;align-items:center;margin:6px 0}.trow .tn{flex:2;min-width:0}.trow .tp{flex:1.4;min-width:0}.trow .tc{min-width:2em;text-align:center}.trow .btn{padding:4px 8px}
+.savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));background:var(--bg);padding:10px 0;display:flex;gap:10px;align-items:center;z-index:4}
+.navl{display:grid;grid-template-columns:1fr 1.4fr;gap:4px 10px;align-items:center;margin-top:8px}.navl label{margin:0;font-size:.85rem}
+.btn.danger{color:#b3261e;border-color:#e6b4b0}
