@@ -42,23 +42,33 @@ async function main() {
   if (!cat.topics.some(t => t.id === "at0")) cat.topics.push({ id: "at0", name: "غير مصنف", for: "articles" });
   if (!cat.topics.some(t => t.id === "at18")) cat.topics.push({ id: "at18", name: "فتاوى واستشارات", for: "articles" });
 
+  const LOG = []; const log = m => { console.log(m); LOG.push(m); };
   const authorId = name => {
     const b = bare(name || "صوت السلف"); if (!b) return "a8";
     const hit = cat.authors.find(a => (a.col || "dawah") === "dawah" && (bare(a.name) === b || bare(a.name).includes(b) || b.includes(bare(a.name))) && bare(a.name).length >= 4);
     if (hit) return hit.id;
     const id = "w" + (cat.authors.filter(a => /^w\d+$/.test(a.id)).length + 1);
     cat.authors.push({ id, name: name.trim(), col: "dawah", bio: "", auto: true });
-    st.newAuthors.push(name.trim()); console.log("  + كاتب جديد:", name.trim());
+    st.newAuthors.push(name.trim()); log("  + كاتب جديد: " + name.trim());
     return id;
   };
+  // الأقسام تطابق تقسيم صوت السلف: القسم الفرعي (الأخير في المسار) مع حفظ القسم الأب
+  const GENERIC = new Set(["المقالات الفرعية", "عام", "المقالات"].map(norm));
   const topicId = (category, title, text) => {
-    const c = norm(category || "");
-    for (const [w, id] of TOPIC_WORDS) if (c && c.includes(norm(w))) return id;
-    if (/^\s*(السؤال|سؤال)\s*:/.test(text) || /الجواب\s*:/.test(text.slice(0, 2000))) return "at18";
-    return "at0";
+    const parts = String(category || "").split("›").map(x => x.trim()).filter(x => x && !GENERIC.has(norm(x)));
+    if (/الاستفتاء|فتاوى|الفتاوى/.test(category || "") || /^\s*(السؤال|سؤال)\s*:/.test(text)) {
+      if (!parts.length) return "at18";
+    }
+    if (!parts.length) return "at0";
+    const leaf = parts[parts.length - 1], parent = parts.length > 1 ? parts[0] : "";
+    const hit = cat.topics.find(t => t.for === "articles" && norm(t.name) === norm(leaf));
+    if (hit) { if (parent && !hit.parent) hit.parent = parent; return hit.id; }
+    const id = "st" + (cat.topics.filter(t => /^st\d+$/.test(t.id)).length + 1);
+    cat.topics.push({ id, name: leaf, for: "articles", parent, auto: true });
+    log("  + قسم جديد: " + (parent ? parent + " › " : "") + leaf);
+    return id;
   };
 
-  const LOG = []; const log = m => { console.log(m); LOG.push(m); };
   let sampled = false;
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
   let got = 0, tried = 0, misses = 0, errs = 0, id = st.next;
@@ -79,7 +89,7 @@ async function main() {
         const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
         const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
         loadGroup(g)[sid] = { pages: text };
-        idx.items.push({ id: sid, t: a.title, a: authorId(a.author), tp: topicId(a.category, a.title, a.text), d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
+        idx.items.push({ id: sid, t: a.title, a: authorId(a.author), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
         have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
       }
     } catch (e) { log(`${id}: خطأ ${e.message}`); errs = (errs || 0) + 1; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); break; } }
