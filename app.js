@@ -541,7 +541,7 @@ const Auth={mode:"local",sb:null,user:null,token:null,
   this.user={id:"local:"+email.toLowerCase(),name,email};ls.set("acct",this.user);return "ok"},
  async signIn(email,pw){
   if(this.mode==="cloud"){const {error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;return}
-  const known=ls.get("acct_known",{})[email.toLowerCase()];if(!known)throw new Error("لا يوجد حساب بهذا البريد على هذا الجهاز. أنشئ حسابًا.");
+  const known=ls.get("acct_known",{})[email.toLowerCase()]||{id:"local:"+email.toLowerCase(),name:email.split("@")[0],email};
   this.user=known;ls.set("acct",known)},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
 function paintAuth(){const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
@@ -561,9 +561,7 @@ function vAccount(q){
  const signup=q.m==="signup",back=q.next||"#/ask",cloud=Auth.mode==="cloud";
  view(`<h2>${signup?"إنشاء حساب":"تسجيل الدخول"}</h2>
  <div class="perks"><b>مزايا الأعضاء</b><ul><li>«اسأل المكتبة»: مساعد بحثي يجيب من نصوص المكتبة ويحيل إلى الكتاب والصفحة.</li><li>إعداد بحث علمي موثق في أي مسألة.</li><li>شرح أي صفحة أو مقال بضغطة من القارئ.</li><li>حفظ محادثاتك والرجوع إليها من أي جهاز.</li></ul></div>
- <div class="oauth"><button data-oauth="google">${GICON} المتابعة بحساب Google</button><button class="apple" data-oauth="apple">المتابعة بحساب Apple</button></div>
- ${cloud?"":'<p class="mut" style="font-size:.8rem">الدخول بحساب Google وApple يعمل بعد ربط الموقع بقاعدة الحسابات (الخطوات في دليل التفعيل).</p>'}
- <div class="or">أو بالبريد الإلكتروني</div>
+ ${cloud?`<div class="oauth"><button data-oauth="google">${GICON} المتابعة بحساب Google</button><button class="apple" data-oauth="apple">المتابعة بحساب Apple</button></div><div class="or">أو بالبريد الإلكتروني</div>`:'<p class="note" style="margin:10px 0">أنشئ حسابك بالاسم والبريد فقط، ويعمل فورًا. (الدخول بحساب Google وApple يُفعَّل قريبًا.)</p>'}
  <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>الاسم</label><input name="name" required autocomplete="name">':""}
  <label>البريد الإلكتروني</label><input name="email" type="email" required autocomplete="email">
  ${cloud?`<label>كلمة المرور</label><input name="pw" type="password" minlength="8" required autocomplete="${signup?"new-password":"current-password"}">`:""}
