@@ -106,16 +106,18 @@ function clean(sc) { const o = JSON.parse(JSON.stringify(sc)); (function f(x) { 
 async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, toolLabel, runOne, used }) {
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   let model = models.shift();
+  let useQuery = false;
   const contents = msgs.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   for (let round = 0; round < maxRounds; round++) {
     const last = round === maxRounds - 1 || Date.now() - t0 > budget * 0.6;
-    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":streamGenerateContent?alt=sse", {
-      method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":streamGenerateContent?alt=sse" + (useQuery ? "&key=" + encodeURIComponent(process.env.GEMINI_API_KEY) : ""), {
+      method: "POST", headers: Object.assign({ "content-type": "application/json" }, useQuery ? {} : { "x-goog-api-key": process.env.GEMINI_API_KEY }),
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, tools: last ? undefined : gTools(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
     });
     if (!r.ok || !r.body) {
       const t = await r.text(); console.error("gemini", model, r.status, t.slice(0, 500));
       if ((r.status === 404 || r.status === 400 && /model/i.test(t)) && models.length) { model = models.shift(); round--; continue; }
+      if ((r.status === 401 || r.status === 403) && !useQuery) { useQuery = true; round--; continue; }
       let gm = ""; try { const e = JSON.parse(t).error || {}; gm = (e.status || "") + " " + String(e.message || "").slice(0, 160); } catch (x) { gm = t.slice(0, 160); }
       send({ t: "error", code: r.status === 429 ? "quota" : "server", detail: "Gemini " + r.status + " " + gm.trim(), v: r.status === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل أو غدًا." : r.status === 401 || r.status === 403 ? "مفتاح Gemini غير مقبول." : "تعذر الاتصال بخدمة الذكاء الاصطناعي." }); return true;
     }
@@ -150,6 +152,25 @@ async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, tool
 }
 
 module.exports = async (req, res) => {
+  // فحص سريع من المتصفح: /api/ask?check=1 (لا يكشف المفتاح)
+  if (req.method === "GET" && /check=1/.test(req.url || "")) {
+    const out = { provider: PROVIDER() || "none", gemini_key: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.slice(0, 3) + "… (" + process.env.GEMINI_API_KEY.length + ")" : "missing", anthropic_key: process.env.ANTHROPIC_API_KEY ? "set" : "missing", supabase: process.env.SUPABASE_URL ? "set" : "missing", tests: [] };
+    if (process.env.GEMINI_API_KEY) {
+      for (const m of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((x, i, a) => x && a.indexOf(x) === i)) {
+        for (const how of ["header", "query"]) {
+          try {
+            const u = "https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent" + (how === "query" ? "?key=" + encodeURIComponent(process.env.GEMINI_API_KEY) : "");
+            const r = await fetch(u, { method: "POST", headers: Object.assign({ "content-type": "application/json" }, how === "header" ? { "x-goog-api-key": process.env.GEMINI_API_KEY } : {}), body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "قل: نعم" }] }], generationConfig: { maxOutputTokens: 20 } }) });
+            const t = await r.text(); let msg = ""; try { const j = JSON.parse(t); msg = j.error ? (j.error.status + " " + j.error.message).slice(0, 200) : "OK: " + (((j.candidates || [])[0] || {}).content || { parts: [{}] }).parts.map(p => p.text || "").join("").slice(0, 40); } catch (e) { msg = t.slice(0, 200); }
+            out.tests.push({ model: m, auth: how, status: r.status, msg });
+            if (r.ok) break;
+          } catch (e) { out.tests.push({ model: m, auth: how, error: String(e.message || e) }); }
+        }
+        if (out.tests.some(t => t.status === 200)) break;
+      }
+    }
+    return res.status(200).json(out);
+  }
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
   const provider = PROVIDER();
   if (!provider) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
