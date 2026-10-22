@@ -49,7 +49,7 @@ const isStatement=b=>b.topicId==="at17"||/بيانات|(^|›\s*)بيان/.test(
 const isReadBook=b=>/^المكتبة المقروءة/.test(b.c||"");
 const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس صوتية/.test(b.source||"");
 const kindOf=b=>!isArt(b)||isReadBook(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
-const BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
+const VOL2=b=>!!(b.set&&b.vol>1),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
 const COL={dawah:"مكتبة الدعوة السلفية",turath:"تراث"};
 const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
 const PL=(b,i)=>SS.label(b,i);
@@ -57,14 +57,14 @@ async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجو
  let sh=LOCAL.shards[id]||SH.get(id)||(window.__SHARDS__&&window.__SHARDS__[id]);
  if(!sh&&b.f){let g=GROUPS.get(b.f);if(!g){g=(window.__GROUPS__&&window.__GROUPS__[b.f])||fetch("data/articles/"+encodeURIComponent(b.f)+".json").then(r=>{if(!r.ok)throw new Error("تعذر تحميل المقال");return r.json()});GROUPS.set(b.f,g)}
   const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[]}}
- if(!sh){const r=await fetch("data/books/"+encodeURIComponent(id)+".json");if(!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
+ if(!sh){const r=await fetch((b.vf?"vols/":"data/books/")+encodeURIComponent(id)+".json");if(!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
  SH.set(id,sh);attach(b,sh);return b}
 async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;let i=0;if(!n)return;
  const w=async()=>{while(q.length){const b=q.shift();try{await loadBook(b.id)}catch(e){}onP&&onP(++i,n)}};await Promise.all([w(),w(),w()])}
 
 /* ---------- عرض عام ---------- */
 const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered()};
-const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
+const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}" href="#/book/${b.id}/1"><b>${esc(b.set?b.setTitle||b.title:b.title)}</b><span>${b.set?`<em class="tag">${b.vols===2?"مجلدان":toAr(b.vols)+" "+(b.vols>2&&b.vols<11?"مجلدات":"مجلدًا")}</em> • `:""}<span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n&&!b.set?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
 const artCard=b=>`<a class="bk ar" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':isStatement(b)?' • <em class="tag">بيان</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
 const anyCard=b=>isArt(b)?artCard(b):bookCard(b);
 const progress=(el,i,n,label)=>{el.innerHTML=`<p class="mut">${label} (${toAr(i)} من ${toAr(n)})</p><div class="prog"><i style="width:${Math.round(i/n*100)}%"></i></div>`};
@@ -155,7 +155,7 @@ function vList(kind,q){const L=LISTS[kind],all=L.items();
 function vAuthors(){const g=(title,col)=>{const as=lib.authors.filter(a=>(a.col||"dawah")===col).map(a=>({a,c:counts(a.id)})).filter(x=>x.c.books||x.c.arts||x.c.fatwas||x.c.st||col==="dawah");
   return`<h2>${title}</h2><div class="grid">${as.map(({a})=>`<a class="card" href="#/author/${a.id}" data-author="${a.id}"><b>${esc(a.name)}</b><span>${a.died?`ت ${a.died}هـ • `:""}${countLine(a.id)}</span></a>`).join("")}</div>`};
  view(`<p class="mut" style="margin-top:14px">اضغط مطولًا على اسم أي مؤلف لترى تعريفه الموجز. <a href="#/tarajim">تراجم مشايخ الدعوة</a></p>`+g("مشايخ الدعوة السلفية والكتّاب","dawah")+g("علماء التراث","turath"))}
-function vAuthor(id,q){const a=A(id),mine=lib.books.filter(b=>b.authorId===id),byDate=l=>l.sort((x,y)=>(y.date||"").localeCompare(x.date||""));
+function vAuthor(id,q){const a=A(id),mine=lib.books.filter(b=>b.authorId===id&&!VOL2(b)),byDate=l=>l.sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  const T_={books:mine.filter(b=>kindOf(b)==="book"),articles:byDate(mine.filter(b=>kindOf(b)==="article")),fatawa:byDate(mine.filter(b=>kindOf(b)==="fatwa")),bayanat:byDate(mine.filter(b=>kindOf(b)==="statement")),tafrighat:mine.filter(isTranscript)};
  const NAMES={books:"الكتب",articles:"المقالات",fatawa:"الفتاوى",bayanat:"البيانات",tafrighat:"التفريغات"},ROUTE={articles:"articles",fatawa:"fatawa",bayanat:"bayanat"};
  const shown=Object.keys(T_).filter(k=>k==="books"||k==="articles"||T_[k].length);
@@ -223,7 +223,7 @@ function vFavs(){const l=lib.books.filter(b=>S.favs.includes(b.id));view(`<h2>ا
 
 /* ---------- البحث ---------- */
 async function vSearch(q){
- const f={q:q.q||"",mode:q.mode||"all",scope:q.scope||"all",a:q.a||"",t:q.t||"",ex:q.ex||"",c:q.c||"",k:q.k||""};
+ const f={q:q.q||"",mode:q.mode||"all",scope:q.scope||"all",a:q.a||"",t:q.t||"",ex:q.ex||"",big:q.big||"",c:q.c||"",k:q.k||""};
  const opt=(arr,v,all)=>`<option value="">${all}</option>`+arr.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
  const so=(v,l,c)=>`<option value="${v}"${c===v?" selected":""}>${l}</option>`;
  view(`<h2>البحث</h2><form data-form="search"><input name="q" type="search" value="${esc(f.q)}" placeholder="اكتب كلمة أو عبارة" aria-label="كلمات البحث">
@@ -231,12 +231,12 @@ async function vSearch(q){
  <div><label>النطاق</label><select name="scope">${so("all","العناوين والنصوص",f.scope)}${so("meta","العناوين والمؤلفون فقط",f.scope)}${so("text","النصوص فقط",f.scope)}</select></div>
  <div><label>النوع</label><select name="k">${so("","كتب ومقالات",f.k)}${so("book","كتب فقط",f.k)}${so("article","مقالات فقط",f.k)}</select></div></div>
  <div class="row"><div><label>القسم</label><select name="c">${so("","الكل",f.c)}${so("dawah",COL.dawah,f.c)}${so("turath",COL.turath,f.c)}</select></div><div><label>المؤلف</label><select name="a">${opt(lib.authors,f.a,"كل المؤلفين")}</select></div><div><label>الموضوع</label><select name="t">${opt(lib.topics,f.t,"كل الموضوعات")}</select></div></div>
- <label class="inl"><input type="checkbox" name="ex" value="1"${f.ex==="1"?" checked":""}> مطابقة التشكيل والهمزات حرفيًا</label><br>
+ <label class="inl"><input type="checkbox" name="ex" value="1"${f.ex==="1"?" checked":""}> مطابقة التشكيل والهمزات حرفيًا</label><br>${lib.books.some(b=>b.big)?`<label class="inl"><input type="checkbox" name="big" value="1"${f.big==="1"?" checked":""}> البحث في الموسوعات الكبيرة متعددة المجلدات أيضًا (أبطأ؛ أو اختر المؤلف)</label><br>`:""}
  <button class="btn p" style="margin-top:10px">ابحث</button></form><div id="sres"></div>`,true);
  if(!f.q.trim())return;
  const out=$("#sres"),n=f.ex==="1"?f.q.trim():norm(f.q).trim(),w=n.split(/\s+/).filter(Boolean),P=f.ex==="1"?(s=>s):(s=>norm(s));
  const m=t=>{const x=P(t);return f.mode==="phrase"?x.includes(n):f.mode==="any"?w.some(k=>x.includes(k)):w.every(k=>x.includes(k))};
- const books=lib.books.filter(b=>(!f.c||bc(b)===f.c)&&(!f.a||b.authorId===f.a)&&(!f.t||b.topicId===f.t)&&(!f.k||(b.type||"book")===f.k));
+ const books=lib.books.filter(b=>(!f.c||bc(b)===f.c)&&(!f.a||b.authorId===f.a)&&(!f.t||b.topicId===f.t)&&(!f.k||(b.type||"book")===f.k)&&(!b.big||f.a||f.big==="1"));
  const meta=f.scope==="text"?[]:books.filter(b=>m(b.title+" "+A(b.authorId).name+" "+T(b.topicId).name));
  const hits=[];
  if(f.scope!=="meta"){await loadMany(books,(i,k)=>progress(out,i,k,"جارٍ تحميل نصوص الكتب للبحث"));
@@ -318,7 +318,8 @@ function openSheet(title,html,wire){ensureSheet();$("#sheetT").textContent=title
 function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg").hidden=true;document.body.classList.remove("sheet-open")}
 function cur(){const rb=$("#rb");return rb?{b:B(rb.dataset.id),p:+rb.dataset.p}:null}
 function tocSheet(){const c=cur();if(!c)return;const b=c.b,ch=chapterOf(b,c.p);
- openSheet("فهرس الكتاب",`<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
+ const vols=b.set?lib.books.filter(x=>x.set===b.set).sort((x,y)=>x.vol-y.vol):[];
+ openSheet("فهرس الكتاب",`${vols.length?`<div class="volbar"><b>المجلدات</b><div class="chips">${vols.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1" data-act="closeSheet">ج ${toAr(x.vol)}</a>`).join("")}</div></div>`:""}<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
  ()=>{$("#tocq").oninput=e=>{const q=norm(e.target.value);$$("#toclist a").forEach(a=>a.hidden=q&&!norm(a.textContent).includes(q))};const on=$("#toclist a.on");if(on)on.scrollIntoView({block:"center"})})}
 function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
  openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="number" min="1" max="${n}" value="${c.p}" aria-label="رقم الصفحة"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p></form>`,
@@ -598,7 +599,7 @@ const AI={s:undefined,
   const w=q.trim().split(/\s+/).slice(0,5).join(" ");
   t+=`\n\n## للمتابعة\n- اجمع ما ورد في المكتبة عن ${w}\n- ${o.col==="turath"?"ابحث في كتب الدعوة عن "+w:"ابحث في كتب التراث عن "+w}`;
   o.onText(t);return t},
- async ensure(o){const need=lib.books.filter(b=>!b.demo&&(!o.col||bc(b)===o.col)&&(!o.bookId||b.id===o.bookId));await loadMany(need,(i,n)=>o.onStatus(`يحمّل نصوص المكتبة للبحث (${toAr(i)} من ${toAr(n)})`))},
+ async ensure(o){const need=lib.books.filter(b=>!b.demo&&(!o.col||bc(b)===o.col)&&(o.bookId?b.id===o.bookId:!b.big));await loadMany(need,(i,n)=>o.onStatus(`يحمّل نصوص المكتبة للبحث (${toAr(i)} من ${toAr(n)})`))},
  async viaSample(sample,o){const scope={col:o.col,bookId:o.bookId};
   const head=SS.SYSTEM+"\n\nالمهمة: "+SS.MODES[o.mode]+this.scopeLine(o)+"\n\nفيما يلي أسئلة الباحث.";
   let tools=null;try{const lim=await sample.limits();if(lim&&lim.tools)tools=SS.TOOLS.map(t=>({name:t.name,description:t.description,inputSchema:t.input_schema,execute:async inp=>{
@@ -760,7 +761,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <p class="mut" style="font-size:.8rem">تسمية الملف «العنوان - المؤلف.pdf» تجعل المؤلف يُعرف تلقائيًا إن لم تختره.</p>
   <div class="row"><div><label>المؤلف</label><select name="author"><option value="">—</option>${opt(lib.authors)}<option value="__new">+ مؤلف جديد</option></select><input name="authornew" placeholder="اسم المؤلف الجديد" style="margin-top:4px"></div><div><label>القسم</label><select name="col"><option value="dawah">${COL.dawah}</option><option value="turath">${COL.turath}</option></select></div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for!=="articles"))}</select></div></div>
   <fieldset class="secs"><legend>يظهر الكتاب أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"> التفريغات (دروس صوتية مفرغة)</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
-  <details><summary>ربطه بكتاب نصي موجود بدل إنشاء كتاب جديد</summary><div class="row"><div><label>الكتاب الموجود</label><select name="book"><option value="">— كتاب جديد —</option>${BOOKS().map(b=>`<option value="${b.id}">${esc(b.title)}</option>`).join("")}</select></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div><label class="inl"><input type="checkbox" name="ocr" value="1"> تحويله إلى نص أيضًا (يستبدل النص الحالي)</label></details>
+  <details><summary>ربطه بكتاب نصي موجود بدل إنشاء كتاب جديد</summary><div class="row"><div><label>الكتاب الموجود</label><select name="book"><option value="">— كتاب جديد —</option>${lib.books.filter(b=>kindOf(b)==="book").map(b=>`<option value="${b.id}">${esc(b.title)}</option>`).join("")}</select></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div><label class="inl"><input type="checkbox" name="ocr" value="1"> تحويله إلى نص أيضًا (يستبدل النص الحالي)</label></details>
   <button class="btn p" style="margin-top:10px">رفع وتحويل</button></form><p id="pdfst" class="mut" role="status"></p>
   <p class="note">بديل للملفات الكبيرة: ارفع الملف مباشرة إلى مجلد <code>ocr-inbox</code> في المستودع باسم «العنوان - المؤلف.pdf».</p>`:`<p class="note">رفع الكتب المصورة يحتاج تفعيل الإدارة المباشرة (مفتاح المشرف أعلاه). أو ارفع ملف PDF إلى مجلد <code>ocr-inbox</code> في المستودع باسم «العنوان - المؤلف.pdf» فيُحوَّل تلقائيًا.</p>`;
  else if(tab==="post")body=`<form data-form="addpost"><div class="row"><div><label>الكاتب</label><select name="aid"><option value="">المكتبة نفسها</option>${opt(lib.authors.filter(a=>bc(a)==="dawah"))}</select></div><div><label>التاريخ</label><input name="date" type="date" value="${today()}"></div><div><label>المصدر</label><select name="src"><option value="فيس بوك">فيس بوك</option><option value="تويتر / X">تويتر / X</option><option value="تليجرام">تليجرام</option><option value="">أخرى</option></select></div></div>
@@ -817,7 +818,7 @@ async function impSave(f){const fd=new FormData(f);try{const aid=await newAuthor
 function updatePayload(){return{format:"sdsl-update-1",created:new Date().toISOString(),authors:LOCAL.catalog.authors,topics:LOCAL.catalog.topics,books:LOCAL.catalog.books,shards:LOCAL.shards,deleted:LOCAL.deleted}}
 async function applyUpdate(u){if(!u||u.format!=="sdsl-update-1")throw new Error("bad");LOCAL.catalog.authors=byId(LOCAL.catalog.authors,u.authors||[]);LOCAL.catalog.topics=byId(LOCAL.catalog.topics,u.topics||[]);
  LOCAL.catalog.books=byId(LOCAL.catalog.books,u.books||[]);Object.assign(LOCAL.shards,u.shards||{});await DB.set("local",LOCAL);SH.clear();merge();renderTicker()}
-async function offline(){const st=$("#offst");const all=lib.books;let i=0;
+async function offline(){const st=$("#offst");const all=lib.books.filter(b=>!b.vf);let i=0;
  try{const c=await caches.open("sdsl-data");const urls=[...new Set(all.map(b=>b.f?"data/articles/"+b.f+".json":"data/books/"+b.id+".json"))];for(const u of urls){progress(st,++i,urls.length,"جارٍ تنزيل النصوص");await c.add(u).catch(()=>{})}
   await c.addAll(["./","index.html","style.css","config.js","search.js","app.js","manifest.webmanifest","data/catalog.json","data/articles/index.json","data/dict/mukhtar.json","assets/logo.jpg","assets/cal.jpg","assets/logo-sdsl.png","assets/logo-sdsl-128.png"]).catch(()=>{});
   st.innerHTML='<p class="mut">تم التنزيل. المكتبة تعمل الآن دون إنترنت.</p>'}catch(e){st.innerHTML='<p class="note">تعذر التنزيل هنا. يعمل من الموقع المنشور.</p>'}}
@@ -825,7 +826,7 @@ async function offline(){const st=$("#offst");const all=lib.books;let i=0;
 /* ---------- التعريف بالمؤلفين والتراجم ---------- */
 let TJ={items:{}};
 const tj=id=>TJ.items[id];
-const counts=id=>{const all=lib.books.filter(b=>b.authorId===id&&!b.demo),k=x=>all.filter(b=>kindOf(b)===x).length;return{books:k("book"),arts:k("article"),fatwas:k("fatwa"),st:k("statement")}};
+const counts=id=>{const all=lib.books.filter(b=>b.authorId===id&&!b.demo&&!VOL2(b)),k=x=>all.filter(b=>kindOf(b)===x).length;return{books:k("book"),arts:k("article"),fatwas:k("fatwa"),st:k("statement")}};
 const countLine=id=>{const c=counts(id),p=[];if(c.books)p.push(c.books+" كتاب");if(c.arts)p.push(c.arts+" مقال");if(c.fatwas)p.push(c.fatwas+" فتوى");if(c.st)p.push(c.st+" بيان");return p.join(" • ")||"لا توجد مواد بعد"};
 function authorBrief(id){const a=A(id),t=tj(id);if(!a||!a.name||a.name==="—")return;
  openSheet(a.name+died(a),`${t&&t.born?`<p class="mut" style="margin:0">المولد: ${esc(t.born)}</p>`:""}
@@ -1019,7 +1020,7 @@ const Pager={idx:-1,dir:0,t:null,
 /* ---------- الشريط والتوجيه والأحداث ---------- */
 function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||""),top=l=>l.filter(b=>!b.demo).sort((x,y)=>key(y).localeCompare(key(x))),ta=top(lib.books.filter(b=>kindOf(b)!=="book")).slice(0,8),tb=top(BOOKS()).slice(0,8),n=[];
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
- const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
+ const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
 function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);

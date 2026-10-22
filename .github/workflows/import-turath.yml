@@ -1,0 +1,34 @@
+name: استيراد كتب التراث من OpenITI
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "معرّفات كتب بعينها مفصولة بفواصل (اتركه فارغًا لكل القائمة)"
+        required: false
+        default: ""
+  push:
+    paths: ["tools/turath-list.json"]
+permissions:
+  contents: write
+concurrency:
+  group: library-data
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: الاستيراد
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ONLY: ${{ github.event.inputs.only }}
+        run: python3 tools/import-turath.py
+      - name: الحفظ
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add -A data vols tools/turath-report.md
+          git diff --cached --quiet || git commit -m "استيراد كتب التراث من OpenITI"
+          git pull --rebase
+          git push
