@@ -341,3 +341,4 @@ body.has-dock .askbox{bottom:calc(76px + env(safe-area-inset-bottom))}
 @media (min-width:901px){body.has-dock .askbox{bottom:0}}
 .msg.a .cite{white-space:normal}.msg{overflow-wrap:anywhere}.aiwrap{min-width:0}
 html,body{overflow-x:clip}
+#aerr{color:#b3261e;font-weight:600;min-height:1em;margin-top:8px}

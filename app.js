@@ -527,10 +527,10 @@ const Auth={mode:"local",sb:null,user:null,token:null,
    try{try{await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/dist/umd/supabase.js")}catch(e){await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js")}
     this.sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{flowType:"pkce",detectSessionInUrl:true,persistSession:true}});this.mode="cloud";
     const {data}=await this.sb.auth.getSession();this.set(data.session);
-    this.sb.auth.onAuthStateChange((_e,s)=>{const was=this.user&&this.user.id;this.set(s);paintAuth();if((this.user&&this.user.id)!==was)Cloud.loadRole()});await Cloud.loadRole();
+    this.sb.auth.onAuthStateChange((_e,s)=>{const was=this.user&&this.user.id;this.set(s);setTimeout(()=>{paintAuth();if((this.user&&this.user.id)!==was)Cloud.loadRole()},0)});await Cloud.loadRole();
     if(/[?&]code=/.test(location.search))history.replaceState(null,"",location.pathname+location.hash);
     const next=ls.get("authNext",null);if(this.user&&next){ls.set("authNext",null);location.hash=next}
-   }catch(e){console.warn("supabase",e)}
+   }catch(e){console.warn("supabase",e);this.loadErr=String(e&&e.message||e||"")}
   }else this.user=ls.get("acct",null);
   paintAuth()},
  // يعرض أزرار Google وApple فقط إذا فُعّل مزوّدها في Supabase
@@ -539,10 +539,10 @@ const Auth={mode:"local",sb:null,user:null,token:null,
  async oauth(provider,next){if(this.mode!=="cloud")throw new Error("الدخول بحساب "+(provider==="google"?"Google":"Apple")+" يعمل بعد ربط الموقع بقاعدة بيانات الحسابات.");
   ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOAuth({provider,options:{redirectTo:location.origin+location.pathname}});if(error)throw error},
  async signUp(name,email,pw){
-  if(this.mode==="cloud"){const {data,error}=await this.sb.auth.signUp({email,password:pw,options:{data:{name}}});if(error)throw error;return data.session?"ok":"confirm"}
+  if(this.mode==="cloud"){const {data,error}=await this.sb.auth.signUp({email,password:pw,options:{data:{name,full_name:name}}});if(error)throw error;if(data.session)this.set(data.session);return data.session?"ok":"confirm"}
   this.user={id:"local:"+email.toLowerCase(),name,email};ls.set("acct",this.user);return "ok"},
  async signIn(email,pw){
-  if(this.mode==="cloud"){const {error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;return}
+  if(this.mode==="cloud"){const {data,error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;this.set(data.session);Cloud.loadRole();return}
   const known=ls.get("acct_known",{})[email.toLowerCase()]||{id:"local:"+email.toLowerCase(),name:email.split("@")[0],email};
   this.user=known;ls.set("acct",known)},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
@@ -567,16 +567,19 @@ function vAccount(q){
  <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>الاسم</label><input name="name" required autocomplete="name">':""}
  <label>البريد الإلكتروني</label><input name="email" type="email" required autocomplete="email">
  ${cloud?`<label>كلمة المرور</label><input name="pw" type="password" minlength="8" required autocomplete="${signup?"new-password":"current-password"}">`:""}
- <button class="btn p" style="margin-top:12px">${signup?"إنشاء الحساب":"دخول"}</button></form><p id="aerr" class="mut" role="alert"></p>
+ <button class="btn p" style="margin-top:12px">${signup?"إنشاء الحساب":"دخول"}</button></form><p id="aerr" role="alert"></p>${CFG.supabaseUrl&&!cloud?`<p class="note">تعذر تحميل خدمة الحسابات${Auth.loadErr?" ("+esc(Auth.loadErr)+")":""}، فيعمل الحساب على هذا الجهاز فقط. أعد تحميل الصفحة بعد قليل.</p>`:""}
  <p>${signup?`لديك حساب؟ <a href="#/account?next=${encodeURIComponent(back)}">سجّل الدخول</a>`:`ليس لديك حساب؟ <a href="#/account?m=signup&next=${encodeURIComponent(back)}">أنشئ حسابًا مجانيًا</a>`}</p>
  ${cloud?"":'<p class="note">وضع تجريبي: لم تُربط قاعدة الحسابات بعد، فيُحفظ الحساب على هذا الجهاز فقط ودون كلمة مرور.</p>'}`);
  if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w||!(p.google||p.apple))return;
   w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}</div><div class="or">أو بالبريد الإلكتروني</div>`;
   $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=e.message}})})}
-async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr");err.textContent="";
+const AUTHERR=[[/invalid login credentials/i,"البريد أو كلمة المرور غير صحيحة. إن لم يكن لك حساب بعد فاضغط «أنشئ حسابًا مجانيًا»."],[/email not confirmed/i,"لم يُؤكَّد بريدك بعد؛ افتح رسالة التأكيد في بريدك ثم سجّل الدخول."],[/already registered|already exists/i,"هذا البريد مسجّل من قبل؛ سجّل الدخول به."],[/password should be at least|weak password/i,"كلمة المرور قصيرة؛ اجعلها 8 أحرف على الأقل."],[/rate limit|too many/i,"محاولات كثيرة؛ انتظر دقيقة ثم أعد المحاولة."],[/invalid.*email|email.*invalid/i,"صيغة البريد غير صحيحة."],[/failed to fetch|network/i,"تعذر الاتصال بخادم الحسابات؛ تأكد من الإنترنت."]];
+const authMsg=e=>{const m=String((e&&(e.message||e.error_description))||e||"");const t=AUTHERR.find(([r])=>r.test(m));return t?t[1]:(m?"تعذر الدخول: "+m:"تعذر الدخول")};
+async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr"),btn=f.querySelector("button"),old=btn.textContent;err.textContent="";btn.disabled=true;btn.textContent=kind==="signup"?"جارٍ إنشاء الحساب…":"جارٍ الدخول…";
+ const slow=setTimeout(()=>{err.textContent="الخادم بطيء في الرد… انتظر قليلًا."},12000);
  try{if(kind==="signup"){const r=await Auth.signUp(String(fd.get("name")).trim(),String(fd.get("email")).trim(),fd.get("pw")||"");if(r==="confirm"){err.textContent="أرسلنا رابط تأكيد إلى بريدك، افتحه ثم سجّل الدخول.";return}}
-  else await Auth.signIn(String(fd.get("email")).trim(),fd.get("pw")||"");paintAuth();location.hash=f.dataset.next||"#/ask"}
- catch(e){err.textContent=e.message||"تعذر الدخول"}}
+  else await Auth.signIn(String(fd.get("email")).trim(),fd.get("pw")||"");paintAuth();toast("أهلًا "+((Auth.user&&Auth.user.name)||"")+"، تم الدخول");location.hash=f.dataset.next||"#/ask"}
+ catch(e){console.warn(e);err.textContent=authMsg(e);err.scrollIntoView({block:"center",behavior:"smooth"})}finally{clearTimeout(slow);btn.disabled=false;btn.textContent=old}}
 
 /* ---------- اسأل المكتبة ---------- */
 const AI={s:undefined,
