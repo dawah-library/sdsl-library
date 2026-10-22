@@ -11,7 +11,37 @@ const decode = s => s.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoin
 const textOf = h => decode(h.replace(/<[^>]+>/g, " ")).replace(/[ \t ]+/g, " ").trim();
 const arabic = s => (s.match(/[ء-ي]/g) || []).length;
 
+// صفحات صوت السلف لها حقول ثابتة: العنوان والتاريخ ومسار القسم وجسم المقال
+function extractSalafvoice(html, url) {
+  const grab = id => { const m = html.match(new RegExp('id="' + id + '"[^>]*>([\\s\\S]*?)</span>', "i")); return m ? textOf(m[1]) : ""; };
+  const title = grab("ContentPlaceHolder1_lblTitle");
+  const dateTxt = grab("ContentPlaceHolder1_lblDate");
+  const bc = (html.match(/<ol class="breadcrumb">([\s\S]*?)<\/ol>/i) || [])[1] || "";
+  const crumbs = [...bc.matchAll(/<a[^>]*>([\s\S]*?)<\/a>/gi)].map(m => textOf(m[1])).filter(t => t && t !== "الرئيسية");
+  const i = html.indexOf('id="FatwaA"'); if (i < 0 || !title) return null;
+  let j = html.indexOf('id="FatwaF"', i); if (j < 0) j = html.indexOf('class="panel panel-success"', i + 50); if (j < 0) j = i + 200000;
+  const body = html.slice(i, j).replace(/^[^>]*>/, "").replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ");
+  let lines = body.split(/<\/?(?:p|div|br|h[1-6]|li|tr|blockquote)[^>]*>/i).map(textOf).filter(l => l && arabic(l) + (l.match(/\d/g) || []).length > 0);
+  let author = "";
+  for (let k = 0; k < Math.min(lines.length, 4); k++) {
+    const m = lines[k].match(/^(?:كتبه|بقلم|كتبته|إعداد|اعداد)\s*[\/:：]?\s*(.{3,60})$/);
+    if (m) { author = m[1]; lines.splice(k, 1); break; }
+  }
+  for (let k = lines.length - 1; k >= Math.max(0, lines.length - 3) && !author; k--) {
+    const m = lines[k].match(/^(?:كتبه|بقلم|كتبته)\s*[\/:：]?\s*(.{3,60})$/); if (m) { author = m[1]; lines.splice(k, 1); }
+  }
+  author = author.replace(/^\s*[\/:：]\s*/, "").replace(/^(الشيخ|الدكتور|د[.\/]|م[.\/]|أ[.\/])\s*/, "").replace(/\s*[-–(]?\s*(حفظه الله|رحمه الله)\s*[-–)]?\s*\.?$/, "").trim();
+  if (author && arabic(author) < 4) author = "";
+  while (lines.length && /^(صوت السلف|www\.salafvoice\.com)$/.test(lines[lines.length - 1])) lines.pop();
+  const text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  let date = "";
+  const dm = dateTxt.match(/(\d{1,2})\s+(\S+)\s+(\d{4})/);
+  if (dm && MONTHS[dm[2]]) date = `${dm[3]}-${String(MONTHS[dm[2]]).padStart(2, "0")}-${dm[1].padStart(2, "0")}`;
+  return { url, title: title.replace(/\s+/g, " "), author: author || "صوت السلف", date, category: crumbs.join(" › "), text, structured: true };
+}
+
 function extract(html, url) {
+  if (html.includes("ContentPlaceHolder1_lblTitle")) { const r = extractSalafvoice(html, url); if (r && r.text.length > 0) return r; }
   html = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|noscript|svg|iframe|select|button)\b[\s\S]*?<\/\1>/gi, " ");
   const og = (html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) || [])[1];
   const tt = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1];
