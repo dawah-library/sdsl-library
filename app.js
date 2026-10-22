@@ -715,14 +715,19 @@ function ghBox(){return GH.on?`<div class="ghbox on"><b>✓ وضع الإدار�
  <li>Permissions ← Repository permissions ← <b>Contents: Read and write</b>.</li><li>Generate token، ثم انسخه والصقه هنا. يُحفظ على هذا الجهاز فقط، ولكل مشرف أن ينشئ مفتاحه.</li></ol></details></div>`}
 async function ghLogin(f){const t=String(new FormData(f).get("t")).trim(),err=$("#gherr");err.textContent="جارٍ التحقق…";GH.token=t;
  try{await GH.verify();toast("تم الدخول. الإدارة المباشرة مفعّلة على هذا الجهاز.");S.admin=true;saveS();route()}catch(e){GH.token="";err.textContent=e.message}}
-async function ghPdf(f){const fd=new FormData(f),file=fd.get("file"),st=$("#pdfst");if(!file||!file.size)return;if(file.size>45*1048576){st.textContent="حجم الملف أكبر من 45 ميجابايت؛ قسّمه أو ارفعه بـ GitHub Desktop إلى مجلد ocr-inbox.";return}
- const btn=f.querySelector("button");btn.disabled=true;st.textContent="جارٍ رفع الملف…";
- try{const base="up"+Date.now().toString(36),link=fd.get("book");let author=String(fd.get("author")||"");if(author==="__new")author=String(fd.get("authornew")||"").trim();else if(author)author=A(author).name;
-  const cfg={title:String(fd.get("title")||"").trim()||file.name.replace(/\.pdf$/i,""),author,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};if(link)cfg.book=link;
-  await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
-  await GH.put("ocr-inbox/"+base+".pdf",new Uint8Array(await file.arrayBuffer()),"رفع كتاب مصور: "+cfg.title);
-  st.innerHTML=`✓ رُفع الملف. ${cfg.ocr?"بدأ التحويل إلى نص على خوادم GitHub، ويستغرق نحو دقيقة لكل 10–15 صفحة، ثم يظهر الكتاب في المكتبة تلقائيًا.":"سيُربط بالكتاب خلال دقيقة."}`;f.reset()}
- catch(e){st.textContent=e.message}finally{btn.disabled=false}}
+async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(x=>x&&x.size),st=$("#pdfst");if(!files.length)return;
+ const big=files.filter(x=>x.size>45*1048576);if(big.length){st.textContent="ملفات أكبر من 45 ميجابايت: "+big.map(x=>x.name).join("، ")+". قسّمها أو ارفعها إلى مجلد ocr-inbox مباشرة.";return}
+ const btn=f.querySelector("button");btn.disabled=true;const done=[],link=files.length===1?fd.get("book"):"";
+ const tags=[];if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
+ let author0=String(fd.get("author")||"");if(author0==="__new")author0=String(fd.get("authornew")||"").trim();else if(author0)author0=A(author0).name;
+ try{for(let i=0;i<files.length;i++){const file=files[i],nm=file.name.replace(/\.pdf$/i,"").replace(/[_]+/g," ").trim(),parts=nm.split(/\s+-\s+/);
+   st.textContent=`جارٍ رفع ${files.length>1?"الكتاب "+toAr(i+1)+" من "+toAr(files.length)+": ":""}${nm}…`;
+   const base="up"+Date.now().toString(36)+i,cfg={title:(files.length===1&&String(fd.get("title")||"").trim())||parts[0],author:author0||parts[1]||undefined,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};
+   if(tags.length)cfg.tags=tags;if(link)cfg.book=link;
+   await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
+   await GH.put("ocr-inbox/"+base+".pdf",new Uint8Array(await file.arrayBuffer()),"رفع كتاب مصور: "+cfg.title);done.push(cfg.title)}
+  st.innerHTML=`✓ رُفع ${toAr(done.length)} ${done.length>1?"كتب":"كتاب"}: ${done.map(esc).join("، ")}.<br>${link&&!fd.get("ocr")?"سيُربط بالكتاب خلال دقيقة.":"بدأ التحويل إلى نص على خوادم GitHub (نحو دقيقة لكل 10–15 صفحة)، ثم تظهر الكتب في أقسامها تلقائيًا. تابع التقدم من تبويب Actions في المستودع."}`;f.reset()}
+ catch(e){st.textContent=(done.length?"رُفع: "+done.join("، ")+". ثم توقف: ":"")+e.message}finally{btn.disabled=false}}
 async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=String(fd.get("text")||"").trim();if(!text)return;
  const dd=fd.get("date"),x={id:"po"+Date.now().toString(36),date:!dd||dd===today()?new Date().toISOString():dd,text};const aid=fd.get("aid");if(aid)x.authorId=aid;
  if(fd.get("url"))x.url=String(fd.get("url")).trim();if(fd.get("src"))x.src=String(fd.get("src"));
@@ -750,9 +755,11 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <label>رابط المصدر (اختياري)</label><input name="url" type="url" placeholder="https://salafvoice.com/article.aspx?a=…">
   <label>نص المقال</label><textarea name="text" required style="min-height:220px"></textarea><p class="mut">السطر الذي يبدأ بـ «# » يظهر عنوانًا فرعيًا.</p><button class="btn p">حفظ المقال</button></form>`;
  else if(tab==="pdf")body=GH.on?`<p class="mut">ارفع ملف PDF لكتاب مصور، فيُحفظ في المكتبة وتُتاح نسخته المصورة في القارئ، ويُحوَّل إلى نص آليًا على خوادم GitHub. والنص الآلي يحتاج مراجعة، ويمكن تصحيحه من القارئ بزر «تعديل النص».</p>
-  <form data-form="ghpdf"><label>ملف PDF (حتى 45 ميجابايت)</label><input type="file" name="file" accept="application/pdf,.pdf" required>
-  <label>العنوان</label><input name="title" placeholder="يُؤخذ من اسم الملف إن تُرك فارغًا">
+  <form data-form="ghpdf"><label>ملفات PDF (يمكن اختيار عدة كتب معًا، حتى 45 ميجابايت للملف)</label><input type="file" name="file" accept="application/pdf,.pdf" multiple required>
+  <label>العنوان</label><input name="title" placeholder="عند رفع عدة ملفات يُؤخذ عنوان كل كتاب من اسم ملفه">
+  <p class="mut" style="font-size:.8rem">تسمية الملف «العنوان - المؤلف.pdf» تجعل المؤلف يُعرف تلقائيًا إن لم تختره.</p>
   <div class="row"><div><label>المؤلف</label><select name="author"><option value="">—</option>${opt(lib.authors)}<option value="__new">+ مؤلف جديد</option></select><input name="authornew" placeholder="اسم المؤلف الجديد" style="margin-top:4px"></div><div><label>القسم</label><select name="col"><option value="dawah">${COL.dawah}</option><option value="turath">${COL.turath}</option></select></div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for!=="articles"))}</select></div></div>
+  <fieldset class="secs"><legend>يظهر الكتاب أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"> التفريغات (دروس صوتية مفرغة)</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
   <details><summary>ربطه بكتاب نصي موجود بدل إنشاء كتاب جديد</summary><div class="row"><div><label>الكتاب الموجود</label><select name="book"><option value="">— كتاب جديد —</option>${BOOKS().map(b=>`<option value="${b.id}">${esc(b.title)}</option>`).join("")}</select></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div><label class="inl"><input type="checkbox" name="ocr" value="1"> تحويله إلى نص أيضًا (يستبدل النص الحالي)</label></details>
   <button class="btn p" style="margin-top:10px">رفع وتحويل</button></form><p id="pdfst" class="mut" role="status"></p>
   <p class="note">بديل للملفات الكبيرة: ارفع الملف مباشرة إلى مجلد <code>ocr-inbox</code> في المستودع باسم «العنوان - المؤلف.pdf».</p>`:`<p class="note">رفع الكتب المصورة يحتاج تفعيل الإدارة المباشرة (مفتاح المشرف أعلاه). أو ارفع ملف PDF إلى مجلد <code>ocr-inbox</code> في المستودع باسم «العنوان - المؤلف.pdf» فيُحوَّل تلقائيًا.</p>`;

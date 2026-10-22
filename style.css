@@ -342,3 +342,4 @@ body.has-dock .askbox{bottom:calc(76px + env(safe-area-inset-bottom))}
 .msg.a .cite{white-space:normal}.msg{overflow-wrap:anywhere}.aiwrap{min-width:0}
 html,body{overflow-x:clip}
 #aerr{color:#b3261e;font-weight:600;min-height:1em;margin-top:8px}
+.secs{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:10px 0}.secs legend{font-size:.85rem;padding:0 6px}.secs .inl{display:block;margin:4px 0}
