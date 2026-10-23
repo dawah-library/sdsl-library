@@ -349,3 +349,4 @@ html,body{overflow-x:clip}
 .savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));background:var(--bg);padding:10px 0;display:flex;gap:10px;align-items:center;z-index:4}
 .navl{display:grid;grid-template-columns:1fr 1.4fr;gap:4px 10px;align-items:center;margin-top:8px}.navl label{margin:0;font-size:.85rem}
 .btn.danger{color:#b3261e;border-color:#e6b4b0}
+.rd .w.unc{background:rgba(240,150,30,.28);border-bottom:2px dotted #c46b00}.revl .chip{margin:3px;display:inline-block}

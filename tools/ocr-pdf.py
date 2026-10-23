@@ -84,14 +84,24 @@ PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع 
 - الشعر: كل بيت في سطر، وافصل بين الشطرين بـ « ... ».
 - الحواشي أسفل الصفحة: إن وُجدت فاكتب بعد المتن سطرًا فيه ______ ثم كل حاشية في سطر برقمها كما في الكتاب، مثل: (1) نص الحاشية.
 - إن كانت الصفحة فارغة أو صورة بلا نص فاكتب: [صفحة بلا نص]
+- كل كلمة لم تتأكد من قراءتها (لضعف الطباعة أو الصورة) ضعها بين ⟪ ⟫ مثل: ⟪كلمة⟫، ليراجعها مدقق بشري.
 أخرج النص فقط دون أي مقدمة أو تعليق."""
+REVIEW = """
+مرفق أيضًا مسودة لهذه الصفحة من أداة تعرّف ضوئي أخرى (Tesseract)، وقد تحتوي أخطاء حروف وكلمات:
+<<<
+{draft}
+>>>
+اعتمد على الصورة أولًا، واستعن بالمسودة مرجعًا ثانيًا للمقارنة: إن اختلفت قراءتك عن المسودة في كلمة فتحقق منها في الصورة جيدًا، وإن بقي شك فضعها بين ⟪ ⟫."""
 STATS = {"gemini": 0, "tesseract": 0}
+UNREVIEWED = []  # صفحات لم يراجعها Gemini (ازدحام أو نفاد الحصة)
+UNCERTAIN = {}  # رقم الصفحة (من صفر) ← كلمات شكّ فيها المراجع
 _glast = [0.0]
 
 
-def gemini_page(img):
+def gemini_page(img, draft=""):
     data = base64.b64encode(open(img, "rb").read()).decode()
-    body = json.dumps({"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": data}}, {"text": PROMPT}]}],
+    prompt = PROMPT + (REVIEW.format(draft=draft[:6000]) if draft.strip() else "")
+    body = json.dumps({"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": data}}, {"text": prompt}]}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": 8192}}).encode()
     models = list(GMODELS)
     for attempt in range(7):
@@ -119,6 +129,9 @@ def gemini_page(img):
     return None
 
 
+UNC = re.compile(r"⟪\s*([^⟪⟫]{1,60}?)\s*⟫")
+
+
 def gemini_clean(t):
     t = fix_punct(t)
     lines = [l.rstrip() for l in t.split("\n")]
@@ -134,21 +147,26 @@ def ocr(pdf, first=1, last=None):
     n = pages_count(pdf)
     last = min(last or n, n)
     pages = []
-    STATS.update(gemini=0, tesseract=0)
+    STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear()
     print("  المحرك: " + ("Gemini مع Tesseract احتياطيًا" if GKEY else "Tesseract"), flush=True)
     with tempfile.TemporaryDirectory() as td:
         for p in range(first, last + 1):
             img = os.path.join(td, f"p{p}")
+            # ١) مسودة Tesseract (مجانية وسريعة) ٢) Gemini يقرأ الصورة ويراجع المسودة ويصحح ويعلّم مواضع الشك
+            subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
+            r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
+            draft = clean_page(r.stdout)
             text = None
             if GKEY:
                 subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-                g = gemini_page(img + ".jpg")
+                g = gemini_page(img + ".jpg", draft)
                 if g is not None:
-                    text = gemini_clean(g); STATS["gemini"] += 1
+                    words = [w.strip() for w in UNC.findall(g) if w.strip()]
+                    if words: UNCERTAIN[len(pages)] = words[:40]
+                    text = gemini_clean(UNC.sub(r"\1", g)); STATS["gemini"] += 1
             if text is None:
-                subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-                r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
-                text = clean_page(r.stdout); STATS["tesseract"] += 1
+                text = draft; STATS["tesseract"] += 1
+                if GKEY: UNREVIEWED.append(len(pages))
             pages.append(text)
             print(f"  صفحة {p}/{last}: {len(pages[-1])} حرف", flush=True)
     return pages
@@ -207,12 +225,16 @@ def main():
             entry["authorId"] = aid or "a8"
         if do_ocr:
             pages = ocr(dest)
-            shard = {"id": bid, "pages": pages, "toc": [], "pl": [f"ص {i+1}" for i in range(len(pages))]}
+            toc = [{"t": l[2:].strip(), "p": i + 1} for i, t in enumerate(pages) for l in t.split("\n") if l.startswith("# ") and 2 < len(l) < 120]
+            shard = {"id": bid, "pages": pages, "toc": toc, "pl": [f"ص {i+1}" for i in range(len(pages))]}
+            if UNCERTAIN: shard["unc"] = {str(k): v for k, v in UNCERTAIN.items()}
+            if UNREVIEWED: shard["unrev"] = UNREVIEWED[:]
             s = json.dumps(shard, ensure_ascii=False, separators=(",", ":"))
             open(os.path.join(DATA, "books", bid + ".json"), "w", encoding="utf-8").write(s)
             entry.update({"n": len(pages), "size": len(s.encode()), "ocr": True,
                           "source": " — ".join(x for x in [re.sub(r"\s*—?\s*نص محوَّل (آليًا|بالذكاء الاصطناعي).*$", "", entry.get("source", "")).strip(" —") if existing else "", "نص محوَّل بالذكاء الاصطناعي من نسخة مصورة، يُرجى الإبلاغ عن أي خطأ" if STATS["gemini"] > STATS["tesseract"] else "نص محوَّل آليًا من نسخة مصورة، يحتاج مراجعة"] if x),
-                          "ocrEngine": "gemini" if STATS["gemini"] > STATS["tesseract"] else "tesseract",
+                          "ocrEngine": "gemini+tesseract" if STATS["gemini"] > STATS["tesseract"] else "tesseract",
+                          "unc": sum(len(v) for v in UNCERTAIN.values()), "unrev": len(UNREVIEWED),
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
         print(f"   تم: {entry.get('n', '?')} صفحة")

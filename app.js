@@ -40,7 +40,7 @@ const SH=new Map(),GROUPS=new Map();let ARTS_IDX=[];
 const artFromIdx=x=>({id:x.id,title:x.t,authorId:x.a,topicId:x.tp,date:x.d,url:x.u,f:x.f,n:x.n,added:x.ad,c:x.c,fa:x.fa,type:"article",col:"dawah"});
 const isFatwa=b=>!!(b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||""));
 const byId=(a,b)=>{const m=new Map();a.forEach(x=>m.set(x.id,x));b.forEach(x=>m.set(x.id,Object.assign({},m.get(x.id)||{},x)));return[...m.values()]};
-function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];if(sh.pl)b.pl=sh.pl;else delete b.pl;b.n=sh.pages.length}
+function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];b.unc=sh.unc||null;b.unrev=sh.unrev||null;if(sh.pl)b.pl=sh.pl;else delete b.pl;b.n=sh.pages.length}
 function merge(){const del=new Set(LOCAL.deleted||[]);
  lib={authors:byId(CAT.authors,LOCAL.catalog.authors),topics:byId(CAT.topics,LOCAL.catalog.topics),
   books:byId(CAT.books.concat(ARTS_IDX),LOCAL.catalog.books).filter(b=>!del.has(b.id)).map(m=>{const b=Object.assign({},m);const sh=LOCAL.shards[b.id]||SH.get(b.id);if(sh)attach(b,sh);return b})}}
@@ -252,9 +252,10 @@ async function vSearch(q){
 
 /* ---------- القارئ الورقي ---------- */
 let LASTREAD=null;
-function pageHtml(text,h){const hs=norm(h||"").split(/\s+/).filter(Boolean);const tx=S.tash?text:strip(text);
+const uncOf=(b,i)=>(S.admin||isAdmin())&&b&&b.unc&&b.unc[String(i)]||null;
+function pageHtml(text,h,uw){const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tx=S.tash?text:strip(text);
  return tx.split("\n").map(line=>{const head=line.startsWith("# "),l=head?line.slice(2):line;
-  const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}">${esc(w)}</span>`:w).join("");
+  const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${esc(w)}</span>`:w).join("");
   return head?`<p class="ph">${inner}</p>`:`<p>${inner}</p>`}).join("")}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
 /* ---------- النسخة المصورة (PDF) ---------- */
@@ -298,8 +299,8 @@ async function ghSaveBook(meta,pages,toc){const sh={id:meta.id,pages,toc:toc||[]
 async function ghSaveAuthor(a){await GH.editJSON("data/catalog.json",c=>{if(!c.authors.some(x=>x.id===a.id))c.authors.push(a);return c},"مؤلف: "+a.name,true);if(!CAT.authors.some(x=>x.id===a.id))CAT.authors.push(a);merge()}
 async function ghSavePage(b,i,text){
  if(b.f){const path="data/articles/"+b.f+".json";await GH.editJSON(path,g=>{g[b.id].pages[i]=text;return g},"تصحيح: "+b.title,true);const gg=await GROUPS.get(b.f);if(gg&&gg[b.id])gg[b.id].pages[i]=text}
- else{const path="data/books/"+b.id+".json";await GH.editJSON(path,sh=>{sh.pages[i]=text;return sh},"تصحيح ص "+(i+1)+": "+b.title,true)}
- b.pages[i]=text}
+ else{const path=(b.vf?"vols/":"data/books/")+b.id+".json";await GH.editJSON(path,sh=>{sh.pages[i]=text;if(sh.unc){delete sh.unc[String(i)];if(!Object.keys(sh.unc).length)delete sh.unc}if(sh.unrev)sh.unrev=sh.unrev.filter(x=>x!==i);return sh},"تصحيح ص "+(i+1)+": "+b.title,true)}
+ b.pages[i]=text;if(b.unc)delete b.unc[String(i)]}
 
 /* ---------- أدوات القراءة: الشريط الثابت واللوحات المنزلقة ---------- */
 const IC={toc:'<path d="M4 6h16M4 12h16M4 18h10"/>',prev:'<path d="M9 6l6 6-6 6"/>',next:'<path d="M15 6l-6 6 6 6"/>',look:'<path d="M4 18L9 6l5 12M5.8 14h6.4M15 18l3-7 3 7M16 16h4"/>',more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',exit:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',pdf:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 15l3-3 2 2 3-4"/><circle cx="9.5" cy="8" r="1.3"/>'};
@@ -314,7 +315,7 @@ function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S
  ["#lf","#ls","#ll","#lt","#lth"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))})}
-function refreshPage(){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h)}
+function refreshPage(){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1))}
 function ensureSheet(){if($("#sheet"))return;document.body.insertAdjacentHTML("beforeend",`<div class="sheet-bg" id="sheetbg" hidden data-act="closeSheet"></div><section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden><div class="sheet-h"><b id="sheetT"></b><button class="btn s" data-act="closeSheet" aria-label="إغلاق">✕</button></div><div class="sheet-b" id="sheetB"></div></section>`)}
 function openSheet(title,html,wire){ensureSheet();$("#sheetT").textContent=title;$("#sheetB").innerHTML=html;$("#sheet").hidden=false;$("#sheetbg").hidden=false;document.body.classList.add("sheet-open");if(wire)wire();const f=$("#sheet").querySelector("input,select,button:not([data-act=closeSheet])");if(f&&f.tagName!=="BUTTON")f.focus()}
 function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg").hidden=true;document.body.classList.remove("sheet-open")}
@@ -359,7 +360,7 @@ async function vBook(id,p,h){
  view(`${head}
  <div class="desk"><article class="paper${art?" art":""} ${dir}" id="paper" aria-label="صفحة ${p}">
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}
-  ${pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h)}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h)}</div><div class="pdfv" id="pdfv"></div></div>`}
+  ${pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
   ${n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
@@ -800,7 +801,7 @@ async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=St
   f.reset()}catch(e){st.textContent=e.message}}
 
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"]]:[]);
+ const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -835,6 +836,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <div class="row"><button class="btn p nf" data-act="expUpd">تنزيل ملف التحديث</button><label class="btn nf" style="margin:0">استيراد ملف تحديث<input type="file" id="impf" accept=".json" hidden></label></div>
   <h3>المضاف والمعدَّل على هذا الجهاز</h3>${LOCAL.catalog.books.map(b=>`<div class="bk"><b>${esc(b.title||b.id)}</b><span>${isArt(b)?"مقال":"كتاب"}${b.edited?" • معدَّل "+b.edited:""}</span> <button class="btn s" data-act="delb" data-id="${b.id}">حذف من الجهاز</button></div>`).join("")||'<p class="mut">لا يوجد.</p>'}`;
  else if(tab==="struct")body=structBody();
+ else if(tab==="review"){const ob=lib.books.filter(b=>b.ocr).sort((x,y)=>(y.added||"").localeCompare(x.added||""));body=`<p class="mut">الكتب المحوّلة آليًا من نسخها المصورة. يقرأ Gemini صورة كل صفحة ويراجع مسودة Tesseract ويصححها، ويعلّم الكلمات التي شكّ فيها لتراجعها أنت: تظهر مظللة بالبرتقالي في القارئ (لك وحدك)، وتختفي العلامة بعد «تعديل النص» وحفظه.</p>${ob.map(b=>`<div class="bk"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)} • ${b.ocrEngine==="gemini+tesseract"||b.ocrEngine==="gemini"?"Gemini + Tesseract":"Tesseract وحده"} • ${toAr(b.unc||0)} موضع للمراجعة${b.unrev?` • ${toAr(b.unrev)} صفحة لم يراجعها Gemini`:""}</span><div class="row" style="margin-top:6px"><button class="btn s nf" data-act="revlist" data-id="${b.id}">مواضع المراجعة</button><a class="btn s nf" href="#/book/${b.id}/1">فتح الكتاب</a>${b.pdf&&/^pdf\//.test(b.pdf)?`<button class="btn s nf" data-act="reocr" data-id="${b.id}">إعادة التحويل بالذكاء الاصطناعي</button>`:""}</div><div class="revl" id="rv-${b.id}"></div></div>`).join("")||'<p class="note">لا توجد كتب محوّلة بعد.</p>'}<p id="bmst" class="mut"></p>`}
  else if(tab==="corr")body=`<p class="mut">تصحيحات أرسلها القراء. راجع النص المقترح وعدّله إن لزم، ثم اعتمده فيُنشر مباشرة (يحتاج مفتاح الإدارة المباشرة).</p><div id="corrs"><p class="mut">جارٍ التحميل…</p></div>`;
  else body=`<p class="mut">نزّل نصوص المكتبة كلها على هذا الجهاز لتعمل دون إنترنت، وتتحدث تلقائيًا عند الاتصال. الحجم الكلي نحو ${Math.round(lib.books.reduce((s,b)=>s+(b.size||0),0)/1048576)} ميجابايت.</p><button class="btn p" data-act="offline">تنزيل المكتبة للعمل دون إنترنت</button><div id="offst"></div>`;
  view(`<h2>الإدارة</h2>${ghBox()}<label class="inl"><input type="checkbox" id="adm"${S.admin?" checked":""}> وضع الإدارة (يظهر زر «تعديل النص» في القارئ)</label>
@@ -1104,6 +1106,8 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="full")setFull(!S.full);
  else if(/^p(like|save|comm|copy|share|imgq|more|menu|delc|link|native|del)$/.test(a))postAct(a,el);
  else if(a==="feedMore")feedMore();
+ else if(a==="revlist"){const id=el.dataset.id,box=$("#rv-"+id);box.innerHTML='<p class="mut">جارٍ التحميل…</p>';const b=await loadBook(id).catch(()=>null);const u=(b&&b.unc)||{},ks=Object.keys(u).map(Number).sort((x,y)=>x-y),ur=(b&&b.unrev)||[];
+  box.innerHTML=(ks.map(i=>`<a class="chip" href="#/book/${id}/${i+1}">${esc(PL(b,i)||"ص "+(i+1))}: ${u[i].slice(0,4).map(esc).join("، ")}${u[i].length>4?"…":""}</a>`).join(" ")||'<p class="mut">لا توجد كلمات معلَّمة.</p>')+(ur.length?`<p class="mut">صفحات لم يراجعها Gemini: ${ur.slice(0,60).map(i=>`<a href="#/book/${id}/${i+1}">${toAr(i+1)}</a>`).join("، ")}</p>`:"")}
  else if(a==="bookmeta")metaDlg();else if(a==="reocr")reocr(el.dataset.id);else if(a==="bookdel")deleteBook(el.dataset.id);
  else if(a==="tup"||a==="tdown"){const r=el.closest(".trow"),o=a==="tup"?r.previousElementSibling:r.nextElementSibling;if(o)a==="tup"?o.before(r):o.after(r)}
  else if(a==="tdel"){const r=el.closest(".trow");if(confirm("حذف القسم «"+r.querySelector(".tn").value+"»؟ (يُحذف عند الحفظ)"))r.remove()}
