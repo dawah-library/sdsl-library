@@ -699,7 +699,8 @@ def assemble():
                     with urllib.request.urlopen(url, timeout=600) as r, open(os.path.join(INBOX, base + ".pdf"), "wb") as out: shutil.copyfileobj(r, out, 1 << 20)
                     os.remove(st); os.remove(os.path.join(INBOX, f)); print("نُزّل من صندوق الرفع:", base); continue
                 except Exception as e:
-                    print("تعذر تنزيل", base, e); continue
+                    det = e.read()[:200].decode("utf-8", "ignore") if hasattr(e, "read") else ""
+                    print("::warning::تعذر تنزيل %s من صندوق الرفع: %s %s" % (base, e, det), flush=True); continue
             if os.path.exists(up):  # الطريقة القديمة (رابط موقَّع محفوظ)
                 url = open(up).read().strip()
                 try:
