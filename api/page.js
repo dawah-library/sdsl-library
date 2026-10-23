@@ -53,7 +53,7 @@ const SECTIONS = {
   ai: ["المساعد العلمي", "مساعد بالذكاء الاصطناعي يبحث في كتب المكتبة ويجيب مع الإحالة إلى الكتاب والصفحة."]
 };
 async function build(p, q, base) {
-  const seg = p.split("/").filter(Boolean).map(decodeURIComponent), v = seg[0];
+  const seg = p.split("/").filter(Boolean).map(decodeURIComponent), v = (seg[0] || "").toLowerCase();
   const r = { title: SITE, desc: "", body: "", ld: null, type: "website", noindex: false };
   if (v === "book" && seg[1]) {
     const it = await findItem(seg[1], base.replace(/\/$/, "")); if (!it) { r.noindex = true; r.title = "غير موجود — " + SITE; return r; }

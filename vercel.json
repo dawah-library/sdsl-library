@@ -56,6 +56,10 @@
     {
       "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)/:rest*",
       "destination": "/api/page?__p=/:first/:rest*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/api/page?__p=/:path*"
     }
   ],
   "redirects": [
