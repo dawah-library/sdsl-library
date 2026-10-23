@@ -87,12 +87,13 @@ PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع 
 - كل كلمة لم تتأكد من قراءتها (لضعف الطباعة أو الصورة) ضعها بين ⟪ ⟫ مثل: ⟪كلمة⟫، ليراجعها مدقق بشري.
 أخرج النص فقط دون أي مقدمة أو تعليق."""
 REVIEW = """
-مرفق أيضًا مسودة لهذه الصفحة من أداة تعرّف ضوئي أخرى (Tesseract)، وقد تحتوي أخطاء حروف وكلمات:
+مرفق أيضًا مسودة أو مسودتان لهذه الصفحة من أدوات تعرّف ضوئي أخرى (Tesseract وSurya)، وقد تحتوي أخطاء حروف وكلمات:
 <<<
 {draft}
 >>>
 اعتمد على الصورة أولًا، واستعن بالمسودة مرجعًا ثانيًا للمقارنة: إن اختلفت قراءتك عن المسودة في كلمة فتحقق منها في الصورة جيدًا، وإن بقي شك فضعها بين ⟪ ⟫."""
 STATS = {"gemini": 0, "tesseract": 0}
+REPORT = []
 UNREVIEWED = []  # صفحات لم يراجعها Gemini (ازدحام أو نفاد الحصة)
 UNCERTAIN = {}  # رقم الصفحة (من صفر) ← كلمات شكّ فيها المراجع
 _glast = [0.0]
@@ -141,7 +142,7 @@ def img_part(img):
 
 
 def gemini_page(img, draft=""):
-    t = gemini_call([img_part(img), {"text": PROMPT + (REVIEW.format(draft=draft[:6000]) if draft.strip() else "")}])
+    t = gemini_call([img_part(img), {"text": PROMPT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
     return t.replace("[صفحة بلا نص]", "").strip() if t else None
 
 
@@ -152,8 +153,8 @@ def gemini_batch(imgs, drafts):
     """عدة صفحات في طلب واحد لتوفير الحصة؛ يعيد قائمة بنص كل صفحة أو None إن اختل التقسيم."""
     parts = []
     for k, (img, d) in enumerate(zip(imgs, drafts), 1):
-        parts += [{"text": "===== صفحة %d =====" % k}, img_part(img), {"text": "مسودة Tesseract للصفحة %d:\n<<<\n%s\n>>>" % (k, d[:5000])}]
-    parts.append({"text": PROMPT + "\n\nأمامك %d صفحات متتالية، لكل صفحة صورتها ومسودة من أداة تعرّف ضوئي أخرى قد تحتوي أخطاء. اعتمد على الصورة أولًا وقارن بالمسودة، وما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), len(imgs))})
+        parts += [{"text": "===== صفحة %d =====" % k}, img_part(img), {"text": "مسودات الصفحة %d من أدوات تعرّف ضوئي أخرى:\n<<<\n%s\n>>>" % (k, d[:9000])}]
+    parts.append({"text": PROMPT + "\n\nأمامك %d صفحات متتالية، لكل صفحة صورتها ومسودة أو مسودتان من أدوات تعرّف ضوئي أخرى قد تحتوي أخطاء. اعتمد على الصورة أولًا وقارن بالمسودات (ما اتفقت عليه المسودتان والصورة فهو ثابت)، وما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), len(imgs))})
     t = gemini_call(parts, max_tokens=min(60000, 4000 * len(imgs)))
     if not t: return None
     pieces = SEP.split(t)
@@ -177,6 +178,37 @@ def gemini_clean(t):
     return "\n".join(out)
 
 
+def surya_drafts(pdf, nums):
+    """مسودة ثانية من Surya (مفتوح المصدر، أدق من Tesseract في العربية). تعيد {رقم الصفحة: نص} أو {} إن تعذر."""
+    if os.environ.get("OCR_SURYA", "1") != "1":
+        return {}
+    if not shutil.which("surya_ocr"):
+        REPORT.append("- Surya غير مثبت على الخادم"); return {}
+    out = tempfile.mkdtemp()
+    cmd = ["surya_ocr", pdf, "--output_dir", out, "--page_range", "%d-%d" % (nums[0] - 1, nums[-1] - 1)]
+    t0 = time.time()
+    try:
+        subprocess.run(cmd, check=True, timeout=int(os.environ.get("SURYA_MAX_MIN", "150")) * 60,
+                       env=dict(os.environ, TORCH_DEVICE="cpu"), capture_output=True)
+    except Exception as e:
+        err = (getattr(e, "stderr", b"") or b"")[-600:].decode("utf-8", "ignore")
+        print("  تعذر Surya: %r %s" % (e, err), flush=True); REPORT.append("- تعذر Surya: %s\n```\n%s\n```" % (str(e)[:200], err)); return {}
+    res = {}
+    for root, _, files in os.walk(out):
+        for f in files:
+            if f.endswith(".json"):
+                data = json.load(open(os.path.join(root, f), encoding="utf-8"))
+                for pages in (data.values() if isinstance(data, dict) else [data]):
+                    for k, pg in enumerate(pages if isinstance(pages, list) else []):
+                        lines = [l.get("text", "") for l in pg.get("text_lines", []) if l.get("text", "").strip()]
+                        num = pg.get("page", k + nums[0])
+                        if num == 0 or (isinstance(num, int) and num < nums[0]): num = nums[0] + k  # ترقيم من صفر في بعض الإصدارات
+                        res[int(num)] = fix_punct("\n".join(lines))
+    print("  اكتملت مسودات Surya: %d صفحة في %d دقيقة" % (len(res), (time.time() - t0) // 60), flush=True)
+    REPORT.append("- Surya: %d صفحة في %d دقيقة" % (len(res), (time.time() - t0) // 60))
+    return res
+
+
 def ocr(pdf, first=1, last=None):
     """١) مسودات Tesseract لكل الصفحات بالتوازي ٢) Gemini يقرأ الصور ويراجع المسودات ويصحح ويعلّم الشك، عدة صفحات في الطلب."""
     from concurrent.futures import ThreadPoolExecutor
@@ -185,7 +217,7 @@ def ocr(pdf, first=1, last=None):
     nums = list(range(first, last + 1))
     STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
     batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
-    print("  المحرك: " + ("Tesseract ثم مراجعة Gemini (%d صفحات في الطلب)" % batch if GKEY else "Tesseract"), flush=True)
+    print("  المحرك: Tesseract" + (" + Surya" if os.environ.get("OCR_SURYA", "1") == "1" and shutil.which("surya_ocr") else "") + (" ثم مراجعة Gemini (%d صفحات في الطلب)" % batch if GKEY else ""), flush=True)
     with tempfile.TemporaryDirectory() as td:
         def tess(p):
             img = os.path.join(td, f"p{p}")
@@ -199,7 +231,10 @@ def ocr(pdf, first=1, last=None):
         with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
             drafts = list(ex.map(tess, nums))
         print("  اكتملت مسودات Tesseract: %d صفحة" % len(drafts), flush=True)
-        pages = list(drafts); reviewed = [False] * len(nums)
+        sur = surya_drafts(pdf, nums)
+        # المسودة الافتراضية إن لم يراجع Gemini: Surya إن وُجدت (أدق)، وإلا Tesseract
+        pages = [sur.get(p) or d for p, d in zip(nums, drafts)]; reviewed = [False] * len(nums)
+        both = [("[مسودة Tesseract]\n" + d + ("\n\n[مسودة Surya]\n" + sur[p] if sur.get(p) else "")) for p, d in zip(nums, drafts)]
         def accept(i, g):
             words = [w.strip() for w in UNC.findall(g) if w.strip()]
             if words: UNCERTAIN[i] = words[:40]
@@ -208,12 +243,12 @@ def ocr(pdf, first=1, last=None):
             for s0 in range(0, len(nums), batch):
                 idx = list(range(s0, min(s0 + batch, len(nums))))
                 imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
-                res = gemini_batch(imgs, [drafts[i] for i in idx]) if len(idx) > 1 else None
+                res = gemini_batch(imgs, [both[i] for i in idx]) if len(idx) > 1 else None
                 if res:
                     for i, g in zip(idx, res): accept(i, g)
                 else:
                     for i, img in zip(idx, imgs):
-                        g = gemini_page(img, drafts[i])
+                        g = gemini_page(img, both[i])
                         if g is not None: accept(i, g)
                 print(f"  روجعت حتى صفحة {nums[idx[-1]]}/{last}", flush=True)
         for i, ok in enumerate(reviewed):
@@ -300,8 +335,10 @@ def main():
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
         print(f"   تم: {entry.get('n', '?')} صفحة")
+        REPORT.append("## %s (%s)\n- الصفحات: %s، راجعها Gemini: %d، دون مراجعة: %d، مواضع شك: %d" % (entry.get("title"), bid, entry.get("n", "?"), STATS["gemini"], STATS["tesseract"], sum(len(v) for v in UNCERTAIN.values())))
     cat["version"] = int(datetime.datetime.now().timestamp() * 1000)
     json.dump(cat, open(cat_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    open(os.path.join(ROOT, "tools", "ocr-report.md"), "w", encoding="utf-8").write("# تقرير آخر تحويل — %s UTC\n\n" % datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M") + "\n".join(REPORT) + "\n")
 
 
 if __name__ == "__main__":

@@ -23,10 +23,32 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr poppler-utils
           mkdir -p tessdata && curl -sSL -o tessdata/ara.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: ذاكرة نماذج Surya
+        if: ${{ vars.OCR_SURYA != '0' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/huggingface
+            ~/.cache/datalab
+          key: surya-models-v1
+      - name: تثبيت Surya (أداة تعرّف مفتوحة المصدر أدق في العربية)
+        if: ${{ vars.OCR_SURYA != '0' }}
+        continue-on-error: true
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q surya-ocr
+          surya_ocr --help > /dev/null && echo "Surya جاهز"
       - name: التحويل
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           REOCR: ${{ github.event.inputs.reocr }}
+          OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
+          RECOGNITION_BATCH_SIZE: "16"
+          DETECTOR_BATCH_SIZE: "2"
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - run: |
-          bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox
+          bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md
