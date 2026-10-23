@@ -222,3 +222,152 @@ create policy "push own" on public.push_subs for all using (auth.uid() = user_id
 --
 --    ولإضافة محرر (يضيف ويعدّل دون إدارة الصلاحيات): غيّر 'admin' إلى 'editor' وضع بريده.
 -- =========================================================
+
+-- ===== الحلقة الاجتماعية: صفحات الأعضاء، والمتابعة، ومنشورات الأعضاء والاقتباس من الكتب، والردود =====
+-- صفحة العضو العامة (منفصلة عن profiles حتى لا تُكشف الصلاحيات ولا تُعدَّل)
+create table if not exists public.member_pages (
+  user_id uuid primary key default auth.uid() references auth.users on delete cascade,
+  name text not null check (length(name) between 2 and 60),
+  bio text check (length(bio) <= 300),
+  avatar_url text check (length(avatar_url) <= 500),
+  updated_at timestamptz not null default now()
+);
+alter table public.member_pages enable row level security;
+drop policy if exists "member pages read" on public.member_pages;
+create policy "member pages read" on public.member_pages for select using (true);
+drop policy if exists "member pages own insert" on public.member_pages;
+create policy "member pages own insert" on public.member_pages for insert with check ((select auth.uid()) = user_id);
+drop policy if exists "member pages own update" on public.member_pages;
+create policy "member pages own update" on public.member_pages for update using ((select auth.uid()) = user_id);
+
+-- المتابعة: followee = 'u:<معرف عضو>' أو 'a:<معرف مؤلف/شيخ>'
+create table if not exists public.follows (
+  follower uuid not null default auth.uid() references auth.users on delete cascade,
+  followee text not null check (followee ~ '^(u|a):[A-Za-z0-9_-]{1,64}$'),
+  created_at timestamptz not null default now(),
+  primary key (follower, followee)
+);
+create index if not exists follows_followee on public.follows (followee);
+alter table public.follows enable row level security;
+drop policy if exists "follows read" on public.follows;
+create policy "follows read" on public.follows for select using (true);
+drop policy if exists "follows own insert" on public.follows;
+create policy "follows own insert" on public.follows for insert with check ((select auth.uid()) = follower and followee <> 'u:' || (select auth.uid())::text);
+drop policy if exists "follows own delete" on public.follows;
+create policy "follows own delete" on public.follows for delete using ((select auth.uid()) = follower);
+
+-- منشورات الأعضاء: «مختارات» من كتب المكتبة فقط، بلا كلام شخصي. معرّفها في التفاعل: 'm' || id
+-- لا يكتب العضو في الجدول مباشرة: الخادم (api/mpost.js) يتحقق أن النص موجود في الكتاب ثم يكتب بمفتاح الخدمة.
+create table if not exists public.member_posts (
+  id bigserial primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  user_name text,
+  body text not null default '' check (length(body) <= 5000),
+  quote jsonb not null check (jsonb_typeof(quote) = 'object' and length(quote::text) <= 6000 and quote ? 'b' and quote ? 't'),
+  created_at timestamptz not null default now(),
+  check (body = '')
+);
+create index if not exists member_posts_user on public.member_posts (user_id, created_at desc);
+create index if not exists member_posts_time on public.member_posts (created_at desc);
+alter table public.member_posts enable row level security;
+drop policy if exists "member posts read" on public.member_posts;
+create policy "member posts read" on public.member_posts for select using (true);
+drop policy if exists "member posts own insert" on public.member_posts;
+drop policy if exists "member posts own update" on public.member_posts;
+drop policy if exists "member posts delete" on public.member_posts;
+create policy "member posts delete" on public.member_posts for delete using ((select auth.uid()) = user_id or public.is_staff());
+
+-- الردود على التعليقات، والإعجاب بالتعليقات
+alter table public.post_comments add column if not exists parent_id bigint references public.post_comments on delete cascade;
+create index if not exists post_comments_post on public.post_comments (post_id, created_at);
+create table if not exists public.comment_reactions (
+  comment_id bigint not null references public.post_comments on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+alter table public.comment_reactions enable row level security;
+drop policy if exists "comment reactions read" on public.comment_reactions;
+create policy "comment reactions read" on public.comment_reactions for select using (true);
+drop policy if exists "comment reactions own insert" on public.comment_reactions;
+create policy "comment reactions own insert" on public.comment_reactions for insert with check ((select auth.uid()) = user_id);
+drop policy if exists "comment reactions own delete" on public.comment_reactions;
+create policy "comment reactions own delete" on public.comment_reactions for delete using ((select auth.uid()) = user_id);
+
+-- إشعارات التفاعل: تعليق على منشورك، ورد على تعليقك، ومتابعة جديدة، وإعجاب بمنشورك
+create or replace function public.social_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare owner uuid; who text; pid bigint;
+begin
+  who := coalesce((select name from public.member_pages where user_id = auth.uid()), 'عضو');
+  if tg_table_name = 'post_comments' then
+    if new.parent_id is not null then
+      select user_id into owner from public.post_comments where id = new.parent_id;
+      if owner is not null and owner <> new.user_id then
+        insert into public.notifications(user_id, title, body, url) values (owner, who || ' ردّ على تعليقك', left(new.body, 140), '#/post/' || new.post_id);
+      end if;
+    end if;
+    if new.post_id ~ '^m[0-9]+$' then
+      pid := substr(new.post_id, 2)::bigint;
+      select user_id into owner from public.member_posts where id = pid;
+      if owner is not null and owner <> new.user_id then
+        insert into public.notifications(user_id, title, body, url) values (owner, who || ' علّق على منشورك', left(new.body, 140), '#/post/' || new.post_id);
+      end if;
+    end if;
+  elsif tg_table_name = 'post_reactions' then
+    if new.post_id ~ '^m[0-9]+$' then
+      pid := substr(new.post_id, 2)::bigint;
+      select user_id into owner from public.member_posts where id = pid;
+      if owner is not null and owner <> new.user_id then
+        insert into public.notifications(user_id, title, url) values (owner, who || ' أعجبه منشورك', '#/post/' || new.post_id);
+      end if;
+    end if;
+  elsif tg_table_name = 'follows' then
+    if new.followee like 'u:%' then
+      insert into public.notifications(user_id, title, url) values (substr(new.followee, 3)::uuid, who || ' بدأ متابعتك', '#/member/' || new.follower);
+    end if;
+  end if;
+  return new;
+exception when others then return new;  -- الإشعار لا يمنع التفاعل نفسه
+end $$;
+revoke execute on function public.social_notify() from public, anon, authenticated;
+drop trigger if exists social_notify_comments on public.post_comments;
+create trigger social_notify_comments after insert on public.post_comments for each row execute function public.social_notify();
+drop trigger if exists social_notify_reactions on public.post_reactions;
+create trigger social_notify_reactions after insert on public.post_reactions for each row execute function public.social_notify();
+drop trigger if exists social_notify_follows on public.follows;
+create trigger social_notify_follows after insert on public.follows for each row execute function public.social_notify();
+
+-- رسائل الأعضاء إلى إدارة المكتبة (لا مراسلة خاصة بين الأعضاء)
+create table if not exists public.admin_messages (
+  id bigserial primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  user_name text,
+  subject text not null check (length(subject) between 2 and 120),
+  body text not null check (length(body) between 2 and 4000),
+  reply text check (length(reply) <= 4000),
+  replied_at timestamptz,
+  status text not null default 'open' check (status in ('open','replied','closed')),
+  created_at timestamptz not null default now()
+);
+create index if not exists admin_messages_user on public.admin_messages (user_id, created_at desc);
+alter table public.admin_messages enable row level security;
+drop policy if exists "admin messages read" on public.admin_messages;
+create policy "admin messages read" on public.admin_messages for select using ((select auth.uid()) = user_id or public.is_staff());
+drop policy if exists "admin messages own insert" on public.admin_messages;
+create policy "admin messages own insert" on public.admin_messages for insert with check ((select auth.uid()) = user_id and reply is null and status = 'open');
+drop policy if exists "admin messages staff update" on public.admin_messages;
+create policy "admin messages staff update" on public.admin_messages for update using (public.is_staff());
+-- إشعار العضو عند رد الإدارة
+create or replace function public.admin_reply_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.reply is not null and (old.reply is distinct from new.reply) then
+    insert into public.notifications(user_id, title, body, url) values (new.user_id, 'ردّت إدارة المكتبة على رسالتك', left(new.reply, 140), '#/messages');
+  end if;
+  return new;
+exception when others then return new;
+end $$;
+revoke execute on function public.admin_reply_notify() from public, anon, authenticated;
+drop trigger if exists admin_reply_notify on public.admin_messages;
+create trigger admin_reply_notify after update on public.admin_messages for each row execute function public.admin_reply_notify();

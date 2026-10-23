@@ -454,3 +454,14 @@ body.fmtp .rd p.ph2{text-align:start;text-indent:0}
 .trv .trh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--mut,#777);margin-bottom:6px}.trv .trh span{flex:1}
 .trv .trt{line-height:1.75;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.98rem}.trv .trt p{margin:.4em 0}
 .trls{gap:6px;flex-wrap:wrap}
+.ixseg{margin:8px 0;flex-wrap:wrap}.ixseg small{opacity:.7}
+.ixq{font-family:inherit}.ixr{font-style:normal;color:var(--accent,#9a6b2f);font-size:.85em}.ixn{font-size:.8rem;margin-top:8px}
+.pquote{display:block;margin:8px 0;padding:12px 14px;border-inline-start:4px solid var(--ac);background:var(--card,rgba(0,0,0,.03));border-radius:8px;color:inherit;text-decoration:none}
+.pquote blockquote{margin:0 0 8px;line-height:1.9;font-size:1.02rem;white-space:pre-wrap}
+.pquote span{font-size:.82rem;color:var(--mut,#777)}
+.mstats{gap:14px;align-items:center;flex-wrap:wrap;margin:6px 0 14px}.mstats b{font-size:1.05rem}
+.ahero .fbtn{margin-top:6px}
+.cmt.rep{margin-inline-start:34px;font-size:.95em}
+.ptools{gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.msg{display:block;margin:10px 0}.msg p{margin:6px 0}.mreply{border-top:1px dashed var(--line);margin-top:8px;padding-top:6px}
+.msg textarea{min-height:80px;margin:6px 0}
