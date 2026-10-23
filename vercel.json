@@ -21,6 +21,10 @@
     },
     "api/remind.js": {
       "maxDuration": 60
+    },
+    "api/translate.js": {
+      "includeFiles": "data/{catalog.json,books/**}",
+      "maxDuration": 60
     }
   },
   "headers": [

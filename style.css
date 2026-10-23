@@ -450,3 +450,7 @@ body.fmtp .rd p.ph2{text-align:start;text-indent:0}
 .rd .tocl a{display:flex;gap:8px;align-items:baseline;color:inherit;text-decoration:none;border-bottom:1px dotted var(--pgline);padding:2px 0}
 .rd .tocl a span{flex:1}.rd .tocl a em{font-style:normal;color:var(--accent,#9a6b2f)}
 .rd .tocl a:hover span{text-decoration:underline}
+.trv{margin-top:14px;border-top:2px solid var(--pgline);padding-top:10px}
+.trv .trh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--mut,#777);margin-bottom:6px}.trv .trh span{flex:1}
+.trv .trt{line-height:1.75;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.98rem}.trv .trt p{margin:.4em 0}
+.trls{gap:6px;flex-wrap:wrap}

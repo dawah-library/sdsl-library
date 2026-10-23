@@ -425,7 +425,7 @@ async function vBook(id,p,h){
   ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf","المصورة"],["both","معًا"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
-  ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div>`}
+  ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="trv" id="trv" hidden></div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div><div class="trv" id="trv" hidden></div>`}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
   ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
@@ -442,7 +442,7 @@ async function vBook(id,p,h){
  </nav>`,same);
  document.body.classList.toggle("reading-full",!!S.full);setProg(b,p);
  if(scroll){scrWire(b);if(p>1&&!same){const s0=$(`.spg[data-p="${p}"]`);if(s0){const y=s0.getBoundingClientRect().top+scrollY-(S.full?8:96);scrollTo(0,y)}}}
- if(pv!=="text")renderPdf(b,p);
+ if(pv!=="text")renderPdf(b,p);if(S.tr)renderTr(b,p);
  paintMark();$$(".rd[data-id]").forEach(r=>paintNotes(r));Mine.touch(id,p);
  if(TTS.cont){TTS.cont=false;setTimeout(()=>TTS.next(),400)}else if(TTS.on&&!same)TTS.stop();
  if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
@@ -487,12 +487,19 @@ async function dictDlg(word){const w=strip(word).replace(/[^ء-ي]/g,"");if(!w)r
   const found=roots(w).map(r=>DICT[r]).filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,3);
   $("#dres").innerHTML=found.length?found.map(x=>`<p class="mut" style="margin:6px 0 2px">مادة (${esc(x.r)}) — مختار الصحاح للرازي</p><div class="dict">${esc(x.t.length>1500?x.t.slice(0,1500)+"…":x.t)}</div>`).join(""):"لم أجد جذر الكلمة في مختار الصحاح. جرّب المعاجم أدناه."}
  catch(x){$("#dres").textContent="تعذر تحميل المعجم. جرّب المعاجم أدناه."}}
-function trDlg(){const rb=$("#rb");if(!rb)return;const L=[["en","الإنجليزية"],["fr","الفرنسية"],["es","الإسبانية"],["tr","التركية"],["de","الألمانية"],["zh-CN","الصينية"],["ru","الروسية"]];
- openDlg(`<h3>ترجمة الصفحة</h3><select id="tl">${L.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("")}</select><button class="btn p" id="tgo" style="margin-top:8px">ترجم</button><div id="tres" dir="auto" style="line-height:1.8;margin-top:10px;white-space:pre-wrap"></div><p class="note">ترجمة آلية غير معتمدة وقد تخطئ في المصطلحات الشرعية، فلا يُعتمد عليها في الفتوى أو النقل.</p>`);
- $("#tgo").onclick=async()=>{const lang=$("#tl").value,txt=strip(plain(B(rb.dataset.id).pages[+rb.dataset.p-1]));const ch=txt.match(/[^.؟!\n]+[.؟!]?/g)||[txt];const parts=[];let cur="";ch.forEach(c=>{if((cur+c).length>450){parts.push(cur);cur=""}cur+=c+" "});if(cur.trim())parts.push(cur);
-  const out=$("#tres");out.textContent="جارٍ الترجمة…";let res="";
-  try{for(const p of parts.slice(0,12)){const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(p.trim())}&langpair=ar|${lang}`);const j=await r.json();res+=(j.responseData.translatedText||"")+" ";out.textContent=res}}
-  catch(x){out.innerHTML=`تعذرت الترجمة. <a target="_blank" rel="noopener" href="https://translate.google.com/?sl=ar&tl=${lang}&text=${encodeURIComponent(txt.slice(0,1500))}">افتحها في مترجم جوجل</a>`}}}
+// الترجمة داخل صفحة القراءة: يختار القارئ لغة مرة، فتظهر ترجمة كل صفحة تحت نصها أثناء التنقل
+const TRL=[["en","English"],["fr","Français"],["es","Español"],["tr","Türkçe"],["de","Deutsch"],["ru","Русский"],["zh-CN","中文"],["ur","اردو"],["id","Indonesia"],["ms","Melayu"],["bn","বাংলা"],["fa","فارسی"],["sw","Kiswahili"],["ha","Hausa"]],TRC=new Map();
+function trDlg(){openDlg(`<h3>الترجمة داخل الصفحة</h3><p class="mut">اختر لغة فتظهر ترجمة كل صفحة تحت نصها وأنت تتنقل في الكتاب.</p><div class="row trls">${TRL.map(([k,t])=>`<button class="btn s${S.tr===k?" p":""}" data-act="trset" data-l="${k}">${t}</button>`).join("")}</div>${S.tr?'<button class="btn s nf danger" data-act="trset" data-l="" style="margin-top:8px">إيقاف الترجمة</button>':""}<p class="note">ترجمة آلية غير معتمدة وقد تخطئ في المصطلحات الشرعية، فلا يُعتمد عليها في الفتوى أو النقل.</p>`)}
+async function mymemory(txt,lang){const ch=txt.match(/[^.؟!\n]+[.؟!]?/g)||[txt];const parts=[];let cur="";ch.forEach(c=>{if((cur+c).length>450){parts.push(cur);cur=""}cur+=c+" "});if(cur.trim())parts.push(cur);let res="";
+ for(const q of parts.slice(0,12)){const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q.trim())}&langpair=ar|${lang}`);const j=await r.json();res+=(j.responseData.translatedText||"")+" "}return res.trim()}
+async function renderTr(b,p){const box=$("#trv");if(!box)return;const lang=S.tr;if(!lang){box.hidden=true;return}box.hidden=false;
+ const lname=(TRL.find(x=>x[0]===lang)||[])[1]||lang,head=`<div class="trh"><span>الترجمة: ${esc(lname)}</span><button class="btn s nf" data-act="tr">تغيير</button><button class="btn s nf" data-act="trset" data-l="">إيقاف</button></div>`,key=b.id+"|"+p+"|"+lang;
+ const show=t=>{const el=$("#trv");if(el&&+el.dataset.p===p)el.innerHTML=head+`<div class="trt" dir="auto" lang="${lang}">${esc(t).replace(/\n+/g,"</p><p>").replace(/^/,"<p>")}</p></div>`};
+ box.dataset.p=p;if(TRC.has(key))return show(TRC.get(key));box.innerHTML=head+'<p class="mut">جارٍ ترجمة الصفحة…</p>';
+ let t="";try{if(!b.f){const r=await fetch(`/api/translate?id=${encodeURIComponent(b.id)}&p=${p}&l=${lang}&v=${b.size||0}`);if(r.ok)t=(await r.json()).text||""}}catch(e){}
+ if(!t){try{t=await mymemory(strip(plain(b.pages[p-1]||"")),lang)}catch(e){}}
+ if(!t&&String(b.pages[p-1]||"").trim()){const el=$("#trv");if(el&&+el.dataset.p===p)el.innerHTML=head+`<p class="note">تعذرت الترجمة الآن. <a target="_blank" rel="noopener" href="https://translate.google.com/?sl=ar&tl=${lang}&text=${encodeURIComponent(strip(plain(b.pages[p-1])).slice(0,1500))}">افتحها في مترجم جوجل</a></p>`;return}
+ TRC.set(key,t);show(t)}
 async function dl(name,content,type){const blob=content instanceof Blob?content:new Blob(["﻿"+content],{type:type+";charset=utf-8"});
  try{const d=window.claude&&window.claude.use?await window.claude.use("downloads"):null;if(d){await d.save({filename:name,data:blob});return}}catch(e){return}
  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
@@ -1355,7 +1362,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="fav"){const id=parse().p[1];S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):[...S.favs,id];saveS();el.textContent=S.favs.includes(id)?"إزالة من المفضلة":"مفضلة"}
  else if(a==="copyp"){const rb=$("#rb"),b=B(rb.dataset.id),i=+rb.dataset.p-1;try{await navigator.clipboard.writeText(plain(b.pages[i])+"\n— "+b.title+"، "+A(b.authorId).name+(PL(b,i)?"، "+PL(b,i):"")+"\n"+SITENAME+(siteLink()?"\n"+siteLink(`#/book/${b.id}/${i+1}`):""));el.textContent="تم النسخ"}catch(x){}}
  else if(a==="logout"){await Auth.signOut();location.hash="#/"}
- else if(a==="tr"){closeSheet();trDlg()}else if(a==="exp"){closeSheet();expDlg()}else if(a==="editp"){closeSheet();editDlg()}else if(a==="offline")offline();
+ else if(a==="tr"){closeSheet();trDlg()}else if(a==="trset"){S.tr=el.dataset.l||"";saveS();const d=dlg();if(d&&d.open)d.close();const c=cur();if(c){if(!$("#trv")&&S.tr)route();else renderTr(c.b,c.p)}}else if(a==="exp"){closeSheet();expDlg()}else if(a==="editp"){closeSheet();editDlg()}else if(a==="offline")offline();
  else if(a==="expUpd")dl("sdsl-update-"+today()+".json",JSON.stringify(updatePayload()),"application/json");
  else if(a==="delb"){if(confirm("حذف هذا العنصر من هذا الجهاز؟")){const id=el.dataset.id;LOCAL.catalog.books=LOCAL.catalog.books.filter(b=>b.id!==id);delete LOCAL.shards[id];await DB.set("local",LOCAL);SH.delete(id);merge();renderTicker();route()}}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const k=f.dataset.form,fd=new FormData(f);
