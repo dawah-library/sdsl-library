@@ -336,7 +336,7 @@
   },
   {
    "id": "baghawisunna",
-   "died": 516,
+   "died": 510,
    "author": "Baghawi",
    "book": "SharhSunna",
    "title": "شرح السنة",
@@ -345,7 +345,7 @@
   },
   {
    "id": "baghawitafsir",
-   "died": 516,
+   "died": 510,
    "author": "Baghawi",
    "book": "MacalimTanzil|Tafsir",
    "title": "معالم التنزيل (تفسير البغوي)",
@@ -354,7 +354,7 @@
   },
   {
    "id": "masabih",
-   "died": 516,
+   "died": 510,
    "author": "Baghawi",
    "book": "Masabih",
    "title": "مصابيح السنة",
@@ -383,7 +383,7 @@
    "id": "ajurrihamala",
    "died": 360,
    "author": "Ajurri",
-   "book": "AkhlaqHamala|Hamalat",
+   "book": "AkhlaqAhlQuran|AkhlaqHamala",
    "title": "أخلاق حملة القرآن",
    "authorName": "الآجري",
    "topic": "t11"
@@ -552,7 +552,7 @@
   },
   {
    "id": "naylawtar",
-   "died": 1250,
+   "died": 1255,
    "author": "Shawkani",
    "book": "NaylAwtar|Nayl",
    "title": "نيل الأوطار",
@@ -661,7 +661,7 @@
   {
    "id": "ajurrumiyya",
    "died": 723,
-   "author": "IbnAjurrum|Sanhaji",
+   "author": "IbnAjrum|IbnAjurrum",
    "book": "Ajurrumiyya|Muqaddima",
    "title": "متن الآجرومية",
    "authorName": "ابن آجروم",
@@ -714,7 +714,7 @@
   },
   {
    "id": "sirahisham",
-   "died": 218,
+   "died": 213,
    "author": "IbnHisham",
    "book": "Sira",
    "title": "السيرة النبوية (سيرة ابن هشام)",
