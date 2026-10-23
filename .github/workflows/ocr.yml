@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: ذاكرة نماذج Surya
-        if: ${{ vars.OCR_SURYA != '0' }}
+        if: ${{ !startsWith(format('x{0}', vars.OCR_SURYA), 'x0') }}
         uses: actions/cache@v4
         with:
           path: |
@@ -36,7 +36,7 @@ jobs:
             ~/.cache/datalab
           key: surya-models-v1
       - name: تثبيت Surya (أداة تعرّف مفتوحة المصدر أدق في العربية)
-        if: ${{ vars.OCR_SURYA != '0' }}
+        if: ${{ !startsWith(format('x{0}', vars.OCR_SURYA), 'x0') }}
         continue-on-error: true
         run: |
           pip install -q torch --index-url https://download.pytorch.org/whl/cpu
