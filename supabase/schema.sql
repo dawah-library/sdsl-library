@@ -38,6 +38,14 @@ end $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+-- دوال المشغّلات تعمل تلقائيًا فقط، فلا يُسمح باستدعائها مباشرة عبر الواجهة
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+do $$ begin
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'rls_auto_enable') then
+    execute 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated';
+  end if;
+end $$;
 insert into public.profiles (id, name)
   select id, coalesce(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name', email) from auth.users
   on conflict (id) do nothing;
