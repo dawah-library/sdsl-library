@@ -446,3 +446,7 @@ body.fmtp .rd p.ph2{text-align:start;text-indent:0}
 .bcard h3{margin:0 0 4px;font-family:var(--rf);font-size:1.3rem}.bcard .bsum{line-height:1.9}
 .btab{width:100%;border-collapse:collapse;margin:8px 0;font-size:.88rem}.btab th{text-align:start;white-space:nowrap;padding:6px 8px;opacity:.7;font-weight:500;vertical-align:top;width:1%}.btab td{padding:6px 8px}.btab tr+tr{border-top:1px solid var(--line)}
 .bcard h4{margin:12px 0 4px}.bcard ul{margin:0;padding-inline-start:20px;line-height:1.9}
+.rd .tocl{margin:.15em 0;text-indent:0}
+.rd .tocl a{display:flex;gap:8px;align-items:baseline;color:inherit;text-decoration:none;border-bottom:1px dotted var(--pgline);padding:2px 0}
+.rd .tocl a span{flex:1}.rd .tocl a em{font-style:normal;color:var(--accent,#9a6b2f)}
+.rd .tocl a:hover span{text-decoration:underline}

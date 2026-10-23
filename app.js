@@ -256,11 +256,19 @@ async function vSearch(q){
 /* ---------- القارئ الورقي ---------- */
 let LASTREAD=null;
 const uncOf=(b,i)=>(S.admin||isAdmin())&&b&&b.unc&&b.unc[String(i)]||null;
-function pageHtml(text,h,uw){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tx0=S.tash?text:strip(text);
+// صفحات فهرس الطبعة: سطر «العنوان ..... 12» يصير رابطًا إلى الصفحة المقابلة بترقيم الطبعة
+const TOCL=/^#*\s*(.{3,150}?)\s*[.…·_\-ـ]{3,}\s*\(?([\d٠-٩]{1,4})\)?\s*$/,LBLMAP=new Map();
+const arD=s=>+String(s).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+function pageByLabel(b,n){if(!b||!b.pages)return 0;let m=LBLMAP.get(b);if(!m){m=new Map();for(let i=0;i<b.pages.length;i++){const x=/([\d٠-٩]+)\s*$/.exec(PL(b,i)||"");if(x&&!m.has(arD(x[1])))m.set(arD(x[1]),i+1)}LBLMAP.set(b,m)}return m.get(n)||0}
+// دمج الأسطر المكسورة: السطر الذي لا ينتهي بعلامة وقف يتصل بما بعده في فقرة واحدة
+function joinLines(tx){if(S.merge===false)return tx;const L=tx.split("\n"),o=[];for(const l of L){const t=l.trim(),prev=o.length?o[o.length-1]:null;
+ if(prev!==null&&t&&prev.trim()&&!/^#/.test(prev)&&!/^#|^[-•*]\s|^[(\[]?[\d٠-٩]{1,3}[)\].-]\s|^\*\*\*/.test(t)&&!/[.؟!:؛»)\]"*]\s*$/.test(prev)&&!/\s{3,}/.test(prev.trim())&&!TOCL.test(prev))o[o.length-1]=prev.trimEnd()+" "+t;else o.push(l)}return o.join("\n")}
+function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tx0=S.tash?text:strip(text);
  // الحواشي: ما بعد سطر الشرطات ____ يُعرض حواشي أسفل الصفحة (ظاهرة أو مطوية بحسب اختيار القارئ)
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
- return tx.split("\n").map(line=>{const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
+ const tocPg=bk&&tx.split("\n").filter(l=>TOCL.test(l.trim())).length>=4;
+ return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
   const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`:w).join("");
   return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p>${inner}</p>`}).join("")+fnHtml}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
@@ -347,12 +355,12 @@ function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
  $$("[data-mode]").forEach(m=>m.onclick=()=>{if(S.mode===m.dataset.mode)return;S.mode=m.dataset.mode;saveS();$$("[data-mode]").forEach(x=>x.setAttribute("aria-checked",x===m));const c=cur();closeSheet();if(c){LASTREAD=null;history.replaceState(null,"","/book/"+c.b.id+"/"+c.p);route()}})}
-function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages){rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1));paintNotes(rb)}})}
+function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages){rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1),b);paintNotes(rb)}})}
 /* شريط تقدم القراءة أعلى الشاشة */
 function setProg(b,p){let el=$("#rprog");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="rprog" aria-hidden="true"><i></i></div>');el=$("#rprog")}const n=b.pages.length;el.hidden=n<2;el.firstChild.style.width=(n>1?Math.round(p/n*1000)/10:0)+"%"}
 /* وضع التمرير العمودي المتصل: الصفحات تتتابع، والصفحة الظاهرة هي الحالية */
 const SCR={io:null,more:null};
-function spgHtml(b,k,h){const lb=PL(b,k-1),ch=chapterOf(b,k);return`<section class="spg" data-p="${k}"${ch?` data-ch="${esc(ch)}"`:""}><div class="spn">صفحة ${toAr(k)}${lb?` <small>${esc(lb)}</small>`:""}</div><div class="rd" data-id="${b.id}" data-p="${k}">${pageHtml(b.pages[k-1],h,uncOf(b,k-1))}</div></section>`}
+function spgHtml(b,k,h){const lb=PL(b,k-1),ch=chapterOf(b,k);return`<section class="spg" data-p="${k}"${ch?` data-ch="${esc(ch)}"`:""}><div class="spn">صفحة ${toAr(k)}${lb?` <small>${esc(lb)}</small>`:""}</div><div class="rd" data-id="${b.id}" data-p="${k}">${pageHtml(b.pages[k-1],h,uncOf(b,k-1),b)}</div></section>`}
 function scrSet(b,k){const sec=$(`.spg[data-p="${k}"]`);if(!sec)return;const old=$("#rb");if(old&&old!==sec.querySelector(".rd"))old.removeAttribute("id");sec.querySelector(".rd").id="rb";
  if(LASTREAD&&LASTREAD.p===k)return;LASTREAD={id:b.id,p:k};S.last={id:b.id,p:k};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[b.id];S.lastBy[b.id]=k;saveS();
  const n=b.pages.length,pg=$(".pgb b");if(pg)pg.textContent=toAr(k);const pr=$("[data-act=prev]"),nx=$("[data-act=next]");if(pr)pr.disabled=k<=1;if(nx)nx.disabled=k>=n;
@@ -417,7 +425,7 @@ async function vBook(id,p,h){
   ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf","المصورة"],["both","معًا"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
-  ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
+  ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div>`}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
   ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
