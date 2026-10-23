@@ -465,3 +465,5 @@ body.fmtp .rd p.ph2{text-align:start;text-indent:0}
 .ptools{gap:6px;flex-wrap:wrap;margin:6px 0 10px}
 .msg{display:block;margin:10px 0}.msg p{margin:6px 0}.mreply{border-top:1px dashed var(--line);margin-top:8px;padding-top:6px}
 .msg textarea{min-height:80px;margin:6px 0}
+.phbox{margin-top:10px;text-align:center}.phbox canvas{width:220px;height:220px;border-radius:50%;touch-action:none;cursor:grab;box-shadow:0 0 0 3px var(--ac);background:#eee;display:block;margin:0 auto 8px}
+.ahero .btn.s{margin-top:6px}

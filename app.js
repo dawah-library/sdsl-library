@@ -165,7 +165,7 @@ function vAuthor(id,q){const a=A(id),mine=lib.books.filter(b=>b.authorId===id&&!
  const NAMES={books:"الكتب",articles:"المقالات",fatawa:"الفتاوى",bayanat:"البيانات",tafrighat:"التفريغات"},ROUTE={articles:"articles",fatawa:"fatawa",bayanat:"bayanat"};
  const shown=Object.keys(T_).filter(k=>k==="books"||k==="articles"||T_[k].length);
  const k=shown.includes(q.k)?q.k:(shown.find(x=>T_[x].length)||"books"),items=T_[k];
- const tt=tj(id);view(`<div class="ahero">${avatar(a,"big")}<h2>${esc(a.name)}${died(a)}</h2>${typeof followBtn==="function"&&Cloud.on()?followBtn("a:"+id,false):""}</div>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
+ const tt=tj(id);view(`<div class="ahero">${avatar(a,"big")}<h2>${esc(a.name)}${died(a)}</h2>${typeof followBtn==="function"&&Cloud.on()?followBtn("a:"+id,false):""}${isAdmin()&&GH.on?`<button class="btn s nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button>`:""}</div>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
  <div class="tabs" role="tablist">${shown.map(x=>`<a role="tab" aria-selected="${k===x}" href="#/author/${id}?k=${x}">${NAMES[x]} (${T_[x].length})</a>`).join("")}<a role="tab" aria-selected="false" href="#/posts?a=${id}">المنشورات</a></div>
  ${items.slice(0,40).map(anyCard).join("")||`<p class="mut">لا توجد ${NAMES[k]} بعد.</p>`}
  ${items.length>40&&ROUTE[k]?`<p><a href="#/${ROUTE[k]}?a=${id}">عرض كل ${NAMES[k]} (${items.length})</a></p>`:""}
@@ -857,6 +857,22 @@ async function saveAuthor(f){const st=$("#aest"),fd=new FormData(f),id=fd.get("i
  if(fd.get("nophoto"))up.photo="";
  const apply=c=>{const a=c.authors.find(x=>x.id===id);if(!a)throw new Error("المؤلف غير موجود في الفهرس المنشور (ربما أُضيف على هذا الجهاز فقط).");Object.assign(a,up);if(a.photo==="")delete a.photo;if(d)a.died=d;else delete a.died;c.version=Date.now();return c};
  try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات مؤلف: "+up.name,true);try{apply(CAT)}catch(e){}merge();st.textContent="✓ حُفظ.";toast("حُفظت بيانات المؤلف")}catch(e){st.textContent=e.message}}
+/* صورة المؤلف من معرض صور الهاتف: اختيار، ثم تحريك وتكبير داخل الإطار الدائري، ثم حفظ */
+function photoDlg(id){const a=A(id);if(!GH.on)return alert("سجّل الدخول بحساب الإدارة أولًا.");
+ openDlg(`<h3>صورة ${esc(a.name)}</h3><p class="mut">اختر صورة من معرض الصور أو التقط صورة، ثم حرّكها بإصبعك وكبّرها حتى يكون الوجه في وسط الدائرة.</p>
+ <label class="btn p nf" style="display:inline-block;cursor:pointer">اختيار صورة<input type="file" id="phf" accept="image/*" hidden></label>
+ <div class="phbox" id="phbox" hidden><canvas id="phc" width="320" height="320"></canvas><label for="phz">التكبير</label><input type="range" id="phz" min="1" max="4" step="0.01" value="1"></div>
+ <div class="row" style="margin-top:10px"><button class="btn p" id="phsave" disabled>حفظ الصورة</button>${a.photo?'<button class="btn danger" id="phdel">إزالة الصورة</button>':""}</div><p id="phst" class="mut"></p>`);
+ let img=null,z=1,ox=0,oy=0;const c=$("#phc"),g=c.getContext("2d"),S=320;
+ const draw=()=>{if(!img)return;const base=Math.max(S/img.width,S/img.height)*z,w=img.width*base,h=img.height*base;ox=Math.min(0,Math.max(S-w,ox));oy=Math.min(0,Math.max(S-h,oy));g.clearRect(0,0,S,S);g.drawImage(img,ox,oy,w,h)};
+ $("#phf").onchange=e=>{const f=e.target.files[0];if(!f)return;const i=new Image();i.onload=()=>{img=i;z=1;const base=Math.max(S/i.width,S/i.height);ox=(S-i.width*base)/2;oy=(S-i.height*base)/2;$("#phbox").hidden=false;$("#phz").value=1;$("#phsave").disabled=false;draw()};i.src=URL.createObjectURL(f)};
+ $("#phz").oninput=e=>{const nz=+e.target.value,cx=S/2,cy=S/2;ox=cx-(cx-ox)*nz/z;oy=cy-(cy-oy)*nz/z;z=nz;draw()};
+ let drag=null;c.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ox,oy};c.setPointerCapture(e.pointerId)};c.onpointermove=e=>{if(!drag)return;const k=S/c.getBoundingClientRect().width;ox=drag.ox+(e.clientX-drag.x)*k;oy=drag.oy+(e.clientY-drag.y)*k;draw()};c.onpointerup=()=>{drag=null};
+ const save=async photo=>{const st=$("#phst");st.textContent="جارٍ الحفظ…";
+  const apply=x=>{const y=x.authors.find(q=>q.id===id);if(!y)throw new Error("المؤلف غير موجود في الفهرس المنشور.");if(photo)y.photo=photo;else delete y.photo;x.version=Date.now();return x};
+  await GH.editJSON("data/catalog.json",apply,(photo?"صورة المؤلف: ":"إزالة صورة المؤلف: ")+a.name,true);try{apply(CAT)}catch(e){}merge();dlg().close();toast("حُفظت الصورة، وتظهر للجميع خلال دقيقة.");route()};
+ $("#phsave").onclick=async()=>{const b=$("#phsave");b.disabled=true;try{const blob=await new Promise(ok=>c.toBlob(ok,"image/jpeg",.86));const bytes=new Uint8Array(await blob.arrayBuffer()),path="assets/authors/"+id+".jpg";$("#phst").textContent="جارٍ رفع الصورة…";await GH.put(path,bytes,"صورة المؤلف: "+a.name);await save(path+"?v="+Date.now().toString(36))}catch(e){$("#phst").textContent=e.message;b.disabled=false}};
+ if($("#phdel"))$("#phdel").onclick=async()=>{if(confirm("إزالة صورة "+a.name+" من الموقع؟"))try{await save("")}catch(e){$("#phst").textContent=e.message}}}
 /* بيانات الكتاب من القارئ */
 function metaDlg(){const c=cur();if(!c)return;closeSheet();const b=c.b;if(isArt(b)&&b.f)return alert("تعديل بيانات المقالات المستوردة يأتي لاحقًا؛ يمكنك تعديل نصها من «تعديل النص».");
  const tags=b.tags||[],o=(arr,v)=>arr.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
@@ -1381,6 +1397,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="ghout"){GH.token="";toast("خرجت من وضع الإدارة المباشرة.");route()}
  else if((a==="pview"||a==="pv")&&!Auth.user&&(a==="pview"||el.dataset.pv!=="text")){needLogin("عرض النسخة المصورة بجوار النص متاح لأعضاء المكتبة المسجلين، والتسجيل مجاني.")}
  else if(a==="pview"){S.pv=(S.pv&&S.pv!=="text")?"text":"pdf";saveS();LASTREAD=null;route()}
+ else if(a==="aphoto"){photoDlg(el.dataset.id)}
  else if(a==="pdfdl"){const c=cur();if(c)pdfDl(c.b).catch(e=>toast(e.message))}
  else if(a==="pv"){S.pv=el.dataset.pv;saveS();LASTREAD=null;route()}
  else if(a==="pdfoff"){const c=cur();if(c){c.b.pdfOffset=(+c.b.pdfOffset||0)+(+el.dataset.d);renderPdf(c.b,c.p)}}
