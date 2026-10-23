@@ -81,7 +81,7 @@ jobs:
 
   review:
     needs: [plan, drafts]
-    if: ${{ always() && needs.plan.outputs.any == '1' }}
+    if: ${{ !cancelled() && needs.plan.outputs.any == '1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
