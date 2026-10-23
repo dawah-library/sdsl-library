@@ -75,7 +75,11 @@ def clean_page(t):
 
 # ---------- التحويل بالذكاء الاصطناعي (Gemini) إن وُجد المفتاح، وإلا Tesseract ----------
 # يمكن إضافة مفاتيح Gemini أخرى من حسابات Google مختلفة (GEMINI_API_KEY_2 … _5) فتتضاعف الحصة اليومية المجانية
-GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 6)] if k.strip()]
+GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 10)] if k.strip()]
+# محرك إضافي مجاني: GitHub Models (نماذج OpenAI عبر رمز GitHub Actions نفسه، بلا حساب ولا مفتاح جديد) — يعمل بجوار Gemini
+GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
+GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
+GHM_EXH = set()
 NBOOKS = max(1, int(os.environ.get("OCR_NBOOKS", "1") or 1))
 KW = max(1, len(GKEYS) // min(NBOOKS, max(1, len(GKEYS)))) if GKEYS else 1  # خيوط هذا الجهاز (مفتاح لكل خيط)
 if GKEYS:  # في التحويل المتوازي يبدأ كل جهاز بمفاتيح مختلفة، فلا يتزاحم جهازان على مفتاح واحد
@@ -132,8 +136,43 @@ def _next_key(ki):
     return None
 
 
+def ghm_call(parts, max_tokens):
+    """الطلب نفسه إلى GitHub Models (صيغة OpenAI)؛ يعيد النص، أو None إن نفدت حصته اليومية في كل نماذجه."""
+    content = []
+    for p in parts:
+        if "text" in p: content.append({"type": "text", "text": p["text"]})
+        elif "inline_data" in p: content.append({"type": "image_url", "image_url": {"url": "data:%s;base64,%s" % (p["inline_data"]["mime_type"], p["inline_data"]["data"]), "detail": "high"}})
+    for m in GHM_MODELS:
+        if m in GHM_EXH: continue
+        body = json.dumps({"model": m, "messages": [{"role": "user", "content": content}], "temperature": 0, "max_tokens": min(max_tokens, 4000)}).encode()
+        for attempt in range(4):
+            try:
+                req = urllib.request.Request("https://models.github.ai/inference/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + GHM_TOKEN})
+                with urllib.request.urlopen(req, timeout=300) as r: j = json.loads(r.read())
+                t = ((j.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                if t.strip(): TL.model = m; STATS["ghm"] = STATS.get("ghm", 0) + 1; return t
+                break
+            except urllib.error.HTTPError as e:
+                msg = e.read()[:300].decode("utf-8", "ignore"); ERRS["GitHub %s %s" % (m, e.code)] += 1
+                print("    GitHub Models %s %s: %s" % (m, e.code, msg[:140]), flush=True)
+                if e.code == 429 and re.search(r"day|daily|UserByDay", msg, re.I): GHM_EXH.add(m); break
+                if e.code == 413 or e.code == 400: break  # الطلب أكبر من حد الخطة المجانية
+                if e.code in (401, 403): GHM_EXH.update(GHM_MODELS); return None
+                time.sleep(min(60, 10 * (attempt + 1)))
+            except Exception as e:
+                ERRS["GitHub اتصال"] += 1; time.sleep(5 * (attempt + 1))
+    return None
+
+
 def gemini_call(parts, max_tokens=8192, models=None, fail=None):
-    """طلب واحد إلى Gemini مع إعادة المحاولة بصبر عند الازدحام، وتبديل المفتاح عند نفاد حصته؛ يعيد النص أو None."""
+    """طلب واحد إلى Gemini مع إعادة المحاولة بصبر عند الازدحام، وتبديل المفتاح عند نفاد حصته؛ يعيد النص أو None.
+    الخيوط المخصصة لـ GitHub Models تجرّبه أولًا، فإن نفدت حصته تحوّلت إلى Gemini."""
+    if getattr(TL, "provider", "") == "ghm" and models is None:
+        t = ghm_call(parts, max_tokens)
+        if t is not None: return t
+        TL.provider = ""  # نفدت حصة GitHub Models: يكمل هذا الخيط بـ Gemini
+        if not GKEYS: return None
+    if not GKEYS: return None
     fail = fail or GFAIL
     if fail[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "25")) or len(KEXH) >= len(GKEYS):
         return None
@@ -574,7 +613,7 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
     with tempfile.TemporaryDirectory() as td:
         def jpg(p):
             subprocess.run(["pdftoppm", "-r", os.environ.get("OCR_DPI", "200"), "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
-        if GKEY and scan:
+        if (GKEY or GHM_TOKEN) and scan:
             with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, [nums[i] for i in scan]))
         def drafts_of(i):
             if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]]
@@ -588,15 +627,23 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
-            if "lite" in (getattr(TL, "model", "") or ""): LITE.add(i)
+            if re.search(r"lite|mini", getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
             else: LITE.discard(i)
-        if GKEY and scan:
+        if (GKEY or GHM_TOKEN) and scan:
             groups = [scan[k:k + batch] for k in range(0, len(scan), batch)]
-            workers = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
-            done = [0]
+            GW = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
+            HW = int(os.environ.get("GHM_WORKERS", "2")) if GHM_TOKEN else 0
+            workers = GW + HW
+            done = [0]; slots = iter(range(10 ** 6)); slot_lock = threading.Lock()
             def review(job):
                 wi, idx = job
-                if getattr(TL, "k", None) is None: TL.k = wi % len(GKEYS)
+                if getattr(TL, "slot", None) is None:  # كل خيط يثبت على محرك واحد: مفاتيح Gemini أولًا ثم GitHub Models
+                    with slot_lock: TL.slot = next(slots)
+                    TL.k = TL.slot % max(1, len(GKEYS))
+                    TL.provider = "ghm" if TL.slot >= GW else ""
+                if getattr(TL, "provider", "") == "ghm" and len(idx) > 2:  # حد الخطة المجانية لحجم الطلب: صفحتان في الطلب
+                    for k2 in range(0, len(idx), 2): review((wi, idx[k2:k2 + 2]))
+                    return
                 imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
                 res = gemini_batch(imgs, [drafts_of(i) for i in idx]) if len(idx) > 1 else None
                 if res:
@@ -606,7 +653,7 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
                         g = gemini_page(img, drafts_of(i))
                         if g is not None: accept(i, g)
                 done[0] += len(idx); print(f"  روجعت {done[0]}/{len(scan)} صفحة", flush=True)
-            print("  المراجعة بالتوازي: %d خيوط على %d مفاتيح" % (workers, len(GKEYS)), flush=True)
+            print("  المراجعة بالتوازي: %d خيوط (%d Gemini على %d مفاتيح + %d GitHub Models)" % (workers, GW, len(GKEYS), HW), flush=True)
             with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="rv") as ex:
                 list(ex.map(review, list(enumerate(groups))))
             if HAND: REPORT.append("- صفحات مخطوطة بخط اليد: %d (أُحيلت إلى المدقق الأقوى وتحتاج مراجعة بشرية)" % len(HAND))

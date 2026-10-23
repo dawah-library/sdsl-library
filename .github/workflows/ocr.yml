@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
   id-token: write
+  models: read
 env:
   OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
 concurrency:
@@ -121,6 +122,14 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHM_WORKERS: ${{ vars.GHM_WORKERS || '2' }}
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           OCR_DRAFTS: ocr-drafts
