@@ -1,10 +1,58 @@
 {
   "functions": {
-    "api/ask.js": { "includeFiles": "data/**", "maxDuration": 300, "memory": 1024 },
-    "api/import.js": { "maxDuration": 30 }
+    "api/ask.js": {
+      "includeFiles": "data/**",
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "api/import.js": {
+      "maxDuration": 30
+    },
+    "api/page.js": {
+      "includeFiles": "data/**",
+      "maxDuration": 15
+    },
+    "api/sitemap.js": {
+      "includeFiles": "data/**",
+      "maxDuration": 15
+    }
   },
   "headers": [
-    { "source": "/data/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }] },
-    { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/sitemap?robots=1"
+    },
+    {
+      "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)",
+      "destination": "/api/page?__p=/:first"
+    },
+    {
+      "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)/:rest*",
+      "destination": "/api/page?__p=/:first/:rest*"
+    }
   ]
 }

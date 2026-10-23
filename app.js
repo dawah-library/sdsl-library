@@ -11,7 +11,8 @@ const DB={open(){return new Promise((res,rej)=>{const r=indexedDB.open("sdsl",1)
  async set(k,v){try{const d=await this.open();await new Promise((r,j)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=r;t.onerror=j})}catch(e){ls.set("db_"+k,v)}}};
 const CFG=Object.assign({supabaseUrl:"",supabaseAnonKey:"",askEndpoint:"api/ask",importEndpoint:"api/import",siteUrl:""},window.SDSL_CONFIG||{});
 const SITENAME="المكتبة الرقمية للدعوة السلفية بمصر";
-const siteLink=(h)=>CFG.siteUrl?CFG.siteUrl.replace(/\/?$/,"/")+(h||""):"";
+const siteLink=(h)=>{const base=(CFG.siteUrl||location.origin+"/").replace(/\/?$/,"/");return base+String(h||"").replace(/^#?\/?/,"")};
+const HERE=()=>"#"+(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;
 const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",admin:false,favs:[],seen:0,look:false},ls.get("set",{}));
 const saveS=()=>ls.set("set",S);
 const toAr=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
@@ -49,7 +50,8 @@ const isStatement=b=>b.topicId==="at17"||/بيانات|(^|›\s*)بيان/.test(
 const isReadBook=b=>/^المكتبة المقروءة/.test(b.c||"");
 const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس صوتية/.test(b.source||"");
 const kindOf=b=>!isArt(b)||isReadBook(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
-const VOL2=b=>!!(b.set&&b.vol>1),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
+let _SM=null,_SMn=-1;const setMin=k=>{if(_SMn!==lib.books.length){_SM={};lib.books.forEach(x=>{if(x.set&&(_SM[x.set]==null||x.vol<_SM[x.set]))_SM[x.set]=x.vol});_SMn=lib.books.length}return _SM[k]};
+const VOL2=b=>!!(b.set&&b.vol>setMin(b.set)),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
 const COL={dawah:"مكتبة الدعوة السلفية",turath:"تراث"};
 const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
 const PL=(b,i)=>SS.label(b,i);
@@ -319,7 +321,7 @@ function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg
 function cur(){const rb=$("#rb");return rb?{b:B(rb.dataset.id),p:+rb.dataset.p}:null}
 function tocSheet(){const c=cur();if(!c)return;const b=c.b,ch=chapterOf(b,c.p);
  const vols=b.set?lib.books.filter(x=>x.set===b.set).sort((x,y)=>x.vol-y.vol):[];
- openSheet("فهرس الكتاب",`${vols.length?`<div class="volbar"><b>المجلدات</b><div class="chips">${vols.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1" data-act="closeSheet">ج ${toAr(x.vol)}</a>`).join("")}</div></div>`:""}<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
+ openSheet("فهرس الكتاب",`${vols.length?`<div class="volbar"><b>المجلدات</b><div class="chips">${vols.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1" data-act="closeSheet">${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`).join("")}</div></div>`:""}<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
  ()=>{$("#tocq").oninput=e=>{const q=norm(e.target.value);$$("#toclist a").forEach(a=>a.hidden=q&&!norm(a.textContent).includes(q))};const on=$("#toclist a.on");if(on)on.scrollIntoView({block:"center"})})}
 function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
  openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="number" min="1" max="${n}" value="${c.p}" aria-label="رقم الصفحة"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p></form>`,
@@ -985,12 +987,12 @@ async function feedMore(){if(FEED.busy||!$("#feed"))return;const batch=FEED.list
 async function vPost(id){await loadPosts();const x=findPost(id);if(!x)return view('<p class="note">المنشور غير موجود.</p><p><a href="#/posts">← كل المنشورات</a></p>');
  if(x.act)x.b=await loadBook(x.b.id).catch(()=>x.b);const st=await Social.state([x.id]);
  view(`<p><a href="#/posts">← كل المنشورات</a></p><div class="feed">${postHtml(x,st)}</div>`);openComments($(".post"))}
-function needLogin(msg){openSheet("للأعضاء المسجلين",`<p>${esc(msg||"الإعجاب والتعليق والحفظ والمشاركة متاحة لأعضاء المكتبة المسجلين، والقراءة متاحة للجميع.")}</p><div class="row"><a class="btn p nf" href="#/account?m=signup&next=${encodeURIComponent(location.hash)}" data-act="closeSheet">أنشئ حسابًا مجانيًا</a><a class="btn nf" href="#/account?next=${encodeURIComponent(location.hash)}" data-act="closeSheet">لدي حساب</a></div>`)}
+function needLogin(msg){openSheet("للأعضاء المسجلين",`<p>${esc(msg||"الإعجاب والتعليق والحفظ والمشاركة متاحة لأعضاء المكتبة المسجلين، والقراءة متاحة للجميع.")}</p><div class="row"><a class="btn p nf" href="#/account?m=signup&next=${encodeURIComponent(HERE())}" data-act="closeSheet">أنشئ حسابًا مجانيًا</a><a class="btn nf" href="#/account?next=${encodeURIComponent(HERE())}" data-act="closeSheet">لدي حساب</a></div>`)}
 async function openComments(card){const box=card.querySelector(".pcomms"),id=card.dataset.id;box.hidden=false;box.innerHTML='<p class="mut">جارٍ تحميل التعليقات…</p>';
  let list=[];try{list=await Social.comments(id)}catch(e){}
  const cl=card.querySelector(".pstats .lnk");if(cl)cl.textContent=list.length?`${toAr(list.length)} تعليق`:"";
  box.innerHTML=`${list.map(c=>`<div class="cmt"><span class="av sm">${esc((c.name||"؟")[0])}</span><div><b>${esc(c.name||"عضو")}</b><p>${linkify(esc(c.text))}</p><span class="mut">${esc(ago(c.at))}${Auth.user&&(c.uid===Auth.user.id||Cloud.staff())?` • <button class="lnk" data-act="pdelc" data-cid="${esc(c.id)}">حذف</button>`:""}</span></div></div>`).join("")||'<p class="mut">لا توجد تعليقات بعد.</p>'}
- ${Auth.user?`<form class="stepper" data-form="pcomment" data-id="${esc(id)}"><input name="t" placeholder="اكتب تعليقًا…" aria-label="اكتب تعليقًا" maxlength="2000" required><button class="btn s p">نشر</button></form>${Cloud.on()?"":'<p class="mut" style="font-size:.75rem">التعليقات محفوظة على جهازك حتى تفعيل قاعدة الحسابات.</p>'}`:`<p class="mut"><a href="#/account?next=${encodeURIComponent(location.hash)}">سجّل الدخول</a> للتعليق.</p>`}`}
+ ${Auth.user?`<form class="stepper" data-form="pcomment" data-id="${esc(id)}"><input name="t" placeholder="اكتب تعليقًا…" aria-label="اكتب تعليقًا" maxlength="2000" required><button class="btn s p">نشر</button></form>${Cloud.on()?"":'<p class="mut" style="font-size:.75rem">التعليقات محفوظة على جهازك حتى تفعيل قاعدة الحسابات.</p>'}`:`<p class="mut"><a href="#/account?next=${encodeURIComponent(HERE())}">سجّل الدخول</a> للتعليق.</p>`}`}
 const postShareText=x=>`${x.act?x.b.title+"\n"+postText(x).slice(0,600):x.text}\n— ${pName(x)}\n${SITENAME}${siteLink()?"\n"+siteLink("#/post/"+encodeURIComponent(x.id)):""}`;
 async function postAct(a,el){const card=el.closest(".post"),id=(card&&card.dataset.id)||el.dataset.id,x=findPost(id);if(!x&&a!=="pdelc")return;
  const must=()=>{if(!Auth.user){needLogin();return false}return true};
@@ -1004,7 +1006,7 @@ async function postAct(a,el){const card=el.closest(".post"),id=(card&&card.datas
  else if(a==="pshare"){if(!must())return;openSheet("مشاركة المنشور",`<div class="tools-grid"><button data-act="pcopy" data-id="${esc(id)}">نسخ النص مع المصدر</button><button data-act="pimgq" data-id="${esc(id)}">تصميمه صورة (قبسة)</button><button data-act="pnative" data-id="${esc(id)}">مشاركة عبر التطبيقات</button><button data-act="plink" data-id="${esc(id)}">نسخ رابط المنشور</button></div><p class="mut" style="margin-top:10px">التصميم صورة يفتح استوديو القبسات بنص المنشور، فتختار الخلفية والمقاس.</p>`)}
  else if(a==="pmenu"){const canDel=!x.act&&(x.mine||GH.on);openSheet("خيارات المنشور",`<div class="tools-grid"><button data-act="plink" data-id="${esc(id)}">نسخ رابط المنشور</button>${x.authorId?`<a href="#/posts?a=${x.authorId}" data-act="closeSheet">منشورات ${esc(A(x.authorId).name)}</a>`:""}${x.act?`<a href="#/book/${x.b.id}/1" data-act="closeSheet">فتح في المكتبة</a>`:""}${canDel?`<button data-act="pdel" data-id="${esc(id)}">حذف المنشور</button>`:""}</div>`)}
  else if(a==="pcopy"){if(!must())return;await navigator.clipboard.writeText(postShareText(x));closeSheet();toast("نُسخ المنشور مع اسم الكاتب والموقع.")}
- else if(a==="plink"){const u=siteLink("#/post/"+encodeURIComponent(id))||location.href.split("#")[0]+"#/post/"+encodeURIComponent(id);await navigator.clipboard.writeText(u);closeSheet();toast("نُسخ رابط المنشور")}
+ else if(a==="plink"){const u=siteLink("#/post/"+encodeURIComponent(id))||location.origin+"/post/"+encodeURIComponent(id);await navigator.clipboard.writeText(u);closeSheet();toast("نُسخ رابط المنشور")}
  else if(a==="pnative"){closeSheet();const t=postShareText(x);if(navigator.share)await navigator.share({text:t}).catch(()=>{});else{await navigator.clipboard.writeText(t);toast("نُسخ للمشاركة.")}}
  else if(a==="pimgq"){if(!must())return;closeSheet();const t=postText(x);pendingQ={t:t.length>600?t.slice(0,600)+"…":t,src:pName(x)+(x.act?" — "+x.b.title:""),ref:x.act?{b:x.b.id,p:1}:null};location.hash="#/qabasat"}
  else if(a==="pdel"){if(!confirm("حذف هذا المنشور؟"))return;closeSheet();
@@ -1079,13 +1081,18 @@ const Pager={idx:-1,dir:0,t:null,
 function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||""),top=l=>l.filter(b=>!b.demo).sort((x,y)=>key(y).localeCompare(key(x))),ta=top(lib.books.filter(b=>kindOf(b)!=="book")).slice(0,8),tb=top(BOOKS()).slice(0,8),n=[];
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
-function parse(){const h=location.hash.slice(1)||"/";const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
+function parse(){const h=(location.hash.startsWith("#/")?location.hash.slice(1):"")||(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent),q:Object.fromEntries(new URLSearchParams(qs||""))}}
 function route(){const{p,q}=parse(),v=p[0];Pager.onRoute();applyLabels();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="post")return vPost(p[1]);if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
  if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);vHome()}
-window.addEventListener("hashchange",route);
+/* الروابط: يكتبها الموقع بصيغة #/… ويحوّلها إلى روابط عادية (/book/…) تفهمها محركات البحث وتُشارك كما هي */
+const toPath=h=>{const p=String(h).replace(/^#/,"");return p.startsWith("/")?p:"/"+p};
+function go(h,replace){history[replace?"replaceState":"pushState"](null,"",toPath(h));route()}
+window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));route()});
+window.addEventListener("popstate",route);
+document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#/"]');if(!a||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank")return;e.preventDefault();const h=a.getAttribute("href");if(toPath(h)!==location.pathname+location.search)go(h);else route()});
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  if(w&&!el){if(String(getSelection()).trim())return;return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
  if(a==="closeDlg")dlg().close();
@@ -1135,7 +1142,7 @@ document.addEventListener("selectionchange",()=>{const s=String(getSelection()).
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#sheet").hidden){closeSheet();return}if($("#rb")&&e.key==="f"&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)){setFull(!S.full);return}if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
 
 /* ---------- الإقلاع ---------- */
-async function boot(){applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
+async function boot(){if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
  const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
  try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}
  ARTS_IDX=((await ai).items||[]).map(artFromIdx);

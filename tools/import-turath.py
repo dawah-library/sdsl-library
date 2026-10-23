@@ -191,7 +191,7 @@ def build(item, meta, pages, vname, cat):
             sh = {"id": bid, "pages": [t for _, t in vp], "toc": toc, "pl": [label(v, p) for p, _ in vp]}
             s = json.dumps(sh, ensure_ascii=False, separators=(",", ":"))
             open(os.path.join(VOLS, bid + ".json"), "w", encoding="utf-8").write(s)
-            entries.append({"id": bid, "title": "%s — ج %d" % (item["title"], v), "set": item["id"], "setTitle": item["title"], "vol": v, "vols": len(vols),
+            entries.append({"id": bid, "title": ("%s — ج %d" % (item["title"], v)) if v else item["title"] + " — المقدمة", "set": item["id"], "setTitle": item["title"], "vol": v, "vols": len(vols),
                             "vf": 1, "big": 1, "authorId": aid, "topicId": item.get("topic", "t3"), "col": "turath", "type": "book",
                             "n": len(vp), "size": len(s.encode("utf-8")), "source": src, "license": lic, "added": today, "openiti": vname})
     else:
