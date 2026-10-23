@@ -66,6 +66,8 @@ async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;le
 
 /* ---------- عرض عام ---------- */
 const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered()};
+/* صورة المؤلف المصغرة: صورته إن أُضيفت، وإلا الحرف الأول بلون مميز */
+const avatar=(a,cls="")=>{a=a||{};const sh=(a.name||"").replace(/^(الإمام|الشيخ|شيخ الإسلام|الحافظ|الدكتور|د\.)\s*/,"");return a.photo?`<img class="aav ${cls}" src="${esc(a.photo)}" alt="${esc(a.name||"")}" loading="lazy">`:`<span class="aav ${cls}" style="${avHue(a.id||a.name||"")}" aria-hidden="true">${esc(sh[0]||"؟")}</span>`};
 const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}" href="#/book/${b.id}${S.lastBy&&S.lastBy[b.id]>1?"":"/1"}"><b>${esc(b.set?b.setTitle||b.title:b.title)}</b><span>${b.set?`<em class="tag">${b.vols===2?"مجلدان":toAr(b.vols)+" "+(b.vols>2&&b.vols<11?"مجلدات":"مجلدًا")}</em> • `:""}<span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n&&!b.set?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
 const artCard=b=>`<a class="bk ar" href="#/book/${b.id}/1"><b>${esc(b.title)}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':isStatement(b)?' • <em class="tag">بيان</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
 const anyCard=b=>isArt(b)?artCard(b):bookCard(b);
@@ -156,14 +158,14 @@ function vList(kind,q){const L=LISTS[kind],all=L.items();
 
 /* ---------- المؤلفون: الصفحة الجامعة ---------- */
 function vAuthors(){const g=(title,col)=>{const as=lib.authors.filter(a=>(a.col||"dawah")===col).map(a=>({a,c:counts(a.id)})).filter(x=>x.c.books||x.c.arts||x.c.fatwas||x.c.st||col==="dawah");
-  return`<h2>${title}</h2><div class="grid">${as.map(({a})=>`<a class="card" href="#/author/${a.id}" data-author="${a.id}"><b>${esc(a.name)}</b><span>${a.died?`ت ${a.died}هـ • `:""}${countLine(a.id)}</span></a>`).join("")}</div>`};
+  return`<h2>${title}</h2><div class="grid">${as.map(({a})=>`<a class="card acard" href="#/author/${a.id}" data-author="${a.id}">${avatar(a)}<div><b>${esc(a.name)}</b><span>${a.died?`ت ${a.died}هـ • `:""}${countLine(a.id)}</span></div></a>`).join("")}</div>`};
  view(`<p class="mut" style="margin-top:14px">اضغط مطولًا على اسم أي مؤلف لترى تعريفه الموجز. <a href="#/tarajim">تراجم مشايخ الدعوة</a></p>`+g("مشايخ الدعوة السلفية والكتّاب","dawah")+g("علماء التراث","turath"))}
 function vAuthor(id,q){const a=A(id),mine=lib.books.filter(b=>b.authorId===id&&!VOL2(b)),byDate=l=>l.sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  const T_={books:mine.filter(b=>kindOf(b)==="book"),articles:byDate(mine.filter(b=>kindOf(b)==="article")),fatawa:byDate(mine.filter(b=>kindOf(b)==="fatwa")),bayanat:byDate(mine.filter(b=>kindOf(b)==="statement")),tafrighat:mine.filter(isTranscript)};
  const NAMES={books:"الكتب",articles:"المقالات",fatawa:"الفتاوى",bayanat:"البيانات",tafrighat:"التفريغات"},ROUTE={articles:"articles",fatawa:"fatawa",bayanat:"bayanat"};
  const shown=Object.keys(T_).filter(k=>k==="books"||k==="articles"||T_[k].length);
  const k=shown.includes(q.k)?q.k:(shown.find(x=>T_[x].length)||"books"),items=T_[k];
- const tt=tj(id);view(`<h2>${esc(a.name)}${died(a)}</h2>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
+ const tt=tj(id);view(`<div class="ahero">${avatar(a,"big")}<h2>${esc(a.name)}${died(a)}</h2></div>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
  <div class="tabs" role="tablist">${shown.map(x=>`<a role="tab" aria-selected="${k===x}" href="#/author/${id}?k=${x}">${NAMES[x]} (${T_[x].length})</a>`).join("")}<a role="tab" aria-selected="false" href="#/posts?a=${id}">المنشورات</a></div>
  ${items.slice(0,40).map(anyCard).join("")||`<p class="mut">لا توجد ${NAMES[k]} بعد.</p>`}
  ${items.length>40&&ROUTE[k]?`<p><a href="#/${ROUTE[k]}?a=${id}">عرض كل ${NAMES[k]} (${items.length})</a></p>`:""}
@@ -315,13 +317,32 @@ function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط
  <label>حجم الخط</label><div class="stepper"><button class="btn" data-sz="-1" aria-label="تصغير الخط">أ−</button><input id="ls" type="range" min="1" max="2.4" step=".05" value="${S.size}" aria-label="حجم الخط"><button class="btn" data-sz="1" aria-label="تكبير الخط">أ+</button></div>
  <label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}">
  <label>لون الصفحة</label><div class="swatches">${PAGES.map(p=>`<button class="swc" data-pg="${p[0]}" title="${p[1]}" aria-label="لون الصفحة: ${p[1]}" aria-pressed="${S.pg===p[0]}" style="background:${p[2]}"></button>`).join("")}</div>
+ <label for="lmode">طريقة التنقل بين الصفحات</label><div class="seg" id="lmode" role="radiogroup">${[["page","أفقي: صفحة صفحة"],["scroll","عمودي: تمرير متصل"]].map(([v,t])=>`<button type="button" role="radio" data-mode="${v}" aria-checked="${(S.mode||"page")===v}">${t}</button>`).join("")}</div>
  <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label>
  <label class="inl"><input type="checkbox" id="lfn"${S.fn==="fold"?" checked":""}> طيّ الحواشي (تُفتح بالضغط)</label>`}
 function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.theme=$("#lth").value;saveS();applyLook();refreshPage()};
  ["#lf","#ls","#ll","#lt","#lth","#lfn"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
- $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))})}
-function refreshPage(){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1))}
+ $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
+ $$("[data-mode]").forEach(m=>m.onclick=()=>{if(S.mode===m.dataset.mode)return;S.mode=m.dataset.mode;saveS();$$("[data-mode]").forEach(x=>x.setAttribute("aria-checked",x===m));const c=cur();closeSheet();if(c){LASTREAD=null;history.replaceState(null,"","/book/"+c.b.id+"/"+c.p);route()}})}
+function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1))})}
+/* شريط تقدم القراءة أعلى الشاشة */
+function setProg(b,p){let el=$("#rprog");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="rprog" aria-hidden="true"><i></i></div>');el=$("#rprog")}const n=b.pages.length;el.hidden=n<2;el.firstChild.style.width=(n>1?Math.round(p/n*1000)/10:0)+"%"}
+/* وضع التمرير العمودي المتصل: الصفحات تتتابع، والصفحة الظاهرة هي الحالية */
+const SCR={io:null,more:null};
+function spgHtml(b,k,h){const lb=PL(b,k-1),ch=chapterOf(b,k);return`<section class="spg" data-p="${k}"${ch?` data-ch="${esc(ch)}"`:""}><div class="spn">صفحة ${toAr(k)}${lb?` <small>${esc(lb)}</small>`:""}</div><div class="rd" data-id="${b.id}" data-p="${k}">${pageHtml(b.pages[k-1],h,uncOf(b,k-1))}</div></section>`}
+function scrSet(b,k){const sec=$(`.spg[data-p="${k}"]`);if(!sec)return;const old=$("#rb");if(old&&old!==sec.querySelector(".rd"))old.removeAttribute("id");sec.querySelector(".rd").id="rb";
+ if(LASTREAD&&LASTREAD.p===k)return;LASTREAD={id:b.id,p:k};S.last={id:b.id,p:k};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[b.id];S.lastBy[b.id]=k;saveS();
+ const n=b.pages.length,pg=$(".pgb b");if(pg)pg.textContent=toAr(k);const pr=$("[data-act=prev]"),nx=$("[data-act=next]");if(pr)pr.disabled=k<=1;if(nx)nx.disabled=k>=n;
+ const rc=$(".run span:last-child");if(rc)rc.textContent=chapterOf(b,k);setProg(b,k);
+ const h=parse().q.h;history.replaceState(null,"","/book/"+b.id+"/"+k+(h?"?h="+encodeURIComponent(h):""))}
+function scrAdd(b,dir){const box=$("#scr");if(!box)return null;const h=parse().q.h,ps=[...box.children].map(x=>+x.dataset.p);
+ if(dir>0){const last=Math.max(...ps);if(last>=b.pages.length)return null;let html="";for(let k=last+1;k<=Math.min(b.pages.length,last+3);k++)html+=spgHtml(b,k,h);box.insertAdjacentHTML("beforeend",html);[...box.children].slice(-3).forEach(x=>SCR.io&&SCR.io.observe(x));if(Math.max(...[...box.children].map(x=>+x.dataset.p))>=b.pages.length&&$("#scrs")){$("#scrs").hidden=true;const e=$("#scend");if(e)e.hidden=false}return true}
+ const first=Math.min(...ps);if(first<=1)return null;const y0=document.documentElement.scrollHeight;box.insertAdjacentHTML("afterbegin",spgHtml(b,first-1,h));window.scrollBy(0,document.documentElement.scrollHeight-y0);SCR.io&&SCR.io.observe(box.firstElementChild);const up=$("#scrup");if(up)up.hidden=first-1<=1;return true}
+function scrWire(b){if(SCR.io)SCR.io.disconnect();if(SCR.more)SCR.more.disconnect();
+ SCR.io=new IntersectionObserver(es=>{if(!$("#scr"))return SCR.io.disconnect();const top=[...$$("#scr .spg")].filter(x=>x.getBoundingClientRect().top<innerHeight*.45).pop();if(top)scrSet(b,+top.dataset.p)},{rootMargin:"0px 0px -50% 0px",threshold:[0,.01,.5,1]});
+ $$("#scr .spg").forEach(x=>SCR.io.observe(x));
+ const sen=$("#scrs");if(sen){SCR.more=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))scrAdd(b,1)},{rootMargin:"900px 0px"});SCR.more.observe(sen)}}
 function ensureSheet(){if($("#sheet"))return;document.body.insertAdjacentHTML("beforeend",`<div class="sheet-bg" id="sheetbg" hidden data-act="closeSheet"></div><section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden><div class="sheet-h"><b id="sheetT"></b><button class="btn s" data-act="closeSheet" aria-label="إغلاق">✕</button></div><div class="sheet-b" id="sheetB"></div></section>`)}
 function openSheet(title,html,wire){ensureSheet();$("#sheetT").textContent=title;$("#sheetB").innerHTML=html;$("#sheet").hidden=false;$("#sheetbg").hidden=false;document.body.classList.add("sheet-open");if(wire)wire();const f=$("#sheet").querySelector("input,select,button:not([data-act=closeSheet])");if(f&&f.tagName!=="BUTTON")f.focus()}
 function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg").hidden=true;document.body.classList.remove("sheet-open")}
@@ -359,19 +380,20 @@ async function vBook(id,p,h){
  if(parse().p[1]!==id)return;
  const n=b.pages.length;p=Math.max(1,Math.min(n,p||(S.lastBy&&S.lastBy[id])||1));const art=isArt(b);
  let pv=b.pdf?(S.pv||"text"):"text";if(pv==="both"&&!matchMedia("(min-width:1000px)").matches)pv="pdf";
+ const scroll=S.mode==="scroll"&&pv==="text"&&!art&&n>1;
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[id];S.lastBy[id]=p;{const ks=Object.keys(S.lastBy);if(ks.length>40)delete S.lastBy[ks[0]]}saveS();
  const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
- const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]}</div>${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
+ const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]}</div>${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
  const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div>${fatwa?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}</div>`:"";
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
- <div class="desk"><article class="paper${art?" art":""} ${dir}" id="paper" aria-label="صفحة ${p}">
+ <div class="desk"><article class="paper${art?" art":""}${scroll?" scroll":""} ${scroll?"":dir}" id="paper" aria-label="صفحة ${p}">
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}
-  ${pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
+  ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
-  ${n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
+  ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
- <p class="mut hint">${n>1?"اسحب الصفحة للتقليب • ":""}اضغط أي كلمة لمعناها • حدّد نصًا لتجعله قبسة</p>
+ <p class="mut hint">${scroll?"مرّر لأسفل لتتابع الصفحات • ":n>1?"اسحب الصفحة للتقليب • ":""}اضغط أي كلمة لمعناها • حدّد نصًا لتجعله قبسة</p>
  <nav class="rbar2" id="rbar" aria-label="أدوات القراءة">
   ${B_("toc","toc","الفهرس",!(b.toc&&b.toc.length))}
   ${B_("prev","prev","السابقة",p<=1)}
@@ -382,7 +404,8 @@ async function vBook(id,p,h){
   ${B_("more","more","المزيد")}
   ${B_("full",S.full?"exit":"full",S.full?"خروج":"ملء الشاشة")}
  </nav>`,same);
- document.body.classList.toggle("reading-full",!!S.full);
+ document.body.classList.toggle("reading-full",!!S.full);setProg(b,p);
+ if(scroll){scrWire(b);if(p>1&&!same){const s0=$(`.spg[data-p="${p}"]`);if(s0){const y=s0.getBoundingClientRect().top+scrollY-(S.full?8:96);scrollTo(0,y)}}}
  if(pv!=="text")renderPdf(b,p);
  if(TTS.cont){TTS.cont=false;setTimeout(()=>TTS.next(),400)}else if(TTS.on&&!same)TTS.stop();
  if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
@@ -394,14 +417,16 @@ const TTS={on:false,paused:false,i:0,cont:false,rate:+(ls.get("ttsRate",1))||1,
  start(){if(!("speechSynthesis"in window))return toast("المتصفح لا يدعم القراءة الصوتية");if(!$("#rb"))return;speechSynthesis.cancel();this.on=true;this.paused=false;this.i=0;this.bar();this.next()},
  bar(){let b=$("#ttsbar");if(!b){document.body.insertAdjacentHTML("beforeend",`<div id="ttsbar" role="region" aria-label="القارئ الصوتي"><button data-act="ttsp" id="ttsp" aria-label="إيقاف مؤقت">⏸</button><span>القراءة الصوتية</span><select id="ttsr" aria-label="السرعة">${[.75,.9,1,1.15,1.3,1.5].map(r=>`<option value="${r}"${r===this.rate?" selected":""}>${toAr(r)}×</option>`).join("")}</select><button data-act="ttss" aria-label="إنهاء">✕</button></div>`);b=$("#ttsbar");$("#ttsr").onchange=e=>{this.rate=+e.target.value;ls.set("ttsRate",this.rate);if(this.on&&!this.paused){speechSynthesis.cancel();this.next()}}}b.hidden=false},
  next(){if(!this.on)return;const rb=$("#rb");if(!rb)return this.stop();const ps=[...rb.querySelectorAll(":scope > p")];
-  if(this.i>=ps.length){const b=B(rb.dataset.id),p=+rb.dataset.p;if(b&&p<b.pages.length){this.i=0;this.cont=true;turn(1)}else this.stop();return}
+  if(this.i>=ps.length){const b=B(rb.dataset.id),p=+rb.dataset.p;if(b&&p<b.pages.length){this.i=0;if($("#scr")){turn(1);setTimeout(()=>this.next(),350)}else{this.cont=true;turn(1)}}else this.stop();return}
   ps.forEach(x=>x.classList.remove("tts"));const el=ps[this.i];el.classList.add("tts");el.scrollIntoView({block:"center",behavior:"smooth"});
   const u=new SpeechSynthesisUtterance(el.textContent.replace(/\s+/g," ").trim()||" ");u.lang="ar-SA";const v=this.voice();if(v)u.voice=v;u.rate=this.rate;
   const me=this.i;u.onend=()=>{if(this.on&&!this.paused&&this.i===me){this.i++;this.next()}};u.onerror=e=>{if(e.error!=="interrupted"&&e.error!=="canceled"){this.i++;this.next()}};speechSynthesis.speak(u)},
  toggle(){if(!this.on)return;this.paused=!this.paused;$("#ttsp").textContent=this.paused?"▶":"⏸";if(this.paused)speechSynthesis.cancel();else this.next()},
  stop(){this.on=false;this.cont=false;try{speechSynthesis.cancel()}catch(e){}$$(".rd p.tts").forEach(x=>x.classList.remove("tts"));const b=$("#ttsbar");if(b)b.hidden=true}};
 if("speechSynthesis"in window)speechSynthesis.onvoiceschanged=()=>{};
-function turn(d){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=+rb.dataset.p+d;if(p<1||p>b.pages.length)return;const h=parse().q.h;location.hash=`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`}
+function turn(d,p0){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=p0||+rb.dataset.p+d;if(p<1||p>b.pages.length)return;
+ if($("#scr")){let sec=$(`.spg[data-p="${p}"]`);if(!sec){const ps=[...$$("#scr .spg")].map(x=>+x.dataset.p);if(p===Math.min(...ps)-1)scrAdd(b,-1);else if(p===Math.max(...ps)+1)scrAdd(b,1);else{LASTREAD=null;location.hash=`#/book/${b.id}/${p}`;return}sec=$(`.spg[data-p="${p}"]`)}
+  if(sec){scrSet(b,p);scrollTo({top:sec.getBoundingClientRect().top+scrollY-(S.full?8:96),behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}return}const h=parse().q.h;location.hash=`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`}
 
 /* ---------- الحوارات ---------- */
 const dlg=()=>$("#dlg");
@@ -749,8 +774,12 @@ function structBody(){const L=CAT.labels||{};
  <div class="savebar"><button class="btn p">حفظ الأقسام والأسماء</button><span id="structst" class="mut" role="status"></span></div></form>
  <h3>المؤلفون</h3><form data-form="authedit"><label>اختر المؤلف</label><select name="id" id="aesel"><option value="">— اختر —</option>${[...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")).map(a=>`<option value="${a.id}">${esc(a.name)} (${a.col==="turath"?"تراث":"الدعوة"})</option>`).join("")}</select>
  <div id="aefields" hidden><div class="row"><div><label>الاسم</label><input name="name"></div><div><label>سنة الوفاة (هـ، للمتوفين)</label><input name="died" type="number"></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="turath">${esc(COL.turath)}</option></select></div></div>
+ <div class="row" style="align-items:center"><div id="aeprev"></div><div><label>الصورة المصغرة (اختياري)</label><input type="file" name="photo" accept="image/*"><label class="inl"><input type="checkbox" name="nophoto" value="1"> إزالة الصورة واستعمال الحرف الأول</label></div></div>
  <label>نبذة مختصرة</label><textarea name="bio" style="min-height:90px"></textarea><button class="btn p" style="margin-top:8px">حفظ بيانات المؤلف</button> <span id="aest" class="mut"></span></div></form>`}
-function wireStruct(){const sel=$("#aesel");if(!sel)return;sel.onchange=()=>{const a=lib.authors.find(x=>x.id===sel.value),f=sel.form,box=$("#aefields");box.hidden=!a;if(!a)return;f.name.value=a.name;f.died.value=a.died||"";f.col.value=a.col||"dawah";f.bio.value=a.bio||""}}
+function wireStruct(){const sel=$("#aesel");if(!sel)return;sel.onchange=()=>{const a=lib.authors.find(x=>x.id===sel.value),f=sel.form,box=$("#aefields");box.hidden=!a;if(!a)return;f.name.value=a.name;f.died.value=a.died||"";f.col.value=a.col||"dawah";f.bio.value=a.bio||"";$("#aeprev").innerHTML=avatar(a,"big")}}
+async function squareJpeg(file,size){const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file)});
+ const c=document.createElement("canvas");c.width=c.height=size;const k=Math.min(img.width,img.height);c.getContext("2d").drawImage(img,(img.width-k)/2,(img.height-k)/2,k,k,0,0,size,size);
+ const blob=await new Promise(ok=>c.toBlob(ok,"image/jpeg",.85));return new Uint8Array(await blob.arrayBuffer())}
 async function saveStruct(f){const st=$("#structst"),btn=f.querySelector(".savebar .btn");if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
  const fd=new FormData(f),labels={};["col_dawah","col_turath"].forEach(k=>{const v=String(fd.get(k)||"").trim();if(v)labels[k]=v});
  NAVDEF.forEach(([h,t])=>{const v=String(fd.get("nav:"+h)||"").trim();if(v&&v!==t)labels["nav:"+h]=v});
@@ -763,7 +792,9 @@ async function saveStruct(f){const st=$("#structst"),btn=f.querySelector(".saveb
  catch(e){st.textContent=e.message;btn.disabled=false}}
 async function saveAuthor(f){const st=$("#aest"),fd=new FormData(f),id=fd.get("id");if(!id)return;if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
  const up={name:String(fd.get("name")).trim(),col:fd.get("col"),bio:String(fd.get("bio")||"").trim()},d=+fd.get("died");st.textContent="جارٍ الحفظ…";
- const apply=c=>{const a=c.authors.find(x=>x.id===id);if(!a)throw new Error("المؤلف غير موجود في الفهرس المنشور (ربما أُضيف على هذا الجهاز فقط).");Object.assign(a,up);if(d)a.died=d;else delete a.died;c.version=Date.now();return c};
+ const ph=fd.get("photo");if(ph&&ph.size){try{const bytes=await squareJpeg(ph,320),path="assets/authors/"+id+".jpg";await GH.put(path,bytes,"صورة المؤلف: "+up.name);up.photo=path+"?v="+Date.now().toString(36)}catch(e){st.textContent="تعذر رفع الصورة: "+e.message;return}}
+ if(fd.get("nophoto"))up.photo="";
+ const apply=c=>{const a=c.authors.find(x=>x.id===id);if(!a)throw new Error("المؤلف غير موجود في الفهرس المنشور (ربما أُضيف على هذا الجهاز فقط).");Object.assign(a,up);if(a.photo==="")delete a.photo;if(d)a.died=d;else delete a.died;c.version=Date.now();return c};
  try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات مؤلف: "+up.name,true);try{apply(CAT)}catch(e){}merge();st.textContent="✓ حُفظ.";toast("حُفظت بيانات المؤلف")}catch(e){st.textContent=e.message}}
 /* بيانات الكتاب من القارئ */
 function metaDlg(){const c=cur();if(!c)return;closeSheet();const b=c.b;if(isArt(b)&&b.f)return alert("تعديل بيانات المقالات المستوردة يأتي لاحقًا؛ يمكنك تعديل نصها من «تعديل النص».");
@@ -985,7 +1016,7 @@ function postText(x){if(!x.act)return x.text||"";const b=x.b;if(!b.pages)return"
  const clean=t=>plain(t||"").replace(/-*\s*NO PAGE\s*NO\s*-*/gi," ").replace(/[ \t]+/g," ").trim();if(isArt(b))return clean(b.pages[0]);
  return b.pages.slice(0,25).map(clean).find(t=>t.length>350&&!/(ت|هاتف|فاكس)\s*:\s*\d{5}|رقم الإيداع|الطبعة|حقوق الطبع/.test(t.slice(0,300)))||clean(b.pages[0])}
 function postHtml(x,st){st=st||{stats:{},likes:new Set(),saves:new Set()};const s=st.stats[x.id]||{likes:0,comments:0},liked=st.likes.has(x.id),saved=st.saves.has(x.id),name=pName(x);
- const av=x.authorId?`<span class="av" data-author="${x.authorId}" style="${avHue(x.authorId)}">${esc(name.replace(/^(الشيخ|الدكتور|د\.)\s*/,"")[0]||"")}</span>`:`<img class="av" src="assets/logo-sdsl-128.png" alt="">`;
+ const av=x.authorId&&A(x.authorId).photo?`<img class="av" data-author="${x.authorId}" src="${esc(A(x.authorId).photo)}" alt="">`:x.authorId?`<span class="av" data-author="${x.authorId}" style="${avHue(x.authorId)}">${esc(name.replace(/^(الشيخ|الدكتور|د\.)\s*/,"")[0]||"")}</span>`:`<img class="av" src="assets/logo-sdsl-128.png" alt="">`;
  let body;if(x.act){const ex=postText(x);body=`<a class="pcard" href="#/book/${x.b.id}/1"><b>${esc(x.b.title)}</b>${ex?`<p>${esc(ex.slice(0,360))}${ex.length>360?"…":""}</p>`:""}<span>${kindOf(x.b)==="book"?"افتح الكتاب":"اقرأ كاملًا"} ←</span></a>`}
  else{const long=(x.text||"").length>420;body=`<div class="ptext${long?" clip":""}">${linkify(esc(x.text||"")).replace(/\n/g,"<br>")}</div>${long?'<button class="more-t" data-act="pmore">عرض المزيد</button>':""}${x.image?`<img class="pimg" src="${esc(x.image)}" alt="" loading="lazy">`:""}${x.url?`<a class="plink" href="${esc(x.url)}" target="_blank" rel="noopener">المنشور الأصلي ↗</a>`:""}`}
  return`<article class="post" data-id="${esc(x.id)}"><header>${av}<div><b${x.authorId?` data-author="${x.authorId}"`:""}>${esc(name)}</b><span class="mut">${x.act?KINDN[kindOf(x.b)]+" • ":""}<a href="#/post/${encodeURIComponent(x.id)}">${esc(ago(x.date))}</a>${x.src?` • ${esc(x.src)}`:""}${x.demo?" • منشور تجريبي":""}</span></div><button class="pmenu" data-act="pmenu" aria-label="خيارات المنشور">⋯</button></header>
@@ -1133,7 +1164,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="feedMore")feedMore();
  else if(a==="fntoggle"){el.closest(".fns").classList.toggle("fold")}
  else if(a==="tts"){closeSheet();TTS.start()}else if(a==="ttsp")TTS.toggle();else if(a==="ttss")TTS.stop();
- else if(a==="selprint"||a==="selcopy"){const s0=String(getSelection()).trim(),rb=$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
+ else if(a==="selprint"||a==="selcopy"){const s0=String(getSelection()).trim(),rb=selRd()||$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
   if(a==="selcopy"){try{await navigator.clipboard.writeText(s0+"\n— "+src+"\n"+link);toast("نُسخ النص مع مصدره")}catch(x){}return}
   const w2=window.open("","_blank");if(!w2)return toast("اسمح بالنوافذ المنبثقة للطباعة");w2.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(src)}</title><style>body{font-family:Amiri,"Traditional Arabic",serif;font-size:20px;line-height:2.1;margin:2cm;text-align:justify}footer{margin-top:1.5em;border-top:1px solid #999;padding-top:.5em;font-size:14px;color:#444}</style></head><body>${s0.split("\n").filter(Boolean).map(l=>"<p>"+esc(l)+"</p>").join("")}<footer>${esc(src)}<br>${esc(SITENAME)} — ${esc(link)}</footer><script>onload=()=>{print()}<\/script></body></html>`);w2.document.close()}
  else if(a==="revlist"){const id=el.dataset.id,box=$("#rv-"+id);box.innerHTML='<p class="mut">جارٍ التحميل…</p>';const b=await loadBook(id).catch(()=>null);const u=(b&&b.unc)||{},ks=Object.keys(u).map(Number).sort((x,y)=>x-y),ur=(b&&b.unrev)||[];
@@ -1153,7 +1184,8 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="look")openSheet("مظهر الصفحة",lookHtml(),wireLook);
  else if(a==="moreSug")fillSug();
  else if(a==="mkq"){const q=SUG[+el.dataset.i];if(!q)return;setQuote(q);if(parse().p[0]==="qabasat"){draw();$("#qt").scrollIntoView({behavior:"smooth",block:"center"})}else location.hash="#/qabasat"}
- else if(a==="selq"){const s=String(getSelection()).trim(),rb=$("#rb");if(s&&rb){const b=B(rb.dataset.id),i=+rb.dataset.p-1;pendingQ={t:s,src:A(b.authorId).name+" — "+b.title+(PL(b,i)?"، "+PL(b,i):""),ref:{b:b.id,p:i+1}};location.hash="#/qabasat"}}
+ else if(a==="scrup"){const c=cur();if(c)scrAdd(c.b,-1)}
+ else if(a==="selq"){const s=String(getSelection()).trim(),rb=selRd()||$("#rb");if(s&&rb){const b=B(rb.dataset.id),i=+rb.dataset.p-1;pendingQ={t:s,src:A(b.authorId).name+" — "+b.title+(PL(b,i)?"، "+PL(b,i):""),ref:{b:b.id,p:i+1}};location.hash="#/qabasat"}}
  else if(a==="fav"){const id=parse().p[1];S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):[...S.favs,id];saveS();el.textContent=S.favs.includes(id)?"إزالة من المفضلة":"مفضلة"}
  else if(a==="copyp"){const rb=$("#rb"),b=B(rb.dataset.id),i=+rb.dataset.p-1;try{await navigator.clipboard.writeText(plain(b.pages[i])+"\n— "+b.title+"، "+A(b.authorId).name+(PL(b,i)?"، "+PL(b,i):"")+"\n"+SITENAME+(siteLink()?"\n"+siteLink(`#/book/${b.id}/${i+1}`):""));el.textContent="تم النسخ"}catch(x){}}
  else if(a==="logout"){await Auth.signOut();location.hash="#/"}
@@ -1175,7 +1207,8 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
   closeSheet();for(let j=1;j<=b.pages.length;j++){const x=(cur-1+j)%b.pages.length;const t=norm(plain(b.pages[x]));if(w.every(k2=>t.includes(k2)))return location.hash=`#/book/${b.id}/${x+1}?h=${encodeURIComponent(h)}`}alert("لا توجد نتائج في هذا الكتاب")}
  else if(k==="addbook")addBook(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
  else if(k==="signin"||k==="signup")authSubmit(f,k);else if(k==="ask")askSubmit(f)});
-document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim(),rb=$("#rb");$("#selq").hidden=!(s.length>12&&rb&&getSelection().anchorNode&&rb.contains(getSelection().anchorNode))});
+const selRd=()=>{const n=getSelection().anchorNode;return n&&(n.nodeType===1?n:n.parentElement).closest(".rd[data-id]")};
+document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim();$("#selq").hidden=!(s.length>12&&selRd())});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#sheet").hidden){closeSheet();return}if($("#rb")&&e.key==="f"&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)){setFull(!S.full);return}if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
 
 /* ---------- الإقلاع ---------- */

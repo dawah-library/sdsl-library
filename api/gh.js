@@ -4,7 +4,7 @@
 //   SUPABASE_URL و SUPABASE_ANON_KEY  للتحقق من أن صاحب الطلب مدير أو محرر
 //   GITHUB_REPO (اختياري، الافتراضي dawah-library/sdsl-library)
 const REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
-const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
+const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/authors|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
 
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;

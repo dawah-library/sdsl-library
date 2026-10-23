@@ -75,7 +75,8 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
     const a = author(seg[1]); if (!a.name) { r.noindex = true; return r; }
     const books = cat().books.filter(b => b.authorId === a.id && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))), arts = aidx().filter(x => x.a === a.id);
     r.title = a.name + " — " + SITE; r.desc = cut(a.bio || `كتب ${a.name} ومقالاته في ${SITE}: ${books.length} كتابًا و${arts.length} مقالًا وفتوى.`, 180); r.type = "profile";
-    r.ld = { "@context": "https://schema.org", "@type": "Person", name: a.name, description: a.bio || undefined };
+    const ph = a.photo ? base + String(a.photo).replace(/^\//, "") : undefined; if (ph) r.image = ph;
+    r.ld = { "@context": "https://schema.org", "@type": "Person", name: a.name, description: a.bio || undefined, image: ph };
     r.body = `<h1>${esc(a.name)}</h1>${a.bio ? `<p>${esc(a.bio)}</p>` : ""}<h2>الكتب</h2><ul>${books.map(b => `<li><a href="/book/${b.id}/1">${esc(b.setTitle || b.title)}</a></li>`).join("")}</ul><h2>المقالات والفتاوى</h2><ul>${arts.slice(0, 200).map(x => `<li><a href="/book/${x.id}/1">${esc(x.t)}</a></li>`).join("")}</ul>`;
     return r;
   }
