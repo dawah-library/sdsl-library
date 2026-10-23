@@ -28,7 +28,8 @@ jobs:
       - id: p
         env:
           REOCR: ${{ github.event.inputs.reocr }}
-          OCR_MACHINES: ${{ vars.OCR_MACHINES || '12' }}
+          OCR_MACHINES: ${{ vars.OCR_MACHINES || '20' }}
+          OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
         run: python3 tools/ocr-pdf.py --plan
 
   drafts:
@@ -51,7 +52,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: ذاكرة نماذج Surya
-        if: ${{ !startsWith(format('x{0}', vars.OCR_SURYA), 'x0') }}
+        if: ${{ vars.OCR_SURYA == '1' }}
         uses: actions/cache@v4
         with:
           path: |
@@ -60,7 +61,7 @@ jobs:
             ~/.cache/datalab
           key: surya-models-v1
       - name: تثبيت Surya
-        if: ${{ !startsWith(format('x{0}', vars.OCR_SURYA), 'x0') }}
+        if: ${{ vars.OCR_SURYA == '1' }}
         continue-on-error: true
         run: |
           pip install -q torch --index-url https://download.pytorch.org/whl/cpu
@@ -68,7 +69,7 @@ jobs:
           surya_ocr --help > /dev/null && echo "Surya جاهز"
       - name: مسودات الصفحات ${{ matrix.shard.first }}-${{ matrix.shard.last }}
         env:
-          OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
+          OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           RECOGNITION_BATCH_SIZE: "16"
           DETECTOR_BATCH_SIZE: "2"
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py --drafts "${{ matrix.shard.path }}" ${{ matrix.shard.first }} ${{ matrix.shard.last }}
@@ -100,7 +101,7 @@ jobs:
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
           REOCR: ${{ github.event.inputs.reocr }}
-          OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
+          OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           OCR_DRAFTS: ocr-drafts
           OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '60' }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
@@ -111,7 +112,6 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
         run: |
           if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3 pillow; python3 tools/r2-store.py; else echo "R2 غير مضبوط"; fi
       - run: |

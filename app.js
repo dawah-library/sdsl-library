@@ -279,15 +279,22 @@ async function pdfDoc(url){url=new URL(url,document.baseURI).href;// pdf.js يح
 if(!window.pdfjsLib){await loadScript(PDFJS);window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace("pdf.min.js","pdf.worker.min.js")}
  let d=PDFDOCS.get(url);if(!d){d=window.pdfjsLib.getDocument(url).promise;PDFDOCS.set(url,d)}return d}
 function pdfPageFor(b,p){const off=+b.pdfOffset||0,m=b.pdfByLabel&&b.pl&&/(\d+)\s*$/.exec(b.pl[p-1]||"");return(m?+m[1]:p)+off}
-function pdfCap(b,n,N){return`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(N)} في النسخة المصورة • <a href="${esc(b.pdf)}${b.img?"":"#page="+n}" target="_blank" rel="noopener">${b.img?"تنزيل الكتاب المصور":"فتح الملف كاملًا"}</a></p>${isAdmin()?`<div class="pdfcal"><span>هل الصورة تطابق النص؟ اضبطها:</span><button class="btn s" data-act="pdfoff" data-d="-1">الصورة السابقة</button><button class="btn s" data-act="pdfoff" data-d="1">الصورة التالية</button><button class="btn s p" data-act="pdfoffsave">حفظ المطابقة (${(+b.pdfOffset||0)>=0?"+":""}${toAr(+b.pdfOffset||0)})</button></div>`:""}`}
-const pimg=(b,n)=>b.img+"/p"+String(n).padStart(4,"0")+".webp";
+function pdfCap(b,n,N){return`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(N)} في النسخة المصورة • ${b.img?`<button class="lnk" data-act="pdfdl">تنزيل الكتاب المصور</button>`:`<a href="${esc(b.pdf)}#page=${n}" target="_blank" rel="noopener">فتح الملف كاملًا</a>`}</p>${isAdmin()?`<div class="pdfcal"><span>هل الصورة تطابق النص؟ اضبطها:</span><button class="btn s" data-act="pdfoff" data-d="-1">الصورة السابقة</button><button class="btn s" data-act="pdfoff" data-d="1">الصورة التالية</button><button class="btn s p" data-act="pdfoffsave">حفظ المطابقة (${(+b.pdfOffset||0)>=0?"+":""}${toAr(+b.pdfOffset||0)})</button></div>`:""}`}
+// صور الصفحات في المخزن الخاص: روابط مؤقتة موقَّعة يطلبها العضو المسجل من /api/pages (عشر صفحات في الطلب)
+const PSIGN=new Map();
+async function pimgUrl(b,n){const k=b.id+"|"+n,c=PSIGN.get(k);if(c&&c.exp>Date.now())return c.u;
+ const from=Math.max(1,n-2),r=await fetch(`/api/pages?b=${encodeURIComponent(b.id)}&from=${from}&n=12`,{headers:{Authorization:"Bearer "+(Auth.token||"")}});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||"تعذر تحميل الصفحة المصورة");const exp=Date.now()+(j.ttl-120)*1000;
+ Object.entries(j.urls||{}).forEach(([p,u])=>PSIGN.set(b.id+"|"+p,{u,exp}));return(PSIGN.get(k)||{}).u}
+async function pdfDl(b){const r=await fetch(`/api/pages?b=${encodeURIComponent(b.id)}&n=1&pdf=1`,{headers:{Authorization:"Bearer "+(Auth.token||"")}});const j=await r.json();if(!r.ok)throw new Error(j.message);window.open(j.pdf,"_blank","noopener")}
 async function renderPdf(b,p){const box=$("#pdfv");if(!box)return;box.innerHTML='<p class="mut" style="text-align:center;padding:30px 0">جارٍ تحميل الصفحة المصورة…</p>';
  if(b.img){// صور الصفحات من مخزن المكتبة: صفحة واحدة خفيفة بدل الملف كله
   const n=pdfPageFor(b,p),N=+b.imgN||0;if(n<1||(N&&n>N)){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
   const im=new Image();im.alt="الصفحة المصورة "+n;im.decoding="async";im.className="pimg";
-  im.onload=()=>{if(!$("#pdfv"))return;box.innerHTML="";const a=document.createElement("a");a.href=im.src;a.target="_blank";a.rel="noopener";a.appendChild(im);box.appendChild(a);box.insertAdjacentHTML("beforeend",pdfCap(b,n,N||n));[n+1,n-1].forEach(k=>{if(k>0&&(!N||k<=N))new Image().src=pimg(b,k)})};
+  im.onload=()=>{if(!$("#pdfv"))return;box.innerHTML="";const a=document.createElement("a");a.href=im.src;a.target="_blank";a.rel="noopener";a.appendChild(im);box.appendChild(a);box.insertAdjacentHTML("beforeend",pdfCap(b,n,N||n))};
   im.onerror=()=>{const el=$("#pdfv");if(el)el.innerHTML='<p class="note">تعذر تحميل الصفحة المصورة. تحقق من الاتصال.</p>'};
-  im.src=pimg(b,n);return}
+  if(!Auth.user){box.innerHTML='<p class="note">النسخة المصورة لأعضاء المكتبة. <a href="#/account">سجّل الدخول</a>.</p>';return}
+  try{im.src=await pimgUrl(b,n);[n+1,n+2].forEach(k=>{if(!N||k<=N)pimgUrl(b,k).then(u=>{new Image().src=u}).catch(()=>{})})}catch(e){box.innerHTML='<p class="note">'+esc(e.message)+'</p>'}return}
  try{const doc=await pdfDoc(b.pdf),n=pdfPageFor(b,p);if(!$("#pdfv"))return;if(n<1||n>doc.numPages){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
   const pg=await doc.getPage(n),w=Math.max(280,box.clientWidth||600),vp0=pg.getViewport({scale:1}),sc=w/vp0.width*Math.min(2,window.devicePixelRatio||1),vp=pg.getViewport({scale:sc});
   const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;if(!$("#pdfv"))return;
@@ -423,7 +430,7 @@ async function vBook(id,p,h){
  let b;try{b=await loadBook(id)}catch(e){return view(`<p class="note">${esc(e.message)}. تحقق من الاتصال وأعد المحاولة.</p>`)}
  if(parse().p[1]!==id)return;
  const n=b.pages.length;p=Math.max(1,Math.min(n,p||(S.lastBy&&S.lastBy[id])||1));const art=isArt(b);
- let pv=b.pdf?(S.pv||"text"):"text";
+ let pv=b.pdf&&Auth.user?(S.pv||"text"):"text";
  const scroll=S.mode==="scroll"&&pv==="text"&&!art&&n>1;
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[id];S.lastBy[id]=p;{const ks=Object.keys(S.lastBy);if(ks.length>40)delete S.lastBy[ks[0]]}saveS();
  const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
@@ -432,7 +439,7 @@ async function vBook(id,p,h){
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
  <div class="desk"><article class="paper${art?" art":""}${scroll?" scroll":""} ${scroll?"":dir}" id="paper" aria-label="صفحة ${p}">
-  ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf","المصورة"],["both","معًا"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
+  ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf",Auth.user?"المصورة":"المصورة 🔒"],["both",Auth.user?"معًا":"معًا 🔒"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
   ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="trv" id="trv" hidden></div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div><div class="trv" id="trv" hidden></div>`}
@@ -894,6 +901,12 @@ async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(
    const base="up"+Date.now().toString(36)+i,cfg={title:(files.length===1&&String(fd.get("title")||"").trim())||parts[0],author:author0||parts[1]||undefined,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};
    if(tags.length)cfg.tags=tags;if(link)cfg.book=link;
    await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
+   // الأسرع: رفع الملف كاملًا إلى مخزن الموقع (Supabase Storage) دفعة واحدة، ثم رابط تنزيل مؤقت يأخذه التحويل
+   let viaStore=false;if(GH.proxied&&Cloud.on()&&file.size<=50*1048576){try{st.textContent=`جارٍ رفع ${cfg.title} (${toAr(Math.round(file.size/1048576))} ميجابايت)…`;
+    const S_=Auth.sb.storage.from("inbox"),{error:ue}=await S_.upload(base+".pdf",file,{contentType:"application/pdf",upsert:true});if(ue)throw ue;
+    const {data:su,error:se}=await S_.createSignedUrl(base+".pdf",6*3600);if(se)throw se;
+    await GH.put("ocr-inbox/"+base+".url",su.signedUrl,"رابط كتاب مصور: "+cfg.title,null);await GH.put("ocr-inbox/"+base+".ready","0","اكتمل رفع: "+cfg.title,null);viaStore=true}catch(e){console.warn("storage upload",e)}}
+   if(viaStore){done.push(cfg.title);continue}
    const bytes=new Uint8Array(await file.arrayBuffer());
    if(GH.proxied){const CH=2500000,n=Math.ceil(bytes.length/CH);for(let k=0;k<n;k++){st.textContent=`جارٍ رفع ${cfg.title}: الجزء ${toAr(k+1)} من ${toAr(n)}…`;await GH.put("ocr-inbox/"+base+".pdf.part"+String(k+1).padStart(3,"0"),bytes.subarray(k*CH,(k+1)*CH),"رفع كتاب مصور (جزء "+(k+1)+"): "+cfg.title,null)}
     await GH.put("ocr-inbox/"+base+".ready",String(n),"اكتمل رفع: "+cfg.title,null)}
@@ -909,8 +922,16 @@ async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=St
   else{if(fd.get("imgurl"))x.image=String(fd.get("imgurl"));const l=ls.get("posts_local",[]);l.unshift(x);ls.set("posts_local",l);POSTS=null;st.textContent="✓ حُفظ على هذا الجهاز. فعّل الإدارة المباشرة لنشره للجميع."}
   f.reset()}catch(e){st.textContent=e.message}}
 
+// حالة المنظومة: آخر الحفظ والنشر، ومهام التحويل الجارية (من واجهة GitHub العامة للمستودع)
+async function sysStatus(){const el=$("#sysst");if(!el)return;const R_=GH.repo,api=u=>fetch("https://api.github.com/repos/"+R_+u).then(r=>r.ok?r.json():Promise.reject(new Error(r.status)));
+ try{const [cm,runs]=await Promise.all([api("/commits?per_page=8"),api("/actions/runs?per_page=12")]);
+  const st=await Promise.all(cm.slice(0,8).map(c=>api("/commits/"+c.sha+"/status").then(x=>x.state).catch(()=>"")));
+  const ic={success:"✓ منشور",pending:"… يُنشر الآن",failure:"✗ تعذر النشر",error:"✗ تعذر النشر"},rs={completed:"",in_progress:"… جارٍ",queued:"في الانتظار"},cs={success:"✓",failure:"✗",cancelled:"أُلغي",skipped:"تُخطي"};
+  el.innerHTML=`<h3 style="font-size:1rem">آخر الحفظ والنشر على الموقع</h3>${cm.map((c,i)=>`<div class="card"><b>${esc(c.commit.message.split("\n")[0].slice(0,140))}</b><span class="mut">${esc(ago(c.commit.author.date))} • ${esc(c.commit.author.name)} • ${ic[st[i]]||"—"}</span></div>`).join("")}
+  <h3 style="font-size:1rem">المهام الآلية (التحويل والاستيراد والفهارس)</h3>${(runs.workflow_runs||[]).map(r=>`<div class="card"><b>${esc(r.name)}</b><span class="mut">${esc(ago(r.created_at))} • ${r.status==="completed"?(cs[r.conclusion]||r.conclusion):rs[r.status]||r.status} • <a href="${esc(r.html_url)}" target="_blank" rel="noopener">التفاصيل</a></span></div>`).join("")}`}
+ catch(e){el.innerHTML='<p class="note">تعذر جلب الحالة الآن ('+esc(e.message)+').</p>'}}
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"]]:[]);
+ const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"],["msgs","رسائل الأعضاء"],["status","حالة النشر والتحويل"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -945,6 +966,8 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <div class="row"><button class="btn p nf" data-act="expUpd">تنزيل ملف التحديث</button><label class="btn nf" style="margin:0">استيراد ملف تحديث<input type="file" id="impf" accept=".json" hidden></label></div>
   <h3>المضاف والمعدَّل على هذا الجهاز</h3>${LOCAL.catalog.books.map(b=>`<div class="bk"><b>${esc(b.title||b.id)}</b><span>${isArt(b)?"مقال":"كتاب"}${b.edited?" • معدَّل "+b.edited:""}</span> <button class="btn s" data-act="delb" data-id="${b.id}">حذف من الجهاز</button></div>`).join("")||'<p class="mut">لا يوجد.</p>'}`;
  else if(tab==="struct")body=structBody();
+ else if(tab==="msgs"){location.hash="#/messages";return}
+ else if(tab==="status"){body='<p class="mut">كل ما تحفظه من الإدارة يُكتب في المستودع ثم يُنشر تلقائيًا على الموقع خلال دقيقة أو اثنتين. هنا آخر عمليات النشر والتحويل.</p><div id="sysst"><p class="mut">جارٍ التحميل…</p></div>';setTimeout(sysStatus,0)}
  else if(tab==="review"){const ob=lib.books.filter(b=>b.ocr).sort((x,y)=>(y.added||"").localeCompare(x.added||""));body=`<p class="mut">الكتب المحوّلة آليًا من نسخها المصورة. يقرأ Gemini صورة كل صفحة ويراجع مسودة Tesseract ويصححها، ويعلّم الكلمات التي شكّ فيها لتراجعها أنت: تظهر مظللة بالبرتقالي في القارئ (لك وحدك)، وتختفي العلامة بعد «تعديل النص» وحفظه.</p>${ob.map(b=>`<div class="bk"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)} • ${b.ocrEngine==="gemini+tesseract"||b.ocrEngine==="gemini"?"Gemini + Tesseract":"Tesseract وحده"} • ${toAr(b.unc||0)} موضع للمراجعة${b.unrev?` • ${toAr(b.unrev)} صفحة لم يراجعها Gemini`:""}</span><div class="row" style="margin-top:6px"><button class="btn s nf" data-act="revlist" data-id="${b.id}">مواضع المراجعة</button><a class="btn s nf" href="#/book/${b.id}/1">فتح الكتاب</a>${(b.pdfLocal||b.pdf)&&/^pdf\//.test(b.pdfLocal||b.pdf)?`<button class="btn s nf" data-act="reocr" data-id="${b.id}">إعادة التحويل بالذكاء الاصطناعي</button>`:""}</div><div class="revl" id="rv-${b.id}"></div></div>`).join("")||'<p class="note">لا توجد كتب محوّلة بعد.</p>'}<p id="bmst" class="mut"></p>`}
  else if(tab==="notify")body=`<p class="mut">يظهر الإشعار في جرس الإشعارات لكل الأعضاء، ويصل إلى أجهزة من فعّل إشعارات الجهاز خلال ساعة.</p><form data-form="bcast"><label>العنوان</label><input name="title" required maxlength="200" placeholder="مثال: صدر كتاب جديد للشيخ…"><label>نص مختصر (اختياري)</label><textarea name="body" style="min-height:80px"></textarea><label>رابط داخل المكتبة (اختياري)</label><input name="url" placeholder="#/book/… أو #/posts" dir="ltr"><button class="btn p" style="margin-top:8px">إرسال الإشعار</button> <span id="bcst" class="mut"></span></form><h3>آخر الإشعارات</h3><div id="bclist" class="mut">جارٍ التحميل…</div>`;
  else if(tab==="corr")body=`<p class="mut">تصحيحات أرسلها القراء. راجع النص المقترح وعدّله إن لزم، ثم اعتمده فيُنشر مباشرة (يحتاج مفتاح الإدارة المباشرة).</p><div id="corrs"><p class="mut">جارٍ التحميل…</p></div>`;
@@ -1356,7 +1379,9 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="aiex"||a==="aifollow"){const ta=$("[name=m]");if(!ta)return;ta.value=el.textContent;if(a==="aiex"){const m=/^اجمع/.test(ta.value)?"gather":/^قارن/.test(ta.value)?"compare":/منهج/.test(ta.value)?"plan":/^لخ/.test(ta.value)?"summarize":/كيف أنظ/.test(ta.value)?"solve":"ask";CONV.mode=m;$("#am").value=m}ta.form.requestSubmit()}
  else if(a==="aipick"){closeSheet();setBookScope(el.dataset.id);const ta=$("[name=m]");if(ta){const b=B(el.dataset.id);if(/^(لخّص كتاب|اختبرني في)\s*:?\s*$/.test(ta.value.trim())||!ta.value.trim())ta.value=(CONV.mode==="quiz"?"اختبرني في كتاب «":CONV.mode==="summarize"?"لخّص كتاب «":"«")+b.title+"»";ta.focus()}}else if(a==="corr")corrDlg();else if(a==="corrok"||a==="corrno")corrDecide(el);
  else if(a==="ghout"){GH.token="";toast("خرجت من وضع الإدارة المباشرة.");route()}
+ else if((a==="pview"||a==="pv")&&!Auth.user&&(a==="pview"||el.dataset.pv!=="text")){needLogin("عرض النسخة المصورة بجوار النص متاح لأعضاء المكتبة المسجلين، والتسجيل مجاني.")}
  else if(a==="pview"){S.pv=(S.pv&&S.pv!=="text")?"text":"pdf";saveS();LASTREAD=null;route()}
+ else if(a==="pdfdl"){const c=cur();if(c)pdfDl(c.b).catch(e=>toast(e.message))}
  else if(a==="pv"){S.pv=el.dataset.pv;saveS();LASTREAD=null;route()}
  else if(a==="pdfoff"){const c=cur();if(c){c.b.pdfOffset=(+c.b.pdfOffset||0)+(+el.dataset.d);renderPdf(c.b,c.p)}}
  else if(a==="pdfoffsave"){const c=cur();if(c)savePdfOffset(c.b,el)}

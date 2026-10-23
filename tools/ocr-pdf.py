@@ -101,6 +101,9 @@ REPORT = []
 UNREVIEWED = []  # صفحات لم يراجعها Gemini (ازدحام أو نفاد الحصة)
 UNCERTAIN = {}  # رقم الصفحة (من صفر) ← كلمات شكّ فيها المراجع
 _glast = [0.0]
+import threading
+TL = threading.local()  # كل خيط مراجعة يعمل بمفتاح Gemini خاص به (TL.k) فتتضاعف السرعة بعدد المفاتيح
+KLAST, KLOCK = {}, threading.Lock()
 
 
 GFAIL = [0]  # إخفاقات Gemini المتتالية: بعد عدد منها يكمل الكتاب بـ Tesseract ويعلّم الصفحات لإعادة المراجعة لاحقًا
@@ -115,11 +118,13 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
     models = list(models or GMODELS)
     for attempt in range(4):
-        wait = GDELAY - (time.time() - _glast[0])
-        if wait > 0: time.sleep(wait)
-        _glast[0] = time.time()
+        ki = getattr(TL, "k", None)
+        ki = (KI[0] if ki is None else ki) % len(GKEYS)
+        with KLOCK:  # التباعد بين الطلبات لكل مفتاح على حدة (حد الطلبات في الدقيقة)
+            nxt = max(time.time(), KLAST.get(ki, 0.0) + GDELAY); KLAST[ki] = nxt
+        if nxt > time.time(): time.sleep(nxt - time.time())
         req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % models[0], data=body,
-                                     headers={"content-type": "application/json", "x-goog-api-key": GKEYS[KI[0] % len(GKEYS)]})
+                                     headers={"content-type": "application/json", "x-goog-api-key": GKEYS[ki]})
         try:
             with urllib.request.urlopen(req, timeout=300) as r:
                 j = json.loads(r.read())
@@ -134,7 +139,9 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue
             if e.code == 429 and len(GKEYS) > 1 and attempt < 3:  # نفدت حصة هذا المفتاح: انتقل إلى المفتاح التالي
-                KI[0] += 1; print("    الانتقال إلى مفتاح Gemini رقم %d" % (KI[0] % len(GKEYS) + 1), flush=True); continue
+                if getattr(TL, "k", None) is not None: TL.k += 1
+                else: KI[0] += 1
+                print("    الانتقال إلى مفتاح Gemini آخر", flush=True); continue
             if e.code in (401, 403): fail[0] = 99; return None
             if e.code in (429, 500, 503) and len(models) > 1 and attempt >= 1: models.pop(0)  # جرّب نموذجًا آخر عند الازدحام
             time.sleep(min(30, 4 * (attempt + 1)))
@@ -449,7 +456,7 @@ def ocr(pdf, first=1, last=None):
         if GKEY:
             from concurrent.futures import ThreadPoolExecutor
             def jpg(p):
-                subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
+                subprocess.run(["pdftoppm", "-r", os.environ.get("OCR_DPI", "200"), "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
             with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, nums))
         drafts = [ready[p].get("t", "") for p in nums]
         sur = {p: ready[p].get("s", "") for p in nums if ready[p].get("s")}
@@ -462,8 +469,12 @@ def ocr(pdf, first=1, last=None):
             if words: UNCERTAIN[i] = words[:40]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
         if GKEY:
-            for s0 in range(0, len(nums), batch):
-                idx = list(range(s0, min(s0 + batch, len(nums))))
+            groups = [list(range(s0, min(s0 + batch, len(nums)))) for s0 in range(0, len(nums), batch)]
+            workers = max(1, len(GKEYS) * int(os.environ.get("GEMINI_PER_KEY", "1")))
+            done = [0]
+            def review(job):
+                wi, idx = job
+                if getattr(TL, "k", None) is None: TL.k = wi % len(GKEYS)
                 imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
                 res = gemini_batch(imgs, [both[i] for i in idx]) if len(idx) > 1 else None
                 if res:
@@ -472,7 +483,10 @@ def ocr(pdf, first=1, last=None):
                     for i, img in zip(idx, imgs):
                         g = gemini_page(img, both[i])
                         if g is not None: accept(i, g)
-                print(f"  روجعت حتى صفحة {nums[idx[-1]]}/{last}", flush=True)
+                done[0] += len(idx); print(f"  روجعت {done[0]}/{len(nums)} صفحة", flush=True)
+            print("  المراجعة بالتوازي: %d خيوط على %d مفاتيح" % (workers, len(GKEYS)), flush=True)
+            with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="rv") as ex:
+                list(ex.map(review, [(j % workers, g) for j, g in enumerate(groups)]))
             pro_pass(pdf, nums, pages, td)
         for i, ok in enumerate(reviewed):
             if ok: STATS["gemini"] += 1
@@ -487,6 +501,14 @@ def assemble():
     for f in sorted(os.listdir(INBOX)):
         if f.endswith(".ready"):
             base = f[:-6]; parts = sorted(x for x in os.listdir(INBOX) if x.startswith(base + ".pdf.part"))
+            up = os.path.join(INBOX, base + ".url")
+            if os.path.exists(up):  # رُفع الملف مباشرة إلى مخزن الموقع (Supabase Storage)، وهنا رابط تنزيل مؤقت
+                url = open(up).read().strip()
+                try:
+                    with urllib.request.urlopen(url, timeout=600) as r, open(os.path.join(INBOX, base + ".pdf"), "wb") as out: shutil.copyfileobj(r, out, 1 << 20)
+                    os.remove(up); os.remove(os.path.join(INBOX, f)); print("نُزّل من المخزن:", base); continue
+                except Exception as e:
+                    print("تعذر تنزيل", base, e); continue
             n = int((open(os.path.join(INBOX, f)).read().strip() or "0"))
             if not parts or (n and len(parts) != n):
                 print("أجزاء ناقصة للملف", base, len(parts), "من", n); continue

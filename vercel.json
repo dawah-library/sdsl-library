@@ -29,6 +29,9 @@
     "api/mpost.js": {
       "includeFiles": "data/{catalog.json,books/**}",
       "maxDuration": 20
+    },
+    "api/pages.js": {
+      "maxDuration": 10
     }
   },
   "headers": [

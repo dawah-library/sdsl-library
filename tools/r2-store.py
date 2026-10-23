@@ -4,20 +4,21 @@
 لكل كتاب مصور يُرفع إلى R2:
   books/<id>/book.pdf          الملف الأصلي (للتنزيل والحفظ الدائم)
   books/<id>/p0001.webp …      صورة خفيفة لكل صفحة (نحو 100 ك.ب) يعرضها القارئ بجوار النص
-ثم يُكتب في data/catalog.json للكتاب: img (أساس روابط الصور) و imgN (عدد الصفحات) و pdf (رابط R2).
+ثم يُكتب في data/catalog.json للكتاب: img="r2" و imgN (عدد الصفحات) و pdf="r2".
+المخزن خاص (غير عام): القارئ يطلب روابط مؤقتة موقَّعة من /api/pages للأعضاء المسجلين فقط.
 
 الاستعمال:
   python3 tools/r2-store.py            يرفع كل كتاب له نسخة في pdf/ ولم يُرفع بعد
   python3 tools/r2-store.py <id> ...   كتب بعينها (ولو رُفعت من قبل)
 يعمل فقط إذا ضُبطت الأسرار: R2_ACCOUNT_ID و R2_ACCESS_KEY_ID و R2_SECRET_ACCESS_KEY و R2_BUCKET
-والمتغير R2_PUBLIC_URL (رابط النطاق العام للمخزن، مثل https://files.dawahlibrary.org). وإلا يخرج بهدوء.
+وإلا يخرج بهدوء.
 لا يحذف شيئًا من المستودع.
 """
 import json, os, subprocess, sys, tempfile, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CAT = os.path.join(ROOT, "data", "catalog.json")
-ENV = {k: os.environ.get(k, "").strip() for k in ["R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET", "R2_PUBLIC_URL"]}
+ENV = {k: os.environ.get(k, "").strip() for k in ["R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET"]}
 WIDTH = int(os.environ.get("R2_IMG_WIDTH", "1100"))
 QUALITY = int(os.environ.get("R2_IMG_QUALITY", "62"))
 
@@ -67,13 +68,13 @@ def store(s3, bid, pdf):
 def main():
     if not all(ENV.values()):
         print("مخزن R2 غير مضبوط بعد (الأسرار ناقصة) — تخطٍّ."); return
-    base = ENV["R2_PUBLIC_URL"].rstrip("/")
     cat = json.load(open(CAT, encoding="utf-8"))
     want = set(sys.argv[1:])
     todo = []
     for b in cat["books"]:
         local = os.path.join(ROOT, "pdf", b["id"] + ".pdf")
         if want and b["id"] not in want: continue
+        if b.get("pdf", "").startswith("pdf/") and b["pdf"] != "pdf/%s.pdf" % b["id"]: continue  # مجلد يشارك ملف كتاب آخر
         if not want and (b.get("img") or not os.path.exists(local)): continue
         if os.path.exists(local): todo.append((b, local))
         elif want: print("لا توجد نسخة محلية للكتاب", b["id"])
@@ -83,10 +84,10 @@ def main():
         print("==", b["id"], b.get("title", ""))
         n = store(s3, b["id"], local)
         if not n: continue
-        b["img"] = "%s/books/%s" % (base, b["id"])
+        b["img"] = "r2"
         b["imgN"] = n
         b["pdfLocal"] = "pdf/%s.pdf" % b["id"]  # تبقى إلى أن يُؤذن بإزالتها من المستودع
-        b["pdf"] = b["img"] + "/book.pdf"
+        b["pdf"] = "r2"
         # كتب المجموعة المتعددة المجلدات التي تشترك في الملف نفسه
         for x in cat["books"]:
             if x is not b and x.get("pdf") == "pdf/%s.pdf" % b["id"]:

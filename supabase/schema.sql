@@ -371,3 +371,14 @@ end $$;
 revoke execute on function public.admin_reply_notify() from public, anon, authenticated;
 drop trigger if exists admin_reply_notify on public.admin_messages;
 create trigger admin_reply_notify after update on public.admin_messages for each row execute function public.admin_reply_notify();
+
+-- صندوق رفع الكتب المصورة (خاص): يرفع المشرف الملف دفعة واحدة، ويأخذه التحويل برابط مؤقت
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('inbox', 'inbox', false, 52428800, array['application/pdf'])
+on conflict (id) do nothing;
+drop policy if exists "inbox staff insert" on storage.objects;
+create policy "inbox staff insert" on storage.objects for insert to authenticated with check (bucket_id = 'inbox' and public.is_staff());
+drop policy if exists "inbox staff read" on storage.objects;
+create policy "inbox staff read" on storage.objects for select to authenticated using (bucket_id = 'inbox' and public.is_staff());
+drop policy if exists "inbox staff update" on storage.objects;
+create policy "inbox staff update" on storage.objects for update to authenticated using (bucket_id = 'inbox' and public.is_staff());
