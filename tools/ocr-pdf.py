@@ -120,7 +120,9 @@ GFAIL = [0]  # إخفاقات Gemini المتتالية: بعد عدد منها 
 
 from collections import Counter
 ERRS = Counter()  # أخطاء Gemini مجمَّعة للتقرير
-KEXH = set()  # مفاتيح نفدت حصتها اليومية
+KEXH = set()  # مفاتيح نفدت حصتها اليومية في كل النماذج
+MEXH = set()  # (مفتاح، نموذج) نفدت حصته اليومية: لكل نموذج حصة مستقلة، فننتقل إلى النموذج البديل قبل ترك المفتاح
+LITE = set()  # صفحات قرأها النموذج الخفيف (حين نفدت حصة الأساسي): تُعاد قراءتها بالأساسي لاحقًا
 
 
 def _next_key(ki):
@@ -137,14 +139,20 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
         return None
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
-    models = list(models or GMODELS)
-    for attempt in range(7):
+    models = list(models or GMODELS); models_all = list(models)
+    for attempt in range(9):
         ki = getattr(TL, "k", None)
         ki = (KI[0] if ki is None else ki) % len(GKEYS)
         if ki in KEXH:
             nk = _next_key(ki)
             if nk is None: return None
             ki = nk; TL.k = nk
+        mm = [m for m in models if (ki, m) not in MEXH]
+        if not mm:  # كل نماذج هذا المفتاح نفدت اليوم
+            KEXH.add(ki); models = list(models_all)
+            if len(KEXH) >= len(GKEYS): fail[0] = 99; return None
+            continue
+        models = mm
         with KLOCK:  # التباعد بين الطلبات لكل مفتاح على حدة (حد الطلبات في الدقيقة)
             nxt = max(time.time(), KLAST.get(ki, 0.0) + GDELAY); KLAST[ki] = nxt
         if nxt > time.time(): time.sleep(nxt - time.time())
@@ -157,6 +165,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
             if t.strip():
                 fail[0] = 0
+                TL.model = models[0]
                 return t
             ERRS["%s رد فارغ (%s)" % (models[0], c.get("finishReason"))] += 1
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
@@ -166,9 +175,8 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             ERRS["%s %s%s" % (models[0], e.code, " (الحصة اليومية)" if daily else "")] += 1
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue
-            if daily:  # نفدت حصة هذا المفتاح اليوم: لا يُستعمل بعد الآن في هذا التشغيل
-                KEXH.add(ki); print("    نفدت الحصة اليومية للمفتاح %d" % (ki + 1), flush=True)
-                if len(KEXH) >= len(GKEYS): fail[0] = 99; return None
+            if daily:  # نفدت حصة هذا النموذج على هذا المفتاح اليوم: جرّب النموذج البديل ثم المفاتيح الأخرى
+                MEXH.add((ki, models[0])); print("    نفدت الحصة اليومية لـ %s على المفتاح %d" % (models[0], ki + 1), flush=True)
                 continue
             if e.code == 429:  # حد الدقيقة: انتظر ثم أعد، وجرّب مفتاحًا آخر إن وُجد
                 nk = _next_key(ki)
@@ -534,14 +542,14 @@ def load_drafts(pdf):
     return out
 
 
-def ocr(pdf, first=1, last=None, only=None):
+def ocr(pdf, first=1, last=None, only=None, prior=None):
     """١) الصفحات الإلكترونية: طبقة النص مباشرة مع تنسيق نصي سريع ٢) المصوَّرة: Gemini يقرأ الصور (مع مسودات Tesseract إن أُعدّت)
     ٣) مدقق ثانٍ أقوى لمواضع الشك والمخطوطات ٤) Tesseract احتياطيًا لما تعذّر على Gemini."""
     from concurrent.futures import ThreadPoolExecutor
     n = pages_count(pdf)
     last = min(last or n, n)
     nums = list(range(first, last + 1)) if not only else [p for p in only if 1 <= p <= n]
-    STATS.update(gemini=0, tesseract=0, pro=0, digital=0); PNUM.clear(); UNCERTAIN.clear(); UNREVIEWED.clear(); HAND.clear(); GFAIL[0] = 0
+    STATS.update(gemini=0, tesseract=0, pro=0, digital=0); PNUM.clear(); UNCERTAIN.clear(); UNREVIEWED.clear(); HAND.clear(); LITE.clear(); GFAIL[0] = 0
     batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
     ready = load_drafts(pdf)
     pages = [""] * len(nums); reviewed = [False] * len(nums)
@@ -569,6 +577,7 @@ def ocr(pdf, first=1, last=None, only=None):
         if GKEY and scan:
             with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, [nums[i] for i in scan]))
         def drafts_of(i):
+            if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]]
             r = ready.get(nums[i]) or {}
             d, su = r.get("t", ""), r.get("s", "")
             return ("[مسودة Tesseract]\n" + d if d else "") + ("\n\n[مسودة Surya]\n" + su if su else "")
@@ -579,6 +588,8 @@ def ocr(pdf, first=1, last=None, only=None):
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
+            if "lite" in (getattr(TL, "model", "") or ""): LITE.add(i)
+            else: LITE.discard(i)
         if GKEY and scan:
             groups = [scan[k:k + batch] for k in range(0, len(scan), batch)]
             workers = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
@@ -684,7 +695,9 @@ def plan():
         books = [f for f, _ in jobs]
         if os.environ.get("OCR_REREVIEW", "") == "1" or not books:  # إكمال الصفحات التي فاتتها المراجعة (يوميًا بعد تجدد الحصة)
             cat = json.load(open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
-            books += ["rereview:" + b["id"] for b in cat["books"] if b.get("unrev") and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))][:6]
+            need = [b for b in cat["books"] if (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            need.sort(key=lambda b: (-(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))  # الأحوج أولًا
+            books += ["rereview:" + b["id"] for b in need][:6]
         if os.environ.get("OCR_TESS", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
         else:  # لا مسودات للكتب الإلكترونية (طبقة نص سليمة)
@@ -729,32 +742,41 @@ def local_pdf(bid):
 
 
 def rereview(bid):
-    """إكمال مراجعة Gemini للصفحات التي فاتتها (ازدحام أو نفاد الحصة) في كتاب محفوظ، دون إعادة الكتاب كله."""
+    """التدقيق الدوري لكتاب محفوظ دون إعادته كله: يعيد قراءة الصفحات من صورها بالترتيب:
+    ١) التي فاتتها مراجعة Gemini (نص Tesseract)  ٢) التي قرأها النموذج الخفيف  ٣) التي فيها كلمات مشكوك فيها."""
     sp = os.path.join(DATA, "books", bid + ".json")
-    sh = json.load(open(sp, encoding="utf-8")); idx = sorted(set(sh.get("unrev") or []))
+    sh = json.load(open(sp, encoding="utf-8"))
+    unrev, lite, unc0 = sorted(set(sh.get("unrev") or [])), sorted(set(sh.get("lite") or [])), dict(sh.get("unc") or {})
+    order = unrev + [i for i in lite if i not in unrev] + [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev and int(k) not in lite]
+    idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
     pdf = local_pdf(bid) if idx else None
-    if not idx or not pdf: print("لا شيء لإكماله في", bid); return
-    print("== إكمال مراجعة %s: %d صفحة" % (bid, len(idx)), flush=True)
-    new = ocr(pdf, only=[i + 1 for i in idx])
-    left, unc = [], dict(sh.get("unc") or {})
+    if not idx or not pdf: print("لا شيء لتدقيقه في", bid); return
+    print("== تدقيق %s: %d صفحة (فاتتها المراجعة %d، خفيفة %d، فيها شك %d)" % (bid, len(idx), len(unrev), len(lite), len(unc0)), flush=True)
+    # النص الحالي مسودةً يستعين بها Gemini مع الصورة
+    os.environ["OCR_DRAFTS"] = ""
+    new = ocr(pdf, only=[i + 1 for i in idx], prior={i + 1: sh["pages"][i] for i in idx})
+    left, lite2, unc = set(unrev), set(lite), dict(unc0)
+    fixed = 0
     for k, i in enumerate(idx):
-        if k in UNREVIEWED: left.append(i); continue
-        sh["pages"][i] = new[k]
+        if k in UNREVIEWED: continue
+        sh["pages"][i] = new[k]; fixed += 1
+        left.discard(i)
+        if k in LITE: lite2.add(i)
+        else: lite2.discard(i)
         if k in UNCERTAIN: unc[str(i)] = UNCERTAIN[k]
         else: unc.pop(str(i), None)
-    sh["unrev"] = left
-    if not left: sh.pop("unrev", None)
-    sh["unc"] = unc
-    if not unc: sh.pop("unc", None)
+    for key, val in (("unrev", sorted(left)), ("lite", sorted(lite2)), ("unc", unc)):
+        if val: sh[key] = val
+        else: sh.pop(key, None)
     s_ = json.dumps(sh, ensure_ascii=False, separators=(",", ":")); open(sp, "w", encoding="utf-8").write(s_)
     if b:
-        b.update({"unrev": len(left), "unc": sum(len(v) for v in unc.values()), "size": len(s_.encode())})
-        if STATS["gemini"] > STATS["tesseract"] or not left: b["ocrEngine"] = "gemini+tesseract"
+        b.update({"unrev": len(left), "lite": len(lite2), "unc": sum(len(v) for v in unc.values()), "size": len(s_.encode())})
+        if not left: b["ocrEngine"] = "gemini+tesseract"
     cat["version"] = int(datetime.datetime.now().timestamp() * 1000)
     json.dump(cat, open(cat_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    REPORT.append("## إكمال مراجعة %s (%s)\n- روجعت الآن: %d، بقي: %d" % ((b or {}).get("title", bid), bid, len(idx) - len(left), len(left)))
+    REPORT.append("## تدقيق %s (%s)\n- أُعيدت قراءته: %d صفحة؛ بقي دون مراجعة: %d، بالنموذج الخفيف: %d، مواضع شك: %d" % ((b or {}).get("title", bid), bid, fixed, len(left), len(lite2), sum(len(v) for v in unc.values())))
     if ERRS: REPORT.append("- أخطاء Gemini: " + "، ".join("%s ×%d" % kv for kv in ERRS.most_common(6)))
     open(os.path.join(ROOT, "tools", "ocr-report.md"), "w", encoding="utf-8").write("# تقرير آخر تحويل — %s UTC\n\n" % datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M") + "\n".join(REPORT) + "\n")
 
@@ -834,12 +856,13 @@ def main():
                 if not existing and card.get("title") and re.match(r"^up[0-9a-z]+", entry.get("title", "")): entry["title"] = card["title"]
             if UNCERTAIN: shard["unc"] = {str(k): v for k, v in UNCERTAIN.items()}
             if UNREVIEWED: shard["unrev"] = UNREVIEWED[:]
+            if LITE: shard["lite"] = sorted(LITE)
             s = json.dumps(shard, ensure_ascii=False, separators=(",", ":"))
             open(os.path.join(DATA, "books", bid + ".json"), "w", encoding="utf-8").write(s)
             entry.update({"n": len(pages), "size": len(s.encode()), "ocr": True,
                           "source": " — ".join(x for x in [re.sub(r"\s*—?\s*نص محوَّل (آليًا|بالذكاء الاصطناعي).*$", "", entry.get("source", "")).strip(" —") if existing else "", "نص محوَّل بالذكاء الاصطناعي من نسخة مصورة، يُرجى الإبلاغ عن أي خطأ" if STATS["gemini"] > STATS["tesseract"] else "نص محوَّل آليًا من نسخة مصورة، يحتاج مراجعة"] if x),
                           "ocrEngine": ("gemini+pro" if STATS.get("pro") else "gemini") + "+tesseract" + ("+surya" if os.environ.get("OCR_SURYA", "1") == "1" else "") if STATS["gemini"] > STATS["tesseract"] else "tesseract",
-                          "unc": sum(len(v) for v in UNCERTAIN.values()), "unrev": len(UNREVIEWED),
+                          "unc": sum(len(v) for v in UNCERTAIN.values()), "unrev": len(UNREVIEWED), "lite": len(LITE),
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
         print(f"   تم: {entry.get('n', '?')} صفحة")

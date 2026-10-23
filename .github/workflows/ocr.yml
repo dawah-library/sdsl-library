@@ -5,7 +5,8 @@ on:
   push:
     paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF", "ocr-inbox/*.redo", "ocr-inbox/*.ready"]
   schedule:
-    - cron: "40 8 * * *"  # يوميًا بعد تجدد حصة Gemini: إكمال الصفحات التي فاتتها المراجعة
+    - cron: "20 7 * * *"   # التدقيق الدوري بعد تجدد حصة Gemini اليومية: الصفحات التي فاتتها المراجعة ثم الخفيفة ثم المشكوك فيها
+    - cron: "40 16 * * *"  # جولة ثانية لما بقي
   workflow_dispatch:
     inputs:
       rereview:
