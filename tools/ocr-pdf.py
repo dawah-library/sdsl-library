@@ -33,7 +33,19 @@ def fix_punct(t):
     t = re.sub(r"\s*,\s*", "، ", t)
     t = t.replace("?", "؟").replace(";", "؛")
     t = re.sub(r"\s+([،؛؟.:])", r"\1", t)
+    # Tesseract يقرأ الفاصلة العربية «،» غالبًا علامة » ؛ نصححها إن لم يسبقها قوس تنصيص مفتوح قريب
+    t = re.sub(r"(?<![«\s])»(?=\s|$)", lambda m: "»" if "«" in t[max(0, m.start() - 80):m.start()] else "،", t)
     return t
+
+
+def garbage(l):
+    """سطر مشوَّه من زخارف الصفحة أو ترويستها: حروف قليلة ورموز كثيرة أو كلمات مقطعة."""
+    s = l.lstrip("# ").strip()
+    if len(s) < 4: return True
+    letters = len(AR.findall(s)); other = len(re.findall(r"[^\s\u0600-\u06FF]", s))
+    words = s.split(); short = sum(1 for w in words if len(w) <= 2)
+    if len(s) < 40 and (other > letters * 0.3 or (len(words) >= 2 and short / len(words) > 0.5)): return True
+    return False
 
 
 def clean_page(t):
@@ -41,6 +53,8 @@ def clean_page(t):
     lines = [l.strip() for l in t.replace("\f", "").split("\n")]
     out, buf = [], ""
     for l in lines:
+        if l and garbage(l):
+            continue
         if not l:
             if buf: out.append(buf); buf = ""
             continue
