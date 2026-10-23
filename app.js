@@ -657,6 +657,7 @@ const Auth={mode:"local",sb:null,user:null,token:null,
  async oauth(provider,next){if(this.mode!=="cloud")throw new Error("الدخول بحساب "+(provider==="google"?"Google":"Apple")+" يعمل بعد ربط الموقع بقاعدة بيانات الحسابات.");
   ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOAuth({provider,options:{redirectTo:location.origin+location.pathname}});if(error)throw error},
  async signUp(name,email,pw){
+  await pwCheck(pw);
   if(this.mode==="cloud"){const {data,error}=await this.sb.auth.signUp({email,password:pw,options:{data:{name,full_name:name}}});if(error)throw error;if(data.session)this.set(data.session);return data.session?"ok":"confirm"}
   this.user={id:"local:"+email.toLowerCase(),name,email};ls.set("acct",this.user);return "ok"},
  async signIn(email,pw){
@@ -691,6 +692,13 @@ function vAccount(q){
  if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w||!(p.google||p.apple))return;
   w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}</div><div class="or">أو بالبريد الإلكتروني</div>`;
   $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=e.message}})})}
+// حماية كلمات المرور: طول كافٍ، ورفض كلمات المرور المسرّبة (فحص Have I Been Pwned بطريقة إخفاء الهوية: يُرسل أول 5 أحرف من بصمة SHA-1 فقط)
+async function pwCheck(pw){pw=String(pw||"");if(pw.length<8)throw new Error("كلمة المرور قصيرة: ثمانية أحرف على الأقل.");
+ if(/^(.)\1+$/.test(pw)||/^(12345678|123456789|password|qwertyui)/i.test(pw))throw new Error("كلمة المرور سهلة التخمين؛ اختر غيرها.");
+ try{const h=[...new Uint8Array(await crypto.subtle.digest("SHA-1",new TextEncoder().encode(pw)))].map(b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+  const r=await fetch("https://api.pwnedpasswords.com/range/"+h.slice(0,5),{headers:{"Add-Padding":"true"}});if(!r.ok)return;
+  const t=await r.text();if(t.split("\n").some(l=>{const [suf,c]=l.trim().split(":");return suf===h.slice(5)&&+c>0}))throw new Error("كلمة المرور هذه ظهرت في تسريبات بيانات سابقة على الإنترنت، فاختر كلمة مرور أخرى لحماية حسابك.")}
+ catch(e){if(/تسريبات/.test(e.message))throw e}}
 const AUTHERR=[[/invalid login credentials/i,"البريد أو كلمة المرور غير صحيحة. إن لم يكن لك حساب بعد فاضغط «أنشئ حسابًا مجانيًا»."],[/email not confirmed/i,"لم يُؤكَّد بريدك بعد؛ افتح رسالة التأكيد في بريدك ثم سجّل الدخول."],[/already registered|already exists/i,"هذا البريد مسجّل من قبل؛ سجّل الدخول به."],[/password should be at least|weak password/i,"كلمة المرور قصيرة؛ اجعلها 8 أحرف على الأقل."],[/rate limit|too many/i,"محاولات كثيرة؛ انتظر دقيقة ثم أعد المحاولة."],[/invalid.*email|email.*invalid/i,"صيغة البريد غير صحيحة."],[/failed to fetch|network/i,"تعذر الاتصال بخادم الحسابات؛ تأكد من الإنترنت."]];
 const authMsg=e=>{const m=String((e&&(e.message||e.error_description))||e||"");const t=AUTHERR.find(([r])=>r.test(m));return t?t[1]:(m?"تعذر الدخول: "+m:"تعذر الدخول")};
 async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr"),btn=f.querySelector("button"),old=btn.textContent;err.textContent="";btn.disabled=true;btn.textContent=kind==="signup"?"جارٍ إنشاء الحساب…":"جارٍ الدخول…";
