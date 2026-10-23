@@ -1,0 +1,17 @@
+name: تقرير صيانة المكتبة إلى تليجرام
+# يرسل تقرير الفحص والصيانة اليومي (يكتبه مساعد الصيانة الآلي في tools/health-report.md) إلى تليجرام الإدارة.
+on:
+  push:
+    branches: [main]
+    paths: ["tools/health-report.md"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/notify.py --file tools/health-report.md "🩺 تقرير الصيانة اليومي"
