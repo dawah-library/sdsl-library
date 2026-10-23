@@ -11,7 +11,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: library-data
+  group: ocr
   cancel-in-progress: false
 jobs:
   ocr:

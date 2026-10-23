@@ -15,7 +15,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: library-data
+  group: import-turath
   cancel-in-progress: false
 jobs:
   import:

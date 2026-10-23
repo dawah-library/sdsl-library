@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: library-data
+  group: daily-import
   cancel-in-progress: false
 jobs:
   import:

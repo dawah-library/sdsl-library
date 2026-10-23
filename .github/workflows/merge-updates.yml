@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: library-data
+  group: merge-updates
   cancel-in-progress: false
 jobs:
   merge:
