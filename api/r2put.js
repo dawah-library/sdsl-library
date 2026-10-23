@@ -8,13 +8,14 @@ const hmac = (k, s) => crypto.createHmac("sha256", k).update(s).digest();
 const sha = s => crypto.createHash("sha256").update(s).digest("hex");
 const enc = s => encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
 
-function presignPut(key, ttl) {
+function presignGet(key, ttl) { return presignPut(key, ttl, "GET"); }
+function presignPut(key, ttl, method) {
   const host = E("R2_ACCOUNT_ID") + ".r2.cloudflarestorage.com";
   const amz = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), day = amz.slice(0, 8);
   const scope = `${day}/auto/s3/aws4_request`, path = "/" + E("R2_BUCKET") + "/" + key.split("/").map(enc).join("/");
   const q = { "X-Amz-Algorithm": "AWS4-HMAC-SHA256", "X-Amz-Credential": E("R2_ACCESS_KEY_ID") + "/" + scope, "X-Amz-Date": amz, "X-Amz-Expires": String(ttl), "X-Amz-SignedHeaders": "host" };
   const qs = Object.keys(q).sort().map(k => enc(k) + "=" + enc(q[k])).join("&");
-  const canon = ["PUT", path, qs, "host:" + host + "\n", "host", "UNSIGNED-PAYLOAD"].join("\n");
+  const canon = [method || "PUT", path, qs, "host:" + host + "\n", "host", "UNSIGNED-PAYLOAD"].join("\n");
   const sts = ["AWS4-HMAC-SHA256", amz, scope, sha(canon)].join("\n");
   const kSig = hmac(hmac(hmac(hmac("AWS4" + E("R2_SECRET_ACCESS_KEY"), day), "auto"), "s3"), "aws4_request");
   return `https://${host}${path}?${qs}&X-Amz-Signature=${crypto.createHmac("sha256", kSig).update(sts).digest("hex")}`;
@@ -26,6 +27,11 @@ module.exports = async (req, res) => {
   // (دُمج هنا لأن خطة Vercel المجانية تسمح باثنتي عشرة دالة فقط)
   if (req.method === "GET") {
     try { await verifyOidc(String(req.headers.authorization || "").replace(/^Bearer\s+/i, "")); } catch (e) { return out(403, { message: "forbidden" }); }
+    const bk = new URL(req.url, "http://x").searchParams.get("pdf") || "";
+    if (bk) {  // نسخة الكتاب المصور من مخزن R2 الخاص (لإعادة التحويل أو إكمال المراجعة)
+      if (!/^[A-Za-z0-9_-]{1,80}$/.test(bk)) return out(400, { message: "bad id" });
+      return out(200, { url: presignGet("books/" + bk + "/book.pdf", 900) });
+    }
     const name = new URL(req.url, "http://x").searchParams.get("f") || "";
     if (!/^up[0-9a-z]{4,30}\.pdf$/.test(name)) return out(400, { message: "bad name" });
     const key = E("SUPABASE_SECRET_KEY") || E("SUPABASE_SERVICE_ROLE_KEY"), h = { apikey: key, "content-type": "application/json" };

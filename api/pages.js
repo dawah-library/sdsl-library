@@ -25,6 +25,11 @@ module.exports = async (req, res) => {
   if (!E("R2_ACCOUNT_ID") || !E("R2_ACCESS_KEY_ID") || !E("R2_SECRET_ACCESS_KEY") || !E("R2_BUCKET")) return out(503, { message: "مخزن الكتب المصورة غير مهيأ بعد." });
   // فحص صحة مفاتيح المخزن (لا يكشف شيئًا): /api/pages?check=1
   if (new URL(req.url, "http://x").searchParams.get("check")) {
+    const ob = new URL(req.url, "http://x").searchParams.get("obj") || "";
+    if (/^[A-Za-z0-9_-]{1,80}$/.test(ob)) {  // هل نسخة الكتاب المصور وصورة صفحته الأولى محفوظتان في المخزن؟ (وجود فقط، بلا محتوى)
+      const has = async k => (await fetch(presign(k, 60), { headers: { Range: "bytes=0-0" } })).ok;
+      return out(200, { pdf: await has("books/" + ob + "/book.pdf"), p1: await has("books/" + ob + "/p0001.webp") });
+    }
     try { const r = await fetch(presign("", 60, { "list-type": "2", "max-keys": "1" })); return out(r.ok ? 200 : 502, { ok: r.ok, status: r.status }); }
     catch (e) { return out(502, { ok: false, error: e.message }); }
   }

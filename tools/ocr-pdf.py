@@ -673,7 +673,7 @@ def plan():
     if os.path.isdir(INBOX):
         assemble()
         files = [os.path.join("ocr-inbox", f) for f in sorted(os.listdir(INBOX)) if f.lower().endswith(".pdf")]
-        files += [os.path.join("pdf", b + ".pdf") for b in redo_ids() if os.path.exists(os.path.join(PDFDIR, b + ".pdf"))]
+        files += [os.path.join("pdf", b + ".pdf") for b in redo_ids() if local_pdf(b)]
         jobs = []
         for f in files:
             side = os.path.join(ROOT, f[:-4] + ".json")
@@ -684,7 +684,7 @@ def plan():
         books = [f for f, _ in jobs]
         if os.environ.get("OCR_REREVIEW", "") == "1" or not books:  # إكمال الصفحات التي فاتتها المراجعة (يوميًا بعد تجدد الحصة)
             cat = json.load(open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
-            books += ["rereview:" + b["id"] for b in cat["books"] if b.get("unrev") and os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"]))][:6]
+            books += ["rereview:" + b["id"] for b in cat["books"] if b.get("unrev") and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))][:6]
         if os.environ.get("OCR_TESS", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
         else:  # لا مسودات للكتب الإلكترونية (طبقة نص سليمة)
@@ -708,14 +708,34 @@ def drafts_job(path, first, last):
     json.dump({"pages": res, "report": REPORT}, open(os.path.join(ROOT, "drafts", "%s-%04d.json" % (md5f(pdf), int(first))), "w", encoding="utf-8"), ensure_ascii=False)
 
 
+def oidc_get(path):
+    """طلب إلى الموقع بهوية مهمة GitHub (OIDC) دون مفاتيح."""
+    tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library", headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
+    site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
+    return json.loads(urllib.request.urlopen(urllib.request.Request(site + path, headers={"Authorization": "Bearer " + tok}), timeout=30).read())
+
+
+def local_pdf(bid):
+    """نسخة الكتاب المصور محليًا: من المستودع إن وُجدت، وإلا من مخزن R2 الخاص (لا تُحفظ في المستودع العام)."""
+    dest = os.path.join(PDFDIR, bid + ".pdf")
+    if os.path.exists(dest): return dest
+    try:
+        url = oidc_get("/api/r2put?pdf=" + bid)["url"]
+        os.makedirs(PDFDIR, exist_ok=True)
+        with urllib.request.urlopen(url, timeout=600) as r, open(dest, "wb") as out: shutil.copyfileobj(r, out, 1 << 20)
+        print("نُزّلت النسخة المصورة من المخزن:", bid); return dest
+    except Exception as e:
+        print("تعذر تنزيل النسخة المصورة", bid, e); return None
+
+
 def rereview(bid):
     """إكمال مراجعة Gemini للصفحات التي فاتتها (ازدحام أو نفاد الحصة) في كتاب محفوظ، دون إعادة الكتاب كله."""
     sp = os.path.join(DATA, "books", bid + ".json")
     sh = json.load(open(sp, encoding="utf-8")); idx = sorted(set(sh.get("unrev") or []))
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
-    pdf = os.path.join(ROOT, (b or {}).get("pdfLocal") or "pdf/%s.pdf" % bid)
-    if not idx or not os.path.exists(pdf): print("لا شيء لإكماله في", bid); return
+    pdf = local_pdf(bid) if idx else None
+    if not idx or not pdf: print("لا شيء لإكماله في", bid); return
     print("== إكمال مراجعة %s: %d صفحة" % (bid, len(idx)), flush=True)
     new = ocr(pdf, only=[i + 1 for i in idx])
     left, unc = [], dict(sh.get("unc") or {})
@@ -747,7 +767,7 @@ def main():
     redo = redo_ids(consume=True)  # طلبات إعادة التحويل من صفحة الإدارة: ocr-inbox/<id>.redo
     if ONLY: redo = [b for b in redo if ONLY == "pdf/%s.pdf" % b]
     for bid in redo:  # إعادة تحويل كتاب موجود من نسخته المصورة المحفوظة
-        src = os.path.join(PDFDIR, bid + ".pdf")
+        src = local_pdf(bid) or os.path.join(PDFDIR, bid + ".pdf")
         if os.path.exists(src):
             shutil.copy(src, os.path.join(INBOX, "redo-" + bid + ".pdf"))
             json.dump({"book": bid, "ocr": True}, open(os.path.join(INBOX, "redo-" + bid + ".json"), "w", encoding="utf-8"))

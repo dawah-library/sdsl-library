@@ -139,7 +139,9 @@ jobs:
           pip install -q --break-system-packages pillow; if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3; fi; python3 tools/r2-store.py
       - run: |
           rm -rf ocr-drafts tessdata
-          bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md
+          # النسخ المصورة لا تُحفظ في المستودع العام إلا احتياطًا إن تعذر رفعها إلى مخزن R2 الخاص
+          KEEP=$(python3 -c "import json,os;c=json.load(open('data/catalog.json'));ids={b['id'] for b in c['books'] if b.get('img')!='r2'};print(' '.join('pdf/'+f for f in os.listdir('pdf') if f.endswith('.pdf') and f[:-4] in ids) if os.path.isdir('pdf') else '')")
+          bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data ocr-inbox tools/ocr-report.md $KEEP
       - name: إشعار تليجرام
         if: success()
         run: python3 tools/notify.py --file tools/ocr-report.md "✅ اكتمل التحويل"
