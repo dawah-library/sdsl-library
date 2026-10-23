@@ -25,6 +25,8 @@ jobs:
     outputs:
       shards: ${{ steps.p.outputs.shards }}
       any: ${{ steps.p.outputs.any }}
+      books: ${{ steps.p.outputs.books }}
+      nbooks: ${{ steps.p.outputs.nbooks }}
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
@@ -33,6 +35,7 @@ jobs:
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_MACHINES: ${{ vars.OCR_MACHINES || '16' }}
           OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
+          OCR_TESS: ${{ vars.OCR_TESS || '0' }}
         run: python3 tools/ocr-pdf.py --plan
 
   drafts:
@@ -82,17 +85,22 @@ jobs:
           path: drafts/
           retention-days: 3
 
+  # المراجعة: جهاز لكل كتاب، حتى ثلاثة كتب معًا (مفتاح Gemini لكل جهاز)
   review:
     needs: [plan, drafts]
-    if: ${{ !cancelled() && needs.plan.outputs.any == '1' }}
+    if: ${{ !cancelled() && needs.plan.outputs.nbooks != '0' && needs.plan.outputs.nbooks != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        book: ${{ fromJSON(needs.plan.outputs.books) }}
     steps:
       - uses: actions/checkout@v4
       - name: تثبيت الأدوات
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr poppler-utils
-          mkdir -p tessdata && curl -sSL -o tessdata/ara.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
+          which pdftoppm || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils)
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -107,6 +115,9 @@ jobs:
           OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           OCR_DRAFTS: ocr-drafts
           OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '60' }}
+          OCR_ONLY: ${{ matrix.book }}
+          OCR_NBOOKS: ${{ needs.plan.outputs.nbooks }}
+          GEMINI_KEY_START: ${{ strategy.job-index }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - name: رفع المصورة وصور الصفحات إلى مخزن R2 (إن ضُبط)
         continue-on-error: true
