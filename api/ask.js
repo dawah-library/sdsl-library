@@ -159,7 +159,10 @@ async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, tool
 module.exports = async (req, res) => {
   // فحص سريع من المتصفح: /api/ask?check=1 (لا يكشف المفتاح)
   if (req.method === "GET" && /check=1/.test(req.url || "")) {
-    const out = { provider: PROVIDER() || "none", gemini_key: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.slice(0, 3) + "… (" + process.env.GEMINI_API_KEY.length + ")" : "missing", anthropic_key: process.env.ANTHROPIC_API_KEY ? "set" : "missing", supabase: process.env.SUPABASE_URL ? "set" : "missing", tests: [] };
+    // صفحة الفحص للمدير فقط (كانت عامة وتستهلك الحصة وتكشف تفاصيل داخلية)
+    const who = await require("../lib/auth").userOf(req);
+    if (!who || who.role !== "admin") return res.status(403).json({ error: "للمدير فقط" });
+    const out = { provider: PROVIDER() || "none", gemini_key: process.env.GEMINI_API_KEY ? "set" : "missing", anthropic_key: process.env.ANTHROPIC_API_KEY ? "set" : "missing", supabase: process.env.SUPABASE_URL ? "set" : "missing", tests: [] };
     if (process.env.GEMINI_API_KEY) {
       for (const m of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((x, i, a) => x && a.indexOf(x) === i)) {
         for (const how of ["header", "query"]) {
@@ -180,7 +183,7 @@ module.exports = async (req, res) => {
       try {
         const done = await runGemini({ system: S.SYSTEM + "\n\nالمهمة: " + S.MODES.ask, msgs: [{ role: "user", content: "ما شروط التوبة؟ أجب في ثلاثة أسطر." }], deep: false, maxRounds: 4, budget: 50000, t0: Date.now(), send: o => ev.push(o), toolLabel: c => "tool:" + c.name + " " + JSON.stringify(c.input).slice(0, 60), runOne: (n, i) => { const v = S.runTool(lib(), n, i, {}); if (n === "search_library") used.push(i.query); return v; }, used });
         out.full = { done, events: ev.filter(e => e.t !== "text").map(e => e.t + ": " + (e.v || "") + (e.detail ? " | " + e.detail : "")).slice(0, 12), answer: ev.filter(e => e.t === "text").map(e => e.v).join("").slice(0, 400) };
-      } catch (e) { out.full = { crash: String(e.stack || e).slice(0, 400) }; }
+      } catch (e) { console.error(e); out.full = { crash: String(e.message || e).slice(0, 200) }; }
     }
     const ok = out.tests.find(t => t.status === 200);
     const esc = x => String(x == null ? "" : x).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));

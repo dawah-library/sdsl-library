@@ -392,3 +392,10 @@ create table if not exists public.app_settings (
 alter table public.app_settings enable row level security;
 drop policy if exists "app settings admin read" on public.app_settings;
 create policy "app settings admin read" on public.app_settings for select using (public.is_admin());
+
+-- ===== تقوية الأمان (23 أكتوبر) =====
+alter policy "member pages own update" on public.member_pages using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+alter policy "notifications own update" on public.notifications using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+alter policy "admin messages staff update" on public.admin_messages using (public.is_staff()) with check (public.is_staff());
+alter policy "corrections staff update" on public.corrections using (public.is_staff()) with check (public.is_staff());
+-- الاسم الظاهر يفرضه الخادم، مع حد للإغراق (التعريف الكامل في قاعدة البيانات: public.guard_member_write)

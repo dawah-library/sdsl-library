@@ -25,6 +25,7 @@ async function sb(path, opt = {}) {
 const inList = ids => "(" + ids.map(x => '"' + String(x).replace(/"/g, "") + '"').join(",") + ")";
 
 module.exports = async (req, res) => {
+  if (require("../lib/rate").limited(req, "remind", 10, 60 * 60e3)) return res.status(429).json({ ok: false });
   res.setHeader("cache-control", "no-store");
   const q = req.query || {};
   const v = vapid();

@@ -98,11 +98,20 @@ function extract(html, url) {
 }
 
 async function handler(req, res) {
+  const who = await require("../lib/auth").userOf(req);  // جلب صفحات من مواقع خارجية: للمشرفين فقط
+  if (!who || !/^(admin|editor)$/.test(who.role)) return res.status(403).json({ error: "للمشرفين فقط" });
   let u;
   try { u = new URL(String((req.query && req.query.url) || "")); } catch (e) { return res.status(400).json({ error: "رابط غير صالح" }); }
   if (!/^https?:$/.test(u.protocol) || !ALLOWED.includes(u.hostname)) return res.status(400).json({ error: "هذا الموقع غير مسموح بالاستيراد منه" });
   try {
-    const r = await fetch(u.href, { headers: { "user-agent": "Mozilla/5.0 (SDSL importer)", "accept-language": "ar" }, redirect: "follow" });
+    let r, url = u.href;
+    for (let hop = 0; hop < 4; hop++) {  // اتباع التحويلات داخل المواقع المسموح بها فقط (منع SSRF)
+      r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (SDSL importer)", "accept-language": "ar" }, redirect: "manual" });
+      if (r.status < 300 || r.status >= 400) break;
+      const nx = new URL(r.headers.get("location") || "", url);
+      if (!/^https?:$/.test(nx.protocol) || !ALLOWED.includes(nx.hostname)) return res.status(400).json({ error: "تحويل إلى موقع غير مسموح" });
+      url = nx.href;
+    }
     if (!r.ok) return res.status(502).json({ error: "رد الموقع برمز " + r.status });
     const buf = await r.arrayBuffer();
     const ct = r.headers.get("content-type") || "";

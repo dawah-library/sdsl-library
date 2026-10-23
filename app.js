@@ -937,8 +937,8 @@ async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(
    // الأسرع: رفع الملف كاملًا إلى مخزن الموقع (Supabase Storage) دفعة واحدة، ثم رابط تنزيل مؤقت يأخذه التحويل
    let viaStore=false;if(GH.proxied&&Cloud.on()&&file.size<=50*1048576){try{st.textContent=`جارٍ رفع ${cfg.title} (${toAr(Math.round(file.size/1048576))} ميجابايت)…`;
     const S_=Auth.sb.storage.from("inbox"),{error:ue}=await S_.upload(base+".pdf",file,{contentType:"application/pdf",upsert:true});if(ue)throw ue;
-    const {data:su,error:se}=await S_.createSignedUrl(base+".pdf",6*3600);if(se)throw se;
-    await GH.put("ocr-inbox/"+base+".url",su.signedUrl,"رابط كتاب مصور: "+cfg.title,null);await GH.put("ocr-inbox/"+base+".ready","0","اكتمل رفع: "+cfg.title,null);viaStore=true}catch(e){console.warn("storage upload",e)}}
+    // لا يُحفظ رابط موقَّع في المستودع العام: يُحفظ اسم الملف فقط، ويطلب التحويل رابطًا مؤقتًا من الخادم
+    await GH.put("ocr-inbox/"+base+".store",base+".pdf","ملف كتاب مصور: "+cfg.title,null);await GH.put("ocr-inbox/"+base+".ready","0","اكتمل رفع: "+cfg.title,null);viaStore=true}catch(e){console.warn("storage upload",e)}}
    if(viaStore){done.push(cfg.title);continue}
    const bytes=new Uint8Array(await file.arrayBuffer());
    if(GH.proxied){const CH=2500000,n=Math.ceil(bytes.length/CH);for(let k=0;k<n;k++){st.textContent=`جارٍ رفع ${cfg.title}: الجزء ${toAr(k+1)} من ${toAr(n)}…`;await GH.put("ocr-inbox/"+base+".pdf.part"+String(k+1).padStart(3,"0"),bytes.subarray(k*CH,(k+1)*CH),"رفع كتاب مصور (جزء "+(k+1)+"): "+cfg.title,null)}
@@ -1033,7 +1033,7 @@ function matchTopic(cat){if(!cat)return"at1";const parts=String(cat).split(/[›
 async function importArticles(){const urls=$("#impurls").value.split(/\s+/).filter(u=>/^https?:\/\//.test(u)),st=$("#impst"),res=$("#impres");res.innerHTML="";let ok=0;
  for(let i=0;i<urls.length;i++){st.textContent=`يجلب ${toAr(i+1)} من ${toAr(urls.length)}…`;const u=urls[i];
   if(lib.books.some(b=>b.url===u)){res.insertAdjacentHTML("beforeend",`<p class="mut">موجود مسبقًا: ${esc(u)}</p>`);continue}
-  try{const r=await fetch(CFG.importEndpoint+"?url="+encodeURIComponent(u));if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||(r.status===404?"خدمة الاستيراد غير متاحة هنا؛ تعمل من الموقع المنشور على Vercel.":"تعذر الجلب"))}
+  try{const r=await fetch(CFG.importEndpoint+"?url="+encodeURIComponent(u),{headers:{Authorization:"Bearer "+(Auth.token||"")}});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||(r.status===404?"خدمة الاستيراد غير متاحة هنا؛ تعمل من الموقع المنشور على Vercel.":"تعذر الجلب"))}
    const a=await r.json();ok++;const id="imp"+i;const aid=matchAuthor(a.author);
    res.insertAdjacentHTML("beforeend",`<form class="studio" style="margin-top:10px" data-form="impsave" data-url="${esc(u)}"><label>العنوان</label><input name="title" value="${esc(a.title)}">
     <div class="row"><div><label>الكاتب${a.author?` (في المصدر: ${esc(a.author)})`:""}</label><select name="aid">${lib.authors.filter(x=>bc(x)==="dawah").map(x=>`<option value="${x.id}"${x.id===aid?" selected":""}>${esc(x.name)}</option>`).join("")}<option value="__new"${aid?"":" selected"}>+ كاتب جديد</option></select><input name="aidnew" value="${aid?"":esc(a.author||"")}"></div>
@@ -1168,7 +1168,7 @@ const Bell={items:[],async load(){const out=[];if(!Auth.user)return this.items=o
  unread(){return this.items.filter(x=>!x.read).length},
  async paint(){const btn=$("#bellbtn");if(!btn)return;btn.hidden=!Auth.user;if(!Auth.user)return;await this.load();const c=this.unread(),b=$("#bellc");b.hidden=!c;b.textContent=c>9?"+٩":toAr(c);
   if(c&&"Notification"in window&&Notification.permission==="granted"){const it=this.items.find(x=>!x.read&&x.local);const key="nshown:"+(it&&it.id);if(it&&!sessionStorage.getItem(key)){try{sessionStorage.setItem(key,1);const r=await navigator.serviceWorker.getRegistration();if(r)r.showNotification(it.title,{body:it.body,icon:"assets/logo-sdsl-128.png",dir:"rtl",lang:"ar",tag:it.id,data:{url:it.url}})}catch(e){}}}},
- open(){const l=this.items;openSheet("الإشعارات",`${l.length?l.map(x=>`<a class="nitem${x.read?"":" new"}" href="${esc(x.url||"#/mine")}" data-act="closeSheet"><b>${esc(x.title)}</b>${x.body?`<span>${esc(x.body)}</span>`:""}<small class="mut">${esc(ago(x.at))}</small></a>`).join(""):'<p class="mut">لا إشعارات بعد. أنشئ «مشروع قراءة» لكتاب من أدوات القراءة ليصلك تذكير بوردك اليومي.</p>'}
+ open(){const l=this.items;openSheet("الإشعارات",`${l.length?l.map(x=>`<a class="nitem${x.read?"":" new"}" href="${esc(/^#\/[\w\-\/?=&%.]*$/.test(x.url||"")?x.url:"#/mine")}" data-act="closeSheet"><b>${esc(x.title)}</b>${x.body?`<span>${esc(x.body)}</span>`:""}<small class="mut">${esc(ago(x.at))}</small></a>`).join(""):'<p class="mut">لا إشعارات بعد. أنشئ «مشروع قراءة» لكتاب من أدوات القراءة ليصلك تذكير بوردك اليومي.</p>'}
   <div class="row" style="margin-top:12px"><a class="btn nf" href="#/mine?t=plans" data-act="closeSheet">مشاريع القراءة</a>${pushBtn()}</div>`);
   const ids=l.map(x=>x.id),seen=new Set(ls.get(Mine.k("seen"),[]));ids.forEach(i=>seen.add(i));ls.set(Mine.k("seen"),[...seen].slice(-300));
   const nids=l.filter(x=>x.nid&&!x.read).map(x=>x.nid);if(nids.length&&Cloud.on())Auth.sb.from("notifications").update({read:true}).in("id",nids).then(()=>{});l.forEach(x=>x.read=true);const b=$("#bellc");if(b)b.hidden=true}};

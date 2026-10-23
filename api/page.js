@@ -106,11 +106,11 @@ module.exports = async (req, res) => {
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(r.title)}"><meta name="twitter:description" content="${esc(r.desc)}"><meta name="twitter:image" content="${esc(img)}">
 ${r.noindex ? '<meta name="robots" content="noindex">' : ""}${r.ld ? `<script type="application/ld+json">${JSON.stringify(r.ld).replace(/</g, "\\u003c")}</script>` : ""}`;
     let html = await template(origin);
-    html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(r.title)}</title>`)
-      .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${esc(r.desc)}">`)
+    html = html.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(r.title)}</title>`)
+      .replace(/<meta name="description"[^>]*>/, () => `<meta name="description" content="${esc(r.desc)}">`)
       .replace(/<!--og-->[\s\S]*?<!--\/og-->/, "")
-      .replace("</head>", head + "\n</head>");
-    if (r.body) html = html.replace(/(<main id="app"[^>]*>)[\s\S]*?(<\/main>)/, `$1<div class="ssr">${r.body}</div>$2`);
+      .replace("</head>", () => head + "\n</head>");
+    if (r.body) html = html.replace(/(<main id="app"[^>]*>)[\s\S]*?(<\/main>)/, (m, a, b) => a + '<div class="ssr">' + r.body + "</div>" + b);
     res.setHeader("content-type", "text/html; charset=utf-8");
     res.setHeader("cache-control", "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400");
     res.status(r.noindex && r.title.startsWith("غير موجود") ? 404 : 200).end(html);

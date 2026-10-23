@@ -42,7 +42,11 @@ module.exports = async (req, res) => {
   res.setHeader("content-type", "application/json; charset=utf-8");
   if (!id || !(p > 0) || !LANGS[l]) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
   if (!process.env.GEMINI_API_KEY) { res.statusCode = 503; return res.end(JSON.stringify({ error: "no key" })); }
+  const { limited } = require("../lib/rate");
+  if (limited(req, "tr", 60, 10 * 60e3)) { res.statusCode = 429; return res.end(JSON.stringify({ error: "busy" })); }
   const pg = await pageText(id, p, u.origin);
+  const v = u.searchParams.get("v");  // رقم الإصدار يجب أن يطابق الكتاب (لا يُتلاعب به لتجاوز التخزين واستنزاف الحصة)
+  if (pg && v && String(pg.b.size || 0) !== v) { res.statusCode = 400; return res.end(JSON.stringify({ error: "stale" })); }
   if (!pg) { res.statusCode = 404; return res.end(JSON.stringify({ error: "not found" })); }
   const src = pg.text.replace(/^#+ /gm, "").replace(/[ً-ْ]/g, "").trim();
   if (!src) { res.setHeader("cache-control", "public, s-maxage=31536000"); return res.end(JSON.stringify({ text: "" })); }
