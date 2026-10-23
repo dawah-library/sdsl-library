@@ -354,7 +354,7 @@ html,body{overflow-x:clip}
 .fns{margin-top:1em;border-top:1px solid var(--pgline,#ccc);padding-top:.4em;font-size:.82em;line-height:1.9}
 .fns .fnt{border:0;background:none;color:var(--ac);font:inherit;font-size:.9em;cursor:pointer;padding:0 0 .2em}
 .fns.fold .fnb{display:none}.fns .fnb p{margin:0 0 .25em;text-indent:0}
-.rd .w.fnr{color:var(--ac);font-size:.8em;vertical-align:super;cursor:pointer}
+.rd .fnr{color:var(--ac);font-size:.72em;vertical-align:super;cursor:pointer;font-weight:700;padding:0 1px}
 .rdfn{font-family:var(--rf);font-size:1.1rem;line-height:2}
 /* أكمل القراءة */
 .resume h2{font-size:1.15rem;margin:16px 0 8px}.resl{display:grid;gap:8px}.resl .bk{position:relative;overflow:hidden}
@@ -422,3 +422,5 @@ body:not(.reading) #rprog{display:none}
 .plan .prog{height:6px;background:var(--line);border-radius:4px;margin:8px 0;overflow:hidden}.plan .prog i{display:block;height:100%;background:var(--ac)}
 .warn{color:#c0392b}
 .plan .prog{position:relative;left:auto;right:auto;bottom:auto}.plan .prog::after{display:none}
+.emptyp{text-align:center;padding:40px 10px;font-family:"IBM Plex Sans Arabic",sans-serif;font-size:.95rem}
+@media(max-width:440px){.rbar2{max-width:calc(100vw - 10px);gap:0}.rbar2 button{min-width:0;flex:1 1 0;padding:6px 2px 4px;font-size:.6rem}.rbar2 svg{width:20px;height:20px}.rbar2 .pgb{flex:1.3 1 0}}

@@ -59,7 +59,7 @@ async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجو
  let sh=LOCAL.shards[id]||SH.get(id)||(window.__SHARDS__&&window.__SHARDS__[id]);
  if(!sh&&b.f){let g=GROUPS.get(b.f);if(!g){g=(window.__GROUPS__&&window.__GROUPS__[b.f])||fetch("data/articles/"+encodeURIComponent(b.f)+".json").then(r=>{if(!r.ok)throw new Error("تعذر تحميل المقال");return r.json()});GROUPS.set(b.f,g)}
   const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[]}}
- if(!sh){const r=await fetch((b.vf?"vols/":"data/books/")+encodeURIComponent(id)+".json");if(!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
+ if(!sh){const r=await fetch((b.vf?"vols/":"data/books/")+encodeURIComponent(id)+".json"+(b.size?"?v="+b.size:""));if(!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
  SH.set(id,sh);attach(b,sh);return b}
 async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;let i=0;if(!n)return;
  const w=async()=>{while(q.length){const b=q.shift();try{await loadBook(b.id)}catch(e){}onP&&onP(++i,n)}};await Promise.all([w(),w(),w()])}
@@ -256,12 +256,12 @@ async function vSearch(q){
 /* ---------- القارئ الورقي ---------- */
 let LASTREAD=null;
 const uncOf=(b,i)=>(S.admin||isAdmin())&&b&&b.unc&&b.unc[String(i)]||null;
-function pageHtml(text,h,uw){const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tx0=S.tash?text:strip(text);
+function pageHtml(text,h,uw){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tx0=S.tash?text:strip(text);
  // الحواشي: ما بعد سطر الشرطات ____ يُعرض حواشي أسفل الصفحة (ظاهرة أو مطوية بحسب اختيار القارئ)
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
  return tx.split("\n").map(line=>{const head=line.startsWith("# "),l=head?line.slice(2):line;
-  const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}${fnt&&/^\(?[\d٠-٩]{1,3}\)[.،:؛]?$/.test(w.trim())?" fnr":""}">${esc(w)}</span>`:w).join("");
+  const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`:w).join("");
   return head?`<p class="ph">${inner}</p>`:`<p>${inner}</p>`}).join("")+fnHtml}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
 /* ---------- النسخة المصورة (PDF) ---------- */
@@ -1277,7 +1277,8 @@ window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#/"))hist
 window.addEventListener("popstate",route);
 document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#/"]');if(!a||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank")return;e.preventDefault();const h=a.getAttribute("href");if(toPath(h)!==location.pathname+location.search)go(h);else route()});
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
- if(w&&!el&&w.classList.contains("fnr")){const k=w.textContent.replace(/[^\d٠-٩]/g,""),fb=w.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>x.textContent.replace(/[^\d٠-٩]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
+ const fr=e.target.closest(".rd .fnr"),dg=x=>String(x).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+ if(fr&&!el){const k=dg(fr.dataset.fn||fr.textContent.replace(/[^\d٠-٩]/g,"")),fb=fr.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>dg(x.textContent).replace(/[^\d]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
  if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
  if(a==="closeDlg")dlg().close();
  else if(a==="bcdel"){if(confirm("حذف هذا الإشعار؟")){await Auth.sb.from("broadcasts").delete().eq("id",el.dataset.id);bcList()}}
