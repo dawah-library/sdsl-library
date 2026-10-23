@@ -64,3 +64,8 @@
 - نصوص الكتب تُطلب بـ `?v=<size>` حتى لا يعرض عامل الخدمة نسخة قديمة بعد إعادة التحويل.
 - شرط خطوات Surya في ocr.yml: `!startsWith(format('x{0}', vars.OCR_SURYA), 'x0')` (المتغير غير المضبوط كان يُعدّ صفرًا).
 - الحفظ من سير العمل عبر tools/git-save.sh (يدمج تعارضات JSON).
+
+## 23 أكتوبر (ليلًا): تسريع التحويل مجانًا
+- محرك ثانٍ مجاني بجوار Gemini: **GitHub Models** (gpt-4.1 ثم gpt-4.1-mini) عبر رمز GitHub Actions نفسه (`permissions: models: read`، المتغير `GITHUB_MODELS_TOKEN`)، بخيطين افتراضيًا (`vars.GHM_WORKERS`)، وصفحتين في الطلب. ما يقرؤه gpt-4.1-mini يُعلَّم «خفيفًا» فيعاد تدقيقه لاحقًا.
+- دعم حتى 9 مفاتيح Gemini: `GEMINI_API_KEY` و`GEMINI_API_KEY_2`…`_9` في أسرار GitHub (مفاتيح مجانية من حسابات Google مختلفة تضاعف الحصة اليومية).
+- إصلاح `api/r2put?f=` (توقيع تنزيل صندوق الرفع بمفاتيح Supabase الجديدة sb_secret) وإظهار سبب التعذر تنبيهًا في المهمة.
