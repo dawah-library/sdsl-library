@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: indexes
   cancel-in-progress: false
@@ -20,3 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 tools/indexes.py
       - run: bash tools/git-save.sh "تحديث الفهارس الفنية" data/idx
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر: ${{ github.workflow }}</b>"

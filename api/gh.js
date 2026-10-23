@@ -39,6 +39,12 @@ module.exports = async (req, res) => {
       headers: { Authorization: "Bearer " + process.env.GITHUB_WRITE_TOKEN, Accept: accept, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "sdsl-library" }
     });
     const text = await r.text();
+    if (req.method === "PUT" && r.ok) {  // إشعار تليجرام بحفظ الإدارة (عدا أجزاء الملفات)
+      const msg = String((JSON.parse(body).message || "")).split("\n")[0];
+      if (!/\(جزء \d+\)|^رابط كتاب|^إعدادات كتاب/.test(msg)) {
+        try { await require("../lib/tg").notify("🛠️ <b>حفظ من الإدارة</b>: " + require("../lib/tg").escH(msg) + "\n" + require("../lib/tg").escH(who.email || "")); } catch (e) { }
+      }
+    }
     res.setHeader("content-type", r.headers.get("content-type") || "application/json");
     res.setHeader("cache-control", "no-store");
     return res.status(r.status).end(text);

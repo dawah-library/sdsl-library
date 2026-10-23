@@ -43,7 +43,9 @@ jobs:
           OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
           OCR_TESS: ${{ vars.OCR_TESS || '0' }}
           OCR_REREVIEW: ${{ (github.event_name == 'schedule' || github.event.inputs.rereview == '1') && '1' || '0' }}
-        run: python3 tools/ocr-pdf.py --plan
+        run: |
+          python3 tools/ocr-pdf.py --plan
+          N=$(grep -oP '^nbooks=\K\d+' "$GITHUB_OUTPUT" | tail -1); [ "${N:-0}" -gt 0 ] && python3 tools/notify.py "⏳ <b>بدأ التحويل</b>: ${N} كتاب" || true
 
   drafts:
     needs: plan
@@ -138,3 +140,10 @@ jobs:
       - run: |
           rm -rf ocr-drafts tessdata
           bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md
+      - name: إشعار تليجرام
+        if: success()
+        run: python3 tools/notify.py --file tools/ocr-report.md "✅ اكتمل التحويل"
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر التحويل</b>: ${{ matrix.book }}"

@@ -53,6 +53,10 @@ module.exports = async (req, res) => {
   // حد بسيط لمنع الإغراق: عشرون مختارة في الساعة
   try { const since = new Date(Date.now() - 3600e3).toISOString(); const n = await sb("member_posts?select=id&user_id=eq." + user.id + "&created_at=gte." + since); if (n && n.length >= 20) return out(res, 429, { message: "بلغت حد النشر لهذه الساعة؛ حاول لاحقًا." }); } catch (e) { }
   const row = { user_id: user.id, user_name: name, body: "", quote: { b: bid, p, pl, t, title: b.setTitle || b.title, au } };
-  try { const r = await sb("member_posts", { method: "POST", body: JSON.stringify(row) }); return out(res, 200, { post: r[0] }); }
+  try {
+    const r = await sb("member_posts", { method: "POST", body: JSON.stringify(row) });
+    try { const { notify, escH } = require("../lib/tg"); await notify(`📖 <b>مختارة جديدة</b> من ${escH(name)}\n«${escH(t.slice(0, 200))}${t.length > 200 ? "…" : ""}»\n— ${escH(row.quote.title)}`); } catch (e) { }
+    return out(res, 200, { post: r[0] });
+  }
   catch (e) { console.error("mpost", e.message); return out(res, 500, { message: "تعذر النشر الآن." }); }
 };

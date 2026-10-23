@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: merge-updates
   cancel-in-progress: false
@@ -18,3 +19,11 @@ jobs:
       - run: node tools/merge-update.js
       - run: |
           bash tools/git-save.sh "دمج تحديثات المكتبة" data updates
+      - name: إشعار تليجرام
+        if: success()
+        run: |
+          S="$(git log -1 --format='%an|%s')"; case "$S" in sdsl-bot*) python3 tools/notify.py "✅ <b>${{ github.workflow }}</b>: ${S#*|}";; *) echo "لا جديد";; esac
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر: ${{ github.workflow }}</b>"

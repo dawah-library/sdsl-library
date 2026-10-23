@@ -33,3 +33,11 @@ jobs:
           pip install -q --break-system-packages pillow; if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3; fi
           python3 tools/r2-store.py ${{ github.event.inputs.ids }}
       - run: bash tools/git-save.sh "نقل كتب مصورة إلى مخزن R2" data/catalog.json
+      - name: إشعار تليجرام
+        if: success()
+        run: |
+          S="$(git log -1 --format='%an|%s')"; case "$S" in sdsl-bot*) python3 tools/notify.py "✅ <b>${{ github.workflow }}</b>: ${S#*|}";; *) echo "لا جديد";; esac
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر: ${{ github.workflow }}</b>"

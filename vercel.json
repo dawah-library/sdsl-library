@@ -35,6 +35,12 @@
     },
     "api/r2put.js": {
       "maxDuration": 20
+    },
+    "api/notify.js": {
+      "maxDuration": 15
+    },
+    "api/tglink.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

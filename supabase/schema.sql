@@ -382,3 +382,13 @@ drop policy if exists "inbox staff read" on storage.objects;
 create policy "inbox staff read" on storage.objects for select to authenticated using (bucket_id = 'inbox' and public.is_staff());
 drop policy if exists "inbox staff update" on storage.objects;
 create policy "inbox staff update" on storage.objects for update to authenticated using (bucket_id = 'inbox' and public.is_staff());
+
+-- إعدادات خاصة بالموقع (مثل رقم محادثة تليجرام للإشعارات): يقرؤها المدير، ويكتبها الخادم بمفتاح الخدمة
+create table if not exists public.app_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_settings enable row level security;
+drop policy if exists "app settings admin read" on public.app_settings;
+create policy "app settings admin read" on public.app_settings for select using (public.is_admin());

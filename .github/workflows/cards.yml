@@ -10,6 +10,7 @@ on:
         default: ""
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: cards
   cancel-in-progress: false
@@ -27,3 +28,11 @@ jobs:
           CARD_IDS: ${{ github.event.inputs.ids }}
         run: python3 tools/ocr-pdf.py --cards
       - run: bash tools/git-save.sh "بطاقات التعريف بالكتب" data
+      - name: إشعار تليجرام
+        if: success()
+        run: |
+          S="$(git log -1 --format='%an|%s')"; case "$S" in sdsl-bot*) python3 tools/notify.py "✅ <b>${{ github.workflow }}</b>: ${S#*|}";; *) echo "لا جديد";; esac
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر: ${{ github.workflow }}</b>"

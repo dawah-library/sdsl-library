@@ -2,13 +2,11 @@
 // تثبت المهمة هويتها برمز OIDC من GitHub (لا مفاتيح في GitHub)، فيتحقق الخادم من توقيعه ومن أنه صادر لمستودعنا وفرعه الرئيس.
 // POST /api/r2put  { keys: ["books/<id>/p0001.webp", ...] }  مع ترويسة Authorization: Bearer <رمز OIDC>
 const crypto = require("crypto");
-const REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
-const AUD = "sdsl-library";
+const { verifyOidc } = require("../lib/oidc");
 const E = k => (process.env[k] || "").trim();
 const hmac = (k, s) => crypto.createHmac("sha256", k).update(s).digest();
 const sha = s => crypto.createHash("sha256").update(s).digest("hex");
 const enc = s => encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
-let JWKS = null, JWKS_AT = 0;
 
 function presignPut(key, ttl) {
   const host = E("R2_ACCOUNT_ID") + ".r2.cloudflarestorage.com";
@@ -20,23 +18,6 @@ function presignPut(key, ttl) {
   const sts = ["AWS4-HMAC-SHA256", amz, scope, sha(canon)].join("\n");
   const kSig = hmac(hmac(hmac(hmac("AWS4" + E("R2_SECRET_ACCESS_KEY"), day), "auto"), "s3"), "aws4_request");
   return `https://${host}${path}?${qs}&X-Amz-Signature=${crypto.createHmac("sha256", kSig).update(sts).digest("hex")}`;
-}
-
-const b64u = s => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
-async function verifyOidc(tok) {
-  const [h, p, sg] = String(tok).split("."); if (!sg) throw new Error("bad token");
-  const head = JSON.parse(b64u(h).toString()), claims = JSON.parse(b64u(p).toString());
-  if (head.alg !== "RS256") throw new Error("alg");
-  if (!JWKS || Date.now() - JWKS_AT > 3600e3) { JWKS = (await (await fetch("https://token.actions.githubusercontent.com/.well-known/jwks")).json()).keys; JWKS_AT = Date.now(); }
-  const jwk = JWKS.find(k => k.kid === head.kid); if (!jwk) throw new Error("kid");
-  const ok = crypto.createVerify("RSA-SHA256").update(h + "." + p).verify(crypto.createPublicKey({ key: jwk, format: "jwk" }), b64u(sg));
-  if (!ok) throw new Error("signature");
-  const now = Date.now() / 1000;
-  if (claims.iss !== "https://token.actions.githubusercontent.com") throw new Error("iss");
-  if ((Array.isArray(claims.aud) ? !claims.aud.includes(AUD) : claims.aud !== AUD)) throw new Error("aud");
-  if (!(claims.exp > now) || (claims.nbf && claims.nbf > now + 60)) throw new Error("expired");
-  if (claims.repository !== REPO || claims.ref !== "refs/heads/main") throw new Error("repo");
-  return claims;
 }
 
 module.exports = async (req, res) => {

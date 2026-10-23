@@ -6,6 +6,9 @@ on:
 concurrency:
   group: remind
   cancel-in-progress: false
+permissions:
+  contents: read
+  id-token: write
 jobs:
   remind:
     runs-on: ubuntu-latest
@@ -13,3 +16,9 @@ jobs:
     steps:
       - name: استدعاء خدمة التذكير
         run: curl -sS --max-time 120 https://dawahlibrary.org/api/remind || true
+      - uses: actions/checkout@v4
+        if: failure()
+      - name: إشعار عند التعثر
+        if: failure()
+        run: |
+          python3 tools/notify.py "⚠️ <b>تعثّر: ${{ github.workflow }}</b>"

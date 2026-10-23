@@ -189,7 +189,7 @@ document.addEventListener("submit", async e => {
   const f = e.target.closest("[data-form]"); if (!f) return; const k = f.dataset.form; if (k !== "amsg" && k !== "areply") return;
   e.preventDefault(); e.stopImmediatePropagation(); const btn = f.querySelector("button"); btn.disabled = true;
   try {
-    if (k === "amsg") { const pg = await Members.page(Auth.user.id); const { error } = await Auth.sb.from("admin_messages").insert({ user_id: Auth.user.id, user_name: (pg && pg.name) || Auth.user.name || "عضو", subject: f.s.value.trim(), body: f.t.value.trim() }); if (error) throw new Error(error.message); toast("أُرسلت رسالتك إلى الإدارة"); }
+    if (k === "amsg") { const pg = await Members.page(Auth.user.id), nm = (pg && pg.name) || Auth.user.name || "عضو"; const { error } = await Auth.sb.from("admin_messages").insert({ user_id: Auth.user.id, user_name: nm, subject: f.s.value.trim(), body: f.t.value.trim() }); if (error) throw new Error(error.message); tgNote("msg", { name: nm, subject: f.s.value.trim(), detail: f.t.value.trim() }); toast("أُرسلت رسالتك إلى الإدارة"); }
     else { const { error } = await Auth.sb.from("admin_messages").update({ reply: f.r.value.trim(), replied_at: new Date().toISOString(), status: "replied" }).eq("id", +f.dataset.id); if (error) throw new Error(error.message); toast("أُرسل الرد وأُشعر العضو"); }
     vMessages();
   } catch (x) { alert(x.message); btn.disabled = false; }
@@ -197,3 +197,28 @@ document.addEventListener("submit", async e => {
 
 // تلوين أزرار المتابعة كلما ظهرت في الصفحة
 let _fbT = null; new MutationObserver(() => { if (_fbT) return; _fbT = setTimeout(() => { _fbT = null; const raw = document.querySelector(".fbtn:not([data-p])"); if (raw) { document.querySelectorAll(".fbtn").forEach(b => b.dataset.p = 1); paintFollowBtns().then(() => document.querySelectorAll(".fbtn").forEach(b => b.dataset.p = 1)); } }, 120); }).observe(document.body, { childList: true, subtree: true });
+
+/* إشعار الإدارة على تليجرام بأحداث الأعضاء (رسالة، تصحيح، عضو جديد) */
+async function tgNote(kind, o) {
+  try { if (!Auth.user || !Auth.token) return; await fetch("/api/notify", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + Auth.token }, body: JSON.stringify(Object.assign({ kind }, o || {})) }); } catch (e) { }
+}
+// عضو جديد: يُبلَّغ مرة واحدة عند أول دخول خلال يوم من إنشاء الحساب
+setTimeout(async () => {
+  try {
+    if (!Auth.user || !Members.on() || ls.get("tg_signup_" + Auth.user.id)) return;
+    const { data } = await Auth.sb.auth.getUser(); const c = data && data.user && Date.parse(data.user.created_at);
+    ls.set("tg_signup_" + Auth.user.id, 1);
+    if (c && Date.now() - c < 86400e3) tgNote("signup", { name: Auth.user.name || Auth.user.email });
+  } catch (e) { }
+}, 4000);
+
+/* ربط تليجرام وحالته (للمدير، في تبويب «حالة النشر والتحويل») */
+async function tgPanel() {
+  const el = document.getElementById("tgst"); if (!el || !Auth.token) return;
+  const call = async m => { const r = await fetch("/api/tglink", { method: m, headers: { authorization: "Bearer " + Auth.token } }); return r.json(); };
+  const paint = j => { el.innerHTML = j.linked ? `<p>✅ إشعارات تليجرام مربوطة${j.name ? " بحساب " + esc(j.name) : ""} عبر البوت @${esc(j.bot || "")}.</p><button class="btn s" data-act="tglink">إعادة الربط</button>`
+    : `<p class="mut">${esc(j.message || (j.token ? "البوت جاهز. افتحه في تليجرام واضغط Start ثم اضغط «ربط تليجرام»." : "أضف TELEGRAM_BOT_TOKEN في إعدادات Vercel أولًا."))}</p>${j.token ? `<button class="btn s p" data-act="tglink">ربط تليجرام</button>` : ""}`; };
+  try { paint(await call("GET")); } catch (e) { el.textContent = "تعذر جلب حالة تليجرام."; }
+  if (window.__tgBound) return; window.__tgBound = 1;
+  document.addEventListener("click", async e => { const b = e.target.closest('[data-act="tglink"]'); if (!b) return; b.disabled = true; try { paint(await call("POST")); } catch (x) { toast(x.message); } b.disabled = false; });
+}
