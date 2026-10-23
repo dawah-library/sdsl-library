@@ -92,7 +92,7 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
 }
 module.exports = async (req, res) => {
   try {
-    const host = req.headers["x-forwarded-host"] || req.headers.host, origin = "https://" + host, base = origin + "/";
+    const host = req.headers["x-forwarded-host"] || req.headers.host, origin = "https://" + host, base = (process.env.SITE_URL || "https://dawahlibrary.org").replace(/\/$/, "") + "/";
     const u = new URL(req.url, origin), p = u.searchParams.get("__p") || "/"; u.searchParams.delete("__p");
     const q = Object.fromEntries(u.searchParams), qs = u.searchParams.toString();
     const r = await build(p, q, base), canon = base + p.replace(/^\//, "") + (qs && !/^\/book\//.test(p) ? "?" + qs : "");

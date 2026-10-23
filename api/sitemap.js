@@ -3,7 +3,7 @@ const fs = require("fs"), path = require("path");
 const read = p => JSON.parse(fs.readFileSync(path.join(process.cwd(), p), "utf8"));
 const x = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 module.exports = (req, res) => {
-  const host = req.headers["x-forwarded-host"] || req.headers.host, base = "https://" + host + "/";
+  const base = (process.env.SITE_URL || "https://dawahlibrary.org").replace(/\/$/, "") + "/";
   res.setHeader("cache-control", "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400");
   if (/robots=1/.test(req.url || "")) {
     res.setHeader("content-type", "text/plain; charset=utf-8");

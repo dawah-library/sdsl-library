@@ -54,5 +54,29 @@
       "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)/:rest*",
       "destination": "/api/page?__p=/:first/:rest*"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "sdsl-library.vercel.app"
+        }
+      ],
+      "destination": "https://dawahlibrary.org/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.dawahlibrary.org"
+        }
+      ],
+      "destination": "https://dawahlibrary.org/:path*",
+      "permanent": true
+    }
   ]
 }
