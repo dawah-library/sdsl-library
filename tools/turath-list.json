@@ -1,49 +1,725 @@
 {
-  "_note": "قائمة كتب التراث المطلوب استيرادها من مشروع OpenITI (نصوص الشاملة بترقيم الطبعات الورقية). died: سنة الوفاة هجريًا، author/book: أجزاء من اسم المؤلف والكتاب في OpenITI (البدائل تفصل بـ |). يضيف الاستيراد الكتب غير الموجودة فقط، ويكتب تقريره في tools/turath-report.md",
-  "books": [
-    {"id": "abudawud", "died": 275, "author": "AbuDawud|Sijistani", "book": "Sunan", "title": "سنن أبي داود", "authorName": "أبو داود السجستاني", "topic": "t3"},
-    {"id": "tirmidhi", "died": 279, "author": "Tirmidhi", "book": "Sunan|Jamic", "title": "سنن الترمذي (الجامع)", "authorName": "الترمذي", "topic": "t3"},
-    {"id": "nasai", "died": 303, "author": "Nasai", "book": "Mujtaba|Sughra|SunanSughra|Sunan", "title": "سنن النسائي (المجتبى)", "authorName": "النسائي", "topic": "t3"},
-    {"id": "ibnmajah", "died": 273, "author": "IbnMaja", "book": "Sunan", "title": "سنن ابن ماجه", "authorName": "ابن ماجه", "topic": "t3"},
-    {"id": "musnadahmad", "died": 241, "author": "IbnHanbal|AhmadIbnHanbal", "book": "Musnad", "title": "مسند الإمام أحمد بن حنبل", "authorName": "الإمام أحمد بن حنبل", "topic": "t3"},
-    {"id": "darimi", "died": 255, "author": "Darimi", "book": "Sunan|Musnad", "title": "سنن الدارمي", "authorName": "الدارمي", "topic": "t3"},
-
-    {"id": "tabari", "died": 310, "author": "Tabari", "book": "JamicBayan|Tafsir", "title": "جامع البيان عن تأويل آي القرآن (تفسير الطبري)", "authorName": "ابن جرير الطبري", "topic": "t2"},
-    {"id": "ibnkathir", "died": 774, "author": "IbnKathir", "book": "TafsirQuran|Tafsir", "title": "تفسير القرآن العظيم (تفسير ابن كثير)", "authorName": "ابن كثير", "topic": "t2"},
-    {"id": "fathbari", "died": 852, "author": "IbnHajar", "book": "FathBari", "title": "فتح الباري شرح صحيح البخاري", "authorName": "ابن حجر العسقلاني", "topic": "t3"},
-    {"id": "nawawimuslim", "died": 676, "author": "Nawawi", "book": "MinhajSharh|SharhSahihMuslim|SharhMuslim|Minhaj", "title": "المنهاج شرح صحيح مسلم بن الحجاج (شرح النووي)", "authorName": "النووي", "topic": "t3"},
-
-    {"id": "majmufatawa", "died": 728, "author": "IbnTaymiyya", "book": "MajmucFatawa|MajmuFatawa|Fatawa", "title": "مجموع الفتاوى", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t1"},
-    {"id": "iqtida", "died": 728, "author": "IbnTaymiyya", "book": "Iqtida", "title": "اقتضاء الصراط المستقيم لمخالفة أصحاب الجحيم", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t1"},
-    {"id": "siyasa", "died": 728, "author": "IbnTaymiyya", "book": "Siyasa", "title": "السياسة الشرعية في إصلاح الراعي والرعية", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t7"},
-    {"id": "ubudiyya", "died": 728, "author": "IbnTaymiyya", "book": "Cubudiyya|Ubudiyya", "title": "العبودية", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t1"},
-    {"id": "minhajsunna", "died": 728, "author": "IbnTaymiyya", "book": "MinhajSunna", "title": "منهاج السنة النبوية", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t1"},
-    {"id": "rafmalam", "died": 728, "author": "IbnTaymiyya", "book": "RafcMalam|RafMalam", "title": "رفع الملام عن الأئمة الأعلام", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t4"},
-    {"id": "furqanawliya", "died": 728, "author": "IbnTaymiyya", "book": "FurqanBayn|Furqan", "title": "الفرقان بين أولياء الرحمن وأولياء الشيطان", "authorName": "شيخ الإسلام ابن تيمية", "topic": "t1"},
-
-    {"id": "zadmaad", "died": 751, "author": "IbnQayyim", "book": "ZadMacad|ZadMaad", "title": "زاد المعاد في هدي خير العباد", "authorName": "ابن قيم الجوزية", "topic": "t5"},
-    {"id": "madarij", "died": 751, "author": "IbnQayyim", "book": "Madarij", "title": "مدارج السالكين", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "ilam", "died": 751, "author": "IbnQayyim", "book": "AclamMuwaqqicin|Iclam|Ilam", "title": "إعلام الموقعين عن رب العالمين", "authorName": "ابن قيم الجوزية", "topic": "t14"},
-    {"id": "jawabkafi", "died": 751, "author": "IbnQayyim", "book": "JawabKafi|Dawa", "title": "الجواب الكافي (الداء والدواء)", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "ighatha", "died": 751, "author": "IbnQayyim", "book": "Ighatha", "title": "إغاثة اللهفان من مصايد الشيطان", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "miftahsaada", "died": 751, "author": "IbnQayyim", "book": "Miftah", "title": "مفتاح دار السعادة", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "fawaid", "died": 751, "author": "IbnQayyim", "book": "Fawaid|Fawacid", "title": "الفوائد", "authorName": "ابن قيم الجوزية", "topic": "t6"},
-    {"id": "wabil", "died": 751, "author": "IbnQayyim", "book": "Wabil", "title": "الوابل الصيب من الكلم الطيب", "authorName": "ابن قيم الجوزية", "topic": "t11"},
-
-    {"id": "muwafaqat", "died": 790, "author": "Shatibi", "book": "Muwafaqat", "title": "الموافقات", "authorName": "الشاطبي", "topic": "t14"},
-    {"id": "itisam", "died": 790, "author": "Shatibi", "book": "Ictisam|Itisam", "title": "الاعتصام", "authorName": "الشاطبي", "topic": "t1"},
-
-    {"id": "tamhid", "died": 463, "author": "IbnCabdBarr|IbnAbdBarr", "book": "Tamhid", "title": "التمهيد لما في الموطأ من المعاني والأسانيد", "authorName": "ابن عبد البر", "topic": "t3"},
-    {"id": "istidhkar", "died": 463, "author": "IbnCabdBarr|IbnAbdBarr", "book": "Istidhkar", "title": "الاستذكار", "authorName": "ابن عبد البر", "topic": "t4"},
-    {"id": "jamibayan", "died": 463, "author": "IbnCabdBarr|IbnAbdBarr", "book": "JamicBayan|JamiBayan", "title": "جامع بيان العلم وفضله", "authorName": "ابن عبد البر", "topic": "t11"},
-    {"id": "istiab", "died": 463, "author": "IbnCabdBarr|IbnAbdBarr", "book": "Isticab|Istiab", "title": "الاستيعاب في معرفة الأصحاب", "authorName": "ابن عبد البر", "topic": "t18"},
-
-    {"id": "qawaidhisan", "died": 1376, "author": "Sacdi|Sadi", "book": "Qawacid|Qawaid", "title": "القواعد الحسان لتفسير القرآن", "authorName": "الشيخ عبد الرحمن السعدي", "topic": "t12"},
-    {"id": "bahja", "died": 1376, "author": "Sacdi|Sadi", "book": "Bahja", "title": "بهجة قلوب الأبرار وقرة عيون الأخيار", "authorName": "الشيخ عبد الرحمن السعدي", "topic": "t3"},
-    {"id": "qawlsadid", "died": 1376, "author": "Sacdi|Sadi", "book": "QawlSadid", "title": "القول السديد شرح كتاب التوحيد", "authorName": "الشيخ عبد الرحمن السعدي", "topic": "t1"},
-
-    {"id": "tankil", "died": 1386, "author": "Mucallimi|Muallimi", "book": "Tankil", "title": "التنكيل بما في تأنيب الكوثري من الأباطيل", "authorName": "عبد الرحمن المعلمي اليماني", "topic": "t13"},
-    {"id": "hilya", "died": 1429, "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd", "book": "Hilya", "title": "حلية طالب العلم", "authorName": "الشيخ بكر أبو زيد", "topic": "t11"},
-    {"id": "manahi", "died": 1429, "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd", "book": "Manahi", "title": "معجم المناهي اللفظية", "authorName": "الشيخ بكر أبو زيد", "topic": "t15"}
-  ]
+ "_note": "قائمة كتب التراث المطلوب استيرادها من مشروع OpenITI (نصوص الشاملة بترقيم الطبعات الورقية). died: سنة الوفاة هجريًا، author/book: أجزاء من اسم المؤلف والكتاب في OpenITI (البدائل تفصل بـ |). يضيف الاستيراد الكتب غير الموجودة فقط، ويكتب تقريره في tools/turath-report.md",
+ "books": [
+  {
+   "id": "abudawud",
+   "died": 275,
+   "author": "AbuDawud|Sijistani",
+   "book": "Sunan",
+   "title": "سنن أبي داود",
+   "authorName": "أبو داود السجستاني",
+   "topic": "t3"
+  },
+  {
+   "id": "tirmidhi",
+   "died": 279,
+   "author": "Tirmidhi",
+   "book": "Sunan|Jamic",
+   "title": "سنن الترمذي (الجامع)",
+   "authorName": "الترمذي",
+   "topic": "t3"
+  },
+  {
+   "id": "nasai",
+   "died": 303,
+   "author": "Nasai",
+   "book": "Mujtaba|Sughra|SunanSughra|Sunan",
+   "title": "سنن النسائي (المجتبى)",
+   "authorName": "النسائي",
+   "topic": "t3"
+  },
+  {
+   "id": "ibnmajah",
+   "died": 273,
+   "author": "IbnMaja",
+   "book": "Sunan",
+   "title": "سنن ابن ماجه",
+   "authorName": "ابن ماجه",
+   "topic": "t3"
+  },
+  {
+   "id": "musnadahmad",
+   "died": 241,
+   "author": "IbnHanbal|AhmadIbnHanbal",
+   "book": "Musnad",
+   "title": "مسند الإمام أحمد بن حنبل",
+   "authorName": "الإمام أحمد بن حنبل",
+   "topic": "t3"
+  },
+  {
+   "id": "darimi",
+   "died": 255,
+   "author": "Darimi",
+   "book": "Sunan|Musnad",
+   "title": "سنن الدارمي",
+   "authorName": "الدارمي",
+   "topic": "t3"
+  },
+  {
+   "id": "tabari",
+   "died": 310,
+   "author": "Tabari",
+   "book": "JamicBayan|Tafsir",
+   "title": "جامع البيان عن تأويل آي القرآن (تفسير الطبري)",
+   "authorName": "ابن جرير الطبري",
+   "topic": "t2"
+  },
+  {
+   "id": "ibnkathir",
+   "died": 774,
+   "author": "IbnKathir",
+   "book": "TafsirQuran|Tafsir",
+   "title": "تفسير القرآن العظيم (تفسير ابن كثير)",
+   "authorName": "ابن كثير",
+   "topic": "t2"
+  },
+  {
+   "id": "fathbari",
+   "died": 852,
+   "author": "IbnHajar",
+   "book": "FathBari",
+   "title": "فتح الباري شرح صحيح البخاري",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t3"
+  },
+  {
+   "id": "nawawimuslim",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "MinhajSharh|SharhSahihMuslim|SharhMuslim|Minhaj",
+   "title": "المنهاج شرح صحيح مسلم بن الحجاج (شرح النووي)",
+   "authorName": "النووي",
+   "topic": "t3"
+  },
+  {
+   "id": "majmufatawa",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "MajmucFatawa|MajmuFatawa|Fatawa",
+   "title": "مجموع الفتاوى",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1"
+  },
+  {
+   "id": "iqtida",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Iqtida",
+   "title": "اقتضاء الصراط المستقيم لمخالفة أصحاب الجحيم",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1"
+  },
+  {
+   "id": "siyasa",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Siyasa",
+   "title": "السياسة الشرعية في إصلاح الراعي والرعية",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t7"
+  },
+  {
+   "id": "ubudiyya",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Cubudiyya|Ubudiyya",
+   "title": "العبودية",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1"
+  },
+  {
+   "id": "minhajsunna",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "MinhajSunna",
+   "title": "منهاج السنة النبوية",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1"
+  },
+  {
+   "id": "rafmalam",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "RafcMalam|RafMalam",
+   "title": "رفع الملام عن الأئمة الأعلام",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t4"
+  },
+  {
+   "id": "furqanawliya",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "FurqanBayn|Furqan",
+   "title": "الفرقان بين أولياء الرحمن وأولياء الشيطان",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1"
+  },
+  {
+   "id": "zadmaad",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "ZadMacad|ZadMaad",
+   "title": "زاد المعاد في هدي خير العباد",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t5"
+  },
+  {
+   "id": "madarij",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Madarij",
+   "title": "مدارج السالكين",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6"
+  },
+  {
+   "id": "ilam",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "AclamMuwaqqicin|Iclam|Ilam",
+   "title": "إعلام الموقعين عن رب العالمين",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t14"
+  },
+  {
+   "id": "jawabkafi",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "JawabKafi|Dawa",
+   "title": "الجواب الكافي (الداء والدواء)",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6"
+  },
+  {
+   "id": "ighatha",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Ighatha",
+   "title": "إغاثة اللهفان من مصايد الشيطان",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6"
+  },
+  {
+   "id": "miftahsaada",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Miftah",
+   "title": "مفتاح دار السعادة",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6"
+  },
+  {
+   "id": "fawaid",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Fawaid|Fawacid",
+   "title": "الفوائد",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6"
+  },
+  {
+   "id": "wabil",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Wabil",
+   "title": "الوابل الصيب من الكلم الطيب",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t11"
+  },
+  {
+   "id": "muwafaqat",
+   "died": 790,
+   "author": "Shatibi",
+   "book": "Muwafaqat",
+   "title": "الموافقات",
+   "authorName": "الشاطبي",
+   "topic": "t14"
+  },
+  {
+   "id": "itisam",
+   "died": 790,
+   "author": "Shatibi",
+   "book": "Ictisam|Itisam",
+   "title": "الاعتصام",
+   "authorName": "الشاطبي",
+   "topic": "t1"
+  },
+  {
+   "id": "tamhid",
+   "died": 463,
+   "author": "IbnCabdBarr|IbnAbdBarr",
+   "book": "Tamhid",
+   "title": "التمهيد لما في الموطأ من المعاني والأسانيد",
+   "authorName": "ابن عبد البر",
+   "topic": "t3"
+  },
+  {
+   "id": "istidhkar",
+   "died": 463,
+   "author": "IbnCabdBarr|IbnAbdBarr",
+   "book": "Istidhkar",
+   "title": "الاستذكار",
+   "authorName": "ابن عبد البر",
+   "topic": "t4"
+  },
+  {
+   "id": "jamibayan",
+   "died": 463,
+   "author": "IbnCabdBarr|IbnAbdBarr",
+   "book": "JamicBayan|JamiBayan",
+   "title": "جامع بيان العلم وفضله",
+   "authorName": "ابن عبد البر",
+   "topic": "t11"
+  },
+  {
+   "id": "istiab",
+   "died": 463,
+   "author": "IbnCabdBarr|IbnAbdBarr",
+   "book": "Isticab|Istiab",
+   "title": "الاستيعاب في معرفة الأصحاب",
+   "authorName": "ابن عبد البر",
+   "topic": "t18"
+  },
+  {
+   "id": "qawaidhisan",
+   "died": 1376,
+   "author": "Sacdi|Sadi",
+   "book": "Qawacid|Qawaid",
+   "title": "القواعد الحسان لتفسير القرآن",
+   "authorName": "الشيخ عبد الرحمن السعدي",
+   "topic": "t12"
+  },
+  {
+   "id": "bahja",
+   "died": 1376,
+   "author": "Sacdi|Sadi",
+   "book": "Bahja",
+   "title": "بهجة قلوب الأبرار وقرة عيون الأخيار",
+   "authorName": "الشيخ عبد الرحمن السعدي",
+   "topic": "t3"
+  },
+  {
+   "id": "qawlsadid",
+   "died": 1376,
+   "author": "Sacdi|Sadi",
+   "book": "QawlSadid",
+   "title": "القول السديد شرح كتاب التوحيد",
+   "authorName": "الشيخ عبد الرحمن السعدي",
+   "topic": "t1"
+  },
+  {
+   "id": "tankil",
+   "died": 1386,
+   "author": "Mucallimi|Muallimi",
+   "book": "Tankil",
+   "title": "التنكيل بما في تأنيب الكوثري من الأباطيل",
+   "authorName": "عبد الرحمن المعلمي اليماني",
+   "topic": "t13"
+  },
+  {
+   "id": "hilya",
+   "died": 1429,
+   "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd",
+   "book": "Hilya",
+   "title": "حلية طالب العلم",
+   "authorName": "الشيخ بكر أبو زيد",
+   "topic": "t11"
+  },
+  {
+   "id": "manahi",
+   "died": 1429,
+   "author": "BakrIbnCabdAllah|BakrAbuZayd|AbuZayd",
+   "book": "Manahi",
+   "title": "معجم المناهي اللفظية",
+   "authorName": "الشيخ بكر أبو زيد",
+   "topic": "t15"
+  },
+  {
+   "id": "baghawisunna",
+   "died": 516,
+   "author": "Baghawi",
+   "book": "SharhSunna",
+   "title": "شرح السنة",
+   "authorName": "البغوي",
+   "topic": "t3"
+  },
+  {
+   "id": "baghawitafsir",
+   "died": 516,
+   "author": "Baghawi",
+   "book": "MacalimTanzil|Tafsir",
+   "title": "معالم التنزيل (تفسير البغوي)",
+   "authorName": "البغوي",
+   "topic": "t2"
+  },
+  {
+   "id": "masabih",
+   "died": 516,
+   "author": "Baghawi",
+   "book": "Masabih",
+   "title": "مصابيح السنة",
+   "authorName": "البغوي",
+   "topic": "t3"
+  },
+  {
+   "id": "ajurrisharia",
+   "died": 360,
+   "author": "Ajurri",
+   "book": "Sharica|Sharia",
+   "title": "الشريعة",
+   "authorName": "الآجري",
+   "topic": "t1"
+  },
+  {
+   "id": "ajurriakhlaq",
+   "died": 360,
+   "author": "Ajurri",
+   "book": "AkhlaqCulama|AkhlaqUlama",
+   "title": "أخلاق العلماء",
+   "authorName": "الآجري",
+   "topic": "t11"
+  },
+  {
+   "id": "ajurrihamala",
+   "died": 360,
+   "author": "Ajurri",
+   "book": "AkhlaqHamala|Hamalat",
+   "title": "أخلاق حملة القرآن",
+   "authorName": "الآجري",
+   "topic": "t11"
+  },
+  {
+   "id": "ibnkhuzaymatawhid",
+   "died": 311,
+   "author": "IbnKhuzayma",
+   "book": "Tawhid",
+   "title": "كتاب التوحيد وإثبات صفات الرب",
+   "authorName": "ابن خزيمة",
+   "topic": "t1"
+  },
+  {
+   "id": "lalikai",
+   "died": 418,
+   "author": "Lalakai|Lalikai",
+   "book": "SharhUsul|Ictiqad",
+   "title": "شرح أصول اعتقاد أهل السنة والجماعة",
+   "authorName": "اللالكائي",
+   "topic": "t1"
+  },
+  {
+   "id": "ibnbatta",
+   "died": 387,
+   "author": "IbnBatta",
+   "book": "Ibana",
+   "title": "الإبانة الكبرى",
+   "authorName": "ابن بطة العكبري",
+   "topic": "t1"
+  },
+  {
+   "id": "sharhtahawiyya",
+   "died": 792,
+   "author": "IbnAbiCizz|IbnAbiIzz",
+   "book": "Tahawiyya|SharhCaqida",
+   "title": "شرح العقيدة الطحاوية",
+   "authorName": "ابن أبي العز الحنفي",
+   "topic": "t1"
+  },
+  {
+   "id": "mughni",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "Mughni",
+   "title": "المغني",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t4"
+  },
+  {
+   "id": "rawdatnazir",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "Rawda",
+   "title": "روضة الناظر وجنة المناظر",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t14"
+  },
+  {
+   "id": "umdafiqh",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "CumdatFiqh|Cumda",
+   "title": "عمدة الفقه",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t4"
+  },
+  {
+   "id": "shafiiumm",
+   "died": 204,
+   "author": "Shafici|Shafii",
+   "book": "Umm",
+   "title": "الأم",
+   "authorName": "الإمام الشافعي",
+   "topic": "t4"
+  },
+  {
+   "id": "risala",
+   "died": 204,
+   "author": "Shafici|Shafii",
+   "book": "Risala",
+   "title": "الرسالة",
+   "authorName": "الإمام الشافعي",
+   "topic": "t14"
+  },
+  {
+   "id": "mudawwana",
+   "died": 240,
+   "author": "Sahnun",
+   "book": "Mudawwana",
+   "title": "المدونة",
+   "authorName": "سحنون",
+   "topic": "t4"
+  },
+  {
+   "id": "bidayatmujtahid",
+   "died": 595,
+   "author": "IbnRushd",
+   "book": "Bidaya",
+   "title": "بداية المجتهد ونهاية المقتصد",
+   "authorName": "ابن رشد الحفيد",
+   "topic": "t4"
+  },
+  {
+   "id": "rawdmurbi",
+   "died": 1051,
+   "author": "Buhuti|Bahuti",
+   "book": "RawdMurbic|Rawd",
+   "title": "الروض المربع شرح زاد المستقنع",
+   "authorName": "البهوتي",
+   "topic": "t4"
+  },
+  {
+   "id": "majmunawawi",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "Majmuc|Majmu",
+   "title": "المجموع شرح المهذب",
+   "authorName": "النووي",
+   "topic": "t4"
+  },
+  {
+   "id": "adhkar",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "Adhkar",
+   "title": "الأذكار",
+   "authorName": "النووي",
+   "topic": "t11"
+  },
+  {
+   "id": "qurtubi",
+   "died": 671,
+   "author": "Qurtubi",
+   "book": "JamicAhkam|Ahkam",
+   "title": "الجامع لأحكام القرآن (تفسير القرطبي)",
+   "authorName": "القرطبي",
+   "topic": "t2"
+  },
+  {
+   "id": "jamiulum",
+   "died": 795,
+   "author": "IbnRajab",
+   "book": "JamicCulum|JamiUlum",
+   "title": "جامع العلوم والحكم",
+   "authorName": "ابن رجب الحنبلي",
+   "topic": "t3"
+  },
+  {
+   "id": "awnmabud",
+   "died": 1329,
+   "author": "Cazimabadi|Azimabadi|Abadi",
+   "book": "CawnMacbud|Awn",
+   "title": "عون المعبود شرح سنن أبي داود",
+   "authorName": "العظيم آبادي",
+   "topic": "t3"
+  },
+  {
+   "id": "tuhfaahwadhi",
+   "died": 1353,
+   "author": "Mubarakfuri",
+   "book": "Tuhfa",
+   "title": "تحفة الأحوذي بشرح جامع الترمذي",
+   "authorName": "المباركفوري",
+   "topic": "t3"
+  },
+  {
+   "id": "naylawtar",
+   "died": 1250,
+   "author": "Shawkani",
+   "book": "NaylAwtar|Nayl",
+   "title": "نيل الأوطار",
+   "authorName": "الشوكاني",
+   "topic": "t4"
+  },
+  {
+   "id": "subulsalam",
+   "died": 1182,
+   "author": "Sancani|Sanani",
+   "book": "SubulSalam|Subul",
+   "title": "سبل السلام",
+   "authorName": "الصنعاني",
+   "topic": "t4"
+  },
+  {
+   "id": "adabkatib",
+   "died": 276,
+   "author": "IbnQutayba",
+   "book": "AdabKatib",
+   "title": "أدب الكاتب",
+   "authorName": "ابن قتيبة",
+   "topic": "t17"
+  },
+  {
+   "id": "uyunakhbar",
+   "died": 276,
+   "author": "IbnQutayba",
+   "book": "CuyunAkhbar|UyunAkhbar",
+   "title": "عيون الأخبار",
+   "authorName": "ابن قتيبة",
+   "topic": "t17"
+  },
+  {
+   "id": "bayantabyin",
+   "died": 255,
+   "author": "Jahiz",
+   "book": "BayanWaTabyin|Bayan",
+   "title": "البيان والتبيين",
+   "authorName": "الجاحظ",
+   "topic": "t17"
+  },
+  {
+   "id": "kamilmubarrad",
+   "died": 285,
+   "author": "Mubarrad",
+   "book": "Kamil",
+   "title": "الكامل في اللغة والأدب",
+   "authorName": "المبرد",
+   "topic": "t17"
+  },
+  {
+   "id": "iqdfarid",
+   "died": 328,
+   "author": "IbnCabdRabbih|IbnAbdRabbih",
+   "book": "CiqdFarid|Iqd",
+   "title": "العقد الفريد",
+   "authorName": "ابن عبد ربه",
+   "topic": "t17"
+  },
+  {
+   "id": "sibawayh",
+   "died": 180,
+   "author": "Sibawayh",
+   "book": "Kitab",
+   "title": "الكتاب",
+   "authorName": "سيبويه",
+   "topic": "t15"
+  },
+  {
+   "id": "ibnaqil",
+   "died": 769,
+   "author": "IbnCaqil|IbnAqil",
+   "book": "Sharh|Alfiyya",
+   "title": "شرح ابن عقيل على ألفية ابن مالك",
+   "authorName": "ابن عقيل",
+   "topic": "t15"
+  },
+  {
+   "id": "awdahmasalik",
+   "died": 761,
+   "author": "IbnHisham",
+   "book": "AwdahMasalik|Awdah",
+   "title": "أوضح المسالك إلى ألفية ابن مالك",
+   "authorName": "ابن هشام الأنصاري",
+   "topic": "t15"
+  },
+  {
+   "id": "shudhur",
+   "died": 761,
+   "author": "IbnHisham",
+   "book": "Shudhur",
+   "title": "شرح شذور الذهب",
+   "authorName": "ابن هشام الأنصاري",
+   "topic": "t15"
+  },
+  {
+   "id": "mughnilabib",
+   "died": 761,
+   "author": "IbnHisham",
+   "book": "MughniLabib|Mughni",
+   "title": "مغني اللبيب عن كتب الأعاريب",
+   "authorName": "ابن هشام الأنصاري",
+   "topic": "t15"
+  },
+  {
+   "id": "ajurrumiyya",
+   "died": 723,
+   "author": "IbnAjurrum|Sanhaji",
+   "book": "Ajurrumiyya|Muqaddima",
+   "title": "متن الآجرومية",
+   "authorName": "ابن آجروم",
+   "topic": "t15"
+  },
+  {
+   "id": "sihah",
+   "died": 393,
+   "author": "Jawhari",
+   "book": "Sihah",
+   "title": "الصحاح تاج اللغة وصحاح العربية",
+   "authorName": "الجوهري",
+   "topic": "t16"
+  },
+  {
+   "id": "maqayis",
+   "died": 395,
+   "author": "IbnFaris",
+   "book": "Maqayis",
+   "title": "مقاييس اللغة",
+   "authorName": "ابن فارس",
+   "topic": "t16"
+  },
+  {
+   "id": "fiqhlugha",
+   "died": 429,
+   "author": "Thacalibi|Thaalibi",
+   "book": "FiqhLugha",
+   "title": "فقه اللغة وسر العربية",
+   "authorName": "الثعالبي",
+   "topic": "t15"
+  },
+  {
+   "id": "siyar",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "Siyar",
+   "title": "سير أعلام النبلاء",
+   "authorName": "الذهبي",
+   "topic": "t18"
+  },
+  {
+   "id": "bidayanihaya",
+   "died": 774,
+   "author": "IbnKathir",
+   "book": "Bidaya",
+   "title": "البداية والنهاية",
+   "authorName": "ابن كثير",
+   "topic": "t18"
+  },
+  {
+   "id": "sirahisham",
+   "died": 218,
+   "author": "IbnHisham",
+   "book": "Sira",
+   "title": "السيرة النبوية (سيرة ابن هشام)",
+   "authorName": "ابن هشام",
+   "topic": "t5"
+  }
+ ]
 }

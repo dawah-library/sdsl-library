@@ -13,7 +13,7 @@ async function pageText(id, p, origin) {
   if (!b) return null;
   let sh = null;
   if (!b.vf) { try { sh = JSON.parse(fs.readFileSync(path.join(ROOT, "data/books", id + ".json"), "utf8")); } catch (e) { } }
-  if (!sh) { try { const r = await fetch(origin + (b.vf ? "/vols/" : "/data/books/") + encodeURIComponent(id) + ".json"); if (r.ok) sh = await r.json(); } catch (e) { } }
+  if (!sh) { try { const r = await fetch((b.vf ? "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/vols/" : origin + "/data/books/") + encodeURIComponent(id) + ".json"); if (r.ok) sh = await r.json(); } catch (e) { } }
   const t = sh && sh.pages && sh.pages[p - 1];
   return t == null ? null : { b, text: String(t) };
 }

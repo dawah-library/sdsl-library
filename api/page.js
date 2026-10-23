@@ -24,7 +24,7 @@ async function findItem(id, origin) {
   if (b) {
     let sh = null;
     if (!b.vf) { try { sh = read("data/books/" + id + ".json"); } catch (e) { } }
-    else { try { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000); const r = await fetch(origin + "/vols/" + encodeURIComponent(id) + ".json", { signal: ac.signal }); clearTimeout(t); if (r.ok) sh = await r.json(); } catch (e) { } }
+    else { try { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000); const r = await fetch("https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/vols/" + encodeURIComponent(id) + ".json", { signal: ac.signal }); clearTimeout(t); if (r.ok) sh = await r.json(); } catch (e) { } }
     return { b, pages: sh && sh.pages, pl: sh && sh.pl, toc: sh && sh.toc };
   }
   const x = aidx().find(y => y.id === id);

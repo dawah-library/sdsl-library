@@ -17,7 +17,7 @@ async function sb(p, opt = {}) {
 }
 async function shard(b, origin) {
   if (!b.vf) { try { return JSON.parse(fs.readFileSync(path.join(ROOT, "data/books", b.id + ".json"), "utf8")); } catch (e) { } }
-  try { const r = await fetch(origin + (b.vf ? "/vols/" : "/data/books/") + encodeURIComponent(b.id) + ".json"); if (r.ok) return await r.json(); } catch (e) { }
+  try { const r = await fetch((b.vf ? "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/vols/" : origin + "/data/books/") + encodeURIComponent(b.id) + ".json"); if (r.ok) return await r.json(); } catch (e) { }
   return null;
 }
 async function body(req) {
