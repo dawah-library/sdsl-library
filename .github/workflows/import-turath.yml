@@ -31,10 +31,4 @@ jobs:
         run: python3 tools/import-turath.py
       - name: الحفظ
         run: |
-          git config user.name "sdsl-bot"
-          git config user.email "sdsl-bot@users.noreply.github.com"
-          git add -A data tools/turath-report.md
-          if [ -d vols ]; then git add -A vols; fi
-          git diff --cached --quiet || git commit -m "استيراد كتب التراث من OpenITI"
-          git pull --rebase -X theirs || git pull --rebase
-          git push
+          bash tools/git-save.sh "استيراد كتب التراث من OpenITI" data vols tools/turath-report.md
