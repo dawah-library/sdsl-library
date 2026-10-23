@@ -12,7 +12,7 @@ function cat() { if (!CAT) CAT = read("data/catalog.json"); return CAT; }
 function aidx() { if (!AIDX) { try { AIDX = read("data/articles/index.json").items || []; } catch (e) { AIDX = []; } } return AIDX; }
 const author = id => (cat().authors.find(a => a.id === id) || {});
 const topic = id => (cat().topics.find(t => t.id === id) || {});
-const COL = () => Object.assign({ dawah: "مكتبة الدعوة السلفية", turath: "تراث" }, { dawah: (cat().labels || {}).col_dawah, turath: (cat().labels || {}).col_turath });
+const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "تراث" }; };
 async function template(origin) {
   if (TPL) return TPL;
   try { TPL = fs.readFileSync(path.join(ROOT, "index.html"), "utf8"); }
@@ -93,7 +93,7 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
 module.exports = async (req, res) => {
   try {
     const host = req.headers["x-forwarded-host"] || req.headers.host, origin = "https://" + host, base = (process.env.SITE_URL || "https://dawahlibrary.org").replace(/\/$/, "") + "/";
-    const u = new URL(req.url, origin), p = u.searchParams.get("__p") || "/"; u.searchParams.delete("__p");
+    const u = new URL(req.url, origin), p = u.searchParams.get("__p") || "/"; ["__p", "first", "rest"].forEach(k => u.searchParams.delete(k));
     const q = Object.fromEntries(u.searchParams), qs = u.searchParams.toString();
     const r = await build(p, q, base), canon = base + p.replace(/^\//, "") + (qs && !/^\/book\//.test(p) ? "?" + qs : "");
     r.desc = r.desc || "المكتبة الرقمية للدعوة السلفية بمصر: كتب المشايخ ومقالات صوت السلف وكتب التراث، مع البحث والقراءة والقبسات ومساعد بحثي.";
