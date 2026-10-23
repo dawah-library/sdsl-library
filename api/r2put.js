@@ -22,6 +22,19 @@ function presignPut(key, ttl) {
 
 module.exports = async (req, res) => {
   const out = (c, o) => { res.statusCode = c; res.setHeader("content-type", "application/json; charset=utf-8"); res.setHeader("cache-control", "no-store"); res.end(JSON.stringify(o)); };
+  // GET ?f=<اسم الملف>: رابط تنزيل مؤقت (10 دقائق) لكتاب في صندوق الرفع الخاص (Supabase Storage)، لمهام التحويل فقط.
+  // (دُمج هنا لأن خطة Vercel المجانية تسمح باثنتي عشرة دالة فقط)
+  if (req.method === "GET") {
+    try { await verifyOidc(String(req.headers.authorization || "").replace(/^Bearer\s+/i, "")); } catch (e) { return out(403, { message: "forbidden" }); }
+    const name = new URL(req.url, "http://x").searchParams.get("f") || "";
+    if (!/^up[0-9a-z]{4,30}\.pdf$/.test(name)) return out(400, { message: "bad name" });
+    const key = E("SUPABASE_SECRET_KEY") || E("SUPABASE_SERVICE_ROLE_KEY"), h = { apikey: key, "content-type": "application/json" };
+    if (!/^sb_/.test(key)) h.Authorization = "Bearer " + key;
+    const r = await fetch(E("SUPABASE_URL") + "/storage/v1/object/sign/inbox/" + name, { method: "POST", headers: h, body: JSON.stringify({ expiresIn: 600 }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.signedURL) return out(404, { message: "not found" });
+    return out(200, { url: E("SUPABASE_URL") + "/storage/v1" + j.signedURL });
+  }
   if (req.method !== "POST") return out(405, { message: "POST فقط" });
   if (!E("R2_ACCOUNT_ID") || !E("R2_ACCESS_KEY_ID") || !E("R2_SECRET_ACCESS_KEY") || !E("R2_BUCKET")) return out(503, { message: "R2 غير مهيأ" });
   try { await verifyOidc(String(req.headers.authorization || "").replace(/^Bearer\s+/i, "")); }

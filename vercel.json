@@ -2,8 +2,7 @@
   "functions": {
     "api/ask.js": {
       "includeFiles": "data/**",
-      "maxDuration": 300,
-      "memory": 1024
+      "maxDuration": 300
     },
     "api/import.js": {
       "maxDuration": 30
@@ -41,9 +40,6 @@
     },
     "api/tglink.js": {
       "maxDuration": 15
-    },
-    "api/inbox.js": {
-      "maxDuration": 10
     }
   },
   "headers": [

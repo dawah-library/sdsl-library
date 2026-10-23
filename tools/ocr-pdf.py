@@ -637,7 +637,7 @@ def assemble():
                 try:
                     tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library", headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
                     site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
-                    url = json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/inbox?f=" + base + ".pdf", headers={"Authorization": "Bearer " + tok}), timeout=30).read())["url"]
+                    url = json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + base + ".pdf", headers={"Authorization": "Bearer " + tok}), timeout=30).read())["url"]
                     with urllib.request.urlopen(url, timeout=600) as r, open(os.path.join(INBOX, base + ".pdf"), "wb") as out: shutil.copyfileobj(r, out, 1 << 20)
                     os.remove(st); os.remove(os.path.join(INBOX, f)); print("نُزّل من صندوق الرفع:", base); continue
                 except Exception as e:
