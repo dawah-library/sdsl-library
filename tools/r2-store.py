@@ -23,7 +23,39 @@ WIDTH = int(os.environ.get("R2_IMG_WIDTH", "1100"))
 QUALITY = int(os.environ.get("R2_IMG_QUALITY", "62"))
 
 
+SITE = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
+
+
+class OidcUploader:
+    """بلا مفاتيح في GitHub: المهمة تثبت هويتها برمز OIDC، فيعطيها الموقع (/api/r2put) روابط رفع مؤقتة."""
+    def __init__(self): self.urls = {}
+    def token(self):
+        import urllib.request
+        u = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library"
+        r = urllib.request.Request(u, headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]})
+        return json.loads(urllib.request.urlopen(r, timeout=30).read())["value"]
+    def prepare(self, keys):
+        import urllib.request
+        for i in range(0, len(keys), 200):
+            body = json.dumps({"keys": keys[i:i + 200]}).encode()
+            r = urllib.request.Request(SITE + "/api/r2put", data=body, method="POST", headers={"content-type": "application/json", "authorization": "Bearer " + self.token()})
+            self.urls.update(json.loads(urllib.request.urlopen(r, timeout=60).read())["urls"])
+    def upload_file(self, path, bucket, key, ExtraArgs=None):
+        import urllib.request
+        if key not in self.urls: self.prepare([key])
+        h = {"Content-Type": (ExtraArgs or {}).get("ContentType", "application/octet-stream")}
+        for t in range(4):
+            try:
+                with open(path, "rb") as f: urllib.request.urlopen(urllib.request.Request(self.urls[key], data=f.read(), method="PUT", headers=h), timeout=300).read()
+                return
+            except Exception as e:
+                if t == 3: raise
+                print("  إعادة رفع", key, e); import time; time.sleep(3 * (t + 1))
+
+
 def client():
+    if not (ENV["R2_ACCESS_KEY_ID"] and ENV["R2_SECRET_ACCESS_KEY"]):
+        return OidcUploader()
     import boto3
     from botocore.config import Config
     return boto3.client("s3", endpoint_url="https://%s.r2.cloudflarestorage.com" % ENV["R2_ACCOUNT_ID"],
@@ -43,6 +75,7 @@ def store(s3, bid, pdf):
     n = pages(pdf)
     if not n: print("  تعذر قراءة", pdf); return None
     pre = "books/%s/" % bid
+    if hasattr(s3, "prepare"): s3.prepare([pre + "book.pdf"] + [pre + "p%04d.webp" % k for k in range(1, n + 1)])
     s3.upload_file(pdf, ENV["R2_BUCKET"], pre + "book.pdf",
                    ExtraArgs={"ContentType": "application/pdf", "CacheControl": "public, max-age=31536000, immutable"})
     total = 0
@@ -66,8 +99,9 @@ def store(s3, bid, pdf):
 
 
 def main():
-    if not all(ENV.values()):
+    if not (all(ENV.values()) or os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL")):
         print("مخزن R2 غير مضبوط بعد (الأسرار ناقصة) — تخطٍّ."); return
+    ENV["R2_BUCKET"] = ENV["R2_BUCKET"] or "dawah-books"
     cat = json.load(open(CAT, encoding="utf-8"))
     want = set(sys.argv[1:])
     todo = []

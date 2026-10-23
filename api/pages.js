@@ -8,11 +8,11 @@ const sha = s => crypto.createHash("sha256").update(s).digest("hex");
 const enc = s => encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
 
 // توقيع رابط GET بطريقة AWS SigV4 (يقبلها R2)
-function presign(key, ttl) {
+function presign(key, ttl, extra) {
   const host = E("R2_ACCOUNT_ID") + ".r2.cloudflarestorage.com", now = new Date();
   const amz = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), day = amz.slice(0, 8);
-  const scope = `${day}/auto/s3/aws4_request`, path = "/" + E("R2_BUCKET") + "/" + key.split("/").map(enc).join("/");
-  const q = { "X-Amz-Algorithm": "AWS4-HMAC-SHA256", "X-Amz-Credential": E("R2_ACCESS_KEY_ID") + "/" + scope, "X-Amz-Date": amz, "X-Amz-Expires": String(ttl), "X-Amz-SignedHeaders": "host" };
+  const scope = `${day}/auto/s3/aws4_request`, path = "/" + E("R2_BUCKET") + (key ? "/" + key.split("/").map(enc).join("/") : "");
+  const q = Object.assign({}, extra || {}, { "X-Amz-Algorithm": "AWS4-HMAC-SHA256", "X-Amz-Credential": E("R2_ACCESS_KEY_ID") + "/" + scope, "X-Amz-Date": amz, "X-Amz-Expires": String(ttl), "X-Amz-SignedHeaders": "host" });
   const qs = Object.keys(q).sort().map(k => enc(k) + "=" + enc(q[k])).join("&");
   const canon = ["GET", path, qs, "host:" + host + "\n", "host", "UNSIGNED-PAYLOAD"].join("\n");
   const sts = ["AWS4-HMAC-SHA256", amz, scope, sha(canon)].join("\n");
@@ -23,6 +23,11 @@ function presign(key, ttl) {
 module.exports = async (req, res) => {
   const out = (c, o) => { res.statusCode = c; res.setHeader("content-type", "application/json; charset=utf-8"); res.setHeader("cache-control", "private, no-store"); res.end(JSON.stringify(o)); };
   if (!E("R2_ACCOUNT_ID") || !E("R2_ACCESS_KEY_ID") || !E("R2_SECRET_ACCESS_KEY") || !E("R2_BUCKET")) return out(503, { message: "مخزن الكتب المصورة غير مهيأ بعد." });
+  // فحص صحة مفاتيح المخزن (لا يكشف شيئًا): /api/pages?check=1
+  if (new URL(req.url, "http://x").searchParams.get("check")) {
+    try { const r = await fetch(presign("", 60, { "list-type": "2", "max-keys": "1" })); return out(r.ok ? 200 : 502, { ok: r.ok, status: r.status }); }
+    catch (e) { return out(502, { ok: false, error: e.message }); }
+  }
   const tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   if (!tok) return out(401, { message: "النسخة المصورة للأعضاء المسجلين." });
   const u = await fetch(E("SUPABASE_URL") + "/auth/v1/user", { headers: { apikey: E("SUPABASE_ANON_KEY"), Authorization: "Bearer " + tok } });

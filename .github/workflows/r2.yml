@@ -12,6 +12,7 @@ on:
     paths: ["pdf/**"]
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: r2
   cancel-in-progress: false
@@ -28,8 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: الرفع
         run: |
-          if [ -z "$R2_ACCESS_KEY_ID" ]; then echo "R2 غير مضبوط بعد"; exit 0; fi
           sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
-          pip install -q --break-system-packages boto3 pillow
+          pip install -q --break-system-packages pillow; if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3; fi
           python3 tools/r2-store.py ${{ github.event.inputs.ids }}
       - run: bash tools/git-save.sh "نقل كتب مصورة إلى مخزن R2" data/catalog.json

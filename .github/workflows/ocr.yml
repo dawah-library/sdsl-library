@@ -12,6 +12,7 @@ on:
         default: ""
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: ocr
   cancel-in-progress: false
@@ -113,7 +114,7 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
-          if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3 pillow; python3 tools/r2-store.py; else echo "R2 غير مضبوط"; fi
+          pip install -q --break-system-packages pillow; if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3; fi; python3 tools/r2-store.py
       - run: |
           rm -rf ocr-drafts tessdata
           bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md

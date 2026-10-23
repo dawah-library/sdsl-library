@@ -32,6 +32,9 @@
     },
     "api/pages.js": {
       "maxDuration": 10
+    },
+    "api/r2put.js": {
+      "maxDuration": 20
     }
   },
   "headers": [
