@@ -751,7 +751,10 @@ function metaDlg(){const c=cur();if(!c)return;closeSheet();const b=c.b;if(isArt(
  <label>بيانات الطبعة أو المصدر</label><input name="source" value="${esc(b.source||"")}">
  <fieldset class="secs"><legend>يظهر أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"${tags.includes("tafrigh")?" checked":""}> التفريغات</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"${tags.includes("furqan:"+n)?" checked":""}> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
  ${b.set?`<p class="mut">يُطبَّق التعديل على مجلدات الكتاب كلها (${toAr(b.vols)}).</p>`:""}
- <div class="row" style="margin-top:8px"><button class="btn p nf">حفظ</button><button type="button" class="btn nf danger" data-act="bookdel" data-id="${b.id}">حذف الكتاب من المكتبة</button></div><p id="bmst" class="mut"></p></form>`)}
+ <div class="row" style="margin-top:8px"><button class="btn p nf">حفظ</button>${b.pdf&&/^pdf\//.test(b.pdf)?`<button type="button" class="btn nf" data-act="reocr" data-id="${b.id}">إعادة تحويل النص بالذكاء الاصطناعي</button>`:""}<button type="button" class="btn nf danger" data-act="bookdel" data-id="${b.id}">حذف الكتاب من المكتبة</button></div><p id="bmst" class="mut"></p></form>`)}
+async function reocr(id){const b=B(id),st=$("#bmst");if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
+ if(!confirm("إعادة تحويل «"+b.title+"» من نسخته المصورة بالذكاء الاصطناعي؟ يُستبدل النص الحالي (وتضيع التصحيحات اليدوية عليه)."))return;
+ try{st.textContent="جارٍ الطلب…";await GH.put("ocr-inbox/"+id+".redo","","طلب إعادة تحويل: "+b.title);st.textContent="✓ بدأ التحويل على خوادم GitHub، ويظهر النص الجديد بعد انتهائه (نحو 3 دقائق لكل 10 صفحات)."}catch(e){st.textContent=e.message}}
 async function saveBookMeta(f){const st=$("#bmst"),fd=new FormData(f),id=f.dataset.id,b=B(id);if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا من صفحة الإدارة.";return}
  const tags=(b.tags||[]).filter(t=>t!=="tafrigh"&&!t.startsWith("furqan:"));if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
  const title=String(fd.get("title")).trim(),up={authorId:fd.get("aid"),col:fd.get("col"),topicId:fd.get("tid"),source:String(fd.get("source")||"").trim(),tags};
@@ -1101,7 +1104,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="full")setFull(!S.full);
  else if(/^p(like|save|comm|copy|share|imgq|more|menu|delc|link|native|del)$/.test(a))postAct(a,el);
  else if(a==="feedMore")feedMore();
- else if(a==="bookmeta")metaDlg();else if(a==="bookdel")deleteBook(el.dataset.id);
+ else if(a==="bookmeta")metaDlg();else if(a==="reocr")reocr(el.dataset.id);else if(a==="bookdel")deleteBook(el.dataset.id);
  else if(a==="tup"||a==="tdown"){const r=el.closest(".trow"),o=a==="tup"?r.previousElementSibling:r.nextElementSibling;if(o)a==="tup"?o.before(r):o.after(r)}
  else if(a==="tdel"){const r=el.closest(".trow");if(confirm("حذف القسم «"+r.querySelector(".tn").value+"»؟ (يُحذف عند الحفظ)"))r.remove()}
  else if(a==="tadd"){const k=el.dataset.kind,box=$("#tl-"+k);box.insertAdjacentHTML("beforeend",topicRows([{id:(k==="articles"?"at":"t")+Date.now().toString(36),name:""}],k));const n=box.lastElementChild.querySelector(".tn");n.placeholder="اسم القسم الجديد";n.focus()}

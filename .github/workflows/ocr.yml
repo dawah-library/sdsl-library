@@ -1,8 +1,13 @@
 name: تحويل الكتب المصورة إلى نص
 on:
   push:
-    paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF"]
+    paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF", "ocr-inbox/*.redo"]
   workflow_dispatch:
+    inputs:
+      reocr:
+        description: "معرّفات كتب موجودة لإعادة تحويلها من نسخها المصورة (مفصولة بفواصل)"
+        required: false
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -19,6 +24,9 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr poppler-utils
           mkdir -p tessdata && curl -sSL -o tessdata/ara.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
       - name: التحويل
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          REOCR: ${{ github.event.inputs.reocr }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - run: |
           bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox

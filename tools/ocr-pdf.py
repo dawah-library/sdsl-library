@@ -8,7 +8,7 @@
   - offset: الفرق بين رقم صفحة النص ورقم صفحة PDF (مثلًا 4 إذا كانت صفحة النص 1 هي صفحة PDF رقم 5)
 النتيجة: data/books/<id>.json + إدخال في data/catalog.json + نقل الملف إلى pdf/<id>.pdf
 """
-import json, os, re, subprocess, sys, tempfile, hashlib, shutil, datetime
+import json, os, re, subprocess, sys, tempfile, hashlib, shutil, datetime, base64, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INBOX, PDFDIR, DATA = os.path.join(ROOT, "ocr-inbox"), os.path.join(ROOT, "pdf"), os.path.join(ROOT, "data")
@@ -72,16 +72,84 @@ def clean_page(t):
     return "\n".join(res)
 
 
+# ---------- التحويل بالذكاء الاصطناعي (Gemini) إن وُجد المفتاح، وإلا Tesseract ----------
+GKEY = os.environ.get("GEMINI_API_KEY", "")
+GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"] if m]
+GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
+PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
+- حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.
+- تجاهل ترويسة الصفحة المتكررة أعلاها (اسم الكتاب أو الباب) ورقم الصفحة والزخارف.
+- العناوين: اكتب كل عنوان في سطر مستقل يبدأ بـ «# ».
+- الفقرات: كل فقرة في سطر واحد متصل (ادمج الأسطر المكسورة والكلمات المقطوعة في نهاية السطر).
+- الشعر: كل بيت في سطر، وافصل بين الشطرين بـ « ... ».
+- الحواشي أسفل الصفحة: إن وُجدت فاكتب بعد المتن سطرًا فيه ______ ثم كل حاشية في سطر برقمها كما في الكتاب، مثل: (1) نص الحاشية.
+- إن كانت الصفحة فارغة أو صورة بلا نص فاكتب: [صفحة بلا نص]
+أخرج النص فقط دون أي مقدمة أو تعليق."""
+STATS = {"gemini": 0, "tesseract": 0}
+_glast = [0.0]
+
+
+def gemini_page(img):
+    data = base64.b64encode(open(img, "rb").read()).decode()
+    body = json.dumps({"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": data}}, {"text": PROMPT}]}],
+                       "generationConfig": {"temperature": 0, "maxOutputTokens": 8192}}).encode()
+    models = list(GMODELS)
+    for attempt in range(7):
+        wait = GDELAY - (time.time() - _glast[0])
+        if wait > 0: time.sleep(wait)
+        _glast[0] = time.time()
+        req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % models[0], data=body,
+                                     headers={"content-type": "application/json", "x-goog-api-key": GKEY})
+        try:
+            with urllib.request.urlopen(req, timeout=180) as r:
+                j = json.loads(r.read())
+            c = (j.get("candidates") or [{}])[0]
+            t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
+            if t.strip():
+                return t.replace("[صفحة بلا نص]", "").strip()
+            raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
+        except urllib.error.HTTPError as e:
+            msg = e.read()[:300].decode("utf-8", "ignore")
+            print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
+            if e.code == 404 and len(models) > 1: models.pop(0); continue
+            if e.code in (401, 403): return None
+            time.sleep(min(60, 5 * (attempt + 1)))
+        except Exception as e:
+            print("    Gemini خطأ: %r" % e, flush=True); time.sleep(5 * (attempt + 1))
+    return None
+
+
+def gemini_clean(t):
+    t = fix_punct(t)
+    lines = [l.rstrip() for l in t.split("\n")]
+    out = []
+    for l in lines:
+        s = l.strip()
+        if not s or re.fullmatch(r"[\d٠-٩\-–—\s()]+", s): continue
+        out.append(re.sub(r"^#+\s*", "# ", s) if s.startswith("#") else s)
+    return "\n".join(out)
+
+
 def ocr(pdf, first=1, last=None):
     n = pages_count(pdf)
     last = min(last or n, n)
     pages = []
+    STATS.update(gemini=0, tesseract=0)
+    print("  المحرك: " + ("Gemini مع Tesseract احتياطيًا" if GKEY else "Tesseract"), flush=True)
     with tempfile.TemporaryDirectory() as td:
         for p in range(first, last + 1):
             img = os.path.join(td, f"p{p}")
-            subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-            r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
-            pages.append(clean_page(r.stdout))
+            text = None
+            if GKEY:
+                subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
+                g = gemini_page(img + ".jpg")
+                if g is not None:
+                    text = gemini_clean(g); STATS["gemini"] += 1
+            if text is None:
+                subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
+                r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
+                text = clean_page(r.stdout); STATS["tesseract"] += 1
+            pages.append(text)
             print(f"  صفحة {p}/{last}: {len(pages[-1])} حرف", flush=True)
     return pages
 
@@ -89,6 +157,17 @@ def ocr(pdf, first=1, last=None):
 def main():
     if not os.path.isdir(INBOX):
         print("لا يوجد مجلد ocr-inbox"); return
+    redo = [x.strip() for x in os.environ.get("REOCR", "").split(",") if x.strip()]
+    for f in sorted(os.listdir(INBOX)):  # طلبات إعادة التحويل من صفحة الإدارة: ocr-inbox/<id>.redo
+        if f.endswith(".redo"):
+            redo.append(f[:-5]); os.remove(os.path.join(INBOX, f))
+    for bid in redo:  # إعادة تحويل كتاب موجود من نسخته المصورة المحفوظة
+        src = os.path.join(PDFDIR, bid + ".pdf")
+        if os.path.exists(src):
+            shutil.copy(src, os.path.join(INBOX, "redo-" + bid + ".pdf"))
+            json.dump({"book": bid, "ocr": True}, open(os.path.join(INBOX, "redo-" + bid + ".json"), "w", encoding="utf-8"))
+        else:
+            print("لا توجد نسخة مصورة محفوظة للكتاب", bid)
     pdfs = sorted(f for f in os.listdir(INBOX) if f.lower().endswith(".pdf"))
     if not pdfs:
         print("لا توجد ملفات PDF"); return
@@ -132,7 +211,8 @@ def main():
             s = json.dumps(shard, ensure_ascii=False, separators=(",", ":"))
             open(os.path.join(DATA, "books", bid + ".json"), "w", encoding="utf-8").write(s)
             entry.update({"n": len(pages), "size": len(s.encode()), "ocr": True,
-                          "source": (entry.get("source", "") + " — " if existing and entry.get("source") else "") + "نص محوَّل آليًا من نسخة مصورة، يحتاج مراجعة",
+                          "source": " — ".join(x for x in [re.sub(r"\s*—?\s*نص محوَّل (آليًا|بالذكاء الاصطناعي).*$", "", entry.get("source", "")).strip(" —") if existing else "", "نص محوَّل بالذكاء الاصطناعي من نسخة مصورة، يُرجى الإبلاغ عن أي خطأ" if STATS["gemini"] > STATS["tesseract"] else "نص محوَّل آليًا من نسخة مصورة، يحتاج مراجعة"] if x),
+                          "ocrEngine": "gemini" if STATS["gemini"] > STATS["tesseract"] else "tesseract",
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
         print(f"   تم: {entry.get('n', '?')} صفحة")
