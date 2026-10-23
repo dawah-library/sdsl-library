@@ -101,13 +101,12 @@ _glast = [0.0]
 GFAIL = [0]  # إخفاقات Gemini المتتالية: بعد عدد منها يكمل الكتاب بـ Tesseract ويعلّم الصفحات لإعادة المراجعة لاحقًا
 
 
-def gemini_page(img, draft=""):
+def gemini_call(parts, max_tokens=8192):
+    """طلب واحد إلى Gemini مع إعادة المحاولة وتبديل النموذج عند الازدحام؛ يعيد النص أو None."""
     if GFAIL[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "6")):
         return None
-    data = base64.b64encode(open(img, "rb").read()).decode()
-    prompt = PROMPT + (REVIEW.format(draft=draft[:6000]) if draft.strip() else "")
-    body = json.dumps({"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": data}}, {"text": prompt}]}],
-                       "generationConfig": {"temperature": 0, "maxOutputTokens": 8192}}).encode()
+    body = json.dumps({"contents": [{"role": "user", "parts": parts}],
+                       "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
     models = list(GMODELS)
     for attempt in range(4):
         wait = GDELAY - (time.time() - _glast[0])
@@ -116,13 +115,13 @@ def gemini_page(img, draft=""):
         req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % models[0], data=body,
                                      headers={"content-type": "application/json", "x-goog-api-key": GKEY})
         try:
-            with urllib.request.urlopen(req, timeout=180) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 j = json.loads(r.read())
             c = (j.get("candidates") or [{}])[0]
             t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
             if t.strip():
                 GFAIL[0] = 0
-                return t.replace("[صفحة بلا نص]", "").strip()
+                return t
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
         except urllib.error.HTTPError as e:
             msg = e.read()[:300].decode("utf-8", "ignore")
@@ -132,9 +131,36 @@ def gemini_page(img, draft=""):
             if e.code in (429, 500, 503) and len(models) > 1 and attempt >= 1: models.pop(0)  # جرّب نموذجًا آخر عند الازدحام
             time.sleep(min(30, 4 * (attempt + 1)))
         except Exception as e:
-            print("    Gemini خطأ: %r" % e, flush=True); time.sleep(5 * (attempt + 1))
+            print("    Gemini خطأ: %r" % e, flush=True); time.sleep(4 * (attempt + 1))
     GFAIL[0] += 1
     return None
+
+
+def img_part(img):
+    return {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(open(img, "rb").read()).decode()}}
+
+
+def gemini_page(img, draft=""):
+    t = gemini_call([img_part(img), {"text": PROMPT + (REVIEW.format(draft=draft[:6000]) if draft.strip() else "")}])
+    return t.replace("[صفحة بلا نص]", "").strip() if t else None
+
+
+SEP = re.compile(r"^\s*=+\s*صفحة\s*(\d+)\s*=+\s*$", re.M)
+
+
+def gemini_batch(imgs, drafts):
+    """عدة صفحات في طلب واحد لتوفير الحصة؛ يعيد قائمة بنص كل صفحة أو None إن اختل التقسيم."""
+    parts = []
+    for k, (img, d) in enumerate(zip(imgs, drafts), 1):
+        parts += [{"text": "===== صفحة %d =====" % k}, img_part(img), {"text": "مسودة Tesseract للصفحة %d:\n<<<\n%s\n>>>" % (k, d[:5000])}]
+    parts.append({"text": PROMPT + "\n\nأمامك %d صفحات متتالية، لكل صفحة صورتها ومسودة من أداة تعرّف ضوئي أخرى قد تحتوي أخطاء. اعتمد على الصورة أولًا وقارن بالمسودة، وما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), len(imgs))})
+    t = gemini_call(parts, max_tokens=min(60000, 4000 * len(imgs)))
+    if not t: return None
+    pieces = SEP.split(t)
+    got = {int(pieces[i]): pieces[i + 1] for i in range(1, len(pieces) - 1, 2)}
+    if sorted(got) != list(range(1, len(imgs) + 1)):
+        print("    تقسيم الصفحات غير مطابق (%s)، تُراجع صفحة صفحة" % sorted(got), flush=True); return None
+    return [got[k].replace("[صفحة بلا نص]", "").strip() for k in range(1, len(imgs) + 1)]
 
 
 UNC = re.compile(r"⟪\s*([^⟪⟫]{1,60}?)\s*⟫")
@@ -152,31 +178,49 @@ def gemini_clean(t):
 
 
 def ocr(pdf, first=1, last=None):
+    """١) مسودات Tesseract لكل الصفحات بالتوازي ٢) Gemini يقرأ الصور ويراجع المسودات ويصحح ويعلّم الشك، عدة صفحات في الطلب."""
+    from concurrent.futures import ThreadPoolExecutor
     n = pages_count(pdf)
     last = min(last or n, n)
-    pages = []
+    nums = list(range(first, last + 1))
     STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
-    print("  المحرك: " + ("Gemini مع Tesseract احتياطيًا" if GKEY else "Tesseract"), flush=True)
+    batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
+    print("  المحرك: " + ("Tesseract ثم مراجعة Gemini (%d صفحات في الطلب)" % batch if GKEY else "Tesseract"), flush=True)
     with tempfile.TemporaryDirectory() as td:
-        for p in range(first, last + 1):
+        def tess(p):
             img = os.path.join(td, f"p{p}")
-            # ١) مسودة Tesseract (مجانية وسريعة) ٢) Gemini يقرأ الصورة ويراجع المسودة ويصحح ويعلّم مواضع الشك
             subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
             r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
-            draft = clean_page(r.stdout)
-            text = None
             if GKEY:
                 subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-                g = gemini_page(img + ".jpg", draft)
-                if g is not None:
-                    words = [w.strip() for w in UNC.findall(g) if w.strip()]
-                    if words: UNCERTAIN[len(pages)] = words[:40]
-                    text = gemini_clean(UNC.sub(r"\1", g)); STATS["gemini"] += 1
-            if text is None:
-                text = draft; STATS["tesseract"] += 1
-                if GKEY: UNREVIEWED.append(len(pages))
-            pages.append(text)
-            print(f"  صفحة {p}/{last}: {len(pages[-1])} حرف", flush=True)
+            try: os.remove(img + ".png")
+            except OSError: pass
+            return clean_page(r.stdout)
+        with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
+            drafts = list(ex.map(tess, nums))
+        print("  اكتملت مسودات Tesseract: %d صفحة" % len(drafts), flush=True)
+        pages = list(drafts); reviewed = [False] * len(nums)
+        def accept(i, g):
+            words = [w.strip() for w in UNC.findall(g) if w.strip()]
+            if words: UNCERTAIN[i] = words[:40]
+            pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
+        if GKEY:
+            for s0 in range(0, len(nums), batch):
+                idx = list(range(s0, min(s0 + batch, len(nums))))
+                imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
+                res = gemini_batch(imgs, [drafts[i] for i in idx]) if len(idx) > 1 else None
+                if res:
+                    for i, g in zip(idx, res): accept(i, g)
+                else:
+                    for i, img in zip(idx, imgs):
+                        g = gemini_page(img, drafts[i])
+                        if g is not None: accept(i, g)
+                print(f"  روجعت حتى صفحة {nums[idx[-1]]}/{last}", flush=True)
+        for i, ok in enumerate(reviewed):
+            if ok: STATS["gemini"] += 1
+            else:
+                STATS["tesseract"] += 1
+                if GKEY: UNREVIEWED.append(i)
     return pages
 
 
