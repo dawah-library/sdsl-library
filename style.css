@@ -424,3 +424,25 @@ body:not(.reading) #rprog{display:none}
 .plan .prog{position:relative;left:auto;right:auto;bottom:auto}.plan .prog::after{display:none}
 .emptyp{text-align:center;padding:40px 10px;font-family:"IBM Plex Sans Arabic",sans-serif;font-size:.95rem}
 @media(max-width:440px){.rbar2{max-width:calc(100vw - 10px);gap:0}.rbar2 button{min-width:0;flex:1 1 0;padding:6px 2px 4px;font-size:.6rem}.rbar2 svg{width:20px;height:20px}.rbar2 .pgb{flex:1.3 1 0}}
+/* تنسيق الكتاب المطبوع */
+body.fmtp .rd p{text-align:justify;text-justify:inter-word;text-indent:1.4em;hyphens:none}
+body.fmtp .rd p.ph{text-align:center;text-indent:0;margin-top:.9em}
+body.fmtp .rd .fns p,body.fmtp .rd p.emptyp,body.fmtp .rd p.tts{text-indent:0}
+body.fmtp .rd .fns p{text-align:justify}
+.rd p.ph2{font-size:1.02em;opacity:.92}
+body.fmtp .rd p.ph2{text-align:start;text-indent:0}
+/* الفهرس الشجري والتنقل بين الفصول */
+.toclist a.l2{padding-inline-start:28px;font-size:.92em;opacity:.9}
+.toclist a.l2::before{content:"◦ ";opacity:.6}
+.chnav{margin-bottom:10px}.chnav .btn{flex:1;text-align:center}
+/* النص والمصورة */
+.pvseg{max-width:330px;margin:0 auto 12px}
+.pvseg button{padding:6px 4px;font-size:.85rem}
+@media(max-width:999px){.pbody.both{display:flex;flex-direction:column-reverse;gap:14px}.paper:has(.pbody.both){max-width:40em}}
+.pdfcal{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:8px 0;font-size:.8rem;font-family:"IBM Plex Sans Arabic",sans-serif}
+/* بطاقة الكتاب */
+.linkbtn{border:0;background:none;color:var(--ac);font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+.rsum{background:var(--card,rgba(0,0,0,.03));border-inline-start:3px solid var(--gold,#b8913a);padding:8px 12px;border-radius:8px;font-size:.9rem;line-height:1.8;margin:8px 0}
+.bcard h3{margin:0 0 4px;font-family:var(--rf);font-size:1.3rem}.bcard .bsum{line-height:1.9}
+.btab{width:100%;border-collapse:collapse;margin:8px 0;font-size:.88rem}.btab th{text-align:start;white-space:nowrap;padding:6px 8px;opacity:.7;font-weight:500;vertical-align:top;width:1%}.btab td{padding:6px 8px}.btab tr+tr{border-top:1px solid var(--line)}
+.bcard h4{margin:12px 0 4px}.bcard ul{margin:0;padding-inline-start:20px;line-height:1.9}

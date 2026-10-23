@@ -73,13 +73,17 @@ def clean_page(t):
 
 
 # ---------- التحويل بالذكاء الاصطناعي (Gemini) إن وُجد المفتاح، وإلا Tesseract ----------
-GKEY = os.environ.get("GEMINI_API_KEY", "")
+# يمكن إضافة مفاتيح Gemini أخرى من حسابات Google مختلفة (GEMINI_API_KEY_2 … _5) فتتضاعف الحصة اليومية المجانية
+GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 6)] if k.strip()]
+GKEY = GKEYS[0] if GKEYS else ""
+KI = [0]
 GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"] if m]
 GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
 PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
 - حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.
 - تجاهل ترويسة الصفحة المتكررة أعلاها (اسم الكتاب أو الباب) ورقم الصفحة والزخارف.
-- العناوين: اكتب كل عنوان في سطر مستقل يبدأ بـ «# ».
+- ابدأ إخراج كل صفحة بسطر فيه رقم الصفحة المطبوع كما يظهر في الصورة (أعلاها أو أسفلها) بالصيغة: [ص: 12] ، وإن لم يظهر رقم فاكتب: [ص: -]
+- العناوين: العنوان الرئيس (باب، فصل، مبحث، مقدمة، خاتمة…) في سطر مستقل يبدأ بـ «# »، والعنوان الفرعي داخله في سطر يبدأ بـ «## ».
 - الفقرات: كل فقرة في سطر واحد متصل (ادمج الأسطر المكسورة والكلمات المقطوعة في نهاية السطر).
 - الشعر: كل بيت في سطر، وافصل بين الشطرين بـ « ... ».
 - الحواشي أسفل الصفحة: إن وُجدت فاكتب بعد المتن سطرًا فيه ______ ثم كل حاشية في سطر برقمها كما في الكتاب، مثل: (1) نص الحاشية.
@@ -115,7 +119,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
         if wait > 0: time.sleep(wait)
         _glast[0] = time.time()
         req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % models[0], data=body,
-                                     headers={"content-type": "application/json", "x-goog-api-key": GKEY})
+                                     headers={"content-type": "application/json", "x-goog-api-key": GKEYS[KI[0] % len(GKEYS)]})
         try:
             with urllib.request.urlopen(req, timeout=300) as r:
                 j = json.loads(r.read())
@@ -129,6 +133,8 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             msg = e.read()[:300].decode("utf-8", "ignore")
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue
+            if e.code == 429 and len(GKEYS) > 1 and attempt < 3:  # نفدت حصة هذا المفتاح: انتقل إلى المفتاح التالي
+                KI[0] += 1; print("    الانتقال إلى مفتاح Gemini رقم %d" % (KI[0] % len(GKEYS) + 1), flush=True); continue
             if e.code in (401, 403): fail[0] = 99; return None
             if e.code in (429, 500, 503) and len(models) > 1 and attempt >= 1: models.pop(0)  # جرّب نموذجًا آخر عند الازدحام
             time.sleep(min(30, 4 * (attempt + 1)))
@@ -166,6 +172,30 @@ def gemini_batch(imgs, drafts):
 
 
 UNC = re.compile(r"⟪\s*([^⟪⟫]{1,60}?)\s*⟫")
+PNUM_RE = re.compile(r"^\s*\[\s*ص\s*[:：]\s*([^\]]*)\]\s*\n?")
+PNUM = {}  # رقم الصفحة (من صفر) ← رقمها المطبوع
+
+
+def take_pnum(i, g):
+    m = PNUM_RE.match(g or "")
+    if not m: return g
+    v = m.group(1).translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")).strip()
+    if re.fullmatch(r"\d{1,4}", v): PNUM[i] = int(v)
+    return g[m.end():]
+
+
+def printed_labels(n):
+    """ترقيم الطبعة الورقية لكل صفحة: من الأرقام التي قرأها Gemini، مع إكمال الفجوات بالتتابع."""
+    if len(PNUM) < max(3, n * 0.25): return None
+    # الإزاحة الغالبة (رقم مطبوع − ترتيب الصفحة) لتجاهل القراءات الشاذة
+    from collections import Counter
+    off = Counter(v - i for i, v in PNUM.items()).most_common(1)[0][0]
+    out = []
+    for i in range(n):
+        v = PNUM.get(i)
+        if v is None or abs((v - i) - off) > 2: v = i + off
+        out.append("ص %d" % v if v >= 1 else "")
+    return out
 
 
 def gemini_clean(t):
@@ -175,7 +205,9 @@ def gemini_clean(t):
     for l in lines:
         s = l.strip()
         if not s or re.fullmatch(r"[\d٠-٩\-–—\s()]+", s): continue
-        out.append(re.sub(r"^#+\s*", "# ", s) if s.startswith("#") else s)
+        if s.startswith("#"): s = re.sub(r"^(#{1,2})#*\s*", lambda m: m.group(1) + " ", s)
+        s = s[:3] + re.sub(r"\s+#+\s*(?=\S)", " — ", s[3:]); s = re.sub(r"\s*#+$", "", s)
+        out.append(s)
     return "\n".join(out)
 
 
@@ -239,6 +271,7 @@ def pro_pass(pdf, nums, pages, td):
         g = gemini_call([img_part(img + ".jpg"), {"text": PRO_PROMPT.format(text=marked[:12000])}], models=PROMODELS, fail=PFAIL)
         if not g: continue
         words = [w.strip() for w in UNC.findall(g) if w.strip()]
+        g = PNUM_RE.sub("", g, count=1)
         pages[i] = gemini_clean(UNC.sub(r"\1", g).replace("[صفحة بلا نص]", "").strip())
         if words: UNCERTAIN[i] = words[:40]
         else: UNCERTAIN.pop(i, None)
@@ -247,6 +280,115 @@ def pro_pass(pdf, nums, pages, td):
         print("  المدقق الثاني راجع %d صفحة في %d دقيقة" % (fixed, (time.time() - t0) // 60), flush=True)
         REPORT.append("- المدقق الثاني (%s): أعاد قراءة %d صفحة فيها شك" % (PROMODELS[0], fixed))
     STATS["pro"] = fixed
+
+
+CARD_PROMPT = """أمامك بداية كتاب عربي (صفحة العنوان وبيانات النشر والمقدمة) وفهرس عناوينه. استخرج بطاقة تعريف بالكتاب بصيغة JSON فقط، بهذه الحقول:
+{"title": "عنوان الكتاب كما في صفحة العنوان", "subtitle": "العنوان الفرعي إن وُجد", "author": "اسم المؤلف أو المعدّ كما في صفحة العنوان", "intro_by": "من قدّم للكتاب إن وُجد", "editor": "المحقق أو المراجع إن وُجد",
+ "publisher": "الناشر ومدينته", "edition": "رقم الطبعة", "year": "سنة الطبع هجريًا وميلاديًا", "printed_pages": "عدد الصفحات المطبوع إن ذُكر",
+ "summary": "تعريف موجز بالكتاب في 3 إلى 5 جمل: موضوعه ومقصده وأهم ما يعالجه، بأسلوب علمي محايد",
+ "parts": ["أهم أبواب الكتاب أو محاوره في عبارات قصيرة (حتى 8)"], "keywords": ["كلمات مفتاحية (حتى 8)"], "audience": "لمن يُنصح به في جملة قصيرة"}
+لا تخترع ما ليس في النص: اترك الحقل فارغًا "" إن لم يُذكر. أخرج JSON صحيحًا فقط."""
+
+
+def make_card(pages, toc):
+    if not GKEY: return None
+    head, total = [], 0
+    for t in pages:
+        if not t.strip(): continue
+        head.append(t); total += len(t)
+        if total > 14000: break
+    titles = "\n".join(("  " if x.get("l") == 2 else "") + x["t"] for x in toc[:120])
+    g = gemini_call([{"text": CARD_PROMPT + "\n\nبداية الكتاب:\n<<<\n" + "\n\n".join(head)[:16000] + "\n>>>\n\nالفهرس:\n<<<\n" + titles + "\n>>>"}], max_tokens=4096)
+    if not g: return None
+    m = re.search(r"\{.*\}", g, re.S)
+    try:
+        card = json.loads(m.group(0)) if m else None
+    except Exception:
+        card = None
+    if not isinstance(card, dict): return None
+    return {k: v for k, v in card.items() if v not in ("", None, [], {})}
+
+
+TOCLINE = re.compile(r"^#*\s*(.{3,150}?)\s*[.…·_\-ـ]{3,}\s*\(?([\d٠-٩۰-۹]{1,4})\)?\s*$")
+DIG = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+
+
+def toc_from_printed(pages, pl):
+    """فهرس الكتاب المطبوع نفسه (سطر العنوان ثم نقاط ثم رقم الصفحة) مربوطًا بصفحات النص عبر ترقيم الطبعة."""
+    rows, where = [], set()
+    for i, t in enumerate(pages):
+        hits = [TOCLINE.match(l.strip()) for l in t.split("\n")]
+        hits = [h for h in hits if h]
+        if len(hits) >= 4:
+            where.add(i); rows += [(h.group(1).strip(" #:"), int(h.group(2).translate(DIG))) for h in hits]
+    if len(rows) < 5: return None
+    num = {}
+    for i, lab in enumerate(pl or []):
+        m = re.search(r"(\d+)\s*$", lab or "")
+        if m: num.setdefault(int(m.group(1)), i + 1)
+    out = []
+    for t, n in rows:
+        p = num.get(n)
+        if p and p - 1 not in where: out.append({"t": t, "p": p})
+    if len(out) < max(5, len(rows) * 0.6): return None
+    return toc_levels(out)
+
+
+ORD = ["أول", "ثاني", "ثالث", "رابع", "خامس", "سادس", "سابع", "ثامن", "تاسع", "عاشر"]
+
+
+def ordinal(t):
+    m = re.match(r"^(أول|ثاني|ثان|ثالث|رابع|خامس|سادس|سابع|ثامن|تاسع|عاشر)[ًٌاٍَُِّْ]*\s*[:：\-–]?", t.replace("أولا", "أول").replace("ثانيا", "ثاني"))
+    if not m: return None
+    w = m.group(1); w = "ثاني" if w == "ثان" else w
+    return ORD.index(w) + 1 if w in ORD else None
+
+
+def toc_levels(toc):
+    """مستويات الفهرس: العناصر المرقمة (أولًا، ثانيًا…) في التسلسل الرئيس مستوى أول، والتسلسلات الداخلية وما بينها مستوى ثانٍ."""
+    main_exp, sub_exp, seen_main = 1, None, False
+    for x in toc:
+        k = ordinal(x["t"])
+        if k is None:
+            if seen_main: x["l"] = 2
+            continue
+        if sub_exp is not None and k == sub_exp: x["l"] = 2; sub_exp += 1
+        elif k == main_exp: main_exp += 1; seen_main = True; sub_exp = None; x.pop("l", None)
+        elif seen_main: x["l"] = 2; sub_exp = k + 1
+    return toc
+
+
+def make_toc(pages):
+    toc = []
+    for i, t in enumerate(pages):
+        for l in t.split("\n"):
+            lv = 2 if l.startswith("## ") else 1 if l.startswith("# ") else 0
+            name = l[lv + 1:].strip()
+            if lv and 1 < len(name) < 120:
+                toc.append({"t": name, "p": i + 1, **({"l": 2} if lv == 2 else {})})
+    return toc
+
+
+def cards_job():
+    """بطاقات تعريف للكتب الموجودة التي ليس لها بطاقة (من نصها، دون صور)."""
+    cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
+    limit = int(os.environ.get("CARDS_MAX", "25")); done = 0
+    ids = [x.strip() for x in os.environ.get("CARD_IDS", "").split(",") if x.strip()]
+    for b in cat["books"]:
+        if done >= limit: break
+        if ids and b["id"] not in ids: continue
+        if not ids and (b.get("card") or b.get("col", "dawah") != "dawah" or b.get("type") == "article" or b.get("vf") or b.get("demo")): continue
+        fp = os.path.join(DATA, "books", b["id"] + ".json")
+        if not os.path.exists(fp): continue
+        sh = json.load(open(fp, encoding="utf-8"))
+        card = make_card(sh.get("pages", []), sh.get("toc", []))
+        if card:
+            b["card"] = card; done += 1; print("بطاقة:", b["title"], flush=True)
+        elif GFAIL[0] >= 6: break
+    if done:
+        cat["version"] = int(datetime.datetime.now().timestamp() * 1000)
+        json.dump(cat, open(cat_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("أُنشئت %d بطاقة" % done)
 
 
 def md5f(path):
@@ -294,7 +436,7 @@ def ocr(pdf, first=1, last=None):
     n = pages_count(pdf)
     last = min(last or n, n)
     nums = list(range(first, last + 1))
-    STATS.update(gemini=0, tesseract=0, pro=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
+    STATS.update(gemini=0, tesseract=0, pro=0); PNUM.clear(); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
     batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
     ready = load_drafts(pdf)
     have = [p for p in nums if p in ready]
@@ -315,6 +457,7 @@ def ocr(pdf, first=1, last=None):
         pages = [sur.get(p) or d for p, d in zip(nums, drafts)]; reviewed = [False] * len(nums)
         both = [("[مسودة Tesseract]\n" + d + ("\n\n[مسودة Surya]\n" + sur[p] if sur.get(p) else "")) for p, d in zip(nums, drafts)]
         def accept(i, g):
+            g = take_pnum(i, g)
             words = [w.strip() for w in UNC.findall(g) if w.strip()]
             if words: UNCERTAIN[i] = words[:40]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
@@ -444,8 +587,25 @@ def main():
             entry["authorId"] = aid or "a8"
         if do_ocr:
             pages = ocr(dest)
-            toc = [{"t": l[2:].strip(), "p": i + 1} for i, t in enumerate(pages) for l in t.split("\n") if l.startswith("# ") and 2 < len(l) < 120]
-            shard = {"id": bid, "pages": pages, "toc": toc, "pl": [f"ص {i+1}" for i in range(len(pages))]}
+            toc = make_toc(pages)
+            pl = printed_labels(len(pages))
+            ptoc = toc_from_printed(pages, pl or ["ص %d" % (i + 1) for i in range(len(pages))])
+            if ptoc:  # فهرس الطبعة نفسها أدق من العناوين المستخرجة؛ وتبقى العناوين التي قبله (التقديم والمقدمة)
+                first = min(x["p"] for x in ptoc)
+                toc = [x for x in toc if x["p"] < first and x.get("l") != 2] + ptoc; REPORT.append("- الفهرس: من فهرس الطبعة المطبوع (%d عنوانًا)" % len(ptoc))
+            shard = {"id": bid, "pages": pages, "toc": toc, "pl": pl or [f"ص {i+1}" for i in range(len(pages))]}
+            if pl: entry["printed"] = True; REPORT.append("- ترقيم الطبعة الورقية: قُرئ في %d صفحة" % len(PNUM))
+            card = make_card(pages, toc)
+            if card:
+                entry["card"] = card; REPORT.append("- بطاقة التعريف: ✓")
+                if not author and not existing and card.get("author"):  # المؤلف من صفحة العنوان إن لم يُحدَّد عند الرفع
+                    nm = card["author"]
+                    hit = next((a for a in cat["authors"] if norm(a["name"]) and (norm(a["name"]) in norm(nm) or norm(nm) in norm(a["name"]))), None)
+                    if hit: entry["authorId"] = hit["id"]
+                    else:
+                        aid = "w" + str(sum(1 for a in cat["authors"] if re.fullmatch(r"w\d+", a["id"])) + 1)
+                        cat["authors"].append({"id": aid, "name": nm, "col": entry["col"], "bio": "", "auto": True}); entry["authorId"] = aid
+                if not existing and card.get("title") and re.match(r"^up[0-9a-z]+", entry.get("title", "")): entry["title"] = card["title"]
             if UNCERTAIN: shard["unc"] = {str(k): v for k, v in UNCERTAIN.items()}
             if UNREVIEWED: shard["unrev"] = UNREVIEWED[:]
             s = json.dumps(shard, ensure_ascii=False, separators=(",", ":"))
@@ -466,4 +626,5 @@ def main():
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--plan": plan()
     elif len(sys.argv) > 4 and sys.argv[1] == "--drafts": drafts_job(*sys.argv[2:5])
+    elif len(sys.argv) > 1 and sys.argv[1] == "--cards": cards_job()
     else: main()

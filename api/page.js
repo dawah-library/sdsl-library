@@ -61,7 +61,7 @@ async function build(p, q, base) {
     const pg = Math.min(Math.max(1, parseInt(seg[2]) || 1), n), lbl = it.pl && it.pl[pg - 1] ? it.pl[pg - 1] : (art ? "" : "ص " + pg);
     const name = b.setTitle ? b.title : b.title, txt = it.pages ? it.pages[pg - 1] : "";
     r.title = name + (lbl && n > 1 ? " — " + lbl : "") + (a.name ? " | " + a.name : "");
-    r.desc = cut(txt, 180) || [name, a.name, b.source].filter(Boolean).join(" — ");
+    r.desc = (pg === 1 && b.card && b.card.summary ? cut(b.card.summary, 180) : cut(txt, 180)) || [name, a.name, b.source].filter(Boolean).join(" — ");
     r.type = art ? "article" : "book";
     r.ld = art ? { "@context": "https://schema.org", "@type": "Article", headline: b.title, author: { "@type": "Person", name: a.name }, datePublished: b.date || undefined, inLanguage: "ar", isPartOf: { "@type": "WebSite", name: SITE } }
       : { "@context": "https://schema.org", "@type": "Book", name: b.setTitle || b.title, author: { "@type": "Person", name: a.name }, inLanguage: "ar", genre: topic(b.topicId).name, publisher: b.source || undefined };

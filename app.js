@@ -28,7 +28,7 @@ function loadFont(f){if(loadedFonts.has(f))return Promise.resolve();loadedFonts.
  return new Promise(ok=>{const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+":wght@400;700&display=swap";
   l.onload=ok;l.onerror=()=>{l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+"&display=swap";l.onerror=ok};document.head.appendChild(l)})}
 const PAGES=[["paper","ورقي","#fbf7ee","#2a241a"],["white","أبيض","#ffffff","#1a1a1a"],["ivory","عاجي","#f7f0dc","#2b2416"],["sand","رملي","#efe2c4","#3a2e18"],["sepia","سيبيا","#f1e4cc","#5b4636"],["mint","نعناعي","#e8f2ec","#1c2a22"],["sky","سماوي","#e8f0f6","#1b2633"],["gray","رمادي","#ececec","#222222"],["night","ليلي","#18231f","#d8e3dd"],["black","أسود","#000000","#cfcfcf"]];
-function applyLook(){const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
+function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
  const pg=PAGES.find(p=>p[0]===S.pg)||PAGES[0];loadFont(S.font);
  r.style.setProperty("--rf",`"${S.font}",serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
  r.style.setProperty("--pg",pg[2]);r.style.setProperty("--pgink",pg[3]);r.style.setProperty("--pgline",["night","black"].includes(pg[0])?"rgba(255,255,255,.14)":"rgba(0,0,0,.12)")}
@@ -260,22 +260,35 @@ function pageHtml(text,h,uw){if(!String(text||"").trim())return`<p class="mut em
  // الحواشي: ما بعد سطر الشرطات ____ يُعرض حواشي أسفل الصفحة (ظاهرة أو مطوية بحسب اختيار القارئ)
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
- return tx.split("\n").map(line=>{const head=line.startsWith("# "),l=head?line.slice(2):line;
+ return tx.split("\n").map(line=>{const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
   const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`:w).join("");
-  return head?`<p class="ph">${inner}</p>`:`<p>${inner}</p>`}).join("")+fnHtml}
+  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p>${inner}</p>`}).join("")+fnHtml}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
 /* ---------- النسخة المصورة (PDF) ---------- */
 const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const PDFDOCS=new Map();
-async function pdfDoc(url){if(!window.pdfjsLib){await loadScript(PDFJS);window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace("pdf.min.js","pdf.worker.min.js")}
+async function pdfDoc(url){url=new URL(url,document.baseURI).href;// pdf.js يحلّ الرابط من عنوان الصفحة لا من <base>، فنعطيه رابطًا كاملًا
+if(!window.pdfjsLib){await loadScript(PDFJS);window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace("pdf.min.js","pdf.worker.min.js")}
  let d=PDFDOCS.get(url);if(!d){d=window.pdfjsLib.getDocument(url).promise;PDFDOCS.set(url,d)}return d}
 function pdfPageFor(b,p){const off=+b.pdfOffset||0,m=b.pdfByLabel&&b.pl&&/(\d+)\s*$/.exec(b.pl[p-1]||"");return(m?+m[1]:p)+off}
 async function renderPdf(b,p){const box=$("#pdfv");if(!box)return;box.innerHTML='<p class="mut" style="text-align:center;padding:30px 0">جارٍ تحميل الصفحة المصورة…</p>';
  try{const doc=await pdfDoc(b.pdf),n=pdfPageFor(b,p);if(!$("#pdfv"))return;if(n<1||n>doc.numPages){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
   const pg=await doc.getPage(n),w=Math.max(280,box.clientWidth||600),vp0=pg.getViewport({scale:1}),sc=w/vp0.width*Math.min(2,window.devicePixelRatio||1),vp=pg.getViewport({scale:sc});
   const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;if(!$("#pdfv"))return;
-  box.innerHTML="";box.appendChild(c);box.insertAdjacentHTML("beforeend",`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(doc.numPages)} في النسخة المصورة • <a href="${esc(b.pdf)}#page=${n}" target="_blank" rel="noopener">فتح الملف كاملًا</a></p>`)}
- catch(e){const el=$("#pdfv");if(el)el.innerHTML='<p class="note">تعذر تحميل النسخة المصورة. تحقق من الاتصال.</p>'}}
+  box.innerHTML="";box.appendChild(c);box.insertAdjacentHTML("beforeend",`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(doc.numPages)} في النسخة المصورة • <a href="${esc(b.pdf)}#page=${n}" target="_blank" rel="noopener">فتح الملف كاملًا</a></p>${isAdmin()?`<div class="pdfcal"><span>هل الصورة تطابق النص؟ اضبطها:</span><button class="btn s" data-act="pdfoff" data-d="-1">الصورة السابقة</button><button class="btn s" data-act="pdfoff" data-d="1">الصورة التالية</button><button class="btn s p" data-act="pdfoffsave">حفظ المطابقة (${(+b.pdfOffset||0)>=0?"+":""}${toAr(+b.pdfOffset||0)})</button></div>`:""}`)}
+ catch(e){console.warn('pdf',e&&e.message||e);const el=$("#pdfv");if(el)el.innerHTML='<p class="note">تعذر تحميل النسخة المصورة. تحقق من الاتصال.</p>'}}
+async function savePdfOffset(b,el){if(!GH.on)return alert("فعّل الإدارة المباشرة أولًا.");const off=+b.pdfOffset||0,ids=b.set&&!b.vf?lib.books.filter(x=>x.set===b.set&&x.pdf===b.pdf).map(x=>x.id):[b.id];el.disabled=true;
+ try{await GH.editJSON("data/catalog.json",c=>{let n=0;c.books.forEach(x=>{if(ids.includes(x.id)){x.pdfOffset=off;n++}});if(!n)throw new Error("الكتاب غير موجود في الفهرس المنشور.");c.version=Date.now();return c},"مطابقة الصفحات المصورة: "+(b.setTitle||b.title),true);toast("حُفظت المطابقة: كل صفحات الكتاب تنتقل الآن إلى صورتها الصحيحة")}catch(e){alert(e.message)}finally{el.disabled=false}}
+/* بطاقة التعريف بالكتاب */
+function cardSheet(){const c=cur();if(!c)return;closeSheet();const b=c.b,k=b.card||{},a=A(b.authorId),R=(t,v)=>v?`<tr><th>${t}</th><td>${esc(Array.isArray(v)?v.join("، "):v)}</td></tr>`:"";
+ const mains=(b.toc||[]).filter(x=>x.l!==2);
+ openSheet("بطاقة الكتاب",`<div class="bcard"><h3>${esc(k.title||b.setTitle||b.title)}</h3>${k.subtitle?`<p class="mut">${esc(k.subtitle)}</p>`:""}
+ <a class="alink" href="#/author/${b.authorId}" data-act="closeSheet">${avatar(a,"sm")}${esc(a.name)}</a>
+ ${k.summary?`<p class="bsum">${esc(k.summary)}</p>`:'<p class="mut">لم تُنشأ بطاقة تعريف مفصلة لهذا الكتاب بعد.</p>'}
+ <table class="btab">${R("تقديم",k.intro_by)}${R("تحقيق ومراجعة",k.editor)}${R("الناشر",k.publisher)}${R("الطبعة",k.edition)}${R("سنة الطبع",k.year)}${R("الموضوع",T(b.topicId).name)}${R("عدد الصفحات",toAr(b.pages.length)+(k.printed_pages?" (المطبوع: "+k.printed_pages+")":""))}${R("لمن يُنصح به",k.audience)}${R("المصدر",b.source)}</table>
+ ${k.parts&&k.parts.length?`<h4>أهم المحاور</h4><ul>${k.parts.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:mains.length?`<h4>أبواب الكتاب</h4><ul>${mains.slice(0,12).map(x=>`<li><a href="#/book/${b.id}/${x.p}" data-act="closeSheet">${esc(x.t)}</a></li>`).join("")}</ul>`:""}
+ ${k.keywords&&k.keywords.length?`<div class="chips">${k.keywords.map(x=>`<a class="chip" href="#/search?q=${encodeURIComponent(x)}" data-act="closeSheet">${esc(x)}</a>`).join("")}</div>`:""}
+ <div class="row" style="margin-top:12px">${b.toc&&b.toc.length?'<button class="btn nf" data-act="toc">الفهرس</button>':""}${b.pdf?'<button class="btn nf" data-act="pv" data-pv="both">النص والمصورة معًا</button>':""}<button class="btn nf" data-act="plan">مشروع قراءة</button></div></div>`)}
 const PV_NAMES={text:"النص",pdf:"المصورة",both:"الاثنان"};
 function nextPv(cur){const wide=matchMedia("(min-width:1000px)").matches;return cur==="text"?"pdf":cur==="pdf"&&wide?"both":"text"}
 
@@ -318,10 +331,11 @@ function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط
  <label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}">
  <label>لون الصفحة</label><div class="swatches">${PAGES.map(p=>`<button class="swc" data-pg="${p[0]}" title="${p[1]}" aria-label="لون الصفحة: ${p[1]}" aria-pressed="${S.pg===p[0]}" style="background:${p[2]}"></button>`).join("")}</div>
  <label for="lmode">طريقة التنقل بين الصفحات</label><div class="seg" id="lmode" role="radiogroup">${[["page","أفقي: صفحة صفحة"],["scroll","عمودي: تمرير متصل"]].map(([v,t])=>`<button type="button" role="radio" data-mode="${v}" aria-checked="${(S.mode||"page")===v}">${t}</button>`).join("")}</div>
+ <label class="inl"><input type="checkbox" id="lfmt"${S.fmt!=="plain"?" checked":""}> تنسيق الكتاب المطبوع (محاذاة الأسطر، وبداية الفقرة، وتوسيط العناوين)</label>
  <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label>
  <label class="inl"><input type="checkbox" id="lfn"${S.fn==="fold"?" checked":""}> طيّ الحواشي (تُفتح بالضغط)</label>`}
-function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.theme=$("#lth").value;saveS();applyLook();refreshPage()};
- ["#lf","#ls","#ll","#lt","#lth","#lfn"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
+function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.fmt=$("#lfmt")&&!$("#lfmt").checked?"plain":"print";S.theme=$("#lth").value;saveS();applyLook();refreshPage()};
+ ["#lf","#ls","#ll","#lt","#lth","#lfn","#lfmt"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
  $$("[data-mode]").forEach(m=>m.onclick=()=>{if(S.mode===m.dataset.mode)return;S.mode=m.dataset.mode;saveS();$$("[data-mode]").forEach(x=>x.setAttribute("aria-checked",x===m));const c=cur();closeSheet();if(c){LASTREAD=null;history.replaceState(null,"","/book/"+c.b.id+"/"+c.p);route()}})}
@@ -349,7 +363,8 @@ function closeSheet(){if(!$("#sheet"))return;$("#sheet").hidden=true;$("#sheetbg
 function cur(){const rb=$("#rb");return rb?{b:B(rb.dataset.id),p:+rb.dataset.p}:null}
 function tocSheet(){const c=cur();if(!c)return;const b=c.b,ch=chapterOf(b,c.p);
  const vols=b.set?lib.books.filter(x=>x.set===b.set).sort((x,y)=>x.vol-y.vol):[];
- openSheet("فهرس الكتاب",`${vols.length?`<div class="volbar"><b>المجلدات</b><div class="chips">${vols.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1" data-act="closeSheet">${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`).join("")}</div></div>`:""}<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
+ const mains=(b.toc||[]).filter(x=>x.l!==2),curM=[...mains].reverse().find(x=>x.p<=c.p),prevC=curM?[...mains].reverse().find(x=>x.p<curM.p):null,nextC=mains.find(x=>x.p>c.p);
+ openSheet("فهرس الكتاب",`${mains.length>1?`<div class="row chnav">${prevC?`<a class="btn nf" href="#/book/${b.id}/${prevC.p}" data-act="closeSheet">→ الفصل السابق</a>`:""}${nextC?`<a class="btn nf" href="#/book/${b.id}/${nextC.p}" data-act="closeSheet">الفصل التالي ←</a>`:""}</div>`:""}${vols.length?`<div class="volbar"><b>المجلدات</b><div class="chips">${vols.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1" data-act="closeSheet">${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`).join("")}</div></div>`:""}<input type="search" id="tocq" placeholder="ابحث في الفهرس" aria-label="ابحث في الفهرس"><div class="toclist" id="toclist">${(b.toc||[]).map(x=>`<a href="#/book/${b.id}/${x.p}" class="${x.t===ch?"on":""}${x.l===2?" l2":""}" data-act="closeSheet">${esc(x.t)} <span class="mut">${esc(PL(b,x.p-1)||"ص "+x.p)}</span></a>`).join("")||'<p class="mut">لا يوجد فهرس لهذا الكتاب.</p>'}</div>`,
  ()=>{$("#tocq").oninput=e=>{const q=norm(e.target.value);$$("#toclist a").forEach(a=>a.hidden=q&&!norm(a.textContent).includes(q))};const on=$("#toclist a.on");if(on)on.scrollIntoView({block:"center"})})}
 function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
  openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="number" min="1" max="${n}" value="${c.p}" aria-label="رقم الصفحة"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p></form>`,
@@ -359,6 +374,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
  <div class="tools-grid">
   <button data-act="fav">${fav?"★ إزالة من المفضلة":"☆ إضافة للمفضلة"}</button>
   <button data-act="copyp">نسخ ${art?"المقال":"الصفحة"}</button>
+  ${art?"":'<button data-act="card">بطاقة الكتاب</button>'}
   <button data-act="mark">علامة على هذه الصفحة</button>
   <button data-act="plan">مشروع قراءة وتذكير</button>
   <button data-act="tts">استمع (قراءة صوتية)</button>
@@ -381,15 +397,16 @@ async function vBook(id,p,h){
  let b;try{b=await loadBook(id)}catch(e){return view(`<p class="note">${esc(e.message)}. تحقق من الاتصال وأعد المحاولة.</p>`)}
  if(parse().p[1]!==id)return;
  const n=b.pages.length;p=Math.max(1,Math.min(n,p||(S.lastBy&&S.lastBy[id])||1));const art=isArt(b);
- let pv=b.pdf?(S.pv||"text"):"text";if(pv==="both"&&!matchMedia("(min-width:1000px)").matches)pv="pdf";
+ let pv=b.pdf?(S.pv||"text"):"text";
  const scroll=S.mode==="scroll"&&pv==="text"&&!art&&n>1;
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[id];S.lastBy[id]=p;{const ks=Object.keys(S.lastBy);if(ks.length>40)delete S.lastBy[ks[0]]}saveS();
  const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
- const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]}</div>${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
+ const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]} • <button class="linkbtn" data-act="card">بطاقة الكتاب</button></div>${b.card&&b.card.summary&&p===1?`<p class="rsum">${esc(b.card.summary)}</p>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
  const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div>${fatwa?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}</div>`:"";
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
  <div class="desk"><article class="paper${art?" art":""}${scroll?" scroll":""} ${scroll?"":dir}" id="paper" aria-label="صفحة ${p}">
+  ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf","المصورة"],["both","معًا"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
   ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
@@ -403,7 +420,7 @@ async function vBook(id,p,h){
   <button data-act="goto" class="pgb"${n>1?"":" disabled"}><b>${toAr(p)}</b><span>من ${toAr(n)}</span></button>
   ${B_("next","next","التالية",p>=n)}
   ${B_("look","look","المظهر")}
-  ${b.pdf?B_("pview","pdf",PV_NAMES[nextPv(pv)]):""}
+  ${b.pdf?B_("pview","pdf",pv==="text"?"المصورة":"النص"):""}
   ${B_("more","more","المزيد")}
   ${B_("full",S.full?"exit":"full",S.full?"خروج":"ملء الشاشة")}
  </nav>`,same);
@@ -1306,7 +1323,11 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="aiex"||a==="aifollow"){const ta=$("[name=m]");if(!ta)return;ta.value=el.textContent;if(a==="aiex"){const m=/^اجمع/.test(ta.value)?"gather":/^قارن/.test(ta.value)?"compare":/منهج/.test(ta.value)?"plan":/^لخ/.test(ta.value)?"summarize":/كيف أنظ/.test(ta.value)?"solve":"ask";CONV.mode=m;$("#am").value=m}ta.form.requestSubmit()}
  else if(a==="aipick"){closeSheet();setBookScope(el.dataset.id);const ta=$("[name=m]");if(ta){const b=B(el.dataset.id);if(/^(لخّص كتاب|اختبرني في)\s*:?\s*$/.test(ta.value.trim())||!ta.value.trim())ta.value=(CONV.mode==="quiz"?"اختبرني في كتاب «":CONV.mode==="summarize"?"لخّص كتاب «":"«")+b.title+"»";ta.focus()}}else if(a==="corr")corrDlg();else if(a==="corrok"||a==="corrno")corrDecide(el);
  else if(a==="ghout"){GH.token="";toast("خرجت من وضع الإدارة المباشرة.");route()}
- else if(a==="pview"){S.pv=nextPv(S.pv&&S.pv!=="text"?(matchMedia("(min-width:1000px)").matches?S.pv:"pdf"):"text");saveS();route()}
+ else if(a==="pview"){S.pv=(S.pv&&S.pv!=="text")?"text":"pdf";saveS();LASTREAD=null;route()}
+ else if(a==="pv"){S.pv=el.dataset.pv;saveS();LASTREAD=null;route()}
+ else if(a==="pdfoff"){const c=cur();if(c){c.b.pdfOffset=(+c.b.pdfOffset||0)+(+el.dataset.d);renderPdf(c.b,c.p)}}
+ else if(a==="pdfoffsave"){const c=cur();if(c)savePdfOffset(c.b,el)}
+ else if(a==="card")cardSheet();
  else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
  else if(a==="share"){const c=cur(),u=siteLink(`#/book/${c.b.id}/${c.p}`)||location.href;try{if(navigator.share)await navigator.share({title:c.b.title,url:u});else{await navigator.clipboard.writeText(u);el.textContent="نُسخ الرابط"}}catch(x){}}
  else if(a==="theme"){S.theme=S.theme==="dark"?"light":S.theme==="light"?"dark":(matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");saveS();applyLook()}

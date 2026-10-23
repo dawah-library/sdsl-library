@@ -1,0 +1,29 @@
+name: بطاقات التعريف بالكتب
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "معرّفات كتب بعينها لإعادة إنشاء بطاقاتها (اختياري، مفصولة بفواصل)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: cards
+  cancel-in-progress: false
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: إنشاء البطاقات
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          CARD_IDS: ${{ github.event.inputs.ids }}
+        run: python3 tools/ocr-pdf.py --cards
+      - run: bash tools/git-save.sh "بطاقات التعريف بالكتب" data

@@ -97,6 +97,8 @@ jobs:
       - name: المراجعة والحفظ
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
           OCR_DRAFTS: ocr-drafts
