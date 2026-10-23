@@ -325,7 +325,7 @@ function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
  $$("[data-mode]").forEach(m=>m.onclick=()=>{if(S.mode===m.dataset.mode)return;S.mode=m.dataset.mode;saveS();$$("[data-mode]").forEach(x=>x.setAttribute("aria-checked",x===m));const c=cur();closeSheet();if(c){LASTREAD=null;history.replaceState(null,"","/book/"+c.b.id+"/"+c.p);route()}})}
-function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages)rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1))})}
+function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages){rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1));paintNotes(rb)}})}
 /* شريط تقدم القراءة أعلى الشاشة */
 function setProg(b,p){let el=$("#rprog");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="rprog" aria-hidden="true"><i></i></div>');el=$("#rprog")}const n=b.pages.length;el.hidden=n<2;el.firstChild.style.width=(n>1?Math.round(p/n*1000)/10:0)+"%"}
 /* وضع التمرير العمودي المتصل: الصفحات تتتابع، والصفحة الظاهرة هي الحالية */
@@ -334,11 +334,11 @@ function spgHtml(b,k,h){const lb=PL(b,k-1),ch=chapterOf(b,k);return`<section cla
 function scrSet(b,k){const sec=$(`.spg[data-p="${k}"]`);if(!sec)return;const old=$("#rb");if(old&&old!==sec.querySelector(".rd"))old.removeAttribute("id");sec.querySelector(".rd").id="rb";
  if(LASTREAD&&LASTREAD.p===k)return;LASTREAD={id:b.id,p:k};S.last={id:b.id,p:k};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[b.id];S.lastBy[b.id]=k;saveS();
  const n=b.pages.length,pg=$(".pgb b");if(pg)pg.textContent=toAr(k);const pr=$("[data-act=prev]"),nx=$("[data-act=next]");if(pr)pr.disabled=k<=1;if(nx)nx.disabled=k>=n;
- const rc=$(".run span:last-child");if(rc)rc.textContent=chapterOf(b,k);setProg(b,k);
+ const rc=$(".run span:last-child");if(rc)rc.textContent=chapterOf(b,k);setProg(b,k);paintMark();Mine.touch(b.id,k);
  const h=parse().q.h;history.replaceState(null,"","/book/"+b.id+"/"+k+(h?"?h="+encodeURIComponent(h):""))}
 function scrAdd(b,dir){const box=$("#scr");if(!box)return null;const h=parse().q.h,ps=[...box.children].map(x=>+x.dataset.p);
- if(dir>0){const last=Math.max(...ps);if(last>=b.pages.length)return null;let html="";for(let k=last+1;k<=Math.min(b.pages.length,last+3);k++)html+=spgHtml(b,k,h);box.insertAdjacentHTML("beforeend",html);[...box.children].slice(-3).forEach(x=>SCR.io&&SCR.io.observe(x));if(Math.max(...[...box.children].map(x=>+x.dataset.p))>=b.pages.length&&$("#scrs")){$("#scrs").hidden=true;const e=$("#scend");if(e)e.hidden=false}return true}
- const first=Math.min(...ps);if(first<=1)return null;const y0=document.documentElement.scrollHeight;box.insertAdjacentHTML("afterbegin",spgHtml(b,first-1,h));window.scrollBy(0,document.documentElement.scrollHeight-y0);SCR.io&&SCR.io.observe(box.firstElementChild);const up=$("#scrup");if(up)up.hidden=first-1<=1;return true}
+ if(dir>0){const last=Math.max(...ps);if(last>=b.pages.length)return null;let html="";for(let k=last+1;k<=Math.min(b.pages.length,last+3);k++)html+=spgHtml(b,k,h);box.insertAdjacentHTML("beforeend",html);[...box.children].slice(-3).forEach(x=>{SCR.io&&SCR.io.observe(x);paintNotes(x.querySelector(".rd"))});if(Math.max(...[...box.children].map(x=>+x.dataset.p))>=b.pages.length&&$("#scrs")){$("#scrs").hidden=true;const e=$("#scend");if(e)e.hidden=false}return true}
+ const first=Math.min(...ps);if(first<=1)return null;const y0=document.documentElement.scrollHeight;box.insertAdjacentHTML("afterbegin",spgHtml(b,first-1,h));window.scrollBy(0,document.documentElement.scrollHeight-y0);SCR.io&&SCR.io.observe(box.firstElementChild);paintNotes(box.firstElementChild.querySelector(".rd"));const up=$("#scrup");if(up)up.hidden=first-1<=1;return true}
 function scrWire(b){if(SCR.io)SCR.io.disconnect();if(SCR.more)SCR.more.disconnect();
  SCR.io=new IntersectionObserver(es=>{if(!$("#scr"))return SCR.io.disconnect();const top=[...$$("#scr .spg")].filter(x=>x.getBoundingClientRect().top<innerHeight*.45).pop();if(top)scrSet(b,+top.dataset.p)},{rootMargin:"0px 0px -50% 0px",threshold:[0,.01,.5,1]});
  $$("#scr .spg").forEach(x=>SCR.io.observe(x));
@@ -359,6 +359,8 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
  <div class="tools-grid">
   <button data-act="fav">${fav?"★ إزالة من المفضلة":"☆ إضافة للمفضلة"}</button>
   <button data-act="copyp">نسخ ${art?"المقال":"الصفحة"}</button>
+  <button data-act="mark">علامة على هذه الصفحة</button>
+  <button data-act="plan">مشروع قراءة وتذكير</button>
   <button data-act="tts">استمع (قراءة صوتية)</button>
   <button data-act="tr">ترجمة</button>
   <button data-act="exp">تصدير وطباعة</button>
@@ -388,7 +390,8 @@ async function vBook(id,p,h){
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
  <div class="desk"><article class="paper${art?" art":""}${scroll?" scroll":""} ${scroll?"":dir}" id="paper" aria-label="صفحة ${p}">
-  ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}
+  <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
+  ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
   ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1))}</div><div class="pdfv" id="pdfv"></div></div>`}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
   ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
@@ -407,6 +410,7 @@ async function vBook(id,p,h){
  document.body.classList.toggle("reading-full",!!S.full);setProg(b,p);
  if(scroll){scrWire(b);if(p>1&&!same){const s0=$(`.spg[data-p="${p}"]`);if(s0){const y=s0.getBoundingClientRect().top+scrollY-(S.full?8:96);scrollTo(0,y)}}}
  if(pv!=="text")renderPdf(b,p);
+ paintMark();$$(".rd[data-id]").forEach(r=>paintNotes(r));Mine.touch(id,p);
  if(TTS.cont){TTS.cont=false;setTimeout(()=>TTS.next(),400)}else if(TTS.on&&!same)TTS.stop();
  if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
  const pp=$("#paper");let sx=0,sy=0;pp.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
@@ -596,7 +600,7 @@ const Auth={mode:"local",sb:null,user:null,token:null,
   const known=ls.get("acct_known",{})[email.toLowerCase()]||{id:"local:"+email.toLowerCase(),name:email.split("@")[0],email};
   this.user=known;ls.set("acct",known)},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
-function paintAuth(){const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
+function paintAuth(){Mine.reset();setTimeout(()=>Bell.paint(),0);const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
  if(Auth.mode==="local"&&Auth.user){const k=ls.get("acct_known",{});k[Auth.user.email.toLowerCase()]=Auth.user;ls.set("acct_known",k)}}
 const Chats={key:()=>"chats:"+(Auth.user?Auth.user.id:"-"),
  async list(){if(Auth.mode==="cloud"){const {data,error}=await Auth.sb.from("conversations").select("id,title,updated_at").order("updated_at",{ascending:false}).limit(50);if(error)throw error;return data}return ls.get(this.key(),[]).map(c=>({id:c.id,title:c.title,updated_at:c.updated_at}))},
@@ -607,7 +611,7 @@ const GICON=`<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10"
 function vAccount(q){
  if(Auth.user){view(`<h2>حسابي</h2><div class="card"><b>${esc(Auth.user.name||"")}</b><span>${esc(Auth.user.email||"")}</span></div>
   ${Auth.mode==="local"?'<p class="note">وضع تجريبي: الحساب ومحادثاته محفوظة على هذا الجهاز فقط. بعد ربط الموقع بقاعدة البيانات تصبح الحسابات حقيقية ومتزامنة بين الأجهزة.</p>':""}
-  <div class="row" style="margin:10px 0"><a class="btn p nf" href="#/ask">اسأل المكتبة</a><a class="btn nf" href="#/favs">المفضلة</a><button class="btn nf" data-act="logout">تسجيل الخروج</button></div>
+  <div class="row" style="margin:10px 0"><a class="btn p nf" href="#/ask">اسأل المكتبة</a><a class="btn nf" href="#/favs">المفضلة</a><a class="btn nf" href="#/mine">مكتبتي: العلامات والتعليقات</a><button class="btn nf" data-act="logout">تسجيل الخروج</button></div>
   <h2>محادثاتي</h2><div id="convs" class="mut">جارٍ التحميل…</div>`);
   Chats.list().then(l=>{$("#convs").innerHTML=l.length?l.map(c=>`<a class="bk" href="#/ask?id=${encodeURIComponent(c.id)}"><b>${esc(c.title||"محادثة")}</b><span>${esc((c.updated_at||"").slice(0,10))}</span></a>`).join(""):"لا توجد محادثات بعد."}).catch(()=>{$("#convs").textContent="تعذر تحميل المحادثات."});return}
  const signup=q.m==="signup",back=q.next||"#/ask",cloud=Auth.mode==="cloud";
@@ -856,7 +860,7 @@ async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=St
   f.reset()}catch(e){st.textContent=e.message}}
 
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"]]:[]);
+ const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -892,6 +896,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <h3>المضاف والمعدَّل على هذا الجهاز</h3>${LOCAL.catalog.books.map(b=>`<div class="bk"><b>${esc(b.title||b.id)}</b><span>${isArt(b)?"مقال":"كتاب"}${b.edited?" • معدَّل "+b.edited:""}</span> <button class="btn s" data-act="delb" data-id="${b.id}">حذف من الجهاز</button></div>`).join("")||'<p class="mut">لا يوجد.</p>'}`;
  else if(tab==="struct")body=structBody();
  else if(tab==="review"){const ob=lib.books.filter(b=>b.ocr).sort((x,y)=>(y.added||"").localeCompare(x.added||""));body=`<p class="mut">الكتب المحوّلة آليًا من نسخها المصورة. يقرأ Gemini صورة كل صفحة ويراجع مسودة Tesseract ويصححها، ويعلّم الكلمات التي شكّ فيها لتراجعها أنت: تظهر مظللة بالبرتقالي في القارئ (لك وحدك)، وتختفي العلامة بعد «تعديل النص» وحفظه.</p>${ob.map(b=>`<div class="bk"><b>${esc(b.title)}</b><span>${esc(A(b.authorId).name)} • ${b.ocrEngine==="gemini+tesseract"||b.ocrEngine==="gemini"?"Gemini + Tesseract":"Tesseract وحده"} • ${toAr(b.unc||0)} موضع للمراجعة${b.unrev?` • ${toAr(b.unrev)} صفحة لم يراجعها Gemini`:""}</span><div class="row" style="margin-top:6px"><button class="btn s nf" data-act="revlist" data-id="${b.id}">مواضع المراجعة</button><a class="btn s nf" href="#/book/${b.id}/1">فتح الكتاب</a>${b.pdf&&/^pdf\//.test(b.pdf)?`<button class="btn s nf" data-act="reocr" data-id="${b.id}">إعادة التحويل بالذكاء الاصطناعي</button>`:""}</div><div class="revl" id="rv-${b.id}"></div></div>`).join("")||'<p class="note">لا توجد كتب محوّلة بعد.</p>'}<p id="bmst" class="mut"></p>`}
+ else if(tab==="notify")body=`<p class="mut">يظهر الإشعار في جرس الإشعارات لكل الأعضاء، ويصل إلى أجهزة من فعّل إشعارات الجهاز خلال ساعة.</p><form data-form="bcast"><label>العنوان</label><input name="title" required maxlength="200" placeholder="مثال: صدر كتاب جديد للشيخ…"><label>نص مختصر (اختياري)</label><textarea name="body" style="min-height:80px"></textarea><label>رابط داخل المكتبة (اختياري)</label><input name="url" placeholder="#/book/… أو #/posts" dir="ltr"><button class="btn p" style="margin-top:8px">إرسال الإشعار</button> <span id="bcst" class="mut"></span></form><h3>آخر الإشعارات</h3><div id="bclist" class="mut">جارٍ التحميل…</div>`;
  else if(tab==="corr")body=`<p class="mut">تصحيحات أرسلها القراء. راجع النص المقترح وعدّله إن لزم، ثم اعتمده فيُنشر مباشرة (يحتاج مفتاح الإدارة المباشرة).</p><div id="corrs"><p class="mut">جارٍ التحميل…</p></div>`;
  else body=`<p class="mut">نزّل نصوص المكتبة كلها على هذا الجهاز لتعمل دون إنترنت، وتتحدث تلقائيًا عند الاتصال. الحجم الكلي نحو ${Math.round(lib.books.reduce((s,b)=>s+(b.size||0),0)/1048576)} ميجابايت.</p><button class="btn p" data-act="offline">تنزيل المكتبة للعمل دون إنترنت</button><div id="offst"></div>`;
  view(`<h2>الإدارة</h2>${ghBox()}<label class="inl"><input type="checkbox" id="adm"${S.admin?" checked":""}> وضع الإدارة (يظهر زر «تعديل النص» في القارئ)</label>
@@ -899,7 +904,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  <p class="note">${GH.on?"أنت في وضع الإدارة المباشرة: احذر، فالتعديلات تُنشر للجميع.":"بدون مفتاح المشرف لا يستطيع أحد تغيير المكتبة المنشورة من هذه الصفحة؛ ما يُضاف يبقى على هذا الجهاز حتى يُرفع ملف التحديث."}</p>`);
  $("#adm").onchange=e=>{S.admin=e.target.checked;saveS()};
  const impf=$("#impf");if(impf)impf.onchange=async e=>{try{await applyUpdate(JSON.parse(await e.target.files[0].text()));alert("تم الاستيراد");route()}catch(x){alert("ملف غير صالح")}};
- const ig=$("#impgo");if(ig)ig.onclick=importArticles;if(tab==="corr"&&Cloud.staff())corrList();if(tab==="struct")wireStruct()}
+ const ig=$("#impgo");if(ig)ig.onclick=importArticles;if(tab==="corr"&&Cloud.staff())corrList();if(tab==="notify"&&Cloud.staff())bcList();if(tab==="struct")wireStruct()}
 async function newAuthor(fd,key,col){let aid=fd.get(key);if(aid!=="__new")return aid;const n=String(fd.get(key+"new")||"").trim();if(!n)throw new Error("اكتب اسم المؤلف الجديد");
  const ex=lib.authors.find(a=>norm(a.name)===norm(n));if(ex)return ex.id;aid="u_a"+Date.now().toString(36);const au={id:aid,name:n,col:col||"dawah",bio:""};if(GH.on)await ghSaveAuthor(au);else LOCAL.catalog.authors.push(au);return aid}
 function splitPages(t,mode,size){t=t.replace(/\r/g,"").trim();if(mode==="mark")return t.split(/\n-{3,}\n|\f/).map(x=>x.trim()).filter(Boolean);
@@ -1006,6 +1011,124 @@ const Social={
  async delComment(id,cid){if(Cloud.on()){const {error}=await Auth.sb.from("post_comments").delete().eq("id",cid);if(error)throw new Error(error.message);return}
   const C=ls.get("soc:comments",{});C[id]=(C[id]||[]).filter(c=>String(c.id)!==String(cid));ls.set("soc:comments",C)},
  async savedIds(){if(!Auth.user)return[];if(Cloud.on()){const {data}=await Auth.sb.from("post_saves").select("post_id").eq("user_id",Auth.user.id).order("created_at",{ascending:false});return(data||[]).map(x=>x.post_id)}return ls.get(this.k("saves"),[]).slice().reverse()}};
+/* ---------- مكتبتي الشخصية: علامة الصفحة، والتعليقات الخاصة، ومشاريع القراءة، والإشعارات ---------- */
+const pgs=n=>n===1?"صفحة واحدة":n===2?"صفحتان":n<=10?toAr(n)+" صفحات":toAr(n)+" صفحة";
+const NCOL={y:["أصفر","#f6d860"],g:["أخضر","#9fdc9b"],b:["أزرق","#9cc8f2"],p:["وردي","#f3a7c4"]};
+const Mine={uid:null,marks:null,notes:{},plans:null,
+ cloud(){return Cloud.on()&&!!Auth.user},
+ reset(){const u=Auth.user&&Auth.user.id;if(u!==this.uid){this.uid=u;this.marks=null;this.notes={};this.plans=null}},
+ k(n){return"mine:"+n+":"+(Auth.user?Auth.user.id:"-")},
+ err(e){if(e&&/relation|does not exist|schema cache/i.test(e.message||""))return new Error("ميزات «مكتبتي» تحتاج تحديث قاعدة البيانات: نفّذ ملف schema.sql من صفحة setup-db.html مرة أخرى.");return new Error(e&&e.message||String(e))},
+ async loadMarks(){this.reset();if(this.marks)return this.marks;const m={};
+  if(this.cloud()){const {data,error}=await Auth.sb.from("bookmarks").select("book_id,page,title,updated_at").eq("user_id",Auth.user.id);if(error)throw this.err(error);(data||[]).forEach(x=>m[x.book_id]=x)}
+  else Object.assign(m,ls.get(this.k("marks"),{}));return this.marks=m},
+ async setMark(b,p){await this.loadMarks();const row={book_id:b.id,page:p,title:b.setTitle||b.title,updated_at:new Date().toISOString()};
+  if(this.cloud()){const {error}=await Auth.sb.from("bookmarks").upsert(Object.assign({user_id:Auth.user.id},row));if(error)throw this.err(error)}
+  this.marks[b.id]=row;if(!this.cloud())ls.set(this.k("marks"),this.marks)},
+ async delMark(bid){await this.loadMarks();if(this.cloud()){const {error}=await Auth.sb.from("bookmarks").delete().eq("user_id",Auth.user.id).eq("book_id",bid);if(error)throw this.err(error)}
+  delete this.marks[bid];if(!this.cloud())ls.set(this.k("marks"),this.marks)},
+ async notesOf(bid){this.reset();if(!Auth.user)return[];if(this.notes[bid])return this.notes[bid];let l=[];
+  if(this.cloud()){const {data,error}=await Auth.sb.from("notes").select("*").eq("user_id",Auth.user.id).eq("book_id",bid).order("created_at");if(error)throw this.err(error);l=data||[]}
+  else l=(ls.get(this.k("notes"),[])).filter(x=>x.book_id===bid);return this.notes[bid]=l},
+ async allNotes(){if(!Auth.user)return[];if(this.cloud()){const {data,error}=await Auth.sb.from("notes").select("*").eq("user_id",Auth.user.id).order("updated_at",{ascending:false}).limit(1000);if(error)throw this.err(error);return data||[]}return ls.get(this.k("notes"),[]).slice().reverse()},
+ async saveNote(n){const now=new Date().toISOString();n.updated_at=now;
+  if(this.cloud()){if(n.id){const {error}=await Auth.sb.from("notes").update({note:n.note,color:n.color,updated_at:now}).eq("id",n.id);if(error)throw this.err(error)}
+   else{const {data,error}=await Auth.sb.from("notes").insert(Object.assign({user_id:Auth.user.id},n)).select().single();if(error)throw this.err(error);n=data}}
+  else{const all=ls.get(this.k("notes"),[]);if(n.id){const i=all.findIndex(x=>x.id===n.id);if(i>=0)all[i]=Object.assign(all[i],n)}else{n.id=Date.now();n.created_at=now;all.push(n)}ls.set(this.k("notes"),all)}
+  delete this.notes[n.book_id];return n},
+ async delNote(n){if(this.cloud()){const {error}=await Auth.sb.from("notes").delete().eq("id",n.id);if(error)throw this.err(error)}else ls.set(this.k("notes"),ls.get(this.k("notes"),[]).filter(x=>x.id!==n.id));delete this.notes[n.book_id]},
+ async loadPlans(){this.reset();if(!Auth.user)return[];if(this.plans)return this.plans;let l=[];
+  if(this.cloud()){const {data,error}=await Auth.sb.from("reading_plans").select("*").eq("user_id",Auth.user.id).order("created_at");if(error)throw this.err(error);l=data||[]}else l=ls.get(this.k("plans"),[]);return this.plans=l},
+ async savePlan(p){await this.loadPlans();const [h,m]=String(p.remind_at||"20:00").split(":").map(Number),off=-new Date().getTimezoneOffset();p.tz_offset=off;p.hour_utc=((h*60+(m||0)-off)/60%24+24|0)%24;
+  if(this.cloud()){const {error}=await Auth.sb.from("reading_plans").upsert(Object.assign({user_id:Auth.user.id},p));if(error)throw this.err(error)}
+  const i=this.plans.findIndex(x=>x.book_id===p.book_id);if(i>=0)this.plans[i]=Object.assign(this.plans[i],p);else this.plans.push(Object.assign({start_date:today(),created_at:new Date().toISOString()},p));if(!this.cloud())ls.set(this.k("plans"),this.plans)},
+ async delPlan(bid){await this.loadPlans();if(this.cloud()){const {error}=await Auth.sb.from("reading_plans").delete().eq("user_id",Auth.user.id).eq("book_id",bid);if(error)throw this.err(error)}this.plans=this.plans.filter(x=>x.book_id!==bid);if(!this.cloud())ls.set(this.k("plans"),this.plans)},
+ // يسجّل تقدم القارئ في مشروع قراءة الكتاب (إن وُجد)
+ touch:(()=>{let t=null;return(bid,p)=>{if(!Auth.user)return;clearTimeout(t);t=setTimeout(async()=>{try{const pl=(await Mine.loadPlans()).find(x=>x.book_id===bid&&x.active!==false);if(!pl||pl.last_page===p)return;pl.last_page=p;pl.last_read=new Date().toISOString();
+  if(Mine.cloud())await Auth.sb.from("reading_plans").update({last_page:p,last_read:pl.last_read}).eq("user_id",Auth.user.id).eq("book_id",bid);else ls.set(Mine.k("plans"),Mine.plans);Bell.paint()}catch(e){}},2500)}})()};
+/* حالة الورد اليومي */
+function planStat(pl,b){const n=b&&b.pages?b.pages.length:(b&&b.n)||0,days=Math.max(1,Math.floor((new Date(today())-new Date(pl.start_date||today()))/864e5)+1),
+ target=Math.min(n||1e9,(pl.start_page||1)-1+days*pl.daily),at=pl.last_page||pl.start_page||1,readToday=pl.last_read&&new Date(pl.last_read).toDateString()===new Date().toDateString(),
+ [h,m]=String(pl.remind_at||"20:00").split(":").map(Number),due=!readToday&&new Date().getHours()*60+new Date().getMinutes()>=h*60+(m||0)&&(!n||at<n);
+ return{n,target,at,behind:Math.max(0,target-at),done:n&&at>=n,readToday,due,pct:n?Math.round(at/n*100):0}}
+/* جرس الإشعارات */
+const Bell={items:[],async load(){const out=[];if(!Auth.user)return this.items=out;
+  try{(await Mine.loadPlans()).filter(p=>p.active!==false).forEach(p=>{const b=B(p.book_id),s=planStat(p,b);if(s.due)out.push({id:"plan:"+p.book_id+":"+today(),title:"وردك اليوم من «"+(p.title||(b&&b.title)||"")+"»",body:`${pgs(p.daily)}${s.behind>p.daily?` (متأخر ${pgs(s.behind)})`:""} — أنت في صفحة ${toAr(s.at)}`,url:"#/book/"+p.book_id+"/"+s.at,at:new Date().toISOString(),local:1})})}catch(e){}
+  if(Cloud.on()){try{const [n,bc]=await Promise.all([Auth.sb.from("notifications").select("*").eq("user_id",Auth.user.id).order("created_at",{ascending:false}).limit(30),Auth.sb.from("broadcasts").select("*").order("created_at",{ascending:false}).limit(15)]);
+   (n.data||[]).forEach(x=>{if(!out.some(o=>o.local&&o.url===x.url))out.push({id:"n"+x.id,nid:x.id,title:x.title,body:x.body,url:x.url,at:x.created_at,read:x.read})});
+   (bc.data||[]).forEach(x=>out.push({id:"b"+x.id,title:x.title,body:x.body,url:x.url,at:x.created_at,bc:1}))}catch(e){}}
+  const seen=new Set(ls.get(Mine.k("seen"),[]));out.forEach(x=>{if(seen.has(x.id))x.read=true});out.sort((a,b)=>String(b.at).localeCompare(String(a.at)));return this.items=out},
+ unread(){return this.items.filter(x=>!x.read).length},
+ async paint(){const btn=$("#bellbtn");if(!btn)return;btn.hidden=!Auth.user;if(!Auth.user)return;await this.load();const c=this.unread(),b=$("#bellc");b.hidden=!c;b.textContent=c>9?"+٩":toAr(c);
+  if(c&&"Notification"in window&&Notification.permission==="granted"){const it=this.items.find(x=>!x.read&&x.local);const key="nshown:"+(it&&it.id);if(it&&!sessionStorage.getItem(key)){try{sessionStorage.setItem(key,1);const r=await navigator.serviceWorker.getRegistration();if(r)r.showNotification(it.title,{body:it.body,icon:"assets/logo-sdsl-128.png",dir:"rtl",lang:"ar",tag:it.id,data:{url:it.url}})}catch(e){}}}},
+ open(){const l=this.items;openSheet("الإشعارات",`${l.length?l.map(x=>`<a class="nitem${x.read?"":" new"}" href="${esc(x.url||"#/mine")}" data-act="closeSheet"><b>${esc(x.title)}</b>${x.body?`<span>${esc(x.body)}</span>`:""}<small class="mut">${esc(ago(x.at))}</small></a>`).join(""):'<p class="mut">لا إشعارات بعد. أنشئ «مشروع قراءة» لكتاب من أدوات القراءة ليصلك تذكير بوردك اليومي.</p>'}
+  <div class="row" style="margin-top:12px"><a class="btn nf" href="#/mine?t=plans" data-act="closeSheet">مشاريع القراءة</a>${pushBtn()}</div>`);
+  const ids=l.map(x=>x.id),seen=new Set(ls.get(Mine.k("seen"),[]));ids.forEach(i=>seen.add(i));ls.set(Mine.k("seen"),[...seen].slice(-300));
+  const nids=l.filter(x=>x.nid&&!x.read).map(x=>x.nid);if(nids.length&&Cloud.on())Auth.sb.from("notifications").update({read:true}).in("id",nids).then(()=>{});l.forEach(x=>x.read=true);const b=$("#bellc");if(b)b.hidden=true}};
+/* إشعارات الجهاز (تصل ولو كان الموقع مغلقًا) */
+const pushOK=()=>"serviceWorker"in navigator&&"PushManager"in window&&"Notification"in window;
+const pushBtn=()=>pushOK()&&Cloud.on()?`<button class="btn nf" data-act="pushon">${Notification.permission==="granted"?"✓ إشعارات الجهاز مفعّلة":"تفعيل إشعارات الجهاز"}</button>`:"";
+async function pushOn(){if(!pushOK())throw new Error(/iPhone|iPad/.test(navigator.userAgent)?"على iPhone: أضف الموقع إلى الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية) ثم افتحه منها وفعّل الإشعارات.":"هذا المتصفح لا يدعم الإشعارات.");
+ const perm=await Notification.requestPermission();if(perm!=="granted")throw new Error("لم يُسمح بالإشعارات. يمكنك السماح بها من إعدادات المتصفح للموقع.");
+ const r=await navigator.serviceWorker.ready,j=await fetch("/api/remind?key=1").then(x=>x.json());if(!j.publicKey)throw new Error(j.message||"خدمة الإشعارات غير مهيأة على الخادم بعد.");
+ const key=Uint8Array.from(atob(j.publicKey.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));let s=await r.pushManager.getSubscription();
+ if(s&&s.options&&s.options.applicationServerKey&&btoa(String.fromCharCode(...new Uint8Array(s.options.applicationServerKey)))!==btoa(String.fromCharCode(...key))){await s.unsubscribe();s=null}
+ if(!s)s=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});const x=s.toJSON();
+ const {error}=await Auth.sb.from("push_subs").upsert({endpoint:x.endpoint,user_id:Auth.user.id,p256dh:x.keys.p256dh,auth:x.keys.auth,ua:navigator.userAgent.slice(0,200)});if(error)throw Mine.err(error)}
+/* شريط العلامة في القارئ */
+async function paintMark(){const rb=$("#rb"),rib=$("#ribbon");if(!rb||!rib)return;const b=B(rb.dataset.id),p=+rb.dataset.p,go=$("#markgo");
+ if(!Auth.user){rib.classList.remove("on");rib.title="ضع علامة على هذه الصفحة (للأعضاء)";if(go)go.hidden=true;return}
+ let m;try{m=(await Mine.loadMarks())[b.id]}catch(e){m=null}if(!$("#rb")||+$("#rb").dataset.p!==p)return;
+ const on=m&&m.page===p;rib.classList.toggle("on",!!on);rib.setAttribute("aria-pressed",!!on);rib.title=on?"العلامة هنا؛ اضغط لإزالتها":"ضع العلامة على هذه الصفحة";
+ if(go){go.hidden=!(m&&!on);if(m&&!on){go.href="#/book/"+b.id+"/"+m.page;go.innerHTML=`<i class="rib-mini"></i> علامتك في صفحة ${toAr(m.page)}`}}}
+async function toggleMark(){const c=cur();if(!c)return;if(!Auth.user){toast("علامة الصفحة للأعضاء: سجّل الدخول لتُحفظ علامتك وتعود إليها من أي جهاز");location.hash="#/account?next="+encodeURIComponent("#/book/"+c.b.id+"/"+c.p);return}
+ try{const m=(await Mine.loadMarks())[c.b.id];if(m&&m.page===c.p){await Mine.delMark(c.b.id);toast("أُزيلت العلامة")}else{await Mine.setMark(c.b,c.p);toast("وُضعت العلامة على صفحة "+toAr(c.p)+(m?" (نُقلت من صفحة "+toAr(m.page)+")":""))}paintMark()}catch(e){alert(e.message)}}
+/* تعليقات القارئ وتظليله */
+function hlWords(rd,notes){const ws=[...rd.querySelectorAll(".w")],tk=ws.map(w=>norm(w.textContent));
+ rd.querySelectorAll(".nmk").forEach(x=>x.remove());ws.forEach(w=>{w.classList.remove("hl");delete w.dataset.note;w.style.removeProperty("--hl")});
+ notes.forEach(n=>{const q=norm(n.quote).split(/\s+/).filter(Boolean);if(!q.length)return;
+  for(let i=0;i<=tk.length-q.length;i++){let ok=true;for(let j=0;j<q.length&&ok;j++){const a=tk[i+j],x=q[j];ok=q.length===1?a.includes(x):j===0?a.endsWith(x):j===q.length-1?a.startsWith(x):a===x}
+   if(ok){for(let j=0;j<q.length;j++){const w=ws[i+j];w.classList.add("hl");w.dataset.note=n.id;w.style.setProperty("--hl",(NCOL[n.color]||NCOL.y)[1])}
+    if(n.note)ws[i+q.length-1].insertAdjacentHTML("afterend",`<button class="nmk" data-act="noteopen" data-id="${n.id}" aria-label="تعليقك">✎</button>`);break}}})}
+async function paintNotes(rd){rd=rd||$("#rb");if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p);if(l.length)hlWords(rd,l)}catch(e){}}
+function noteDlg(n){const isNew=!n.id;openDlg(`<h3>${isNew?"تعليق خاص على النص":"تعليقك"}</h3><blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote)}</blockquote>
+ <form data-form="note"><label>تعليقك (لا يراه غيرك)</label><textarea name="note" style="min-height:110px" placeholder="فائدة، أو سؤال، أو ربط بموضع آخر…">${esc(n.note||"")}</textarea>
+ <label>لون التظليل</label><div class="swatches">${Object.entries(NCOL).map(([k,[t,c]])=>`<label class="swl"><input type="radio" name="color" value="${k}"${(n.color||"y")===k?" checked":""}><span style="background:${c}" title="${t}"></span></label>`).join("")}</div>
+ <div class="row" style="margin-top:10px"><button class="btn p nf">حفظ</button>${isNew?"":`<button type="button" class="btn nf danger" data-act="notedel">حذف</button>`}<a class="btn nf" href="#/mine?t=notes" data-act="closeDlg">كل تعليقاتي</a></div><p id="nst" class="mut"></p></form>`);
+ NOTE_EDIT=n}
+let NOTE_EDIT=null;
+async function bcList(){const box=$("#bclist");if(!box)return;const {data,error}=await Auth.sb.from("broadcasts").select("*").order("created_at",{ascending:false}).limit(20);if(error){box.textContent=Mine.err(error).message;return}
+ box.innerHTML=(data||[]).length?data.map(x=>`<div class="nitem"><b>${esc(x.title)}</b>${x.body?`<span>${esc(x.body)}</span>`:""}<small class="mut">${esc(ago(x.created_at))} • ${x.pushed?"أُرسل للأجهزة":"ينتظر الإرسال للأجهزة"}</small> <button class="btn s" data-act="bcdel" data-id="${x.id}">حذف</button></div>`).join(""):"لا إشعارات بعد."}
+async function bcSend(f){const fd=new FormData(f),st=$("#bcst");st.textContent="جارٍ الإرسال…";const {error}=await Auth.sb.from("broadcasts").insert({title:String(fd.get("title")).trim(),body:String(fd.get("body")||"").trim()||null,url:String(fd.get("url")||"").trim()||null});
+ if(error){st.textContent=Mine.err(error).message;return}f.reset();st.textContent="✓ أُرسل";bcList();fetch("/api/remind").catch(()=>{})}
+async function noteSave(f){const fd=new FormData(f),n=Object.assign({},NOTE_EDIT,{note:String(fd.get("note")||"").trim(),color:fd.get("color")||"y"});$("#nst").textContent="جارٍ الحفظ…";
+ try{await Mine.saveNote(n);dlg().close();$$(`.rd[data-id="${n.book_id}"]`).forEach(r=>paintNotes(r));toast("حُفظ تعليقك")}catch(e){$("#nst").textContent=e.message}}
+function selNote(){const s=String(getSelection()).trim().replace(/\s+/g," "),rd=selRd();if(!s||!rd)return;if(!Auth.user){toast("التعليقات الخاصة للأعضاء: سجّل الدخول أولًا");location.hash="#/account?next="+encodeURIComponent("#/book/"+rd.dataset.id+"/"+rd.dataset.p);return}
+ const b=B(rd.dataset.id);noteDlg({book_id:b.id,page:+rd.dataset.p,title:b.setTitle||b.title,quote:s.slice(0,2900),color:"y"});getSelection().removeAllRanges()}
+async function noteOpen(id){const rd=$(`.rd .w[data-note="${id}"]`);const bid=rd?rd.closest(".rd").dataset.id:null;const l=bid?await Mine.notesOf(bid):[];const n=l.find(x=>String(x.id)===String(id));if(n)noteDlg(n)}
+/* مشروع القراءة */
+async function planDlg(){const c=cur();if(!c)return;closeSheet();if(!Auth.user){toast("مشاريع القراءة للأعضاء: سجّل الدخول أولًا");location.hash="#/account?next="+encodeURIComponent("#/book/"+c.b.id+"/"+c.p);return}
+ let pl=null;try{pl=(await Mine.loadPlans()).find(x=>x.book_id===c.b.id)}catch(e){return alert(e.message)}const n=c.b.pages.length,d=pl?pl.daily:Math.max(1,Math.min(20,Math.ceil(n/30)));
+ openDlg(`<h3>مشروع قراءة: ${esc(c.b.setTitle||c.b.title)}</h3><p class="mut">حدّد وردك اليومي ووقت التذكير، فيصلك إشعار إن لم تقرأ وردك حتى ذلك الوقت.</p>
+ <form data-form="plan" data-id="${c.b.id}"><div class="row"><div><label>عدد الصفحات يوميًا</label><input name="daily" type="number" min="1" max="500" value="${d}" required></div><div><label>وقت التذكير</label><input name="at" type="time" value="${esc(pl?pl.remind_at:"20:00")}"></div><div><label>البداية من صفحة</label><input name="sp" type="number" min="1" max="${n}" value="${pl?pl.start_page:c.p}"></div></div>
+ <p class="mut" id="pest"></p>
+ <div class="row" style="margin-top:8px"><button class="btn p nf">${pl?"حفظ التعديل":"ابدأ المشروع"}</button>${pl?'<button type="button" class="btn nf danger" data-act="plandel">إنهاء المشروع</button>':""}</div><p id="plst" class="mut"></p></form>
+ ${pushOK()&&Cloud.on()?`<p class="note">ليصلك التذكير ولو كان الموقع مغلقًا فعّل إشعارات الجهاز: ${pushBtn()}</p>`:""}`);
+ const est=()=>{const f=$('form[data-form="plan"]');if(!f)return;const k=Math.ceil((n-(+f.sp.value||1)+1)/Math.max(1,+f.daily.value||1));$("#pest").textContent=`تختم الكتاب (${toAr(n)} صفحة) في نحو ${toAr(k)} يومًا.`};est();$('form[data-form="plan"]').oninput=est}
+async function planSave(f){const fd=new FormData(f),b=B(f.dataset.id),old=(Mine.plans||[]).find(x=>x.book_id===b.id);
+ const p={book_id:b.id,title:b.setTitle||b.title,daily:+fd.get("daily"),remind_at:fd.get("at")||"20:00",start_page:+fd.get("sp")||1,active:true};if(!old||old.start_page!==p.start_page){p.start_date=today();p.last_page=p.start_page}
+ $("#plst").textContent="جارٍ الحفظ…";try{await Mine.savePlan(p);dlg().close();toast("بدأ مشروع القراءة. يصلك التذكير في "+p.remind_at);Bell.paint()}catch(e){$("#plst").textContent=e.message}}
+/* صفحة «مكتبتي» */
+async function vMine(q){if(!Auth.user)return view(`<h2>مكتبتي</h2><p class="note">العلامات والتعليقات الخاصة ومشاريع القراءة للأعضاء. <a href="#/account?next=%23%2Fmine">سجّل الدخول أو أنشئ حسابًا</a> (مجانًا).</p>`);
+ const t=q.t||"marks",tabs=[["marks","العلامات"],["notes","تعليقاتي"],["plans","مشاريع القراءة"]];
+ view(`<h2>مكتبتي</h2><div class="tabs" role="tablist">${tabs.map(([k,n])=>`<a role="tab" href="#/mine?t=${k}" aria-selected="${k===t}">${n}</a>`).join("")}</div><div id="minebox" class="mut">جارٍ التحميل…</div>`);
+ const box=$("#minebox");box.className="";const bk=(id,p)=>`#/book/${id}/${p}`;
+ try{if(t==="marks"){const m=Object.values(await Mine.loadMarks()).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
+   box.innerHTML=m.length?m.map(x=>`<a class="bk" href="${bk(x.book_id,x.page)}"><b><i class="rib-mini"></i> ${esc(x.title||(B(x.book_id)||{}).title||x.book_id)}</b><span>صفحة ${toAr(x.page)} • ${esc(ago(x.updated_at))}</span></a>`).join(""):"لا علامات بعد. اضغط الشريط أعلى الصفحة في القارئ لتضع علامتك."}
+  else if(t==="notes"){const l=await Mine.allNotes();const g={};l.forEach(n=>(g[n.book_id]=g[n.book_id]||[]).push(n));
+   box.innerHTML=l.length?Object.entries(g).map(([id,ns])=>`<h3>${esc(ns[0].title||(B(id)||{}).title||id)}</h3>${ns.sort((a,b)=>a.page-b.page).map(n=>`<a class="nrow" href="${bk(id,n.page)}"><blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote.length>260?n.quote.slice(0,260)+"…":n.quote)}</blockquote>${n.note?`<p>${esc(n.note)}</p>`:""}<small class="mut">صفحة ${toAr(n.page)} • ${esc(ago(n.updated_at||n.created_at))}</small></a>`).join("")}`).join(""):"لا تعليقات بعد. حدّد عبارة في أي كتاب ثم اضغط «تعليق» لتظللها وتكتب فائدتك."}
+  else{const l=await Mine.loadPlans();box.innerHTML=(l.length?l.map(p=>{const b=B(p.book_id),s=planStat(p,b);return`<div class="plan"><a href="${bk(p.book_id,s.at)}"><b>${esc(p.title||(b||{}).title||"")}</b></a><div class="prog"><i style="width:${s.pct}%"></i></div><span class="mut">${s.done?"✓ أتممت الكتاب":`صفحة ${toAr(s.at)} من ${toAr(s.n)} • الورد ${pgs(p.daily)} يوميًا • التذكير ${esc(p.remind_at||"")}`}${s.behind?` • <b class="warn">متأخر ${pgs(s.behind)}</b>`:s.readToday?" • ✓ قرأت اليوم":""}</span></div>`}).join(""):"<p>لا مشاريع قراءة بعد. افتح كتابًا ثم «المزيد ← مشروع قراءة».</p>")+`<p style="margin-top:10px">${pushBtn()}</p>`}}
+ catch(e){box.innerHTML=`<p class="note">${esc(e.message)}</p>`}}
 function ago(d){const t=new Date(d);if(!d||isNaN(t))return"";if(/^\d{4}-\d\d-\d\d$/.test(d)){const k=Math.round((new Date(today())-t)/864e5);return k<=0?"اليوم":k===1?"أمس":fmtDate(d)}const s=(Date.now()-t)/1000;if(s<60)return"الآن";
  const f=(n,one,two,few,many)=>n===1?one:n===2?two:n<=10?`${toAr(n)} ${few}`:`${toAr(n)} ${many}`;
  if(s<3600)return"منذ "+f(Math.floor(s/60),"دقيقة","دقيقتين","دقائق","دقيقة");if(s<86400)return"منذ "+f(Math.floor(s/3600),"ساعة","ساعتين","ساعات","ساعة");
@@ -1146,7 +1269,7 @@ function route(){const{p,q}=parse(),v=p[0];if(v!=="book"&&TTS.on)TTS.stop();Page
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="post")return vPost(p[1]);if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book")return vBook(p[1],+p[2],q.h);if(v==="search")return vSearch(q);
- if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);vHome()}
+ if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);if(v==="mine")return vMine(q);vHome()}
 /* الروابط: يكتبها الموقع بصيغة #/… ويحوّلها إلى روابط عادية (/book/…) تفهمها محركات البحث وتُشارك كما هي */
 const toPath=h=>{const p=String(h).replace(/^#/,"");return p.startsWith("/")?p:"/"+p};
 function go(h,replace){history[replace?"replaceState":"pushState"](null,"",toPath(h));route()}
@@ -1155,8 +1278,13 @@ window.addEventListener("popstate",route);
 document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#/"]');if(!a||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank")return;e.preventDefault();const h=a.getAttribute("href");if(toPath(h)!==location.pathname+location.search)go(h);else route()});
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  if(w&&!el&&w.classList.contains("fnr")){const k=w.textContent.replace(/[^\d٠-٩]/g,""),fb=w.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>x.textContent.replace(/[^\d٠-٩]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
- if(w&&!el){if(String(getSelection()).trim())return;return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
+ if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
  if(a==="closeDlg")dlg().close();
+ else if(a==="bcdel"){if(confirm("حذف هذا الإشعار؟")){await Auth.sb.from("broadcasts").delete().eq("id",el.dataset.id);bcList()}}
+ else if(a==="mark")toggleMark();else if(a==="selnote")selNote();else if(a==="noteopen")noteOpen(el.dataset.id);else if(a==="plan")planDlg();else if(a==="bell")Bell.open();
+ else if(a==="notedel"){if(NOTE_EDIT&&confirm("حذف هذا التعليق والتظليل؟")){try{await Mine.delNote(NOTE_EDIT);dlg().close();$$(`.rd[data-id="${NOTE_EDIT.book_id}"]`).forEach(r=>{hlWords(r,[]);paintNotes(r)});toast("حُذف التعليق")}catch(x){alert(x.message)}}}
+ else if(a==="plandel"){const f=el.closest("form");if(confirm("إنهاء مشروع القراءة لهذا الكتاب؟")){try{await Mine.delPlan(f.dataset.id);dlg().close();toast("انتهى المشروع");Bell.paint()}catch(x){alert(x.message)}}}
+ else if(a==="pushon"){el.disabled=true;try{await pushOn();el.textContent="✓ إشعارات الجهاز مفعّلة";toast("فُعّلت إشعارات الجهاز")}catch(x){el.disabled=false;alert(x.message)}}
  else if(a==="closeSheet"){if(el.tagName!=="A")e.preventDefault();closeSheet()}
  else if(a==="toc")tocSheet();else if(a==="goto")gotoSheet();else if(a==="more")moreSheet();else if(a==="prev")turn(-1);else if(a==="next")turn(1);
  else if(a==="full")setFull(!S.full);
@@ -1194,6 +1322,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="delb"){if(confirm("حذف هذا العنصر من هذا الجهاز؟")){const id=el.dataset.id;LOCAL.catalog.books=LOCAL.catalog.books.filter(b=>b.id!==id);delete LOCAL.shards[id];await DB.set("local",LOCAL);SH.delete(id);merge();renderTicker();route()}}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const k=f.dataset.form,fd=new FormData(f);
  const qs=(skipNew)=>{const p=new URLSearchParams();fd.forEach((v,n)=>{if(v&&!(skipNew&&n==="s"&&v==="new"))p.set(n,v)});return p.toString()};
+ if(k==="note")return noteSave(f);if(k==="bcast")return bcSend(f);if(k==="plan")return planSave(f);
  if(k==="quick"||k==="search")location.hash="#/search?"+qs();
  else if(k==="libq"){const s=qs(true);location.hash="#/library"+(s?"?"+s:"")}
  else if(k==="artq"||k==="listq"){const s=qs(true);location.hash="#/"+(f.dataset.route||"articles")+(s?"?"+s:"")}

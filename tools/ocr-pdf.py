@@ -102,13 +102,14 @@ _glast = [0.0]
 GFAIL = [0]  # إخفاقات Gemini المتتالية: بعد عدد منها يكمل الكتاب بـ Tesseract ويعلّم الصفحات لإعادة المراجعة لاحقًا
 
 
-def gemini_call(parts, max_tokens=8192):
+def gemini_call(parts, max_tokens=8192, models=None, fail=None):
     """طلب واحد إلى Gemini مع إعادة المحاولة وتبديل النموذج عند الازدحام؛ يعيد النص أو None."""
-    if GFAIL[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "6")):
+    fail = fail or GFAIL
+    if fail[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "6")):
         return None
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
-    models = list(GMODELS)
+    models = list(models or GMODELS)
     for attempt in range(4):
         wait = GDELAY - (time.time() - _glast[0])
         if wait > 0: time.sleep(wait)
@@ -121,19 +122,19 @@ def gemini_call(parts, max_tokens=8192):
             c = (j.get("candidates") or [{}])[0]
             t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
             if t.strip():
-                GFAIL[0] = 0
+                fail[0] = 0
                 return t
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
         except urllib.error.HTTPError as e:
             msg = e.read()[:300].decode("utf-8", "ignore")
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue
-            if e.code in (401, 403): GFAIL[0] = 99; return None
+            if e.code in (401, 403): fail[0] = 99; return None
             if e.code in (429, 500, 503) and len(models) > 1 and attempt >= 1: models.pop(0)  # جرّب نموذجًا آخر عند الازدحام
             time.sleep(min(30, 4 * (attempt + 1)))
         except Exception as e:
             print("    Gemini خطأ: %r" % e, flush=True); time.sleep(4 * (attempt + 1))
-    GFAIL[0] += 1
+    fail[0] += 1
     return None
 
 
@@ -209,29 +210,107 @@ def surya_drafts(pdf, nums):
     return res
 
 
+# ---------- المدقق الثاني: نموذج أقوى يعيد قراءة الصفحات التي بقي فيها شك فقط ----------
+PROMODELS = [m for m in [os.environ.get("GEMINI_PRO_MODEL", "gemini-2.5-pro"), "gemini-pro-latest"] if m]
+PFAIL = [0]
+PRO_PROMPT = """أمامك صورة صفحة من كتاب عربي مطبوع، وتحتها قراءة أولية لها أعدّها مدقق آخر، وفيها كلمات مشكوك فيها بين ⟪ ⟫.
+راجع القراءة كلها على الصورة بعناية، وصحح كل ما يخالف الصورة، واحسم الكلمات المشكوك فيها بالنظر الدقيق في الصورة.
+حافظ على تنسيق القراءة نفسه (العناوين بـ «# »، والحواشي بعد سطر ______، والفقرات في أسطر متصلة).
+ما بقي فيه شك حقيقي بعد التدقيق فاتركه بين ⟪ ⟫. أخرج نص الصفحة كاملًا فقط دون أي تعليق.
+القراءة الأولية:
+<<<
+{text}
+>>>"""
+
+
+def pro_pass(pdf, nums, pages, td):
+    """يعيد قراءة الصفحات ذات مواضع الشك بنموذج أدق وبصورة أوضح (حصته المجانية أقل، فيقتصر على الأشد شكًّا)."""
+    limit = int(os.environ.get("OCR_PRO_MAX", "60"))
+    if not GKEY or limit <= 0 or not UNCERTAIN: return
+    order = sorted(UNCERTAIN, key=lambda i: -len(UNCERTAIN[i]))[:limit]
+    fixed = 0; t0 = time.time(); PFAIL[0] = 0
+    for i in order:
+        if PFAIL[0] >= 2: print("  توقف المدقق الثاني (الحصة أو الازدحام)", flush=True); break
+        img = os.path.join(td, "hi%d" % nums[i])
+        subprocess.run(["pdftoppm", "-r", "260", "-jpeg", "-jpegopt", "quality=88", "-f", str(nums[i]), "-l", str(nums[i]), "-singlefile", pdf, img], check=True)
+        before = UNCERTAIN[i]
+        marked = pages[i]
+        for w in before: marked = marked.replace(w, "⟪%s⟫" % w, 1)
+        g = gemini_call([img_part(img + ".jpg"), {"text": PRO_PROMPT.format(text=marked[:12000])}], models=PROMODELS, fail=PFAIL)
+        if not g: continue
+        words = [w.strip() for w in UNC.findall(g) if w.strip()]
+        pages[i] = gemini_clean(UNC.sub(r"\1", g).replace("[صفحة بلا نص]", "").strip())
+        if words: UNCERTAIN[i] = words[:40]
+        else: UNCERTAIN.pop(i, None)
+        fixed += 1
+    if fixed:
+        print("  المدقق الثاني راجع %d صفحة في %d دقيقة" % (fixed, (time.time() - t0) // 60), flush=True)
+        REPORT.append("- المدقق الثاني (%s): أعاد قراءة %d صفحة فيها شك" % (PROMODELS[0], fixed))
+    STATS["pro"] = fixed
+
+
+def md5f(path):
+    h = hashlib.md5()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""): h.update(b)
+    return h.hexdigest()
+
+
+def tess_page(pdf, p, td):
+    img = os.path.join(td, f"t{p}")
+    subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
+    r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
+    try: os.remove(img + ".png")
+    except OSError: pass
+    return clean_page(r.stdout)
+
+
+def make_drafts(pdf, nums):
+    """مسودات Tesseract (بالتوازي) وSurya لمجموعة صفحات: {رقم: {"t": .., "s": ..}}"""
+    from concurrent.futures import ThreadPoolExecutor
+    with tempfile.TemporaryDirectory() as td:
+        with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
+            tess = list(ex.map(lambda p: tess_page(pdf, p, td), nums))
+    print("  اكتملت مسودات Tesseract: %d صفحة" % len(tess), flush=True)
+    sur = surya_drafts(pdf, nums)
+    return {p: {"t": t, "s": sur.get(p, "")} for p, t in zip(nums, tess)}
+
+
+def load_drafts(pdf):
+    """مسودات جاهزة أعدّتها أجهزة متوازية (مجلد OCR_DRAFTS) لهذا الملف."""
+    d = os.environ.get("OCR_DRAFTS", "")
+    if not d or not os.path.isdir(d): return {}
+    key, out = md5f(pdf), {}
+    for root, _, files in os.walk(d):
+        for f in files:
+            if f.startswith(key) and f.endswith(".json"):
+                for k, v in json.load(open(os.path.join(root, f), encoding="utf-8")).get("pages", {}).items(): out[int(k)] = v
+    return out
+
+
 def ocr(pdf, first=1, last=None):
     """١) مسودات Tesseract لكل الصفحات بالتوازي ٢) Gemini يقرأ الصور ويراجع المسودات ويصحح ويعلّم الشك، عدة صفحات في الطلب."""
     from concurrent.futures import ThreadPoolExecutor
     n = pages_count(pdf)
     last = min(last or n, n)
     nums = list(range(first, last + 1))
-    STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
+    STATS.update(gemini=0, tesseract=0, pro=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
     batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
-    print("  المحرك: Tesseract" + (" + Surya" if os.environ.get("OCR_SURYA", "1") == "1" and shutil.which("surya_ocr") else "") + (" ثم مراجعة Gemini (%d صفحات في الطلب)" % batch if GKEY else ""), flush=True)
+    ready = load_drafts(pdf)
+    have = [p for p in nums if p in ready]
+    print("  المحرك: Tesseract" + (" + Surya" if os.environ.get("OCR_SURYA", "1") == "1" and (shutil.which("surya_ocr") or have) else "") + (" ثم مراجعة Gemini (%d صفحات في الطلب) ثم مدقق ثانٍ لمواضع الشك" % batch if GKEY else ""), flush=True)
+    if have:
+        print("  مسودات جاهزة من الأجهزة المتوازية: %d صفحة" % len(have), flush=True); REPORT.append("- مسودات من أجهزة متوازية: %d صفحة" % len(have))
     with tempfile.TemporaryDirectory() as td:
-        def tess(p):
-            img = os.path.join(td, f"p{p}")
-            subprocess.run(["pdftoppm", "-r", "300", "-gray", "-png", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-            r = subprocess.run(["tesseract", img + ".png", "-", "-l", LANG, "--psm", "4"], capture_output=True, text=True)
-            if GKEY:
-                subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, img], check=True)
-            try: os.remove(img + ".png")
-            except OSError: pass
-            return clean_page(r.stdout)
-        with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
-            drafts = list(ex.map(tess, nums))
-        print("  اكتملت مسودات Tesseract: %d صفحة" % len(drafts), flush=True)
-        sur = surya_drafts(pdf, nums)
+        missing = [p for p in nums if p not in ready]
+        if missing: ready.update(make_drafts(pdf, missing))
+        if GKEY:
+            from concurrent.futures import ThreadPoolExecutor
+            def jpg(p):
+                subprocess.run(["pdftoppm", "-r", "170", "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
+            with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, nums))
+        drafts = [ready[p].get("t", "") for p in nums]
+        sur = {p: ready[p].get("s", "") for p in nums if ready[p].get("s")}
         # المسودة الافتراضية إن لم يراجع Gemini: Surya إن وُجدت (أدق)، وإلا Tesseract
         pages = [sur.get(p) or d for p, d in zip(nums, drafts)]; reviewed = [False] * len(nums)
         both = [("[مسودة Tesseract]\n" + d + ("\n\n[مسودة Surya]\n" + sur[p] if sur.get(p) else "")) for p, d in zip(nums, drafts)]
@@ -251,6 +330,7 @@ def ocr(pdf, first=1, last=None):
                         g = gemini_page(img, both[i])
                         if g is not None: accept(i, g)
                 print(f"  روجعت حتى صفحة {nums[idx[-1]]}/{last}", flush=True)
+            pro_pass(pdf, nums, pages, td)
         for i, ok in enumerate(reviewed):
             if ok: STATS["gemini"] += 1
             else:
@@ -259,9 +339,7 @@ def ocr(pdf, first=1, last=None):
     return pages
 
 
-def main():
-    if not os.path.isdir(INBOX):
-        print("لا يوجد مجلد ocr-inbox"); return
+def assemble():
     # تجميع الملفات المرفوعة أجزاءً من صفحة الإدارة: <اسم>.pdf.part001… ثم <اسم>.ready
     for f in sorted(os.listdir(INBOX)):
         if f.endswith(".ready"):
@@ -272,10 +350,54 @@ def main():
             with open(os.path.join(INBOX, base + ".pdf"), "wb") as out:
                 for x in parts: out.write(open(os.path.join(INBOX, x), "rb").read()); os.remove(os.path.join(INBOX, x))
             os.remove(os.path.join(INBOX, f)); print("جُمِّع:", base, len(parts), "أجزاء")
-    redo = [x.strip() for x in os.environ.get("REOCR", "").split(",") if x.strip()]
-    for f in sorted(os.listdir(INBOX)):  # طلبات إعادة التحويل من صفحة الإدارة: ocr-inbox/<id>.redo
+
+
+def redo_ids(consume=False):
+    ids = [x.strip() for x in os.environ.get("REOCR", "").split(",") if x.strip()]
+    for f in sorted(os.listdir(INBOX)):
         if f.endswith(".redo"):
-            redo.append(f[:-5]); os.remove(os.path.join(INBOX, f))
+            ids.append(f[:-5])
+            if consume: os.remove(os.path.join(INBOX, f))
+    return ids
+
+
+def plan():
+    """يقسم صفحات الكتب المنتظرة على أجهزة متوازية لإعداد المسودات (Tesseract وSurya) بسرعة."""
+    shards = []
+    if os.path.isdir(INBOX):
+        assemble()
+        files = [os.path.join("ocr-inbox", f) for f in sorted(os.listdir(INBOX)) if f.lower().endswith(".pdf")]
+        files += [os.path.join("pdf", b + ".pdf") for b in redo_ids() if os.path.exists(os.path.join(PDFDIR, b + ".pdf"))]
+        jobs = []
+        for f in files:
+            side = os.path.join(ROOT, f[:-4] + ".json")
+            cfg = json.load(open(side, encoding="utf-8")) if f.startswith("ocr-inbox") and os.path.exists(side) else {}
+            if f.startswith("ocr-inbox") and cfg.get("book") and not cfg.get("ocr"): continue  # ربط نسخة مصورة بلا تحويل
+            n = pages_count(os.path.join(ROOT, f))
+            if n: jobs.append((f, n))
+        total = sum(n for _, n in jobs); maxj = int(os.environ.get("OCR_MACHINES", "12"))
+        size = max(int(os.environ.get("OCR_SHARD", "30")), -(-total // maxj)) if total else 1
+        for f, n in jobs:
+            for a in range(1, n + 1, size): shards.append({"path": f, "first": a, "last": min(n, a + size - 1)})
+    out = json.dumps(shards, ensure_ascii=False)
+    print("الأجزاء:", out)
+    if os.environ.get("GITHUB_OUTPUT"):
+        with open(os.environ["GITHUB_OUTPUT"], "a") as g: g.write("shards=%s\nany=%s\n" % (out, "1" if shards else "0"))
+
+
+def drafts_job(path, first, last):
+    if os.path.isdir(INBOX): assemble()
+    pdf = os.path.join(ROOT, path)
+    res = make_drafts(pdf, list(range(int(first), int(last) + 1)))
+    os.makedirs(os.path.join(ROOT, "drafts"), exist_ok=True)
+    json.dump({"pages": res, "report": REPORT}, open(os.path.join(ROOT, "drafts", "%s-%04d.json" % (md5f(pdf), int(first))), "w", encoding="utf-8"), ensure_ascii=False)
+
+
+def main():
+    if not os.path.isdir(INBOX):
+        print("لا يوجد مجلد ocr-inbox"); return
+    assemble()
+    redo = redo_ids(consume=True)  # طلبات إعادة التحويل من صفحة الإدارة: ocr-inbox/<id>.redo
     for bid in redo:  # إعادة تحويل كتاب موجود من نسخته المصورة المحفوظة
         src = os.path.join(PDFDIR, bid + ".pdf")
         if os.path.exists(src):
@@ -330,7 +452,7 @@ def main():
             open(os.path.join(DATA, "books", bid + ".json"), "w", encoding="utf-8").write(s)
             entry.update({"n": len(pages), "size": len(s.encode()), "ocr": True,
                           "source": " — ".join(x for x in [re.sub(r"\s*—?\s*نص محوَّل (آليًا|بالذكاء الاصطناعي).*$", "", entry.get("source", "")).strip(" —") if existing else "", "نص محوَّل بالذكاء الاصطناعي من نسخة مصورة، يُرجى الإبلاغ عن أي خطأ" if STATS["gemini"] > STATS["tesseract"] else "نص محوَّل آليًا من نسخة مصورة، يحتاج مراجعة"] if x),
-                          "ocrEngine": "gemini+tesseract" if STATS["gemini"] > STATS["tesseract"] else "tesseract",
+                          "ocrEngine": ("gemini+pro" if STATS.get("pro") else "gemini") + "+tesseract" + ("+surya" if os.environ.get("OCR_SURYA", "1") == "1" else "") if STATS["gemini"] > STATS["tesseract"] else "tesseract",
                           "unc": sum(len(v) for v in UNCERTAIN.values()), "unrev": len(UNREVIEWED),
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
@@ -342,4 +464,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "--plan": plan()
+    elif len(sys.argv) > 4 and sys.argv[1] == "--drafts": drafts_job(*sys.argv[2:5])
+    else: main()

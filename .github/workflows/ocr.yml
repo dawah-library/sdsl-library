@@ -1,4 +1,6 @@
 name: تحويل الكتب المصورة إلى نص
+# ثلاث مراحل: ١) تقسيم صفحات الكتب على أجهزة متوازية ٢) كل جهاز يعدّ مسودات Tesseract وSurya لنصيبه
+# ٣) جهاز أخير يجمع المسودات ويراجعها Gemini على الصور، ثم مدقق ثانٍ أقوى لمواضع الشك، ويحفظ الكتاب.
 on:
   push:
     paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF", "ocr-inbox/*.redo", "ocr-inbox/*.ready"]
@@ -14,12 +16,34 @@ concurrency:
   group: ocr
   cancel-in-progress: false
 jobs:
-  ocr:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 10
+    outputs:
+      shards: ${{ steps.p.outputs.shards }}
+      any: ${{ steps.p.outputs.any }}
     steps:
       - uses: actions/checkout@v4
-      - name: تثبيت أدوات التعرف الضوئي
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+      - id: p
+        env:
+          REOCR: ${{ github.event.inputs.reocr }}
+          OCR_MACHINES: ${{ vars.OCR_MACHINES || '12' }}
+        run: python3 tools/ocr-pdf.py --plan
+
+  drafts:
+    needs: plan
+    if: ${{ needs.plan.outputs.any == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: تثبيت Tesseract
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr poppler-utils
           mkdir -p tessdata && curl -sSL -o tessdata/ara.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
@@ -35,20 +59,49 @@ jobs:
             ~/.cache/huggingface
             ~/.cache/datalab
           key: surya-models-v1
-      - name: تثبيت Surya (أداة تعرّف مفتوحة المصدر أدق في العربية)
+      - name: تثبيت Surya
         if: ${{ !startsWith(format('x{0}', vars.OCR_SURYA), 'x0') }}
         continue-on-error: true
         run: |
           pip install -q torch --index-url https://download.pytorch.org/whl/cpu
           pip install -q surya-ocr
           surya_ocr --help > /dev/null && echo "Surya جاهز"
-      - name: التحويل
+      - name: مسودات الصفحات ${{ matrix.shard.first }}-${{ matrix.shard.last }}
+        env:
+          OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
+          RECOGNITION_BATCH_SIZE: "16"
+          DETECTOR_BATCH_SIZE: "2"
+        run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py --drafts "${{ matrix.shard.path }}" ${{ matrix.shard.first }} ${{ matrix.shard.last }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drafts-${{ strategy.job-index }}
+          path: drafts/
+          retention-days: 3
+
+  review:
+    needs: [plan, drafts]
+    if: ${{ always() && needs.plan.outputs.any == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: تثبيت الأدوات
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr poppler-utils
+          mkdir -p tessdata && curl -sSL -o tessdata/ara.traineddata https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: drafts-*
+          path: ocr-drafts
+      - name: المراجعة والحفظ
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '1' }}
-          RECOGNITION_BATCH_SIZE: "16"
-          DETECTOR_BATCH_SIZE: "2"
+          OCR_DRAFTS: ocr-drafts
+          OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '60' }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - run: |
+          rm -rf ocr-drafts tessdata
           bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md

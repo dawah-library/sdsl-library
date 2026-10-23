@@ -122,6 +122,90 @@ create or replace view public.post_stats with (security_invoker = true) as
   ) x group by post_id;
 grant select on public.post_stats to anon, authenticated;
 
+
+-- 6) مكتبتي الشخصية: علامة الصفحة، والتعليقات الخاصة، ومشاريع القراءة، والإشعارات
+-- علامة واحدة لكل كتاب تبقى حتى ينقلها القارئ إلى صفحة أخرى
+create table if not exists public.bookmarks (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  book_id text not null, page int not null, title text,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, book_id)
+);
+alter table public.bookmarks enable row level security;
+drop policy if exists "bookmarks own" on public.bookmarks;
+create policy "bookmarks own" on public.bookmarks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- تعليقات القارئ وتظليله الخاص (لا يراها غيره)
+create table if not exists public.notes (
+  id bigserial primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  book_id text not null, page int not null, title text,
+  quote text not null check (length(quote) between 1 and 3000),
+  note text check (length(note) < 5000),
+  color text not null default 'y',
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+alter table public.notes enable row level security;
+drop policy if exists "notes own" on public.notes;
+create policy "notes own" on public.notes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists notes_user_book on public.notes (user_id, book_id);
+
+-- مشاريع القراءة (ورد يومي وتذكير)
+create table if not exists public.reading_plans (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  book_id text not null, title text,
+  daily int not null default 10 check (daily between 1 and 500),
+  remind_at text default '20:00', tz_offset int not null default 180, hour_utc int,
+  start_page int not null default 1, last_page int, start_date date not null default current_date,
+  last_read timestamptz, last_sent date, active boolean not null default true,
+  created_at timestamptz not null default now(),
+  primary key (user_id, book_id)
+);
+alter table public.reading_plans enable row level security;
+drop policy if exists "plans own" on public.reading_plans;
+create policy "plans own" on public.reading_plans for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- إشعارات العضو (تذكير الورد وغيره)
+create table if not exists public.notifications (
+  id bigserial primary key,
+  user_id uuid not null references auth.users on delete cascade,
+  title text not null, body text, url text, read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+alter table public.notifications enable row level security;
+drop policy if exists "notifications own read" on public.notifications;
+create policy "notifications own read" on public.notifications for select using (auth.uid() = user_id);
+drop policy if exists "notifications own update" on public.notifications;
+create policy "notifications own update" on public.notifications for update using (auth.uid() = user_id);
+drop policy if exists "notifications own delete" on public.notifications;
+create policy "notifications own delete" on public.notifications for delete using (auth.uid() = user_id);
+
+-- إشعارات عامة يرسلها المشرف لكل الأعضاء
+create table if not exists public.broadcasts (
+  id bigserial primary key,
+  title text not null check (length(title) between 1 and 200), body text, url text,
+  pushed boolean not null default false,
+  created_by uuid default auth.uid(), created_at timestamptz not null default now()
+);
+alter table public.broadcasts enable row level security;
+drop policy if exists "broadcasts read" on public.broadcasts;
+create policy "broadcasts read" on public.broadcasts for select using (true);
+drop policy if exists "broadcasts staff" on public.broadcasts;
+create policy "broadcasts staff" on public.broadcasts for insert with check (public.is_staff());
+drop policy if exists "broadcasts staff delete" on public.broadcasts;
+create policy "broadcasts staff delete" on public.broadcasts for delete using (public.is_staff());
+
+-- اشتراكات إشعارات الجهاز (Web Push)
+create table if not exists public.push_subs (
+  endpoint text primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  p256dh text not null, auth text not null, ua text,
+  created_at timestamptz not null default now()
+);
+alter table public.push_subs enable row level security;
+drop policy if exists "push own" on public.push_subs;
+create policy "push own" on public.push_subs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- =========================================================
 -- 5) اجعل حسابك مديرًا للمكتبة:
 --    سجّل الدخول في الموقع مرة واحدة أولًا، ثم ضع بريدك مكان المثال ونفّذ السطر التالي وحده

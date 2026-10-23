@@ -18,6 +18,9 @@
     },
     "api/gh.js": {
       "maxDuration": 30
+    },
+    "api/remind.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

@@ -22,19 +22,20 @@
 <header class="top">
   <a class="brand" href="#/"><img src="assets/logo-sdsl-128.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><span>مكتبة الدعوة السلفية الرقمية</span></a>
   <div class="tools">
+    <button class="ic bell" id="bellbtn" data-act="bell" hidden aria-label="الإشعارات"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg><b id="bellc" hidden></b></button>
     <a class="ic" href="#/account" id="acctbtn">دخول</a>
     <a class="ic" href="#/qabasat">قبسات</a>
     <button class="ic" data-act="theme" aria-label="تبديل المظهر الليلي والنهاري">◐</button>
   </div>
   <nav aria-label="الأقسام">
-    <a href="#/library?c=dawah">مكتبة الدعوة</a><a href="#/articles">المقالات</a><a href="#/fatawa">الفتاوى</a><a href="#/bayanat">البيانات</a><a href="#/library?c=turath">تراث</a><a href="#/furqan">قضايا الفرقان</a><a href="#/tafrighat">تفريغات</a><a href="#/posts">منشورات</a><a href="#/tarajim">التراجم</a><a href="#/authors">المؤلفون</a><a href="#/search">البحث</a><a href="#/ask">اسأل المكتبة</a><a href="#/favs">المفضلة</a><a href="#/contact">تواصل معنا</a><a href="#/admin">الإدارة</a>
+    <a href="#/library?c=dawah">مكتبة الدعوة</a><a href="#/articles">المقالات</a><a href="#/fatawa">الفتاوى</a><a href="#/bayanat">البيانات</a><a href="#/library?c=turath">تراث</a><a href="#/furqan">قضايا الفرقان</a><a href="#/tafrighat">تفريغات</a><a href="#/posts">منشورات</a><a href="#/tarajim">التراجم</a><a href="#/authors">المؤلفون</a><a href="#/search">البحث</a><a href="#/ask">اسأل المكتبة</a><a href="#/favs">المفضلة</a><a href="#/mine">مكتبتي</a><a href="#/contact">تواصل معنا</a><a href="#/admin">الإدارة</a>
   </nav>
 </header>
 <div id="ticker" hidden><span class="tl">جديد المكتبة</span><div class="tv" dir="ltr"><div class="tt" id="tt"></div></div></div>
 <div id="banner" hidden></div>
 <main id="app" tabindex="-1"><p class="mut" style="padding:30px 0;text-align:center">جارٍ تحميل المكتبة…</p></main>
 <footer><div class="cal"><img src="assets/cal.jpg" alt="الدعوة السلفية بمصر"></div><img class="dawah-logo" src="assets/logo.jpg" alt="شعار الدعوة السلفية"><p class="flinks"><a href="#/about">من نحن</a> • <a href="#/dawah">التعريف بالدعوة</a> • <a href="#/history">تاريخ الدعوة</a> • <a href="#/contact">تواصل معنا</a></p><p>© 2026 مكتبة الدعوة السلفية الرقمية — جمعية الدعاة</p></footer>
-<div id="selq" class="selbar" hidden><button class="btn p" data-act="selq">اجعل المحدد قبسة</button><button class="btn" data-act="selcopy">نسخ</button><button class="btn" data-act="selprint">طباعة</button></div>
+<div id="selq" class="selbar" hidden><button class="btn p" data-act="selq">اجعل المحدد قبسة</button><button class="btn" data-act="selnote">تعليق</button><button class="btn" data-act="selcopy">نسخ</button><button class="btn" data-act="selprint">طباعة</button></div>
 <dialog id="dlg"><div id="dlgb"></div><button class="btn" data-act="closeDlg">إغلاق</button></dialog>
 <script src="config.js"></script>
 <script src="search.js"></script>
