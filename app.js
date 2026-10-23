@@ -276,10 +276,11 @@ function nextPv(cur){const wide=matchMedia("(min-width:1000px)").matches;return 
 /* ---------- الإدارة المباشرة عبر GitHub ---------- */
 const GH={repo:CFG.repo||"dawah-library/sdsl-library",branch:CFG.branch||"main",
  get token(){return ls.get("ghtoken","")},set token(v){ls.set("ghtoken",v||"")},
- get on(){return!!this.token},
- async api(path,opt={}){const r=await fetch("https://api.github.com/repos/"+this.repo+path,Object.assign({},opt,{headers:Object.assign({Authorization:"Bearer "+this.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},opt.headers||{})}));
+ get proxied(){return!this.token&&typeof Cloud!=="undefined"&&Cloud.staff()&&CFG.ghProxy!==""},
+ get on(){return!!this.token||this.proxied},
+ async api(path,opt={}){const r=this.proxied?await fetch((CFG.ghProxy||"api/gh")+"?p="+encodeURIComponent(path),{method:opt.method||"GET",body:opt.body,headers:{"Content-Type":"application/json",Authorization:"Bearer "+(Auth.token||""),Accept:(opt.headers&&opt.headers.Accept)||"application/json"}}):await fetch("https://api.github.com/repos/"+this.repo+path,Object.assign({},opt,{headers:Object.assign({Authorization:"Bearer "+this.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},opt.headers||{})}));
   if(!r.ok){let m="";try{m=(await r.json()).message}catch(e){}throw new Error(r.status===401?"المفتاح غير صالح أو منتهي.":r.status===403||r.status===404?"لا يملك المفتاح صلاحية الكتابة على المستودع.":r.status===409?"تعارض مع تعديل آخر، أعد المحاولة.":("خطأ "+r.status+" "+m))}return r},
- async verify(){const r=await this.api("");const j=await r.json();if(!j.permissions||!j.permissions.push)throw new Error("المفتاح لا يملك صلاحية الكتابة.");return j},
+ async verify(){if(this.proxied)return{};const r=await this.api("");const j=await r.json();if(!j.permissions||!j.permissions.push)throw new Error("المفتاح لا يملك صلاحية الكتابة.");return j},
  async get(path){const r=await this.api("/contents/"+encodeURI(path)+"?ref="+this.branch);const j=await r.json();let text;
   if(j.encoding==="base64"&&j.content)text=new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g,"")),c=>c.charCodeAt(0)));
   else{const raw=await this.api("/contents/"+encodeURI(path)+"?ref="+this.branch,{headers:{Accept:"application/vnd.github.raw+json"}});text=await raw.text()}
@@ -769,7 +770,7 @@ async function deleteBook(id){const b=B(id);if(!b||!GH.on)return alert("فعّل
 
 /* ---------- الإدارة ---------- */
 const IMPORT_LIST=["https://salafvoice.com/article.aspx?a=25750","https://salafvoice.com/article.aspx?a=25749","https://salafvoice.com/article.aspx?a=25748","https://salafvoice.com/article.aspx?a=25747","https://salafvoice.com/article.aspx?a=25746","https://salafvoice.com/article.aspx?a=25745","https://salafvoice.com/article.aspx?a=25744","https://salafvoice.com/article.aspx?a=25743","https://salafvoice.com/article.aspx?a=25742","https://salafvoice.com/article.aspx?a=25741","https://salafvoice.com/article.aspx?a=22854","https://salafvoice.com/article.aspx?a=22910","https://salafvoice.com/article.aspx?a=22875","https://salafvoice.com/article.aspx?a=22902"];
-function ghBox(){return GH.on?`<div class="ghbox on"><b>✓ وضع الإدارة المباشرة مفعّل</b><p>كل ما تضيفه أو تصححه يُحفظ في المكتبة مباشرة، ويظهر للجميع خلال دقيقة تقريبًا.</p><button class="btn s" data-act="ghout">خروج من هذا الجهاز</button></div>`
+function ghBox(){return GH.proxied?`<div class="ghbox on"><b>✓ الإدارة المباشرة مفعّلة بحسابك</b><p>أنت مسجّل بحساب الإدارة، فكل ما تضيفه أو تعدّله يُحفظ في المكتبة مباشرة ويظهر للجميع خلال دقيقة، دون مفتاح على هذا الجهاز.</p></div>`:GH.on?`<div class="ghbox on"><b>✓ وضع الإدارة المباشرة مفعّل</b><p>كل ما تضيفه أو تصححه يُحفظ في المكتبة مباشرة، ويظهر للجميع خلال دقيقة تقريبًا.</p><button class="btn s" data-act="ghout">خروج من هذا الجهاز</button></div>`
  :`<div class="ghbox"><b>الإدارة المباشرة</b><p>أدخل مفتاح المشرف ليُحفظ ما تضيفه وتصححه في المكتبة مباشرة ويظهر للجميع. وبدونه تُحفظ الإضافات على هذا الجهاز وتُنشر بـ«ملف التحديث».</p>
  <form data-form="ghlogin" class="stepper"><input name="t" type="password" placeholder="مفتاح المشرف (github_pat_…)" dir="ltr" autocomplete="off" required><button class="btn p">دخول</button></form><p id="gherr" class="mut" role="alert"></p>
  <details><summary>كيف أحصل على مفتاح المشرف؟ (مرة واحدة)</summary><ol>
@@ -788,14 +789,17 @@ async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(
    const base="up"+Date.now().toString(36)+i,cfg={title:(files.length===1&&String(fd.get("title")||"").trim())||parts[0],author:author0||parts[1]||undefined,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};
    if(tags.length)cfg.tags=tags;if(link)cfg.book=link;
    await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
-   await GH.put("ocr-inbox/"+base+".pdf",new Uint8Array(await file.arrayBuffer()),"رفع كتاب مصور: "+cfg.title);done.push(cfg.title)}
+   const bytes=new Uint8Array(await file.arrayBuffer());
+   if(GH.proxied){const CH=2500000,n=Math.ceil(bytes.length/CH);for(let k=0;k<n;k++){st.textContent=`جارٍ رفع ${cfg.title}: الجزء ${toAr(k+1)} من ${toAr(n)}…`;await GH.put("ocr-inbox/"+base+".pdf.part"+String(k+1).padStart(3,"0"),bytes.subarray(k*CH,(k+1)*CH),"رفع كتاب مصور (جزء "+(k+1)+"): "+cfg.title,null)}
+    await GH.put("ocr-inbox/"+base+".ready",String(n),"اكتمل رفع: "+cfg.title,null)}
+   else await GH.put("ocr-inbox/"+base+".pdf",bytes,"رفع كتاب مصور: "+cfg.title);done.push(cfg.title)}
   st.innerHTML=`✓ رُفع ${toAr(done.length)} ${done.length>1?"كتب":"كتاب"}: ${done.map(esc).join("، ")}.<br>${link&&!fd.get("ocr")?"سيُربط بالكتاب خلال دقيقة.":"بدأ التحويل إلى نص على خوادم GitHub (نحو دقيقة لكل 10–15 صفحة)، ثم تظهر الكتب في أقسامها تلقائيًا. تابع التقدم من تبويب Actions في المستودع."}`;f.reset()}
  catch(e){st.textContent=(done.length?"رُفع: "+done.join("، ")+". ثم توقف: ":"")+e.message}finally{btn.disabled=false}}
 async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=String(fd.get("text")||"").trim();if(!text)return;
  const dd=fd.get("date"),x={id:"po"+Date.now().toString(36),date:!dd||dd===today()?new Date().toISOString():dd,text};const aid=fd.get("aid");if(aid)x.authorId=aid;
  if(fd.get("url"))x.url=String(fd.get("url")).trim();if(fd.get("src"))x.src=String(fd.get("src"));
  try{const img=fd.get("img");
-  if(GH.on){st.textContent="جارٍ النشر…";if(img&&img.size){if(img.size>4*1048576)throw new Error("الصورة أكبر من 4 ميجابايت");const ext=(img.name.match(/\.(jpe?g|png|webp|gif)$/i)||[".jpg"])[0].toLowerCase();const path="assets/posts/"+x.id+ext;await GH.put(path,new Uint8Array(await img.arrayBuffer()),"صورة منشور");x.image=path}else if(fd.get("imgurl"))x.image=String(fd.get("imgurl"));
+  if(GH.on){st.textContent="جارٍ النشر…";if(img&&img.size){if(img.size>(GH.proxied?2.5:4)*1048576)throw new Error("الصورة كبيرة؛ الحد "+(GH.proxied?"2.5":"4")+" ميجابايت");const ext=(img.name.match(/\.(jpe?g|png|webp|gif)$/i)||[".jpg"])[0].toLowerCase();const path="assets/posts/"+x.id+ext;await GH.put(path,new Uint8Array(await img.arrayBuffer()),"صورة منشور");x.image=path}else if(fd.get("imgurl"))x.image=String(fd.get("imgurl"));
    await GH.editJSON("data/posts.json",o=>{o=o||{items:[]};o.items.unshift(x);return o},"منشور: "+text.slice(0,40));(POSTS||[]).unshift(x);st.textContent="✓ نُشر المنشور، ويظهر للجميع خلال دقيقة."}
   else{if(fd.get("imgurl"))x.image=String(fd.get("imgurl"));const l=ls.get("posts_local",[]);l.unshift(x);ls.set("posts_local",l);POSTS=null;st.textContent="✓ حُفظ على هذا الجهاز. فعّل الإدارة المباشرة لنشره للجميع."}
   f.reset()}catch(e){st.textContent=e.message}}

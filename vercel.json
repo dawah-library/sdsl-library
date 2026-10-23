@@ -15,6 +15,9 @@
     "api/sitemap.js": {
       "includeFiles": "data/**",
       "maxDuration": 15
+    },
+    "api/gh.js": {
+      "maxDuration": 30
     }
   },
   "headers": [

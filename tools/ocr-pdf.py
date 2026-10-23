@@ -183,6 +183,16 @@ def ocr(pdf, first=1, last=None):
 def main():
     if not os.path.isdir(INBOX):
         print("لا يوجد مجلد ocr-inbox"); return
+    # تجميع الملفات المرفوعة أجزاءً من صفحة الإدارة: <اسم>.pdf.part001… ثم <اسم>.ready
+    for f in sorted(os.listdir(INBOX)):
+        if f.endswith(".ready"):
+            base = f[:-6]; parts = sorted(x for x in os.listdir(INBOX) if x.startswith(base + ".pdf.part"))
+            n = int((open(os.path.join(INBOX, f)).read().strip() or "0"))
+            if not parts or (n and len(parts) != n):
+                print("أجزاء ناقصة للملف", base, len(parts), "من", n); continue
+            with open(os.path.join(INBOX, base + ".pdf"), "wb") as out:
+                for x in parts: out.write(open(os.path.join(INBOX, x), "rb").read()); os.remove(os.path.join(INBOX, x))
+            os.remove(os.path.join(INBOX, f)); print("جُمِّع:", base, len(parts), "أجزاء")
     redo = [x.strip() for x in os.environ.get("REOCR", "").split(",") if x.strip()]
     for f in sorted(os.listdir(INBOX)):  # طلبات إعادة التحويل من صفحة الإدارة: ocr-inbox/<id>.redo
         if f.endswith(".redo"):

@@ -1,7 +1,7 @@
 name: تحويل الكتب المصورة إلى نص
 on:
   push:
-    paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF", "ocr-inbox/*.redo"]
+    paths: ["ocr-inbox/*.pdf", "ocr-inbox/*.PDF", "ocr-inbox/*.redo", "ocr-inbox/*.ready"]
   workflow_dispatch:
     inputs:
       reocr:
