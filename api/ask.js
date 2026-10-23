@@ -104,7 +104,7 @@ async function runAnthropic({ system, msgs, deep, maxRounds, budget, t0, send, t
 const gTools = () => [{ functionDeclarations: S.TOOLS.map(t => ({ name: t.name, description: t.description, parameters: clean(t.input_schema) })) }];
 function clean(sc) { const o = JSON.parse(JSON.stringify(sc)); (function f(x) { if (x && typeof x === "object") { if (Array.isArray(x.enum)) { x.enum = x.enum.filter(v => v !== ""); if (!x.enum.length) delete x.enum; } Object.values(x).forEach(f); } })(o); if (o.properties && !Object.keys(o.properties).length) delete o.properties; return o; }
 async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, toolLabel, runOne, used }) {
-  const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+  const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   let model = models.shift();
   let useQuery = false; const retried = {};
   const contents = msgs.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
@@ -161,7 +161,7 @@ module.exports = async (req, res) => {
   if (req.method === "GET" && /check=1/.test(req.url || "")) {
     const out = { provider: PROVIDER() || "none", gemini_key: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.slice(0, 3) + "… (" + process.env.GEMINI_API_KEY.length + ")" : "missing", anthropic_key: process.env.ANTHROPIC_API_KEY ? "set" : "missing", supabase: process.env.SUPABASE_URL ? "set" : "missing", tests: [] };
     if (process.env.GEMINI_API_KEY) {
-      for (const m of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter((x, i, a) => x && a.indexOf(x) === i)) {
+      for (const m of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((x, i, a) => x && a.indexOf(x) === i)) {
         for (const how of ["header", "query"]) {
           try {
             const u = "https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent" + (how === "query" ? "?key=" + encodeURIComponent(process.env.GEMINI_API_KEY) : "");
