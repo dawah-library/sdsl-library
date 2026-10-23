@@ -98,13 +98,18 @@ UNCERTAIN = {}  # رقم الصفحة (من صفر) ← كلمات شكّ فيه
 _glast = [0.0]
 
 
+GFAIL = [0]  # إخفاقات Gemini المتتالية: بعد عدد منها يكمل الكتاب بـ Tesseract ويعلّم الصفحات لإعادة المراجعة لاحقًا
+
+
 def gemini_page(img, draft=""):
+    if GFAIL[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "6")):
+        return None
     data = base64.b64encode(open(img, "rb").read()).decode()
     prompt = PROMPT + (REVIEW.format(draft=draft[:6000]) if draft.strip() else "")
     body = json.dumps({"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": data}}, {"text": prompt}]}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": 8192}}).encode()
     models = list(GMODELS)
-    for attempt in range(7):
+    for attempt in range(4):
         wait = GDELAY - (time.time() - _glast[0])
         if wait > 0: time.sleep(wait)
         _glast[0] = time.time()
@@ -116,16 +121,19 @@ def gemini_page(img, draft=""):
             c = (j.get("candidates") or [{}])[0]
             t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
             if t.strip():
+                GFAIL[0] = 0
                 return t.replace("[صفحة بلا نص]", "").strip()
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
         except urllib.error.HTTPError as e:
             msg = e.read()[:300].decode("utf-8", "ignore")
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue
-            if e.code in (401, 403): return None
-            time.sleep(min(60, 5 * (attempt + 1)))
+            if e.code in (401, 403): GFAIL[0] = 99; return None
+            if e.code in (429, 500, 503) and len(models) > 1 and attempt >= 1: models.pop(0)  # جرّب نموذجًا آخر عند الازدحام
+            time.sleep(min(30, 4 * (attempt + 1)))
         except Exception as e:
             print("    Gemini خطأ: %r" % e, flush=True); time.sleep(5 * (attempt + 1))
+    GFAIL[0] += 1
     return None
 
 
@@ -147,7 +155,7 @@ def ocr(pdf, first=1, last=None):
     n = pages_count(pdf)
     last = min(last or n, n)
     pages = []
-    STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear()
+    STATS.update(gemini=0, tesseract=0); UNCERTAIN.clear(); UNREVIEWED.clear(); GFAIL[0] = 0
     print("  المحرك: " + ("Gemini مع Tesseract احتياطيًا" if GKEY else "Tesseract"), flush=True)
     with tempfile.TemporaryDirectory() as td:
         for p in range(first, last + 1):
