@@ -104,6 +104,16 @@ jobs:
           OCR_DRAFTS: ocr-drafts
           OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '60' }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
+      - name: رفع المصورة وصور الصفحات إلى مخزن R2 (إن ضُبط)
+        continue-on-error: true
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+        run: |
+          if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3 pillow; python3 tools/r2-store.py; else echo "R2 غير مضبوط"; fi
       - run: |
           rm -rf ocr-drafts tessdata
           bash tools/git-save.sh "تحويل كتب مصورة إلى نص" data pdf ocr-inbox tools/ocr-report.md

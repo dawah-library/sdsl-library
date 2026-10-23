@@ -1,0 +1,36 @@
+name: نقل الكتب المصورة إلى مخزن R2
+# يرفع كل كتاب له نسخة في pdf/ ولم يُرفع بعد، مع صورة خفيفة لكل صفحة. لا يحذف شيئًا من المستودع.
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "معرّفات كتب بعينها (مفصولة بمسافات)، أو اتركه فارغًا للكل"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths: ["pdf/**"]
+permissions:
+  contents: write
+concurrency:
+  group: r2
+  cancel-in-progress: false
+jobs:
+  store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: الرفع
+        run: |
+          if [ -z "$R2_ACCESS_KEY_ID" ]; then echo "R2 غير مضبوط بعد"; exit 0; fi
+          sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+          pip install -q --break-system-packages boto3 pillow
+          python3 tools/r2-store.py ${{ github.event.inputs.ids }}
+      - run: bash tools/git-save.sh "نقل كتب مصورة إلى مخزن R2" data/catalog.json

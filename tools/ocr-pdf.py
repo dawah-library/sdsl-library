@@ -569,7 +569,7 @@ def main():
         existing = next((b for b in cat["books"] if b["id"] == bid), None)
         entry = existing or {"id": bid, "title": title, "type": "book", "col": cfg.get("col", "dawah"),
                              "topicId": cfg.get("topic", "t1"), "added": datetime.date.today().isoformat()}
-        entry["pdf"] = f"pdf/{bid}.pdf"
+        if not entry.get("img"): entry["pdf"] = f"pdf/{bid}.pdf"  # إن كان في مخزن R2 يبقى رابطه
         if "offset" in cfg: entry["pdfOffset"] = int(cfg["offset"])
         if cfg.get("tags"): entry["tags"] = sorted(set(entry.get("tags", []) + cfg["tags"]))
         do_ocr = cfg.get("ocr", existing is None)

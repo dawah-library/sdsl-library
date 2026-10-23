@@ -238,7 +238,7 @@ footer .dawah-logo{height:64px;width:auto;background:#fff;border-radius:10px;pad
 
 /* ===== النسخة المصورة ===== */
 .pbody.both{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-.pdfv canvas{width:100%;height:auto;display:block;border:1px solid var(--pgline);border-radius:3px;background:#fff}
+.pdfv canvas,.pdfv .pimg{width:100%;height:auto;display:block;border:1px solid var(--pgline);border-radius:3px;background:#fff}
 .pdfcap{text-align:center;font-size:.78rem;margin:6px 0 0}.ocrn{font-size:.76rem;text-align:center;margin:8px 0 0}
 body.reading-full .paper:has(.pbody.both){max-width:96vw}
 .paper:has(.pbody.both){max-width:92em}
