@@ -5,6 +5,7 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const SS=window.SDSLSearch,strip=SS.strip,norm=SS.norm,plain=SS.plain;
+try{if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!navigator.standalone&&!matchMedia("(display-mode: standalone)").matches)document.documentElement.classList.add("ios-browser")}catch(e){}
 const ls={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const DB={open(){return new Promise((res,rej)=>{const r=indexedDB.open("sdsl",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
  async get(k){try{const d=await this.open();return await new Promise(r=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(undefined)})}catch(e){return ls.get("db_"+k)}},
@@ -1041,11 +1042,12 @@ let TJ={items:{}};
 const tj=id=>TJ.items[id];
 const counts=id=>{const all=lib.books.filter(b=>b.authorId===id&&!b.demo&&!VOL2(b)),k=x=>all.filter(b=>kindOf(b)===x).length;return{books:k("book"),arts:k("article"),fatwas:k("fatwa"),st:k("statement")}};
 const countLine=id=>{const c=counts(id),p=[];if(c.books)p.push(c.books+" كتاب");if(c.arts)p.push(c.arts+" مقال");if(c.fatwas)p.push(c.fatwas+" فتوى");if(c.st)p.push(c.st+" بيان");return p.join(" • ")||"لا توجد مواد بعد"};
-function authorBrief(id){const a=A(id),t=tj(id);if(!a||!a.name||a.name==="—")return;
- openSheet(a.name+died(a),`${t&&t.born?`<p class="mut" style="margin:0">المولد: ${esc(t.born)}</p>`:""}
+function authorBrief(id){const a=A(id),t=tj(id);if(!a||!a.name||a.name==="—")return;try{getSelection().removeAllRanges()}catch(e){}
+ // نافذة في وسط الشاشة (لا تختفي خلف شريط المتصفح السفلي في الآيفون)
+ openDlg(`<div class="abr"><div class="ahero">${avatar(a,"big")}<h3>${esc(a.name)}${died(a)}</h3></div>`+`${t&&t.born?`<p class="mut" style="margin:0">المولد: ${esc(t.born)}</p>`:""}
  <p class="brief">${esc((t&&t.brief)||a.bio||"لم يُضف تعريف بهذا المؤلف بعد.")}</p>
  <p class="mut">في المكتبة: ${countLine(id)}</p>
- <div class="row">${t?`<a class="btn p nf" href="#/tarjama/${id}" data-act="closeSheet">الترجمة المفصلة</a>`:""}<a class="btn nf" href="#/author/${id}" data-act="closeSheet">كتبه ومقالاته</a></div>`)}
+ <div class="row">${t?`<a class="btn p nf" href="#/tarjama/${id}" data-act="closeDlg">الترجمة المفصلة</a>`:""}<a class="btn nf" href="#/author/${id}" data-act="closeDlg">كتبه ومقالاته</a>${isAdmin()&&GH.on?`<button class="btn nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button>`:""}</div></div>`)}
 // الضغط المطول (أو الزر الأيمن) على أي اسم مؤلف يعرض التعريف الموجز
 let lpTimer=null,lpFired=false;
 document.addEventListener("pointerdown",e=>{const el=e.target.closest("[data-author]");if(!el)return;lpFired=false;clearTimeout(lpTimer);

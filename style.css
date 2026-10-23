@@ -467,3 +467,9 @@ body.fmtp .rd p.ph2{text-align:start;text-indent:0}
 .msg textarea{min-height:80px;margin:6px 0}
 .phbox{margin-top:10px;text-align:center}.phbox canvas{width:220px;height:220px;border-radius:50%;touch-action:none;cursor:grab;box-shadow:0 0 0 3px var(--ac);background:#eee;display:block;margin:0 auto 8px}
 .ahero .btn.s{margin-top:6px}
+/* الضغط المطول على أسماء المؤلفين: بلا تحديد نص ولا قائمة النظام في الآيفون */
+[data-author]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.abr .ahero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin-bottom:6px}.abr h3{margin:0;font-family:Amiri,serif}
+.abr .brief{line-height:1.8}
+/* الأشرطة السفلية في متصفح الآيفون (شريط Safari العائم يغطي أسفل الشاشة) */
+html.ios-browser .sheet{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
