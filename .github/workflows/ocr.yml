@@ -13,6 +13,8 @@ on:
 permissions:
   contents: write
   id-token: write
+env:
+  OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
 concurrency:
   group: ocr
   cancel-in-progress: false
@@ -29,7 +31,7 @@ jobs:
       - id: p
         env:
           REOCR: ${{ github.event.inputs.reocr }}
-          OCR_MACHINES: ${{ vars.OCR_MACHINES || '20' }}
+          OCR_MACHINES: ${{ vars.OCR_MACHINES || '16' }}
           OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
         run: python3 tools/ocr-pdf.py --plan
 
@@ -40,7 +42,7 @@ jobs:
     timeout-minutes: 240
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 16
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
