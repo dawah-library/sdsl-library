@@ -1,0 +1,59 @@
+name: استيراد كتاب من turath.io
+on:
+  workflow_dispatch:
+    inputs:
+      book:
+        description: "رقم الكتاب في الشاملة/turath.io"
+        required: true
+      id:
+        description: "معرّف الكتاب في المكتبة"
+        required: true
+      title:
+        description: "العنوان"
+        required: true
+      author_id:
+        description: "معرّف المؤلف"
+        required: true
+      author:
+        description: "اسم المؤلف"
+        required: false
+        default: ""
+      topic:
+        description: "القسم (t4 الفقه…)"
+        required: false
+        default: "t4"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: import-turath
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: الاستيراد
+        env:
+          TIO_BOOK: ${{ github.event.inputs.book }}
+          TIO_ID: ${{ github.event.inputs.id }}
+          TIO_TITLE: ${{ github.event.inputs.title }}
+          TIO_AUTHOR_ID: ${{ github.event.inputs.author_id }}
+          TIO_AUTHOR: ${{ github.event.inputs.author }}
+          TIO_TOPIC: ${{ github.event.inputs.topic }}
+        run: python3 tools/import-turathio.py
+      - name: الحفظ
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add vols data/catalog.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "تراث: ${{ github.event.inputs.title }}"
+          for i in 1 2 3 4 5; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done
+      - name: فهرس معاني الكلمات
+        run: |
+          python3 tools/gloss.py >/dev/null && git add data/gloss && (git diff --cached --quiet || (git commit -qm "فهرس معاني الكلمات بعد الاستيراد" && git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main)) || true
+      - name: إشعار
+        if: always()
+        run: '[ -s .tio-report.txt ] && python3 tools/notify.py "$(cat .tio-report.txt)" || true'

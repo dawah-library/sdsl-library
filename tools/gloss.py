@@ -16,7 +16,7 @@ CAT = {  # بادئة المعرّف ← التصنيف
     "lex": ["mukhtar", "sihah", "maqayis", "lisan", "qamus", "nihaya", "mufradat", "fiqhlugha", "tajarus", "mukhassas"],
     "tafsir": ["saadi", "ibnkathir", "tabari", "qurtubi", "baghawi"],
     "hadith": ["fathbari", "nawawimuslim", "subulsalam", "naylawtar", "istidhkar", "tamhid"],
-    "fiqh": ["mawsuafiqhiyya", "mughni", "majmunawawi", "rawdmurbi", "bidayatmujtahid", "ilam", "shafiiumm", "mudawwana"],
+    "fiqh": ["mawsuakuwaitiyya", "qawaidfiqhiyya", "mughni", "majmunawawi", "rawdmurbi", "bidayatmujtahid", "ilam", "shafiiumm", "mudawwana"],
     "usul": ["rawdatnazir", "muwafaqat", "risala"],
     "aqida": ["majmufatawa", "minhajsunna", "iqtida"],
 }
@@ -101,7 +101,7 @@ def main():
             if c == "lex":
                 for m in HEAD_LEX.finditer(t):
                     hits.append((key(m.group(1)), "l", m.end()))
-            elif c == "fiqh" and re.sub(r"-v\d+$", "", bid) == "mawsuafiqhiyya":
+            elif c == "fiqh" and re.sub(r"-v\d+$", "", bid) == "mawsuakuwaitiyya":
                 for m in HEAD.finditer(t):
                     h = m.group(1).strip(" :.")
                     if 1 <= len(h.split()) <= 3 and not re.search(r"\d|فصل|باب|مبحث|المطلب|التعريف|الحكم|أحكام", h):
