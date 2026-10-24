@@ -1,0 +1,52 @@
+name: قياس Qari-OCR (القارئ المجاني المفتوح)
+on:
+  workflow_dispatch:
+    inputs:
+      book:
+        description: "معرّف كتاب مصور"
+        required: true
+        default: "p2d64fddf"
+      first:
+        required: true
+        default: "5"
+      last:
+        required: true
+        default: "8"
+      pixels:
+        description: "أقصى عدد بكسلات للصورة (أقل = أسرع)"
+        required: false
+        default: "802816"
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/huggingface
+          key: qari-v1
+      - name: التثبيت
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "transformers>=4.49,<5" accelerate qwen-vl-utils pillow
+      - name: القياس
+        env:
+          QARI_PIXELS: ${{ github.event.inputs.pixels }}
+        run: |
+          PDF=$(python3 -c "import importlib.util,sys;sys.argv=['x'];s=importlib.util.spec_from_file_location('o','tools/ocr-pdf.py');o=importlib.util.module_from_spec(s);s.loader.exec_module(o);print(o.local_pdf('${{ github.event.inputs.book }}') or '')" | tail -1)
+          echo "PDF=$PDF"; nproc; free -g
+          python3 tools/qari.py "$PDF" ${{ github.event.inputs.first }} ${{ github.event.inputs.last }} | tee qari-bench.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qari-bench
+          path: qari-bench.txt
