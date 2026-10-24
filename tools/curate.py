@@ -136,7 +136,11 @@ def fawaid(cat):
             done = z
             if len(re.sub(r"\s", "", text)) < 600:
                 continue
-            r = gemini(PICK.format(title=b.get("setTitle") or b["title"], author=au.get(b.get("authorId"), ""), n=3, text=text[:40000])) or {}
+            r = gemini(PICK.format(title=b.get("setTitle") or b["title"], author=au.get(b.get("authorId"), ""), n=3, text=text[:40000]))
+            if r is None:  # تعذر الطلب (نفاد الحصة أو المهلة): لا تُعدّ هذه الصفحات مقروءة، ويُستأنف منها لاحقًا
+                done = a
+                BUDGET[0] = min(BUDGET[0], 2)
+                break
             for x in r.get("items", [])[:3]:
                 pg = int(x.get("page") or a + 1)
                 src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
