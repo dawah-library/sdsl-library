@@ -615,3 +615,15 @@ details.qorg{margin:8px 0;border:1px dashed var(--line);border-radius:10px;paddi
 .pathl{padding-inline-start:22px}.pathl li{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}.pathl li.done{border-color:var(--ac)}
 .pathl li>div:first-child{flex:1;min-width:200px}.pathl b{display:block}.pathl .prog{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 2px}.pathl .prog i{display:block;height:100%;background:var(--gold)}
 .card .prog{display:block;height:4px;background:var(--line);border-radius:4px;margin-top:6px;position:relative;overflow:hidden}.card .prog::after{content:"";position:absolute;inset:0 0 0 auto;width:var(--w);background:var(--gold)}
+/* صفحتا التعريف والتاريخ */
+.cmhero.dwh{background:linear-gradient(135deg,#0f5c4d,#6b5a2b)}.cmhero.dwh2{background:linear-gradient(135deg,#6b5a2b,#1f5f70)}
+.dw h3{margin-top:26px;scroll-margin-top:80px}.dw p{line-height:1.95}
+.dwnav{margin:6px 0 4px}.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.dwgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:10px 0}
+.dwc{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.dwc b{color:var(--ac)}.dwc p{margin:6px 0 0;font-size:.95rem;line-height:1.85}
+details.dwc summary{cursor:pointer;font-weight:700;color:var(--ac);list-style:none;display:flex;gap:8px;align-items:center}
+details.dwc summary::-webkit-details-marker{display:none}
+.dwn{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;background:var(--gold);color:#fff;font-size:.85rem}
+.dwbox{border-right:4px solid var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--sf));padding:10px 14px;border-radius:8px;margin:12px 0;line-height:1.9}
+.dwlist{line-height:1.95}.dwera{margin:18px 0 0;color:var(--gold);font-family:Amiri,serif;font-size:1.2rem}
