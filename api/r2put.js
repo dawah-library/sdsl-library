@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
       return out(200, { url: presignGet("books/" + bk + "/book.pdf", 900) });
     }
     const name = new URL(req.url, "http://x").searchParams.get("f") || "";
-    if (!/^up[0-9a-z]{4,30}\.pdf$/.test(name)) return out(400, { message: "bad name" });
+    if (!/^(up[0-9a-z]{4,30}\.pdf|au[0-9a-z]{4,30}\.(mp3|m4a|aac|ogg|wav|webm))$/.test(name)) return out(400, { message: "bad name" });
     const key = E("SUPABASE_SECRET_KEY") || E("SUPABASE_SERVICE_ROLE_KEY");
     // المفاتيح الجديدة (sb_secret_) تُقبل في ترويسة apikey وحدها، وبعض خوادم التخزين تطلبها في Authorization أيضًا: نجرّب الطريقتين
     let last = "";

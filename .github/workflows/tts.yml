@@ -1,0 +1,51 @@
+name: صوتيات المكتبة (تحويل النص إلى صوت)
+# مجاني بالكامل: أصوات Edge العصبية العربية عبر edge-tts، والملفات الصوتية في «إصدارات» المستودع (خارج مساحة R2 والموقع)
+on:
+  push:
+    paths: ["data/audio/_queue.json"]
+  schedule:
+    - cron: "10 2 * * *"   # يوميًا: يكمل الطابور، ويعيد الصفحات التي تغيّر نصها بعد التدقيق
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "معرّفات كتب لتحويلها الآن (مفصولة بفواصل)"
+        required: false
+        default: ""
+      refresh:
+        description: "إعادة الصفحات التي تغيّر نصها (1 للتفعيل)"
+        required: false
+        default: "0"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: tts
+  cancel-in-progress: false
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: الأدوات
+        run: |
+          pip install -q "edge-tts>=7"
+          which ffprobe || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - name: التحويل إلى صوت
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TTS_COMMIT: "1"
+          TTS_MAX_MIN: "320"
+          TTS_ONLY: ${{ github.event.inputs.books }}
+          TTS_REFRESH: ${{ github.event_name == 'schedule' && '1' || github.event.inputs.refresh || '0' }}
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          python3 tools/tts.py
+      - name: إشعار الإدارة
+        if: always()
+        run: |
+          [ -s .tts-report.txt ] && python3 tools/notify.py "$(cat .tts-report.txt)" || true
