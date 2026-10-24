@@ -18,7 +18,15 @@ def _load():
     from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
     torch.set_num_threads(os.cpu_count() or 4)
     t = time.time()
-    m = Qwen2VLForConditionalGeneration.from_pretrained(MODEL, torch_dtype=torch.bfloat16 if os.environ.get("QARI_BF16", "1") == "1" else torch.float32)
+    dt = torch.bfloat16 if os.environ.get("QARI_BF16", "1") == "1" else torch.float32
+    base = os.environ.get("QARI_BASE", "Qwen/Qwen2-VL-2B-Instruct")
+    try:  # النموذج منشور مُكيِّفًا (LoRA) على Qwen2-VL-2B: نحمّل الأساس الكامل ثم ندمج المكيِّف
+        from peft import PeftModel
+        m = Qwen2VLForConditionalGeneration.from_pretrained(base, dtype=dt)
+        m = PeftModel.from_pretrained(m, MODEL).merge_and_unload()
+    except Exception as e:
+        print("  تحميل المكيِّف تعذر (%s)؛ يُجرَّب النموذج مباشرة" % str(e)[:120], flush=True)
+        m = Qwen2VLForConditionalGeneration.from_pretrained(MODEL, dtype=dt)
     m.eval()
     px = int(os.environ.get("QARI_PIXELS", str(1024 * 28 * 28)))  # حجم الصورة يحدد عدد الرموز وبالتالي السرعة
     p = AutoProcessor.from_pretrained(MODEL, min_pixels=256 * 28 * 28, max_pixels=px)

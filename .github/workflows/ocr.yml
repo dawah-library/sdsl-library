@@ -91,13 +91,13 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.cache/huggingface
-          key: qari-v2
+          key: qari-v3
       - name: تثبيت Qari-OCR (القارئ العربي المفتوح المجاني)
         if: ${{ vars.OCR_QARI == '1' }}
         continue-on-error: true
         run: |
           pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install -q "transformers>=4.49,<5" accelerate qwen-vl-utils pillow
+          pip install -q "transformers>=4.49,<5" accelerate peft qwen-vl-utils pillow
       - name: مسودات الصفحات ${{ matrix.shard.first }}-${{ matrix.shard.last }}
         env:
           OCR_QARI: ${{ vars.OCR_QARI || '0' }}
