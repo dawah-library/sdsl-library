@@ -950,6 +950,8 @@ def main():
         base = f[:-4]
         title, author = (base.split(" - ", 1) + [""])[:2] if " - " in base else (base, "")
         title, author = cfg.get("title", title).strip(), cfg.get("author", author).strip()
+        title = re.sub(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]", "", title).strip()  # علامات الاتجاه الخفية من أسماء الملفات
+        title = re.sub(r"\s*[-–]\s*" + re.escape(author.replace("الشيخ ", "")) + r"\s*$", "", title) if author else title
         bid = cfg.get("book") or ("p" + hashlib.md5(base.encode()).hexdigest()[:8])
         print(f"== {f} → {bid}")
         dest = os.path.join(PDFDIR, bid + ".pdf")
