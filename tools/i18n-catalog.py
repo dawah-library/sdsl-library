@@ -9,6 +9,7 @@ KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEM
 PROMPT = """You are an expert translator of classical and modern Islamic Arabic literature. For each item give its established English rendering:
 - Book titles: the conventional English form used by scholars (transliterated title in standard academic style, then a colon and a faithful English meaning when helpful), e.g. "فتح الباري شرح صحيح البخاري" -> "Fath al-Bari: Commentary on Sahih al-Bukhari"; "العقيدة الواسطية" -> "Al-Aqidah al-Wasitiyyah (The Wasiti Creed)". Keep volume markers as "— Vol. N".
 - Person names: standard transliteration (e.g. "ابن قيم الجوزية" -> "Ibn Qayyim al-Jawziyyah", "الشيخ ياسر برهامي" -> "Shaykh Yasir Burhami").
+- Never leave any Arabic letters in the output; transliterate everything. Use "Qur'an" and "Shaykh"; use a plain apostrophe (') for both 'ayn and hamza.
 Return ONLY a JSON object mapping each given key to its English string.
 
 Items:
@@ -31,9 +32,30 @@ def gemini(text):
     return None
 
 
+AR = re.compile(r"[\u0600-\u06FF]")
+
+
+def norm(v):
+    """توحيد النقحرة: Qur'an وShaykh وعلامة واحدة للعين والهمزة؛ ويُرفض ما بقي فيه حرف عربي ليعاد ترجمته."""
+    v = re.sub(r"\s+", " ", v).strip()
+    if AR.search(v):
+        return ""
+    v = re.sub(r"[ʿʾ‘’`]", "'", v)
+    v = re.sub(r"\bQur'?an\b", "Qur'an", v)
+    v = re.sub(r"\bSheikh\b", "Shaykh", v)
+    return v
+
+
 def main():
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
     out = json.load(open(OUT, encoding="utf-8")) if os.path.exists(OUT) else {"books": {}, "authors": {}}
+    for sec in ("books", "authors"):  # تنظيف ما سبق حفظه
+        for k in list(out[sec]):
+            v = norm(out[sec][k])
+            if v:
+                out[sec][k] = v
+            else:
+                del out[sec][k]
     jobs = []
     for b in cat["books"]:
         if b.get("type", "book") == "book" and b["id"] not in out["books"]:
@@ -52,7 +74,8 @@ def main():
         if not res:
             break
         for k, v in res.items():
-            if isinstance(v, str) and v.strip():
+            v = norm(v) if isinstance(v, str) else ""
+            if v:
                 (out["books"] if k.startswith("b:") else out["authors"])[k[2:]] = v.strip()
         json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         print("  %d/%d" % (min(i + 60, len(jobs)), len(jobs)), flush=True)
