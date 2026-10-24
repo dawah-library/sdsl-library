@@ -116,15 +116,16 @@ function cmReportDlg(id) {
 function cmExportDlg(list, label) {
   window.__cmExp = { list, label };
   openDlg(`<h3>تصدير ${esc(label)}</h3><p class="mut">${toAr(list.length)} منشور، بنصوصها وتوثيقها (الكتاب والمؤلف والصفحة) واسم ناشرها وتاريخه.</p><div class="tools-grid">
-  <button data-act="cmexpf" data-f="doc">ملف Word</button><button data-act="cmexpf" data-f="pdf">PDF (طباعة)</button><button data-act="cmexpf" data-f="txt">نص عادي</button><button data-act="cmexpf" data-f="md">Markdown</button><button data-act="cmexpf" data-f="json">JSON (بيانات)</button><button data-act="cmexpf" data-f="csv">جدول CSV</button></div>`);
+  <button data-act="cmexpf" data-f="doc">ملف Word</button><button data-act="cmexpf" data-f="pdf">PDF (طباعة)</button><button data-act="cmexpf" data-f="txt">نص عادي</button><button data-act="cmexpf" data-f="md">Markdown</button><button data-act="cmexpf" data-f="json">JSON (بيانات)</button><button data-act="cmexpf" data-f="csv">جدول CSV</button></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="cmtash" ${S.tash ? "checked" : ""}> بالتشكيل (إن وُجد في النص)</label>`);
 }
 function cmRef(q) { return q ? `${q.title || ""}${q.au ? "، " + q.au : ""}${q.pl ? "، " + q.pl : q.p ? "، ص " + q.p : ""}` : ""; }
 function cmLink(x) { return (typeof siteLink === "function" && siteLink("#/post/" + x.id)) || location.origin + "/post/" + x.id; }
 async function cmExportAs(f) {
-  const { list, label } = window.__cmExp || {}; if (!list || !list.length) return;
+  const ex = window.__cmExp || {}, label = ex.label, keep = !$("#cmtash") || $("#cmtash").checked; if (!ex.list || !ex.list.length) return;
+  const T = t => keep ? t : strip(t || ""), list = ex.list.map(x => Object.assign({}, x, { text: T(x.text), quote: x.quote ? Object.assign({}, x.quote, { t: T(x.quote.t) }) : x.quote }));
   const name = (label || "مجتمع المكتبة").replace(/[\\/:*?"<>|]/g, "");
   const H = s => esc(s || "");
-  if (f === "txt") return dl(name + ".txt", postsToText(list), "text/plain");
+  if (f === "txt") return dl(name + ".txt", postsToText(list).replace(/«([^»]*)»/g, (m, t) => "«" + T(t) + "»"), "text/plain");
   if (f === "md") return dl(name + ".md", `# ${label}\n\n` + list.map(x => `> ${(x.quote && x.quote.t || x.text || "").replace(/\n/g, "\n> ")}\n\n— ${cmRef(x.quote)}\n\n*${pName(x)} • ${fmtDate(x.date)}* — [الرابط](${cmLink(x)})`).join("\n\n---\n\n") + `\n\n${SITENAME}\n`, "text/markdown");
   if (f === "json") return dl(name + ".json", JSON.stringify({ source: SITENAME, exported: new Date().toISOString(), items: list.map(x => ({ id: x.id, by: pName(x), date: x.date, text: x.quote ? x.quote.t : x.text, book: x.quote && x.quote.title, author: x.quote && x.quote.au, page: x.quote && (x.quote.pl || x.quote.p), link: cmLink(x) })) }, null, 2), "application/json");
   if (f === "csv") { const c = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`; return dl(name + ".csv", ["النص,الكتاب,المؤلف,الصفحة,الناشر,التاريخ,الرابط"].concat(list.map(x => [x.quote ? x.quote.t : x.text, x.quote && x.quote.title, x.quote && x.quote.au, x.quote && (x.quote.pl || x.quote.p), pName(x), fmtDate(x.date), cmLink(x)].map(c).join(","))).join("\n"), "text/csv"); }

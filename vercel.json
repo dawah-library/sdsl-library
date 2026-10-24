@@ -150,5 +150,5 @@
       "permanent": true
     }
   ],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)data/audio'"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)data/audio' ':(exclude)data/tashkeel'"
 }

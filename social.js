@@ -131,7 +131,7 @@ async function openComments(card) {
 
 /* تصدير مجموعة فوائد (منشوراتي أو محفوظاتي) نصًا موثقًا */
 function postsToText(list) {
-  return list.map(x => { const q = x.quote, src = q ? `\n«${q.t}»\n— ${q.title || ""}${q.au ? "، " + q.au : ""}${q.pl ? "، " + q.pl : q.p ? "، ص " + q.p : ""}` : ""; return `${x.text || ""}${src}\n(${pName(x)} — ${fmtDate ? fmtDate(x.date) : x.date})`.trim(); }).join("\n\n———\n\n") + `\n\n${SITENAME}`;
+  return list.map(x => { const q = x.quote, src = q ? `\n«${typeof expTash === "function" ? expTash(q.t) : q.t}»\n— ${q.title || ""}${q.au ? "، " + q.au : ""}${q.pl ? "، " + q.pl : q.p ? "، ص " + q.p : ""}` : ""; return `${x.text || ""}${src}\n(${pName(x)} — ${fmtDate ? fmtDate(x.date) : x.date})`.trim(); }).join("\n\n———\n\n") + `\n\n${SITENAME}`;
 }
 
 /* الأحداث الخاصة بالحلقة الاجتماعية */

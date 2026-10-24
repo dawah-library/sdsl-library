@@ -1,0 +1,55 @@
+name: تشكيل الكتب (تشكيل مدقق نحويًا ولغويًا)
+# مجاني: Gemini للتشكيل، ومدقق مستقل (GPT-4.1 عبر GitHub Models أو Gemini Pro) للمراجعة؛ ولا يتغير حرف من نص الكتاب.
+on:
+  schedule:
+    - cron: "10 21 * * *"   # بعد جولتي التدقيق النصي اليوميتين، بما بقي من الحصة المجانية
+  push:
+    paths: ["data/tashkeel/_queue.json"]
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "معرّفات كتب لتشكيلها الآن (مفصولة بفواصل)"
+        required: false
+        default: ""
+      pages:
+        description: "الحد الأقصى للصفحات في هذه الجولة"
+        required: false
+        default: "400"
+permissions:
+  contents: write
+  id-token: write
+  models: read
+concurrency:
+  group: tashkeel
+  cancel-in-progress: false
+jobs:
+  tashkeel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: التشكيل
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TK_ONLY: ${{ github.event.inputs.books }}
+          TK_MAX_PAGES: ${{ github.event.inputs.pages || '400' }}
+          TK_MAX_MIN: "300"
+        run: python3 tools/tashkeel.py
+      - name: الحفظ
+        if: always()
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/tashkeel
+          git diff --cached --quiet && exit 0
+          git commit -qm "تشكيل الكتب: جولة $(date -u +%F)"
+          for i in 1 2 3 4 5; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
+      - name: إشعار الإدارة
+        if: always()
+        run: |
+          [ -s .tk-report.txt ] && python3 tools/notify.py "$(cat .tk-report.txt)" || true
