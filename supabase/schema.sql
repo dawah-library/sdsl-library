@@ -412,3 +412,18 @@ alter table public.member_posts add column if not exists hidden_reason text;
 -- app_settings: المفاتيح community_rules وcommunity_open وradio_channels يقرؤها الجميع ويكتبها المدير
 -- is_banned(uid, scope) ويستعمله guard_member_write لمنع تعليق الموقوف؛ وapi/mpost يمنع نشره
 -- notifications: سياسة "notifications staff insert"؛ وصندوق inbox يقبل ملفات الصوت
+
+-- صيانة 24 أكتوبر: فهارس المفاتيح الأجنبية، وسحب تنفيذ دوال المشغّلات عبر RPC
+create index if not exists comment_reactions_user_idx on public.comment_reactions(user_id);
+create index if not exists conversations_user_idx on public.conversations(user_id);
+create index if not exists corrections_user_idx on public.corrections(user_id);
+create index if not exists direct_messages_recipient_idx on public.direct_messages(recipient);
+create index if not exists notifications_user_idx on public.notifications(user_id);
+create index if not exists post_comments_parent_idx on public.post_comments(parent_id);
+create index if not exists post_comments_user_idx on public.post_comments(user_id);
+create index if not exists post_reactions_user_idx on public.post_reactions(user_id);
+create index if not exists post_reports_user_idx on public.post_reports(user_id);
+create index if not exists post_saves_user_idx on public.post_saves(user_id);
+create index if not exists push_subs_user_idx on public.push_subs(user_id);
+revoke execute on function public.dm_notify() from public, anon, authenticated;
+revoke execute on function public.report_notify() from public, anon, authenticated;
