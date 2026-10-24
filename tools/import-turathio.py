@@ -94,6 +94,9 @@ def main():
         v = str((j.get("meta") or {}).get("vol") or "1")
         vols.setdefault(v, []).append((n, j))
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
+    old = next((b for b in cat["books"] if b["id"] == BID and not b.get("set")), None)
+    if old and os.environ.get("TIO_SINGLE", "auto") != "0":
+        return replace_single(cat, old, order, pages, vols, heads, m)
     aid = os.environ.get("TIO_AUTHOR_ID", "ta_" + BID)
     if not any(a["id"] == aid for a in cat["authors"]):
         cat["authors"].append({"id": aid, "name": os.environ.get("TIO_AUTHOR", ""), "col": "turath", "bio": ""})
@@ -122,6 +125,31 @@ def main():
     cat["version"] = int(time.time() * 1000)
     json.dump(cat, open(os.path.join(ROOT, "data", "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     open(os.path.join(ROOT, ".tio-report.txt"), "w", encoding="utf-8").write("📚 أضيف إلى قسم التراث: «%s» — %d جزءًا، %d صفحة" % (title, len(keys), len(order)))
+
+
+def replace_single(cat, old, order, pages, vols, heads, m):
+    """استبدال نص كتاب موجود في ملف واحد (data/books/<id>.json) بنسخة الشاملة المشكولة، مع بقاء معرّفه وبياناته (فلا تنكسر روابطه)."""
+    multi = len(vols) > 1
+    pg_text = [clean(pages[n].get("text") or "") for n in order]
+    pl = [("ج%s ص%s" if multi else "ص %s%s") % (((pages[n].get("meta") or {}).get("vol") or "1", (pages[n].get("meta") or {}).get("page", "")) if multi else ((pages[n].get("meta") or {}).get("page", ""), "")) for n in order]
+    pos = {n: i for i, n in enumerate(order)}
+    toc = [{"t": t, "p": pos[p] + 1, **({"l": 2} if lv > 1 else {})} for p, t, lv in heads if p in pos and t]
+    if not toc:
+        for i, t in enumerate(pg_text):
+            for h in re.findall(r"^# (.{2,80})$", t, re.M)[:2]:
+                toc.append({"t": h, "p": i + 1})
+    s = json.dumps({"id": BID, "pages": pg_text, "toc": toc[:3000], "pl": pl}, ensure_ascii=False, separators=(",", ":"))
+    open(os.path.join(ROOT, "data", "books", BID + ".json"), "w", encoding="utf-8").write(s)
+    old.update({"n": len(pg_text), "size": len(s.encode()), "tash": 1,
+                "source": (m.get("name") or "") + " — نص المكتبة الشاملة المشكول عبر turath.io (الكتاب %s)" % BOOK,
+                "license": "نص المكتبة الشاملة (الكتاب %s) عبر turath.io" % BOOK})
+    old.pop("openiti", None)
+    cat["version"] = int(time.time() * 1000)
+    json.dump(cat, open(os.path.join(ROOT, "data", "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    d = sum(len(re.findall(r"[\u064B-\u0652]", t)) for t in pg_text[::max(1, len(pg_text) // 30)])
+    l = sum(len(re.findall(r"[\u0621-\u064A]", t)) for t in pg_text[::max(1, len(pg_text) // 30)])
+    open(os.path.join(ROOT, ".tio-report.txt"), "w", encoding="utf-8").write("📚 حُدِّث «%s» بنسخة الشاملة المشكولة — %d صفحة، كثافة التشكيل %.0f٪" % (old.get("title", BID), len(pg_text), 100 * d / max(1, l)))
+    print("  ملف واحد: %d صفحة، %.1f م.ب" % (len(pg_text), len(s) / 1e6), flush=True)
 
 
 if __name__ == "__main__":

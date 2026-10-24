@@ -1,0 +1,46 @@
+name: استيراد كتب التراث المشكولة من الشاملة
+on:
+  workflow_dispatch:
+  push:
+    paths: ["data/turathio-queue.json"]
+    branches: [main]
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+concurrency:
+  group: turathio-batch
+  cancel-in-progress: false
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: استرجاع ما جُلب سابقًا
+        uses: actions/cache/restore@v4
+        with:
+          path: .tio-cache
+          key: tiob-${{ github.run_id }}
+          restore-keys: tiob-
+      - name: البحث والاستيراد
+        env:
+          TIO_MINUTES: "300"
+        run: python3 tools/turathio-batch.py
+      - name: حفظ ما جُلب للاستئناف
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .tio-cache
+          key: tiob-${{ github.run_id }}
+      - name: الاستئناف في تشغيل جديد
+        if: ${{ hashFiles('.tio-incomplete') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run turathio-batch.yml --ref main
+      - name: فهرس معاني الكلمات
+        if: ${{ hashFiles('.tio-incomplete') == '' }}
+        run: python3 tools/gloss.py >/dev/null && bash tools/git-save.sh "فهرس معاني الكلمات بعد استيراد التراث المشكول" data/gloss || true
+      - name: إشعار
+        if: always()
+        run: '[ -s .tio-batch-report.txt ] && python3 tools/notify.py "$(cat .tio-batch-report.txt)" || true'
