@@ -84,7 +84,11 @@ def scan(item):
                 if d.get("type") == "dir" and all(k in keyn(d["name"]) for k in need):
                     log("  ✓ وُجد بالبحث الموسع: %s/%s/%s" % (repo, a, d["name"]))
                     return repo, a, d["name"]
-    log("  ✗ لم يُعثر عليه بالبحث الموسع في %s" % ", ".join(item.get("repos", [])))
+    near = []
+    for repo in item.get("repos", ["1450AH", "1425AH", "1400AH"]):
+        for a in [d["name"] for d in listdir(repo, "data") if d.get("type") == "dir"]:
+            near += [repo + "/" + d["name"] for d in listdir(repo, "data/" + a) if d.get("type") == "dir" and need[0] in keyn(d["name"])]
+    log("  ✗ لم يُعثر عليه بالبحث الموسع في %s. أقرب العناوين: %s" % (", ".join(item.get("repos", [])), ", ".join(near[:40]) or "لا شيء"))
     return None
 
 

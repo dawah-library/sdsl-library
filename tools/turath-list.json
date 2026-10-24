@@ -722,7 +722,20 @@
    "topic": "t5"
   },
   {
-   "id": "mawsuafiqhiyya",
+   "id": "qawaidfiqhiyya",
+   "died": 1427,
+   "scan": true,
+   "repos": [
+    "1450AH"
+   ],
+   "author": "Burnu",
+   "book": "MawsucatQawacid",
+   "title": "موسوعة القواعد الفقهية",
+   "authorName": "محمد صدقي البورنو",
+   "topic": "t4"
+  },
+  {
+   "id": "mawsuakuwaitiyya",
    "died": 1427,
    "scan": true,
    "repos": [
@@ -732,7 +745,7 @@
     "1375AH"
    ],
    "author": "Kuwayt|Awqaf|Wizara|Lajna",
-   "book": "Mawsuca+Fiqh",
+   "book": "Mawsuca+Fiqh+Kuwayt",
    "title": "الموسوعة الفقهية الكويتية",
    "authorName": "وزارة الأوقاف والشؤون الإسلامية بالكويت",
    "topic": "t4"
