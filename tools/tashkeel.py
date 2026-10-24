@@ -29,6 +29,7 @@ LOCK = threading.Lock()
 EXH = set()  # (محرك، مفتاح) نفدت حصته اليوم
 STATS = {"gemini": 0, "review": 0, "pages": 0, "fail": 0}
 REPORT = []
+ERRS = []
 
 
 def log(*a):
@@ -171,6 +172,7 @@ def call(engine, prompt, slot=0):
                 break
             except urllib.error.HTTPError as e:
                 msg = e.read()[:400].decode("utf-8", "ignore")
+                ERRS.append("%s %s %s" % (eng, e.code, re.sub(r"\s+", " ", msg)[:160]))
                 if e.code == 429 and re.search(r"day|daily|PerDay|UserByDay|quota", msg, re.I) and not re.search(r"PerMinute|per minute", msg, re.I):
                     with LOCK:
                         EXH.add((eng, k))
@@ -183,6 +185,7 @@ def call(engine, prompt, slot=0):
                     break
                 time.sleep(min(90, 15 * (attempt + 1)))
             except Exception as e:
+                ERRS.append("%s %s" % (eng, str(e)[:160]))
                 time.sleep(5 * (attempt + 1))
     return None
 
@@ -222,6 +225,7 @@ def tashkeel_page(src, slot):
     d1, r1 = transfer(src, clean_out(first))
     if r1 < 0.8:
         log("  تطابق ضعيف بعد التشكيل (%.0f%%)" % (r1 * 100))
+        ERRS.append("تطابق ضعيف %.0f%%: %s" % (r1 * 100, clean_out(first)[:120].replace("\n", " ")))
         return None
     # التدقيق بمحرك مستقل عن الأول
     rev, m2 = None, ""
@@ -332,6 +336,9 @@ def main():
     rep = "✍️ <b>تشكيل الكتب</b>\n" + "\n".join(REPORT[:20]) + "\nصفحات: %d • دُققت بمحرك ثانٍ: %d • تعذّر: %d" % (STATS["pages"], STATS["review"], STATS["fail"])
     open(os.path.join(ROOT, ".tk-report.txt"), "w", encoding="utf-8").write(rep if REPORT else "")
     log(rep)
+    from collections import Counter
+    for e, n in Counter(ERRS).most_common(8):
+        print("::warning::%s × %d" % (e, n), flush=True)
 
 
 if __name__ == "__main__":
