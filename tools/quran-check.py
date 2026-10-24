@@ -172,14 +172,16 @@ def main():
         summary[bid] = {"n": res["n"], "bad": sum(1 for x in res["issues"] if x["k"] in ("near", "missing")),
                         "warn": sum(1 for x in res["issues"] if x["k"] in ("sura", "nq"))}
         # مواضع الخلل إلى مواضع الشك في الكتاب ليقدّمها التدقيق
-        if res["issues"]:
-            unc = dict(sh.get("unc") or {})
-            for it in res["issues"]:
+        unc = {k: [w for w in v if not str(w).startswith("(آية:")] for k, v in (sh.get("unc") or {}).items()}
+        unc = {k: v for k, v in unc.items() if v}
+        if True:
+            for it in [x for x in res["issues"] if x["k"] in ("near", "missing")]:
                 k = str(it["p"] - 1)
                 lab = "(آية: %s)" % (" ".join(it.get("diff") or []) or it["t"][:30])
                 if lab not in unc.get(k, []):
                     unc[k] = (unc.get(k, []) + [lab])[:40]
-            sh["unc"] = unc
+            if unc: sh["unc"] = unc
+            else: sh.pop("unc", None)
             s = json.dumps(sh, ensure_ascii=False, separators=(",", ":"))
             open(path, "w", encoding="utf-8").write(s)
             for b in cat["books"]:
