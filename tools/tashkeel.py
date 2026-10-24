@@ -140,7 +140,7 @@ def post(url, body, headers, timeout=300):
         try:
             return json.loads(raw)
         except Exception:
-            raise RuntimeError("رد غير مفهوم %s: %s" % (r.status, raw[:160].decode("utf-8", "ignore")))
+            raise RuntimeError("رد غير مفهوم %s من %s: %s" % (r.status, r.geturl(), raw[:160].decode("utf-8", "ignore")))
 
 
 def gemini(prompt, model, key):
@@ -151,8 +151,23 @@ def gemini(prompt, model, key):
     return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
+GHM_URLS = ["https://models.github.ai/inference/chat/completions", "https://models.inference.ai.azure.com/chat/completions"]
+
+
 def ghm(prompt):
-    j = post("https://models.github.ai/inference/chat/completions", {"model": GHM_MODEL, "messages": [{"role": "user", "content": prompt}], "temperature": 0, "max_tokens": 4000},
+    last = None
+    for u in list(GHM_URLS):
+        try:
+            return ghm1(prompt, u)
+        except RuntimeError as e:  # رد غير مفهوم: نجرب العنوان الآخر ونثبت عليه
+            last = e
+            GHM_URLS.remove(u); GHM_URLS.append(u)
+    raise last
+
+
+def ghm1(prompt, url):
+    model = GHM_MODEL if "github.ai" in url else GHM_MODEL.split("/")[-1]
+    j = post(url, {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0, "max_tokens": 4000},
              {"authorization": "Bearer " + GHM, "accept": "application/vnd.github+json", "x-github-api-version": "2022-11-28"})
     return (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
 
