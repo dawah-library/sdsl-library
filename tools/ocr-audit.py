@@ -47,6 +47,7 @@ def main():
         n = len(sh["pages"])
         with tempfile.TemporaryDirectory() as td, ThreadPoolExecutor(os.cpu_count() or 2) as ex:
             tw = list(ex.map(lambda i: tess_words(pdf, i + 1 + off, td), range(n)))
+        allr = [[i + 1, words(sh["pages"][i]), tw[i]] for i in range(n)]
         res, unc = [], {k: [w for w in v if w not in ("(نقص محتمل)", "(زيادة محتملة)")] for k, v in (sh.get("unc") or {}).items()}
         for i in range(n):
             gw, t = words(sh["pages"][i]), tw[i]
@@ -63,7 +64,7 @@ def main():
         else: sh.pop("unc", None)
         s = json.dumps(sh, ensure_ascii=False, separators=(",", ":")); open(path, "w", encoding="utf-8").write(s)
         b["unc"] = sum(len(v) for v in unc.values()); b["size"] = len(s.encode())
-        json.dump({"pages": n, "flag": res}, open(os.path.join(ROOT, "data", "audit", bid + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        json.dump({"pages": n, "flag": res, "all": allr}, open(os.path.join(ROOT, "data", "audit", bid + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         rep.append("- %s: %d صفحة، يُشتبه في نقص %d وزيادة %d" % (b.get("title"), n, sum(1 for x in res if x["k"] == "short"), sum(1 for x in res if x["k"] == "long")))
         print(rep[-1], flush=True)
     json.dump(cat, open(os.path.join(ROOT, "data", "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
