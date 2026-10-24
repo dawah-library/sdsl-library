@@ -407,7 +407,20 @@ HONOR_GLYPHS = {"\uf055": "عز وجل", "\uf074": "رضي الله عنه", "\u
                 "\ufd42": "رضي الله عنها", "\ufd43": "رضي الله عنهم", "\ufd44": "رضي الله عنهما"}
 
 
+_PROPH = {"رسول", "نبي", "حبيب", "خليل", "صفي", "ورسول", "ونبي", "لرسول", "برسول"}
+
+
+def fix_allah_saw(t):
+    """رمز «عز وجل» في المطبوع يُقرأ أحيانًا «ﷺ» بعد لفظ الجلالة: يُصحح ما لم يسبقه «رسول» أو «نبي»."""
+    def rep(m):
+        w = re.sub(r"[\u064B-\u0652\u0670\u0640]", "", t[max(0, m.start() - 25):m.start()]).split()
+        return m.group(0) if (w and w[-1] in _PROPH) else m.group(1) + " عز وجل"
+    return re.sub(r"(\b(?:الله|لله|ربنا|ربه|ربك|الرب|ربي)[\u064B-\u0652]*)\s*ﷺ", rep, t)
+
+
 def honor_words(t):
+    t = fix_allah_saw(t or "")
+    t = re.sub(r"⦅(\([٠-٩\d]{1,3}\))⦅", r"\1", t).replace("⦅", "").replace("⦆", "")
     t = re.sub(r"(ابن عباس|ابن عمر|ابن عمرو|ابن الزبير)\s*[\ufb6b\ufd65\ufd43]", r"\1 رضي الله عنهما", t or "")
     for k, v in HONOR_GLYPHS.items():
         t = t.replace(k, v)
