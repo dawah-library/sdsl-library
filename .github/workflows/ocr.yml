@@ -127,6 +127,8 @@ jobs:
           GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
           GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
           GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          MISTRAL_MAX_PAGES: ${{ vars.MISTRAL_MAX_PAGES || '3000' }}
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           OCR_DRAFTS: ocr-drafts

@@ -307,6 +307,72 @@ def gemini_batch(imgs, drafts):
     return [got[k].replace("[صفحة بلا نص]", "").strip() for k in range(1, len(imgs) + 1)]
 
 
+# ── Mistral OCR: قارئ ثانٍ مستقل (مدفوع زهيد، يُفعَّل بإضافة السر MISTRAL_API_KEY) ──
+# يقرأ كل صفحة مصورة قراءة منظمة (عناوين وجداول وحواشٍ) فتصير مسودته أساس مراجعة Gemini على الصورة،
+# فيراجع Gemini صفحات أكثر في الطلب الواحد، وما اختلف فيه القارئان يُعلَّم موضع شك يذهب إلى المدقق الأقوى.
+# وإن نفدت حصة Gemini حلّ نص Mistral محل Tesseract وعُلِّم «خفيفًا» ليعاد تدقيقه في الجولات التالية.
+MKEY = os.environ.get("MISTRAL_API_KEY", "").strip()
+MMODEL = os.environ.get("MISTRAL_OCR_MODEL", "mistral-ocr-latest")
+MBUDGET = [int(os.environ.get("MISTRAL_MAX_PAGES", "3000") or 0)]
+MLOCK = threading.Lock()
+MDRAFT = {}  # رقم الصفحة في الملف ← نص Mistral
+MUSED = set()  # صفحات (من صفر) نصها النهائي من Mistral لتعذر Gemini
+
+
+def mistral_clean(t):
+    t = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", t or "")  # الصور
+    t = re.sub(r"^#{2,6}\s+", "# ", t, flags=re.M)  # العناوين بصيغة المكتبة
+    t = re.sub(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$", "____", t, flags=re.M)  # فاصل الحواشي
+    t = re.sub(r"\$\^\{?(\d+)\}?\$", r"(\1)", t)  # أرقام الحواشي المرفوعة
+    return re.sub(r"\n{3,}", "\n\n", t).strip()
+
+
+def mistral_page(img):
+    with MLOCK:
+        if MBUDGET[0] <= 0: return ""
+        MBUDGET[0] -= 1
+    body = json.dumps({"model": MMODEL, "document": {"type": "image_url", "image_url": "data:image/jpeg;base64," + base64.b64encode(open(img, "rb").read()).decode()}}).encode()
+    for t in range(4):
+        try:
+            req = urllib.request.Request("https://api.mistral.ai/v1/ocr", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + MKEY})
+            with urllib.request.urlopen(req, timeout=120) as r:
+                j = json.loads(r.read())
+            STATS["mistral"] = STATS.get("mistral", 0) + 1
+            return mistral_clean("\n\n".join(pg.get("markdown", "") for pg in j.get("pages", [])))
+        except urllib.error.HTTPError as e:
+            ERRS["mistral %d" % e.code] += 1
+            if e.code in (401, 402, 403): MBUDGET[0] = 0; return ""
+            time.sleep(5 * (t + 1))
+        except Exception as e:
+            ERRS["mistral " + type(e).__name__] += 1; time.sleep(5 * (t + 1))
+    return ""
+
+
+def mistral_drafts(nums, imgdir):
+    if not MKEY or not nums: return
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("MISTRAL_WORKERS", "6"))) as ex:
+        for p, t in zip(nums, ex.map(lambda p: mistral_page(os.path.join(imgdir, f"p{p}.jpg")), nums)):
+            if t.strip(): MDRAFT[p] = t
+    print("  قرأ Mistral OCR: %d من %d صفحة" % (sum(1 for p in nums if p in MDRAFT), len(nums)), flush=True)
+
+
+_DI = re.compile(r"[\u064B-\u0652\u0670\u0640]")
+
+
+def _words(t):
+    return re.findall(r"[\u0621-\u064A]{2,}", _DI.sub("", t or "").replace("أ", "ا").replace("إ", "ا").replace("آ", "ا").replace("ة", "ه").replace("ى", "ي"))
+
+
+def disagreements(final, other, cap=8):
+    """كلمات في النص النهائي لم ترد في قراءة Mistral؛ تُعاد إن كانت قليلة (اتفاق عام مع خلاف في مواضع محددة)."""
+    a, b = _words(final), Counter(_words(other))
+    if len(a) < 20: return []
+    miss = [w for w in a if b[w] <= 0]
+    if len(miss) > max(cap, len(a) // 12): return []  # قراءة Mistral مختلة: لا يُعتد بالخلاف
+    return list(dict.fromkeys(miss))[:cap]
+
+
 UNC = re.compile(r"⟪\s*([^⟪⟫]{1,60}?)\s*⟫")
 PNUM_RE = re.compile(r"^\s*\[\s*ص\s*[:：]\s*([^\]]*)\]\s*\n?")
 PNUM = {}  # رقم الصفحة (من صفر) ← رقمها المطبوع
@@ -589,7 +655,7 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
     n = pages_count(pdf)
     last = min(last or n, n)
     nums = list(range(first, last + 1)) if not only else [p for p in only if 1 <= p <= n]
-    STATS.update(gemini=0, tesseract=0, pro=0, digital=0); PNUM.clear(); UNCERTAIN.clear(); UNREVIEWED.clear(); HAND.clear(); LITE.clear(); GFAIL[0] = 0
+    STATS.update(gemini=0, tesseract=0, pro=0, digital=0, mistral=0, mistral_only=0); PNUM.clear(); UNCERTAIN.clear(); UNREVIEWED.clear(); HAND.clear(); LITE.clear(); GFAIL[0] = 0
     batch = max(1, int(os.environ.get("GEMINI_BATCH", "4")))
     ready = load_drafts(pdf)
     pages = [""] * len(nums); reviewed = [False] * len(nums)
@@ -614,17 +680,21 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
     with tempfile.TemporaryDirectory() as td:
         def jpg(p):
             subprocess.run(["pdftoppm", "-r", os.environ.get("OCR_DPI", "200"), "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
-        if (GKEY or GHM_TOKEN) and scan:
+        if (GKEY or GHM_TOKEN or MKEY) and scan:
             with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, [nums[i] for i in scan]))
+            MDRAFT.clear(); MUSED.clear(); mistral_drafts([nums[i] for i in scan], td)
+            if MDRAFT: batch = max(batch, int(os.environ.get("GEMINI_BATCH_VERIFY", "6")))  # التحقق من مسودة جيدة أخف من القراءة
         def drafts_of(i):
-            if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]]
+            if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]] + ("\n\n[قراءة Mistral OCR المستقلة]\n" + MDRAFT[nums[i]] if MDRAFT.get(nums[i]) else "")
             r = ready.get(nums[i]) or {}
-            d, su = r.get("t", ""), r.get("s", "")
+            d, su, mi = r.get("t", ""), r.get("s", ""), MDRAFT.get(nums[i], "")
+            if mi: return "[مسودة Mistral OCR، وهي الأدق غالبًا]\n" + mi + ("\n\n[مسودة Surya]\n" + su if su else "")
             return ("[مسودة Tesseract]\n" + d if d else "") + ("\n\n[مسودة Surya]\n" + su if su else "")
         def accept(i, g):
             g = take_pnum(i, g)
             if g.lstrip().startswith("[مخطوط]"): HAND.add(i); g = g.lstrip()[len("[مخطوط]"):]
             words = [w.strip() for w in UNC.findall(g) if w.strip()]
+            if MDRAFT.get(nums[i]): words += [w for w in disagreements(UNC.sub(r"\1", g), MDRAFT[nums[i]]) if w not in words]
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
@@ -662,16 +732,21 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
         # ٤) الاحتياط: Tesseract لما لم يُقرأ (من المسودة الجاهزة إن وُجدت)
         rest = [i for i in range(len(nums)) if not reviewed[i]]
         if rest:
-            print("  Tesseract احتياطيًا لـ %d صفحة" % len(rest), flush=True)
-            need = [nums[i] for i in rest if not (ready.get(nums[i]) or {}).get("t")]
+            print("  احتياطيًا لـ %d صفحة: Mistral لـ %d، وTesseract للباقي" % (len(rest), sum(1 for i in rest if MDRAFT.get(nums[i]))), flush=True)
+            need = [nums[i] for i in rest if not (ready.get(nums[i]) or {}).get("t") and not MDRAFT.get(nums[i])]
             if need:
                 ensure_tesseract()
                 with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: got = dict(zip(need, ex.map(lambda p: tess_page(pdf, p, td), need)))
             else: got = {}
             for i in rest:
                 r = ready.get(nums[i]) or {}
+                if MDRAFT.get(nums[i]):  # قراءة Mistral أدق كثيرًا من Tesseract: تُعتمد مؤقتًا وتُعلَّم خفيفة
+                    pages[i] = gemini_clean(MDRAFT[nums[i]]); MUSED.add(i); LITE.add(i); continue
                 pages[i] = r.get("s") or r.get("t") or got.get(nums[i], "")
+        if MUSED: REPORT.append("- صفحات اعتُمدت فيها قراءة Mistral مؤقتًا لنفاد حصة Gemini: %d (تُدقَّق في الجولات التالية)" % len(MUSED))
+        if STATS.get("mistral"): REPORT.append("- صفحات قرأها Mistral OCR قراءة ثانية مستقلة: %d" % STATS["mistral"])
         for i, ok in enumerate(reviewed):
+            if i in MUSED: STATS["mistral_only"] = STATS.get("mistral_only", 0) + 1; continue
             if ok: STATS["gemini"] += 1
             else:
                 STATS["tesseract"] += 1
@@ -812,6 +887,7 @@ def rereview(bid):
     fixed = 0
     for k, i in enumerate(idx):
         if k in UNREVIEWED: continue
+        if k in MUSED and i not in unrev: continue  # قراءة Gemini السابقة أولى من قراءة Mistral وحدها
         sh["pages"][i] = new[k]; fixed += 1
         left.discard(i)
         if k in LITE: lite2.add(i)
