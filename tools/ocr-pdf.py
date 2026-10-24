@@ -401,8 +401,21 @@ def printed_labels(n):
     return out
 
 
+# رموز الدعاء في خطوط المصاحف (KFGQPC وأمثالها) تأتي من طبقة النص حروفًا خاصة لا تظهر في المتصفح: تُكتب بالكلمات
+HONOR_GLYPHS = {"\uf055": "عز وجل", "\uf074": "رضي الله عنه", "\uf075": "عليه السلام", "\ufb6c": "رضي الله عنه",
+                "\ufb6b": "رضي الله عنهم", "\ufd65": "رضي الله عنهم", "\ufdfe": "سبحانه وتعالى", "\ufd41": "رضي الله عنه",
+                "\ufd42": "رضي الله عنها", "\ufd43": "رضي الله عنهم", "\ufd44": "رضي الله عنهما"}
+
+
+def honor_words(t):
+    t = re.sub(r"(ابن عباس|ابن عمر|ابن عمرو|ابن الزبير)\s*[\ufb6b\ufd65\ufd43]", r"\1 رضي الله عنهما", t or "")
+    for k, v in HONOR_GLYPHS.items():
+        t = t.replace(k, v)
+    return t
+
+
 def gemini_clean(t):
-    t = fix_punct(t)
+    t = fix_punct(honor_words(t)).replace("^(", "(")  # أرقام الحواشي المرفوعة بصيغة ^(١)
     lines = [l.rstrip() for l in t.split("\n")]
     out = []
     for l in lines:
