@@ -316,7 +316,8 @@ MMODEL = os.environ.get("MISTRAL_OCR_MODEL", "mistral-ocr-latest")
 MBUDGET = [int(os.environ.get("MISTRAL_MAX_PAGES", "3000") or 0)]
 MLOCK = threading.Lock()
 MDRAFT = {}  # رقم الصفحة في الملف ← نص Mistral
-MUSED = set()  # صفحات (من صفر) نصها النهائي من Mistral لتعذر Gemini
+MUSED = set()  # صفحات (من صفر) نصها النهائي من القارئ الثاني لتعذر Gemini
+MSRC = {}  # مصدر المسودة الثانية إن لم تكن Mistral
 
 
 def mistral_clean(t):
@@ -629,11 +630,21 @@ def make_drafts(pdf, nums):
     """مسودات Tesseract (بالتوازي) وSurya لمجموعة صفحات: {رقم: {"t": .., "s": ..}}"""
     from concurrent.futures import ThreadPoolExecutor
     with tempfile.TemporaryDirectory() as td:
-        with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
-            tess = list(ex.map(lambda p: tess_page(pdf, p, td), nums))
-    print("  اكتملت مسودات Tesseract: %d صفحة" % len(tess), flush=True)
+        if os.environ.get("OCR_TESS", "0") == "1":
+            with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
+                tess = list(ex.map(lambda p: tess_page(pdf, p, td), nums))
+            print("  اكتملت مسودات Tesseract: %d صفحة" % len(tess), flush=True)
+        else: tess = [""] * len(nums)
     sur = surya_drafts(pdf, nums)
-    return {p: {"t": t, "s": sur.get(p, "")} for p, t in zip(nums, tess)}
+    q = {}
+    if os.environ.get("OCR_QARI", "0") == "1":  # القارئ العربي المفتوح المجاني على معالج الجهاز
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import qari
+            q = qari.qari_pages(pdf, nums, deadline=time.time() + 60 * float(os.environ.get("QARI_MINUTES", "200")))
+        except Exception as e:
+            print("  تعذر Qari-OCR:", str(e)[:200], flush=True)
+    return {p: {"t": t, "s": sur.get(p, ""), "q": q.get(p, "")} for p, t in zip(nums, tess)}
 
 
 def load_drafts(pdf):
@@ -682,13 +693,16 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             subprocess.run(["pdftoppm", "-r", os.environ.get("OCR_DPI", "200"), "-jpeg", "-jpegopt", "quality=82", "-f", str(p), "-l", str(p), "-singlefile", pdf, os.path.join(td, f"p{p}")], check=True)
         if (GKEY or GHM_TOKEN or MKEY) and scan:
             with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex: list(ex.map(jpg, [nums[i] for i in scan]))
-            MDRAFT.clear(); MUSED.clear(); mistral_drafts([nums[i] for i in scan], td)
+            MDRAFT.clear(); MUSED.clear(); MSRC.clear(); mistral_drafts([nums[i] for i in scan], td)
+            for i in scan:  # مسودة Qari (المجانية) قارئًا ثانيًا حيث لا مسودة Mistral
+                qt = (ready.get(nums[i]) or {}).get("q", "")
+                if qt.strip() and nums[i] not in MDRAFT: MDRAFT[nums[i]] = mistral_clean(qt); MSRC[nums[i]] = "Qari-OCR"
             if MDRAFT: batch = max(batch, int(os.environ.get("GEMINI_BATCH_VERIFY", "6")))  # التحقق من مسودة جيدة أخف من القراءة
         def drafts_of(i):
-            if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]] + ("\n\n[قراءة Mistral OCR المستقلة]\n" + MDRAFT[nums[i]] if MDRAFT.get(nums[i]) else "")
+            if prior and prior.get(nums[i]): return "[النص الحالي للصفحة، وقد يحتوي أخطاء قراءة]\n" + prior[nums[i]] + ("\n\n[قراءة %s المستقلة]\n" % MSRC.get(nums[i], "Mistral OCR") + MDRAFT[nums[i]] if MDRAFT.get(nums[i]) else "")
             r = ready.get(nums[i]) or {}
             d, su, mi = r.get("t", ""), r.get("s", ""), MDRAFT.get(nums[i], "")
-            if mi: return "[مسودة Mistral OCR، وهي الأدق غالبًا]\n" + mi + ("\n\n[مسودة Surya]\n" + su if su else "")
+            if mi: return "[مسودة %s، وهي الأدق غالبًا]\n" % MSRC.get(nums[i], "Mistral OCR") + mi + ("\n\n[مسودة Surya]\n" + su if su else "")
             return ("[مسودة Tesseract]\n" + d if d else "") + ("\n\n[مسودة Surya]\n" + su if su else "")
         def accept(i, g):
             g = take_pnum(i, g)
@@ -824,7 +838,7 @@ def plan():
             need = [b for b in cat["books"] if (b.get("col") == "dawah" or b["id"] in req) and (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             need.sort(key=lambda b: (-(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))  # الأحوج أولًا
             books += ["rereview:" + b["id"] for b in need][:6]
-        if os.environ.get("OCR_TESS", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
+        if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
         else:  # لا مسودات للكتب الإلكترونية (طبقة نص سليمة)
             jobs = [(f, n) for f, n in jobs if not textlayer(os.path.join(ROOT, f), min(n, 5))]
