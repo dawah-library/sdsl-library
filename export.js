@@ -47,7 +47,8 @@ function expDlg() {
   <label>الصيغة</label><select name="f"><option value="pdf">PDF (طباعة بقالب)</option><option value="doc">Word</option><option value="epub">EPUB (كتاب إلكتروني)</option><option value="html">صفحة HTML</option><option value="md">Markdown</option><option value="txt">نص عادي</option></select>
   <div class="row"><div><label>القالب</label><select name="tpl">${Object.entries(EXT_TPL).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join("")}</select></div><div><label>مقاس الصفحة (PDF)</label><select name="sz"><option value="A4">A4</option><option value="A5">A5 (كتاب)</option><option value="Letter">Letter</option></select></div></div>
   <label class="chk"><input type="checkbox" name="fn" checked> الحواشي</label><label class="chk"><input type="checkbox" name="toc" checked> فهرس في أول الملف</label><label class="chk"><input type="checkbox" name="pl" checked> أرقام صفحات الطبعة</label>
-  <p class="mut">التشكيل يتبع اختيار «إظهار التشكيل» (${S.tash ? "ظاهر" : "مخفي"}). ${member ? "" : "للزوار حتى ٥٠ صفحة في المرة؛ وللأعضاء الكتاب كاملًا."}</p>
+  ${typeof hasTash !== "function" || hasTash(b) || isArt(b) ? `<label class="chk"><input type="checkbox" name="tash"${S.tash ? " checked" : ""}> بالتشكيل${typeof origTash === "function" && (b.col || "dawah") !== "dawah" && origTash(b) ? " (تشكيل الطبعة)" : ""}</label>` : ""}
+  <p class="mut">${member ? "" : "للزوار حتى ٥٠ صفحة في المرة؛ وللأعضاء الكتاب كاملًا."}</p>
   <button class="btn p">تصدير</button> <span id="expst" class="mut"></span></form>`);
 }
 async function expRun(f) {
@@ -57,6 +58,7 @@ async function expRun(f) {
   else if (sc === "range") { a = Math.max(1, +f.a.value || 1); z = Math.min(n, Math.max(a, +f.z.value || a)); }
   else if (sc === "all") { if (!Auth.user) return needLogin("تصدير الكتاب كاملًا متاح للأعضاء المسجلين مجانًا."); a = 1; z = n; }
   if (!Auth.user && z - a + 1 > 50) z = a + 49;
+  if (f.tash && f.tash.checked !== !!S.tash) { S.tash = f.tash.checked; saveS(); if (typeof refreshPage === "function") refreshPage(); }
   const fm = f.f.value, tpl = EXT_TPL[f.tpl.value] || EXT_TPL.classic, opt = { fn: f.fn.checked, toc: f.toc.checked, pl: f.pl.checked };
   const au = A(b.authorId).name, title = b.setTitle ? b.title : b.title, safe = title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) + (a === 1 && z === n ? "" : ` (${a}-${z})`);
   const pages = []; for (let i = a; i <= z; i++) pages.push({ i, t: shownText(b, i - 1), l: PL(b, i - 1) || "ص " + i });

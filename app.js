@@ -282,6 +282,10 @@ const TK={list:null,busy:false,ch:new Map(),
   if(!this.ch.has(key)){this.ch.set(key,null);fetch(this.raw(b.id+"/"+k+".json")).then(r=>r.ok?r.json():{}).catch(()=>({})).then(j=>{this.ch.set(key,j||{});refreshPage()});return null}
   const c=this.ch.get(key),e=c&&c[String(i+1)];return e&&e.h===fnv(text)?e.t:null}};
 // النص كما يراه القارئ (بالتشكيل المدقق أو بدون تشكيل) — للنسخ والتصدير
+// تشكيل الطبعة الأصلي (كثير من كتب التراث مشكول في أصله): يُعرف من كثافة الحركات في صفحات من الكتاب
+const ORIG_TASH=new Map();
+function origTash(b){if(!b||!b.pages)return false;if(ORIG_TASH.has(b.id))return ORIG_TASH.get(b.id);const ps=b.pages,step=Math.max(1,Math.floor(ps.length/12));let d=0,l=0;for(let i=0;i<ps.length;i+=step){const t=ps[i]||"";d+=(t.match(/[\u064B-\u0652]/g)||[]).length;l+=(t.match(/[\u0621-\u064A]/g)||[]).length}const r=l>200&&d/l>0.02;ORIG_TASH.set(b.id,r);return r}
+const hasTash=b=>!!(b&&(TK.info(b)||origTash(b)||bc(b)==="dawah"));
 const shownText=(b,i)=>{const t=b.pages[i]||"";return S.tash?(TK.get(b,t)||t):strip(t)};
 const expTash=t=>S.tash?t:strip(t);
 function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tk=S.tash&&bk?TK.get(bk,text):null;const tx0=S.tash?(tk||text):strip(text);
@@ -438,8 +442,7 @@ function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
 function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.favs.includes(b.id);
  openSheet("أدوات القراءة",`${b.pages.length>1?`<form class="stepper" data-form="inbook" data-id="${b.id}"><input name="h" type="search" value="${esc(parse().q.h||"")}" placeholder="بحث داخل ${art?"المقال":"الكتاب"}" aria-label="بحث داخل الكتاب"><button class="btn p">بحث</button></form>`:""}
  <div class="tools-grid">
-  <button data-act="tashtog">${S.tash?"إخفاء التشكيل":"إظهار التشكيل"}${TK.info(b)?` <small class="mut">(مشكول ${toAr(Math.round(100*TK.info(b).n/Math.max(1,TK.info(b).of)))}٪)</small>`:""}</button>
-  ${bc(b)!=="dawah"&&!art&&!TK.info(b)?`<button data-act="tkreq" data-id="${b.id}">✍️ اطلب تشكيل هذا الكتاب</button>`:""}
+  ${hasTash(b)||art?`<button data-act="tashtog">${S.tash?"إخفاء التشكيل":"إظهار التشكيل"}${TK.info(b)?` <small class="mut">(مشكول ${toAr(Math.round(100*TK.info(b).n/Math.max(1,TK.info(b).of)))}٪)</small>`:bc(b)!=="dawah"&&origTash(b)?` <small class="mut">(تشكيل الطبعة)</small>`:""}</button>`:""}
   <button data-act="fav">${fav?"★ إزالة من المفضلة":"☆ إضافة للمفضلة"}</button>
   <button data-act="offbook" data-id="${b.id}">${(ls.get("offbooks",[])).includes(b.set||b.id)?"✓ محفوظ دون إنترنت":"⇩ حفظ للقراءة دون إنترنت"}</button>
   <button data-act="copyp">نسخ ${art?"المقال":"الصفحة"}</button>
@@ -1403,8 +1406,8 @@ document.addEventListener("submit",async e=>{const f=e.target.closest('[data-for
 
 /* ---------- إدارة التشكيل ---------- */
 async function tkAdmin(){const el=$("#tkadm");if(!el)return;TK.list=null;TK.busy=false;await TK.init();const L=TK.list||{};let Q={items:[]};try{const r=await fetch(TK.raw("_queue.json"));if(r.ok)Q=await r.json()}catch(e){}
- const bs=lib.books.filter(b=>kindOf(b)==="book"&&!b.demo).sort((x,y)=>(x.col===y.col?0:x.col==="dawah"?-1:1)||(x.n||0)-(y.n||0));
- el.className="";el.innerHTML=`<p class="note">كتب مكتبة الدعوة تُشكَّل وتُراجَع تلقائيًا، وكتب التراث وغيرها حسب الطلب: قدّم الكتاب في الطابور هنا، أو من «أدوات القراءة ← اطلب تشكيل هذا الكتاب» (ويصلك طلب الأعضاء إشعارًا).</p><p class="mut">يُشكَّل الكتاب ليلًا بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم تراجعه جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
+ const bs=lib.books.filter(b=>kindOf(b)==="book"&&!b.demo&&b.col==="dawah").sort((x,y)=>(x.col===y.col?0:x.col==="dawah"?-1:1)||(x.n||0)-(y.n||0));
+ el.className="";el.innerHTML=`<p class="note">خدمة التشكيل لكتب مكتبة الدعوة وحدها في هذه المرحلة: تُشكَّل وتُراجَع تلقائيًا، ويمكنك تقديم كتاب على غيره في الطابور. أما كتب التراث فيُعرض تشكيلها الأصلي (إن كانت مشكولة في طبعتها) ويُخفى بحسب اختيار القارئ.</p><p class="mut">يُشكَّل الكتاب ليلًا بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم تراجعه جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
  <p class="note">يظهر التشكيل لك أنت للمعاينة، ولا يظهر للأعضاء إلا بعد «اعتماد العرض» لكل كتاب.</p>
  <form data-form="tkq" class="stepper"><select name="b">${bs.map(b=>`<option value="${b.id}">${esc(b.setTitle||b.title)}</option>`).join("")}</select><button class="btn p">قدّمه في الطابور</button></form>
  ${(Q.items||[]).length?`<p class="mut">في المقدمة: ${Q.items.map(x=>esc((B(x.id||x)||{}).title||x.id||x)).join("، ")}</p>`:""}
