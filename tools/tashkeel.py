@@ -254,7 +254,7 @@ def tashkeel_page(src, slot):
 
 
 def ready_books(cat):
-    """الكتب المؤهلة للتشكيل: نصها غير مشكول، واكتمل تدقيقها إن كانت محوّلة آليًا. الدعوة أولًا ثم التراث."""
+    """الكتب المؤهلة للتشكيل: نصها غير مشكول، واكتمل تدقيقها إن كانت محوّلة آليًا."""
     out = []
     for b in cat["books"]:
         if b.get("demo") or b.get("type") in ("article", "fatwa", "statement"):
@@ -280,7 +280,9 @@ def main():
     pri = [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
     only = [x for x in os.environ.get("TK_ONLY", "").split(",") if x.strip()]
     books = {b["id"]: b for b in ready_books(cat)}
-    order = [i for i in (only or pri) if i in books] + ([] if only else [i for i in books if i not in pri])
+    # كتب الدعوة تُشكَّل تلقائيًا، وغيرها (كالتراث) حسب الطلب المباشر فقط (طابور الإدارة أو التشغيل اليدوي)
+    auto = [i for i, b in books.items() if b.get("col") == "dawah" and i not in pri]
+    order = [i for i in (only or pri) if i in books] + ([] if only else auto)
     if not GKEYS and not GHM:
         log("لا محرك متاح")
         return

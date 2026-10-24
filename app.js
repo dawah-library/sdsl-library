@@ -425,6 +425,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
  openSheet("أدوات القراءة",`${b.pages.length>1?`<form class="stepper" data-form="inbook" data-id="${b.id}"><input name="h" type="search" value="${esc(parse().q.h||"")}" placeholder="بحث داخل ${art?"المقال":"الكتاب"}" aria-label="بحث داخل الكتاب"><button class="btn p">بحث</button></form>`:""}
  <div class="tools-grid">
   <button data-act="tashtog">${S.tash?"إخفاء التشكيل":"إظهار التشكيل"}${TK.info(b)?` <small class="mut">(مشكول ${toAr(Math.round(100*TK.info(b).n/Math.max(1,TK.info(b).of)))}٪)</small>`:""}</button>
+  ${bc(b)!=="dawah"&&!art&&!TK.info(b)?`<button data-act="tkreq" data-id="${b.id}">✍️ اطلب تشكيل هذا الكتاب</button>`:""}
   <button data-act="fav">${fav?"★ إزالة من المفضلة":"☆ إضافة للمفضلة"}</button>
   <button data-act="copyp">نسخ ${art?"المقال":"الصفحة"}</button>
   ${art?"":'<button data-act="card">بطاقة الكتاب</button>'}
@@ -1357,7 +1358,7 @@ async function postAct(a,el){if(a==="preact"){const pk=el.closest(".rxpick"),b=p
 /* ---------- إدارة التشكيل ---------- */
 async function tkAdmin(){const el=$("#tkadm");if(!el)return;TK.list=null;TK.busy=false;await TK.init();const L=TK.list||{};let Q={items:[]};try{const r=await fetch(TK.raw("_queue.json"));if(r.ok)Q=await r.json()}catch(e){}
  const bs=lib.books.filter(b=>kindOf(b)==="book"&&!b.demo).sort((x,y)=>(x.col===y.col?0:x.col==="dawah"?-1:1)||(x.n||0)-(y.n||0));
- el.className="";el.innerHTML=`<p class="mut">يُشكَّل كل كتاب غير مشكول آليًا كل ليلة بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم تراجعه جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
+ el.className="";el.innerHTML=`<p class="note">كتب مكتبة الدعوة تُشكَّل وتُراجَع تلقائيًا، وكتب التراث وغيرها حسب الطلب: قدّم الكتاب في الطابور هنا، أو من «أدوات القراءة ← اطلب تشكيل هذا الكتاب» (ويصلك طلب الأعضاء إشعارًا).</p><p class="mut">يُشكَّل الكتاب ليلًا بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم تراجعه جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
  <p class="note">يظهر التشكيل لك أنت للمعاينة، ولا يظهر للأعضاء إلا بعد «اعتماد العرض» لكل كتاب.</p>
  <form data-form="tkq" class="stepper"><select name="b">${bs.map(b=>`<option value="${b.id}">${esc(b.setTitle||b.title)}</option>`).join("")}</select><button class="btn p">قدّمه في الطابور</button></form>
  ${(Q.items||[]).length?`<p class="mut">في المقدمة: ${Q.items.map(x=>esc((B(x.id||x)||{}).title||x.id||x)).join("، ")}</p>`:""}
@@ -1487,6 +1488,9 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="card")cardSheet();
  else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
  else if(a==="share"){const c=cur(),u=siteLink(`#/book/${c.b.id}/${c.p}`)||location.href;try{if(navigator.share)await navigator.share({title:c.b.title,url:u});else{await navigator.clipboard.writeText(u);el.textContent="نُسخ الرابط"}}catch(x){}}
+ else if(a==="tkreq"){const b=B(el.dataset.id);if(!b)return;closeSheet();
+  if(GH.on){try{await GH.editJSON("data/tashkeel/_queue.json",o=>{o=o||{items:[]};o.items=[{id:b.id}].concat((o.items||[]).filter(x=>(x.id||x)!==b.id));return o},"تشكيل حسب الطلب: «"+(b.setTitle||b.title)+"»");toast("أضيف الكتاب إلى طابور التشكيل؛ يبدأ خلال دقائق")}catch(x){toast(x.message)}return}
+  if(!Auth.user)return needLogin("طلب التشكيل متاح للأعضاء المسجلين.");if(typeof tgNote==="function")tgNote("tkreq",{subject:"تشكيل: "+(b.setTitle||b.title),detail:b.id});toast("أُرسل طلبك إلى الإدارة، جزاك الله خيرًا")}
  else if(a==="tashtog2"){S.tash=!S.tash;saveS();el.textContent=S.tash?"التصدير بالتشكيل ✓":"التصدير بلا تشكيل ✓";toast(S.tash?"يُصدَّر النص بتشكيله ويظهر التشكيل في القراءة":"يُصدَّر النص بلا تشكيل ويُخفى في القراءة")}
  else if(a==="tashtog"){S.tash=!S.tash;saveS();refreshPage();closeSheet();const lt=$("#lt");if(lt)lt.checked=S.tash;toast(S.tash?"يظهر التشكيل"+(TK.info(cur()&&cur().b)?" (التشكيل المدقق لهذا الكتاب)":""):"أُخفي التشكيل، ويُنسخ النص ويُصدَّر بلا تشكيل")}
  else if(a==="theme"){S.theme=S.theme==="dark"?"light":S.theme==="light"?"dark":(matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");saveS();applyLook()}

@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
     text = b.kind === "msg" ? `📩 <b>رسالة جديدة للإدارة</b> من ${who}\n${sub}\n${det}\n<a href="https://dawahlibrary.org/messages">افتح الرسائل</a>`
       : b.kind === "corr" ? `📝 <b>اقتراح تصحيح</b> من ${who}\n${sub}\n${det}`
       : b.kind === "signup" ? `👤 <b>عضو جديد</b>: ${who}`
+      : b.kind === "tkreq" ? `✍️ <b>طلب ${String(b.subject || "").startsWith("مراجعة") ? "مراجعة نص" : "تشكيل"} كتاب</b> من ${who}\n${sub}\n${det}\n<a href="https://dawahlibrary.org/admin?t=tashkeel">إدارة التشكيل</a>`
       : b.kind === "report" ? `🚩 <b>بلاغ عن منشور في مجتمع المكتبة</b> من ${who}\n${sub}\n${det}\n<a href="https://dawahlibrary.org/community?k=reports">افتح البلاغات</a>`
       : "";
     if (!text) return out(400, { ok: false });
