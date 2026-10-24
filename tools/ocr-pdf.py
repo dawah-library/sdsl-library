@@ -709,6 +709,8 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             if g.lstrip().startswith("[مخطوط]"): HAND.add(i); g = g.lstrip()[len("[مخطوط]"):]
             words = [w.strip() for w in UNC.findall(g) if w.strip()]
             if MDRAFT.get(nums[i]): words += [w for w in disagreements(UNC.sub(r"\1", g), MDRAFT[nums[i]]) if w not in words]
+            if len(re.findall(r"[\u0621-\u064A]", g)) > 200:  # حروف لاتينية داخل كلمة عربية: خلل معروف في النموذج الخفيف (مثل «للمدend»)
+                words += [w for w in re.findall(r"\S*[\u0621-\u064A]+[A-Za-z]+\S*|\S*[A-Za-z]+[\u0621-\u064A]+\S*", g) if w not in words]
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
