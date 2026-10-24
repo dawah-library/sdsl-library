@@ -43,7 +43,7 @@ jobs:
           OCR_MACHINES: ${{ vars.OCR_MACHINES || '16' }}
           OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
           OCR_TESS: ${{ vars.OCR_TESS || '0' }}
-          OCR_QARI: ${{ vars.OCR_QARI || '0' }}
+          OCR_QARI: ${{ vars.OCR_QARI || '1' }}
           OCR_REREVIEW: ${{ (github.event_name == 'schedule' || github.event.inputs.rereview == '1') && '1' || '0' }}
         run: |
           python3 tools/ocr-pdf.py --plan
@@ -85,7 +85,7 @@ jobs:
           pip install -q surya-ocr
           surya_ocr --help > /dev/null && echo "Surya جاهز"
       - name: ذاكرة نموذج Qari-OCR
-        if: ${{ vars.OCR_QARI == '1' }}
+        if: ${{ vars.OCR_QARI != '0' }}
         uses: actions/cache@v4
         with:
           path: |
@@ -93,14 +93,14 @@ jobs:
             ~/.cache/huggingface
           key: qari-v3
       - name: تثبيت Qari-OCR (القارئ العربي المفتوح المجاني)
-        if: ${{ vars.OCR_QARI == '1' }}
+        if: ${{ vars.OCR_QARI != '0' }}
         continue-on-error: true
         run: |
           pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -q "transformers>=4.49,<5" accelerate peft qwen-vl-utils pillow
       - name: مسودات الصفحات ${{ matrix.shard.first }}-${{ matrix.shard.last }}
         env:
-          OCR_QARI: ${{ vars.OCR_QARI || '0' }}
+          OCR_QARI: ${{ vars.OCR_QARI || '1' }}
           OCR_TESS: ${{ vars.OCR_TESS || '0' }}
           QARI_PIXELS: ${{ vars.QARI_PIXELS || '802816' }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
