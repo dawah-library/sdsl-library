@@ -1,0 +1,25 @@
+name: ضبط إعدادات الدخول في Supabase
+# يدوي: read لعرض الإعدادات الحالية (بلا أسرار)، apply لضبطها. الأسرار: SUPABASE_ACCESS_TOKEN (لازم)،
+# GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET (اختياري)، SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM (اختياري).
+on:
+  workflow_dispatch:
+    inputs:
+      mode: { description: "read أو apply", default: "read" }
+permissions:
+  contents: read
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/auth-config.py "${{ inputs.mode }}"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
