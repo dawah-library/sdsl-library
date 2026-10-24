@@ -1,0 +1,48 @@
+name: انتقاء منشورات المشايخ وتدقيق سؤال وجواب
+on:
+  schedule:
+    - cron: "40 19 * * *"   # يوميًا بالحصة المجانية المتبقية
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "fawaid أو qa أو all"
+        required: false
+        default: "all"
+      max:
+        description: "حد طلبات الذكاء الاصطناعي"
+        required: false
+        default: "80"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: curate
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: استخراج سؤال وجواب من النصوص
+        run: python3 tools/qa.py
+      - name: الانتقاء والتدقيق
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          CUR_MODE: ${{ github.event.inputs.mode || 'all' }}
+          CUR_MAX: ${{ github.event.inputs.max || '80' }}
+        run: python3 tools/curate.py
+      - name: الحفظ
+        if: always()
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/qa data/fawaid.json 2>/dev/null
+          git diff --cached --quiet && exit 0
+          git commit -qm "انتقاء المنشورات وتدقيق سؤال وجواب"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
+      - name: إشعار
+        if: always()
+        run: '[ -s .cur-report.txt ] && python3 tools/notify.py "$(cat .cur-report.txt)" || true'
