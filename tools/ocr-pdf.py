@@ -887,7 +887,9 @@ def rereview(bid):
     sp = os.path.join(DATA, "books", bid + ".json")
     sh = json.load(open(sp, encoding="utf-8"))
     unrev, lite, unc0 = sorted(set(sh.get("unrev") or [])), sorted(set(sh.get("lite") or [])), dict(sh.get("unc") or {})
-    order = unrev + [i for i in lite if i not in unrev] + [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev and int(k) not in lite]
+    # الأولوية: ما فاتته المراجعة، ثم مواضع الشك (وهي قليلة وأثرها كبير)، ثم بقية الصفحات الخفيفة بما بقي من الحصة
+    uncp = [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev]
+    order = unrev + uncp + [i for i in lite if i not in unrev and i not in uncp]
     idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)

@@ -150,7 +150,7 @@ jobs:
           REOCR: ${{ github.event.inputs.reocr }}
           OCR_SURYA: ${{ vars.OCR_SURYA || '0' }}
           OCR_DRAFTS: ocr-drafts
-          OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '60' }}
+          OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '0' }}  # Gemini Pro صار مدفوعًا فقط؛ يُفعَّل بالمتغير عند تفعيل الدفع
           OCR_ONLY: ${{ matrix.book }}
           OCR_NBOOKS: ${{ needs.plan.outputs.nbooks }}
           GEMINI_KEY_START: ${{ strategy.job-index }}
