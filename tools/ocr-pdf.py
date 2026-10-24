@@ -710,7 +710,9 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             words = [w.strip() for w in UNC.findall(g) if w.strip()]
             if MDRAFT.get(nums[i]): words += [w for w in disagreements(UNC.sub(r"\1", g), MDRAFT[nums[i]]) if w not in words]
             if len(re.findall(r"[\u0621-\u064A]", g)) > 200:  # حروف لاتينية داخل كلمة عربية: خلل معروف في النموذج الخفيف (مثل «للمدend»)
-                words += [w for w in re.findall(r"\S*[\u0621-\u064A]+[A-Za-z]+\S*|\S*[A-Za-z]+[\u0621-\u064A]+\S*", g) if w not in words]
+                FOREIGN = r"A-Za-z\u0370-\u03FF\u0400-\u04FF\u1100-\u11FF\uAC00-\uD7AF\u3040-\u30FF\u4E00-\u9FFF\u0900-\u097F"  # لاتيني ويوناني وكيريلي وكوري وياباني وصيني وهندي
+                words += [w for w in re.findall(r"\S*[\u0621-\u064A]+[" + FOREIGN + r"]+\S*|\S*[" + FOREIGN + r"]+[\u0621-\u064A]+\S*", g) if w not in words]
+                words += [w for w in re.findall(r"\S+\s*\[كذا\]", g) if w not in words]  # تعليق أضافه النموذج نفسه
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
