@@ -415,7 +415,9 @@ def fix_allah_saw(t):
     def rep(m):
         w = re.sub(r"[\u064B-\u0652\u0670\u0640]", "", t[max(0, m.start() - 25):m.start()]).split()
         return m.group(0) if (w and w[-1] in _PROPH) else m.group(1) + " عز وجل"
-    return re.sub(r"(\b(?:الله|لله|ربنا|ربه|ربك|الرب|ربي)[\u064B-\u0652]*)\s*ﷺ", rep, t)
+    t = re.sub(r"(\b[فوب]?(?:الله|لله|ربنا|ربه|ربك|الرب|ربي)[\u064B-\u0652]*)\s*ﷺ", rep, t)
+    # «قال ﷺ: ﴿» قبل آية: الرمز رمز «جل وعلا» لا الصلاة على النبي
+    return re.sub(r"(\bو?قال)\s*ﷺ(:?\s*)﴿", r"\1 تعالى\2﴿", t)
 
 
 def honor_words(t):
