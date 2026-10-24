@@ -34,6 +34,7 @@ def show(c, title):
     for k in SAFE:
         if k in c:
             print("  %s = %s" % (k, c[k]))
+    print("::notice title=%s::%s" % (title, " | ".join("%s=%s" % (k, c[k]) for k in SAFE if k in c)))
 
 
 def main():
