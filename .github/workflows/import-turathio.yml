@@ -49,7 +49,7 @@ jobs:
           TIO_AUTHOR_ID: ${{ github.event.inputs.author_id }}
           TIO_AUTHOR: ${{ github.event.inputs.author }}
           TIO_TOPIC: ${{ github.event.inputs.topic }}
-        run: python3 tools/import-turathio.py
+        run: TIO_CONC=3 python3 tools/import-turathio.py
       - name: حفظ ما جُلب للاستئناف
         if: always()
         uses: actions/cache/save@v4

@@ -11,6 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QP = os.path.join(ROOT, "data", "turathio-queue.json")
 API = "https://api.turath.io"
 DEADLINE = time.time() + 60 * float(os.environ.get("TIO_MINUTES", "300"))
+MAX_BOOKS = int(os.environ.get("TIO_MAX_BOOKS", "1"))  # مهمة متدرجة غير عاجلة: كتاب واحد في التشغيل
 MIN_TASH = float(os.environ.get("TIO_MIN_TASH", "0.15"))
 REPORT = []
 
@@ -79,9 +80,12 @@ def main():
     q = json.load(open(QP, encoding="utf-8"))
     done = set(q.get("done") or [])
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
+    n_done = 0
     for it in q["items"]:
         if it["id"] in done or it.get("skip"):
             continue
+        if n_done >= MAX_BOOKS:
+            break
         if time.time() > DEADLINE - 20 * 60:
             open(os.path.join(ROOT, ".tio-incomplete"), "w").write(it["id"]); break
         if not it.get("b"):
@@ -104,7 +108,7 @@ def main():
         if os.path.exists(os.path.join(ROOT, ".tio-incomplete")):
             json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1); break
         if r.returncode == 0:
-            q.setdefault("done", []).append(it["id"]); done.add(it["id"])
+            q.setdefault("done", []).append(it["id"]); done.add(it["id"]); n_done += 1
             rep = os.path.join(ROOT, ".tio-report.txt")
             REPORT.append("- " + (open(rep, encoding="utf-8").read().strip() if os.path.exists(rep) else it["q"]))
             json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

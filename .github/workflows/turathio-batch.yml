@@ -1,20 +1,20 @@
 name: استيراد كتب التراث المشكولة من الشاملة
+# مهمة متدرجة غير عاجلة: كتاب واحد كل ليلة، بطلبات قليلة، وتتنحى إذا كان تحويل كتب المشايخ يعمل
 on:
   workflow_dispatch:
-  push:
-    paths: ["data/turathio-queue.json"]
-    branches: [main]
+  schedule:
+    - cron: "23 23 * * *"
 permissions:
   contents: write
   id-token: write
-  actions: write
+  actions: read
 concurrency:
   group: turathio-batch
   cancel-in-progress: false
 jobs:
   batch:
     runs-on: ubuntu-latest
-    timeout-minutes: 330
+    timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
       - name: استرجاع ما جُلب سابقًا
@@ -23,9 +23,20 @@ jobs:
           path: .tio-cache
           key: tiob-${{ github.run_id }}
           restore-keys: tiob-
-      - name: البحث والاستيراد
+      - name: التنحي لتحويل كتب المشايخ
+        id: yield
         env:
-          TIO_MINUTES: "300"
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh run list -R ${{ github.repository }} -w ocr.yml -s in_progress --json databaseId -q length 2>/dev/null || echo 0)
+          q=$(gh run list -R ${{ github.repository }} -w ocr.yml -s queued --json databaseId -q length 2>/dev/null || echo 0)
+          if [ "$((n+q))" -gt 0 ]; then echo "التحويل يعمل؛ يؤجَّل الاستيراد"; echo "skip=1" >> $GITHUB_OUTPUT; fi
+      - name: البحث والاستيراد
+        if: ${{ steps.yield.outputs.skip != '1' }}
+        env:
+          TIO_MINUTES: "170"
+          TIO_CONC: "3"
+          TIO_MAX_BOOKS: "1"
         run: python3 tools/turathio-batch.py
       - name: حفظ ما جُلب للاستئناف
         if: always()
@@ -33,11 +44,6 @@ jobs:
         with:
           path: .tio-cache
           key: tiob-${{ github.run_id }}
-      - name: الاستئناف في تشغيل جديد
-        if: ${{ hashFiles('.tio-incomplete') != '' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run turathio-batch.yml --ref main
       - name: فهرس معاني الكلمات
         if: ${{ hashFiles('.tio-incomplete') == '' }}
         run: python3 tools/gloss.py >/dev/null && bash tools/git-save.sh "فهرس معاني الكلمات بعد استيراد التراث المشكول" data/gloss || true
