@@ -24,6 +24,7 @@ def norm(t):
     t = t.replace("ء", "").replace("ة", "ه").replace("ى", "ي").replace("ی", "ي")
     t = re.sub(r"[^ء-ي ]", " ", t)
     t = re.sub(r"\bالايه\b|\bالايات\b", " ", t)
+    t = re.sub(r"\bالليل", "اليل", t)  # الرسم العثماني «ٱلَّيْل» بلام واحدة
     return re.sub(r"\s+", " ", t).strip()
 
 
@@ -122,11 +123,15 @@ def check_book(bid, q, ix):
         return None
     sh = json.load(open(path, encoding="utf-8"))
     res = {"n": 0, "ok": 0, "issues": []}
+    qok = {norm(x) for x in sh.get("qok") or []}
     for pi, page in enumerate(sh["pages"]):
         body = page.split("____")[0] if page else ""
         fns = fn_suras(page or "") + fn_suras(sh["pages"][pi - 1] if pi else "") + fn_suras(sh["pages"][pi + 1] if pi + 1 < len(sh["pages"]) else "")
         for m in VERSE.finditer(body):
             raw = m.group(1)
+            if norm(raw) in qok:  # أكّد المدقق صحته (قراءة أخرى، أو حروف مقطعة للتمثيل...)
+                res["n"] += 1; res["ok"] += 1
+                continue
             parts = [x for x in re.split(r"\.{2,}|…", raw) if len(norm(x).split()) >= 3]
             if not parts:
                 continue
