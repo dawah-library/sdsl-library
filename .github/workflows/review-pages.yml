@@ -1,0 +1,63 @@
+name: صور صفحات للمراجعة اليدوية (مشفرة)
+# يحوّل صفحات مختارة من النسخة المصورة الخاصة (R2) إلى صور، ويشفّرها بالمفتاح العام tools/review-pubkey.pem
+# (لا يفك تشفيرها إلا صاحب المفتاح الخاص)، ثم يضعها في الفرع review-scans. لا تُنشر صور الكتب مكشوفة في المستودع العام.
+on:
+  workflow_dispatch:
+    inputs:
+      book:
+        description: "معرّف الكتاب"
+        required: true
+      pages:
+        description: "أرقام الصفحات في النص (من 1) مفصولة بفواصل، أو all"
+        required: true
+        default: "all"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: review-pages
+  cancel-in-progress: false
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+      - name: الصور والتشفير
+        env:
+          BOOK: ${{ github.event.inputs.book }}
+          PAGES: ${{ github.event.inputs.pages }}
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, os, subprocess, sys
+          sys.argv = ["x"]
+          s = importlib.util.spec_from_file_location("o", "tools/ocr-pdf.py"); o = importlib.util.module_from_spec(s); s.loader.exec_module(o)
+          bid = os.environ["BOOK"]
+          cat = json.load(open("data/catalog.json", encoding="utf-8"))
+          b = next(x for x in cat["books"] if x["id"] == bid)
+          off = int(b.get("pdfOffset") or 0)
+          pdf = o.local_pdf(bid)
+          n = b.get("n") or 0
+          ps = list(range(1, n + 1)) if os.environ["PAGES"].strip() == "all" else [int(x) for x in os.environ["PAGES"].split(",") if x.strip()]
+          os.makedirs("rv", exist_ok=True)
+          for p in ps:
+              subprocess.run(["pdftoppm", "-r", "110", "-gray", "-jpeg", "-jpegopt", "quality=70", "-f", str(p + off), "-l", str(p + off), "-singlefile", pdf, "rv/p%04d" % p], check=True)
+          print("صفحات:", len(ps))
+          PY
+          tar czf rv.tgz rv
+          openssl rand -out k.bin 32
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in rv.tgz -out "$BOOK.enc" -pass file:k.bin
+          openssl pkeyutl -encrypt -pubin -inkey tools/review-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in k.bin -out "$BOOK.key"
+          rm -rf rv rv.tgz k.bin
+      - name: الحفظ في فرع review-scans
+        env:
+          BOOK: ${{ github.event.inputs.book }}
+        run: |
+          mkdir /tmp/out && mv "$BOOK.enc" "$BOOK.key" /tmp/out/
+          git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
+          git fetch -q origin review-scans && git checkout -q review-scans || git checkout -q --orphan review-scans
+          git rm -rq --cached . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/out/* . && git add "$BOOK.enc" "$BOOK.key"
+          git commit -qm "صفحات مشفرة للمراجعة: $BOOK" && git push -q -f origin HEAD:review-scans
