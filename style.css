@@ -609,3 +609,9 @@ ul.tj,ul.tj ul{list-style:none;margin:0;padding:0}
 .dmm.me{align-self:flex-start;background:color-mix(in srgb,var(--ac) 12%,var(--sf));border-radius:14px 14px 4px 14px}.dmm p{margin:0}.dmm small{color:var(--mut);font-size:.72rem}
 .dmform{display:flex;gap:8px;align-items:flex-end;margin-top:8px}.dmform textarea{flex:1;min-height:70px}
 .expx .seg{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}.expx .seg label{display:flex;gap:6px;align-items:center;font-size:.92rem}
+.tjed{position:absolute;inset-inline-end:58px;top:6px;border:0;background:none;color:var(--mut);cursor:pointer;font-size:.95rem}.tjn.d0>.tjcard .tjed{color:#fff}
+details.qorg{margin:8px 0;border:1px dashed var(--line);border-radius:10px;padding:6px 10px}details.qorg summary{cursor:pointer;font-size:.9rem}
+.cmhero.ph{background:linear-gradient(135deg,#8a5a2b,#0f5c4d)}
+.pathl{padding-inline-start:22px}.pathl li{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}.pathl li.done{border-color:var(--ac)}
+.pathl li>div:first-child{flex:1;min-width:200px}.pathl b{display:block}.pathl .prog{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 2px}.pathl .prog i{display:block;height:100%;background:var(--gold)}
+.card .prog{display:block;height:4px;background:var(--line);border-radius:4px;margin-top:6px;position:relative;overflow:hidden}.card .prog::after{content:"";position:absolute;inset:0 0 0 auto;width:var(--w);background:var(--gold)}

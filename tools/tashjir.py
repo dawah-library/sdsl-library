@@ -157,7 +157,15 @@ def build(bid, cat):
                     part[i]["r"] = "bad"
                 else:
                     part[i]["r"] = "ok"
-    return {"id": bid, "t": title, "a": au, "s": top.get("s", ""), "p": [1, len(pages)], "c": groups, "built": time.strftime("%Y-%m-%d"), "model": MODEL}
+    m = {"id": bid, "t": title, "a": au, "s": top.get("s", ""), "p": [1, len(pages)], "c": groups, "built": time.strftime("%Y-%m-%d"), "model": MODEL}
+    k = [0]
+    def ids(n):  # معرّف ثابت لكل عقدة (للتصحيح اليدوي)
+        k[0] += 1; n["i"] = k[0]
+        for c in n.get("c", []):
+            ids(c)
+    for g in m["c"]:
+        ids(g)
+    return m
 
 
 def main():

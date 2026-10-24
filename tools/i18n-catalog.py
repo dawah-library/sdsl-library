@@ -38,6 +38,10 @@ def main():
     for b in cat["books"]:
         if b.get("type", "book") == "book" and b["id"] not in out["books"]:
             jobs.append(("b:" + b["id"], b.get("title", "")))
+    ap = os.path.join(ROOT, "data", "articles", "index.json")
+    arts = [x for x in (json.load(open(ap, encoding="utf-8")).get("items", []) if os.path.exists(ap) else []) if x["id"] not in out["books"]]
+    arts.sort(key=lambda x: x.get("d") or "", reverse=True)  # الأحدث أولًا
+    jobs += [("b:" + x["id"], x.get("t", "")) for x in arts[: int(os.environ.get("ART_MAX", "600"))]]
     for a in cat["authors"]:
         if a["id"] not in out["authors"]:
             jobs.append(("a:" + a["id"], a.get("name", "")))

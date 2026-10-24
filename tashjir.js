@@ -17,7 +17,7 @@ function tjFilter(n, lvl, a, z, d = 0) {
 function tjNode(n, d, ci, bid) {
   const col = TJC[ci % TJC.length], pg = Array.isArray(n.p) ? `ص ${toAr(n.p[0])}${n.p[1] && n.p[1] !== n.p[0] ? "–" + toAr(n.p[1]) : ""}` : n.p ? "ص " + toAr(n.p) : "";
   const pp = Array.isArray(n.p) ? n.p[0] : n.p, flag = n.v === 0 ? ' <span class="tjflag" title="العبارة لم تُطابق نص الصفحة">؟</span>' : n.r === "bad" ? ' <span class="tjflag">!</span>' : "";
-  return `<li class="tjn d${d}" style="--c:${col}"><div class="tjcard"><b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
+  return `<li class="tjn d${d}" style="--c:${col}"><div class="tjcard">${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
 }
 async function vTashjir(q, id) {
   if (!id) {
@@ -81,10 +81,16 @@ document.addEventListener("click", async e => {
     else if (a === "tjpdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة"); await document.fonts.ready; const u = tjCanvas().toDataURL("image/png"); w.document.write(`<!doctype html><title>${esc(T.m.t)}</title><style>body{margin:0}img{width:100%}</style><img src="${u}"><script>onload=()=>setTimeout(()=>print(),300)<\/script>`); w.document.close(); }
     else if (a === "tjall") { const cards = document.querySelectorAll(".tj ul"); const hide = [...cards].some(u => !u.hidden); document.querySelectorAll(".tj .tjn.d1>ul,.tj .tjn.d2>ul,.tj .tjn.d3>ul").forEach(u => u.hidden = hide); }
     else if (a === "tjok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on && !confirm("هل راجعت التشجير وتريد عرضه للأعضاء؟")) return; await GH.editJSON("data/tashjir/_list.json", o => { if (o[el.dataset.id]) o[el.dataset.id].ok = on ? 1 : 0; return o; }, (on ? "اعتماد تشجير: " : "إيقاف تشجير: ") + el.dataset.id, true); TSJ.list = null; toast(on ? "اعتُمد التشجير" : "أوقف العرض"); route(); }
+    else if (a === "tjedit") {
+      if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const find = n => { if (n.i === +el.dataset.i) return n; for (const c of n.c || []) { const r = find(c); if (r) return r; } return null; };
+      const n0 = find({ c: T.m.c }); if (!n0) return; const nt = prompt("نص الغصن:", n0.t || ""); if (nt === null) return; const ns = n0.s != null ? prompt("الخلاصة (اتركها فارغة لحذفها):", n0.s || "") : null; const del = nt.trim() === "" && confirm("حذف هذا الغصن وما تحته؟");
+      await GH.editJSON("data/tashjir/" + T.id + ".json", m => { const walk = arr => { for (let k = 0; k < (arr || []).length; k++) { const x = arr[k]; if (x.i === n0.i) { if (del) arr.splice(k, 1); else { x.t = nt.trim(); if (ns !== null) x.s = ns.trim(); x.r = "manual"; x.v = 1; } return true; } if (walk(x.c)) return true; } return false; }; walk(m.c); return m; }, "تشجير: تصحيح يدوي", true);
+      TSJ.maps.delete(T.id); toast("حُفظ التصحيح"); route();
+    }
     else if (a === "tjre") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); if (!confirm("إعادة تشجير الكتاب من جديد؟")) return; await GH.editJSON("data/tashjir/_queue.json", o => { o = o || { items: [] }; o.items = [{ id: el.dataset.id }].concat((o.items || []).filter(x => (x.id || x) !== el.dataset.id)); return o; }, "تشجير: إعادة " + el.dataset.id); toast("يُعاد التشجير خلال دقائق، ويصلك إشعار"); }
   } catch (x) { toast(x.message || "تعذر"); }
 });
-document.addEventListener("click", e => { const c = e.target.closest(".tj .tjcard"); if (!c || e.target.closest("a")) return; const u = c.parentElement.querySelector(":scope>ul"); if (u) u.hidden = !u.hidden; });
+document.addEventListener("click", e => { const c = e.target.closest(".tj .tjcard"); if (!c || e.target.closest("a,button")) return; const u = c.parentElement.querySelector(":scope>ul"); if (u) u.hidden = !u.hidden; });
 document.addEventListener("submit", async e => {
   const f = e.target.closest('[data-form="tjrange"],[data-form="tjq"]'); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
   if (f.dataset.form === "tjrange") { const p = new URLSearchParams({ lvl: f.dataset.lvl }); if (+f.a.value) p.set("from", f.a.value); if (+f.z.value) p.set("to", f.z.value); go("#/tashjir/" + f.dataset.id + "?" + p); return; }
