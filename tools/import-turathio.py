@@ -5,13 +5,16 @@
   TIO_AUTHOR_ID=ta_kuwayt TIO_AUTHOR="وزارة الأوقاف والشؤون الإسلامية بالكويت" TIO_TOPIC=t4 python3 tools/import-turathio.py
 يحفظ كل جزء في vols/<id>-vNN.json بتسمية صفحات الطبعة (ج N ص M) وفهرس من العناوين، ويضيف الأجزاء إلى الفهرس العام.
 """
-import concurrent.futures as cf, html, json, os, re, sys, time, urllib.request, urllib.error
+import concurrent.futures as cf, gzip, html, json, os, re, sys, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 API = "https://api.turath.io"
 BOOK = os.environ["TIO_BOOK"]
 BID = os.environ["TIO_ID"]
-CONC = int(os.environ.get("TIO_CONC", "4"))
+CONC = int(os.environ.get("TIO_CONC", "6"))
+# الاستئناف: الصفحات المجلوبة تُحفظ في .tio-cache (تحفظه المهمة بين التشغيلات)، ويتوقف الجلب قبل مهلة المهمة
+CACHE = os.path.join(ROOT, ".tio-cache", "%s.json.gz" % BOOK)
+DEADLINE = time.time() + 60 * float(os.environ.get("TIO_MINUTES", "250"))
 
 
 def get(url, tries=6):
@@ -49,9 +52,25 @@ def main():
     for h in (idx.get("headings") or []):
         heads.append((int(h.get("page") or 0), h.get("title") or "", int(h.get("level") or 1)))
     # الصفحات تباعًا حتى النهاية
-    pages = {}
-    pg, misses, step = 1, 0, 200
+    pages, pg = {}, 1
+    if os.path.exists(CACHE):
+        c = json.load(gzip.open(CACHE, "rt", encoding="utf-8"))
+        pages = {int(k): v for k, v in c.get("pages", {}).items()}
+        pg = int(c.get("next", 1))
+        print("  استئناف: %d صفحة محفوظة، من الصفحة %d" % (len(pages), pg), flush=True)
+
+    def save(nxt):
+        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+        with gzip.open(CACHE, "wt", encoding="utf-8") as f:
+            json.dump({"next": nxt, "pages": pages}, f, ensure_ascii=False)
+
+    misses, step = 0, 200
     while misses < 3:
+        if time.time() > DEADLINE:
+            save(pg)
+            open(os.path.join(ROOT, ".tio-incomplete"), "w").write(str(pg))
+            print("  توقف قبل المهلة عند الصفحة %d (%d صفحة)؛ يُستأنف في تشغيل جديد" % (pg, len(pages)), flush=True)
+            return
         batch = list(range(pg, pg + step))
         with cf.ThreadPoolExecutor(CONC) as ex:
             res = list(ex.map(lambda n: (n, get("%s/page?book_id=%s&pg=%d" % (API, BOOK, n))), batch))
@@ -63,6 +82,9 @@ def main():
         misses = misses + 1 if got == 0 else 0
         print("  حتى الصفحة %d: %d صفحة" % (pg + step - 1, len(pages)), flush=True)
         pg += step
+        if (pg // step) % 5 == 0:
+            save(pg)
+    save(pg)
     if not pages:
         sys.exit("لم تُجلب أي صفحة")
     order = sorted(pages)
