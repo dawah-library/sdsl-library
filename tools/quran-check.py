@@ -56,16 +56,18 @@ class Index:
         self.words, self.pos = [], []  # كل كلمات المصحف متتابعة، وموضع كل كلمة (سورة، آية)
         self.sname = {}
         for s in q["suras"]:
-            self.sname[s["n"]] = norm(re.sub(r"^سورة\s*", "", s["name"]))
+            self.sname[s["n"]] = re.sub(r"^سوره\s*", "", norm(s["name"]))
             for i, a in enumerate(s["ayat"], 1):
                 for w in norm(a).split():
-                    self.words.append(skel(w)); self.pos.append((s["n"], i))
+                    k = skel(w)
+                    if k:
+                        self.words.append(k); self.pos.append((s["n"], i))
         self.tri = {}
         for i in range(len(self.words) - 2):
             self.tri.setdefault(tuple(self.words[i:i + 3]), []).append(i)
 
     def find(self, text):
-        ws = [skel(w) for w in norm(text).split()]
+        ws = [k for k in (skel(w) for w in norm(text).split()) if k]
         if len(ws) < 3:
             return None
         votes = {}
@@ -74,14 +76,15 @@ class Index:
                 votes[p - i] = votes.get(p - i, 0) + 1
         if not votes:
             return {"r": 0.0}
-        start = max(votes, key=votes.get)
-        start = max(0, start)
+        ranked = sorted(votes.items(), key=lambda kv: -kv[1])
+        start = max(0, ranked[0][0])
+        uniq = len(ranked) == 1 or ranked[1][1] < ranked[0][1]
         cand = self.words[start:start + len(ws)]
         sm = difflib.SequenceMatcher(None, ws, cand, autojunk=False)
         r = sm.ratio()
         diff = [" ".join(ws[a:b]) for tag, a, b, c, d in sm.get_opcodes() if tag != "equal" and b > a][:8]
         s, a = self.pos[min(start, len(self.pos) - 1)]
-        return {"r": round(r, 3), "s": s, "a": a, "start": start, "len": len(ws), "diff": diff}
+        return {"r": round(r, 3), "s": s, "a": a, "start": start, "len": len(ws), "diff": diff, "uniq": uniq}
 
     def text_at(self, q, start, n):
         s0, a0 = self.pos[start]; s1, a1 = self.pos[min(start + n - 1, len(self.pos) - 1)]
@@ -98,15 +101,18 @@ FN_REF = re.compile(r"^\s*\(([\d٠-٩]{1,3})\)\s*(?:من\s+)?(?:سورة\s+)?([^
 
 
 def fn_suras(page):
-    """رقم الحاشية ← اسم السورة المذكور فيها."""
-    out = {}
-    if "____" not in page:
+    """أسماء السور المذكورة في حواشي الصفحة (قائمة؛ فأرقام الحواشي قد تتكرر في الصفحة)."""
+    out = []
+    if "____" not in (page or ""):
         return out
     for line in page.split("____", 1)[1].split("\n"):
         line = line.strip("_ ").strip()
         m = FN_REF.match(line)
         if m:
-            out[m.group(1).translate(str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩"))] = norm(m.group(2))
+            v = re.sub(r"^(?:من\s+)?(?:سوره\s+)?", "", norm(m.group(2)))
+            v = re.sub(r"\s+من$", "", v).strip()
+            if v:
+                out.append(v)
     return out
 
 
@@ -118,7 +124,7 @@ def check_book(bid, q, ix):
     res = {"n": 0, "ok": 0, "issues": []}
     for pi, page in enumerate(sh["pages"]):
         body = page.split("____")[0] if page else ""
-        fns = fn_suras(page or "")
+        fns = fn_suras(page or "") + fn_suras(sh["pages"][pi - 1] if pi else "") + fn_suras(sh["pages"][pi + 1] if pi + 1 < len(sh["pages"]) else "")
         for m in VERSE.finditer(body):
             raw = m.group(1)
             parts = [x for x in re.split(r"\.{2,}|…", raw) if len(norm(x).split()) >= 3]
@@ -130,22 +136,19 @@ def check_book(bid, q, ix):
                 f = ix.find(part)
                 if not f or f.get("r", 0) >= 0.97:
                     continue
-                kind = "near" if f["r"] >= 0.6 else "missing"
+                kind = "near" if f["r"] >= 0.6 else ("missing" if f["r"] > 0 else "nq")  # nq: نص بين قوسي الآية وليس من القرآن (حديث أو عنوان)
                 bad = {"p": pi + 1, "t": raw[:400], "k": kind, "r": f["r"], "diff": f.get("diff", [])}
                 if "start" in f:
                     bad.update({"s": f["s"], "a": f["a"], "best": ix.text_at(q, f["start"], f["len"]) if kind == "near" else ""})
                 break
             if not bad:
-                # السورة المذكورة في الحاشية التي تلي الآية مباشرة (إن وُجدت)
-                tail = body[m.start() - 40:m.start()]
-                mk = re.findall(r"\(([\d٠-٩]{1,3})\)", tail)
+                # السورة: يُكتفى بأن تُذكر سورة الآية في إحدى حواشي الصفحة (أرقام الحواشي قد تتكرر في الصفحة الواحدة)
                 f = ix.find(parts[0])
-                if mk and f and f.get("s"):
-                    k = mk[-1].translate(str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩"))
-                    named = fns.get(k)
+                named = fns
+                if f and f.get("s") and f.get("uniq") and f.get("len", 0) >= 5 and named:
                     real = ix.sname.get(f["s"], "")
-                    if named and real and named not in real and real not in named:
-                        bad = {"p": pi + 1, "t": raw[:400], "k": "sura", "r": f["r"], "s": f["s"], "a": f["a"], "named": named, "real": real}
+                    if real and not any(real in x or x in real for x in named):
+                        bad = {"p": pi + 1, "t": raw[:400], "k": "sura", "r": f["r"], "s": f["s"], "a": f["a"], "named": "، ".join(named), "real": real}
             if bad:
                 res["issues"].append(bad)
             else:
@@ -166,7 +169,8 @@ def main():
             continue
         res, sh, path = r
         json.dump(res, open(os.path.join(OUT, bid + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-        summary[bid] = {"n": res["n"], "bad": len(res["issues"])}
+        summary[bid] = {"n": res["n"], "bad": sum(1 for x in res["issues"] if x["k"] in ("near", "missing")),
+                        "warn": sum(1 for x in res["issues"] if x["k"] in ("sura", "nq"))}
         # مواضع الخلل إلى مواضع الشك في الكتاب ليقدّمها التدقيق
         if res["issues"]:
             unc = dict(sh.get("unc") or {})
