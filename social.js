@@ -4,19 +4,21 @@ const MP = new Map(); // منشورات الأعضاء المحمَّلة: "m<id
 const Members = {
   pages: new Map(), follows: null,
   on() { return typeof Cloud !== "undefined" && Cloud.on(); },
-  toPost(r) { const x = { id: "m" + r.id, mid: r.id, uid: r.user_id, member: 1, name: r.user_name || (this.pages.get(r.user_id) || {}).name || "عضو", text: r.body || "", quote: r.quote || null, date: r.created_at }; MP.set(x.id, x); return x; },
+  toPost(r) { const x = { id: "m" + r.id, mid: r.id, uid: r.user_id, member: 1, name: r.user_name || (this.pages.get(r.user_id) || {}).name || "عضو", text: r.body || "", quote: r.quote || null, date: r.created_at, hidden: !!r.hidden, pinned: !!r.pinned, hreason: r.hidden_reason || "" }; MP.set(x.id, x); return x; },
   async posts(opt) {
     opt = opt || {}; if (!this.on()) return [];
-    let q = Auth.sb.from("member_posts").select("id,user_id,user_name,body,quote,created_at").order("created_at", { ascending: false }).limit(opt.limit || 60);
+    let q = Auth.sb.from("member_posts").select("id,user_id,user_name,body,quote,created_at,hidden,pinned,hidden_reason").order("created_at", { ascending: false }).limit(opt.limit || 60);
     if (opt.uid) q = q.eq("user_id", opt.uid);
     if (opt.uids) { if (!opt.uids.length) return []; q = q.in("user_id", opt.uids); }
     if (opt.book) q = q.eq("quote->>b", opt.book);
+    if (opt.since) q = q.gte("created_at", opt.since);
+    if (opt.visible) q = q.eq("hidden", false);
     const { data, error } = await q; if (error) { console.warn(error); return []; }
     return (data || []).map(r => this.toPost(r));
   },
   async post(id) {
     if (MP.has(id)) return MP.get(id); if (!this.on() || !/^m\d+$/.test(id)) return null;
-    const { data } = await Auth.sb.from("member_posts").select("id,user_id,user_name,body,quote,created_at").eq("id", +id.slice(1)).maybeSingle();
+    const { data } = await Auth.sb.from("member_posts").select("id,user_id,user_name,body,quote,created_at,hidden,pinned,hidden_reason").eq("id", +id.slice(1)).maybeSingle();
     return data ? this.toPost(data) : null;
   },
   async publish(quote) {
@@ -25,7 +27,7 @@ const Members = {
     const { data: ses } = await Auth.sb.auth.getSession(), tok = ses && ses.session && ses.session.access_token;
     const r = await fetch("/api/mpost", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + (tok || "") }, body: JSON.stringify({ b: quote.b, p: quote.p, t: quote.t }) });
     const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.message || "تعذر النشر الآن.");
-    return this.toPost(j.post);
+    const x = this.toPost(j.post); x.pending = !!j.pending; return x;
   },
   async del(x) { const { error } = await Auth.sb.from("member_posts").delete().eq("id", x.mid); if (error) throw new Error(error.message); MP.delete(x.id); },
   async page(uid) {
@@ -74,7 +76,7 @@ function composeDlg(quote) {
   if (!quote) return openDlg(`<h3>انشر مختارة</h3><p>النشر في المكتبة مقصور على المختارات من الكتب.</p><ol class="mut"><li>افتح أي كتاب.</li><li>حدّد الفقرة التي تريدها.</li><li>اضغط «انشر مختارة» في الشريط الذي يظهر.</li></ol><p class="mut">تظهر المختارة بطاقةً موثقة باسم الكتاب ومؤلفه وصفحته، ومن يضغطها يصل إلى موضعها في الكتاب.</p><a class="btn p nf" href="#/library">إلى المكتبة</a>`);
   window.__pendingQuote = quote;
   openDlg(`<h3>انشر مختارة من الكتاب</h3>${quoteHtml(quote).replace(/^<a /, "<div ").replace(/<\/a>$/, "</div>")}
-  <form data-form="mpost"><p class="mut" style="font-size:.85rem">تُنشر المختارة كما هي من الكتاب بتوثيقها، وتظهر لمن يتابعك وفي «الكل».</p><button class="btn p">نشر المختارة</button></form>`);
+  <form data-form="mpost"><p class="mut" style="font-size:.85rem">تُنشر المختارة كما هي من الكتاب بتوثيقها في <b>مجتمع المكتبة</b>، وتظهر لمن يتابعك. بالنشر توافق على <a href="#/community?k=rules" data-act="closeDlg">معايير المجتمع</a>.</p><button class="btn p">نشر المختارة</button></form>`);
 }
 
 /* صفحة العضو */
@@ -165,7 +167,7 @@ document.addEventListener("submit", async e => {
   const f = e.target.closest("[data-form]"); if (!f) return; const k = f.dataset.form; if (k !== "mpost" && k !== "mepage") return;
   e.preventDefault(); e.stopImmediatePropagation(); const btn = f.querySelector("button"); btn.disabled = true;
   try {
-    if (k === "mpost") { const x = await Members.publish(window.__pendingQuote); window.__pendingQuote = null; dlg().close(); toast("نُشر منشورك"); location.hash = "#/post/" + x.id; }
+    if (k === "mpost") { const x = await Members.publish(window.__pendingQuote); window.__pendingQuote = null; dlg().close(); toast(x.pending ? "أُرسلت مختارتك، وتظهر للأعضاء بعد مراجعة الإدارة" : "نُشرت مختارتك في مجتمع المكتبة"); location.hash = "#/post/" + x.id; }
     else { const name = f.name.value.trim(), bio = f.bio.value.trim(); await Members.savePage({ name, bio }); dlg().close(); toast("حُفظت صفحتك"); route(); }
   } catch (x) { alert(x.message); btn.disabled = false; }
 }, true);

@@ -15,6 +15,10 @@ on:
         description: "إعادة الصفحات التي تغيّر نصها (1 للتفعيل)"
         required: false
         default: "0"
+      force:
+        description: "معرّفات كتب يُعاد تسجيلها كاملة"
+        required: false
+        default: ""
 permissions:
   contents: write
   id-token: write
@@ -40,6 +44,7 @@ jobs:
           TTS_COMMIT: "1"
           TTS_MAX_MIN: "320"
           TTS_ONLY: ${{ github.event.inputs.books }}
+          TTS_FORCE: ${{ github.event.inputs.force }}
           TTS_REFRESH: ${{ github.event_name == 'schedule' && '1' || github.event.inputs.refresh || '0' }}
         run: |
           git config user.name "sdsl-bot"

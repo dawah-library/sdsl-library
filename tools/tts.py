@@ -127,36 +127,54 @@ def commit(msg):
         time.sleep(4)
 
 
-SENT = re.compile(r"[^.؟!:؛\n]+[.؟!:؛]?")
+PUN = re.compile(r"[.؟!:؛،\n]")
+
+
+def phrases(text, words):
+    """تقسيم نص الصفحة إلى عبارات قصيرة بتوقيتها، بمطابقة كلمات الصوت على النص الأصلي (لإبراز العبارة أثناء الاستماع)."""
+    pos, cur = [], 0
+    for ms, w in words:
+        w = w.strip()
+        if not w:
+            continue
+        i = text.find(w, cur)
+        if i < 0 or i - cur > 200:
+            continue
+        pos.append((ms, i, i + len(w)))
+        cur = i + len(w)
+    if not pos:
+        return []
+    out, start, n = [], 0, 0
+    for k, (ms, a, b) in enumerate(pos):
+        n += 1
+        nxt = pos[k + 1][1] if k + 1 < len(pos) else len(text)
+        gap = text[b:nxt]
+        if k + 1 == len(pos) or (n >= 4 and PUN.search(gap)) or n >= 22:
+            seg = text[pos[start][1]:nxt].strip()
+            if seg:
+                out.append([pos[start][0], seg])
+            start, n = k + 1, 0
+    return out
 
 
 async def speak(text, voice, rate, path):
     import edge_tts
-    sents, buf = [], bytearray()
+    buf, words, sents = bytearray(), [], []
     try:
-        comm = edge_tts.Communicate(text, voice, rate=rate, boundary="SentenceBoundary")
-    except TypeError:  # إصدارات قديمة بلا حدود الجمل
+        comm = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
+    except TypeError:
         comm = edge_tts.Communicate(text, voice, rate=rate)
-    words = []
     async for ch in comm.stream():
         if ch["type"] == "audio":
             buf.extend(ch["data"])
-        elif ch["type"] == "SentenceBoundary":
-            sents.append([int(ch["offset"] / 10000), ch["text"]])
         elif ch["type"] == "WordBoundary":
             words.append([int(ch["offset"] / 10000), ch["text"]])
+        elif ch["type"] == "SentenceBoundary":
+            sents.append([int(ch["offset"] / 10000), ch["text"]])
     if not buf:
         raise RuntimeError("لا صوت")
-    if not sents and words:  # تجميع الكلمات في جمل بحسب علامات الوقف في النص
-        parts = [s.strip() for s in SENT.findall(text) if s.strip()]
-        wi = 0
-        for s in parts:
-            n = len(s.split())
-            if wi < len(words):
-                sents.append([words[wi][0], s])
-            wi += n
     open(path, "wb").write(bytes(buf))
-    return sents
+    return phrases(text, words) or sents
 
 
 def mp3_secs(path):
@@ -193,7 +211,8 @@ async def tts_book(item, lst):
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
             continue
-        if cur and cur.get("d") and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
+        force = bool(item.get("force")) or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
+        if cur and cur.get("d") and not force and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
             continue
         todo.append((p, tx))
     if not todo:
@@ -232,7 +251,8 @@ async def tts_book(item, lst):
             man["pages"][str(p)] = {"d": mp3_secs(path), "h": h(tx), "s": sents}
             os.remove(path)
         save_book(man, b, lst, len(pages))
-        commit("صوتيات المكتبة: «%s» (%d صفحة)" % (man["title"], sum(1 for v in man["pages"].values() if v.get("d"))))
+        if (i // BATCH) % 3 == 2 or i + BATCH >= len(todo) or left() < 600:  # حفظ دوري كل ١٢٠ صفحة تقريبًا
+            commit("صوتيات المكتبة: «%s» (%d صفحة)" % (man["title"], sum(1 for v in man["pages"].values() if v.get("d"))))
         log("  حُفظت %d صفحة، بقي من الوقت %d دقيقة" % (len(done), left() // 60))
     remaining = [p for p, _ in todo if not (man["pages"].get(str(p)) or {}).get("d")]
     REPORT.append("%s «%s»: %d صفحة مسموعة%s" % (bid, man["title"], sum(1 for v in man["pages"].values() if v.get("d")), (" — بقي %d" % len(remaining)) if remaining else " — اكتمل"))
@@ -244,7 +264,9 @@ def save_book(man, b, lst, total):
     ps = man["pages"]
     secs = sum(v.get("d", 0) for v in ps.values()) + sum(r.get("d", 0) for r in man.get("rec", []))
     lst[man["id"]] = {"n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
-                      "t": man["title"], "a": b.get("authorId", ""), "rec": len(man.get("rec", [])), "upd": time.strftime("%Y-%m-%d")}
+                      "t": man["title"], "a": b.get("authorId", ""), "c": b.get("col", ""), "rec": len(man.get("rec", [])), "upd": time.strftime("%Y-%m-%d"),
+                      "ds": [round((ps.get(str(i)) or {}).get("d", 0)) for i in range(1, total + 1)],
+                      "rd": [[r.get("f"), round(r.get("d", 0)), r.get("t", "")] for r in man.get("rec", [])]}
     jsave(os.path.join(AUD, "_list.json"), lst)
 
 

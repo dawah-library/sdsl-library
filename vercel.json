@@ -48,7 +48,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; worker-src 'self' blob: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://nqxkkdexpodjjwfdkxoq.supabase.co wss://nqxkkdexpodjjwfdkxoq.supabase.co https://raw.githubusercontent.com https://api.github.com https://api.mymemory.translated.net https://api.pwnedpasswords.com https://*.r2.cloudflarestorage.com https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; worker-src 'self' blob: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https://github.com https://*.githubusercontent.com; connect-src 'self' https://nqxkkdexpodjjwfdkxoq.supabase.co wss://nqxkkdexpodjjwfdkxoq.supabase.co https://raw.githubusercontent.com https://api.github.com https://api.mymemory.translated.net https://api.pwnedpasswords.com https://*.r2.cloudflarestorage.com https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "X-Content-Type-Options",
@@ -149,5 +149,6 @@
       "destination": "https://dawahlibrary.org/:path*",
       "permanent": true
     }
-  ]
+  ],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)data/audio'"
 }

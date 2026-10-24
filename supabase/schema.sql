@@ -399,3 +399,16 @@ alter policy "notifications own update" on public.notifications using ((select a
 alter policy "admin messages staff update" on public.admin_messages using (public.is_staff()) with check (public.is_staff());
 alter policy "corrections staff update" on public.corrections using (public.is_staff()) with check (public.is_staff());
 -- الاسم الظاهر يفرضه الخادم، مع حد للإغراق (التعريف الكامل في قاعدة البيانات: public.guard_member_write)
+
+-- ===== مجتمع المكتبة (٢٤ أكتوبر ٢٠٢٦): تفاعلات متعددة، وإخفاء وتثبيت، وإيقاف الأعضاء، وبلاغات، ومعايير المجتمع =====
+alter table public.post_reactions add column if not exists kind text not null default 'like';
+-- post_reactions_kind_chk: kind in ('like','love','dua','benefit','wow','sad'); سياسة "reactions own update"
+-- post_stats: أضيف عمود kinds (عدد كل تفاعل)
+alter table public.member_posts add column if not exists hidden boolean not null default false;
+alter table public.member_posts add column if not exists pinned boolean not null default false;
+alter table public.member_posts add column if not exists hidden_reason text;
+-- community_bans(user_id, scope post|all, reason, until, by_user, user_name) للمشرفين، والعضو يقرأ إيقافه
+-- post_reports(post_id, user_id, reason, status open|done) العضو يبلّغ، والمشرفون يراجعون؛ ومشغّل report_notify يشعر المشرفين
+-- app_settings: المفاتيح community_rules وcommunity_open وradio_channels يقرؤها الجميع ويكتبها المدير
+-- is_banned(uid, scope) ويستعمله guard_member_write لمنع تعليق الموقوف؛ وapi/mpost يمنع نشره
+-- notifications: سياسة "notifications staff insert"؛ وصندوق inbox يقبل ملفات الصوت

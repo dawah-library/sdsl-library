@@ -35,6 +35,13 @@ module.exports = async (req, res) => {
   const u = await fetch(process.env.SUPABASE_URL + "/auth/v1/user", { headers: { apikey: process.env.SUPABASE_ANON_KEY || sbKey(), Authorization: "Bearer " + tok } });
   if (!u.ok) return out(res, 401, { message: "انتهت الجلسة؛ سجّل الدخول من جديد." });
   const user = await u.json();
+  // الأعضاء الموقوفون عن النشر في مجتمع المكتبة (تحددهم الإدارة)
+  try { const ban = await sb("community_bans?select=until,reason&user_id=eq." + user.id); const x = ban && ban[0];
+    if (x && (!x.until || Date.parse(x.until) > Date.now())) return out(res, 403, { message: "أوقفت إدارة المكتبة النشر من حسابك" + (x.until ? " حتى " + String(x.until).slice(0, 10) : "") + (x.reason ? ": " + x.reason : ".") }); } catch (e) { }
+  // إعدادات المجتمع: إيقاف النشر مؤقتًا، أو المراجعة قبل الظهور
+  let cset = {}, staff = false;
+  try { const r = await sb("app_settings?select=value&key=eq.community_open"); cset = (r && r[0] && r[0].value) || {}; const pr = await sb("profiles?select=role&id=eq." + user.id); staff = !!(pr && pr[0] && /^(admin|editor)$/.test(pr[0].role)); } catch (e) { }
+  if (cset.closed && !staff) return out(res, 403, { message: "النشر في مجتمع المكتبة متوقف مؤقتًا بقرار الإدارة." });
   const q = await body(req), bid = String(q.b || "").slice(0, 80), p = parseInt(q.p, 10), t = String(q.t || "").replace(/\s+/g, " ").trim();
   if (!bid || !(p > 0) || t.length < 20) return out(res, 400, { message: "حدّد فقرة من الكتاب (عشرون حرفًا على الأقل)." });
   if (t.length > 1500) return out(res, 400, { message: "المختارة طويلة؛ الحد ١٥٠٠ حرف." });
@@ -53,10 +60,11 @@ module.exports = async (req, res) => {
   // حد بسيط لمنع الإغراق: عشرون مختارة في الساعة
   try { const since = new Date(Date.now() - 3600e3).toISOString(); const n = await sb("member_posts?select=id&user_id=eq." + user.id + "&created_at=gte." + since); if (n && n.length >= 20) return out(res, 429, { message: "بلغت حد النشر لهذه الساعة؛ حاول لاحقًا." }); } catch (e) { }
   const row = { user_id: user.id, user_name: name, body: "", quote: { b: bid, p, pl, t, title: b.setTitle || b.title, au } };
+  if (cset.premod && !staff) { row.hidden = true; row.hidden_reason = "بانتظار مراجعة الإدارة"; }
   try {
     const r = await sb("member_posts", { method: "POST", body: JSON.stringify(row) });
-    try { const { notify, escH } = require("../lib/tg"); await notify(`📖 <b>مختارة جديدة</b> من ${escH(name)}\n«${escH(t.slice(0, 200))}${t.length > 200 ? "…" : ""}»\n— ${escH(row.quote.title)}`); } catch (e) { }
-    return out(res, 200, { post: r[0] });
+    try { const { notify, escH } = require("../lib/tg"); await notify(`📖 <b>منشور جديد في مجتمع المكتبة</b> من ${escH(name)}\n«${escH(t.slice(0, 200))}${t.length > 200 ? "…" : ""}»\n— ${escH(row.quote.title)}\n<a href="https://dawahlibrary.org/community?k=admin">مراقبة المجتمع</a>`, { url: "#/community?k=admin" }); } catch (e) { }
+    return out(res, 200, { post: r[0], pending: !!row.hidden });
   }
   catch (e) { console.error("mpost", e.message); return out(res, 500, { message: "تعذر النشر الآن." }); }
 };
