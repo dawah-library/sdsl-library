@@ -271,7 +271,7 @@ const arD=s=>+String(s).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d))
 function pageByLabel(b,n){if(!b||!b.pages)return 0;let m=LBLMAP.get(b);if(!m){m=new Map();for(let i=0;i<b.pages.length;i++){const x=/([\d٠-٩]+)\s*$/.exec(PL(b,i)||"");if(x&&!m.has(arD(x[1])))m.set(arD(x[1]),i+1)}LBLMAP.set(b,m)}return m.get(n)||0}
 // دمج الأسطر المكسورة: السطر الذي لا ينتهي بعلامة وقف يتصل بما بعده في فقرة واحدة
 function joinLines(tx){if(S.merge===false)return tx;const L=tx.split("\n"),o=[];for(const l of L){const t=l.trim(),prev=o.length?o[o.length-1]:null;
- if(prev!==null&&t&&prev.trim()&&!/^#/.test(prev)&&!/^#|^[-•*]\s|^[(\[]?[\d٠-٩]{1,3}[)\].-]\s|^\*\*\*/.test(t)&&!/[.؟!:؛»)\]"*]\s*$/.test(prev)&&!/\s{3,}/.test(prev.trim())&&!TOCL.test(prev))o[o.length-1]=prev.trimEnd()+" "+t;else o.push(l)}return o.join("\n")}
+ if(prev!==null&&t&&prev.trim()&&!/^#/.test(prev)&&!/^#|^[-•*]\s|^[(\[]?[\d٠-٩]{1,3}[)\].-]\s|^\*\*\*/.test(t)&&!/[.؟!:؛»)\]"*]\s*$/.test(prev)&&!/^\|/.test(t)&&!/^\|/.test(prev.trim())&&!/\s{3,}/.test(prev.trim())&&!TOCL.test(prev))o[o.length-1]=prev.trimEnd()+" "+t;else o.push(l)}return o.join("\n")}
 /* التشكيل المدقق: نسخة مشكولة منفصلة عن نص الكتاب (data/tashkeel)، تُعرض مع «إظهار التشكيل» إذا طابقت بصمتُها نصَّ الصفحة الحالي */
 const fnv=s=>{let h=0x811c9dc5;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,0x01000193)>>>0}return h.toString(36)};
 const TK={list:null,busy:false,ch:new Map(),
@@ -293,9 +293,9 @@ function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
  const tocPg=bk&&tx.split("\n").filter(l=>TOCL.test(l.trim())).length>=4;
- return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
+ return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tl=line.trim();if(/^\|.*\|$/.test(tl)){if(/^\|[\s:|-]+\|$/.test(tl))return"";return"<tr>"+tl.slice(1,-1).split("|").map(c=>"<td>"+esc(c.trim()).replace(/&lt;br&gt;/g,"<br>")+"</td>").join("")+"</tr>"}const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
   const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`:w).join("");
-  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p>${inner}</p>`}).join("")+fnHtml}
+  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
 /* ---------- النسخة المصورة (PDF) ---------- */
 const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
