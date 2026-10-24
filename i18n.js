@@ -35,8 +35,17 @@
       ["placeholder", "aria-label", "title"].forEach(a => { const v = el.getAttribute(a); if (v && /[ء-ي]/.test(v)) { const t = tr(v); if (t != null) el.setAttribute(a, t); } });
     });
   }
+  // أسماء الكتب والمؤلفين بالإنجليزية تحت أسمائها العربية
+  let CATEN = { books: {}, authors: {} };
+  fetch("data/i18n-cat-en.json").then(r => r.ok ? r.json() : null).then(j => { if (j) { CATEN = j; q.add(document.body); if (!raf) raf = requestAnimationFrame(flush); } }).catch(() => { });
+  function names(root) {
+    if (!root.querySelectorAll) return;
+    root.querySelectorAll('a.bk[href^="#/book/"]:not([data-en]),a.acard2[href^="#/audio/"]:not([data-en])').forEach(a => { a.dataset.en = 1; const id = a.getAttribute("href").split("/")[2]; const t = CATEN.books[id]; if (t) a.querySelector("b") && a.querySelector("b").insertAdjacentHTML("afterend", `<small class="entitle" data-noi18n>${t.replace(/[<>&]/g, "")}</small>`); });
+    root.querySelectorAll("[data-author]:not([data-en])").forEach(el => { el.dataset.en = 1; const n = CATEN.authors[el.dataset.author]; if (n) el.title = n; });
+    const h = root.querySelector && root.querySelector(".rhead h2:not([data-en])"); if (h) { h.dataset.en = 1; const id = (location.pathname.split("/")[2] || (location.hash.split("/")[2] || "")); const t = CATEN.books[id]; if (t) h.insertAdjacentHTML("afterend", `<p class="entitle" data-noi18n>${t.replace(/[<>&]/g, "")}</p>`); }
+  }
   let q = new Set(), raf = 0;
-  const flush = () => { raf = 0; const roots = [...q]; q.clear(); roots.forEach(r => { if (r.isConnected) walk(r.nodeType === 3 ? r.parentNode : r); }); if (document.title && /[ء-ي]/.test(document.title)) { const t = tr(document.title); if (t) document.title = t; } };
+  const flush = () => { raf = 0; const roots = [...q]; q.clear(); roots.forEach(r => { if (r.isConnected) { const e = r.nodeType === 3 ? r.parentNode : r; walk(e); names(e); } }); if (document.title && /[ء-ي]/.test(document.title)) { const t = tr(document.title); if (t) document.title = t; } };
   const mo = new MutationObserver(ms => { ms.forEach(m => { if (m.type === "characterData") q.add(m.target); else m.addedNodes.forEach(x => q.add(x)); }); if (!raf) raf = requestAnimationFrame(flush); });
   fetch("data/i18n-en.json").then(r => r.json()).then(j => {
     D = j.ui || {};

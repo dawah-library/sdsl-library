@@ -566,3 +566,4 @@ html.ui-en body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif}
 html.ui-en .rd,html.ui-en .aptext,html.ui-en .gmore,html.ui-en .ptext,html.ui-en .pquote,html.ui-en .cmt p,html.ui-en textarea,html.ui-en .rulestx,html.ui-en .dict,html.ui-en .tocl,html.ui-en .q p,html.ui-en .abrief p,html.ui-en .gitem p{direction:rtl;text-align:right}
 html.ui-en .bk b,html.ui-en .acard2 b,html.ui-en .rhead h2,html.ui-en .ahead h1,html.ui-en [data-author],html.ui-en .post header b{unicode-bidi:plaintext}
 html.ui-en #ticker .tv{direction:rtl}
+html.ui-en .entitle{display:block;direction:ltr;text-align:left;font-size:.78rem;color:var(--mut);font-style:italic;margin:0}
