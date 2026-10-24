@@ -567,3 +567,6 @@ html.ui-en .rd,html.ui-en .aptext,html.ui-en .gmore,html.ui-en .ptext,html.ui-en
 html.ui-en .bk b,html.ui-en .acard2 b,html.ui-en .rhead h2,html.ui-en .ahead h1,html.ui-en [data-author],html.ui-en .post header b{unicode-bidi:plaintext}
 html.ui-en #ticker .tv{direction:rtl}
 html.ui-en .entitle{display:block;direction:ltr;text-align:left;font-size:.78rem;color:var(--mut);font-style:italic;margin:0}
+/* تكبير الصفحة المصورة */
+.zbar{display:flex;gap:6px;justify-content:center;align-items:center;margin:4px 0 6px}.zbar button,.zbar a{border:1px solid var(--line);background:var(--sf);color:var(--ink);border-radius:10px;min-width:38px;height:34px;font-size:1.1rem;cursor:pointer;text-decoration:none;display:grid;place-items:center}.zbar .zv{min-width:52px;text-align:center;font-size:.85rem;color:var(--mut)}
+.zwrap{overflow:auto;max-height:80vh;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;border-radius:8px}.zwrap.zoomed{cursor:grab}.zwrap img,.zwrap canvas{display:block;width:100%;height:auto;margin:0 auto}

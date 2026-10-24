@@ -25,6 +25,7 @@ async function body(req) {
   const chunks = []; for await (const c of req) chunks.push(c);
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"); } catch (e) { return {}; }
 }
+const CAT0 = () => { if (!CAT) { try { CAT = JSON.parse(fs.readFileSync(path.join(ROOT, "data/catalog.json"), "utf8")); } catch (e) { } } return CAT; };
 const out = (res, code, o) => { res.statusCode = code; res.setHeader("content-type", "application/json; charset=utf-8"); res.end(JSON.stringify(o)); };
 
 module.exports = async (req, res) => {
@@ -39,10 +40,24 @@ module.exports = async (req, res) => {
   try { const ban = await sb("community_bans?select=until,reason&user_id=eq." + user.id); const x = ban && ban[0];
     if (x && (!x.until || Date.parse(x.until) > Date.now())) return out(res, 403, { message: "أوقفت إدارة المكتبة النشر من حسابك" + (x.until ? " حتى " + String(x.until).slice(0, 10) : "") + (x.reason ? ": " + x.reason : ".") }); } catch (e) { }
   // إعدادات المجتمع: إيقاف النشر مؤقتًا، أو المراجعة قبل الظهور
-  let cset = {}, staff = false;
-  try { const r = await sb("app_settings?select=value&key=eq.community_open"); cset = (r && r[0] && r[0].value) || {}; const pr = await sb("profiles?select=role&id=eq." + user.id); staff = !!(pr && pr[0] && /^(admin|editor)$/.test(pr[0].role)); } catch (e) { }
+  let cset = {}, staff = false, prof = null;
+  try { const r = await sb("app_settings?select=value&key=eq.community_open"); cset = (r && r[0] && r[0].value) || {}; const pr = await sb("profiles?select=role,author_id&id=eq." + user.id); prof = pr && pr[0]; staff = !!(prof && /^(admin|editor)$/.test(prof.role)); } catch (e) { }
   if (cset.closed && !staff) return out(res, 403, { message: "النشر في مجتمع المكتبة متوقف مؤقتًا بقرار الإدارة." });
-  const q = await body(req), bid = String(q.b || "").slice(0, 80), p = parseInt(q.p, 10), t = String(q.t || "").replace(/\s+/g, " ").trim();
+  const q0 = await body(req);
+  // حساب الشيخ (عضو مميز بموافقة الإدارة): ينشر ما يشاء نصًا حرًا، ويظهر في «منشورات المشايخ» وفي المجتمع
+  if (q0.free) {
+    if (!prof || prof.role !== "sheikh") return out(res, 403, { message: "النشر الحر لحسابات المشايخ المعتمدة من الإدارة فقط." });
+    const text = String(q0.text || "").replace(/\r/g, "").trim();
+    if (text.length < 10 || text.length > 6000) return out(res, 400, { message: "اكتب منشورًا بين ١٠ و٦٠٠٠ حرف." });
+    let nm = "الشيخ";
+    try { const pg = await sb("member_pages?select=name&user_id=eq." + user.id); if (pg && pg[0]) nm = pg[0].name; if (prof.author_id && CAT0()) { const a = CAT0().authors.find(x => x.id === prof.author_id); if (a) nm = a.name; } } catch (e) { }
+    try {
+      const r = await sb("member_posts", { method: "POST", body: JSON.stringify({ user_id: user.id, user_name: nm, body: text, quote: null, sheikh: true, author_id: prof.author_id || null }) });
+      try { const { notify, escH } = require("../lib/tg"); await notify(`🕌 <b>منشور جديد من حساب شيخ</b>: ${escH(nm)}\n${escH(text.slice(0, 300))}`, { url: "#/posts?k=posts" }); } catch (e) { }
+      return out(res, 200, { post: r[0] });
+    } catch (e) { console.error("mpost free", e.message); return out(res, 500, { message: "تعذر النشر الآن." }); }
+  }
+  const q = q0, bid = String(q.b || "").slice(0, 80), p = parseInt(q.p, 10), t = String(q.t || "").replace(/\s+/g, " ").trim();
   if (!bid || !(p > 0) || t.length < 20) return out(res, 400, { message: "حدّد فقرة من الكتاب (عشرون حرفًا على الأقل)." });
   if (t.length > 1500) return out(res, 400, { message: "المختارة طويلة؛ الحد ١٥٠٠ حرف." });
   if (!CAT) CAT = JSON.parse(fs.readFileSync(path.join(ROOT, "data/catalog.json"), "utf8"));

@@ -92,7 +92,7 @@ async function suggest(n,seed,filter){
   const t=ss[Math.floor(rnd()*ss.length)];if(!out.some(o=>o.t===t))out.push({t,b,i})}
  return out}
 let SUG=[];
-const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q.b.authorId).name)} — ${esc(q.b.title)}${PL(q.b,q.i)?"، "+esc(PL(q.b,q.i)):""}</span><div class="row" style="margin-top:6px"><button class="btn s nf" data-act="mkq" data-i="${i}">صمّم قبسة</button><a class="btn s nf" href="#/book/${q.b.id}/${q.i+1}">افتح الصفحة</a></div></div>`;
+const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q.b.authorId).name)} — ${esc(q.b.title)}${PL(q.b,q.i)?"، "+esc(PL(q.b,q.i)):""}</span><div class="row" style="margin-top:6px"><button class="btn s nf" data-act="mkq" data-i="${i}">صمّم الاقتباس</button><a class="btn s nf" href="#/book/${q.b.id}/${q.i+1}">افتح الصفحة</a></div></div>`;
 
 /* ---------- الرئيسية ---------- */
 function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
@@ -306,18 +306,30 @@ async function pimgUrl(b,n){const k=b.id+"|"+n,c=PSIGN.get(k);if(c&&c.exp>Date.n
  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||"تعذر تحميل الصفحة المصورة");const exp=Date.now()+(j.ttl-120)*1000;
  Object.entries(j.urls||{}).forEach(([p,u])=>PSIGN.set(b.id+"|"+p,{u,exp}));return(PSIGN.get(k)||{}).u}
 async function pdfDl(b){const r=await fetch(`/api/pages?b=${encodeURIComponent(b.id)}&n=1&pdf=1`,{headers:{Authorization:"Bearer "+(Auth.token||"")}});const j=await r.json();if(!r.ok)throw new Error(j.message);window.open(j.pdf,"_blank","noopener")}
+/* تكبير الصفحة المصورة وتصغيرها: أزرار، وقرص بإصبعين، وضغطتان متتاليتان، وسحب للتنقل داخل الصفحة المكبرة */
+function zoomify(box){const el=box.querySelector("img.pimg,canvas");if(!el)return;const wrap=document.createElement("div");wrap.className="zwrap";el.replaceWith(wrap);wrap.appendChild(el);
+ let z=Math.min(4,Math.max(1,+S.pz||1));const bar=document.createElement("div");bar.className="zbar";bar.innerHTML='<button data-z="-" aria-label="تصغير الصفحة">−</button><span class="zv"></span><button data-z="+" aria-label="تكبير الصفحة">+</button><button data-z="0" aria-label="الحجم الأصلي">⟲</button>'+(el.tagName==="IMG"?'<a href="'+el.src+'" target="_blank" rel="noopener" aria-label="فتح الصورة كاملة">⤢</a>':"");wrap.before(bar);
+ const set=(nz,cx,cy)=>{nz=Math.min(4,Math.max(1,Math.round(nz*100)/100));const r=wrap.getBoundingClientRect(),fx=cx==null?.5:(cx-r.left+wrap.scrollLeft)/(wrap.scrollWidth||1),fy=cy==null?.5:(cy-r.top+wrap.scrollTop)/(wrap.scrollHeight||1);z=nz;el.style.width=(z*100)+"%";el.style.maxWidth="none";wrap.classList.toggle("zoomed",z>1);bar.querySelector(".zv").textContent=toAr(Math.round(z*100))+"٪";S.pz=z;saveS();
+  requestAnimationFrame(()=>{wrap.scrollLeft=fx*wrap.scrollWidth-wrap.clientWidth/2;wrap.scrollTop=fy*wrap.scrollHeight-wrap.clientHeight/2})};
+ bar.addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(!b)return;const k=b.dataset.z;set(k==="+"?z+.5:k==="-"?z-.5:1)});
+ let last=0;wrap.addEventListener("click",e=>{const t=Date.now();if(t-last<320){set(z>1?1:2,e.clientX,e.clientY);last=0}else last=t});
+ const pts=new Map();let d0=0,z0=1,drag=null;
+ wrap.addEventListener("pointerdown",e=>{pts.set(e.pointerId,e);if(pts.size===2){const[a,b]=[...pts.values()];d0=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);z0=z}else if(z>1&&e.pointerType==="mouse"){drag={x:e.clientX,y:e.clientY,l:wrap.scrollLeft,t:wrap.scrollTop}}});
+ wrap.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,e);if(pts.size===2&&d0){const[a,b]=[...pts.values()],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);set(z0*d/d0,(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);e.preventDefault()}else if(drag){wrap.scrollLeft=drag.l-(e.clientX-drag.x);wrap.scrollTop=drag.t-(e.clientY-drag.y)}});
+ const up=e=>{pts.delete(e.pointerId);if(pts.size<2)d0=0;drag=null};["pointerup","pointercancel","pointerleave"].forEach(ev=>wrap.addEventListener(ev,up));
+ set(z)}
 async function renderPdf(b,p){const box=$("#pdfv");if(!box)return;box.innerHTML='<p class="mut" style="text-align:center;padding:30px 0">جارٍ تحميل الصفحة المصورة…</p>';
  if(b.img){// صور الصفحات من مخزن المكتبة: صفحة واحدة خفيفة بدل الملف كله
   const n=pdfPageFor(b,p),N=+b.imgN||0;if(n<1||(N&&n>N)){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
   const im=new Image();im.alt="الصفحة المصورة "+n;im.decoding="async";im.className="pimg";
-  im.onload=()=>{if(!$("#pdfv"))return;box.innerHTML="";const a=document.createElement("a");a.href=im.src;a.target="_blank";a.rel="noopener";a.appendChild(im);box.appendChild(a);box.insertAdjacentHTML("beforeend",pdfCap(b,n,N||n))};
+  im.onload=()=>{if(!$("#pdfv"))return;box.innerHTML="";box.appendChild(im);box.insertAdjacentHTML("beforeend",pdfCap(b,n,N||n));zoomify(box)};
   im.onerror=()=>{const el=$("#pdfv");if(el)el.innerHTML='<p class="note">تعذر تحميل الصفحة المصورة. تحقق من الاتصال.</p>'};
   if(!Auth.user){box.innerHTML='<p class="note">النسخة المصورة لأعضاء المكتبة. <a href="#/account">سجّل الدخول</a>.</p>';return}
   try{im.src=await pimgUrl(b,n);[n+1,n+2].forEach(k=>{if(!N||k<=N)pimgUrl(b,k).then(u=>{new Image().src=u}).catch(()=>{})})}catch(e){box.innerHTML='<p class="note">'+esc(e.message)+'</p>'}return}
  try{const doc=await pdfDoc(b.pdf),n=pdfPageFor(b,p);if(!$("#pdfv"))return;if(n<1||n>doc.numPages){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
   const pg=await doc.getPage(n),w=Math.max(280,box.clientWidth||600),vp0=pg.getViewport({scale:1}),sc=w/vp0.width*Math.min(2,window.devicePixelRatio||1),vp=pg.getViewport({scale:sc});
   const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;if(!$("#pdfv"))return;
-  box.innerHTML="";box.appendChild(c);box.insertAdjacentHTML("beforeend",pdfCap(b,n,doc.numPages))}
+  box.innerHTML="";box.appendChild(c);box.insertAdjacentHTML("beforeend",pdfCap(b,n,doc.numPages));zoomify(box)}
  catch(e){console.warn('pdf',e&&e.message||e);const el=$("#pdfv");if(el)el.innerHTML='<p class="note">تعذر تحميل النسخة المصورة. تحقق من الاتصال.</p>'}}
 async function savePdfOffset(b,el){if(!GH.on)return alert("فعّل الإدارة المباشرة أولًا.");const off=+b.pdfOffset||0,ids=b.set&&!b.vf?lib.books.filter(x=>x.set===b.set&&x.pdf===b.pdf).map(x=>x.id):[b.id];el.disabled=true;
  try{await GH.editJSON("data/catalog.json",c=>{let n=0;c.books.forEach(x=>{if(ids.includes(x.id)){x.pdfOffset=off;n++}});if(!n)throw new Error("الكتاب غير موجود في الفهرس المنشور.");c.version=Date.now();return c},"مطابقة الصفحات المصورة: "+(b.setTitle||b.title),true);toast("حُفظت المطابقة: كل صفحات الكتاب تنتقل الآن إلى صورتها الصحيحة")}catch(e){alert(e.message)}finally{el.disabled=false}}
@@ -435,7 +447,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
   <button data-act="tr">ترجمة</button>
   <button data-act="exp">تصدير وطباعة</button>
   <a href="#/ask?b=${b.id}&p=${c.p}" data-act="closeSheet">اسأل المكتبة عنها</a>
-  <button data-act="qhint">صمّم قبسة</button>
+  <button data-act="qhint">صمّم الاقتباس</button>
   ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
   <button data-act="share">مشاركة الرابط</button>
   ${S.admin||GH.on?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button>':""}
@@ -609,7 +621,7 @@ async function vQabasat(q){const pq=pendingQ;
  view(`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
  <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">تراث</option></select><button class="btn" data-act="moreSug">مقتطفات أخرى</button></div>
  <div id="sugl"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
- <h2>صمّم قبستك</h2><div class="studio">
+ <h2>صمّم الاقتباس</h2><div class="studio">
  <label for="qt">النص</label><textarea id="qt"></textarea>
  <div class="row"><div><label for="qs">المصدر (الكاتب والكتاب)</label><input id="qs"></div><div><label for="qc">تعليق (اختياري)</label><input id="qc" placeholder="تعليق قصير يظهر أسفل القبسة"></div></div>
  <div class="row"><div><label for="qfont">خط القبسة</label><select id="qfont">${fontOpts(Q.font)}</select></div><div><label for="qz">المقاس</label><select id="qz"><option value="1080x1080">مربع للمنشورات</option><option value="1080x1350">طولي للمنشورات</option><option value="1080x1920">قصص وحالات</option><option value="1600x900">عرضي</option></select></div><div><label for="qi">لون الكتابة</label><select id="qi"><option value="auto">تلقائي</option><option value="light">فاتح</option><option value="dark">داكن</option></select></div></div>
@@ -824,7 +836,7 @@ function addMsg(m){const d=document.createElement("div");d.className="msg "+(m.r
 function fillAnswer(d,m){const {body,follow}=aiSplit(m.content);d.innerHTML=md(body)+(m.searches&&m.searches.length?`<details class="srch"><summary>بحث في المكتبة ${toAr(m.searches.length)} مرة</summary>${m.searches.map(s=>`<span>${esc(s)}</span>`).join("")}</details>`:"")+(follow.length?`<div class="aifollow">${follow.map(f=>`<button data-act="aifollow">${esc(f)}</button>`).join("")}</div>`:"");
  const bar=document.createElement("div");bar.className="mact";const c=document.createElement("button");c.className="btn s";c.textContent="نسخ";
  c.onclick=async()=>{try{await navigator.clipboard.writeText(body.replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(x,id,p)=>{const b=B(id);return b?`(${b.title}${PL(b,+p-1)?"، "+PL(b,+p-1):""})`:""})+"\n— "+SITENAME);c.textContent="تم النسخ"}catch(e){}};
- const q=document.createElement("button");q.className="btn s";q.textContent="صمّم قبسة";q.onclick=()=>{const t=plain(body.replace(/\[\[[^\]]+\]\]/g,"").replace(/^#+\s*/gm,"").replace(/\*\*/g,"")).trim();pendingQ={t:t.length>600?t.slice(0,600)+"…":t,src:"المساعد العلمي — "+SITENAME};location.hash="#/qabasat"};
+ const q=document.createElement("button");q.className="btn s";q.textContent="صمّم الاقتباس";q.onclick=()=>{const t=plain(body.replace(/\[\[[^\]]+\]\]/g,"").replace(/^#+\s*/gm,"").replace(/\*\*/g,"")).trim();pendingQ={t:t.length>600?t.slice(0,600)+"…":t,src:"المساعد العلمي — "+SITENAME};location.hash="#/qabasat"};
  bar.append(c,q);d.appendChild(bar)}
 async function askSubmit(f){const ta=f.querySelector("[name=m]"),text=ta.value.trim();if(!text||ASKCTL)return;
  if(!Auth.user)return needLogin("المساعد العلمي متاح لأعضاء المكتبة مجانًا. أنشئ حسابك أو سجّل الدخول، ثم اسأل ما شئت.");
@@ -986,7 +998,7 @@ async function sysStatus(){const el=$("#sysst");if(!el)return;const R_=GH.repo,a
   <h3 style="font-size:1rem">المهام الآلية (التحويل والاستيراد والفهارس)</h3>${(runs.workflow_runs||[]).map(r=>`<div class="card"><b>${esc(r.name)}</b><span class="mut">${esc(ago(r.created_at))} • ${r.status==="completed"?(cs[r.conclusion]||r.conclusion):rs[r.status]||r.status} • <a href="${esc(r.html_url)}" target="_blank" rel="noopener">التفاصيل</a></span></div>`).join("")}`}
  catch(e){el.innerHTML='<p class="note">تعذر جلب الحالة الآن ('+esc(e.message)+').</p>'}}
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"],["tashkeel","التشكيل"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"],["msgs","رسائل الأعضاء"],["community","مراقبة المجتمع"],["audio","الصوتيات والراديو"],["status","حالة النشر والتحويل"]]:[]);
+ const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"],["tashkeel","التشكيل"],["sheikhs","حسابات المشايخ"]]:[]).concat(Cloud.staff()?[["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"],["msgs","رسائل الأعضاء"],["community","مراقبة المجتمع"],["audio","الصوتيات والراديو"],["status","حالة النشر والتحويل"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -1023,6 +1035,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  else if(tab==="struct")body=structBody();
  else if(tab==="msgs"){location.hash="#/messages";return}
  else if(tab==="community"){location.hash="#/community?k=admin";return}
+ else if(tab==="sheikhs"){body='<div id="shadm" class="mut">جارٍ التحميل…</div>';setTimeout(shAdmin,0)}
  else if(tab==="tashkeel"){body='<div id="tkadm" class="mut">جارٍ التحميل…</div>';setTimeout(tkAdmin,0)}
  else if(tab==="audio"){location.hash="#/audio?k=admin";return}
  else if(tab==="status"){body='<p class="mut">كل ما تحفظه من الإدارة يُكتب في المستودع ثم يُنشر تلقائيًا على الموقع خلال دقيقة أو اثنتين. هنا آخر عمليات النشر والتحويل.</p><h3 style="font-size:1rem">إشعارات تليجرام</h3><div id="tgst" class="card"><p class="mut">جارٍ التحميل…</p></div><div id="sysst"><p class="mut">جارٍ التحميل…</p></div>';setTimeout(()=>{sysStatus();if(typeof tgPanel==="function")tgPanel()},0)}
@@ -1122,8 +1135,8 @@ async function loadPosts(){if(POSTS)return POSTS;let items=[];try{const r=await 
 const actPosts=()=>lib.books.filter(b=>!b.demo&&bc(b)==="dawah").map(b=>({id:"act-"+b.id,authorId:b.authorId,date:(isArt(b)?b.date:b.added)||b.added||"",act:1,b}));
 const findPost=id=>(typeof MP!=="undefined"&&MP.get(id))||(POSTS||[]).find(x=>x.id===id)||(/^act-/.test(id)?actPosts().find(x=>x.id===id):null);
 const pName=x=>x.authorId?A(x.authorId).name:x.member?(x.name||"عضو"):(x.name||"مكتبة الدعوة السلفية الرقمية");
-const Cloud={role:"member",on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
- async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;try{const {data}=await Auth.sb.from("profiles").select("role").eq("id",Auth.user.id).maybeSingle();if(data&&data.role)this.role=data.role}catch(e){}
+const Cloud={role:"member",author:null,isSheikh(){return this.on()&&!!Auth.user&&this.role==="sheikh"},on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
+ async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;try{const {data}=await Auth.sb.from("profiles").select("role,author_id").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null}}catch(e){}
   if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}}};
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
@@ -1277,9 +1290,9 @@ function postText(x){if(!x.act)return x.text||"";const b=x.b;if(!b.pages)return"
  return b.pages.slice(0,25).map(clean).find(t=>t.length>350&&!/(ت|هاتف|فاكس)\s*:\s*\d{5}|رقم الإيداع|الطبعة|حقوق الطبع/.test(t.slice(0,300)))||clean(b.pages[0])}
 function postHtml(x,st){st=st||{stats:{},likes:new Map(),saves:new Set()};const s=st.stats[x.id]||{likes:0,comments:0,kinds:{}},my=st.likes.get?st.likes.get(x.id):(st.likes.has(x.id)?"like":null),saved=st.saves.has(x.id),name=pName(x);
  const av=x.authorId&&A(x.authorId).photo?`<img class="av" data-author="${x.authorId}" src="${esc(A(x.authorId).photo)}" alt="">`:x.authorId?`<span class="av" data-author="${x.authorId}" style="${avHue(x.authorId)}">${esc(name.replace(/^(الشيخ|الدكتور|د\.)\s*/,"")[0]||"")}</span>`:x.member?`<a href="#/member/${x.uid}" class="av" style="${avHue(x.uid)}">${esc((x.name||"ع")[0])}</a>`:`<img class="av" src="assets/logo-sdsl-128.png" alt="">`;
- let body;if(x.member){body=quoteHtml(x.quote)}else if(x.act){const ex=postText(x);body=`<a class="pcard" href="#/book/${x.b.id}/1"><b>${esc(x.b.title)}</b>${ex?`<p>${esc(ex.slice(0,360))}${ex.length>360?"…":""}</p>`:""}<span>${kindOf(x.b)==="book"?"افتح الكتاب":"اقرأ كاملًا"} ←</span></a>`}
+ let body;if(x.member&&x.quote){body=quoteHtml(x.quote)}else if(x.act){const ex=postText(x);body=`<a class="pcard" href="#/book/${x.b.id}/1"><b>${esc(x.b.title)}</b>${ex?`<p>${esc(ex.slice(0,360))}${ex.length>360?"…":""}</p>`:""}<span>${kindOf(x.b)==="book"?"افتح الكتاب":"اقرأ كاملًا"} ←</span></a>`}
  else{const long=(x.text||"").length>420;body=`<div class="ptext${long?" clip":""}">${linkify(esc(x.text||"")).replace(/\n/g,"<br>")}</div>${long?'<button class="more-t" data-act="pmore">عرض المزيد</button>':""}${x.image?`<img class="pimg" src="${esc(x.image)}" alt="" loading="lazy">`:""}${x.url?`<a class="plink" href="${esc(x.url)}" target="_blank" rel="noopener">المنشور الأصلي ↗</a>`:""}`}
- return`<article class="post" data-id="${esc(x.id)}"><header>${av}<div><b${x.authorId?` data-author="${x.authorId}"`:""}>${x.member?`<a href="#/member/${x.uid}">${esc(name)}</a>`:esc(name)}</b><span class="mut">${x.pinned?"📌 مثبّت • ":""}${x.hidden?'<b class="warn">مخفي عن الأعضاء</b> • ':""}${x.act?KINDN[kindOf(x.b)]+" • ":x.member?"مختارة من كتاب • ":""}<a href="#/post/${encodeURIComponent(x.id)}">${esc(ago(x.date))}</a>${x.src?` • ${esc(x.src)}`:""}${x.demo?" • منشور تجريبي":""}</span></div><button class="pmenu" data-act="pmenu" aria-label="خيارات المنشور">⋯</button></header>
+ return`<article class="post" data-id="${esc(x.id)}"><header>${av}<div><b${x.authorId?` data-author="${x.authorId}"`:""}>${x.member?`<a href="#/member/${x.uid}">${esc(name)}</a>`:esc(name)}</b><span class="mut">${x.pinned?"📌 مثبّت • ":""}${x.hidden?'<b class="warn">مخفي عن الأعضاء</b> • ':""}${x.act?KINDN[kindOf(x.b)]+" • ":x.sheikh?"🕌 من حساب الشيخ • ":x.member?"مختارة من كتاب • ":""}<a href="#/post/${encodeURIComponent(x.id)}">${esc(ago(x.date))}</a>${x.src?` • ${esc(x.src)}`:""}${x.demo?" • منشور تجريبي":""}</span></div><button class="pmenu" data-act="pmenu" aria-label="خيارات المنشور">⋯</button></header>
  ${body}
  <div class="pstats"><button class="lnk rxsum" data-act="rxwho" data-likes="${s.likes}" data-kinds="${esc(JSON.stringify(s.kinds||{}))}">${rxSum(s)}</button><button class="lnk" data-act="pcomm">${s.comments?`${toAr(s.comments)} تعليق`:""}</button></div>
  <div class="pact"><button data-act="plike" class="rxbtn" data-my="${my||""}" aria-pressed="${!!my}">${rxLabel(my)}</button><button data-act="pcomm">💬 تعليق</button><button data-act="psave" aria-pressed="${saved}">${saved?"★ محفوظ":"☆ حفظ"}</button><button data-act="pshare">↗ مشاركة</button></div>
@@ -1310,14 +1323,14 @@ async function vPosts(q){if(q.k==="picks")return go("#/community",true);const k=
  view(`<h2>منشورات</h2><p class="mut">منشورات مختارة لمشايخ الدعوة السلفية وكتّابها، وجديد المكتبة من كتب ومقالات وفتاوى وبيانات. ${Auth.user?"":'<a href="#/account?next=%23%2Fposts">سجّل الدخول</a> للإعجاب والتعليق والحفظ والمشاركة.'}</p>
  <div class="tabs" role="tablist">${tabs.map(([v,l])=>`<a role="tab" aria-selected="${k===v}" href="${url({k:v})}">${l}</a>`).join("")}</div>
  <div class="pstrip" data-noswipe><a href="${url({a:""})}"${!q.a?' aria-current="true"':""}><span class="ring"><img src="assets/logo-sdsl-128.png" alt=""></span><small>الكل</small></a>${authors.map(id=>{const nm=A(id).name,sh=nm.replace(/^(الشيخ|الدكتور|د\.)\s*/,"");return`<a href="${url({a:id})}"${q.a===id?' aria-current="true"':""}><span class="ring"><span class="av" style="${avHue(id)}">${esc(sh[0]||"")}</span></span><small>${esc(sh.split(/\s+/).slice(0,2).join(" "))}</small></a>`}).join("")}</div>
- <a class="cmcta" href="#/community"><b>مجتمع المكتبة</b><span>مختارات الأعضاء من الكتب: تفاعل وعلّق وشارك واحفظ ←</span></a>${Auth.user&&Cloud.on()&&k==="saved"?'<div class="row ptools"><button class="btn s" data-act="pexport" data-k="saved">تصدير المحفوظات</button></div>':""}
+ ${Cloud.isSheikh()?`<div class="row ptools"><button class="btn p" data-act="shpost">✍️ منشور جديد</button></div>`:""}<a class="cmcta" href="#/community"><b>مجتمع المكتبة</b><span>مختارات الأعضاء من الكتب: تفاعل وعلّق وشارك واحفظ ←</span></a>${Auth.user&&Cloud.on()&&k==="saved"?'<div class="row ptools"><button class="btn s" data-act="pexport" data-k="saved">تصدير المحفوظات</button></div>':""}
  <div id="feed" class="feed"></div><div id="feedEnd" class="mut feedend">جارٍ التحميل…</div>`);
  let list;if(k==="saved"){if(!Auth.user){$("#feedEnd").innerHTML='<a href="#/account?next=%23%2Fposts%3Fk%3Dsaved">سجّل الدخول</a> لترى منشوراتك المحفوظة.';return}list=(await Social.savedIds()).map(findPost).filter(Boolean)}
  else if(k==="follow"){if(!Auth.user){$("#feedEnd").innerHTML='<a href="#/account?next=%23%2Fposts%3Fk%3Dfollow">سجّل الدخول</a> لترى منشورات من تتابعهم.';return}
   const fs=await Members.myFollows(),aids=new Set([...fs].filter(x=>x[0]==="a").map(x=>x.slice(2))),uids=[...fs].filter(x=>x[0]==="u").map(x=>x.slice(2));
   if(!aids.size){$("#feedEnd").innerHTML='لا تتابع أحدًا من المشايخ بعد. افتح صفحة شيخ واضغط «متابعة»؛ تظهر منشوراته هنا. ومتابعة الأعضاء في <a href="#/community?k=follow">مجتمع المكتبة</a>.';return}
   list=POSTS.concat(actPosts()).filter(x=>aids.has(x.authorId));list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
- else{list=k==="lib"?actPosts():k==="posts"?POSTS.slice():POSTS.concat(actPosts());list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
+ else{const shp=(k===""||k==="posts")&&typeof Members!=="undefined"?await Members.posts({sheikh:true,limit:120,visible:true}).catch(()=>[]):[];list=k==="lib"?actPosts():k==="posts"?POSTS.concat(shp):POSTS.concat(actPosts(),shp);list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
  if(q.a)list=list.filter(x=>x.authorId===q.a);
  Object.assign(FEED,{list,pos:0,busy:false});if(FEED.obs)FEED.obs.disconnect();
  if("IntersectionObserver"in window){FEED.obs=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))feedMore()},{rootMargin:"700px"});FEED.obs.observe($("#feedEnd"))}feedMore()}
@@ -1354,6 +1367,24 @@ async function postAct(a,el){if(a==="preact"){const pk=el.closest(".rxpick"),b=p
   else if(GH.on){await GH.editJSON("data/posts.json",o=>{o.items=(o.items||[]).filter(y=>y.id!==id);return o},"حذف منشور");toast("حُذف المنشور، ويختفي عند الجميع خلال دقيقة.")}
   POSTS=null;route()}
  }catch(e){console.warn(e);toast(e.message||"تعذر تنفيذ الطلب")}}
+
+/* ---------- حسابات المشايخ (عضو مميز بموافقة الإدارة) ---------- */
+async function shAdmin(q){const el=$("#shadm");if(!el)return;if(!Cloud.on())return el.textContent="يحتاج قاعدة الحسابات.";
+ let qq=Auth.sb.from("profiles").select("id,name,role,author_id,created_at").order("created_at",{ascending:false}).limit(60);if(q)qq=qq.ilike("name","%"+q+"%");const {data,error}=await qq;if(error){el.textContent=error.message;return}
+ const au=lib.authors.filter(a=>a.col!=="turath").sort((x,y)=>x.name.localeCompare(y.name,"ar"));
+ el.className="";el.innerHTML=`<p class="mut">امنح أحد مشايخ الدعوة المؤلفين «حساب شيخ»: ينشر ما يشاء نصًا حرًا (لا يُشترط أن يكون من الكتب)، فيظهر منشوره للزوار والأعضاء في «منشورات المشايخ» وفي «مجتمع المكتبة» باسمه وصورته. يُطلب من الشيخ أولًا إنشاء حساب عادي في الموقع، ثم تبحث عنه هنا باسمه.</p>
+ <form data-form="shq" class="stepper"><input name="q" placeholder="ابحث عن عضو باسمه" value="${esc(q||"")}"><button class="btn">بحث</button></form>
+ ${(data||[]).map(p=>`<div class="bk"><b>${esc(p.name||"عضو")}</b> ${p.role==="sheikh"?'<em class="tag">حساب شيخ</em>':p.role!=="member"?`<em class="tag">${esc(p.role)}</em>`:""}<span>${esc((p.created_at||"").slice(0,10))}${p.author_id?" • مرتبط بـ "+esc(A(p.author_id).name):""}</span>
+ ${p.role==="admin"||p.role==="editor"?"":`<div class="row" style="margin-top:6px"><select data-sh="${p.id}"><option value="">— اختر المؤلف المرتبط —</option>${au.map(a=>`<option value="${a.id}" ${a.id===p.author_id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>${p.role==="sheikh"?`<button class="btn s" data-act="shgrant" data-id="${p.id}" data-on="1">حفظ الربط</button><button class="btn s danger" data-act="shgrant" data-id="${p.id}" data-on="0">سحب الخاصية</button>`:`<button class="btn s p" data-act="shgrant" data-id="${p.id}" data-on="1">منحه حساب شيخ</button>`}</div>`}</div>`).join("")||'<p class="mut">لا نتائج.</p>'}`}
+document.addEventListener("submit",e=>{const f=e.target.closest('[data-form="shq"]');if(!f)return;e.preventDefault();e.stopImmediatePropagation();shAdmin(f.q.value.trim())},true);
+document.addEventListener("click",async e=>{const el=e.target.closest('[data-act="shgrant"],[data-act="shpost"]');if(!el)return;
+ if(el.dataset.act==="shpost"){if(!Cloud.isSheikh())return;openDlg(`<h3>منشور جديد</h3><p class="mut">يظهر باسمك في «منشورات المشايخ» وفي «مجتمع المكتبة».</p><form data-form="shpost"><textarea name="t" maxlength="6000" style="min-height:200px" required placeholder="اكتب منشورك…"></textarea><button class="btn p" style="margin-top:8px">نشر</button></form>`);return}
+ try{const on=el.dataset.on==="1",sel=document.querySelector(`select[data-sh="${el.dataset.id}"]`),aid=sel&&sel.value||null;if(on&&!aid&&!confirm("لم تختر المؤلف المرتبط؛ يظهر المنشور باسم العضو. متابعة؟"))return;if(!on&&!confirm("سحب خاصية حساب الشيخ؟"))return;
+  const {error}=await Auth.sb.from("profiles").update(on?{role:"sheikh",author_id:aid}:{role:"member",author_id:null}).eq("id",el.dataset.id);if(error)throw new Error(error.message);
+  try{await Auth.sb.from("notifications").insert({user_id:el.dataset.id,title:on?"منحتك إدارة المكتبة «حساب شيخ»: يمكنك النشر في منشورات المشايخ":"سُحبت خاصية حساب الشيخ",url:"#/posts?k=posts"})}catch(x){}
+  toast(on?"مُنح حساب الشيخ":"سُحبت الخاصية");shAdmin()}catch(x){toast(x.message)}});
+document.addEventListener("submit",async e=>{const f=e.target.closest('[data-form="shpost"]');if(!f)return;e.preventDefault();e.stopImmediatePropagation();const b=f.querySelector("button");b.disabled=true;
+ try{const x=await Members.publishFree(f.t.value.trim());dlg().close();toast("نُشر منشورك");location.hash="#/post/"+x.id}catch(x){alert(x.message);b.disabled=false}},true);
 
 /* ---------- إدارة التشكيل ---------- */
 async function tkAdmin(){const el=$("#tkadm");if(!el)return;TK.list=null;TK.busy=false;await TK.init();const L=TK.list||{};let Q={items:[]};try{const r=await fetch(TK.raw("_queue.json"));if(r.ok)Q=await r.json()}catch(e){}
