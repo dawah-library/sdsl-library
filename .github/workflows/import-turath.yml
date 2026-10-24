@@ -33,6 +33,9 @@ jobs:
       - name: الحفظ
         run: |
           bash tools/git-save.sh "استيراد كتب التراث من OpenITI" data vols tools/turath-report.md
+      - name: فهرس معاني الكلمات
+        run: |
+          python3 tools/gloss.py >/dev/null && bash tools/git-save.sh "فهرس معاني الكلمات بعد الاستيراد" data/gloss || true
       - name: إشعار تليجرام
         if: success()
         run: |

@@ -1,9 +1,9 @@
 {
  "next": 242,
- "perRun": 150,
+ "perRun": 400,
  "fatwaAuthor": "a2",
  "maxMisses": 60,
- "delayMs": 1500,
+ "delayMs": 900,
  "latestHint": 25750,
  "imported": 200,
  "lastRun": "2026-10-22T16:18:41.349Z",

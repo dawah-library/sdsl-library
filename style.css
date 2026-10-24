@@ -599,3 +599,13 @@ ul.tj,ul.tj ul{list-style:none;margin:0;padding:0}
 .tjcard b{display:block;font-family:var(--rf);line-height:1.6}.tjcard p{margin:4px 0 0;font-size:.88rem;color:var(--mut);line-height:1.7}.tjcard q{display:block;margin-top:4px;font-family:var(--rf);font-size:.95rem;color:var(--c)}
 .tjp{position:absolute;inset-inline-end:10px;top:8px;font-size:.72rem;text-decoration:none;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);padding:1px 8px;border-radius:10px}.tjn.d0>.tjcard .tjp{color:#fff;background:rgba(255,255,255,.18)}
 .tjcard b{padding-inline-end:58px}.tjflag{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#e67e22;color:#fff;font-size:.7rem;vertical-align:middle}
+/* حفظ المتون والرسائل الخاصة والتصدير */
+.cmhero.hz{background:linear-gradient(135deg,#6b4fa3,#1f5f70)}
+.hzcard{text-align:center}.hzcue{font-family:var(--rf);font-size:1.5rem;line-height:1.9;margin:14px 0;color:var(--ac)}
+.hzans{font-family:var(--rf);font-size:1.25rem;line-height:2.1;background:var(--pg);color:var(--pgink);border-radius:12px;padding:12px;margin:10px 0;text-align:justify;max-height:45vh;overflow:auto}
+.hzgr{justify-content:center;gap:6px;flex-wrap:wrap}.hzbtns{justify-content:center}
+.dmthread{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;padding:8px 0}
+.dmm{max-width:82%;background:var(--sf);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px;align-self:flex-end}
+.dmm.me{align-self:flex-start;background:color-mix(in srgb,var(--ac) 12%,var(--sf));border-radius:14px 14px 4px 14px}.dmm p{margin:0}.dmm small{color:var(--mut);font-size:.72rem}
+.dmform{display:flex;gap:8px;align-items:flex-end;margin-top:8px}.dmform textarea{flex:1;min-height:70px}
+.expx .seg{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}.expx .seg label{display:flex;gap:6px;align-items:center;font-size:.92rem}

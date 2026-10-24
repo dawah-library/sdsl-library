@@ -79,37 +79,43 @@ async function main() {
   const isFatwa = c => /^(أسئلة|الاستفتاء|من فقه الواقع)/.test(c || "");
   if (st.fatwaAuthor) idx.items.forEach(x => { if (x.a === "a8" && isFatwa(x.c)) { x.a = st.fatwaAuthor; x.fa = 1; } });
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
-  let got = 0, tried = 0, misses = 0, errs = 0, id = st.next;
-  let atEnd = false;
-  while (got < want && tried < want * 4 && !atEnd) {
-    const sid = "sv" + id, url = BASE + id; tried++;
-    if (have.has(sid)) { id++; continue; }
+  let got = 0, errs = 0, stop = false;
+  // معالجة رقم واحد: "ok" أو "miss" أو "have" أو "err"
+  async function one(id) {
+    const sid = "sv" + id, url = BASE + id;
+    if (have.has(sid)) return "have";
     try {
       const html = await getHtml(url);
       if (html) { const isF = /أسئلة|الاستفتاء/.test((html.match(/<ol class="breadcrumb">([\s\S]*?)<\/ol>/i) || [""])[0]); const key = isF ? "fatwa" : "article";
         if (!sampled[key]) { sampled[key] = true; fs.mkdirSync(path.join(ROOT, "tools", "samples"), { recursive: true }); fs.writeFileSync(path.join(ROOT, "tools", "samples", "last-" + key + ".html"), html); } }
       const a = html ? extract(html, url) : null;
-      if (!a || !a.text || a.text.length < 200 || !a.title) {
-        misses++; log(`${id}: لا يوجد مقال`);
-        // بعد آخر مقال منشور: نتوقف ونعود غدًا لنفحص الجديد من بعد آخر مقال وُجد
-        if (misses >= st.maxMisses && id > st.latestHint) { atEnd = true; id = (st.lastSeen || id - misses) ; console.log("وصلنا إلى آخر المقالات المنشورة."); break; }
-      } else {
-        misses = 0; errs = 0; st.lastSeen = id; if (id > st.latestHint) st.latestHint = id;
-        const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
-        const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
-        loadGroup(g)[sid] = { pages: text };
-        const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category);
-        idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : aid0, ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
-        have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
-      }
-    } catch (e) { log(`${id}: خطأ ${e.message}`); errs = (errs || 0) + 1; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); break; } }
-    id++; await sleep(st.delayMs);
+      await sleep(st.delayMs);
+      if (!a || !a.text || a.text.length < 200 || !a.title) { log(`${id}: لا يوجد مقال`); return "miss"; }
+      errs = 0; if (id > st.latestHint) st.latestHint = id;
+      const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
+      const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
+      loadGroup(g)[sid] = { pages: text };
+      const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category);
+      idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : aid0, ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
+      have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
+      return "ok";
+    } catch (e) { log(`${id}: خطأ ${e.message}`); errs++; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); stop = true; } await sleep(st.delayMs); return "err"; }
   }
+  // ١) الجديد المنشور بعد آخر رقم معروف (فتاوى وبيانات ومقالات اليوم)
+  let h = (st.headNext || st.latestHint + 1), hm = 0;
+  while (!stop && hm < 25) { const r = await one(h); if (r === "ok" || r === "have") { hm = 0; st.headNext = h + 1; } else hm++; h++; }
+  // ٢) من الأحدث إلى الأقدم: نصف الدفعة، حتى يظهر الحديث من الفتاوى والبيانات أولًا
+  let back = st.backNext || st.latestHint, bGot = got, bTried = 0;
+  while (!stop && got - bGot < Math.ceil(want / 2) && bTried < want * 3 && back > st.next) { await one(back); back--; bTried++; }
+  st.backNext = back;
+  // ٣) من الأقدم إلى الأحدث: بقية الدفعة
+  let id = st.next, tried = 0;
+  while (!stop && got < want && tried < want * 4 && id < back) { await one(id); id++; tried++; }
   for (const [g, obj] of Object.entries(groups)) fs.writeFileSync(path.join(ADIR, g + ".json"), JSON.stringify(obj));
   idx.items.sort((x, y) => (x.d || "").localeCompare(y.d || "") || x.id.localeCompare(y.id));
   fs.writeFileSync(IDX, JSON.stringify(idx));
   cat.version = Date.now(); fs.writeFileSync(CAT, JSON.stringify(cat));
-  Object.assign(st, { next: id, imported: (st.imported || 0) + got, lastRun: new Date().toISOString() });
+  Object.assign(st, { next: Math.min(id, back + 1), imported: (st.imported || 0) + got, lastRun: new Date().toISOString() });
   fs.writeFileSync(STATE, JSON.stringify(st, null, 1));
   log(`\nاستُورد ${got} مقالًا. الموضع التالي: ${id}. المجموع: ${st.imported}.`);
   fs.writeFileSync(path.join(DATA, "import-log.txt"), `آخر تشغيل: ${st.lastRun}\n` + LOG.join("\n") + "\n");
