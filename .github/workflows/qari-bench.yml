@@ -12,6 +12,10 @@ on:
       last:
         required: true
         default: "8"
+      bf16:
+        description: "1 = bfloat16 (أبطأ على معالجات لا تدعمه)، 0 = float32"
+        required: false
+        default: "0"
       pixels:
         description: "أقصى عدد بكسلات للصورة (أقل = أسرع)"
         required: false
@@ -42,6 +46,7 @@ jobs:
       - name: القياس
         env:
           QARI_PIXELS: ${{ github.event.inputs.pixels }}
+          QARI_BF16: ${{ github.event.inputs.bf16 }}
         run: |
           {
           echo "# قياس Qari-OCR — $(date -u +%F' '%H:%M) UTC"; echo; echo '```'
@@ -51,9 +56,9 @@ jobs:
           P=$(echo "$PDF" | tail -1)
           [ -f "$P" ] && python3 tools/qari.py "$P" ${{ github.event.inputs.first }} ${{ github.event.inputs.last }} 2>&1 | grep -v "Warning\|warn" | tail -150
           echo '```'
-          } > tools/qari-bench.md 2>&1 || true
+          } > tools/qari-bench-${{ github.event.inputs.bf16 }}.md 2>&1 || true
       - name: حفظ النتيجة
         if: always()
         run: |
           git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
-          git add tools/qari-bench.md && git commit -qm "قياس Qari-OCR" && for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done || true
+          git add tools/qari-bench-${{ github.event.inputs.bf16 }}.md && git commit -qm "قياس Qari-OCR" && for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done || true
