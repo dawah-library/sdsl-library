@@ -1,4 +1,4 @@
-# تقرير استيراد كتب التراث — 2026-10-24 05:39 UTC
+# تقرير استيراد كتب التراث — 2026-10-24 05:45 UTC
 
 ## القواعد الحسان لتفسير القرآن
   ✗ لم يُعثر على الكتاب عند 1376CabdRahmanSacdi. كتبه: TaysirKarimRahman
@@ -19,8 +19,6 @@
   ✗ لم يُعثر على الكتاب عند 1429BakrIbnCabdAllah. كتبه: TabaqatNassabin
 
 ## الموسوعة الفقهية الكويتية
-  ✓ وُجد بالبحث الموسع: 1450AH/1450Burnu/1450Burnu.MawsucatQawacidFiqhiyya
-  النسخة: 1450Burnu.MawsucatQawacidFiqhiyya.Sham20Y0014596-ara1.completed (6801 ك.ب)
-  ✓ أُضيف: 4931 صفحة، 12 مجلد، 6.4 م.ب — مؤسسة الرسالة، 2003
+  ✗ لم يُعثر عليه بالبحث الموسع في 1450AH, 1425AH, 1400AH, 1375AH. أقرب العناوين: 1450AH/1450Anonymous.MawsucatRijalZaydiyya, 1450AH/1450Burnu.MawsucatQawacidFiqhiyya, 1450AH/1450DarTaqrib.MawsucaQuraniyya, 1450AH/1450Maghrawi.MawsucatMawaqifSalaf, 1450AH/1450MajmacFikrIslami.MawsucatMuallifiImamiya, 1450AH/1450MawsucaShicriya.MucjamShucara, 1450AH/1450MuhammadHadiYusufi.MawsucatTarikhIslam, 1450AH/1450MuhammadTawfiqSahli.MawsucatAmthalShacbiyyaFalastiniyya, 1450AH/1450Multiple.MawsucaMujazaFiTarikhIslami, 1450AH/1450YasirCabdRahman.MawsucatAkhlaq, 1400AH/1381SalimHasan.MawsucatMisrQadima
 
-المضاف في هذا التشغيل: 1
+المضاف في هذا التشغيل: 0
