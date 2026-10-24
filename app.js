@@ -679,10 +679,11 @@ function setQuote(q){pendingQ={t:q.t,src:A(q.b.authorId).name+" — "+q.b.title+
 
 /* ---------- الحسابات ---------- */
 const loadScript=src=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)});
-const Auth={mode:"local",sb:null,user:null,token:null,
- async init(){
+const Auth={mode:"local",sb:null,user:null,token:null,ready:false,
+ async init(){try{await this._init()}finally{this.ready=true}},
+ async _init(){
   if(CFG.supabaseUrl&&CFG.supabaseAnonKey){
-   try{try{await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/dist/umd/supabase.js")}catch(e){await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js")}
+   try{let ok=false;for(const u of["vendor/supabase.js","https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/dist/umd/supabase.js","https://unpkg.com/@supabase/supabase-js@2.75.0/dist/umd/supabase.js"]){try{await loadScript(u);if(window.supabase&&window.supabase.createClient){ok=true;break}}catch(e){}}if(!ok)throw new Error("تعذر تحميل مكتبة الحسابات");
     this.sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{flowType:"pkce",detectSessionInUrl:true,persistSession:true}});this.mode="cloud";
     const {data}=await this.sb.auth.getSession();this.set(data.session);
     this.sb.auth.onAuthStateChange((_e,s)=>{const was=this.user&&this.user.id;this.set(s);setTimeout(()=>{paintAuth();if((this.user&&this.user.id)!==was)Cloud.loadRole()},0)});await Cloud.loadRole();
@@ -704,6 +705,9 @@ const Auth={mode:"local",sb:null,user:null,token:null,
   if(this.mode==="cloud"){const {data,error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;this.set(data.session);Cloud.loadRole();return}
   const known=ls.get("acct_known",{})[email.toLowerCase()]||{id:"local:"+email.toLowerCase(),name:email.split("@")[0],email};
   this.user=known;ls.set("acct",known)},
+ async phoneOtp(phone){const {error}=await this.sb.auth.signInWithOtp({phone});if(error)throw error},
+ async phoneVerify(phone,token){const {data,error}=await this.sb.auth.verifyOtp({phone,token,type:"sms"});if(error)throw error;this.set(data.session);Cloud.loadRole()},
+ async emailLink(email,next){ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error)throw error},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
 function paintAuth(){Mine.reset();setTimeout(()=>Bell.paint(),0);const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
  if(Auth.mode==="local"&&Auth.user){const k=ls.get("acct_known",{});k[Auth.user.email.toLowerCase()]=Auth.user;ls.set("acct_known",k)}}
@@ -719,19 +723,29 @@ function vAccount(q){
   <div class="row" style="margin:10px 0"><a class="btn p nf" href="#/ask">اسأل المكتبة</a><a class="btn nf" href="#/favs">المفضلة</a><a class="btn nf" href="#/mine">مكتبتي: العلامات والتعليقات</a><a class="btn nf" href="#/hifz">حفظ المتون</a><a class="btn nf" href="#/dm">الرسائل الخاصة</a><button class="btn nf" data-act="logout">تسجيل الخروج</button></div>
   <h2>محادثاتي</h2><div id="convs" class="mut">جارٍ التحميل…</div>`);
   Chats.list().then(l=>{$("#convs").innerHTML=l.length?l.map(c=>`<a class="bk" href="#/ask?id=${encodeURIComponent(c.id)}"><b>${esc(c.title||"محادثة")}</b><span>${esc((c.updated_at||"").slice(0,10))}</span></a>`).join(""):"لا توجد محادثات بعد."}).catch(()=>{$("#convs").textContent="تعذر تحميل المحادثات."});return}
+ if(!Auth.ready&&CFG.supabaseUrl){view(`<h2>تسجيل الدخول</h2><p class="mut">جارٍ تجهيز خدمة الحسابات…</p>`);const t=setInterval(()=>{if(Auth.ready){clearInterval(t);if(parse().p[0]==="account")route()}},200);return}
  const signup=q.m==="signup",back=q.next||"#/ask",cloud=Auth.mode==="cloud";
  view(`<h2>${signup?"إنشاء حساب":"تسجيل الدخول"}</h2>
  <div class="perks"><b>مزايا الأعضاء</b><ul><li>«اسأل المكتبة»: مساعد بحثي يجيب من نصوص المكتبة ويحيل إلى الكتاب والصفحة.</li><li>إعداد بحث علمي موثق في أي مسألة.</li><li>شرح أي صفحة أو مقال بضغطة من القارئ.</li><li>حفظ محادثاتك والرجوع إليها من أي جهاز.</li></ul></div>
- ${cloud?`<div id="oauthw"></div>`:'<p class="note" style="margin:10px 0">أنشئ حسابك بالاسم والبريد فقط، ويعمل فورًا. (الدخول بحساب Google وApple يُفعَّل قريبًا.)</p>'}
+ ${cloud?`<div id="oauthw"></div>`:''}
  <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>الاسم</label><input name="name" required autocomplete="name">':""}
  <label>البريد الإلكتروني</label><input name="email" type="email" required autocomplete="email">
  ${cloud?`<label>كلمة المرور</label><input name="pw" type="password" minlength="8" required autocomplete="${signup?"new-password":"current-password"}">`:""}
  <button class="btn p" style="margin-top:12px">${signup?"إنشاء الحساب":"دخول"}</button></form><p id="aerr" role="alert"></p>${CFG.supabaseUrl&&!cloud?`<p class="note">تعذر تحميل خدمة الحسابات${Auth.loadErr?" ("+esc(Auth.loadErr)+")":""}، فيعمل الحساب على هذا الجهاز فقط. أعد تحميل الصفحة بعد قليل.</p>`:""}
  <p>${signup?`لديك حساب؟ <a href="#/account?next=${encodeURIComponent(back)}">سجّل الدخول</a>`:`ليس لديك حساب؟ <a href="#/account?m=signup&next=${encodeURIComponent(back)}">أنشئ حسابًا مجانيًا</a>`}</p>
  ${cloud?"":'<p class="note">وضع تجريبي: لم تُربط قاعدة الحسابات بعد، فيُحفظ الحساب على هذا الجهاز فقط ودون كلمة مرور.</p>'}`);
- if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w||!(p.google||p.apple))return;
-  w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}</div><div class="or">أو بالبريد الإلكتروني</div>`;
-  $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=e.message}})})}
+ if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w)return;
+  w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}${p.phone?'<button data-alt="phone">📱 الدخول برقم الهاتف</button>':""}<button data-alt="link">✉️ رابط دخول إلى بريدي (دون كلمة مرور)</button></div><div id="altw"></div><div class="or">أو بالبريد وكلمة المرور</div>`;
+  $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=authMsg(e)}});
+  $$("[data-alt]").forEach(b=>b.onclick=()=>altLogin(b.dataset.alt,back))})}
+// الدخول برقم الهاتف (رمز SMS) أو برابط يُرسل إلى البريد
+function altLogin(kind,back){const w=$("#altw"),err=$("#aerr");err.textContent="";
+ if(kind==="link"){w.innerHTML=`<div class="card"><label>بريدك الإلكتروني</label><input id="lkem" type="email" autocomplete="email" dir="ltr"><button class="btn p" id="lkgo" style="margin-top:8px">أرسل رابط الدخول</button></div>`;
+  $("#lkgo").onclick=async()=>{const em=$("#lkem").value.trim();if(!em)return;try{await Auth.emailLink(em,back);w.innerHTML='<p class="note">أرسلنا رابط الدخول إلى بريدك؛ افتحه من هذا الجهاز وستدخل مباشرة. (تفقد مجلد الرسائل غير المرغوبة)</p>'}catch(e){err.textContent=authMsg(e)}};return}
+ w.innerHTML=`<div class="card"><label>رقم الهاتف مع رمز الدولة</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="+9665xxxxxxxx"><button class="btn p" id="phgo" style="margin-top:8px">أرسل رمز التحقق</button><div id="phv" hidden><label>الرمز الذي وصلك</label><input id="phc" inputmode="numeric" autocomplete="one-time-code" dir="ltr"><button class="btn p" id="phok" style="margin-top:8px">تأكيد الدخول</button></div></div>`;
+ const num=()=>{let v=$("#ph").value.replace(/[\s\-()]/g,"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));if(v.startsWith("00"))v="+"+v.slice(2);return v};
+ $("#phgo").onclick=async()=>{const n=num();if(!/^\+\d{8,15}$/.test(n)){err.textContent="اكتب الرقم كاملًا مع رمز الدولة، مثل +9665xxxxxxxx";return}try{await Auth.phoneOtp(n);$("#phv").hidden=false;err.textContent="أرسلنا رمزًا إلى هاتفك."}catch(e){err.textContent=authMsg(e)}};
+ $("#phok").onclick=async()=>{try{await Auth.phoneVerify(num(),$("#phc").value.trim());paintAuth();location.hash=back}catch(e){err.textContent=authMsg(e)}}}
 // حماية كلمات المرور: طول كافٍ، ورفض كلمات المرور المسرّبة (فحص Have I Been Pwned بطريقة إخفاء الهوية: يُرسل أول 5 أحرف من بصمة SHA-1 فقط)
 async function pwCheck(pw){pw=String(pw||"");if(pw.length<8)throw new Error("كلمة المرور قصيرة: ثمانية أحرف على الأقل.");
  if(/^(.)\1+$/.test(pw)||/^(12345678|123456789|password|qwertyui)/i.test(pw))throw new Error("كلمة المرور سهلة التخمين؛ اختر غيرها.");
@@ -739,7 +753,7 @@ async function pwCheck(pw){pw=String(pw||"");if(pw.length<8)throw new Error("ك�
   const r=await fetch("https://api.pwnedpasswords.com/range/"+h.slice(0,5),{headers:{"Add-Padding":"true"}});if(!r.ok)return;
   const t=await r.text();if(t.split("\n").some(l=>{const [suf,c]=l.trim().split(":");return suf===h.slice(5)&&+c>0}))throw new Error("كلمة المرور هذه ظهرت في تسريبات بيانات سابقة على الإنترنت، فاختر كلمة مرور أخرى لحماية حسابك.")}
  catch(e){if(/تسريبات/.test(e.message))throw e}}
-const AUTHERR=[[/invalid login credentials/i,"البريد أو كلمة المرور غير صحيحة. إن لم يكن لك حساب بعد فاضغط «أنشئ حسابًا مجانيًا»."],[/email not confirmed/i,"لم يُؤكَّد بريدك بعد؛ افتح رسالة التأكيد في بريدك ثم سجّل الدخول."],[/already registered|already exists/i,"هذا البريد مسجّل من قبل؛ سجّل الدخول به."],[/password should be at least|weak password/i,"كلمة المرور قصيرة؛ اجعلها 8 أحرف على الأقل."],[/rate limit|too many/i,"محاولات كثيرة؛ انتظر دقيقة ثم أعد المحاولة."],[/invalid.*email|email.*invalid/i,"صيغة البريد غير صحيحة."],[/failed to fetch|network/i,"تعذر الاتصال بخادم الحسابات؛ تأكد من الإنترنت."]];
+const AUTHERR=[[/invalid login credentials/i,"البريد أو كلمة المرور غير صحيحة. إن لم يكن لك حساب بعد فاضغط «أنشئ حسابًا مجانيًا»."],[/email not confirmed/i,"لم يُؤكَّد بريدك بعد؛ افتح رسالة التأكيد في بريدك ثم سجّل الدخول."],[/already registered|already exists/i,"هذا البريد مسجّل من قبل؛ سجّل الدخول به."],[/password should be at least|weak password/i,"كلمة المرور قصيرة؛ اجعلها 8 أحرف على الأقل."],[/rate limit|too many/i,"محاولات كثيرة؛ انتظر دقيقة ثم أعد المحاولة."],[/invalid.*email|email.*invalid/i,"صيغة البريد غير صحيحة."],[/failed to fetch|network/i,"تعذر الاتصال بخادم الحسابات؛ تأكد من الإنترنت."],[/provider is not enabled|unsupported.*provider|phone.*disabled|sms.*provider/i,"هذه الطريقة لم تُفعَّل بعد في إعدادات الموقع."],[/token has expired|invalid.*otp|otp.*invalid/i,"الرمز غير صحيح أو انتهت صلاحيته؛ اطلب رمزًا جديدًا."]];
 const authMsg=e=>{const m=String((e&&(e.message||e.error_description))||e||"");const t=AUTHERR.find(([r])=>r.test(m));return t?t[1]:(m?"تعذر الدخول: "+m:"تعذر الدخول")};
 async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr"),btn=f.querySelector("button"),old=btn.textContent;err.textContent="";btn.disabled=true;btn.textContent=kind==="signup"?"جارٍ إنشاء الحساب…":"جارٍ الدخول…";
  const slow=setTimeout(()=>{err.textContent="الخادم بطيء في الرد… انتظر قليلًا."},12000);

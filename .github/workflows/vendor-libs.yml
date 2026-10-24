@@ -1,0 +1,26 @@
+name: نسخ مكتبة الحسابات داخل الموقع
+# ينزّل مكتبة Supabase (supabase-js) إلى vendor/ فتُحمَّل من الموقع نفسه، فلا يتعطل الدخول إذا تعذر الوصول إلى شبكة CDN على بعض الهواتف
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/vendor-libs.yml"]
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: التنزيل
+        run: |
+          mkdir -p vendor
+          curl -fsSL -o /tmp/sb.tgz https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.75.0.tgz
+          tar xzf /tmp/sb.tgz -C /tmp
+          cp /tmp/package/dist/umd/supabase.js vendor/supabase.js
+          ls -la vendor
+      - name: الحفظ
+        run: |
+          git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
+          git add vendor/supabase.js
+          git diff --cached --quiet || git commit -qm "مكتبة الحسابات داخل الموقع (supabase-js 2.75.0)"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
