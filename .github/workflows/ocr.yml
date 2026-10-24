@@ -81,7 +81,7 @@ jobs:
         if: ${{ vars.OCR_SURYA == '1' }}
         continue-on-error: true
         run: |
-          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -q surya-ocr
           surya_ocr --help > /dev/null && echo "Surya جاهز"
       - name: ذاكرة نموذج Qari-OCR
@@ -91,12 +91,12 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.cache/huggingface
-          key: qari-v1
+          key: qari-v2
       - name: تثبيت Qari-OCR (القارئ العربي المفتوح المجاني)
         if: ${{ vars.OCR_QARI == '1' }}
         continue-on-error: true
         run: |
-          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -q "transformers>=4.49,<5" accelerate qwen-vl-utils pillow
       - name: مسودات الصفحات ${{ matrix.shard.first }}-${{ matrix.shard.last }}
         env:

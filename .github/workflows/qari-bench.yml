@@ -34,10 +34,10 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.cache/huggingface
-          key: qari-v1
+          key: qari-v2
       - name: التثبيت
         run: |
-          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -q "transformers>=4.49,<5" accelerate qwen-vl-utils pillow
       - name: القياس
         env:
