@@ -147,7 +147,7 @@ def ghm_call(parts, max_tokens):
         body = json.dumps({"model": m, "messages": [{"role": "user", "content": content}], "temperature": 0, "max_tokens": min(max_tokens, 4000)}).encode()
         for attempt in range(4):
             try:
-                req = urllib.request.Request("https://models.github.ai/inference/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + GHM_TOKEN})
+                req = urllib.request.Request("https://models.github.ai/inference/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + GHM_TOKEN, "accept": "application/vnd.github+json", "x-github-api-version": "2022-11-28"})
                 with urllib.request.urlopen(req, timeout=300) as r: j = json.loads(r.read())
                 t = ((j.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
                 if t.strip(): TL.model = m; STATS["ghm"] = STATS.get("ghm", 0) + 1; return t

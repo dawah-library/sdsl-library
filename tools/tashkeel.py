@@ -136,7 +136,11 @@ def transfer(src, out):
 def post(url, body, headers, timeout=300):
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=dict({"content-type": "application/json"}, **headers))
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read())
+        raw = r.read()
+        try:
+            return json.loads(raw)
+        except Exception:
+            raise RuntimeError("رد غير مفهوم %s: %s" % (r.status, raw[:160].decode("utf-8", "ignore")))
 
 
 def gemini(prompt, model, key):
@@ -149,7 +153,7 @@ def gemini(prompt, model, key):
 
 def ghm(prompt):
     j = post("https://models.github.ai/inference/chat/completions", {"model": GHM_MODEL, "messages": [{"role": "user", "content": prompt}], "temperature": 0, "max_tokens": 4000},
-             {"authorization": "Bearer " + GHM})
+             {"authorization": "Bearer " + GHM, "accept": "application/vnd.github+json", "x-github-api-version": "2022-11-28"})
     return (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
 
 
