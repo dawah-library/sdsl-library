@@ -379,7 +379,8 @@ def surya_drafts(pdf, nums):
 
 
 # ---------- المدقق الثاني: نموذج أقوى يعيد قراءة الصفحات التي بقي فيها شك فقط ----------
-PROMODELS = [m for m in [os.environ.get("GEMINI_PRO_MODEL", "gemini-2.5-pro"), "gemini-pro-latest"] if m]
+# gemini-2.5-pro متقاعد (يعيد 404)؛ يبقى تجاوزه ممكنًا بالمتغير GEMINI_PRO_MODEL
+PROMODELS = list(dict.fromkeys(m for m in [os.environ.get("GEMINI_PRO_MODEL", ""), "gemini-pro-latest"] if m))
 PFAIL = [0]
 PRO_PROMPT = """أمامك صورة صفحة من كتاب عربي مطبوع، وتحتها قراءة أولية لها أعدّها مدقق آخر، وفيها كلمات مشكوك فيها بين ⟪ ⟫.
 راجع القراءة كلها على الصورة بعناية، وصحح كل ما يخالف الصورة، واحسم الكلمات المشكوك فيها بالنظر الدقيق في الصورة.
