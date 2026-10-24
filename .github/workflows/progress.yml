@@ -1,0 +1,39 @@
+name: متابعة إنجاز الكتب
+# يحسب نسبة إنجاز كل كتاب ووقته المتوقع (data/progress.json) بعد كل مهمة تخص الكتب، ويقدّم الكتب المكتملة تدقيقًا إلى الخدمات
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_run:
+    workflows:
+      - "تحويل الكتب المصورة إلى نص"
+      - "تشكيل الكتب (تشكيل مدقق نحويًا ولغويًا)"
+      - "انتقاء منشورات المشايخ وتدقيق سؤال وجواب"
+      - "تشجير الكتب (للكتب التي تختارها الإدارة)"
+      - "الفهارس الفنية (الآيات والأحاديث والأعلام)"
+      - "فحص الآيات في الكتب"
+      - "بطاقات التعريف بالكتب"
+      - "صوتيات المكتبة (تحويل النص إلى صوت)"
+    types: [completed]
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: progress
+  cancel-in-progress: false
+jobs:
+  progress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/progress.py
+      - run: bash tools/git-save.sh "متابعة إنجاز الكتب" data/progress.json data/tashjir/_queue.json data/audio/_queue.json
+      - name: تشغيل الخدمات للكتب المكتملة تدقيقًا
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -s .progress-dispatch ] || exit 0
+          grep -q '^tashjir' .progress-dispatch && gh workflow run tashjir.yml --ref main || true
+          ids=$(grep '^tts ' .progress-dispatch | cut -d' ' -f2 | paste -sd, -)
+          [ -n "$ids" ] && gh workflow run tts.yml --ref main -f books="$ids" -f approved="معتمد" || true

@@ -2,3 +2,5 @@ __pycache__/
 .tio-cache/
 .tio-incomplete
 .about-missing.txt
+.progress-dispatch
+.quran-report.txt
