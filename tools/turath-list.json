@@ -749,6 +749,42 @@
    "title": "الموسوعة الفقهية الكويتية",
    "authorName": "وزارة الأوقاف والشؤون الإسلامية بالكويت",
    "topic": "t4"
+  },
+  {
+   "id": "nihaya",
+   "died": 606,
+   "author": "IbnAthir|Athir",
+   "book": "NihayaFiGharib|Nihaya",
+   "title": "النهاية في غريب الحديث والأثر",
+   "authorName": "ابن الأثير",
+   "topic": "t16"
+  },
+  {
+   "id": "mufradat",
+   "died": 502,
+   "author": "Raghib|Isfahani|Asfahani",
+   "book": "MufradatFiGharib|Mufradat",
+   "title": "المفردات في غريب القرآن",
+   "authorName": "الراغب الأصفهاني",
+   "topic": "t16"
+  },
+  {
+   "id": "lisan",
+   "died": 711,
+   "author": "IbnManzur|Manzur",
+   "book": "LisanCarab|Lisan",
+   "title": "لسان العرب",
+   "authorName": "ابن منظور",
+   "topic": "t16"
+  },
+  {
+   "id": "qamus",
+   "died": 817,
+   "author": "Fayruzabadi|Firuzabadi",
+   "book": "QamusMuhit|Qamus",
+   "title": "القاموس المحيط",
+   "authorName": "الفيروزآبادي",
+   "topic": "t16"
   }
  ]
 }
