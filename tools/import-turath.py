@@ -72,7 +72,25 @@ def listdir(repo, path):
     return _dir_cache[k]
 
 
+def scan(item):
+    """بحث موسّع للأعمال الجماعية الحديثة (بلا سنة وفاة): كل المؤلفين في المستودعات المذكورة، وتطابق كل أجزاء اسم الكتاب."""
+    need = [keyn(x) for x in item["book"].split("+") if x.strip()]
+    akeys = alts(item.get("author", ""))
+    for repo in item.get("repos", ["1450AH", "1425AH", "1400AH"]):
+        authors = [d["name"] for d in listdir(repo, "data") if d.get("type") == "dir"]
+        authors.sort(key=lambda a: 0 if any(k in keyn(a) for k in akeys) else 1)
+        for a in authors:
+            for d in listdir(repo, "data/" + a):
+                if d.get("type") == "dir" and all(k in keyn(d["name"]) for k in need):
+                    log("  ✓ وُجد بالبحث الموسع: %s/%s/%s" % (repo, a, d["name"]))
+                    return repo, a, d["name"]
+    log("  ✗ لم يُعثر عليه بالبحث الموسع في %s" % ", ".join(item.get("repos", [])))
+    return None
+
+
 def find(item):
+    if item.get("scan"):
+        return scan(item)
     repo = repo_for(item["died"])
     authors = [d for d in listdir(repo, "data") if d.get("type") == "dir" and d["name"].startswith("%04d" % item["died"])]
     akeys = alts(item["author"])

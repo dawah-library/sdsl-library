@@ -720,6 +720,22 @@
    "title": "السيرة النبوية (سيرة ابن هشام)",
    "authorName": "ابن هشام",
    "topic": "t5"
+  },
+  {
+   "id": "mawsuafiqhiyya",
+   "died": 1427,
+   "scan": true,
+   "repos": [
+    "1450AH",
+    "1425AH",
+    "1400AH",
+    "1375AH"
+   ],
+   "author": "Kuwayt|Awqaf|Wizara|Lajna",
+   "book": "Mawsuca+Fiqh",
+   "title": "الموسوعة الفقهية الكويتية",
+   "authorName": "وزارة الأوقاف والشؤون الإسلامية بالكويت",
+   "topic": "t4"
   }
  ]
 }
