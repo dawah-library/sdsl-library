@@ -1,0 +1,24 @@
+name: فحص شمول التعريف بالمكتبة لخدمات الموقع
+# عند كل إيداع يغيّر واجهة الموقع: يتأكد أن كل صفحة وخدمة جديدة مذكورة في صفحة التعريف بالمكتبة (about.js)،
+# وإلا نبّه الإدارة (الجرس وتليجرام) لإدراجها.
+on:
+  push:
+    branches: [main]
+    paths: ["*.js", "index.html"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - id: c
+        run: python3 tools/check-about.py
+        continue-on-error: true
+      - if: steps.c.outcome == 'failure'
+        run: python3 tools/notify.py --file .about-missing.txt "📋 التعريف بالمكتبة يحتاج تحديثًا"
+      - if: steps.c.outcome == 'failure'
+        run: exit 1
