@@ -1,0 +1,26 @@
+name: فحص الآيات في الكتب
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "معرّفات الكتب (فارغ = كتب مكتبة الدعوة)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "52 8 * * *"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: quran-check
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/quran-check.py ${{ github.event.inputs.ids }}
+      - run: bash tools/git-save.sh "فحص الآيات في الكتب" data/quran data/quran-check data/books data/catalog.json
+      - if: always()
+        run: '[ -s .quran-report.txt ] && python3 tools/notify.py "$(cat .quran-report.txt)" || true'
