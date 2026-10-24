@@ -1,0 +1,26 @@
+name: فهرس معاني الكلمات
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * 0"   # أسبوعيًا: يضم الكتب المستوردة حديثًا
+  push:
+    paths: ["tools/gloss.py"]
+permissions:
+  contents: write
+concurrency:
+  group: gloss
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/gloss.py
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/gloss
+          git diff --cached --quiet && exit 0
+          git commit -qm "فهرس معاني الكلمات: تحديث"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done

@@ -1450,7 +1450,7 @@ document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#/"]');
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  const fr=e.target.closest(".rd .fnr"),dg=x=>String(x).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
  if(fr&&!el){const k=dg(fr.dataset.fn||fr.textContent.replace(/[^\d٠-٩]/g,"")),fb=fr.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>dg(x.textContent).replace(/[^\d]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
- if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return dictDlg(w.textContent)}if(!el)return;const a=el.dataset.act;
+ if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return}if(!el)return;const a=el.dataset.act;
  if(a==="closeDlg")dlg().close();
  else if(a==="bcdel"){if(confirm("حذف هذا الإشعار؟")){await Auth.sb.from("broadcasts").delete().eq("id",el.dataset.id);bcList()}}
  else if(a==="mark")toggleMark();else if(a==="selnote")selNote();else if(a==="noteopen")noteOpen(el.dataset.id);else if(a==="plan")planDlg();else if(a==="bell")Bell.open();

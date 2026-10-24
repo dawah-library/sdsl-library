@@ -40,10 +40,23 @@ module.exports = async (req, res) => {
   const u = new URL(req.url, "https://" + (req.headers.host || "dawahlibrary.org"));
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");
-  if (!id || !(p > 0) || !LANGS[l]) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
+  if (!u.searchParams.get("w") && (!id || !(p > 0)) || !LANGS[l]) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
   if (!process.env.GEMINI_API_KEY) { res.statusCode = 503; return res.end(JSON.stringify({ error: "no key" })); }
   const { limited } = require("../lib/rate");
   if (limited(req, "tr", 60, 10 * 60e3)) { res.statusCode = 429; return res.end(JSON.stringify({ error: "busy" })); }
+  // ترجمة كلمة في سياقها (للضغطة المطولة على الكلمة في القارئ)
+  const w = (u.searchParams.get("w") || "").trim();
+  if (w) {
+    const ctx = (u.searchParams.get("ctx") || "").slice(0, 320);
+    if (w.length > 40 || /[<>{}]/.test(w + ctx)) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad" })); }
+    const prompt = `You are an expert translator of classical Islamic Arabic texts. Translate the Arabic word «${w}» as it is used in this sentence: «${ctx}» into ${LANGS[l]}.
+Reply in exactly two lines, in ${LANGS[l]}:
+1) the best equivalent (1–4 words; you may give two alternatives separated by " / "), and if it is an Islamic technical term add its standard transliteration in parentheses;
+2) one short sentence explaining the precise meaning intended in this context.
+No other text.`;
+    try { const text = await gemini(prompt); res.setHeader("cache-control", "public, max-age=86400, s-maxage=31536000"); return res.end(JSON.stringify({ text })); }
+    catch (e) { res.statusCode = 502; res.setHeader("cache-control", "no-store"); return res.end(JSON.stringify({ error: "busy" })); }
+  }
   const pg = await pageText(id, p, u.origin);
   const v = u.searchParams.get("v");  // رقم الإصدار يجب أن يطابق الكتاب (لا يُتلاعب به لتجاوز التخزين واستنزاف الحصة)
   if (pg && v && String(pg.b.size || 0) !== v) { res.statusCode = 400; return res.end(JSON.stringify({ error: "stale" })); }

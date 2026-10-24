@@ -550,3 +550,13 @@ body.apfull-on{overflow:hidden}
 .rnext{list-style:none;padding:0;text-align:start}.rnext li{padding:6px 0;border-bottom:1px solid var(--line)}.rnext b{display:inline-block;min-width:70px;color:var(--ac)}
 .ckl{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px;background:var(--bg)}
 @media (prefers-reduced-motion:reduce){.eq b,#apbar.playing .apcov,.rxpick{animation:none!important}}
+/* معاني الكلمة بالضغطة المطولة */
+.rd .w{-webkit-touch-callout:none}
+.wmenu{position:absolute;z-index:85;display:flex;flex-wrap:wrap;align-items:center;gap:4px;max-width:min(94vw,420px);background:var(--sf);border:1px solid var(--line);border-radius:16px;padding:6px 8px;box-shadow:0 12px 30px rgba(0,0,0,.22);animation:rxin .16s ease-out}
+.wmenu b{font-family:var(--rf);font-size:1.15rem;color:var(--ac);padding:0 6px}
+.wmenu button{border:0;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem;padding:6px 10px;border-radius:12px;cursor:pointer}.wmenu button:hover{background:color-mix(in srgb,var(--ac) 12%,var(--bg))}
+.wsec{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:var(--sf)}.wsec>summary{cursor:pointer;padding:10px 12px;font-weight:600}.wsec>div{padding:0 12px 10px}
+.wsec h4{margin:10px 0 4px;color:var(--ac);font-size:.95rem}
+.gitem{border-top:1px dashed var(--line);padding:6px 0}.gitem>summary{cursor:pointer;font-size:.9rem}.gitem p{font-family:var(--rf);font-size:1.05rem;line-height:1.95;margin:6px 0}
+.gmore{font-family:var(--rf);font-size:1.12rem;line-height:2.05;max-height:55vh;overflow:auto;background:var(--pg);color:var(--pgink);border-radius:12px;padding:12px}.gmore mark{background:color-mix(in srgb,var(--gold) 45%,transparent);color:inherit;border-radius:4px}
+.wtr{padding:8px 0}.wtr b{font-size:1.1rem}
