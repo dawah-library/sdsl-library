@@ -273,7 +273,7 @@ body.reading-full .paper:has(.pbody.both){max-width:96vw}
 #dock a{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 1px 6px;color:var(--mut);text-decoration:none;font-size:.68rem;white-space:nowrap;font-weight:600;border-radius:18px;transition:color .25s;-webkit-tap-highlight-color:transparent}
 #dock a svg{width:23px;height:23px;transition:transform .3s cubic-bezier(.2,.8,.2,1.4)}
 #dock a[aria-current=page]{color:var(--ac)}#dock a[aria-current=page] svg{transform:translateY(-1px) scale(1.08)}
-#dock .dk-ind{position:absolute;top:6px;bottom:6px;width:calc((100% - 12px)/var(--n,5));right:calc(6px + var(--pos,0)*(100% - 12px)/var(--n,5));border-radius:18px;background:color-mix(in srgb,var(--ac) 13%,transparent);transition:right .42s cubic-bezier(.2,.8,.2,1)}
+#dock .dk-ind{position:absolute;top:6px;bottom:6px;width:calc((100% - 12px)/var(--n,5));inset-inline-start:calc(6px + var(--pos,0)*(100% - 12px)/var(--n,5));border-radius:18px;background:color-mix(in srgb,var(--ac) 13%,transparent);transition:right .42s cubic-bezier(.2,.8,.2,1)}
 #dock.drag .dk-ind{transition:none}
 #peek{position:fixed;z-index:44;top:45%;display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;color:var(--ac);opacity:var(--k,0)}
 #peek.on{display:flex}#peek.l{left:14px;transform:translateX(calc((var(--k,0) - 1)*110%))}#peek.r{right:14px;transform:translateX(calc((1 - var(--k,0))*110%))}
@@ -560,3 +560,9 @@ body.apfull-on{overflow:hidden}
 .gitem{border-top:1px dashed var(--line);padding:6px 0}.gitem>summary{cursor:pointer;font-size:.9rem}.gitem p{font-family:var(--rf);font-size:1.05rem;line-height:1.95;margin:6px 0}
 .gmore{font-family:var(--rf);font-size:1.12rem;line-height:2.05;max-height:55vh;overflow:auto;background:var(--pg);color:var(--pgink);border-radius:12px;padding:12px}.gmore mark{background:color-mix(in srgb,var(--gold) 45%,transparent);color:inherit;border-radius:4px}
 .wtr{padding:8px 0}.wtr b{font-size:1.1rem}
+
+/* الواجهة الإنجليزية: الواجهة من اليسار، والنصوص العربية من اليمين */
+html.ui-en body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif}
+html.ui-en .rd,html.ui-en .aptext,html.ui-en .gmore,html.ui-en .ptext,html.ui-en .pquote,html.ui-en .cmt p,html.ui-en textarea,html.ui-en .rulestx,html.ui-en .dict,html.ui-en .tocl,html.ui-en .q p,html.ui-en .abrief p,html.ui-en .gitem p{direction:rtl;text-align:right}
+html.ui-en .bk b,html.ui-en .acard2 b,html.ui-en .rhead h2,html.ui-en .ahead h1,html.ui-en [data-author],html.ui-en .post header b{unicode-bidi:plaintext}
+html.ui-en #ticker .tv{direction:rtl}

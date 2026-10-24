@@ -1436,6 +1436,7 @@ function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||"
  for(let i=0;i<8;i++){if(ta[i])n.push(ta[i]);if(tb[i])n.push(tb[i])}if(!n.length){t.hidden=true;return}
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=(location.hash.startsWith("#/")?location.hash.slice(1):"")||(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent).map((x,i)=>i?x:x.toLowerCase().replace(/\.html$/,"")),q:Object.fromEntries(new URLSearchParams(qs||""))}}
+(function(){const b=document.querySelector('[data-act="uilang"]');if(b)b.textContent=S.ui==="en"?"ع":"EN"})();
 function route(){const{p,q}=parse(),v=p[0];if(v!=="book"&&TTS.on)TTS.stop();Pager.onRoute();applyLabels();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="community")return vCommunity(q);if(v==="audio")return vAudio(q,p[1]);if(v==="radio")return vRadio(q,p[1]);if(v==="post")return vPost(p[1]);if(v==="member")return vMember(p[1]);if(v==="messages")return vMessages();if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory();if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
@@ -1488,6 +1489,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="card")cardSheet();
  else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
  else if(a==="share"){const c=cur(),u=siteLink(`#/book/${c.b.id}/${c.p}`)||location.href;try{if(navigator.share)await navigator.share({title:c.b.title,url:u});else{await navigator.clipboard.writeText(u);el.textContent="نُسخ الرابط"}}catch(x){}}
+ else if(a==="uilang"){S.ui=S.ui==="en"?"ar":"en";saveS();location.reload()}
  else if(a==="tkreq"){const b=B(el.dataset.id);if(!b)return;closeSheet();
   if(GH.on){try{await GH.editJSON("data/tashkeel/_queue.json",o=>{o=o||{items:[]};o.items=[{id:b.id}].concat((o.items||[]).filter(x=>(x.id||x)!==b.id));return o},"تشكيل حسب الطلب: «"+(b.setTitle||b.title)+"»");toast("أضيف الكتاب إلى طابور التشكيل؛ يبدأ خلال دقائق")}catch(x){toast(x.message)}return}
   if(!Auth.user)return needLogin("طلب التشكيل متاح للأعضاء المسجلين.");if(typeof tgNote==="function")tgNote("tkreq",{subject:"تشكيل: "+(b.setTitle||b.title),detail:b.id});toast("أُرسل طلبك إلى الإدارة، جزاك الله خيرًا")}
