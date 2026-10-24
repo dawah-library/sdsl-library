@@ -263,7 +263,8 @@ def save_book(man, b, lst, total):
     jsave(os.path.join(AUD, man["id"] + ".json"), man)
     ps = man["pages"]
     secs = sum(v.get("d", 0) for v in ps.values()) + sum(r.get("d", 0) for r in man.get("rec", []))
-    lst[man["id"]] = {"n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
+    prev = lst.get(man["id"]) or {}
+    lst[man["id"]] = {"ok": prev.get("ok", 0), "n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
                       "t": man["title"], "a": b.get("authorId", ""), "c": b.get("col", ""), "rec": len(man.get("rec", [])), "upd": time.strftime("%Y-%m-%d"),
                       "ds": [round((ps.get(str(i)) or {}).get("d", 0)) for i in range(1, total + 1)],
                       "rd": [[r.get("f"), round(r.get("d", 0)), r.get("t", "")] for r in man.get("rec", [])]}

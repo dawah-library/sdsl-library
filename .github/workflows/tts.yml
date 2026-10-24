@@ -1,10 +1,7 @@
 name: صوتيات المكتبة (تحويل النص إلى صوت)
 # مجاني بالكامل: أصوات Edge العصبية العربية عبر edge-tts، والملفات الصوتية في «إصدارات» المستودع (خارج مساحة R2 والموقع)
+# موقوف بقرار الإدارة (٢٤ أكتوبر): لا تسجيل حتى يُعتمد تصحيح الكتب نصيًا وتشكيلها. التشغيل يدوي فقط مع تأكيد الاعتماد.
 on:
-  push:
-    paths: ["data/audio/_queue.json"]
-  schedule:
-    - cron: "10 2 * * *"   # يوميًا: يكمل الطابور، ويعيد الصفحات التي تغيّر نصها بعد التدقيق
   workflow_dispatch:
     inputs:
       books:
@@ -19,6 +16,10 @@ on:
         description: "معرّفات كتب يُعاد تسجيلها كاملة"
         required: false
         default: ""
+      approved:
+        description: "اكتب: معتمد — بعد اعتماد الإدارة لتصحيح النص وتشكيله"
+        required: true
+        default: ""
 permissions:
   contents: write
   id-token: write
@@ -29,6 +30,7 @@ jobs:
   tts:
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    if: github.event.inputs.approved == 'معتمد'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

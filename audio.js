@@ -14,6 +14,9 @@ const AUDIO = {
     j = j || {};
     // بيانات قديمة بلا مدد الصفحات: تُستكمل من بيان الكتاب
     await Promise.all(Object.entries(j).filter(([, x]) => x.n && !x.ds).map(async ([id, x]) => { const m = await this.manifest(id); if (m && m.pages) { x.ds = []; for (let i = 1; i <= (x.of || 0); i++) x.ds.push(Math.round((m.pages[String(i)] || {}).d || 0)); x.rd = (m.rec || []).map(r => [r.f, Math.round(r.d || 0), r.t]); } }));
+    // لا يظهر للأعضاء إلا ما اعتمدته الإدارة بعد تصحيح نصه وتشكيله؛ والمشرف يرى الباقي للمعاينة
+    const staff = typeof Cloud !== "undefined" && Cloud.staff();
+    Object.keys(j).forEach(id => { if (!j[id].ok) { if (staff) j[id].preview = 1; else delete j[id]; } });
     this.at = Date.now(); return (this.list = j);
   },
   async manifest(bid) {
@@ -170,8 +173,9 @@ function radioNextHtml(ch) {
 }
 
 /* ---------- صفحة «صوتيات المكتبة» ---------- */
+const AUDIO_SOON = `<div class="card soon"><h3>قريبًا بإذن الله</h3><p>تُنشر صوتيات الكتب وبث الراديو بعد اعتماد تصحيح نصوص الكتب وتشكيلها تشكيلًا مدققًا نحويًا ولغويًا، حتى يكون المسموع صحيحًا كالمقروء.</p><p class="mut">وإلى ذلك الحين تستطيع الاستماع إلى أي كتاب بصوت جهازك: افتح الكتاب ثم «أدوات القراءة ← القراءة الصوتية».</p><a class="btn" href="#/library?c=dawah">تصفح كتب الدعوة</a></div>`;
 const audioCard = (id, x) => { const b = B(id), a = b ? A(b.authorId) : { name: "" }, ready = AUDIO.ready(x) || (x.rd && x.rd.length), pct = x.of ? Math.round(100 * x.n / x.of) : 0;
-  return `<a class="acard2" href="#/audio/${id}"><span class="acov" style="${avHue(id)}"><i>🎧</i><em>${esc((b ? b.setTitle || b.title : x.t || id).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : x.t || id)}</b><small>${esc(a.name)}</small><small class="mut">${ready ? "⏱ " + fmtDur(x.d) : "قيد التجهيز"}${x.rec ? " • 🎙 تسجيل" : x.vn ? " • 🔊 " + esc(x.vn) : ""}</small>${x.of && x.n < x.of ? `<i class="prog" style="--w:${pct}%"></i>` : ""}</a>`; };
+  return `<a class="acard2" href="#/audio/${id}"><span class="acov" style="${avHue(id)}"><i>🎧</i><em>${esc((b ? b.setTitle || b.title : x.t || id).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : x.t || id)}</b><small>${esc(a.name)}</small>${x.preview ? '<small class="warn">معاينة للإدارة — غير منشور</small>' : ""}<small class="mut">${ready ? "⏱ " + fmtDur(x.d) : "قيد التجهيز"}${x.rec ? " • 🎙 تسجيل" : x.vn ? " • 🔊 " + esc(x.vn) : ""}</small>${x.of && x.n < x.of ? `<i class="prog" style="--w:${pct}%"></i>` : ""}</a>`; };
 async function vAudio(q, bid) {
   if (bid) return vAudioBook(bid);
   if (q.k === "admin") return vAudioAdmin();
@@ -180,6 +184,7 @@ async function vAudio(q, bid) {
   const ready = ids.filter(id => AUDIO.ready(L[id]) || (L[id].rd && L[id].rd.length)), prep = ids.filter(id => !ready.includes(id) || (L[id].of && L[id].n < L[id].of));
   const f = q.c || "", show = ready.filter(id => !f || (f === "rec" ? L[id].rec : (L[id].c || B(id).col) === f));
   const box = $("#audbox"); if (!box) return;
+  if (!ready.length && !Cloud.staff()) { box.innerHTML = AUDIO_SOON; return; }
   box.innerHTML = `${last && B(last.bid) && L[last.bid] ? `<div class="card aresume"><div><b>أكمل الاستماع</b><span>${esc(B(last.bid).setTitle || B(last.bid).title)} • ${esc(PL(B(last.bid), last.p - 1) || "صفحة " + toAr(last.p))}</span></div><button class="btn p" data-act="applay" data-id="${last.bid}" data-p="${last.p}" data-t="${last.t}">▶ أكمل</button></div>` : ""}
   ${AP.lineup.length ? `<h3>قائمة التشغيل <small class="mut">(تُسمع متتابعة)</small></h3><div class="lineup">${AP.lineup.map((id, k) => B(id) ? `<span class="chip">${esc(B(id).setTitle || B(id).title)} <button class="lnk" data-act="aplineupx" data-k="${k}" aria-label="إزالة">✕</button></span>` : "").join("")}<button class="btn s p" data-act="aplineupplay">▶ شغّل القائمة</button></div>` : ""}
   <div class="tabs" role="tablist">${[["", "الكل"], ["dawah", "كتب الدعوة"], ["turath", "التراث"], ["rec", "تسجيلات"]].map(([v, l]) => `<a role="tab" aria-selected="${f === v}" href="#/audio${v ? "?c=" + v : ""}">${l}</a>`).join("")}</div>
@@ -208,7 +213,7 @@ async function vAudioBook(bid) {
 async function vRadio(q, cid) {
   view(`<div class="radio"><div class="rdhead"><h2>📻 راديو المكتبة</h2><p>بث متواصل من كتب المكتبة المسموعة، يسمعه كل المستمعين في اللحظة نفسها كالإذاعة. يعمل في خلفية جهازك ولو أغلقت الشاشة.</p></div><div id="rdbox"><p class="mut">جارٍ ضبط الموجات…</p></div></div>`);
   const ch = await radioChannels(), box = $("#rdbox"); if (!box) return;
-  if (!ch.length) { box.innerHTML = `<div class="card"><p>تُجهَّز صوتيات الكتب الآن، ويبدأ البث فور اكتمال أول كتاب مسموع بإذن الله.</p><a class="btn" href="#/audio">صوتيات المكتبة</a></div>`; return; }
+  if (!ch.length) { box.innerHTML = AUDIO_SOON; return; }
   const sel = ch.find(c => c.id === (cid || q.c)) || ch[0], live = AP.mode === "radio" && AP.ch && AP.ch.id === sel.id;
   const { i } = radioPos(sel), now = sel.items[i], nb = B(now.bid);
   box.innerHTML = `<div class="chips rch">${ch.map(c => `<a class="chip${c.id === sel.id ? " x" : ""}" href="#/radio/${c.id}">${esc(c.n)}</a>`).join("")}</div>
@@ -231,12 +236,12 @@ async function vAudioAdmin() {
   const books = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.col === y.col ? 0 : x.col === "dawah" ? -1 : 1) || (x.n || 0) - (y.n || 0));
   const opt = books.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${b.n ? " (" + toAr(b.n) + " ص)" : ""}${L[b.id] ? " ✓" : ""}</option>`).join("");
   const voices = [["ar-SA-HamedNeural", "حامد — رجل، فصحى (سعودي)"], ["ar-EG-ShakirNeural", "شاكر — رجل (مصري)"], ["ar-KW-FahedNeural", "فهد — رجل (كويتي)"], ["ar-AE-HamdanNeural", "حمدان — رجل"], ["ar-SA-ZariyahNeural", "زارية — امرأة"], ["ar-EG-SalmaNeural", "سلمى — امرأة"]];
-  $("#aadm").className = ""; $("#aadm").innerHTML = `<div class="card"><h3>تحويل كتاب إلى صوت (مجانًا)</h3><p class="mut">يُحوَّل الكتاب صفحةً صفحة بأصوات عصبية عربية، وتُحفظ الملفات في إصدارات المستودع على GitHub دون تكلفة، ويظهر الكتاب في «صوتيات المكتبة» و«الراديو» تباعًا. الصفحات التي يتغير نصها بعد التدقيق يُعاد تسجيلها تلقائيًا كل ليلة.</p>
+  $("#aadm").className = ""; $("#aadm").innerHTML = `<div class="card"><h3>تحويل كتاب إلى صوت (مجانًا)</h3><p class="note">⏸ التسجيل الصوتي موقوف بقرار الإدارة حتى يُعتمد تصحيح الكتب نصيًا وتشكيلها. تُحفظ الطلبات في الطابور، ولا تُنفَّذ إلا بتشغيل يدوي مع كلمة «معتمد».</p><p class="mut">يُحوَّل الكتاب صفحةً صفحة بأصوات عصبية عربية، وتُحفظ الملفات في إصدارات المستودع على GitHub دون تكلفة، ويظهر الكتاب في «صوتيات المكتبة» و«الراديو» تباعًا. الصفحات التي يتغير نصها بعد التدقيق يُعاد تسجيلها تلقائيًا كل ليلة.</p>
   <form data-form="audq"><label>الكتاب</label><select name="b" required>${opt}</select><label>الصوت</label><select name="v">${voices.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><label>السرعة</label><select name="r"><option value="-10%">أبطأ قليلًا</option><option value="-5%" selected>معتدلة</option><option value="+0%">عادية</option><option value="+10%">أسرع</option></select><button class="btn p" style="margin-top:8px">أضف إلى طابور التحويل</button> <span id="audqs" class="mut"></span></form></div>
   <div class="card"><h3>رفع تسجيل صوتي بشري</h3><p class="mut">درس أو قراءة مسجلة لكتاب (mp3 أو m4a، حتى ٥٠ ميجابايت للملف). يُنقل إلى إصدارات المستودع ويظهر في صفحة الكتاب المسموع.</p>
   <form data-form="audrec"><label>الكتاب</label><select name="b" required>${opt}</select><label>عنوان التسجيل</label><input name="t" maxlength="120" placeholder="مثال: شرح الباب الأول" required><label>يبدأ من صفحة</label><input name="p" type="number" min="1" value="1"><label>الملف</label><input name="f" type="file" accept="audio/*" required><button class="btn p" style="margin-top:8px">رفع التسجيل</button> <span id="audrs" class="mut"></span></form></div>
   <div class="card"><h3>طابور التحويل</h3>${(Q.items || []).length ? `<ol>${Q.items.map(it => `<li>${esc((B(it.id) || {}).title || it.id)} ${it.rec ? "— 🎙 " + esc(it.rec.t || "") : "— " + esc(it.voice || "")}${it.err ? ` <span class="warn">(تعثّر ${toAr(it.err)})</span>` : ""}</li>`).join("")}</ol>` : '<p class="mut">الطابور فارغ.</p>'}
-  <h4>الكتب المسموعة</h4>${Object.entries(L).map(([id, x]) => `<div class="bk"><b>${esc((B(id) || {}).title || x.t || id)}</b><span>${toAr(x.n)} من ${toAr(x.of || 0)} صفحة • ${fmtDur(x.d)}${x.vn ? " • " + esc(x.vn) : ""}${x.rec ? " • " + toAr(x.rec) + " تسجيل" : ""} • آخر تحديث ${esc(x.upd || "")}</span></div>`).join("") || '<p class="mut">لا كتب مسموعة بعد.</p>'}</div>
+  <h4>الكتب المسموعة</h4>${Object.entries(L).map(([id, x]) => `<div class="bk"><b>${esc((B(id) || {}).title || x.t || id)}</b> ${x.ok ? '<em class="tag">منشور للأعضاء</em>' : '<em class="tag">غير منشور</em>'} <button class="btn s" data-act="apok" data-id="${id}" data-on="${x.ok ? 0 : 1}">${x.ok ? "إلغاء النشر" : "اعتماد ونشر للأعضاء"}</button><span>${toAr(x.n)} من ${toAr(x.of || 0)} صفحة • ${fmtDur(x.d)}${x.vn ? " • " + esc(x.vn) : ""}${x.rec ? " • " + toAr(x.rec) + " تسجيل" : ""} • آخر تحديث ${esc(x.upd || "")}</span></div>`).join("") || '<p class="mut">لا كتب مسموعة بعد.</p>'}</div>
   <div class="card"><h3>قنوات الراديو</h3><p class="mut">القنوات التلقائية: «مختارات المكتبة» و«إذاعة الدعوة السلفية» و«إذاعة التراث». وأنشئ قنوات خاصة من الكتب المسموعة:</p>
   ${(RC.list || []).map((c, k) => `<div class="bk"><b>${esc(c.n)}</b><span>${toAr((c.books || []).length)} كتاب${c.mix ? " • مختارات متنوعة" : " • كتب كاملة"}</span><button class="btn s" data-act="rcdel" data-k="${k}">حذف القناة</button></div>`).join("")}
   <form data-form="rcadd"><label>اسم القناة</label><input name="n" maxlength="60" required placeholder="مثال: إذاعة العقيدة"><label>وصف قصير</label><input name="d" maxlength="120"><label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && B(id)).map(id => `<label class="chk"><input type="checkbox" name="bk" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<p class="mut">تظهر الكتب هنا بعد اكتمال صوتياتها.</p>'}</div><label class="chk"><input type="checkbox" name="mix"> مختارات متنوعة (مقاطع قصيرة) بدل الكتب كاملة</label><button class="btn p" style="margin-top:8px">إنشاء القناة</button></form></div>`;
@@ -261,6 +266,7 @@ document.addEventListener("click", async e => {
     else if (a === "aplineupx") { AP.lineup.splice(+el.dataset.k, 1); ls.set("ap_lineup", AP.lineup); route(); }
     else if (a === "aplineupplay") { if (AP.lineup[0]) await AP.playBook(AP.lineup[0], 1); }
     else if (a === "rdplay") { const ch = (window.__rch || []).find(c => c.id === el.dataset.c); if (!ch) return; if (AP.mode === "radio" && AP.ch && AP.ch.id === ch.id && !AP.audio().paused) { AP.toggle(false); } else await AP.playRadio(ch); setTimeout(() => { if (parse().p[0] === "radio") route(); }, 400); }
+    else if (a === "apok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on && !confirm("هل راجعت نص هذا الكتاب وتشكيله وتريد نشر صوتياته للأعضاء؟")) return; await GH.editJSON("data/audio/_list.json", o => { if (o[el.dataset.id]) { if (on) o[el.dataset.id].ok = 1; else delete o[el.dataset.id].ok; } return o; }, (on ? "اعتماد صوتيات: " : "إلغاء نشر صوتيات: ") + el.dataset.id, true); AUDIO.list = null; toast(on ? "نُشرت صوتيات الكتاب" : "أُلغي النشر"); route(); }
     else if (a === "rcdel") { if (!confirm("حذف القناة؟")) return; const RC = window.__RC || { list: [] }; RC.list.splice(+el.dataset.k, 1); await CM.saveSetting("radio_channels", RC); toast("حُذفت القناة"); route(); }
   } catch (x) { console.warn(x); toast(x.message || "تعذر تنفيذ الطلب"); }
 });
