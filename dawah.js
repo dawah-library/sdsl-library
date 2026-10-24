@@ -55,8 +55,8 @@ const DW_REL = [
   ["الثورة الإيرانية والتقريب", "حين انبهر كثيرون بثورة 1979 انفردت الدعوة تقريبًا ببيان حقيقتها العقدية، وأن الخلاف مع الرافضة خلاف في أصول الدين لا في الفروع، وحذّرت مبكرًا من دعاوى التقريب على حساب الثوابت ومن مشروع تصدير الثورة."]
 ];
 
-async function vDawah() {
-  view(`<div class="page dw">
+async function dwFull() {
+  view(`<div class="page dw">${DW_DRAFT}
   <div class="cmhero dwh"><div><h2>التعريف بالدعوة السلفية بمصر</h2><p>دعوة إلى الرجوع إلى الكتاب والسنة بفهم سلف الأمة، نشأت في الإسكندرية في سبعينيات القرن الماضي، وانتشرت في محافظات مصر، تجمع بين العلم الشرعي والتربية والعمل الإصلاحي.</p></div>
   <div class="row"><a class="btn p" href="#/history">تاريخ الدعوة</a><a class="btn" href="#/tarajim">تراجم المشايخ</a></div></div>
   <nav class="chips dwnav"><a class="chip" href="javascript:void 0" data-dw="dw-def">ما السلفية؟</a><a class="chip" href="javascript:void 0" data-dw="dw-usul">أصول المنهج</a><a class="chip" href="javascript:void 0" data-dw="dw-sheikh">مشايخ التأسيس</a><a class="chip" href="javascript:void 0" data-dw="dw-work">مجالات العمل</a><a class="chip" href="javascript:void 0" data-dw="dw-study">البناء العلمي</a><a class="chip" href="javascript:void 0" data-dw="dw-rel">المواقف من الاتجاهات</a><a class="chip" href="javascript:void 0" data-dw="dw-self">دعوتنا بقلمها</a></nav>
@@ -95,6 +95,29 @@ async function vDawah() {
   const id = B("sv32") ? "sv32" : B("sv36") ? "sv36" : null;
   if (!id) { $("#dawahText").innerHTML = '<p class="mut">لم يُستورد النص بعد.</p>'; return; }
   try { const b = await loadBook(id); const el = $("#dawahText"); if (el) el.innerHTML = `<div class="rd">${pageHtml(b.pages[0])}</div>`; } catch (e) { }
+}
+
+/* بقرار الإدارة (24 أكتوبر 2026): المحتوى المعدّ من المراجع مسودة تظهر للمشرفين فقط حتى تُعتمد مراجع أدق،
+   والزوار والأعضاء يرون التعريف الرسمي للدعوة بقلمها (مقال «دعوتنا») وصفحة تاريخ قيد الإعداد. لإظهاره للجميع: DW_PUBLIC = true. */
+const DW_PUBLIC = false;
+const DW_DRAFT = '<p class="note">مسودة قيد المراجعة تظهر للمشرفين فقط، ولا يراها الزوار والأعضاء حتى تُعتمد مراجعها.</p>';
+const dwShow = () => DW_PUBLIC || (typeof isAdmin === "function" && isAdmin());
+async function vDawah() {
+  if (dwShow()) return dwFull();
+  view(`<div class="page dw"><div class="cmhero dwh"><div><h2>التعريف بالدعوة السلفية بمصر</h2><p>دعوة إلى الرجوع إلى الكتاب والسنة بفهم سلف الأمة، نشأت في الإسكندرية في سبعينيات القرن الماضي، وانتشرت في محافظات مصر.</p></div><div class="row"><a class="btn" href="#/tarajim">تراجم المشايخ</a></div></div>
+  <h3>دعوتنا: تعريف الدعوة بنفسها</h3><div class="paper art" id="dawahText"><p class="mut">جارٍ التحميل…</p></div><p class="mut">من مقال «دعوتنا» المنشور على موقع صوت السلف.</p>
+  <p class="note">يجري إعداد تعريف موسّع بالدعوة السلفية ومنهجها من مراجع معتمدة، ويُنشر هنا بعد مراجعته.</p>
+  <div class="row"><a class="btn nf" href="#/tarajim">تراجم مشايخ الدعوة</a>${B("sv180") ? '<a class="btn nf" href="#/book/sv180/1">السلفية منهج فكري لا حقبة تاريخية</a>' : ""}<a class="btn nf" href="#/contact">تواصل معنا</a></div></div>`);
+  const id = B("sv32") ? "sv32" : B("sv36") ? "sv36" : null;
+  if (!id) { $("#dawahText").innerHTML = '<p class="mut">لم يُستورد النص بعد.</p>'; return; }
+  try { const b = await loadBook(id); const el = $("#dawahText"); if (el) el.innerHTML = `<div class="rd">${pageHtml(b.pages[0])}</div>`; } catch (e) { }
+}
+function vHistory(q) {
+  if (dwShow()) return hsFull(q);
+  view(`<div class="page dw"><div class="cmhero dwh2"><div><h2>تاريخ الدعوة السلفية بمصر</h2><p>صفحة قيد الإعداد.</p></div></div>
+  <p>يجري إعداد تاريخ الدعوة السلفية بمصر من مراجع وشهادات موثقة، ويُنشر هنا بعد التحقق منه واعتماده.</p>
+  <p>إلى ذلك الحين يمكنك قراءة <a href="#/tarajim">تراجم مشايخ الدعوة</a> و<a href="#/dawah">تعريف الدعوة بنفسها</a>.</p>
+  <p class="mut">لديك وثائق أو شهادات تاريخية موثقة؟ <a href="#/contact">راسل المكتبة</a>.</p></div>`);
 }
 
 /* ---------- التاريخ ---------- */
@@ -147,9 +170,9 @@ const DW_LESSONS = [
   "الارتباط بكبار العلماء ونقل كلامهم بألفاظه ضبط الفهم وحمى من الانزلاق."
 ];
 
-function vHistory(q) {
+function hsFull(q) {
   const era = (q && q.e) || "";
-  view(`<div class="page dw">
+  view(`<div class="page dw">${DW_DRAFT}
   <div class="cmhero dwh2"><div><h2>تاريخ الدعوة السلفية بمصر</h2><p>من جذور المنهج السلفي ووصوله إلى مصر، إلى نشأة الدعوة في جامعة الإسكندرية، وبنائها المؤسسي، ومحنها، وما بعد 2011.</p></div><div class="row"><a class="btn p" href="#/dawah">التعريف بالدعوة</a></div></div>
 
   <h3>كيف وصل المنهج السلفي إلى مصر؟</h3>
