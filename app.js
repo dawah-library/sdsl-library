@@ -708,6 +708,7 @@ const Auth={mode:"local",sb:null,user:null,token:null,ready:false,
  async phoneOtp(phone){const {error}=await this.sb.auth.signInWithOtp({phone});if(error)throw error},
  async phoneVerify(phone,token){const {data,error}=await this.sb.auth.verifyOtp({phone,token,type:"sms"});if(error)throw error;this.set(data.session);Cloud.loadRole()},
  async emailLink(email,next){ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error)throw error},
+ async resetPw(email){const {error}=await this.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+"#/account?m=newpw"});if(error)throw error},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
 function paintAuth(){Mine.reset();setTimeout(()=>Bell.paint(),0);const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
  if(Auth.mode==="local"&&Auth.user){const k=ls.get("acct_known",{});k[Auth.user.email.toLowerCase()]=Auth.user;ls.set("acct_known",k)}}
@@ -718,6 +719,7 @@ const Chats={key:()=>"chats:"+(Auth.user?Auth.user.id:"-"),
   const all=ls.get(this.key(),[]).filter(x=>x.id!==c.id);all.unshift(c);ls.set(this.key(),all.slice(0,40))}};
 const GICON=`<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#fff" stroke="#dadce0"/><text x="10" y="14.5" text-anchor="middle" font-size="12" font-weight="700" font-family="Arial,sans-serif" fill="#4285f4">G</text></svg>`;
 function vAccount(q){
+ if(Auth.user&&q.m==="newpw"){view(`<h2>تعيين كلمة مرور جديدة</h2><form data-form="newpw"><label>كلمة المرور الجديدة</label><input name="pw" type="password" minlength="8" required dir="ltr" autocomplete="new-password"><label>تأكيدها</label><input name="pw2" type="password" minlength="8" required dir="ltr" autocomplete="new-password"><button class="btn p" style="margin-top:12px">حفظ</button></form><p id="aerr" role="alert"></p>`);return}
  if(Auth.user){view(`<h2>حسابي</h2><div class="card"><b>${esc(Auth.user.name||"")}</b><span>${esc(Auth.user.email||"")}</span></div>
   ${Auth.mode==="local"?'<p class="note">وضع تجريبي: الحساب ومحادثاته محفوظة على هذا الجهاز فقط. بعد ربط الموقع بقاعدة البيانات تصبح الحسابات حقيقية ومتزامنة بين الأجهزة.</p>':""}
   <div class="row" style="margin:10px 0"><a class="btn p nf" href="#/ask">اسأل المكتبة</a><a class="btn nf" href="#/favs">المفضلة</a><a class="btn nf" href="#/mine">مكتبتي: العلامات والتعليقات</a><a class="btn nf" href="#/hifz">حفظ المتون</a><a class="btn nf" href="#/dm">الرسائل الخاصة</a><button class="btn nf" data-act="logout">تسجيل الخروج</button></div>
@@ -726,17 +728,19 @@ function vAccount(q){
  if(!Auth.ready&&CFG.supabaseUrl){view(`<h2>تسجيل الدخول</h2><p class="mut">جارٍ تجهيز خدمة الحسابات…</p>`);const t=setInterval(()=>{if(Auth.ready){clearInterval(t);if(parse().p[0]==="account")route()}},200);return}
  const signup=q.m==="signup",back=q.next||"#/ask",cloud=Auth.mode==="cloud";
  view(`<h2>${signup?"إنشاء حساب":"تسجيل الدخول"}</h2>
+ <div class="atabs"><a class="${signup?"":"on"}" href="#/account?next=${encodeURIComponent(back)}">دخول</a><a class="${signup?"on":""}" href="#/account?m=signup&next=${encodeURIComponent(back)}">حساب جديد</a></div>
  <div class="perks"><b>مزايا الأعضاء</b><ul><li>«اسأل المكتبة»: مساعد بحثي يجيب من نصوص المكتبة ويحيل إلى الكتاب والصفحة.</li><li>إعداد بحث علمي موثق في أي مسألة.</li><li>شرح أي صفحة أو مقال بضغطة من القارئ.</li><li>حفظ محادثاتك والرجوع إليها من أي جهاز.</li></ul></div>
  ${cloud?`<div id="oauthw"></div>`:''}
- <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>الاسم</label><input name="name" required autocomplete="name">':""}
+ <form data-form="${signup?"signup":"signin"}" data-next="${esc(back)}">${signup?'<label>اسم العضو (يظهر في الموقع)</label><input name="name" required minlength="2" maxlength="40" autocomplete="nickname" placeholder="مثال: عبد الله المصري">':""}
  <label>البريد الإلكتروني</label><input name="email" type="email" required autocomplete="email">
- ${cloud?`<label>كلمة المرور</label><input name="pw" type="password" minlength="8" required autocomplete="${signup?"new-password":"current-password"}">`:""}
+ ${cloud?`<label>كلمة المرور${signup?" (ثمانية أحرف على الأقل)":""}</label><div class="pwrow"><input name="pw" type="password" minlength="8" required dir="ltr" autocomplete="${signup?"new-password":"current-password"}"><button type="button" class="lnk" data-act="pwshow" aria-label="إظهار كلمة المرور">👁</button></div>${signup?'<label>تأكيد كلمة المرور</label><input name="pw2" type="password" minlength="8" required dir="ltr" autocomplete="new-password">':`<p class="mut" style="margin:6px 0 0"><a href="javascript:void 0" data-act="pwreset">نسيت كلمة المرور؟</a></p>`}`:""}
+ <p class="mut" style="margin:8px 0 0">${cloud?"يبقى دخولك محفوظًا على هذا الجهاز، فلا تحتاج إلى الدخول كل مرة، حتى تختار «تسجيل الخروج».":""}</p>
  <button class="btn p" style="margin-top:12px">${signup?"إنشاء الحساب":"دخول"}</button></form><p id="aerr" role="alert"></p>${CFG.supabaseUrl&&!cloud?`<p class="note">تعذر تحميل خدمة الحسابات${Auth.loadErr?" ("+esc(Auth.loadErr)+")":""}، فيعمل الحساب على هذا الجهاز فقط. أعد تحميل الصفحة بعد قليل.</p>`:""}
  <p>${signup?`لديك حساب؟ <a href="#/account?next=${encodeURIComponent(back)}">سجّل الدخول</a>`:`ليس لديك حساب؟ <a href="#/account?m=signup&next=${encodeURIComponent(back)}">أنشئ حسابًا مجانيًا</a>`}</p>
  ${cloud?"":'<p class="note">وضع تجريبي: لم تُربط قاعدة الحسابات بعد، فيُحفظ الحساب على هذا الجهاز فقط ودون كلمة مرور.</p>'}`);
  if(cloud)Auth.providers().then(p=>{const w=$("#oauthw");if(!w)return;
-  w.innerHTML=`<div class="oauth">${p.google?`<button data-oauth="google">${GICON} المتابعة بحساب Google</button>`:""}${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}${p.phone?'<button data-alt="phone">📱 الدخول برقم الهاتف</button>':""}<button data-alt="link">✉️ رابط دخول إلى بريدي (دون كلمة مرور)</button></div><div id="altw"></div><div class="or">أو بالبريد وكلمة المرور</div>`;
-  $$("[data-oauth]").forEach(b=>b.onclick=async()=>{try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=authMsg(e)}});
+  w.innerHTML=`<div class="oauth"><button data-oauth="google"${p.google?"":' data-off="1"'}>${GICON} ${signup?"إنشاء حساب":"الدخول"} بحساب Gmail (Google) مباشرة</button>${p.apple?'<button class="apple" data-oauth="apple">المتابعة بحساب Apple</button>':""}${p.phone?'<button data-alt="phone">📱 الدخول برقم الهاتف</button>':""}<button data-alt="link">✉️ رابط دخول إلى بريدي (دون كلمة مرور)</button></div><div id="altw"></div><div class="or">أو ${signup?"أنشئ حسابًا":"ادخل"} بالبريد وكلمة المرور</div>`;
+  $$("[data-oauth]").forEach(b=>b.onclick=async()=>{if(b.dataset.off){$("#aerr").textContent="الدخول بحساب Gmail قيد التفعيل؛ استخدم البريد وكلمة المرور الآن، ويمكنك لاحقًا الدخول بـ Gmail بالبريد نفسه.";return}try{await Auth.oauth(b.dataset.oauth,back)}catch(e){$("#aerr").textContent=authMsg(e)}});
   $$("[data-alt]").forEach(b=>b.onclick=()=>altLogin(b.dataset.alt,back))})}
 // الدخول برقم الهاتف (رمز SMS) أو برابط يُرسل إلى البريد
 function altLogin(kind,back){const w=$("#altw"),err=$("#aerr");err.textContent="";
@@ -755,9 +759,16 @@ async function pwCheck(pw){pw=String(pw||"");if(pw.length<8)throw new Error("ك�
  catch(e){if(/تسريبات/.test(e.message))throw e}}
 const AUTHERR=[[/invalid login credentials/i,"البريد أو كلمة المرور غير صحيحة. إن لم يكن لك حساب بعد فاضغط «أنشئ حسابًا مجانيًا»."],[/email not confirmed/i,"لم يُؤكَّد بريدك بعد؛ افتح رسالة التأكيد في بريدك ثم سجّل الدخول."],[/already registered|already exists/i,"هذا البريد مسجّل من قبل؛ سجّل الدخول به."],[/password should be at least|weak password/i,"كلمة المرور قصيرة؛ اجعلها 8 أحرف على الأقل."],[/rate limit|too many/i,"محاولات كثيرة؛ انتظر دقيقة ثم أعد المحاولة."],[/invalid.*email|email.*invalid/i,"صيغة البريد غير صحيحة."],[/failed to fetch|network/i,"تعذر الاتصال بخادم الحسابات؛ تأكد من الإنترنت."],[/provider is not enabled|unsupported.*provider|phone.*disabled|sms.*provider/i,"هذه الطريقة لم تُفعَّل بعد في إعدادات الموقع."],[/token has expired|invalid.*otp|otp.*invalid/i,"الرمز غير صحيح أو انتهت صلاحيته؛ اطلب رمزًا جديدًا."]];
 const authMsg=e=>{const m=String((e&&(e.message||e.error_description))||e||"");const t=AUTHERR.find(([r])=>r.test(m));return t?t[1]:(m?"تعذر الدخول: "+m:"تعذر الدخول")};
+// إظهار كلمة المرور، واستعادتها بالبريد، وتعيين كلمة جديدة بعد رابط الاستعادة
+document.addEventListener("click",async e=>{const a=e.target.closest('[data-act="pwshow"],[data-act="pwreset"]');if(!a)return;e.preventDefault();
+ if(a.dataset.act==="pwshow"){const i=a.parentNode.querySelector("input");i.type=i.type==="password"?"text":"password";return}
+ const f=a.closest("form"),em=f&&f.email&&f.email.value.trim(),err=$("#aerr");if(!em){err.textContent="اكتب بريدك الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟».";return}
+ try{await Auth.resetPw(em);err.textContent="أرسلنا إلى بريدك رابطًا لتعيين كلمة مرور جديدة؛ افتحه من هذا الجهاز. (تفقد مجلد الرسائل غير المرغوبة)"}catch(x){err.textContent=authMsg(x)}});
+document.addEventListener("submit",async e=>{const f=e.target.closest('[data-form="newpw"]');if(!f)return;e.preventDefault();e.stopImmediatePropagation();const err=$("#aerr");
+ try{if(f.pw.value!==f.pw2.value)throw new Error("كلمتا المرور غير متطابقتين.");await pwCheck(f.pw.value);const {error}=await Auth.sb.auth.updateUser({password:f.pw.value});if(error)throw error;toast("حُفظت كلمة المرور الجديدة");location.hash="#/account"}catch(x){err.textContent=authMsg(x)}},true);
 async function authSubmit(f,kind){const fd=new FormData(f),err=$("#aerr"),btn=f.querySelector("button"),old=btn.textContent;err.textContent="";btn.disabled=true;btn.textContent=kind==="signup"?"جارٍ إنشاء الحساب…":"جارٍ الدخول…";
  const slow=setTimeout(()=>{err.textContent="الخادم بطيء في الرد… انتظر قليلًا."},12000);
- try{if(kind==="signup"){const r=await Auth.signUp(String(fd.get("name")).trim(),String(fd.get("email")).trim(),fd.get("pw")||"");if(r==="confirm"){err.textContent="أرسلنا رابط تأكيد إلى بريدك، افتحه ثم سجّل الدخول.";return}}
+ try{if(kind==="signup"&&fd.get("pw2")!==null&&fd.get("pw2")!==fd.get("pw"))throw new Error("كلمتا المرور غير متطابقتين.");if(kind==="signup"){const r=await Auth.signUp(String(fd.get("name")).trim(),String(fd.get("email")).trim(),fd.get("pw")||"");if(r==="confirm"){err.textContent="أرسلنا رابط تأكيد إلى بريدك، افتحه ثم سجّل الدخول.";return}}
   else await Auth.signIn(String(fd.get("email")).trim(),fd.get("pw")||"");paintAuth();toast("أهلًا "+((Auth.user&&Auth.user.name)||"")+"، تم الدخول");location.hash=f.dataset.next||"#/ask"}
  catch(e){console.warn(e);err.textContent=authMsg(e);err.scrollIntoView({block:"center",behavior:"smooth"})}finally{clearTimeout(slow);btn.disabled=false;btn.textContent=old}}
 
