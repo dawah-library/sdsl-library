@@ -2,7 +2,8 @@
 """تشكيل الكتب غير المشكولة تشكيلًا مدققًا نحويًا ولغويًا، مجانًا.
 
 المرحلة الأولى: Gemini يشكّل الصفحة تشكيلًا تامًا بحسب الإعراب والصرف.
-المرحلة الثانية: مدقق مستقل (نموذج GPT-4.1 عبر GitHub Models، أو Gemini Pro) يراجع التشكيل كلمة كلمة ويصحح أخطاء الإعراب والضبط.
+المرحلة الثانية: جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة، وإلا Gemini بتعليمات المدقق) تراجع التشكيل كلمة كلمة وتصحح أخطاء الإعراب والضبط.
+(كانت GitHub Models محركًا ثانيًا، وقد أوقفتها GitHub نهائيًا في ٣٠ يوليو ٢٠٢٦.)
 الضمان: لا يُقبل من النموذج إلا الحركات؛ تُنقل حركاته إلى حروف النص الأصلي نفسه كلمةً كلمة، وأي كلمة تغيّرت حروفها تبقى كما في الأصل.
 فلا يتغير حرف ولا كلمة ولا علامة ترقيم في الكتاب أبدًا.
 
@@ -151,18 +152,8 @@ def gemini(prompt, model, key):
     return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
-GHM_URLS = ["https://models.github.ai/inference/chat/completions", "https://models.inference.ai.azure.com/chat/completions"]
-
-
 def ghm(prompt):
-    last = None
-    for u in list(GHM_URLS):
-        try:
-            return ghm1(prompt, u)
-        except RuntimeError as e:  # رد غير مفهوم: نجرب العنوان الآخر ونثبت عليه
-            last = e
-            GHM_URLS.remove(u); GHM_URLS.append(u)
-    raise last
+    return ghm1(prompt, "https://models.github.ai/inference/chat/completions")
 
 
 def ghm1(prompt, url):
@@ -252,6 +243,8 @@ def tashkeel_page(src, slot):
         rev, m2 = call("ghm", P2 + d1), GHM_MODEL
     if rev is None and GKEYS:
         rev, m2 = call("pro", P2 + d1, slot), PRO
+    if rev is None and GKEYS:  # مراجعة ثانية مستقلة بالنموذج نفسه بتعليمات المدقق
+        rev, m2 = call("g", P2 + d1, slot + 1), GMODEL + "/مراجعة"
     if rev:
         d2, r2 = transfer(src, clean_out(rev))
         if r2 >= max(0.8, r1 - 0.05) and diac_ratio(d2) >= diac_ratio(d1) * 0.85:

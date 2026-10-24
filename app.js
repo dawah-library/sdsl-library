@@ -1357,7 +1357,7 @@ async function postAct(a,el){if(a==="preact"){const pk=el.closest(".rxpick"),b=p
 /* ---------- إدارة التشكيل ---------- */
 async function tkAdmin(){const el=$("#tkadm");if(!el)return;TK.list=null;TK.busy=false;await TK.init();const L=TK.list||{};let Q={items:[]};try{const r=await fetch(TK.raw("_queue.json"));if(r.ok)Q=await r.json()}catch(e){}
  const bs=lib.books.filter(b=>kindOf(b)==="book"&&!b.demo).sort((x,y)=>(x.col===y.col?0:x.col==="dawah"?-1:1)||(x.n||0)-(y.n||0));
- el.className="";el.innerHTML=`<p class="mut">يُشكَّل كل كتاب غير مشكول آليًا كل ليلة بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم يراجعه مدقق مستقل (GPT-4.1 أو Gemini Pro) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
+ el.className="";el.innerHTML=`<p class="mut">يُشكَّل كل كتاب غير مشكول آليًا كل ليلة بالحصة المجانية: يشكّله Gemini بحسب الإعراب والصرف، ثم تراجعه جولة تدقيق مستقلة (Gemini Pro إن أتاحت الحصة) كلمة كلمة. ولا يتغير حرف من نص الكتاب: تُنقل الحركات وحدها إلى حروفه، وما اختلفت حروفه يبقى كما هو. ولا تُشكَّل كتب التحويل الآلي إلا بعد اكتمال تدقيقها، ويُعاد تشكيل أي صفحة يُصحَّح نصها.</p>
  <p class="note">يظهر التشكيل لك أنت للمعاينة، ولا يظهر للأعضاء إلا بعد «اعتماد العرض» لكل كتاب.</p>
  <form data-form="tkq" class="stepper"><select name="b">${bs.map(b=>`<option value="${b.id}">${esc(b.setTitle||b.title)}</option>`).join("")}</select><button class="btn p">قدّمه في الطابور</button></form>
  ${(Q.items||[]).length?`<p class="mut">في المقدمة: ${Q.items.map(x=>esc((B(x.id||x)||{}).title||x.id||x)).join("، ")}</p>`:""}
