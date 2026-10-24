@@ -15,18 +15,22 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 10)] if k.strip()]
 MODEL = os.environ.get("CUR_MODEL", "gemini-flash-latest")
 BUDGET = [int(os.environ.get("CUR_MAX", "80"))]
+# حد زمني يترك وقتًا للحفظ قبل مهلة المهمة (حين تتزاحم المهام على حصة Gemini نفسها)
+DEADLINE = time.time() + 60 * float(os.environ.get("CUR_MINUTES", "95"))
 EXH = set()
 DIAC = re.compile(r"[\u064B-\u0652\u0670\u0640]")
 REPORT = []
 
 
 def gemini(prompt):
-    if BUDGET[0] <= 0:
+    if BUDGET[0] <= 0 or time.time() > DEADLINE:
         return None
     for k in range(len(KEYS)):
         if k in EXH:
             continue
         for attempt in range(4):
+            if time.time() > DEADLINE:
+                return None
             try:
                 body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json", "maxOutputTokens": 16000}}).encode()
                 req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body, headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
