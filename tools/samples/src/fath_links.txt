@@ -1,0 +1,3 @@
+/cdn-cgi/styles/main.css
+https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-1xxx-errors/error-1005/
+https://www.cloudflare.com/5xx-error-landing
