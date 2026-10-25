@@ -24,12 +24,14 @@ async function sb(path, opt = {}) {
 }
 const inList = ids => "(" + ids.map(x => '"' + String(x).replace(/"/g, "") + '"').join(",") + ")";
 
-/* البريد: يعمل متى ضُبطت في Vercel متغيرات SMTP_HOST وSMTP_USER وSMTP_PASS (واختياريًا SMTP_PORT وSMTP_FROM)،
+/* البريد: يعمل متى ضُبط في Vercel RESEND_API_KEY (يرسل من noreply@dawahlibrary.org)، أو متغيرات SMTP_HOST وSMTP_USER وSMTP_PASS (واختياريًا SMTP_PORT وSMTP_FROM)،
    مثل Gmail بكلمة مرور التطبيقات (smtp.gmail.com، 465). عنوان العضو من حسابه في Supabase. */
 let MAILER;
 async function mailTo(uid, title, body, url, pid, pr) {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
-  if (MAILER === undefined) { try { const nm = require("nodemailer"), port = +(process.env.SMTP_PORT || 465); MAILER = nm.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); } catch (e) { MAILER = null; } }
+  const resend = process.env.RESEND_API_KEY;
+  if (!resend && (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS)) return false;
+  if (resend) MAILER = { sendMail: async m => { const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: "Bearer " + resend, "Content-Type": "application/json" }, body: JSON.stringify(m) }); if (!r.ok) throw new Error("resend " + r.status + " " + (await r.text()).slice(0, 200)); } };
+  else if (MAILER === undefined) { try { const nm = require("nodemailer"), port = +(process.env.SMTP_PORT || 465); MAILER = nm.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); } catch (e) { MAILER = null; } }
   if (!MAILER) return false;
   const key = sbKey(), h = { apikey: key }; if (!/^sb_/.test(key)) h.Authorization = "Bearer " + key;
   const u = await (await fetch(process.env.SUPABASE_URL + "/auth/v1/admin/users/" + uid, { headers: h })).json();
@@ -41,7 +43,7 @@ async function mailTo(uid, title, body, url, pid, pr) {
 <div style="background:#eee;border-radius:8px;height:10px;overflow:hidden"><div style="background:#0f5c4d;height:10px;width:${pct}%"></div></div><p style="font-size:13px;color:#666">قرأت ${pct}٪ من المسار، وبقي ${pr.left} صفحة.</p>
 <p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#0f5c4d;color:#fff;padding:12px 26px;border-radius:10px;text-decoration:none;font-weight:bold">ابدأ وردك الآن</a></p>
 <p style="font-size:12px;color:#999">«من سلك طريقًا يلتمس فيه علمًا سهّل الله له به طريقًا إلى الجنة». لإيقاف التذكير بالبريد أو تغيير وقته: <a href="${edit}">خطة المسار</a>.</p></div>`;
-  await MAILER.sendMail({ from: process.env.SMTP_FROM || `"مكتبة الدعوة السلفية الرقمية" <${process.env.SMTP_USER}>`, to: u.email, subject: title, text: body + "\n" + link, html });
+  await MAILER.sendMail({ from: process.env.MAIL_FROM || process.env.SMTP_FROM || (resend ? "مكتبة الدعوة السلفية الرقمية <noreply@dawahlibrary.org>" : `"مكتبة الدعوة السلفية الرقمية" <${process.env.SMTP_USER}>`), to: u.email, subject: title, text: body + "\n" + link, html });
   return true;
 }
 module.exports = async (req, res) => {
