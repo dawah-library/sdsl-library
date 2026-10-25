@@ -427,3 +427,14 @@ create index if not exists post_saves_user_idx on public.post_saves(user_id);
 create index if not exists push_subs_user_idx on public.push_subs(user_id);
 revoke execute on function public.dm_notify() from public, anon, authenticated;
 revoke execute on function public.report_notify() from public, anon, authenticated;
+
+-- المسارات العلمية الخاصة وخطط القراءة (paths.js)
+create table if not exists public.study_paths (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  id text not null, title text, books jsonb not null default '[]'::jsonb, plan jsonb,
+  custom boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.study_paths enable row level security;
+drop policy if exists "study_paths own" on public.study_paths;
+create policy "study_paths own" on public.study_paths for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

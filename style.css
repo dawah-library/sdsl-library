@@ -639,3 +639,9 @@ details.dwc summary::-webkit-details-marker{display:none}
 .atabs a{flex:1;text-align:center;padding:9px;text-decoration:none;font-weight:700;background:var(--sf)}.atabs a.on{background:var(--ac);color:#fff}
 .pwrow{display:flex;gap:6px;align-items:center}.pwrow input{flex:1}.pwrow .lnk{font-size:1.1rem}
 .oauth button[data-off]{opacity:.75}
+
+/* مساراتي وخطط القراءة */
+.spform{margin:8px 0}.spform .seg{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px}.spform .seg label{display:flex;gap:6px;align-items:center}
+.spoff{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 8px}.spoff label{display:flex;gap:4px;align-items:center;font-size:.92rem}
+.spday{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}.spitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.spnew{border-style:dashed!important;text-align:center}
