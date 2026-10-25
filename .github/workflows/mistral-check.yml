@@ -11,11 +11,8 @@ jobs:
         env: { K: "${{ secrets.MISTRAL_API_KEY }}" }
         run: |
           [ -n "$K" ] || { echo "::error::السر MISTRAL_API_KEY غير موجود"; exit 1; }
-          sudo apt-get install -y -qq fonts-noto-core imagemagick >/dev/null 2>&1 || true
-          convert -size 900x220 xc:white -font Noto-Naskh-Arabic -pointsize 44 -fill black -gravity center label:"بسم الله الرحمن الرحيم الحمد لله رب العالمين" -composite p.png 2>/dev/null || convert -size 900x220 xc:white -pointsize 40 -gravity center label:"Test page" p.png
-          B=$(base64 -w0 p.png)
           code=$(curl -sS -o r.json -w "%{http_code}" https://api.mistral.ai/v1/ocr -H "Authorization: Bearer $K" -H "Content-Type: application/json" \
-            -d "{\"model\":\"mistral-ocr-latest\",\"document\":{\"type\":\"image_url\",\"image_url\":\"data:image/png;base64,$B\"}}")
+            -d '{"model":"mistral-ocr-latest","document":{"type":"image_url","image_url":"https://dawahlibrary.org/assets/logo.jpg"}}')
           echo "HTTP $code"; head -c 600 r.json; echo
           echo "::notice title=Mistral OCR::HTTP $code — $(head -c 200 r.json | tr -d '\n')"
           [ "$code" = "200" ]
