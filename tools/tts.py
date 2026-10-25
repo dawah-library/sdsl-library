@@ -4,7 +4,7 @@
 لكل كتاب إصدار باسم audio-<المعرف>، وفيه ملف صوتي لكل صفحة pNNNN.mp3، وملف بيان data/audio/<المعرف>.json
 فيه مدة كل صفحة وتوقيت جملها (لإظهار النص متزامنًا أثناء الاستماع)، وبصمة نصها (تُعاد الصفحة إذا تغيّر نصها بعد التدقيق).
 الطابور data/audio/_queue.json:
-  {"items": [{"id": "<كتاب>", "voice": "ar-SA-HamedNeural", "rate": "-5%"},
+  {"items": [{"id": "<كتاب>", "voice": "ar-SA-HamedNeural", "rate": "-5%"},   # "pages": [3, 7] لإعادة صفحات بعينها
              {"id": "<كتاب>", "rec": {"f": "au....mp3", "t": "عنوان التسجيل", "p": 1}}]}
 المتغيرات: TTS_MAX_MIN (حد دقائق التشغيل)، TTS_CONC (التوازي)، TTS_ONLY (كتب بعينها)، TTS_REFRESH=1 (إعادة الصفحات التي تغيّر نصها)
 """
@@ -204,14 +204,17 @@ async def tts_book(item, lst):
     man["title"] = b.get("setTitle") or b["title"]
     pages = sh.get("pages") or []
     first, last = int(item.get("from") or 1), int(item.get("to") or len(pages))
+    only_p = {int(x) for x in (item.get("pages") or [])}  # صفحات بعينها يعيد تسجيلها المشرف بعد مراجعة السماع
     todo = []
     for p in range(first, min(last, len(pages)) + 1):
+        if only_p and p not in only_p:
+            continue
         tx = clean(pages[p - 1])
         cur = man["pages"].get(str(p))
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
             continue
-        force = bool(item.get("force")) or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
+        force = bool(item.get("force")) or p in only_p or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
         if cur and cur.get("d") and not force and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
             continue
         todo.append((p, tx))

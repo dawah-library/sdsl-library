@@ -84,6 +84,7 @@ const AP = {
   },
   toggle(on) { const a = this.audio(); if (this.i < 0) return; if (on === undefined) on = a.paused; if (on) { if (this.mode === "radio") { const { i, off } = radioPos(this.ch); if (i !== this.i) return this.load(i, off, true); try { a.currentTime = off; } catch (e) { } } a.play().catch(() => { }); } else a.pause(); },
   next(auto) {
+    if (auto && this.mode === "book") ARev.onEnd(this.cur());
     if (auto && this.sleepEnd) { this.sleepEnd = false; this.audio().pause(); toast("انتهى مؤقت النوم"); return; }
     if (this.i + 1 < this.q.length) this.load(this.i + 1, 0, true);
     else if (this.mode === "radio") this.load(0, 0, true);
@@ -150,7 +151,7 @@ const AP = {
 const R_EPOCH = Date.UTC(2026, 0, 1);
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 async function radioChannels() {
-  const L = await AUDIO.load(), ready = Object.entries(L).filter(([, x]) => AUDIO.ready(x));
+  const L = await AUDIO.load(), ready = Object.entries(L).filter(([, x]) => AUDIO.ready(x) && !x.preview); // الراديو للكتب المعتمدة فقط، حتى للمشرف
   const pages = ids => { const q = []; ids.forEach(id => (L[id].ds || []).forEach((d, k) => { if (d > 0) q.push({ bid: id, p: k + 1, d, f: AUDIO.page(k + 1) }); })); return q; };
   const mk = (id, n, d, ids, mix) => { let items; if (mix) { const day = Math.floor((Date.now() - R_EPOCH) / 864e5), rnd = seeded(day * 7919 + 17), chunks = []; ids.forEach(bid => { const ps = pages([bid]); for (let i = 0; i < ps.length; i += 3) chunks.push(ps.slice(i, i + 3)); }); for (let i = chunks.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1));[chunks[i], chunks[j]] = [chunks[j], chunks[i]]; } items = [].concat(...chunks); } else items = pages(ids);
     return { id, n, d, ids, mix: !!mix, items, T: items.reduce((s, x) => s + x.d, 0) }; };
@@ -177,7 +178,7 @@ const AUDIO_SOON = `<div class="card soon"><h3>قريبًا بإذن الله</h
 const audioCard = (id, x) => { const b = B(id), a = b ? A(b.authorId) : { name: "" }, ready = AUDIO.ready(x) || (x.rd && x.rd.length), pct = x.of ? Math.round(100 * x.n / x.of) : 0;
   return `<a class="acard2" href="#/audio/${id}"><span class="acov" style="${avHue(id)}"><i>🎧</i><em>${esc((b ? b.setTitle || b.title : x.t || id).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : x.t || id)}</b><small>${esc(a.name)}</small>${x.preview ? '<small class="warn">معاينة للإدارة — غير منشور</small>' : ""}<small class="mut">${ready ? "⏱ " + fmtDur(x.d) : "قيد التجهيز"}${x.rec ? " • 🎙 تسجيل" : x.vn ? " • 🔊 " + esc(x.vn) : ""}</small>${x.of && x.n < x.of ? `<i class="prog" style="--w:${pct}%"></i>` : ""}</a>`; };
 async function vAudio(q, bid) {
-  if (bid) return vAudioBook(bid);
+  if (bid) return q.rev && Cloud.staff() ? vAudioRev(bid, q) : vAudioBook(bid);
   if (q.k === "admin") return vAudioAdmin();
   view(`<div class="cmhero aud"><div><h2>صوتيات المكتبة</h2><p>كتب المكتبة مسموعة: استمع في الطريق والبيت، ولو أغلقت الشاشة، مع النص متزامنًا، وعلامات التوقف، وقائمة تشغيل لأكثر من كتاب.</p></div><div class="row"><a class="btn p" href="#/radio">📻 راديو المكتبة</a>${Cloud.staff() ? '<a class="btn" href="#/audio?k=admin">إدارة الصوتيات</a>' : ""}</div></div><div id="audbox"><p class="mut">جارٍ التحميل…</p></div>`);
   const L = await AUDIO.load(), ids = Object.keys(L).filter(id => B(id)), last = ls.get("ap_last", null), marks = AMarks.all();
@@ -199,7 +200,7 @@ async function vAudioBook(bid) {
   const L = await AUDIO.load(), x = L[bid] || { n: 0, ds: [], of: b.n || 0 }, a = A(b.authorId), ready = AUDIO.ready(x);
   let toc = []; try { const bb = await loadBook(bid); toc = (bb.toc || []).filter(t => t.l !== 2).slice(0, 80); } catch (e) { }
   const inLine = AP.lineup.includes(bid), marks = AMarks.of(bid);
-  view(`<p><a href="#/audio">← صوتيات المكتبة</a></p><div class="abook"><span class="acov big" style="${avHue(bid)}"><i>🎧</i><em>${esc((b.setTitle || b.title).split(/\s+/).slice(0, 4).join(" "))}</em></span>
+  view(`<p><a href="#/audio">← صوتيات المكتبة</a></p>${x.preview ? `<div class="note"><b>معاينة للإدارة — غير منشور.</b> لا يظهر للأعضاء ولا يدخل الراديو حتى يُعتمد. <a class="btn s p" href="#/audio/${bid}?rev=1">🎧 استمع وراجع قبل الاعتماد</a></div>` : ""}<div class="abook"><span class="acov big" style="${avHue(bid)}"><i>🎧</i><em>${esc((b.setTitle || b.title).split(/\s+/).slice(0, 4).join(" "))}</em></span>
   <div><h2>${esc(b.setTitle || b.title)}</h2><p><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a></p>
   <p class="mut">${ready ? `⏱ ${fmtDur(x.d)} • ${toAr(x.n)} مقطعًا${x.of && x.n < x.of ? ` من ${toAr(x.of)} (يُستكمل تباعًا)` : ""}${x.vn ? " • بصوت " + esc(x.vn) + " (صوت آلي)" : ""}` : "صوتيات هذا الكتاب قيد التجهيز."}</p>
   <div class="row">${ready ? `<button class="btn p" data-act="applay" data-id="${bid}" data-p="1">▶ استمع من البداية</button><button class="btn" data-act="aplineup" data-id="${bid}">${inLine ? "✓ في قائمة التشغيل" : "+ إلى قائمة التشغيل"}</button>` : ""}<a class="btn" href="#/book/${bid}/1?tts=1">🔊 استمع بصوت جهازك</a><a class="btn" href="#/book/${bid}/1">📖 اقرأ الكتاب</a></div></div></div>
@@ -227,11 +228,97 @@ async function vRadio(q, cid) {
   window.__rch = ch;
 }
 
+
+/* ---------- مراجعة السماع قبل الاعتماد (للمشرفين) ----------
+   حالة كل مقطع تُحفظ في الجهاز أولًا (arev_<المعرف>)، ثم في data/audio/_review.json بزر «حفظ المراجعة» ليراها المشرفون.
+   h: {الصفحة: بصمة نصها وقت السماع} — إن أعيد تسجيل الصفحة تغيّرت بصمتها فتحتاج سماعًا جديدًا؛ nt: {الصفحة: ملاحظة}. */
+const ARev = {
+  remote: null,
+  async loadRemote(force) {
+    if (this.remote && !force) return this.remote;
+    let j = null; try { const r = await fetch(RAW("data/audio/_review.json") + "?t=" + Date.now()); if (r.ok) j = await r.json(); } catch (e) { }
+    return (this.remote = j || {});
+  },
+  get(bid) { const l = ls.get("arev_" + bid, null), r = (this.remote || {})[bid]; if (l && (!r || (l.at || 0) >= (r.at || 0))) return l; return r ? JSON.parse(JSON.stringify(r)) : { h: {}, nt: {} }; },
+  put(bid, o) { o.h = o.h || {}; o.nt = o.nt || {}; o.at = Date.now(); ls.set("arev_" + bid, o); },
+  pages: x => (x.ds || []).map((d, k) => d > 0 ? k + 1 : 0).filter(Boolean),
+  st(r, man, p) {
+    if (r.nt && r.nt[p]) return "note";
+    const h = r.h && r.h[p]; if (!h) return "";
+    const cur = man && man.pages && man.pages[String(p)] && man.pages[String(p)].h;
+    return cur && h !== 1 && h !== cur ? "chg" : "ok";
+  },
+  stat(bid, x, man) { const r = this.get(bid), ps = this.pages(x || {}); return { N: ps.length, heard: ps.filter(p => this.st(r, man, p) === "ok" || (r.nt && r.nt[p] && r.h && r.h[p])).length, notes: Object.keys(r.nt || {}).filter(p => r.nt[p]).length, by: r.by || "" }; },
+  async hashOf(bid, p) { const m = await AUDIO.manifest(bid); return (m && m.pages && m.pages[String(p)] && m.pages[String(p)].h) || 1; },
+  async onEnd(it) {
+    if (!it || it.rec || typeof Cloud === "undefined" || !Cloud.staff()) return;
+    const r = this.get(it.bid); r.h = r.h || {}; r.h[it.p] = await this.hashOf(it.bid, it.p); this.put(it.bid, r); this.paint(it.bid);
+  },
+  async mark(bid, p) {
+    const r = this.get(bid), cur = this.st(r, (window.__arev || {}).man, p);
+    if (cur === "ok") delete r.h[p]; else { r.h = r.h || {}; r.h[p] = await this.hashOf(bid, p); if (r.nt) delete r.nt[p]; }
+    this.put(bid, r); this.paint(bid);
+  },
+  note(bid, p) {
+    const r = this.get(bid), t = prompt("ملاحظة على هذا المقطع (خطأ نطق أو تشكيل أو كلمة ناقصة…)، واتركها فارغة لإزالتها:", (r.nt || {})[p] || "");
+    if (t === null) return; r.nt = r.nt || {}; if (t.trim()) r.nt[p] = t.trim().slice(0, 300); else delete r.nt[p];
+    this.put(bid, r); this.paint(bid);
+  },
+  async save(bid) {
+    if (!GH.on) throw new Error("فعّل الإدارة المباشرة (سجّل الدخول بحساب المدير) لحفظ المراجعة.");
+    const r = this.get(bid); r.by = (Auth.user && Auth.user.name) || r.by || ""; this.put(bid, r);
+    await GH.editJSON("data/audio/_review.json", o => { o = o || {}; o[bid] = { h: r.h, nt: r.nt, by: r.by, at: r.at }; return o; }, "مراجعة سماع: " + ((B(bid) || {}).title || bid), true);
+    (this.remote = this.remote || {})[bid] = JSON.parse(JSON.stringify(r));
+  },
+  async redo(bid) {
+    const r = this.get(bid), ps = Object.keys(r.nt || {}).filter(p => r.nt[p]).map(Number).sort((a, b) => a - b), x = (AUDIO.list || {})[bid] || {};
+    if (!ps.length) return toast("لا ملاحظات لإعادة تسجيلها");
+    if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا.");
+    if (!confirm(`إعادة تسجيل ${toAr(ps.length)} صفحة: ${ps.map(toAr).join("، ")}.\nصحّح نص هذه الصفحات أو تشكيلها أولًا من «📖»، وإلا أعيد تسجيلها بالخطأ نفسه. متابعة؟`)) return;
+    await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(i => i.id !== bid || i.rec); o.items.push({ id: bid, voice: x.v || "ar-SA-HamedNeural", pages: ps }); return o; }, "صوتيات: إعادة تسجيل صفحات من «" + ((B(bid) || {}).title || bid) + "»");
+    await this.save(bid).catch(() => { });
+    toast("أضيفت الصفحات إلى طابور التحويل؛ تُسجَّل عند تشغيل التحويل الصوتي، ثم تظهر هنا «أعيد تسجيلها» لتسمعها من جديد");
+  },
+  row(c, p) {
+    const r = this.get(c.bid), s = this.st(r, c.man, p), d = (c.x.ds || [])[p - 1], ic = { ok: "✅", note: "⚠️", chg: "🔄", "": "○" }[s];
+    return `<div class="bk" data-rp="${p}" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center${s === "note" ? ";border-color:#d8433b" : ""}"><span title="${{ ok: "سُمع وسليم", note: "عليه ملاحظة", chg: "أعيد تسجيله — يحتاج سماعًا", "": "لم يُسمع" }[s]}">${ic}</span>
+    <button class="lnk" data-act="applay" data-id="${c.bid}" data-p="${p}" style="flex:1;text-align:start">▶ ${esc(PL(c.b, p - 1) || "صفحة " + toAr(p))} <span class="mut">${fmtT(d)}</span></button>
+    <button class="btn s" data-act="aprvok" data-id="${c.bid}" data-p="${p}" aria-label="سليم">${s === "ok" ? "↺" : "✓ سليم"}</button><button class="btn s" data-act="aprvnote" data-id="${c.bid}" data-p="${p}">✎ ملاحظة</button><a class="btn s" href="#/book/${c.bid}/${p}" title="افتح الصفحة لتصحيح النص أو التشكيل">📖</a>
+    ${s === "note" ? `<div class="warn" style="flex-basis:100%">${esc(r.nt[p])}</div>` : s === "chg" ? '<div class="mut" style="flex-basis:100%">أعيد تسجيل هذه الصفحة بعد سماعها؛ استمع إليها من جديد.</div>' : ""}</div>`;
+  },
+  paint(bid) {
+    const c = window.__arev, box = $("#arev"); if (!c || !box || (bid && bid !== c.bid)) return;
+    const st = this.stat(c.bid, c.x, c.man), r = this.get(c.bid), ps = this.pages(c.x), chg = ps.filter(p => this.st(r, c.man, p) === "chg").length;
+    const show = ps.filter(p => { const s = this.st(r, c.man, p); return c.f === "todo" ? s !== "ok" : c.f === "note" ? s === "note" : true; });
+    const pct = st.N ? Math.round(100 * st.heard / st.N) : 0;
+    $("#arevst").innerHTML = `<b>${toAr(st.heard)} من ${toAr(st.N)} مقطعًا سُمع (${toAr(pct)}٪)</b>${st.notes ? ` • <span class="warn">${toAr(st.notes)} ملاحظة</span>` : ""}${chg ? ` • ${toAr(chg)} أعيد تسجيلها` : ""}<i class="prog" style="--w:${pct}%;display:block;margin-top:6px"></i>`;
+    $("#arevtabs").innerHTML = [["", "الكل"], ["todo", "لم يُسمع"], ["note", "الملاحظات"]].map(([v, l]) => `<a role="tab" href="#/audio/${c.bid}?rev=1${v ? "&f=" + v : ""}" aria-selected="${(c.f || "") === v}">${l}</a>`).join("");
+    const rb = $("#arevredo"); if (rb) { rb.hidden = !st.notes; rb.textContent = "↻ إعادة تسجيل صفحات الملاحظات (" + toAr(st.notes) + ")"; }
+    box.innerHTML = show.map(p => this.row(c, p)).join("") || '<p class="mut">لا مقاطع هنا.</p>';
+  }
+};
+async function vAudioRev(bid, q) {
+  const b = B(bid); if (!b) return view('<p class="note">الكتاب غير موجود.</p>');
+  view('<p class="mut">جارٍ التحميل…</p>');
+  const L = await AUDIO.load(true); await ARev.loadRemote(true); const x = L[bid];
+  if (!x || !AUDIO.ready(x)) return view(`<p><a href="#/audio?k=admin">← إدارة الصوتيات</a></p><p class="note">لا مقاطع مسموعة لهذا الكتاب بعد.</p>`);
+  const man = await AUDIO.manifest(bid);
+  window.__arev = { bid, b, x, man, f: q.f || "" };
+  view(`<p><a href="#/audio?k=admin">← إدارة الصوتيات</a></p>
+  <h2>مراجعة السماع: ${esc(b.setTitle || b.title)}</h2>
+  <p class="mut">${esc(A(b.authorId).name)} • بصوت ${esc(x.vn || x.v || "")} • ⏱ ${fmtDur(x.d)} • ${x.ok ? '<em class="tag">منشور للأعضاء</em>' : '<em class="tag">غير منشور</em>'}</p>
+  <div class="note">استمع إلى المقاطع بالترتيب؛ يُعلَّم المقطع «✅ سُمع» تلقائيًا إذا سمعته إلى آخره، أو اضغط «✓ سليم». عند أي خطأ في النطق أو التشكيل اضغط «✎ ملاحظة»، ثم صحّح نص الصفحة من «📖»، ثم «إعادة تسجيل صفحات الملاحظات». يمكنك رفع السرعة من المشغّل لتسريع المراجعة. لا يظهر الكتاب للأعضاء ولا يدخل الراديو إلا بعد اعتماده.</div>
+  <div class="card"><div id="arevst"></div>
+  <div class="row" style="margin-top:10px"><button class="btn p" data-act="aprvplay">▶ استمع من أول مقطع لم يُسمع</button><button class="btn" data-act="aprvsave" data-id="${bid}">💾 حفظ المراجعة</button><button class="btn" id="arevredo" data-act="aprvredo" data-id="${bid}" hidden></button><button class="btn${x.ok ? "" : " p"}" data-act="apok" data-id="${bid}" data-on="${x.ok ? 0 : 1}">${x.ok ? "إلغاء النشر" : "✔ اعتماد ونشر للأعضاء والراديو"}</button></div></div>
+  <div class="tabs" role="tablist" id="arevtabs"></div><div id="arev"></div>`);
+  ARev.paint();
+}
+
 /* ---------- إدارة الصوتيات (للمشرفين) ---------- */
 async function vAudioAdmin() {
   if (!Cloud.staff() && !GH.on) return view('<p class="note">للمشرفين.</p>');
   view('<h2>إدارة الصوتيات والراديو</h2><div id="aadm" class="mut">جارٍ التحميل…</div>');
-  const L = await AUDIO.load(true); let Q = { items: [] }; try { const r = await fetch(RAW("data/audio/_queue.json") + "?t=" + Date.now()); if (r.ok) Q = await r.json(); } catch (e) { }
+  const L = await AUDIO.load(true); await ARev.loadRemote(true); let Q = { items: [] }; try { const r = await fetch(RAW("data/audio/_queue.json") + "?t=" + Date.now()); if (r.ok) Q = await r.json(); } catch (e) { }
   let RC = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); if (data && data.value) RC = data.value; } catch (e) { }
   const books = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.col === y.col ? 0 : x.col === "dawah" ? -1 : 1) || (x.n || 0) - (y.n || 0));
   const opt = books.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${b.n ? " (" + toAr(b.n) + " ص)" : ""}${L[b.id] ? " ✓" : ""}</option>`).join("");
@@ -241,10 +328,10 @@ async function vAudioAdmin() {
   <div class="card"><h3>رفع تسجيل صوتي بشري</h3><p class="mut">درس أو قراءة مسجلة لكتاب (mp3 أو m4a، حتى ٥٠ ميجابايت للملف). يُنقل إلى إصدارات المستودع ويظهر في صفحة الكتاب المسموع.</p>
   <form data-form="audrec"><label>الكتاب</label><select name="b" required>${opt}</select><label>عنوان التسجيل</label><input name="t" maxlength="120" placeholder="مثال: شرح الباب الأول" required><label>يبدأ من صفحة</label><input name="p" type="number" min="1" value="1"><label>الملف</label><input name="f" type="file" accept="audio/*" required><button class="btn p" style="margin-top:8px">رفع التسجيل</button> <span id="audrs" class="mut"></span></form></div>
   <div class="card"><h3>طابور التحويل</h3>${(Q.items || []).length ? `<ol>${Q.items.map(it => `<li>${esc((B(it.id) || {}).title || it.id)} ${it.rec ? "— 🎙 " + esc(it.rec.t || "") : "— " + esc(it.voice || "")}${it.err ? ` <span class="warn">(تعثّر ${toAr(it.err)})</span>` : ""}</li>`).join("")}</ol>` : '<p class="mut">الطابور فارغ.</p>'}
-  <h4>الكتب المسموعة</h4>${Object.entries(L).map(([id, x]) => `<div class="bk"><b>${esc((B(id) || {}).title || x.t || id)}</b> ${x.ok ? '<em class="tag">منشور للأعضاء</em>' : '<em class="tag">غير منشور</em>'} <button class="btn s" data-act="apok" data-id="${id}" data-on="${x.ok ? 0 : 1}">${x.ok ? "إلغاء النشر" : "اعتماد ونشر للأعضاء"}</button><span>${toAr(x.n)} من ${toAr(x.of || 0)} صفحة • ${fmtDur(x.d)}${x.vn ? " • " + esc(x.vn) : ""}${x.rec ? " • " + toAr(x.rec) + " تسجيل" : ""} • آخر تحديث ${esc(x.upd || "")}</span></div>`).join("") || '<p class="mut">لا كتب مسموعة بعد.</p>'}</div>
+  <h4>الكتب المسموعة</h4><p class="mut">استمع إلى الكتاب كاملًا من «🎧 استمع وراجع» قبل اعتماده: يُعلَّم كل مقطع مسموعًا عند سماعه إلى آخره، وتُسجَّل ملاحظات أخطاء النطق والتشكيل لتصحيحها وإعادة تسجيلها. لا يظهر الكتاب للأعضاء ولا يدخل الراديو إلا بعد الاعتماد.</p>${Object.entries(L).map(([id, x]) => `<div class="bk"><b>${esc((B(id) || {}).title || x.t || id)}</b> ${x.ok ? '<em class="tag">منشور للأعضاء</em>' : '<em class="tag">غير منشور</em>'} <a class="btn s${x.ok ? "" : " p"}" href="#/audio/${id}?rev=1">🎧 استمع وراجع</a> <button class="btn s" data-act="apok" data-id="${id}" data-on="${x.ok ? 0 : 1}">${x.ok ? "إلغاء النشر" : "اعتماد ونشر للأعضاء"}</button><span>${(() => { const st = ARev.stat(id, x); return st.N ? `<b class="${st.heard >= st.N && !st.notes ? "" : "warn"}">مراجعة السماع: ${toAr(st.heard)} من ${toAr(st.N)}${st.notes ? " • " + toAr(st.notes) + " ملاحظة" : ""}${st.by ? " (" + esc(st.by) + ")" : ""}</b> • ` : ""; })()}${toAr(x.n)} من ${toAr(x.of || 0)} صفحة • ${fmtDur(x.d)}${x.vn ? " • " + esc(x.vn) : ""}${x.rec ? " • " + toAr(x.rec) + " تسجيل" : ""} • آخر تحديث ${esc(x.upd || "")}</span></div>`).join("") || '<p class="mut">لا كتب مسموعة بعد.</p>'}</div>
   <div class="card"><h3>قنوات الراديو</h3><p class="mut">القنوات التلقائية: «مختارات المكتبة» و«إذاعة الدعوة السلفية» و«إذاعة التراث». وأنشئ قنوات خاصة من الكتب المسموعة:</p>
   ${(RC.list || []).map((c, k) => `<div class="bk"><b>${esc(c.n)}</b><span>${toAr((c.books || []).length)} كتاب${c.mix ? " • مختارات متنوعة" : " • كتب كاملة"}</span><button class="btn s" data-act="rcdel" data-k="${k}">حذف القناة</button></div>`).join("")}
-  <form data-form="rcadd"><label>اسم القناة</label><input name="n" maxlength="60" required placeholder="مثال: إذاعة العقيدة"><label>وصف قصير</label><input name="d" maxlength="120"><label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && B(id)).map(id => `<label class="chk"><input type="checkbox" name="bk" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<p class="mut">تظهر الكتب هنا بعد اكتمال صوتياتها.</p>'}</div><label class="chk"><input type="checkbox" name="mix"> مختارات متنوعة (مقاطع قصيرة) بدل الكتب كاملة</label><button class="btn p" style="margin-top:8px">إنشاء القناة</button></form></div>`;
+  <form data-form="rcadd"><label>اسم القناة</label><input name="n" maxlength="60" required placeholder="مثال: إذاعة العقيدة"><label>وصف قصير</label><input name="d" maxlength="120"><label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && L[id].ok && B(id)).map(id => `<label class="chk"><input type="checkbox" name="bk" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<p class="mut">تظهر الكتب هنا بعد اكتمال صوتياتها واعتمادها.</p>'}</div><label class="chk"><input type="checkbox" name="mix"> مختارات متنوعة (مقاطع قصيرة) بدل الكتب كاملة</label><button class="btn p" style="margin-top:8px">إنشاء القناة</button></form></div>`;
   window.__RC = RC;
 }
 
@@ -266,7 +353,12 @@ document.addEventListener("click", async e => {
     else if (a === "aplineupx") { AP.lineup.splice(+el.dataset.k, 1); ls.set("ap_lineup", AP.lineup); route(); }
     else if (a === "aplineupplay") { if (AP.lineup[0]) await AP.playBook(AP.lineup[0], 1); }
     else if (a === "rdplay") { const ch = (window.__rch || []).find(c => c.id === el.dataset.c); if (!ch) return; if (AP.mode === "radio" && AP.ch && AP.ch.id === ch.id && !AP.audio().paused) { AP.toggle(false); } else await AP.playRadio(ch); setTimeout(() => { if (parse().p[0] === "radio") route(); }, 400); }
-    else if (a === "apok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on && !confirm("هل راجعت نص هذا الكتاب وتشكيله وتريد نشر صوتياته للأعضاء؟")) return; await GH.editJSON("data/audio/_list.json", o => { if (o[el.dataset.id]) { if (on) o[el.dataset.id].ok = 1; else delete o[el.dataset.id].ok; } return o; }, (on ? "اعتماد صوتيات: " : "إلغاء نشر صوتيات: ") + el.dataset.id, true); AUDIO.list = null; toast(on ? "نُشرت صوتيات الكتاب" : "أُلغي النشر"); route(); }
+    else if (a === "apok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on) { const st = ARev.stat(el.dataset.id, (AUDIO.list || {})[el.dataset.id] || {}); const w = (st.N && st.heard < st.N ? `⚠ لم يُسمع ${toAr(st.N - st.heard)} من ${toAr(st.N)} مقطعًا بعد.\n` : "") + (st.notes ? `⚠ عليه ${toAr(st.notes)} ملاحظة لم تُعالج.\n` : ""); if (!confirm(w + "اعتماد هذا الكتاب ينشر صوتياته للأعضاء ويدخله الراديو. هل راجعت نصه وتشكيله واستمعت إليه؟")) return; ARev.save(el.dataset.id).catch(() => { }); } await GH.editJSON("data/audio/_list.json", o => { if (o[el.dataset.id]) { if (on) o[el.dataset.id].ok = 1; else delete o[el.dataset.id].ok; } return o; }, (on ? "اعتماد صوتيات: " : "إلغاء نشر صوتيات: ") + el.dataset.id, true); AUDIO.list = null; toast(on ? "نُشرت صوتيات الكتاب" : "أُلغي النشر"); route(); }
+    else if (a === "aprvok") ARev.mark(el.dataset.id, +el.dataset.p);
+    else if (a === "aprvnote") ARev.note(el.dataset.id, +el.dataset.p);
+    else if (a === "aprvplay") { const c = window.__arev; if (!c) return; const r = ARev.get(c.bid), p = ARev.pages(c.x).find(p => ARev.st(r, c.man, p) !== "ok") || 1; await AP.playBook(c.bid, p); }
+    else if (a === "aprvsave") { await ARev.save(el.dataset.id); toast("حُفظت المراجعة؛ يراها المشرفون الآخرون"); }
+    else if (a === "aprvredo") await ARev.redo(el.dataset.id);
     else if (a === "rcdel") { if (!confirm("حذف القناة؟")) return; const RC = window.__RC || { list: [] }; RC.list.splice(+el.dataset.k, 1); await CM.saveSetting("radio_channels", RC); toast("حُذفت القناة"); route(); }
   } catch (x) { console.warn(x); toast(x.message || "تعذر تنفيذ الطلب"); }
 });
