@@ -102,3 +102,101 @@ document.addEventListener("click", e => {
   else if (a === "gmore") glossMore(el.dataset.b, +el.dataset.p);
 });
 document.addEventListener("change", e => { if (e.target.id === "wlang") { S.lang2 = e.target.value; saveS(); const st = window.__wsheet; if (st) wordTr(st.w, st.ctx, S.lang2); } });
+
+/* شرح العبارة: عند تحديد أكثر من كلمة في القارئ («📚 شرح العبارة» في شريط التحديد).
+   يبحث عن العبارة بنصها ثم بألفاظ قريبة منها (أغلب كلماتها متقاربة في موضع واحد)، ويقدّم المواضع التي يعقبها بيان
+   (أي، يعني، معناه، المراد، قوله…) في كتب الشريعة، ثم ورودها في كتب مشايخ الدعوة، ثم في كتب التراث.
+   المرحلة الأولى: كتب المكتبة غير الموسوعية + شروح الفهرس (data/gloss). والموسوعات الكبيرة (التفسير وشروح الحديث والفقه والعقيدة) عند الطلب. */
+const PHS = new Set("في من على الى عن ما لا ان او ثم قد هو هي هم ذلك هذا هذه التي الذي الذين كان كانت مع بل لم لن اذا كل به له لها وهو وهي وما ولا فان انه الا حتى اي قال يا ولم وقد لقد عند منه فيه".split(" "));
+const PHEXP = /(^|[^ء-ي])(اي|يعني|معناه|معني|المراد|يريد|ارادوا|تفسيره|بمعني|والمعني|ومعناه|قوله)([^ء-ي]|$)/;
+const PHCATS = { tafsir: "التفسير", hadith: "شروح الحديث", fiqh: "الفقه وأصوله", aqida: "العقيدة" };
+function phPrep(text) {
+  const toks = norm(strip(text)).replace(/[^ء-ي\s]/g, " ").split(/\s+/).filter(Boolean).slice(0, 14);
+  const keys = [...new Set(toks.filter(w => !PHS.has(w)).map(w => { for (const p of ["وبال", "فبال", "وال", "فال", "بال", "كال", "لل", "ال"]) if (w.startsWith(p) && w.length - p.length >= 2) return w.slice(p.length); return w.length >= 4 && "وفب".includes(w[0]) ? w.slice(1) : w; }).filter(w => w.length >= 2))].slice(0, 8);
+  const rx = new RegExp(toks.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^ء-ي]+"));
+  return { toks, keys, rx, need: Math.max(2, Math.ceil(keys.length * .75)) };
+}
+function phFind(p, q) {
+  const base = strip(plain(p)), nb = norm(base), m = q.rx.exec(nb);
+  if (m) return { s: 100, at: m.index, len: m[0].length, base, exact: 1 };
+  if (q.keys.length < 2) return null;
+  let have = 0; for (const k of q.keys) if (nb.includes(k)) have++;
+  if (have < q.need) return null;
+  const tk = [...nb.matchAll(/[ء-ي]+/g)], W = q.toks.length * 2 + 4; let best = 0, bj = -1, be = -1;
+  for (let j = 0; j < tk.length; j++) {
+    if (!q.keys.some(k => tk[j][0].includes(k))) continue;
+    const got = new Set(); let e = j;
+    for (let x = j; x < Math.min(tk.length, j + W); x++) for (const k of q.keys) if (!got.has(k) && tk[x][0].includes(k)) { got.add(k); e = x; }
+    if (got.size > best) { best = got.size; bj = j; be = e; if (best === q.keys.length) break; }
+  }
+  if (best < q.need) return null;
+  return { s: Math.round(best / q.keys.length * 80), at: tk[bj].index, len: tk[be].index + tk[be][0].length - tk[bj].index, base };
+}
+function phScan(books, q, skip) {
+  const out = [];
+  for (const b of books) {
+    if (!b.pages) continue; let n = 0;
+    for (let i = 0; i < b.pages.length && n < 3; i++) {
+      if (skip && b.id === skip.b && i + 1 === skip.p) continue;
+      const h = phFind(b.pages[i], q); if (!h) continue;
+      const nb = norm(h.base), around = nb.slice(Math.max(0, h.at - 40), h.at) + " " + nb.slice(h.at + h.len, h.at + h.len + 160);
+      h.ex = PHEXP.test(around); h.b = b; h.i = i; h.s += h.ex ? 30 : 0; out.push(h); n++;
+    }
+  }
+  return out;
+}
+function phItem(h, phrase) {
+  const b = h.b, a = Math.max(0, h.at - 90), z = h.at + h.len, t = h.base;
+  const snip = (a ? "…" : "") + esc(t.slice(a, h.at)) + "<mark>" + esc(t.slice(h.at, z)) + "</mark>" + esc(t.slice(z, z + 260)) + (z + 260 < t.length ? "…" : "");
+  return `<details class="gitem"${h.ex ? " open" : ""}><summary><b>${esc(b.setTitle || b.title)}</b> <span class="mut">${esc(A(b.authorId).name)} • ${esc(PL(b, h.i) || "ص " + toAr(h.i + 1))}${h.exact ? "" : " • ألفاظ قريبة"}${h.ex ? " • فيه بيان" : ""}</span></summary><p>${snip}</p><div class="row"><a class="btn s nf" href="#/book/${esc(b.id)}/${h.i + 1}?h=${encodeURIComponent(h.exact ? phrase : t.slice(h.at, z))}" data-act="closeSheet">افتح الموضع في الكتاب</a></div></details>`;
+}
+async function phraseSheet(text, bid, p) {
+  const phrase = strip(String(text)).replace(/\s+/g, " ").trim(), q = phPrep(phrase);
+  if (q.toks.length < 2) { toast("للكلمة الواحدة: اضغط عليها ضغطًا مطولًا"); return; }
+  const src = bid && B(bid), ask = `اشرح العبارة «${phrase}»${src ? ` الواردة في «${src.setTitle || src.title}»` : ""}: معناها، وما قاله فيها أهل التفسير وشراح الحديث والفقهاء، وما ورد فيها في كتب مشايخ الدعوة السلفية، مع الإحالة إلى المواضع.`;
+  openSheet("شرح العبارة", `<div class="wsheet"><p class="phq">«${esc(phrase.length > 160 ? phrase.slice(0, 160) + "…" : phrase)}»</p>
+  <div id="phres"><p class="mut">جارٍ البحث عن العبارة وما يقاربها في كتب المكتبة…</p></div>
+  <div class="phmore"><p class="mut" style="margin:10px 0 4px">ابحث أيضًا في الموسوعات الكبيرة (أبطأ):</p><div class="row">${Object.entries(PHCATS).map(([c, t]) => `<button class="btn s" data-act="phcat" data-c="${c}">${t}</button>`).join("")}</div></div>
+  <div class="row" style="margin-top:10px"><a class="btn s nf" href="#/search?q=${encodeURIComponent(phrase)}&mode=phrase" data-act="closeSheet">🔎 بحث العبارة في المكتبة كلها</a><a class="btn s nf" href="#/ask?q=${encodeURIComponent(ask)}" data-act="closeSheet">💬 اسأل المساعد عن شرحها</a></div></div>`);
+  const st = window.__phsheet = { phrase, q, hits: [], skip: bid ? { b: bid, p } : null, done: new Set() };
+  const el = $("#phres"), [cats] = await Promise.all([GL.meta()]);
+  const first = lib.books.filter(b => !b.big && b.type !== "article" && !b.demo);
+  await loadMany(first, (i, n) => { if (window.__phsheet === st && i % 4 === 0) progress(el, i, n, "جارٍ تحميل الكتب للبحث"); });
+  if (window.__phsheet !== st) return;
+  st.hits = phScan(first, q, st.skip);
+  // شروح الفهرس: مداخل كلمات العبارة التي يجتمع فيها أكثر ألفاظها
+  try {
+    const seen = new Set(st.hits.map(h => h.b.id + ":" + (h.i + 1)));
+    for (const k of q.keys.slice(0, 4)) for (const e of await GL.load(k)) {
+      const id = e[0] + ":" + e[1], b = B(e[0]); if (seen.has(id) || !b || cats[e[0]] === "lex") continue;
+      const h = phFind(e[3], q); if (!h) continue; seen.add(id);
+      Object.assign(h, { b, i: e[1] - 1, ex: true, s: h.s + 40 }); st.hits.push(h);
+    }
+  } catch (x) { }
+  phRender();
+}
+function phRender() {
+  const st = window.__phsheet, el = $("#phres"); if (!st || !el) return;
+  GL.meta().then(cats => {
+    const H = st.hits.slice().sort((a, b) => b.s - a.s), sh = H.filter(h => h.ex && cats[h.b.id] && cats[h.b.id] !== "lex"), shs = new Set(sh);
+    const dw = H.filter(h => !shs.has(h) && bc(h.b) === "dawah"), tr = H.filter(h => !shs.has(h) && bc(h.b) !== "dawah");
+    const sec = (t, a, n) => a.length ? `<h4>${t} <small class="mut">(${toAr(a.length)})</small></h4>${a.slice(0, n).map(h => phItem(h, st.phrase)).join("")}` : "";
+    el.innerHTML = (sec("📖 بيانها في كتب الشريعة", sh, 8) + sec("🕌 في كتب مشايخ الدعوة", dw, 8) + sec("📚 في كتب التراث", tr, 8)) ||
+      `<p class="mut">لم أجد العبارة ولا ألفاظًا قريبة منها في الكتب التي بُحث فيها. جرّب البحث في الموسوعات الكبيرة أدناه، أو اسأل المساعد.</p>`;
+    if (st.done.size) el.insertAdjacentHTML("afterbegin", `<p class="mut" style="font-size:.85rem">شمل البحث أيضًا: ${[...st.done].map(c => PHCATS[c]).join("، ")}.</p>`);
+  });
+}
+async function phCat(c, btn) {
+  const st = window.__phsheet; if (!st || st.done.has(c)) return; btn.disabled = true;
+  const cats = await GL.meta(), list = lib.books.filter(b => b.big && (cats[b.id] === c || (c === "fiqh" && cats[b.id] === "usul")));
+  await loadMany(list, (i, n) => { if (window.__phsheet === st) btn.textContent = PHCATS[c] + " " + toAr(Math.round(i / n * 100)) + "٪"; });
+  if (window.__phsheet !== st) return;
+  const seen = new Set(st.hits.map(h => h.b.id + ":" + (h.i + 1)));
+  phScan(list, st.q, st.skip).forEach(h => { if (!seen.has(h.b.id + ":" + (h.i + 1))) st.hits.push(h); });
+  st.done.add(c); btn.textContent = "✓ " + PHCATS[c]; phRender();
+}
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
+  if (a === "selexp") { const s = String(getSelection()).trim(), rb = selRd() || $("#rb"); if (!s) return; try { getSelection().removeAllRanges(); } catch (x) { } $("#selq").hidden = true; phraseSheet(s, rb && rb.dataset.id, rb && +rb.dataset.p); }
+  else if (a === "phcat") phCat(el.dataset.c, el);
+});

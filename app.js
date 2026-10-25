@@ -1621,7 +1621,7 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  else if(k==="addbook")addBook(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
  else if(k==="signin"||k==="signup")authSubmit(f,k);else if(k==="ask")askSubmit(f)});
 const selRd=()=>{const n=getSelection().anchorNode;return n&&(n.nodeType===1?n:n.parentElement).closest(".rd[data-id]")};
-document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim();$("#selq").hidden=!(s.length>12&&selRd())});
+document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim();$("#selq").hidden=!((s.length>12||/\S\s+\S/.test(s))&&selRd())});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#sheet").hidden){closeSheet();return}if($("#rb")&&e.key==="f"&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)){setFull(!S.full);return}if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
 
 /* ---------- الإقلاع ---------- */
