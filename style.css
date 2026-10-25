@@ -626,6 +626,11 @@ details.dwc summary{cursor:pointer;font-weight:700;color:var(--ac);list-style:no
 details.dwc summary::-webkit-details-marker{display:none}
 .dwn{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;background:var(--gold);color:#fff;font-size:.85rem}
 .dwbox{border-right:4px solid var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--sf));padding:10px 14px;border-radius:8px;margin:12px 0;line-height:1.9}
+.abart{background:var(--sf);border:1px solid var(--line);border-radius:14px;padding:4px 16px;margin:10px 0 6px}
+.abart>summary{cursor:pointer;list-style:none;font-weight:700;color:var(--ac);padding:10px 0}.abart>summary::-webkit-details-marker{display:none}
+.abart>summary::before{content:"▾ "}.abart[open]>summary::before{content:"▴ "}.abart .abless,.abart[open] .abmore{display:none}.abart[open] .abless{display:inline}
+.abart article{border-top:1px solid var(--line);padding:4px 0 10px}.abart h4{color:var(--gold);font-family:Amiri,serif;font-size:1.2rem;margin:20px 0 4px}
+.abgoals{line-height:1.95;padding-inline-start:22px}.abgoals li{margin:6px 0}.abgoals b{color:var(--ac)}
 .dwlist{line-height:1.95}.dwera{margin:18px 0 0;color:var(--gold);font-family:Amiri,serif;font-size:1.2rem}
 
 /* صفحة الدخول وإنشاء الحساب */
