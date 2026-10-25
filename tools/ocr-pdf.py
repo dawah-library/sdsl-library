@@ -343,6 +343,8 @@ def mistral_page(img):
         except urllib.error.HTTPError as e:
             ERRS["mistral %d" % e.code] += 1
             if e.code in (401, 402, 403): MBUDGET[0] = 0; return ""
+            # الخطة المجانية محدودة جدًا: إن تكرر الرفض (429) ولم تنجح صفحة واحدة، يُوقف Mistral في هذا التشغيل ويُكمل Gemini وحده
+            if e.code == 429 and ERRS["mistral 429"] >= 6 and not STATS.get("mistral"): MBUDGET[0] = 0; print("  أوقف Mistral: الحد مستنفد (429)", flush=True); return ""
             time.sleep(5 * (t + 1))
         except Exception as e:
             ERRS["mistral " + type(e).__name__] += 1; time.sleep(5 * (t + 1))
@@ -352,7 +354,7 @@ def mistral_page(img):
 def mistral_drafts(nums, imgdir):
     if not MKEY or not nums: return
     from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=int(os.environ.get("MISTRAL_WORKERS", "6"))) as ex:
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("MISTRAL_WORKERS", "2"))) as ex:
         for p, t in zip(nums, ex.map(lambda p: mistral_page(os.path.join(imgdir, f"p{p}.jpg")), nums)):
             if t.strip(): MDRAFT[p] = t
     print("  قرأ Mistral OCR: %d من %d صفحة" % (sum(1 for p in nums if p in MDRAFT), len(nums)), flush=True)
