@@ -200,3 +200,83 @@ document.addEventListener("click", e => {
   if (a === "selexp") { const s = String(getSelection()).trim(), rb = selRd() || $("#rb"); if (!s) return; try { getSelection().removeAllRanges(); } catch (x) { } $("#selq").hidden = true; phraseSheet(s, rb && rb.dataset.id, rb && +rb.dataset.p); }
   else if (a === "phcat") phCat(el.dataset.c, el);
 });
+
+/* تفسير الآية وشرح الحديث (من شريط التحديد):
+   - الآية: يُتعرّف عليها من نص المصحف (data/quran/quran.json)، ثم يُفتح موضعها في كل تفسير من الفهرس المسبق data/tafidx (يبنيه tools/ayah-index.py).
+   - الحديث: يظهر الزر إذا سبق التحديدَ ذكرُ النبي ﷺ أو «حديث»؛ ويُبحث عن متنه في كتب شروح السنة عند الطلب، مع رابط الدرر السنية. */
+const QR = {
+  d: null, all: "", at: [],
+  n: s => norm(strip(String(s))).replace(/﻿/g, "").replace(/[^ء-ي]+/g, " ").replace(/\s+/g, " ").trim(),
+  async load() {
+    if (this.d) return this.d;
+    if (!this._p) this._p = fetch("data/quran/quran.json").then(r => r.json()).then(j => { const at = [], parts = []; let o = 1;
+      j.suras.forEach(s => s.ayat.forEach((a, i) => { const t = this.n(a); at.push({ s: s.n, a: i + 1, o, e: o + t.length, t, name: s.name }); parts.push(t); o += t.length + 3; }));
+      this.all = " " + parts.join(" | ") + " "; this.at = at; return (this.d = j); }).catch(() => null);
+    return this._p;
+  },
+  // يعيد الآيات التي يقع فيها التحديد (من آية إلى آية)، أو null
+  find(sel) {
+    if (!this.d) return null; const s = this.n(sel).split(" "); if (s.length < 3) return null;
+    const rx = new RegExp(s.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "")).join("(?: \\| | )")), m = rx.exec(this.all); if (!m) return null;
+    const a0 = this.at.findIndex(x => x.e >= m.index), a1 = this.at.findIndex(x => x.e >= m.index + m[0].length - 1);
+    return a0 < 0 ? null : this.at.slice(a0, Math.max(a0, a1) + 1);
+  }
+};
+const HADITH_SH = [["fathbari", "فتح الباري (ابن حجر)"], ["nawawimuslim", "شرح النووي على مسلم"], ["awnmabud", "عون المعبود (أبو داود)"], ["tuhfaahwadhi", "تحفة الأحوذي (الترمذي)"], ["subulsalam", "سبل السلام"], ["naylawtar", "نيل الأوطار"], ["tamhid", "التمهيد (ابن عبد البر)"], ["jamiulum", "جامع العلوم والحكم (ابن رجب)"], ["majmufatawa", "مجموع الفتاوى (ابن تيمية)"], ["zadmaad", "زاد المعاد (ابن القيم)"]];
+const HCTX = /(صلى الله عليه وسلم|ﷺ|رسول الله|النبي|نبي الله|حديث|مرفوعا|يرفعه|عن [^\s]+ (?:بن|رضي))/;
+function selCtx() { try { const r = getSelection().getRangeAt(0), p = (r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement).closest("p,div"); const pre = document.createRange(); pre.setStart(p, 0); pre.setEnd(r.startContainer, r.startOffset); return pre.toString().slice(-160); } catch (e) { return ""; } }
+document.addEventListener("selectionchange", () => {
+  const bar = $("#selq"); if (!bar) return; const s = String(getSelection()).trim(), inRd = typeof selRd === "function" && selRd();
+  if (inRd && !QR.d) QR.load();
+  const ay = inRd && s.length > 8 && QR.find(s), wc = s.split(/\s+/).length, had = inRd && !ay && wc >= 4 && (HCTX.test(selCtx()) || HCTX.test(s.slice(0, 60)));
+  bar.querySelector('[data-act="seltaf"]').hidden = !ay; bar.querySelector('[data-act="selhad"]').hidden = !had;
+});
+async function tafsirSheet(sel) {
+  await QR.load(); const ay = QR.find(sel); if (!ay) return toast("لم أتعرّف على آية في التحديد");
+  const f = ay[0], l = ay[ay.length - 1], ref = `${f.name.replace(/[ً-ْٰ]/g, "").replace(/سوره/, "سورة")} ${toAr(f.a)}${l.a !== f.a ? "–" + toAr(l.a) : ""}`;
+  const qa = QR.d.suras[f.s - 1].ayat.slice(f.a - 1, (l.s === f.s ? l.a : f.a)).map((t, i) => t.replace(/﻿/, "") + " ﴿" + toAr(f.a + i) + "﴾").join(" ");
+  openSheet("تفسير " + ref, `<div class="wsheet"><p class="phq">${esc(qa)}</p><div id="tfres"><p class="mut">جارٍ تحميل التفاسير…</p></div>
+  <div class="row" style="margin-top:10px"><a class="btn s nf" target="_blank" rel="noopener" href="https://tafsir.app/${f.s}/${f.a}">التفاسير الأخرى في tafsir.app ↗</a><a class="btn s nf" href="#/ask?q=${encodeURIComponent("فسّر قوله تعالى: ﴿" + qa.replace(/﴿[^﴾]*﴾/g, "") + "﴾ [" + ref + "] من تفسير ابن كثير والبغوي وغيرهما من كتب المكتبة، مع الإحالة")}" data-act="closeSheet">💬 اسأل المساعد</a></div></div>`);
+  let idx = {}, meta = {}; try { [idx, meta] = await Promise.all([fetch(`data/tafidx/${f.s}.json`).then(r => r.json()), fetch("data/tafidx/_meta.json").then(r => r.json())]); } catch (e) { }
+  const ents = idx[f.a] || [], el = $("#tfres"); if (!el) return;
+  if (!ents.length) { el.innerHTML = '<p class="mut">لم أجد هذه الآية في فهرس التفاسير بعد.</p>'; return; }
+  el.innerHTML = ents.map((e, i) => `<details class="gitem" ${i === 0 ? "open" : ""} id="tf${i}"><summary><b>${esc(((meta.tafasir || []).find(t => e[0].startsWith(t[0])) || [0, B(e[0]) ? B(e[0]).setTitle || B(e[0]).title : e[0]])[1])}</b> <span class="mut">${esc(PL(B(e[0]) || {}, e[1] - 1) || "ص " + toAr(e[1]))}${e[2] ? "" : " • موضع تقريبي"}</span></summary><div class="tftext mut">جارٍ التحميل…</div><div class="row"><a class="btn s nf" href="#/book/${esc(e[0])}/${e[1]}?h=${encodeURIComponent(f.t.split(" ").slice(0, 5).join(" "))}" data-act="closeSheet">افتح التفسير في الكتاب</a></div></details>`).join("");
+  ents.forEach(async (e, i) => {
+    const box = document.querySelector(`#tf${i} .tftext`); if (!box) return;
+    try {
+      const b = await loadBook(e[0]), pg = strip(plain(b.pages[e[1] - 1] || "")) + "\n" + strip(plain(b.pages[e[1]] || ""));
+      const key = QR.n(f.t).split(" ").slice(0, 4).join(" "), nb = norm(pg).replace(/[^ء-ي\n]+/g, " "); let at = 0;
+      // موضع الآية في الصفحة: أقرب عبارة تبدأ بكلماتها
+      const words = key.split(" "), rx = new RegExp(words.join("[^ء-ي]+")), m = rx.exec(norm(pg)); if (m) at = m.index;
+      const t = pg.slice(Math.max(0, at - 20), at + 1600);
+      box.className = "tftext"; box.innerHTML = esc(t).replace(/\n/g, "<br>") + (pg.length > at + 1600 ? "…" : "");
+    } catch (x) { box.textContent = "تعذر تحميل التفسير الآن."; }
+  });
+}
+async function hadithSheet(sel) {
+  const txt = strip(String(sel)).replace(/\s+/g, " ").trim(), core = txt.replace(/^.*?(?:صلى الله عليه وسلم|ﷺ)\s*[:«"]?\s*/, "").replace(/^(?:قال|يقول)\s*[:«"]?\s*/, "") || txt;
+  const q = phPrep(core.split(" ").length >= 4 ? core : txt);
+  openSheet("شرح الحديث", `<div class="wsheet"><p class="phq">«${esc(txt.length > 220 ? txt.slice(0, 220) + "…" : txt)}»</p>
+  <p class="mut" style="margin:6px 0">اختر كتاب الشرح ليُبحث فيه عن الحديث (تُحمّل مجلداته أول مرة):</p>
+  <div class="row hdbtns">${HADITH_SH.map(([p, t]) => `<button class="btn s" data-act="hdsrch" data-p="${p}">${esc(t)}</button>`).join("")}<button class="btn s p" data-act="hdall">ابحث فيها كلها</button></div>
+  <div id="hdres"></div>
+  <div class="row" style="margin-top:10px"><a class="btn s nf" target="_blank" rel="noopener" href="https://dorar.net/hadith/search?q=${encodeURIComponent(core.split(" ").slice(0, 12).join(" "))}">الحكم والشرح في الدرر السنية ↗</a><a class="btn s nf" href="#/ask?q=${encodeURIComponent("اشرح حديث: «" + txt.slice(0, 400) + "» وخرّجه، مستعينًا بشروح السنة في المكتبة (فتح الباري وشرح النووي وغيرهما) مع الإحالة")}" data-act="closeSheet">💬 اسأل المساعد</a></div></div>`);
+  window.__hd = { q, phrase: core, hits: [], done: new Set() };
+}
+async function hdSearch(pre, btn) {
+  const st = window.__hd; if (!st || st.done.has(pre)) return; st.done.add(pre); btn.disabled = true; const label = btn.textContent;
+  const list = lib.books.filter(b => b.id === pre || b.id.startsWith(pre + "-v"));
+  await loadMany(list, (i, n) => { btn.textContent = label + " " + toAr(Math.round(i / n * 100)) + "٪"; });
+  if (window.__hd !== st) return;
+  const found = phScan(list, st.q, null).sort((a, b) => b.s - a.s).slice(0, 4);
+  btn.textContent = (found.length ? "✓ " : "— ") + label; st.hits.push(...found.map(h => Object.assign(h, { pre })));
+  const el = $("#hdres"); if (!el) return;
+  const order = HADITH_SH.map(x => x[0]), H = st.hits.slice().sort((a, b) => order.indexOf(a.pre) - order.indexOf(b.pre) || b.s - a.s);
+  el.innerHTML = H.length ? H.map(h => phItem(h, st.phrase)).join("") : '<p class="mut">لم أجد الحديث في الشروح التي بُحث فيها بعد.</p>';
+}
+document.addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
+  if (a === "seltaf" || a === "selhad") { const s = String(getSelection()).trim(); if (!s) return; try { getSelection().removeAllRanges(); } catch (x) { } $("#selq").hidden = true; a === "seltaf" ? tafsirSheet(s) : hadithSheet(s); }
+  else if (a === "hdsrch") hdSearch(el.dataset.p, el);
+  else if (a === "hdall") { el.disabled = true; for (const b of document.querySelectorAll('[data-act="hdsrch"]')) await hdSearch(b.dataset.p, b); el.textContent = "✓ بُحث فيها كلها"; }
+});

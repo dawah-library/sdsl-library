@@ -1,0 +1,20 @@
+name: فهرس تفسير الآيات
+# يبني data/tafidx (موضع كل آية في كل تفسير). يدوي، ويعمل تلقائيًا عند تغيير المصحف أو الأداة.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["tools/ayah-index.py", "data/quran/quran.json"]
+permissions:
+  contents: write
+concurrency: { group: tafidx, cancel-in-progress: false }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/ayah-index.py
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/tafidx && (git diff --cached --quiet || (git commit -m "فهرس تفسير الآيات" && git pull --rebase && git push))
