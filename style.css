@@ -645,3 +645,5 @@ details.dwc summary::-webkit-details-marker{display:none}
 .spoff{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 8px}.spoff label{display:flex;gap:4px;align-items:center;font-size:.92rem}
 .spday{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}.spitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .spnew{border-style:dashed!important;text-align:center}
+.spcheer{text-align:center}.spcheer .row{justify-content:center}.spconf{font-size:3.2rem;animation:spbounce .9s ease-out}.spbad{color:#b4532a}.spsort{margin:6px 0 10px}
+@keyframes spbounce{0%{transform:scale(.3) rotate(-20deg);opacity:0}60%{transform:scale(1.2) rotate(8deg);opacity:1}100%{transform:scale(1) rotate(0)}}

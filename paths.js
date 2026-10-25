@@ -58,14 +58,31 @@ function spState(books, plan, pid) {
   if (daily && pid) { const k = "spday:" + pid, sn = ls.get(k, null), d0 = ldate(now); let s = sn && sn.d === d0 ? sn : { d: d0, read, daily: isOff(now) ? 0 : daily }; if (s !== sn) ls.set(k, s); todayGoal = s.daily; todayRead = Math.max(0, read - s.read); }
   const seg = []; let need = Math.max(0, todayGoal - todayRead);
   for (const x of bs) { if (!need) break; if (x.r >= x.n) continue; const a = x.r + 1, z = Math.min(x.n, x.r + need); seg.push({ b: x.b, id: x.id, a, z }); need -= z - x.r; }
-  return { bs, total, read, left, pct: total ? Math.round(read / total * 100) : 0, daily, end, late, offToday: isOff(now), todayGoal, todayRead, seg, cur: bs.find(x => x.r < x.n), mins: daily * (+(plan && plan.mpp) || 2) };
+  // توقع الإتمام من معدل القراءة الفعلي: سجل يومي لما قُرئ من كتب المسار
+  let pace = 0, fc = null;
+  if (pid) {
+    const hk = "sphist:" + pid, hist = ls.get(hk, {}), d0 = ldate(now); hist[d0] = read;
+    const ks = Object.keys(hist).sort(); while (ks.length > 30) delete hist[ks.shift()]; ls.set(hk, hist);
+    const ref = ks.filter(k => k <= ldate(now.getTime() - 864e5)).filter(k => k >= ldate(now.getTime() - 14 * 864e5));
+    if (ref.length) { const k0 = ref[0], days = Math.max(1, Math.round((now - new Date(k0 + "T00:00")) / 864e5)); pace = (read - hist[k0]) / days; }
+    if (pace > 0 && left) { fc = new Date(now); fc.setDate(fc.getDate() + Math.ceil(left / pace)); }
+  }
+  return { pace, fc, bs, total, read, left, pct: total ? Math.round(read / total * 100) : 0, daily, end, late, offToday: isOff(now), todayGoal, todayRead, seg, cur: bs.find(x => x.r < x.n), mins: daily * (+(plan && plan.mpp) || 2) };
 }
 const pgs2 = n => n === 1 ? "صفحة واحدة" : n === 2 ? "صفحتان" : toAr(n) + (n > 2 && n < 11 ? " صفحات" : " صفحة");
+function spForecast(st, plan) {
+  if (!st.left) return "";
+  if (!st.fc) return `<p class="mut">🔮 توقع الإتمام: يظهر بعد يومين من القراءة، محسوبًا من معدل قراءتك الفعلي.</p>`;
+  let h = `<p>🔮 <b>بمعدل قراءتك الحالي</b> (نحو ${pgs2(Math.max(1, Math.round(st.pace)))} يوميًا) <b>تتم المسار ${esc(fdate(st.fc))}</b>`;
+  if (st.end) { const dd = Math.round((st.fc - st.end) / 864e5); h += dd > 0 ? ` <span class="spbad">— بعد موعد خطتك بـ${toAr(dd)} يومًا؛ زد وردك قليلًا</span>` : dd < 0 ? ` <span class="ok">— قبل موعد خطتك بـ${toAr(-dd)} يومًا، أحسنت</span>` : ` <span class="ok">— في موعد خطتك تمامًا</span>`; }
+  return h + "</p>";
+}
 function spSummary(st, plan) {
   if (!st.left) return `<p class="ok">أتممت قراءة كتب المسار، بارك الله فيك.</p>`;
-  if (!plan || plan.mode !== "timed") return `<p class="mut">بلا مدة محددة: اقرأ على راحتك، ويُحسب تقدمك من قراءتك. بقي ${pgs2(st.left)}.</p>`;
+  if (!plan || plan.mode !== "timed") return `<p class="mut">بلا مدة محددة: اقرأ على راحتك، ويُحسب تقدمك من قراءتك. بقي ${pgs2(st.left)}.</p>` + spForecast(st, plan);
   const offs = (plan.off || []).length ? ` • إجازة: ${plan.off.map(d => DAYS[d]).join("، ")}` : "";
   let h = `<p><b>الورد اليومي: ${pgs2(st.daily)}</b> (نحو ${toAr(st.mins)} دقيقة) • الختم المتوقع: ${esc(fdate(st.end))}${offs}</p>`;
+  h += spForecast(st, plan);
   if (st.late) h += `<p class="note">انقضت المدة المحددة ولم يكتمل المسار؛ عدّل الخطة لتحديد موعد جديد.</p>`;
   if (st.offToday) h += `<p class="mut">اليوم يوم إجازة من القراءة.</p>`;
   else if (st.seg.length) h += `<div class="spday"><b>وردك اليوم${st.todayRead ? ` (قرأت ${pgs2(st.todayRead)} من ${pgs2(st.todayGoal)})` : ""}:</b>${st.seg.map(s => `<a class="btn s p nf" href="#/book/${s.id}/${s.a}">«${esc(s.b.setTitle || s.b.title)}» ص ${toAr(s.a)}–${toAr(s.z)}</a>`).join("")}</div>`;
@@ -84,12 +101,12 @@ function spPlanForm(pid, plan, books) {
    <div class="spby" data-by="minutes"><label>دقائق يوميًا</label><input type="number" name="minutes" min="5" max="600" value="${esc(plan.minutes || 20)}"></div>
    <div><label>دقائق للصفحة تقريبًا</label><input type="number" name="mpp" min="0.5" max="15" step="0.5" value="${esc(plan.mpp || 2)}"></div></div>
    <label>أيام الإجازة من القراءة</label><div class="spoff">${DAYS.map((d, i) => `<label><input type="checkbox" name="off" value="${i}"${(plan.off || []).includes(i) ? " checked" : ""}> ${d}</label>`).join("")}</div>
-   <label>وقت التذكير</label><input type="time" name="at" value="${esc(plan.at || "20:00")}">
+   <div class="row" style="align-items:end"><div><label>وقت التذكير</label><input type="time" name="at" value="${esc(plan.at || "20:00")}"></div><label class="inl"><input type="checkbox" name="email" value="1"${plan.email === false ? "" : " checked"}> أرسل التذكير إلى بريدي أيضًا</label></div>
   </div>
   <p id="spest" class="note"></p><div class="row"><button class="btn p">احفظ الخطة</button></div></form>`;
 }
 function spReadForm(f) {
-  const fd = new FormData(f), p = { mode: fd.get("mode"), by: fd.get("by"), off: fd.getAll("off").map(Number), at: fd.get("at") || "20:00", mpp: +fd.get("mpp") || 2 };
+  const fd = new FormData(f), p = { mode: fd.get("mode"), by: fd.get("by"), off: fd.getAll("off").map(Number), at: fd.get("at") || "20:00", email: fd.get("email") === "1", mpp: +fd.get("mpp") || 2 };
   if (p.mode === "timed") { if (p.by === "days") { const nd = +fd.get("ndays"); p.end = nd ? ldate(Date.now() + (nd - 1) * 864e5) : fd.get("end"); } else if (p.by === "pages") p.daily = +fd.get("daily") || 10; else p.minutes = +fd.get("minutes") || 20; }
   return p;
 }
@@ -118,7 +135,7 @@ async function vPaths(q, pid) {
     const f = $('form[data-form="spplan"]'); if (f) { spEst(f, p.books); f.oninput = f.onchange = () => spEst(f, p.books); }
     return;
   }
-  const card = (id, t, books, plan, tag) => { const st = spState(books, plan); return `<a class="card" href="#/paths/${encodeURIComponent(id)}"><b>${esc(t)}</b><span>${toAr(books.length)} كتب • ${toAr(st.pct)}٪${plan && plan.mode === "timed" && st.left ? " • " + pgs2(st.daily) + " يوميًا" : ""}${tag || ""}</span><i class="prog" style="--w:${st.pct}%"></i></a>`; };
+  const card = (id, t, books, plan, tag) => { const st = spState(books, plan, Auth.user ? id : null); return `<a class="card" href="#/paths/${encodeURIComponent(id)}"><b>${esc(t)}</b><span>${toAr(books.length)} كتب • ${toAr(st.pct)}٪${plan && plan.mode === "timed" && st.left ? " • " + pgs2(st.daily) + " يوميًا • الختم " + st.end.toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) : ""}${tag || ""}</span><i class="prog" style="--w:${st.pct}%"></i></a>`; };
   view(`<div class="cmhero ph"><div><h2>المسارات العلمية</h2><p>اختر مسارًا رشحته المكتبة، أو اصنع مسارك بنفسك من كتبها. ولكل مسار خطة اختيارية: بلا مدة، أو بمدة وورد يومي بالصفحات أو بالدقائق، مع أيام إجازة وتذكير.</p></div></div>
   <h3>مساراتي</h3>${Auth.user ? `<div class="grid">${mine.map(r => card(r.id, r.title, (r.books || []).filter(id => B(id)), r.plan)).join("")}<a class="card spnew" href="#/paths/new"><b>＋ اصنع مسارك</b><span>اختر الكتب وترتيبها بنفسك</span></a></div>` : `<p class="note"><a href="#/account">سجّل الدخول</a> لتصنع مسارك الخاص وتضع خطة لقراءته.</p>`}
   <h3>مسارات مرشحة من المكتبة</h3><div class="grid">${P.map(p => { const o = SP.get(p.id); return card(p.id, p.t, p.books, o && o.plan, o && o.plan && o.plan.mode === "timed" ? " • ✓ لك خطة" : ""); }).join("")}</div>`);
@@ -131,9 +148,24 @@ function spEdit(eid) {
   view(`<p><a href="#/paths">← المسارات العلمية</a></p><h2>${old ? "تعديل مساري" : "اصنع مسارك"}</h2>
   <form data-form="spsave" data-id="${esc(old ? old.id : "")}"><label>اسم المسار</label><input name="t" required maxlength="80" value="${esc(old ? old.title : "")}" placeholder="مثلًا: مسار العقيدة الخاص بي">
   <label>الكتب بالترتيب</label><ol id="spsel" class="pathl"></ol>
+  <div class="spsort"><label>رتّب لي الكتب</label><div class="row"><select id="spord"><option value="few">الأقل صفحات أولًا</option><option value="many">الأكثر صفحات أولًا</option><option value="mix">تنويع بين المؤلفين (كتاب لكل مؤلف بالتناوب)</option><option value="auth">مؤلفًا بعد مؤلف (إتمام كتب المؤلف ثم الانتقال)</option></select><button type="button" class="btn s" data-act="spsort">رتّب</button></div></div>
   <label>أضف كتابًا</label><input id="spq" type="search" placeholder="اكتب جزءًا من اسم الكتاب أو المؤلف"><div id="spres"></div>
   <div class="row" style="margin-top:12px"><button class="btn p">احفظ المسار</button></div></form>`);
   spPaint(); $("#spq").oninput = () => spFind($("#spq").value);
+}
+/* الترتيب الآلي: المجلدات المتتابعة من موسوعة واحدة تبقى وحدة واحدة بترتيبها */
+function spOrder(s, how) {
+  const units = []; s.forEach(id => { const b = B(id), k = b.setTitle || b.title, u = units[units.length - 1]; if (u && u.k === k) u.ids.push(id); else units.push({ k, a: b.authorId, ids: [id], n: 0 }); });
+  units.forEach(u => u.n = u.ids.reduce((t, id) => t + (B(id).n || 0), 0));
+  let out;
+  if (how === "few" || how === "many") out = units.slice().sort((x, y) => how === "few" ? x.n - y.n : y.n - x.n);
+  else {
+    const g = new Map(); units.slice().sort((x, y) => x.n - y.n).forEach(u => { if (!g.has(u.a)) g.set(u.a, []); g.get(u.a).push(u); });
+    const groups = [...g.values()].sort((x, y) => x[0].n - y[0].n);
+    if (how === "auth") out = groups.flat();
+    else { out = []; for (let i = 0; groups.some(q => q[i]); i++) groups.forEach(q => q[i] && out.push(q[i])); }
+  }
+  s.splice(0, s.length, ...out.flatMap(u => u.ids));
 }
 function spSets() { // الموسوعات متعددة المجلدات تُضاف كتابًا واحدًا بكل مجلداتها
   const m = new Map(); lib.books.filter(b => b.type !== "article" && !b.demo).forEach(b => { const k = b.setTitle || b.title; if (!m.has(k)) m.set(k, { t: k, a: b.authorId, ids: [] }); m.get(k).ids.push(b.id); }); return [...m.values()];
@@ -152,6 +184,7 @@ document.addEventListener("click", async e => {
   if (a === "spadd" && s) { el.dataset.ids.split(",").forEach(id => { if (!s.includes(id)) s.push(id); }); el.textContent = "✓"; spPaint(); }
   else if (a === "spmv" && s) { const i = +el.dataset.i, j = i + +el.dataset.d; if (j >= 0 && j < s.length) { [s[i], s[j]] = [s[j], s[i]]; spPaint(); } }
   else if (a === "sprm" && s) { s.splice(+el.dataset.i, 1); spPaint(); }
+  else if (a === "spsort" && s) { spOrder(s, $("#spord").value); spPaint(); toast("رُتّبت الكتب، ويمكنك تعديل الترتيب بالأسهم"); }
   else if (a === "spdel") { if (!confirm("حذف هذا المسار من مساراتك؟")) return; try { await SP.del(el.dataset.id); location.hash = "#/paths"; } catch (x) { alert(x.message); } }
 });
 document.addEventListener("submit", async e => {
@@ -165,7 +198,7 @@ document.addEventListener("submit", async e => {
       const pid = f.dataset.id, p = spReadForm(f); if (p.mode === "timed" && p.off.length >= 7) return toast("اترك يومًا واحدًا على الأقل للقراءة");
       const rec = (await loadPaths()).find(x => x.id === pid), old = SP.get(pid);
       await SP.save({ id: pid, title: old ? old.title : rec && rec.t, books: old ? old.books : rec ? rec.books : [], custom: old ? !!old.custom : false, plan: p });
-      ls.set("spday:" + pid, null); toast("حُفظت خطة القراءة"); route();
+      ls.set("spday:" + pid, null); toast("حُفظت خطة القراءة"); route(); spSync("plan").catch(() => { });
     }
   } catch (x) { alert(x.message || x); }
 }, true);
@@ -205,3 +238,43 @@ async function cert(pid, name) {
 }
 document.addEventListener("click", e => { const el = e.target.closest('[data-act="pquiz"]'); if (!el) return; const q = ls.get("pquiz", {}); q[el.dataset.id] = today(); ls.set("pquiz", q); });
 document.addEventListener("submit", e => { const f = e.target.closest('[data-form="cert"]'); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); cert(f.dataset.id, f.n.value.trim()); }, true);
+
+/* أثناء القراءة: تهنئة عند إتمام كل كتاب من كتب مساراتك، ومزامنة التقدم إلى الحساب ليصل التذكير اليومي بالبريد وإشعارات الموقع */
+const SPCHEER = ["«من سلك طريقًا يلتمس فيه علمًا سهّل الله له به طريقًا إلى الجنة».", "قال الزهري: «العلم ذكرٌ لا يحبه إلا ذكورة الرجال».", "قال يحيى بن أبي كثير: «لا يُستطاع العلم براحة الجسم».", "قال الشافعي: «طلب العلم أفضل من صلاة النافلة».", "قيل للإمام أحمد: إلى متى تطلب العلم؟ قال: «مع المحبرة إلى المقبرة»."];
+const spBooks = (r, P) => { const rec = P.find(x => x.id === r.id); return { t: rec ? rec.t : r.title, books: (rec ? rec.books : r.books || []).filter(id => B(id)) }; };
+const spDone = id => { const b = B(id), n = b && (b.n || (b.pages || []).length); return n && ((S.maxBy || {})[id] || 0) >= n - 1; };
+async function spCheck(bid) {
+  if (!Auth.user || !B(bid) || !spDone(bid)) return;
+  const rows = await SP.load(), P = await loadPaths(), fk = "spfin:" + Auth.user.id, fin = ls.get(fk, {}), b = B(bid);
+  for (const r of rows) {
+    const { t, books } = spBooks(r, P); if (!books.includes(bid)) continue;
+    const unit = b.setTitle ? books.filter(id => B(id).setTitle === b.setTitle) : [bid];
+    if (!unit.every(spDone)) continue; const key = r.id + ":" + (b.setTitle || bid); if (fin[key]) continue;
+    fin[key] = ldate(Date.now()); ls.set(fk, fin);
+    const st = spState(books, r.plan), units = [...new Set(books.map(id => B(id).setTitle || id))], doneU = units.filter(u => books.filter(id => (B(id).setTitle || id) === u).every(spDone)).length, next = st.cur;
+    openDlg(`<div class="spcheer"><div class="spconf">🎉</div><h3>أتممت قراءة «${esc(b.setTitle || b.title)}»</h3><p>بارك الله لك فيما قرأت، ونفعك به، وزادك علمًا وعملًا.</p>
+    <p class="mut">${esc(SPCHEER[Math.floor(Math.random() * SPCHEER.length)])}</p>
+    <div class="prog"><i style="width:${st.pct}%"></i></div><p><b>${toAr(doneU)} من ${toAr(units.length)}</b> كتب في مسار «${esc(t)}» • ${toAr(st.pct)}٪</p>
+    ${st.left ? `${st.fc ? `<p>🔮 بمعدلك الحالي تتم المسار ${esc(fdate(st.fc))}.</p>` : ""}<div class="row">${next ? `<a class="btn p nf" href="#/book/${next.id}/${next.r + 1}" data-act="closeDlg">ابدأ «${esc(next.b.setTitle || next.b.title)}»</a>` : ""}<a class="btn nf" href="#/ask?q=${encodeURIComponent("اختبرني في كتاب «" + (b.setTitle || b.title) + "» بعشرة أسئلة متدرجة مع الإجابات وتعليلها")}" data-act="closeDlg">اختبر نفسك فيه</a></div>`
+      : `<p class="ok"><b>وبه أتممت المسار كله، فهنيئًا لك.</b></p><div class="row"><a class="btn p nf" href="#/paths/${encodeURIComponent(r.id)}" data-act="closeDlg">شهادة إتمام المسار</a></div>`}</div>`);
+    try { if ("Notification" in window && Notification.permission === "granted") { const reg = await navigator.serviceWorker.getRegistration(); if (reg) reg.showNotification("🎉 أتممت «" + (b.setTitle || b.title) + "»", { body: "بارك الله لك. " + toAr(doneU) + " من " + toAr(units.length) + " في مسار «" + t + "»", tag: "spfin-" + key, icon: "assets/logo-sdsl-128.png" }); } } catch (x) { }
+    return;
+  }
+}
+/* حالة المسار تُرفع إلى الحساب: يقرؤها الخادم (api/remind.js) ليرسل التذكير اليومي في وقته، إلا يوم إجازة أو إن قرأ العضو اليوم */
+async function spSync(force) {
+  if (!Auth.user || !Mine.cloud()) return; const rows = await SP.load(); if (SP.local) return;
+  const P = await loadPaths(), tz = -new Date().getTimezoneOffset(), today0 = ldate(Date.now());
+  for (const r of rows) {
+    if (!r.plan || r.plan.mode !== "timed") continue;
+    const { books } = spBooks(r, P), st = spState(books, r.plan, r.id), [h, m] = String(r.plan.at || "20:00").split(":").map(Number);
+    const prog = { d: today0, read: st.read, total: st.total, daily: st.daily, left: st.left, todayRead: st.todayRead, goal: st.todayGoal, last: force === "plan" ? (r.progress && r.progress.last) : today0, next: st.cur ? { id: st.cur.id, p: st.cur.r + 1, t: st.cur.b.setTitle || st.cur.b.title } : null };
+    const hour = ((Math.floor((h * 60 + (m || 0) - tz) / 60) % 24) + 24) % 24;
+    if (!force && r.progress && r.progress.read === prog.read && r.progress.d === prog.d) continue;
+    try { await SP.save({ id: r.id, progress: prog, tz_offset: tz, hour_utc: hour }); } catch (x) { }
+  }
+}
+if (typeof Mine !== "undefined" && Mine.touch) {
+  const _mt = Mine.touch; let t = null;
+  Mine.touch = (bid, p) => { _mt(bid, p); clearTimeout(t); t = setTimeout(() => { spCheck(bid).catch(() => { }); spSync().catch(() => { }); }, 3000); };
+}

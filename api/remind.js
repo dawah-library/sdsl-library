@@ -24,6 +24,26 @@ async function sb(path, opt = {}) {
 }
 const inList = ids => "(" + ids.map(x => '"' + String(x).replace(/"/g, "") + '"').join(",") + ")";
 
+/* البريد: يعمل متى ضُبطت في Vercel متغيرات SMTP_HOST وSMTP_USER وSMTP_PASS (واختياريًا SMTP_PORT وSMTP_FROM)،
+   مثل Gmail بكلمة مرور التطبيقات (smtp.gmail.com، 465). عنوان العضو من حسابه في Supabase. */
+let MAILER;
+async function mailTo(uid, title, body, url, pid, pr) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
+  if (MAILER === undefined) { try { const nm = require("nodemailer"), port = +(process.env.SMTP_PORT || 465); MAILER = nm.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); } catch (e) { MAILER = null; } }
+  if (!MAILER) return false;
+  const key = sbKey(), h = { apikey: key }; if (!/^sb_/.test(key)) h.Authorization = "Bearer " + key;
+  const u = await (await fetch(process.env.SUPABASE_URL + "/auth/v1/admin/users/" + uid, { headers: h })).json();
+  if (!u || !u.email) return false;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const pct = pr.total ? Math.round(pr.read / pr.total * 100) : 0, link = SITE + "#" + url, edit = SITE + "#/paths/" + encodeURIComponent(pid);
+  const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #e5e1d8;border-radius:14px;background:#fffdf8;color:#222;line-height:1.9">
+<h2 style="color:#0f5c4d;margin:0 0 8px">مكتبة الدعوة السلفية الرقمية</h2><h3 style="margin:0 0 10px">${esc(title)}</h3><p>${esc(body)}.</p>
+<div style="background:#eee;border-radius:8px;height:10px;overflow:hidden"><div style="background:#0f5c4d;height:10px;width:${pct}%"></div></div><p style="font-size:13px;color:#666">قرأت ${pct}٪ من المسار، وبقي ${pr.left} صفحة.</p>
+<p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#0f5c4d;color:#fff;padding:12px 26px;border-radius:10px;text-decoration:none;font-weight:bold">ابدأ وردك الآن</a></p>
+<p style="font-size:12px;color:#999">«من سلك طريقًا يلتمس فيه علمًا سهّل الله له به طريقًا إلى الجنة». لإيقاف التذكير بالبريد أو تغيير وقته: <a href="${edit}">خطة المسار</a>.</p></div>`;
+  await MAILER.sendMail({ from: process.env.SMTP_FROM || `"مكتبة الدعوة السلفية الرقمية" <${process.env.SMTP_USER}>`, to: u.email, subject: title, text: body + "\n" + link, html });
+  return true;
+}
 module.exports = async (req, res) => {
   if (require("../lib/rate").limited(req, "remind", 10, 60 * 60e3)) return res.status(429).json({ ok: false });
   res.setHeader("cache-control", "no-store");
@@ -62,6 +82,28 @@ module.exports = async (req, res) => {
       // لا نحدّث إلا من أُرسل إليهم فعلًا، ونعلّم الباقين كذلك حتى لا يتكرر فحصهم اليوم
     }
     for (const p of plans || []) await sb(`reading_plans?user_id=eq.${p.user_id}&book_id=eq.${encodeURIComponent(p.book_id)}`, { method: "PATCH", body: JSON.stringify({ last_sent: todayUTC }) });
+    // 1-ب) تذكير ورد المسارات العلمية (جدول study_paths): في وقت العضو، إلا يوم إجازته أو إن قرأ اليوم أو أتم المسار
+    try {
+      const rows = await sb(`study_paths?select=user_id,id,title,plan,progress,tz_offset,last_sent&hour_utc=lte.${H}&or=(last_sent.is.null,last_sent.lt.${todayUTC})&limit=500`);
+      const dueP = (rows || []).filter(r => {
+        const pl = r.plan || {}, pr = r.progress || {}; if (pl.mode !== "timed" || !pr.next || !pr.left) return false;
+        const loc = new Date(now.getTime() + (r.tz_offset || 0) * 60000), lt = loc.toISOString().slice(0, 10);
+        if ((pl.off || []).includes(loc.getUTCDay())) return false;
+        return pr.last !== lt;
+      });
+      log.paths = dueP.length;
+      if (dueP.length) {
+        const subs = await sb("push_subs?select=*&user_id=in." + inList([...new Set(dueP.map(r => r.user_id))]));
+        for (const r of dueP) {
+          const pr = r.progress, d = pr.daily || 10, pg = d === 1 ? "صفحة واحدة" : d === 2 ? "صفحتان" : d <= 10 ? d + " صفحات" : d + " صفحة";
+          const url = "/book/" + pr.next.id + "/" + pr.next.p, title = "وردك اليوم من مسار «" + (r.title || "مسارك") + "»", body = pg + " — تابع «" + pr.next.t + "» من صفحة " + pr.next.p;
+          await sb("notifications", { method: "POST", body: JSON.stringify({ user_id: r.user_id, title, body, url: "#" + url }) });
+          await pushTo((subs || []).filter(s => s.user_id === r.user_id), { title, body, url, tag: "spath-" + r.id });
+          if (r.plan.email !== false) { try { if (await mailTo(r.user_id, title, body, url, r.id, pr)) log.emailed = (log.emailed || 0) + 1; } catch (e) { console.error("mail", e.message); } }
+        }
+      }
+      for (const r of rows || []) await sb(`study_paths?user_id=eq.${r.user_id}&id=eq.${encodeURIComponent(r.id)}`, { method: "PATCH", body: JSON.stringify({ last_sent: todayUTC }) });
+    } catch (e) { if (!/study_paths/.test(e.message)) console.error("paths", e.message); log.paths = "غير مفعّل: " + String(e.message).slice(0, 80); }
     // 2) الإشعارات العامة من المشرفين
     const bc = await sb("broadcasts?select=*&pushed=eq.false&order=created_at.asc&limit=5");
     if (bc && bc.length) {

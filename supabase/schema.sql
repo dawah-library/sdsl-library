@@ -433,8 +433,13 @@ create table if not exists public.study_paths (
   user_id uuid not null default auth.uid() references auth.users on delete cascade,
   id text not null, title text, books jsonb not null default '[]'::jsonb, plan jsonb,
   custom boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+  progress jsonb, tz_offset int not null default 180, hour_utc int, last_sent date,
   primary key (user_id, id)
 );
+alter table public.study_paths add column if not exists progress jsonb;
+alter table public.study_paths add column if not exists tz_offset int not null default 180;
+alter table public.study_paths add column if not exists hour_utc int;
+alter table public.study_paths add column if not exists last_sent date;
 alter table public.study_paths enable row level security;
 drop policy if exists "study_paths own" on public.study_paths;
 create policy "study_paths own" on public.study_paths for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
