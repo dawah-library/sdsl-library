@@ -1,0 +1,17 @@
+name: استكشاف المصادر الجديدة
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/probe-sources.yml", "tools/probe-sources.js"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node tools/probe-sources.js
+      - run: bash tools/git-save.sh "عينات المصادر الجديدة" tools/samples
