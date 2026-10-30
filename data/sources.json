@@ -14,7 +14,8 @@
    "col": "dawah",
    "on": true,
    "lists": [
-    "https://anasalafy.com/ar/category/articles"
+    "https://anasalafy.com/ar/category/articles",
+    "https://anasalafy.com/ar"
    ],
    "linkRx": "https://anasalafy\\.com/ar/\\d{3,}-[^\"'\\s<>]+",
    "siteSuffix": "موقع أنا السلفي",
@@ -29,17 +30,15 @@
      "skipped": 0,
      "errs": 1
     }
-   }
+   },
+   "base": "https://anasalafy.com"
   },
   {
    "id": "fath",
    "name": "بوابة الفتح",
    "col": "dawah",
    "on": true,
-   "lists": [
-    "https://fath-news.com/"
-   ],
-   "linkRx": "https://fath-news\\.com/[^\"'\\s<>]*\\d{3,}[^\"'\\s<>]*",
+   "lists": [],
    "skipRx": "^(خبر|عاجل|بالصور|فيديو)|يستقبل|يلتقي|يشارك|يهنئ|ينعى",
    "minChars": 1200,
    "perRun": 30,
@@ -53,24 +52,33 @@
      "skipped": 0,
      "errs": 1
     }
-   }
+   },
+   "base": "https://fath-news.com"
   },
   {
    "id": "alnour",
    "name": "الموقع الرسمي لحزب النور",
    "col": "dawah",
-   "on": false,
+   "on": true,
    "lists": [],
-   "note": "أضف رابط قسم المقالات (لا الأخبار) ثم فعّله"
+   "note": "المقالات العلمية والشرعية والتربوية فقط دون الأخبار والتقارير (ب4-9)",
+   "base": "https://alnourpartyeg.com",
+   "skipRx": "^(خبر|عاجل|بالصور|فيديو)|يستقبل|يلتقي|يشارك|يهنئ|ينعى|يعزي|بيان صحفي|مؤتمر|ندوة",
+   "minChars": 1000,
+   "perRun": 30,
+   "delayMs": 2000
   },
   {
    "id": "salaf",
    "name": "مركز سلف للبحوث والدراسات",
    "col": "ithra",
    "lic": "link",
-   "on": false,
+   "on": true,
    "lists": [],
-   "note": "أضف رابط قائمة المقالات والبحوث، وغيّر lic إلى full إن أذن المركز بإعادة النشر"
+   "note": "إثرائي: يُعرض الملخص والرابط (lic=link) حتى يأذن المركز بإعادة النشر كاملًا",
+   "base": "https://salafcenter.org",
+   "perRun": 30,
+   "delayMs": 2000
   },
   {
    "id": "furqan",

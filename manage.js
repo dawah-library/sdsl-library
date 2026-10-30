@@ -430,8 +430,8 @@ const MG = (() => {
      <h3>المصادر (بترتيب الأولوية)</h3><p class="mut">حدّد رابط قائمة المقالات لكل مصدر ثم فعّله؛ يُراجَع يوميًا، ويُسجَّل وقت آخر مراجعة ونتيجتها. تعديل المصادر يشغّل الاستجلاب فورًا.</p>
      <div class="mglist">${(SD.sources || []).map((x, i) => `<form class="mgrow" data-form="mgsrc" data-i="${i}"><span class="mgt"><b>${esc(x.name)}</b> <em class="tag">${esc(COL[x.col] || x.col)}</em> ${x.lic === "link" ? '<em class="tag">ملخص ورابط</em>' : ""}<br>
        <span class="mut">${x.state && x.state.lastRun ? "آخر مراجعة " + new Date(x.state.lastRun).toLocaleString("ar-EG") + (x.state.last ? ` — جديد ${toAr(x.state.last.added)}، متخطى ${toAr(x.state.last.skipped)}، أخطاء ${toAr(x.state.last.errs)}` : "") : "لم يُراجَع بعد"}${x.note ? " • " + esc(x.note) : ""}</span>
-       <input name="lists" value="${esc((x.lists || []).join(" "))}" placeholder="روابط قوائم المقالات (مفصولة بمسافة)"></span>
-       <span><label class="inl"><input type="checkbox" name="on"${x.on !== false && (x.lists || []).length ? " checked" : ""}${x.id === "salafvoice" ? " disabled" : ""}> مفعّل</label><button class="btn s">حفظ</button></span></form>`).join("")}</div>
+       <input name="base" value="${esc(x.base || "")}" placeholder="رابط الموقع (يُكتشف آليًا: ووردبريس، RSS، خريطة الموقع، الرئيسية)"><input name="lists" value="${esc((x.lists || []).join(" "))}" placeholder="روابط قوائم مقالات إضافية (اختياري)">${x.state && x.state.mode ? `<span class="mut">طريقة الجلب: ${esc(x.state.mode)}</span>` : ""}</span>
+       <span><label class="inl"><input type="checkbox" name="on"${x.on !== false && ((x.lists || []).length || x.base) ? " checked" : ""}${x.id === "salafvoice" ? " disabled" : ""}> مفعّل</label><button class="btn s">حفظ</button></span></form>`).join("")}</div>
      ${(QD.errors || []).length ? `<details><summary>أخطاء الاستجلاب (${toAr(QD.errors.length)})</summary><pre class="mgreport">${QD.errors.slice(-60).map(e => esc(e.src + " — " + e.url + " — " + e.err)).join("\n")}</pre></details>` : ""}`;
   }
   async function impDecide(f, go) {
@@ -456,8 +456,8 @@ const MG = (() => {
     } catch (e) { alert(e.message); }
   }
   async function srcSave(f) {
-    const i = +f.dataset.i, lists = f.lists.value.split(/\s+/).filter(u => /^https:\/\//.test(u)), on = f.on.checked && lists.length > 0;
-    try { await GH.editJSON(SP, o => { const x = o.sources[i]; x.lists = lists; x.on = on; return o; }, "مصادر الاستجلاب: " + (SD.sources[i] || {}).name, false); toast(on ? "حُفظ وفُعّل، ويبدأ الاستجلاب خلال دقائق." : "حُفظ."); route(); } catch (e) { alert(e.message); }
+    const i = +f.dataset.i, lists = f.lists.value.split(/\s+/).filter(u => /^https:\/\//.test(u)), base = /^https:\/\//.test(f.base.value.trim()) ? f.base.value.trim() : "", on = f.on.checked && (lists.length > 0 || !!base);
+    try { await GH.editJSON(SP, o => { const x = o.sources[i]; x.lists = lists; x.base = base; x.on = on; return o; }, "مصادر الاستجلاب: " + (SD.sources[i] || {}).name, false); toast(on ? "حُفظ وفُعّل، ويبدأ الاستجلاب خلال دقائق." : "حُفظ."); route(); } catch (e) { alert(e.message); }
   }
 
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
