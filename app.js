@@ -144,24 +144,28 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
 /* ---------- المكتبة (الكتب) ---------- */
 function sideList(title,arr,key,cur,url,count,wide){return`<details${wide?" open":""}><summary>${title}</summary><div class="sidebox"><a class="fl${!cur?" on":""}" href="${url({[key]:"",pg:1})}">الكل <span>${count("")}</span></a>${arr.filter(x=>key==="t"||count(x.id)||x.id===cur).map(x=>`<a class="fl${x.id===cur?" on":""}${count(x.id)?"":" zero"}" href="${url({[key]:x.id,pg:1})}">${esc(x.name)}${key==="a"?died(x):""} <span>${count(x.id)}</span></a>`).join("")}</div></details>`}
 function vLibrary(q){
- const f={c:q.c||"",k:q.c==="turath"&&/^(article|fatwa|tafrigh)$/.test(q.k||"")?q.k:"",t:q.t||"",a:q.a||"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
+ const f={c:q.c||"",k:q.c==="turath"&&/^(article|fatwa|tafrigh)$/.test(q.k||"")?q.k:"",t:q.t||"",a:q.a||"",m:/^(hanafi|maliki|shafii|hanbali|general)$/.test(q.m||"")?q.m:"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
  // المكتبة العامة: كتب، ومقالات، وفتاوى، وتفريغات (k) — تصفية للسجلات نفسها دون نسخها
  const genK=k=>lib.books.filter(b=>!b.demo&&bc(b)==="turath"&&(k==="tafrigh"?isTranscript(b):isArt(b)&&kindOf(b)===k));
  const inC=f.k?genK(f.k):BOOKS().filter(b=>!f.c||bc(b)===f.c);
  let r=inC.filter(b=>(!f.t||b.topicId===f.t)&&(!f.a||b.authorId===f.a));
+ // الفقه المذهبي: وسوم madh:* على كتب الفقه
+ const MADH=[["hanafi","الحنفي"],["maliki","المالكي"],["shafii","الشافعي"],["hanbali","الحنبلي"],["general","الفقه العام والمقارن"]],hasM=b=>(b.tags||[]).some(x=>x.startsWith("madh:")),showM=!!f.t&&r.some(hasM);
+ if(f.m)r=r.filter(b=>(b.tags||[]).includes("madh:"+f.m));
  if(f.q.trim()){const w=norm(f.q).split(/\s+/).filter(Boolean);r=r.filter(b=>w.every(k=>norm(b.title+" "+A(b.authorId).name).includes(k)))}
  r=f.s==="title"?[...r].sort((x,y)=>x.title.localeCompare(y.title,"ar")):f.s==="died"?[...r].sort((x,y)=>(A(x.authorId).died||9999)-(A(y.authorId).died||9999)):[...r].sort((x,y)=>(y.added||"").localeCompare(x.added||""));
  const np=Math.max(1,Math.ceil(r.length/PER));f.pg=Math.max(1,Math.min(f.pg,np));
- const url=o=>{const n=Object.assign({},f,o),p=new URLSearchParams();["c","k","t","a","q","s"].forEach(k=>{if(n[k]&&!(k==="s"&&n[k]==="new"))p.set(k,n[k])});if(n.pg>1)p.set("pg",n.pg);return"#/library"+(p.toString()?"?"+p:"")};
+ const url=o=>{const n=Object.assign({},f,o),p=new URLSearchParams();["c","k","t","a","m","q","s"].forEach(k=>{if(n[k]&&!(k==="s"&&n[k]==="new"))p.set(k,n[k])});if(n.pg>1)p.set("pg",n.pg);return"#/library"+(p.toString()?"?"+p:"")};
  const cnt=key=>id=>inC.filter(b=>!id||b[key==="t"?"topicId":"authorId"]===id).length;
  const title=f.t?T(f.t).name:f.c?COL[f.c]:"المكتبة",bio=f.c==="turath"?"كتب التراث الإسلامي والمراجع المعتمدة بين أهل العلم، وكتب العلماء والباحثين المعاصرين من خارج الدعوة السلفية، ليستفيد منها الباحث مع تراث مشايخ الدعوة السلفية.":f.c==="dawah"?"كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور.":"";
  const tabs=`<div class="tabs" role="tablist">${[["","كل الكتب"],["dawah",COL.dawah],["turath",COL.turath]].map(([v,l])=>`<a role="tab" aria-selected="${f.c===v}" href="${url({c:v,a:"",t:"",pg:1})}">${l}</a>`).join("")}<a role="tab" aria-selected="false" href="#/articles">المقالات</a></div>`+(f.c==="turath"?`<div class="tabs sub" role="tablist" aria-label="أقسام المكتبة العامة">${[["","الكتب"],["article","المقالات"],["fatwa","الفتاوى"],["tafrigh","التفريغات"]].map(([v,l])=>`<a role="tab" aria-selected="${f.k===v}" href="${url({k:v,t:"",a:"",pg:1})}">${l} <span class="mut">(${toAr((v?genK(v):BOOKS().filter(b=>bc(b)==="turath")).length)})</span></a>`).join("")}</div>`:"");
  const chips=[f.t&&`<a class="chip x" href="${url({t:"",pg:1})}">${esc(T(f.t).name)} ✕</a>`,f.a&&`<a class="chip x" href="${url({a:"",pg:1})}">${esc(A(f.a).name)} ✕</a>`,f.q&&`<a class="chip x" href="${url({q:"",pg:1})}">«${esc(f.q)}» ✕</a>`].filter(Boolean).join(" ");
  const sorts=[["new","الأحدث"],["title","العنوان"],["died","وفاة المؤلف"]].map(([v,l])=>`<a href="${url({s:v,pg:1})}"${f.s===v?' style="font-weight:700"':""}>${l}</a>`).join(" • ");
  view(`${tabs}<h2>${esc(title)} <span class="mut">(${r.length})</span></h2>${bio?`<p class="mut">${esc(bio)}</p>`:""}<div class="lib"><aside class="side">${sideList("الأقسام",lib.topics.filter(t=>t.for!=="articles"),"t",f.t,url,cnt("t"),wide)}${sideList("المؤلفون",lib.authors,"a",f.a,url,cnt("a"),wide)}</aside><section>
- <form class="sbox" style="margin:0 0 8px;max-width:none" data-form="libq">${["c","k","t","a","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين هذا القسم" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
+ <form class="sbox" style="margin:0 0 8px;max-width:none" data-form="libq">${["c","k","t","a","m","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين هذا القسم" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
+ ${showM||f.m?`<div class="tabs sub" role="tablist" aria-label="الفقه المذهبي">${[["","كل كتب الفقه"],...MADH].map(([v,l])=>`<a role="tab" aria-selected="${f.m===v}" href="${url({m:v,pg:1})}">${v?"المذهب "+l:l}</a>`).join("").replace("المذهب الفقه العام","الفقه العام")}</div>`:""}
  <div class="row" style="margin-bottom:6px"><span class="chips">${chips}</span><span class="mut nf">الترتيب: ${sorts}</span></div>
- ${r.slice((f.pg-1)*PER,f.pg*PER).map(f.k?anyCard:bookCard).join("")||(f.k&&!inC.length?`<div class="note">لا توجد ${({article:"مقالات",fatwa:"فتاوى",tafrigh:"تفريغات"})[f.k]} في المكتبة العامة بعد. تُضاف من «الإدارة» باختيار القسم «${esc(COL.turath)}».</div>`:'<div class="note">لا توجد كتب مطابقة.</div>')}
+ ${r.slice((f.pg-1)*PER,f.pg*PER).map(f.k?anyCard:bookCard).join("")||(f.k&&!inC.length?`<div class="note">لا توجد ${({article:"مقالات",fatwa:"فتاوى",tafrigh:"تفريغات"})[f.k]} في المكتبة العامة بعد. تُضاف من «الإدارة» باختيار القسم «${esc(COL.turath)}».</div>`:(f.m?`<div class="note">لا توجد بعدُ كتب في ${esc(f.m==="general"?"الفقه العام":"المذهب "+MADH.find(x=>x[0]===f.m)[1])} في المكتبة.</div>`:'<div class="note">لا توجد كتب مطابقة.</div>'))}
  ${np>1?`<div class="pgn"><a class="btn s" ${f.pg>1?`href="${url({pg:f.pg-1})}"`:'aria-disabled="true"'}>السابقة</a><span class="mut">صفحة ${f.pg} من ${np}</span><a class="btn s" ${f.pg<np?`href="${url({pg:f.pg+1})}"`:'aria-disabled="true"'}>التالية</a></div>`:""}</section></div>`)}
 
 /* ---------- قوائم المقالات والفتاوى والبيانات ---------- */
@@ -175,16 +179,17 @@ function vList(kind,q){const L=LISTS[kind],all=L.items();
  let r=all.filter(b=>(!f.t||b.topicId===f.t)&&(!f.a||b.authorId===f.a));
  if(f.q.trim()){const w=norm(f.q).split(/\s+/).filter(Boolean);r=r.filter(b=>w.every(k=>norm(b.title).includes(k)))}
  const an=b=>A(b.authorId).name;
- r=f.s==="title"?[...r].sort((x,y)=>x.title.localeCompare(y.title,"ar")):f.s==="author"?[...r].sort((x,y)=>an(x).localeCompare(an(y),"ar")||(y.date||"").localeCompare(x.date||"")):f.s==="old"?[...r].sort((x,y)=>(x.date||"9").localeCompare(y.date||"9")):[...r].sort((x,y)=>(y.date||"").localeCompare(x.date||""));
+ r=f.s==="title"?[...r].sort((x,y)=>x.title.localeCompare(y.title,"ar")):f.s==="author"?[...r].sort((x,y)=>an(x).localeCompare(an(y),"ar")||(y.date||"").localeCompare(x.date||"")):f.s==="old"?[...r].sort((x,y)=>(x.date||"9").localeCompare(y.date||"9")):f.s==="topic"?[...r].sort((x,y)=>topicLabel(T(x.topicId)).localeCompare(topicLabel(T(y.topicId)),"ar")||(y.date||"").localeCompare(x.date||"")):[...r].sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  const np=Math.max(1,Math.ceil(r.length/PER));f.pg=Math.max(1,Math.min(f.pg,np));
  const url=o=>{const n=Object.assign({},f,o),p=new URLSearchParams();["t","a","q","s"].forEach(k=>{if(n[k]&&!(k==="s"&&n[k]==="new"))p.set(k,n[k])});if(n.pg>1)p.set("pg",n.pg);return"#/"+L.route+(p.toString()?"?"+p:"")};
  const cnt=key=>id=>all.filter(b=>!id||b[key==="t"?"topicId":"authorId"]===id).length;
  const topics=lib.topics.filter(t=>all.some(b=>b.topicId===t.id)).map(t=>Object.assign({},t,{name:topicLabel(t)})).sort((x,y)=>x.name.localeCompare(y.name,"ar"));
  const authors=lib.authors.filter(a=>all.some(b=>b.authorId===a.id));
- const sorts=kind==="statement"?[["new","الأحدث"],["old","الأقدم"]]:[["new","الأحدث"],["title","حسب العنوان"],["author",kind==="fatwa"?"حسب الشيخ":"حسب الكاتب"]];
+ const sorts=kind==="statement"?[["new","الأحدث"],["old","الأقدم"]]:[["new","الأحدث"],["title","حسب العنوان"],["author",kind==="fatwa"?"حسب الشيخ":"حسب الكاتب"],["topic",kind==="fatwa"?"حسب الباب":"حسب الموضوع"]];
  const tabs=`<div class="tabs" role="tablist">${sorts.map(([v,l])=>`<a role="tab" aria-selected="${f.s===v}" href="${url({s:v,pg:1})}">${l}</a>`).join("")}</div>`;
  const page=r.slice((f.pg-1)*PER,f.pg*PER);let list="";
- if(f.s==="author"){let last=null;page.forEach(b=>{if(b.authorId!==last){last=b.authorId;list+=`<h3 class="grp"><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(an(b))}</a></h3>`}list+=artCard(b)})}else list=page.map(artCard).join("");
+ if(f.s==="author"){let last=null;page.forEach(b=>{if(b.authorId!==last){last=b.authorId;list+=`<h3 class="grp"><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(an(b))}</a></h3>`}list+=artCard(b)})}
+ else if(f.s==="topic"){let last=null;page.forEach(b=>{if(b.topicId!==last){last=b.topicId;list+=`<h3 class="grp"><a href="${url({t:b.topicId,s:"new",pg:1})}">${esc(topicLabel(T(b.topicId)))}</a> <span class="mut">(${toAr(cnt("t")(b.topicId))})</span></h3>`}list+=artCard(b)})}else list=page.map(artCard).join("");
  const chips=[f.t&&`<a class="chip x" href="${url({t:"",pg:1})}">${esc(topicLabel(T(f.t)))} ✕</a>`,f.a&&`<a class="chip x" href="${url({a:"",pg:1})}">${esc(A(f.a).name)} ✕</a>`,f.q&&`<a class="chip x" href="${url({q:"",pg:1})}">«${esc(f.q)}» ✕</a>`].filter(Boolean).join(" ");
  view(`<h2>${L.title} <span class="mut">(${r.length})</span></h2><p class="mut">${L.desc}</p>${tabs}
  <div class="lib"><aside class="side">${sideList(kind==="fatwa"?"الأبواب":"الأقسام",topics,"t",f.t,url,cnt("t"),wide)}${sideList(kind==="fatwa"?"المشايخ":"الكُتّاب",authors,"a",f.a,url,cnt("a"),wide)}</aside><section>

@@ -184,6 +184,11 @@
       "source": "/author/w73",
       "destination": "/author/w53",
       "permanent": true
+    },
+    {
+      "source": "/book/umda/:rest*",
+      "destination": "/book/umdafiqh/1",
+      "permanent": false
     }
   ],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)data/audio' ':(exclude)data/tashkeel' ':(exclude)data/switches.json' ':(exclude)data/admin-log.json'"
