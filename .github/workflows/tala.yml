@@ -5,6 +5,9 @@ on:
     - cron: "10 4 * * 1"   # أسبوعيًا: يضم الكتب والمقالات الجديدة
   push:
     paths: ["tools/tala-curate.py", "data/tala.json"]
+  workflow_run:
+    workflows: ["استيراد كتب التراث من OpenITI", "الاستيراد اليومي لمقالات صوت السلف"]
+    types: [completed]
 permissions:
   contents: write
 concurrency:
