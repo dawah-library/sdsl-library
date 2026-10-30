@@ -724,3 +724,9 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 @media (prefers-color-scheme:dark){:root:not([data-theme]) .ed-chg{background:#6b5313}:root:not([data-theme]) .ed-add{background:#1f5133}:root:not([data-theme]) .ed-del{background:#6a2420}}
 .edsum{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.edsum .chip.warn{border-color:#c2410c;color:#c2410c}
 @media (max-width:720px){.edcmp{grid-template-columns:1fr}}
+/* مساحة الفريق (team.js) */
+.tmnav{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;margin:8px 0;scrollbar-width:thin}.tmnav .chip{white-space:nowrap}.tmnav .chip.x{background:var(--ac);color:var(--on);border-color:var(--ac)}
+.tmtools{align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.tmtools form{flex:1;min-width:220px}
+.tmrow b .tag{margin-inline-end:4px}.tmlate{color:#b42318;font-weight:600}.tmbody{white-space:normal;line-height:1.9}
+.tmstate{align-items:flex-end;gap:8px;flex-wrap:wrap}.tmstate>div{min-width:150px;flex:1}
+.tmposts{max-height:none}.tmposts .dmm small b{color:var(--ink)}
