@@ -5,3 +5,4 @@ __pycache__/
 .progress-dispatch
 .quran-report.txt
 .audit-report.txt
+data/sx/

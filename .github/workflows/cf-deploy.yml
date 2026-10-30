@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-node@v4
         with: { node-version: 22 }
       - if: steps.tok.outputs.ok == '1'
-        run: npm install --no-audit --no-fund && npm install --no-save wrangler@4 && python3 tools/cf-config.py
+        run: npm install --no-audit --no-fund && npm install --no-save wrangler@4 && python3 tools/cf-config.py && python3 tools/build-sx.py
       - name: إنشاء المشروع (أول مرة)
         if: steps.tok.outputs.ok == '1'
         run: |

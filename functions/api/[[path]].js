@@ -1,5 +1,6 @@
 // كل طلبات /api/* على Cloudflare Pages: تُوجَّه إلى ملفات api/*.js نفسها عبر المهايئ.
 import { run } from "../_lib/adapter.js";
+import ask from "../../api/ask.js";
 import gh from "../../api/gh.js";
 import imp from "../../api/import.js";
 import mpost from "../../api/mpost.js";
@@ -12,8 +13,7 @@ import sitemap from "../../api/sitemap.js";
 import tglink from "../../api/tglink.js";
 import translate from "../../api/translate.js";
 
-// المساعد العلمي يبحث في نصوص المكتبة كلها (~٢٠٠ م.ب) داخل الدالة، وهذا يتجاوز حدود Cloudflare المجانية.
-const ask = (req, res) => res.status(503).json({ message: "المساعد العلمي متوقف مؤقتًا بعد نقل الاستضافة، ويعود قريبًا بإذن الله." });
+// المساعد العلمي: وسيط خفيف، والبحث في المتصفح على الفهرس المقلوب data/sx (انظر askx.js)
 const H = { gh, import: imp, mpost, notify, page, pages, r2put, remind, sitemap, tglink, translate, ask };
 const DATA = { page: ["index.html", "data/catalog.json"], sitemap: ["data/catalog.json"], translate: ["data/catalog.json"], mpost: ["data/catalog.json"] };
 

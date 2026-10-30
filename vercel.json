@@ -1,8 +1,7 @@
 {
   "functions": {
     "api/ask.js": {
-      "includeFiles": "data/**",
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/import.js": {
       "maxDuration": 30
