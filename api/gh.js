@@ -6,6 +6,8 @@
 const REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
 const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/authors|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
 
+// المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
+const ROLE_AR = w => (w.role === "admin" ? "مشرف" : "محرر") + " #" + String(w.id || "").slice(0, 6);
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
   const tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -37,7 +39,7 @@ async function batch(req, res, who) {
       return res.status(400).json({ message: "مسار غير مسموح: " + p });
   }
   const branch = String(b.branch || "main").replace(/[^\w.-]/g, "");
-  const message = String(b.message || "حفظ دفعة من صفحة الإدارة") + "\n\nبواسطة: " + (who.email || who.id);
+  const message = String(b.message || "حفظ دفعة من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const ref = await gh("/git/ref/heads/" + branch), base = await gh("/git/commits/" + ref.object.sha);
@@ -73,7 +75,7 @@ module.exports = async (req, res) => {
     let body;
     if (req.method === "PUT") {
       const b = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-      b.message = String(b.message || "تعديل من صفحة الإدارة") + "\n\nبواسطة: " + (who.email || who.id);
+      b.message = String(b.message || "تعديل من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
       body = JSON.stringify(b);
     }
     const accept = String(req.headers.accept || "").includes("raw") ? "application/vnd.github.raw+json" : "application/vnd.github+json";

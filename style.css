@@ -698,3 +698,4 @@ body.mk-t .rd p.ph:not(.ph2)::after{content:"";display:block;width:3.5em;height:
 .mklegend{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem}.mklegend i{font-style:normal;font-weight:600}
 
 footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{margin:6px 0;line-height:2}footer .fip{font-size:.85em}
+.newg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:8px 0 18px}.newc{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:10px 14px}.newc h3{margin:2px 0 6px;font-size:1.02em}.newc>a{display:block;padding:6px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}.newc>a b{display:block;font-weight:600;line-height:1.5}.newc>a span{font-size:.85em;color:var(--mut)}.newc>a.all{border:0;color:var(--ac);font-size:.9em;padding-top:8px}
