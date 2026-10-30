@@ -15,6 +15,7 @@ function lib() {
   if (LIB) return LIB;
   const root = path.join(process.cwd(), "data");
   const cat = JSON.parse(fs.readFileSync(path.join(root, "catalog.json"), "utf8"));
+  cat.books = cat.books.filter(b => !b.hidden); // المخفي من «إدارة المواد» لا يدخل البحث
   cat.books.forEach(b => {
     if (b.demo) return;
     try { const sh = JSON.parse(fs.readFileSync(path.join(root, "books", b.id + ".json"), "utf8")); b.pages = sh.pages; if (sh.pl) b.pl = sh.pl; if (sh.toc) b.toc = sh.toc; }
@@ -22,14 +23,14 @@ function lib() {
   });
   // المقالات المستوردة: فهرس + ملفات شهرية (الأحدث أولًا، بحد أقصى للذاكرة)
   try {
-    const idx = JSON.parse(fs.readFileSync(path.join(root, "articles", "index.json"), "utf8")).items || [];
+    const idx = (JSON.parse(fs.readFileSync(path.join(root, "articles", "index.json"), "utf8")).items || []).filter(x => !x.h);
     const byGroup = {}; idx.forEach(x => (byGroup[x.f] = byGroup[x.f] || []).push(x));
     let budget = +(process.env.SDSL_ARTICLES_MB || 120) * 1048576;
     for (const g of Object.keys(byGroup).sort().reverse()) {
       const p = path.join(root, "articles", g + ".json"); if (!fs.existsSync(p)) continue;
       const size = fs.statSync(p).size; if (size > budget) break; budget -= size;
       const data = JSON.parse(fs.readFileSync(p, "utf8"));
-      byGroup[g].forEach(x => { if (data[x.id]) cat.books.push({ id: x.id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: "dawah", pages: data[x.id].pages }); });
+      byGroup[g].forEach(x => { if (data[x.id]) cat.books.push({ id: x.id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: x.col || "dawah", pages: data[x.id].pages }); });
     }
   } catch (e) { /* لا توجد مقالات بعد */ }
   return (LIB = cat);
@@ -157,6 +158,7 @@ async function runGemini({ system, msgs, deep, maxRounds, budget, t0, send, tool
 }
 
 module.exports = async (req, res) => {
+  if (req.method === "POST" && await require("../lib/switch").stopped("ask", res, "المساعد العلمي")) return;
   // فحص سريع من المتصفح: /api/ask?check=1 (لا يكشف المفتاح)
   if (req.method === "GET" && /check=1/.test(req.url || "")) {
     // صفحة الفحص للمدير فقط (كانت عامة وتستهلك الحصة وتكشف تفاصيل داخلية)

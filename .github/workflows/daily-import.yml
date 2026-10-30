@@ -15,7 +15,23 @@ concurrency:
   group: daily-import
   cancel-in-progress: false
 jobs:
+  # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json). الإيقاف يشمل التشغيل اليدوي والآلي؛ وتعذر القراءة لا يوقف المهمة.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" import_salafvoice)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح import_salafvoice: $on"
   import:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

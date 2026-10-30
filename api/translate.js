@@ -41,6 +41,7 @@ module.exports = async (req, res) => {
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");
   if (!u.searchParams.get("w") && (!id || !(p > 0)) || !LANGS[l]) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
+  if (await require("../lib/switch").stopped("translate", res, "الترجمة")) return;
   if (!process.env.GEMINI_API_KEY) { res.statusCode = 503; return res.end(JSON.stringify({ error: "no key" })); }
   const { limited } = require("../lib/rate");
   if (limited(req, "tr", 60, 10 * 60e3)) { res.statusCode = 429; return res.end(JSON.stringify({ error: "busy" })); }

@@ -98,6 +98,7 @@ function extract(html, url) {
 }
 
 async function handler(req, res) {
+  if (await require("../lib/switch").stopped("import", res, "الاستيراد")) return;
   const who = await require("../lib/auth").userOf(req);  // جلب صفحات من مواقع خارجية: للمشرفين فقط
   if (!who || !/^(admin|editor)$/.test(who.role)) return res.status(403).json({ error: "للمشرفين فقط" });
   let u;

@@ -52,6 +52,7 @@ module.exports = async (req, res) => {
   const q = req.query || {};
   const v = vapid();
   if (q.key) return res.status(v ? 200 : 503).json(v ? { publicKey: v.publicKey } : { message: "أضف SUPABASE_SECRET_KEY في إعدادات Vercel لتفعيل إشعارات الجهاز." });
+  if (!(await require("../lib/switch").on("notify"))) return res.status(200).json({ ok: true, paused: true, message: "التذكير والإشعارات موقوفة من الإدارة" });
   if (!v || !process.env.SUPABASE_URL) return res.status(503).json({ message: "الإعداد ناقص: SUPABASE_URL و SUPABASE_SECRET_KEY" });
   let webpush = null;
   try { webpush = require("web-push"); webpush.setVapidDetails(SITE, v.publicKey, v.privateKey); } catch (e) { console.warn("web-push", e.message); }

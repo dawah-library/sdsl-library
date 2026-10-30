@@ -8,8 +8,8 @@ const read = p => JSON.parse(fs.readFileSync(path.join(ROOT, p), "utf8"));
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const plain = s => String(s || "").replace(/^# /gm, "").replace(/\s+\n/g, "\n").trim();
 const cut = (s, n) => { s = plain(s).replace(/\s+/g, " "); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; };
-function cat() { if (!CAT) CAT = read("data/catalog.json"); return CAT; }
-function aidx() { if (!AIDX) { try { AIDX = read("data/articles/index.json").items || []; } catch (e) { AIDX = []; } } return AIDX; }
+function cat() { if (!CAT) { CAT = read("data/catalog.json"); CAT.books = CAT.books.filter(b => !b.hidden); } return CAT; } // المخفي لا يُعرض لمحركات البحث
+function aidx() { if (!AIDX) { try { AIDX = (read("data/articles/index.json").items || []).filter(x => !x.h); } catch (e) { AIDX = []; } } return AIDX; }
 const author = id => (cat().authors.find(a => a.id === id) || {});
 const topic = id => (cat().topics.find(t => t.id === id) || {});
 const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "المكتبة العامة" }; };
@@ -31,7 +31,7 @@ async function findItem(id, origin) {
   if (!x) return null;
   let pages = null;
   try { const g = read("data/articles/" + x.f + ".json"); pages = g[id] && g[id].pages; } catch (e) { }
-  return { b: { id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: "dawah", url: x.u }, pages };
+  return { b: { id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: x.col || "dawah", url: x.u }, pages };
 }
 const SECTIONS = {
   library: ["المكتبة", "كتب مشايخ الدعوة السلفية بمصر، والمكتبة العامة: كتب التراث الإسلامي والمراجع وكتب العلماء والباحثين من خارج الدعوة، للقراءة والبحث."],
