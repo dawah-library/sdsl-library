@@ -55,12 +55,17 @@ def shard_of(key):
     return (w[:2] if len(w) > 1 else w + "_") if w else "__"
 
 
+def pack_of(eid):  # «taqrib.1.2445» → «taqrib.1.6»؛ و«lib.a1» → «lib»
+    p = eid.split(".")
+    return p[0] if len(p) < 3 else "%s.%s.%d" % (p[0], p[1], int(p[2]) // 400)
+
+
 def fname(c):  # اسم الملف بالرموز الست عشرية (كفهرس المعاني data/gloss)
     return "-".join("%04x" % ord(x) for x in c)
 
 
 def clean_name(h):
-    h = re.sub(r"^\s*\d+\s*[-–]\s*", "", h)
+    h = re.sub(r"^\s*(?:[\d٠-٩]+\s*[-–]?\s*)+", "", h)  # أرقام التراجم (وأكثر من رقم في الميزان)
     h = re.sub(r"\(\s*\d+\s*\)", "", h)                     # أرقام الحواشي
     h = re.sub(r"\*?\s*\([^)]{0,30}\)\s*$", "", h)          # رموز الكتب الستة (ع) (خ، د)
     h = h.replace("*", "").strip(" -–،:")
@@ -163,17 +168,21 @@ def main():
     # الكتابة مقسمة بالحرف الأول
     os.makedirs(OUT, exist_ok=True)
     for f in glob.glob(os.path.join(OUT, "*.json")): os.remove(f)
-    shards = collections.defaultdict(lambda: {"k": {}, "e": {}, "m": {}})
-    for key, ids in K.items():
-        s = shards[shard_of(key)]; s["k"][key] = sorted(ids)
-        for i in ids: s["e"][i] = E[i]
+    # المفاتيح والمواضع في ملفات صغيرة بالحرفين الأولين، والتراجم نفسها في حزم (e-<المصدر>.<المجلد>.<الحزمة>) تُجلب عند الحاجة
+    shards = collections.defaultdict(lambda: {"k": {}, "m": {}})
+    for key, ids in K.items():  # الأشهر أولًا (الأطول ترجمة)، وحد ٦٠ احتمالًا للمفتاح الواحد
+        shards[shard_of(key)]["k"][key] = sorted(ids, key=lambda i: -(E[i].get("L") or 0))[:60]
+    packs = collections.defaultdict(dict)
+    for eid, e in E.items(): packs[pack_of(eid)][eid] = e
+    for pk, es in packs.items():
+        open(os.path.join(OUT, "e-" + pk + ".json"), "w", encoding="utf-8").write(json.dumps(es, ensure_ascii=False, separators=(",", ":")))
     for key, refs in M.items():
         shards[shard_of(key)]["m"][key] = sorted(refs, key=lambda r: -len(r[1]))[:40]
     total = 0
     for c, s in shards.items():
         txt = json.dumps(s, ensure_ascii=False, separators=(",", ":")); total += len(txt.encode())
         open(os.path.join(OUT, fname(c) + ".json"), "w", encoding="utf-8").write(txt)
-    meta = {"v": 1, "sources": [[w, l, k] for w, l, k in SOURCES if load_work(cat, w)], "n": len(E), "keys": len(K), "shards": len(shards)}
+    meta = {"v": 1, "sources": [[w, l, k] for w, l, k in SOURCES if load_work(cat, w)], "n": len(E), "keys": len(K), "shards": len(shards), "packs": len(packs)}
     json.dump(meta, open(os.path.join(OUT, "_meta.json"), "w", encoding="utf-8"), ensure_ascii=False)
     report.append(f"- المجموع: {len(E)} ترجمة، {len(K)} مفتاحًا، {len(M)} اسمًا مذكورًا في الكتب، {len(shards)} ملفًا ({total // 1024} ك.ب)")
     open(os.path.join(ROOT, "tools", "alam-report.md"), "w", encoding="utf-8").write("# فهرس الأعلام\n\n" + "\n".join(report) + "\n")

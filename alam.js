@@ -14,7 +14,10 @@ const ALAM = (() => {
     .replace(/(^|\s)عبد\s+/g, "$1عبد").replace(/(^|\s)(ابي|ابا)(?=\s)/g, "$1ابو").replace(/\s+/g, " ").trim();
   const shardOf = k => { const t = k.split(" "); let w = t.length > 1 && /^(ابو|ابن|ام|بنت)$/.test(t[0]) ? t[1] : t[0]; if (w.startsWith("ال") && w.length > 3) w = w.slice(2);
     const c = w ? (w.length > 1 ? w.slice(0, 2) : w + "_") : "__"; return [...c].map(x => x.codePointAt(0).toString(16).padStart(4, "0")).join("-"); };
-  const load = s => { if (!SH.has(s)) SH.set(s, fetch(raw(s + ".json")).then(r => r.ok ? r.json() : { k: {}, e: {}, m: {} }).catch(() => ({ k: {}, e: {}, m: {} }))); return SH.get(s); };
+  const PK = new Map(), packOf = id => { const p = id.split("."); return p.length < 3 ? p[0] : p[0] + "." + p[1] + "." + Math.floor(+p[2] / 400); };
+  const loadPack = k => { if (!PK.has(k)) PK.set(k, fetch(raw("e-" + k + ".json")).then(r => r.ok ? r.json() : {}).catch(() => ({}))); return PK.get(k); };
+  async function ents(ids) { const ps = [...new Set(ids.slice(0, 60).map(packOf))], got = await Promise.all(ps.map(loadPack)), all = Object.assign({}, ...got); return ids.slice(0, 60).filter(id => all[id]).map(id => Object.assign({ id }, all[id])); }
+  const load = s => { if (!SH.has(s)) SH.set(s, fetch(raw(s + ".json")).then(r => r.ok ? r.json() : { k: {}, m: {} }).catch(() => ({ k: {}, m: {} }))); return SH.get(s); };
   const meta = async () => META || (META = await fetch(raw("_meta.json")).then(r => r.ok ? r.json() : {}).catch(() => ({})));
   const STOP = /^(قال|وقال|عن|وعن|حدثنا|حدثني|اخبرنا|اخبرني|سمعت|روي|رواه|ذكر|ذكره|قاله|الامام|الحافظ|الشيخ|العلامه|شيخ|الاسلام|رضي|رحمه|الله|عنه|عنها|تعالي|و|ف)$/;
   // مفاتيح البحث من النص المحدد: النص كله، ثم بعد حذف ألفاظ الرواية والألقاب، ثم نوافذ متناقصة
@@ -27,7 +30,7 @@ const ALAM = (() => {
   async function lookup(text) {
     const ks = candidates(text);
     for (const k of ks) { const s = await load(shardOf(k)); const ids = s.k[k];
-      if (ids && ids.length) { const es = ids.map(id => Object.assign({ id }, s.e[id])); return { key: k, q: text, es: rank(es, k), m: s.m[k] || [] }; } }
+      if (ids && ids.length) { const es = await ents(ids); return { key: k, q: text, es: rank(es, k), m: s.m[k] || [] }; } }
     for (const k of ks) { const s = await load(shardOf(k)); if (s.m[k]) return { key: k, es: [], m: s.m[k] }; }
     return { key: ks[0] || norm(text), es: [], m: [] };
   }
