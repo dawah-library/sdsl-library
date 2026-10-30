@@ -49,8 +49,9 @@ jobs:
           GITHUB_WRITE_TOKEN: ${{ secrets.GH_WRITE_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: |
-          if [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+          if [ -z "$SUPABASE_SECRET_KEY" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
             SUPABASE_SECRET_KEY=$(curl -s "https://api.supabase.com/v1/projects/nqxkkdexpodjjwfdkxoq/api-keys?reveal=true" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" | jq -r 'if type=="array" then (([.[]|select(.type=="secret")][0].api_key) // ([.[]|select(.name=="service_role")][0].api_key) // empty) else empty end' 2>/dev/null || true)
             [ -z "$SUPABASE_SECRET_KEY" ] && echo "::warning::تعذر جلب مفتاح Supabase السري عبر SUPABASE_ACCESS_TOKEN"
             if [ -n "$SUPABASE_SECRET_KEY" ]; then echo "::add-mask::$SUPABASE_SECRET_KEY"; fi; export SUPABASE_SECRET_KEY
