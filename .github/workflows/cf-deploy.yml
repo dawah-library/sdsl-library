@@ -96,5 +96,9 @@ jobs:
             first=$(echo "$ids" | head -1)
             if [ -n "$first" ]; then curl -s -X PUT "$CF/zones/$z/dns_records/$first" -H "$H" -H "content-type: application/json" -d "$body" | jq -r '"::notice::dns '"$d"' updated: \(.success)"'
             else curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$body" | jq -r '"::notice::dns '"$d"' created: \(.success)"'; fi
-            n=$(echo "$ids" | sed '/^$/d' | wc -l); [ "$n" -gt 1 ] && echo "::warning::$d عليه $((n-1)) سجل إضافي قديم لم يُحذف (يحتاج إذن الحذف)"
+            # بإذن صاحب المكتبة (٣٠ أكتوبر ٢٠٢٦): حذف سجلات A/AAAA/CNAME القديمة الباقية (كانت تشير إلى Vercel)
+            for x in $(echo "$ids" | sed '1d;/^$/d'); do curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns '"$d"' old record removed: \(.success)"' || true; done
+          done
+          for x in $(curl -s "$CF/zones/$z/dns_records?name=*.dawahlibrary.org" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id'); do
+            curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns *.dawahlibrary.org removed: \(.success)"' || true
           done
