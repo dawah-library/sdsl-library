@@ -12,7 +12,7 @@ const BASE = "https://salafvoice.com/article.aspx?a=";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const readJSON = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return d; } };
 const strip = s => String(s).replace(/[ً-ٰٟـ]/g, "");
-const norm = s => strip(s).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim();
+const norm = s => strip(String(s || "").replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "")).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim();
 const bare = s => norm(s).replace(/^(الشيخ|الدكتور|دكتور|الأستاذ|الاستاذ|د[.\/]?|م[.\/]|أ[.\/]|ا[.\/])\s*/, "").replace(/\s*-?\s*(حفظه الله|رحمه الله)$/, "").replace(/(^|\s)(عبد|ابو|أبو)\s+/g, "$1$2").replace(/\s+/g, " ").trim();
 
 // خريطة أقسام صوت السلف إلى موضوعات المقالات في المكتبة
@@ -38,16 +38,21 @@ async function main() {
   const cat = readJSON(CAT, null); if (!cat) throw new Error("catalog.json غير موجود");
   fs.mkdirSync(ADIR, { recursive: true });
   const idx = readJSON(IDX, { v: 1, items: [] });
-  const have = new Set(idx.items.map(x => x.id).concat(cat.books.map(b => b.id)));
+  const have = new Set(idx.items.map(x => x.id).concat(cat.books.map(b => b.id), st.skipped || []));
+  // التهاني والتعازي الصادرة باسم الدعوة لا تُستورد (قرار الإدارة ٣٠ أكتوبر ٢٠٢٦)؛ الفتاوى عن حكم التهنئة والعزاء تبقى
+  const isGreeting = t => { const x = norm(t || ""); return /الدعوه السلفيه/.test(x) && (/^"?\s*(تعزيه|تهنئه)/.test(x) || /بخالص العزاء/.test(x)); };
   if (!cat.topics.some(t => t.id === "at0")) cat.topics.push({ id: "at0", name: "غير مصنف", for: "articles" });
   if (!cat.topics.some(t => t.id === "at18")) cat.topics.push({ id: "at18", name: "فتاوى واستشارات", for: "articles" });
 
   const LOG = []; const log = m => { console.log(m); LOG.push(m); };
   const authorId = name => {
     const b = bare(name || "صوت السلف"); if (!b) return "a8";
+    // الأسماء البديلة (aliases) تطابَق تامًّا أولًا، ثم الاسم الرسمي بالاحتواء
+    const exact = cat.authors.find(a => (a.col || "dawah") === "dawah" && (a.aliases || []).some(x => bare(x) === b));
+    if (exact) return exact.id;
     const hit = cat.authors.find(a => (a.col || "dawah") === "dawah" && (bare(a.name) === b || bare(a.name).includes(b) || b.includes(bare(a.name))) && bare(a.name).length >= 4);
     if (hit) return hit.id;
-    const id = "w" + (cat.authors.filter(a => /^w\d+$/.test(a.id)).length + 1);
+    const id = "w" + (Math.max(0, ...cat.authors.filter(a => /^w\d+$/.test(a.id)).map(a => +a.id.slice(1))) + 1); // أكبر رقم +1 (العدّ يكرر الأرقام بعد الدمج)
     cat.authors.push({ id, name: name.trim(), col: "dawah", bio: "", auto: true });
     st.newAuthors.push(name.trim()); log("  + كاتب جديد: " + name.trim());
     return id;
@@ -91,6 +96,7 @@ async function main() {
       const a = html ? extract(html, url) : null;
       await sleep(st.delayMs);
       if (!a || !a.text || a.text.length < 200 || !a.title) { log(`${id}: لا يوجد مقال`); return "miss"; }
+      if (isGreeting(a.title)) { (st.skipped = st.skipped || []).push(sid); have.add(sid); log(`${id}: تخطٍّ (تهنئة/تعزية) ${a.title}`); return "have"; }
       errs = 0; if (id > st.latestHint) st.latestHint = id;
       const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
       const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];

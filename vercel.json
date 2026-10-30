@@ -179,6 +179,11 @@
       ],
       "destination": "https://dawahlibrary.org/:path*",
       "permanent": true
+    },
+    {
+      "source": "/author/w73",
+      "destination": "/author/w53",
+      "permanent": true
     }
   ],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)data/audio' ':(exclude)data/tashkeel'"
