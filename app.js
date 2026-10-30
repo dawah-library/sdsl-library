@@ -1778,6 +1778,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="copyp"){const rb=$("#rb"),b=B(rb.dataset.id),i=+rb.dataset.p-1;try{await navigator.clipboard.writeText(plain(shownText(b,i))+"\n— "+b.title+"، "+A(b.authorId).name+(PL(b,i)?"، "+PL(b,i):"")+"\n"+SITENAME+(siteLink()?"\n"+siteLink(`#/book/${b.id}/${i+1}`):""));el.textContent="تم النسخ"}catch(x){}}
  else if(a==="logout"){await Auth.signOut();location.hash="#/"}
  else if(a==="tr"){closeSheet();trDlg()}else if(a==="trset"){S.tr=el.dataset.l||"";saveS();const d=dlg();if(d&&d.open)d.close();const c=cur();if(c){if(!$("#trv")&&S.tr)route();else renderTr(c.b,c.p)}}else if(a==="exp"){closeSheet();expDlg()}else if(a==="editp"){closeSheet();editDlg()}else if(a==="offline")offline();
+ else if(a==="mega"){const m=$("#mega"),o=m.hidden;m.hidden=!o;el.setAttribute("aria-expanded",String(o));if(o){const f=m.querySelector("a");if(f)f.focus()}}
  else if(a==="expUpd")dl("sdsl-update-"+today()+".json",JSON.stringify(updatePayload()),"application/json");
  else if(a==="delb"){if(confirm("حذف هذا العنصر من هذا الجهاز؟")){const id=el.dataset.id;LOCAL.catalog.books=LOCAL.catalog.books.filter(b=>b.id!==id);delete LOCAL.shards[id];await DB.set("local",LOCAL);SH.delete(id);merge();renderTicker();route()}}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const k=f.dataset.form,fd=new FormData(f);
@@ -1829,3 +1830,7 @@ document.addEventListener("click",e=>{if(e.target.closest('[data-act="qorgx"]'))
 document.addEventListener("click",async e=>{const el=e.target.closest('[data-act="offbook"]');if(!el)return;e.preventDefault();const b=B(el.dataset.id);if(!b)return;
  const vols=b.set?lib.books.filter(x=>x.set===b.set):[b];el.disabled=true;let i=0;
  try{for(const v of vols){el.textContent="جارٍ الحفظ… "+toAr(++i)+"/"+toAr(vols.length);await loadBook(v.id)}const l=ls.get("offbooks",[]);const k=b.set||b.id;if(!l.includes(k))l.push(k);ls.set("offbooks",l);el.textContent="✓ محفوظ دون إنترنت";toast("حُفظ الكتاب؛ يُقرأ الآن ولو انقطع الإنترنت")}catch(x){toast(x.message);el.disabled=false}});
+/* قائمة «الأقسام» الشاملة: تُغلق عند اختيار رابط أو الضغط خارجها أو Esc */
+(()=>{const close=()=>{const m=$("#mega");if(m&&!m.hidden){m.hidden=true;const b=$(".megab");if(b)b.setAttribute("aria-expanded","false")}};
+document.addEventListener("click",e=>{if(e.target.closest("#mega a")||(!e.target.closest("#mega")&&!e.target.closest(".megab")))close()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});})();
