@@ -16,7 +16,7 @@ jobs:
       - run: python3 tools/cf-config.py && git diff --exit-code _headers _routes.json
       - name: بناء الدوال
         run: |
-          npx wrangler pages functions build --outdir /tmp/fb > /tmp/build.log 2>&1 || { grep -v '^\s*$' /tmp/build.log | tail -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+          npx wrangler pages functions build --outdir /tmp/fb --compatibility-flags nodejs_compat --compatibility-date 2025-09-01 > /tmp/build.log 2>&1 || { grep -v '^\s*$' /tmp/build.log | tail -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - name: تشغيل وفحص
         run: |
           npx wrangler pages dev . --port 8788 --ip 127.0.0.1 > /tmp/dev.log 2>&1 &
