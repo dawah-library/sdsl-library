@@ -1,5 +1,5 @@
 // خريطة الموقع لمحركات البحث (/sitemap.xml) وملف robots.txt
-const fs = require("fs"), path = require("path");
+const fs = require("../lib/fs"), path = require("path");
 const read = p => JSON.parse(fs.readFileSync(path.join(process.cwd(), p), "utf8"));
 const x = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 module.exports = (req, res) => {

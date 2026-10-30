@@ -31,7 +31,7 @@ async function mailTo(uid, title, body, url, pid, pr) {
   const resend = process.env.RESEND_API_KEY;
   if (!resend && (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS)) return false;
   if (resend) MAILER = { sendMail: async m => { const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: "Bearer " + resend, "Content-Type": "application/json" }, body: JSON.stringify(m) }); if (!r.ok) throw new Error("resend " + r.status + " " + (await r.text()).slice(0, 200)); } };
-  else if (MAILER === undefined) { try { const nm = require("nodemailer"), port = +(process.env.SMTP_PORT || 465); MAILER = nm.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); } catch (e) { MAILER = null; } }
+  else if (MAILER === undefined) { try { const nm = require(process.env.SDSL_MAILER_MODULE || "nodemailer"), port = +(process.env.SMTP_PORT || 465); MAILER = nm.createTransport({ host: process.env.SMTP_HOST, port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); } catch (e) { MAILER = null; } }
   if (!MAILER) return false;
   const key = sbKey(), h = { apikey: key }; if (!/^sb_/.test(key)) h.Authorization = "Bearer " + key;
   const u = await (await fetch(process.env.SUPABASE_URL + "/auth/v1/admin/users/" + uid, { headers: h })).json();

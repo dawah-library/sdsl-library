@@ -1,0 +1,89 @@
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; worker-src 'self' blob: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https://github.com https://*.githubusercontent.com; connect-src 'self' https://nqxkkdexpodjjwfdkxoq.supabase.co wss://nqxkkdexpodjjwfdkxoq.supabase.co https://raw.githubusercontent.com https://api.github.com https://api.mymemory.translated.net https://api.pwnedpasswords.com https://*.r2.cloudflarestorage.com https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+/setup-db.html
+  ! Content-Security-Policy
+
+/data/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/assets/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/vendor/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/favicon.ico
+  Cache-Control: public, max-age=86400
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
+
+/404.html
+  Cache-Control: public, max-age=86400
+
+/about.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/app.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/audio.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/community.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/config.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/dawah.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/dm.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/export.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/hifz.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/i18n.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/manage.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/paths.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/qa.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/search.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/social.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/style.css
+  Cache-Control: public, max-age=60, must-revalidate
+
+/tashjir.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/words.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache
+
+/api/*
+  X-Robots-Tag: noindex

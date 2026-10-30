@@ -2,7 +2,7 @@
 // النشر مقصور على الاقتباس من الكتب: يتحقق الخادم من أن النص المقتبس موجود فعلًا في الصفحة المذكورة من الكتاب،
 // ولا يقبل كلامًا شخصيًا. لا يستطيع العضو الكتابة في الجدول مباشرة؛ الخادم وحده يكتب بمفتاح الخدمة.
 // POST /api/mpost  { b: معرف الكتاب, p: رقم الصفحة, t: النص المقتبس }  مع ترويسة Authorization: Bearer <رمز الدخول>
-const fs = require("fs"), path = require("path");
+const fs = require("../lib/fs"), path = require("path");
 const ROOT = process.cwd();
 let CAT = null;
 const norm = s => String(s || "").replace(/[ً-ْٰـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")

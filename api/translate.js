@@ -1,7 +1,7 @@
 // دالة خادم Vercel: ترجمة صفحة من كتاب بالذكاء الاصطناعي (Gemini) لعرضها داخل صفحة القراءة.
 // الطلب: GET /api/translate?id=<كتاب>&p=<رقم الصفحة>&l=<رمز اللغة>
 // النتيجة تُخزَّن في شبكة Vercel سنة كاملة، فكل صفحة تُترجم إلى كل لغة مرة واحدة فقط للجميع (تكلفة شبه معدومة).
-const fs = require("fs"), path = require("path");
+const fs = require("../lib/fs"), path = require("path");
 const ROOT = process.cwd();
 const LANGS = { en: "English", fr: "French", es: "Spanish", tr: "Turkish", de: "German", "zh-CN": "Simplified Chinese", ru: "Russian", ur: "Urdu", id: "Indonesian", ms: "Malay", bn: "Bengali", fa: "Persian", sw: "Swahili", ha: "Hausa" };
 const MODELS = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);

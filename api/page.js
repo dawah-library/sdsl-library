@@ -1,7 +1,7 @@
 // دالة خادم Vercel: صفحات قابلة للفهرسة في محركات البحث ولمعاينة الروابط عند مشاركتها.
 // تعيد صفحة الموقع نفسها (index.html) مع عنوان ووصف وصورة مناسبة لكل كتاب أو مقال أو مؤلف،
 // ونص الصفحة مكتوبًا داخلها ليقرأه محرك البحث، ثم يكمل الموقع عمله عاديًا في المتصفح.
-const fs = require("fs"), path = require("path");
+const fs = require("../lib/fs"), path = require("path");
 const ROOT = process.cwd(), SITE = "مكتبة الدعوة السلفية الرقمية";
 let TPL = null, CAT = null, AIDX = null;
 const read = p => JSON.parse(fs.readFileSync(path.join(ROOT, p), "utf8"));
@@ -9,7 +9,7 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&am
 const plain = s => String(s || "").replace(/^# /gm, "").replace(/\s+\n/g, "\n").trim();
 const cut = (s, n) => { s = plain(s).replace(/\s+/g, " "); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; };
 function cat() { if (!CAT) { CAT = read("data/catalog.json"); CAT.books = CAT.books.filter(b => !b.hidden); } return CAT; } // المخفي لا يُعرض لمحركات البحث
-function aidx() { if (!AIDX) { try { AIDX = (read("data/articles/index.json").items || []).filter(x => !x.h); } catch (e) { AIDX = []; } } return AIDX; }
+function aidx() { if (!AIDX) { try { AIDX = (read("data/articles/index.json").items || []).filter(x => !x.h); } catch (e) { return []; } } return AIDX; }
 const author = id => (cat().authors.find(a => a.id === id) || {});
 const topic = id => (cat().topics.find(t => t.id === id) || {});
 const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "المكتبة العامة" }; };

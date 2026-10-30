@@ -1,0 +1,41 @@
+{
+ "version": 1,
+ "include": [
+  "/*"
+ ],
+ "exclude": [
+  "/",
+  "/index.html",
+  "/assets/*",
+  "/data/*",
+  "/ocr-inbox/*",
+  "/pdf/*",
+  "/updates/*",
+  "/vendor/*",
+  "/vols/*",
+  "/404.html",
+  "/about.js",
+  "/app.js",
+  "/audio.js",
+  "/community.js",
+  "/config.js",
+  "/dawah.js",
+  "/dm.js",
+  "/export.js",
+  "/favicon.ico",
+  "/hifz.js",
+  "/i18n.js",
+  "/manage.js",
+  "/manifest.webmanifest",
+  "/paths.js",
+  "/privacy.html",
+  "/qa.js",
+  "/search.js",
+  "/setup-db.html",
+  "/social.js",
+  "/style.css",
+  "/sw.js",
+  "/tashjir.js",
+  "/words.js"
+ ]
+}
