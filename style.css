@@ -747,3 +747,6 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .talalv{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:6px 10px;background:var(--sf)}.talalv.done{border-color:var(--gold)}.talalv summary{cursor:pointer;padding:4px 0}
 .talait{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px dashed var(--line)}.talait a{flex:1;min-width:180px}.talait.ok a{color:var(--mut)}
 .talameth p{margin:.3em 0}.talanote{margin:.2em 1em}
+.tjzoom{gap:6px;align-items:center;margin:6px 0}.tjwrap{cursor:grab;overflow:auto;touch-action:pan-x pan-y}.tjwrap .tj{transition:transform .15s}
+.rsched .rprog{padding:6px 0;border-top:1px dashed var(--line)}.rsched .rprog.live{color:var(--ac);font-weight:600}
+.apfind{margin:4px 0 8px}.aptext .hit{background:#f6d58a;border-radius:3px}

@@ -17,11 +17,50 @@ function tjFilter(n, lvl, a, z, d = 0) {
 function tjNode(n, d, ci, bid) {
   const col = TJC[ci % TJC.length], pg = Array.isArray(n.p) ? `ص ${toAr(n.p[0])}${n.p[1] && n.p[1] !== n.p[0] ? "–" + toAr(n.p[1]) : ""}` : n.p ? "ص " + toAr(n.p) : "";
   const pp = Array.isArray(n.p) ? n.p[0] : n.p, flag = n.v === 0 ? ' <span class="tjflag" title="العبارة لم تُطابق نص الصفحة">؟</span>' : n.r === "bad" ? ' <span class="tjflag">!</span>' : "";
-  return `<li class="tjn d${d}" style="--c:${col}"><div class="tjcard">${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
+  if (n.b) bid = n.b; // خرائط العلوم: كل غصن يشير إلى كتابه
+  const go = n.u ? `<a class="tjp" href="${esc(n.u)}">${esc(n.ul || "افتح")}</a>` : "";
+  return `<li class="tjn d${d}" style="--c:${col}"><div class="tjcard">${go}${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
+}
+/* خرائط العلوم التفاعلية (ب7-27 … ب7-44): تُبنى من محتوى المكتبة الفعلي — موضوعات الكتب والمقالات والمتون وفهارس الكتب —
+   فكل غصن رابط إلى كتاب أو باب بصفحته أو مقال، ولا تُنشأ علاقة علمية لم ترد في تصنيف المكتبة أو فهارس كتبها (ب7-42). */
+const TJ_SCI = [["aqeeda", "العقيدة", /عقيد|توحيد|إيمان/], ["fiqh", "الفقه", /^الفقه|فقه|الصيام|الصلاة|الحج|الزكاة|الطهارة|المعاملات/], ["usul", "أصول الفقه", /أصول الفقه|القواعد الفقهية/], ["hadith", "الحديث وعلومه", /حديث|السنة/], ["quran", "علوم القرآن والتفسير", /قرآن|تفسير|تجويد|تلاوة/], ["lugha", "اللغة العربية", /لغة|نحو|معاجم|صرف|بلاغة|أدب/], ["tarbiya", "التربية والفكر والتاريخ", /تزكية|رقائق|تربية|أسرة|فكر|منهج|تاريخ|سيرة|تراجم|آداب|أذكار/]];
+function tjScience(k) {
+  const S = TJ_SCI.find(x => x[0] === k); if (!S) return null;
+  const bt = lib.topics.filter(t => t.for !== "articles" && S[2].test(t.name)), at = lib.topics.filter(t => t.for === "articles" && S[2].test(topicLabel(t)));
+  const books = t => lib.books.filter(b => !isArt(b) && !VOL2(b) && inTopic(b, t.id) && (b.col || "dawah") !== "ithra");
+  const bnode = b => ({ t: b.setTitle || b.title, s: (A(b.authorId).name || "") + (b.set ? " • " + toAr(b.vols || 1) + " مجلدات" : b.n ? " • " + toAr(b.n) + " صفحة" : ""), b: b.id, p: 1, c: (b.toc || []).filter(x => !x.l || x.l === 1).slice(0, 8).map(x => ({ t: x.t, p: x.p })) });
+  const col = c => ({ t: c === "dawah" ? "كتب مشايخ الدعوة" : "المتون والمراجع (المكتبة العامة)", c: bt.map(t => ({ t: t.name, c: books(t).filter(b => (b.col || "dawah") === c).sort((x, y) => (x.n || 0) - (y.n || 0)).slice(0, 12).map(bnode) })).filter(x => x.c.length) });
+  const arts = at.map(t => { const l = lib.books.filter(b => isArt(b) && inTopic(b, t.id) && (b.col || "dawah") !== "ithra"); return { t: topicLabel(t), s: toAr(l.length) + " مادة", u: "#/articles?t=" + t.id, ul: "كل المقالات", c: l.slice(-6).reverse().map(b => ({ t: b.title, b: b.id, p: 1 })) }; }).filter(x => x.c.length).slice(0, 8);
+  const root = { t: S[1], s: "خريطة من محتوى المكتبة: الكتب بأبوابها، والمقالات بموضوعاتها", c: [col("turath"), col("dawah"), arts.length ? { t: "مقالات وفتاوى", c: arts } : null].filter(x => x && x.c && x.c.length) };
+  return root;
+}
+// التكبير والتصغير والسحب لكل الخرائط (ب7-39)
+function tjZoom() {
+  const w = $("#tjwrap"); if (!w || w.dataset.z) return; w.dataset.z = 1; let sc = 1; const ul = w.querySelector(".tj");
+  const set = v => { sc = Math.min(2.5, Math.max(0.35, v)); ul.style.transform = `scale(${sc})`; ul.style.transformOrigin = "top right"; ul.style.width = (100 / sc) + "%"; const lb = $("#tjzl"); if (lb) lb.textContent = toAr(Math.round(sc * 100)) + "٪"; };
+  w.insertAdjacentHTML("beforebegin", `<div class="row tjzoom"><button class="btn s" data-z="1.2" aria-label="تكبير">＋</button><span id="tjzl">١٠٠٪</span><button class="btn s" data-z="0.83" aria-label="تصغير">－</button><button class="btn s" data-z="0">ملاءمة</button></div>`);
+  w.parentElement.querySelectorAll("[data-z]").forEach(bt => bt.onclick = () => set(+bt.dataset.z ? sc * +bt.dataset.z : 1));
+  w.addEventListener("wheel", e => { if (!e.ctrlKey) return; e.preventDefault(); set(sc * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
+  let drag = null; w.addEventListener("pointerdown", e => { if (e.target.closest("a,button")) return; drag = { x: e.clientX, y: e.clientY, l: w.scrollLeft, t: w.scrollTop }; });
+  w.addEventListener("pointermove", e => { if (!drag) return; w.scrollLeft = drag.l - (e.clientX - drag.x); w.scrollTop = drag.t - (e.clientY - drag.y); });
+  ["pointerup", "pointerleave"].forEach(ev => w.addEventListener(ev, () => drag = null));
+  let pd = 0; w.addEventListener("touchmove", e => { if (e.touches.length !== 2) return; const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pd) set(sc * d / pd); pd = d; }, { passive: true });
+  w.addEventListener("touchend", () => pd = 0);
 }
 async function vTashjir(q, id) {
+  if (id && id.startsWith("m:")) {
+    const k = id.slice(2), tree = tjScience(k), S = TJ_SCI.find(x => x[0] === k); if (!tree) return view('<p class="note">الخريطة غير موجودة.</p>');
+    view(`<p><a href="#/tashjir">← التشجير والخرائط</a></p><div class="tjhead"><h2>خريطة ${esc(S[1])}</h2><p class="mut">خريطة تفاعلية مبنية من محتوى المكتبة الفعلي: اضغط أي غصن لفتح الكتاب أو الباب أو المقال، وكبّر وصغّر واسحب للتنقل.</p></div>
+     <nav class="chips">${TJ_SCI.map(([x, n]) => `<a class="chip${x === k ? " x" : ""}" href="#/tashjir/m:${x}">${esc(n)}</a>`).join("")}</nav>
+     <div class="row tjtools"><button class="btn s" data-act="tjall">طيّ/فتح الكل</button><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjshare">مشاركة</button></div>
+     <p class="mut tjnote">الفروع من تصنيف المكتبة وفهارس الكتب نفسها، لا علاقات مستنتجة آليًا. لاقتراح تصحيح: «تواصل معنا».</p>
+     <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, "")}</ul></div>`);
+    window.__tj = { m: tree, tree, id, lvl: 3 }; tjZoom(); return;
+  }
   if (!id) {
-    view(`<div class="cmhero tj"><div><h2>تشجير الكتب</h2><p>خرائط ذهنية لكتب مشايخ الدعوة توضّح بناء الكتاب وأفكاره: تشجير عام للكتاب، ومتوسط للفصول والأبواب، وتفصيلي للموضوعات ونقاطها، وكل غصن مربوط بصفحته.</p></div></div><div id="tjbox" class="mut">جارٍ التحميل…</div>`);
+    view(`<div class="cmhero tj"><div><h2>تشجير الكتب</h2><p>خرائط ذهنية لكتب مشايخ الدعوة توضّح بناء الكتاب وأفكاره: تشجير عام للكتاب، ومتوسط للفصول والأبواب، وتفصيلي للموضوعات ونقاطها، وكل غصن مربوط بصفحته.</p></div></div>
+     <h3>خرائط العلوم التفاعلية</h3><div class="agrid">${TJ_SCI.map(([k, n]) => `<a class="acard2" href="#/tashjir/m:${k}"><span class="acov" style="${avHue(k)}"><i>🗺️</i><em>${esc(n)}</em></span><b>${esc(n)}</b><small class="mut">الكتب والمتون والمقالات</small></a>`).join("")}</div>
+     <h3>تشجير الكتب</h3><div id="tjbox" class="mut">جارٍ التحميل…</div>`);
     const L = await TSJ.index(), staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff);
     const box = $("#tjbox"); if (!box) return; box.className = "";
     box.innerHTML = (ids.length ? `<div class="agrid">${ids.map(k => { const b = B(k); return `<a class="acard2" href="#/tashjir/${k}"><span class="acov" style="${avHue(k)}"><i>🌳</i><em>${esc((b ? b.setTitle || b.title : L[k].t).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : L[k].t)}</b><small class="mut">${toAr(L[k].n || 0)} نقطة${L[k].ok ? "" : " • معاينة للإدارة"}</small></a>`; }).join("")}</div>` : `<div class="card soon"><h3>قريبًا بإذن الله</h3><p>تُشجَّر كتب الدعوة تباعًا بعد تدقيق نصوصها ومطابقتها بالنسخ المصورة، وتختار الإدارة الكتب المعروضة.</p></div>`)
@@ -41,7 +80,7 @@ async function vTashjir(q, id) {
   <div class="row tjtools"><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
   <p class="mut tjnote">التشجير مساعد على الفهم والمراجعة، وهو من إعداد آلي راجعته جولة تدقيق ثانية؛ والمرجع نص الكتاب بالضغط على رقم الصفحة. علامة «؟» تعني عبارة لم تطابق نص الصفحة بعد.</p>
   <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, id)}</ul></div>`);
-  window.__tj = { m, tree, id, lvl, a, z };
+  window.__tj = { m, tree, id, lvl, a, z }; tjZoom();
 }
 function tjAdminForm(L) {
   const bs = lib.books.filter(b => kindOf(b) === "book" && bc(b) === "dawah" && !b.demo && !VOL2(b));

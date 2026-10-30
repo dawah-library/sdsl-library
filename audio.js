@@ -139,9 +139,13 @@ const AP = {
     <div class="row apopts">${radio ? "" : `<select data-act="aprate" aria-label="سرعة الاستماع">${rates.map(r => `<option value="${r}" ${r === this.rate ? "selected" : ""}>السرعة ×${toAr(r)}</option>`).join("")}</select>`}
     <select data-act="apsleep" aria-label="مؤقت النوم"><option value="">${this.sleepAt ? "⏾ " + toAr(Math.max(1, Math.round((this.sleepAt - Date.now()) / 60e3))) + " دقيقة" : this.sleepEnd ? "⏾ نهاية المقطع" : "⏾ مؤقت النوم"}</option><option value="15">١٥ دقيقة</option><option value="30">٣٠ دقيقة</option><option value="60">ساعة</option><option value="end">نهاية المقطع</option><option value="0">إلغاء المؤقت</option></select>
     ${radio ? "" : '<button class="btn s" data-act="apmark">🔖 علامة توقف</button>'}${b && !it.rec ? `<a class="btn s" href="#/book/${it.bid}/${it.p}" data-act="apfullx">📖 افتح الصفحة</a>` : ""}<a class="btn s" href="#/audio/${it.bid}" data-act="apfullx">صفحة الكتاب المسموع</a></div>
-    <h4>النص أثناء الاستماع <small class="mut">(اضغط جملة للانتقال إليها)</small></h4><div id="aptext" class="aptext"></div>
+    <h4>النص أثناء الاستماع <small class="mut">(اضغط جملة للانتقال إليها)</small></h4>${radio ? "" : '<input type="search" id="apfind" class="apfind" placeholder="ابحث في نص المقطع…" aria-label="بحث في النص المصاحب">'}<div id="aptext" class="aptext"></div>
     ${radio ? radioNextHtml(this.ch) : ""}`;
     this.paintText();
+    const fi = $("#apfind"); if (fi) fi.oninput = () => { // البحث في النص المصاحب للصوت (ب12-25): تظليل المطابق والانتقال إلى أول موضع
+      const w = norm(fi.value.trim()), box = $("#aptext"); if (!box) return; let first = null;
+      box.querySelectorAll("[data-si]").forEach(el => { const hit = w.length > 1 && norm(el.textContent).includes(w); el.classList.toggle("hit", hit); if (hit && !first) first = el; });
+      if (first) first.scrollIntoView({ block: "center", behavior: "smooth" }); };
   },
   openFull() { this.bar(); const f = $("#apfull"); f.hidden = false; document.body.classList.add("apfull-on"); this.paintFull(); },
   closeFull() { const f = $("#apfull"); if (f) f.hidden = true; document.body.classList.remove("apfull-on"); }
@@ -158,10 +162,34 @@ async function radioChannels() {
   const all = ready.map(([id]) => id), byC = c => ready.filter(([id, x]) => (x.c || (B(id) || {}).col) === c).map(([id]) => id);
   const ch = [mk("mix", "مختارات المكتبة", "مقاطع متنوعة من كل الكتب المسموعة، تتجدد كل يوم", all, true), mk("dawah", "إذاعة الدعوة السلفية", "كتب مشايخ الدعوة السلفية كاملة متتابعة", byC("dawah")), mk("turath", "إذاعة التراث", "متون التراث وكتبه كاملة متتابعة", byC("turath"))];
   try { if (typeof Members !== "undefined" && Members.on()) { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); ((data && data.value && data.value.list) || []).forEach(c => { const ids = (c.books || []).filter(id => L[id] && AUDIO.ready(L[id])); if (ids.length) ch.push(mk("c-" + c.id, c.n, c.d || "قناة من إعداد الإدارة", ids, !!c.mix)); }); } } catch (e) { }
+  // البرامج الإذاعية بمواعيد ثابتة (ب12-35 … ب12-38): البرنامج الجاري الآن قناة في المقدمة تبدأ من أول مواده عند موعده
+  for (const pr of await radioPrograms()) { const live = progLive(pr); if (!live) continue; const ids = (pr.books || []).filter(id => L[id] && AUDIO.ready(L[id]) && !L[id].preview); if (!ids.length) continue;
+    const c = mk("p-" + pr.id, "📡 " + pr.n, (pr.d || "برنامج إذاعي") + " • حتى " + live.end, ids, false); c.start = live.t0; c.prog = 1; ch.unshift(c); }
   return ch.filter(c => c.items.length);
 }
+let RPROG = null;
+async function radioPrograms() {
+  if (RPROG) return RPROG;
+  try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_programs").maybeSingle(); RPROG = (data && data.value && data.value.list) || []; } catch (e) { RPROG = []; }
+  setTimeout(() => RPROG = null, 300e3); return RPROG;
+}
+// هل البرنامج على الهواء الآن؟ (بتوقيت مصر: المواعيد تُكتب بتوقيت القاهرة)
+function progLive(pr, at) {
+  const now = at || new Date(), cai = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Cairo" })), day = cai.getDay();
+  if (pr.days && pr.days.length && !pr.days.includes(day)) return null;
+  const [h, m] = String(pr.at || "00:00").split(":").map(Number), st = new Date(cai); st.setHours(h, m || 0, 0, 0);
+  const dur = (+pr.dur || 60) * 60e3, diff = cai - st; if (diff < 0 || diff >= dur) return null;
+  const end = new Date(st.getTime() + dur); return { t0: now.getTime() - diff, end: String(end.getHours()).padStart(2, "0") + ":" + String(end.getMinutes()).padStart(2, "0") };
+}
+const RDAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+async function radioScheduleHtml() {
+  const ps = await radioPrograms(); if (!ps.length) return "";
+  const day = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" })).getDay();
+  const today = ps.filter(p => !p.days || !p.days.length || p.days.includes(day)).sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  return `<div class="card rsched"><h3>📅 جدول البرامج اليوم (${RDAYS[day]}) <small class="mut">بتوقيت القاهرة</small></h3>${today.map(p => `<div class="rprog${progLive(p) ? " live" : ""}"><b>${esc(p.at)}</b> <span>${esc(p.n)}</span> <span class="mut">${toAr(+p.dur || 60)} دقيقة${p.d ? " • " + esc(p.d) : ""}</span>${progLive(p) ? ' <em class="tag on">على الهواء</em>' : ""}</div>`).join("") || '<p class="mut">لا برامج اليوم.</p>'}</div>`;
+}
 function radioPos(ch) {
-  const start = ch.mix ? R_EPOCH + Math.floor((Date.now() - R_EPOCH) / 864e5) * 864e5 : R_EPOCH;
+  const start = ch.start || (ch.mix ? R_EPOCH + Math.floor((Date.now() - R_EPOCH) / 864e5) * 864e5 : R_EPOCH);
   let pos = ((Date.now() - start) / 1000) % (ch.T || 1), i = 0;
   while (i < ch.items.length && pos >= ch.items[i].d) { pos -= ch.items[i].d; i++; }
   return { i: Math.min(i, ch.items.length - 1), off: Math.max(0, pos) };
@@ -214,7 +242,8 @@ async function vAudioBook(bid) {
 async function vRadio(q, cid) {
   view(`<div class="radio"><div class="rdhead"><h2>📻 راديو المكتبة</h2><p>بث متواصل من كتب المكتبة المسموعة، يسمعه كل المستمعين في اللحظة نفسها كالإذاعة. يعمل في خلفية جهازك ولو أغلقت الشاشة.</p></div><div id="rdbox"><p class="mut">جارٍ ضبط الموجات…</p></div></div>`);
   const ch = await radioChannels(), box = $("#rdbox"); if (!box) return;
-  if (!ch.length) { box.innerHTML = AUDIO_SOON; return; }
+  const sched = await radioScheduleHtml();
+  if (!ch.length) { box.innerHTML = AUDIO_SOON + sched; return; }
   const sel = ch.find(c => c.id === (cid || q.c)) || ch[0], live = AP.mode === "radio" && AP.ch && AP.ch.id === sel.id;
   const { i } = radioPos(sel), now = sel.items[i], nb = B(now.bid);
   box.innerHTML = `<div class="chips rch">${ch.map(c => `<a class="chip${c.id === sel.id ? " x" : ""}" href="#/radio/${c.id}">${esc(c.n)}</a>`).join("")}</div>
@@ -224,6 +253,7 @@ async function vRadio(q, cid) {
   <button class="btn p big" data-act="rdplay" data-c="${sel.id}">${live && !AP.audio().paused ? "⏸ إيقاف" : "▶ استمع الآن"}</button>
   <p class="mut">مدة دورة القناة ${fmtDur(sel.T)} • ${toAr(sel.ids.length)} ${sel.ids.length > 2 && sel.ids.length < 11 ? "كتب" : "كتاب"}</p></div>
   ${radioNextHtml(sel)}
+  ${sched}
   <p class="mut">تريد كتابًا من أوله بالترتيب الذي تختاره؟ <a href="#/audio">صوتيات المكتبة</a>.</p>`;
   window.__rch = ch;
 }
@@ -333,11 +363,19 @@ async function vAudioAdmin() {
   ${(RC.list || []).map((c, k) => `<div class="bk"><b>${esc(c.n)}</b><span>${toAr((c.books || []).length)} كتاب${c.mix ? " • مختارات متنوعة" : " • كتب كاملة"}</span><button class="btn s" data-act="rcdel" data-k="${k}">حذف القناة</button></div>`).join("")}
   <form data-form="rcadd"><label>اسم القناة</label><input name="n" maxlength="60" required placeholder="مثال: إذاعة العقيدة"><label>وصف قصير</label><input name="d" maxlength="120"><label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && L[id].ok && B(id)).map(id => `<label class="chk"><input type="checkbox" name="bk" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<p class="mut">تظهر الكتب هنا بعد اكتمال صوتياتها واعتمادها.</p>'}</div><label class="chk"><input type="checkbox" name="mix"> مختارات متنوعة (مقاطع قصيرة) بدل الكتب كاملة</label><button class="btn p" style="margin-top:8px">إنشاء القناة</button></form></div>`;
   window.__RC = RC;
+  let RP = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_programs").maybeSingle(); if (data && data.value) RP = data.value; } catch (e) { }
+  window.__RP = RP;
+  $("#aadm").insertAdjacentHTML("beforeend", `<div class="card"><h3>📅 البرامج الإذاعية بمواعيد ثابتة</h3><p class="mut">برنامج يُبث في موعده (بتوقيت القاهرة) في الأيام المحددة، ويظهر قناةً «على الهواء» في مقدمة الراديو، وفي جدول البرامج اليومي. مواده من الكتب المسموعة المعتمدة.</p>
+   ${(RP.list || []).map((p, k) => `<div class="bk"><b>${esc(p.at)} — ${esc(p.n)}</b><span>${(p.days || []).length ? p.days.map(d => RDAYS[d]).join("، ") : "يوميًا"} • ${toAr(+p.dur || 60)} دقيقة • ${toAr((p.books || []).length)} كتاب</span><button class="btn s" data-act="rpdel" data-k="${k}">حذف</button></div>`).join("") || '<p class="mut">لا برامج بعد.</p>'}
+   <form data-form="rpadd"><div class="row"><div><label>اسم البرنامج</label><input name="n" maxlength="60" required placeholder="مثال: مجلس العقيدة"></div><div><label>الموعد</label><input name="at" type="time" required value="20:00"></div><div><label>المدة (دقيقة)</label><input name="dur" type="number" min="10" max="600" value="60"></div></div>
+   <label>وصف</label><input name="d" maxlength="120"><label>الأيام (اتركها كلها فارغة ليوميًا)</label><div>${RDAYS.map((d, i) => `<label class="inl"><input type="checkbox" name="day" value="${i}"> ${d}</label>`).join("")}</div>
+   <label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && L[id].ok && B(id)).map(id => `<label class="inl"><input type="checkbox" name="pb" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<span class="mut">لا كتب مسموعة معتمدة بعد.</span>'}</div>
+   <button class="btn p">إضافة البرنامج</button></form></div>`);
 }
 
 /* ---------- الأحداث ---------- */
 document.addEventListener("click", async e => {
-  const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act; if (!/^(ap|rd|rc)/.test(a)) return;
+  const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act; if (!/^(ap|rd|rc|rp)/.test(a)) return;
   if (el.tagName !== "A") e.preventDefault();
   try {
     if (a === "applay") { await AP.playBook(el.dataset.id, +el.dataset.p || 1, +el.dataset.t || 0); }
@@ -359,6 +397,7 @@ document.addEventListener("click", async e => {
     else if (a === "aprvplay") { const c = window.__arev; if (!c) return; const r = ARev.get(c.bid), p = ARev.pages(c.x).find(p => ARev.st(r, c.man, p) !== "ok") || 1; await AP.playBook(c.bid, p); }
     else if (a === "aprvsave") { await ARev.save(el.dataset.id); toast("حُفظت المراجعة؛ يراها المشرفون الآخرون"); }
     else if (a === "aprvredo") await ARev.redo(el.dataset.id);
+    else if (a === "rpdel") { if (!confirm("حذف البرنامج؟")) return; const RP = window.__RP || { list: [] }; RP.list.splice(+el.dataset.k, 1); await CM.saveSetting("radio_programs", RP); RPROG = null; route(); }
     else if (a === "rcdel") { if (!confirm("حذف القناة؟")) return; const RC = window.__RC || { list: [] }; RC.list.splice(+el.dataset.k, 1); await CM.saveSetting("radio_channels", RC); toast("حُذفت القناة"); route(); }
   } catch (x) { console.warn(x); toast(x.message || "تعذر تنفيذ الطلب"); }
 });
@@ -370,7 +409,7 @@ document.addEventListener("change", e => {
   else if (el.dataset.act === "apsleep" && el.value !== "") AP.sleep(el.value === "end" ? "end" : +el.value);
 });
 document.addEventListener("submit", async e => {
-  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audrec|rcadd)$/.test(f.dataset.form)) return;
+  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audrec|rcadd|rpadd)$/.test(f.dataset.form)) return;
   e.preventDefault(); e.stopImmediatePropagation(); const btn = f.querySelector("button"); btn.disabled = true;
   try {
     if (f.dataset.form === "audq") {
@@ -387,6 +426,10 @@ document.addEventListener("submit", async e => {
       const it = { id: f.b.value, rec: { f: name, t: f.t.value.trim(), p: +f.p.value || 1, by: (Auth.user && Auth.user.name) || "" } };
       await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).unshift(it); return o; }, "صوتيات: تسجيل «" + it.rec.t + "»");
       $("#audrs").textContent = "رُفع التسجيل؛ يظهر في صفحة الكتاب خلال دقائق."; f.reset(); btn.disabled = false;
+    } else if (f.dataset.form === "rpadd") {
+      const books = [...f.querySelectorAll('input[name="pb"]:checked')].map(x => x.value), days = [...f.querySelectorAll('input[name="day"]:checked')].map(x => +x.value);
+      const RP = window.__RP || { list: [] }; (RP.list = RP.list || []).push({ id: Date.now().toString(36), n: f.n.value.trim(), d: f.d.value.trim(), at: f.at.value, dur: +f.dur.value || 60, days, books });
+      await CM.saveSetting("radio_programs", RP); RPROG = null; toast("أُضيف البرنامج"); route();
     } else if (f.dataset.form === "rcadd") {
       const ids = [...f.querySelectorAll('input[name="bk"]:checked')].map(x => x.value); if (!ids.length) throw new Error("اختر كتابًا واحدًا على الأقل");
       const RC = window.__RC || { list: [] }; (RC.list = RC.list || []).push({ id: Date.now().toString(36), n: f.n.value.trim(), d: f.d.value.trim(), books: ids, mix: f.mix.checked });
