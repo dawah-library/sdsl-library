@@ -1,4 +1,4 @@
-# تقرير استيراد كتب التراث — 2026-10-24 10:52 UTC
+# تقرير استيراد كتب التراث — 2026-10-30 18:10 UTC
 
 ## القواعد الحسان لتفسير القرآن
   ✗ لم يُعثر على الكتاب عند 1376CabdRahmanSacdi. كتبه: TaysirKarimRahman
@@ -21,20 +21,28 @@
 ## الموسوعة الفقهية الكويتية
   ✗ لم يُعثر عليه بالبحث الموسع في 1450AH, 1425AH, 1400AH, 1375AH. أقرب العناوين: 1450AH/1450Anonymous.MawsucatRijalZaydiyya, 1450AH/1450Burnu.MawsucatQawacidFiqhiyya, 1450AH/1450DarTaqrib.MawsucaQuraniyya, 1450AH/1450Maghrawi.MawsucatMawaqifSalaf, 1450AH/1450MajmacFikrIslami.MawsucatMuallifiImamiya, 1450AH/1450MawsucaShicriya.MucjamShucara, 1450AH/1450MuhammadHadiYusufi.MawsucatTarikhIslam, 1450AH/1450MuhammadTawfiqSahli.MawsucatAmthalShacbiyyaFalastiniyya, 1450AH/1450Multiple.MawsucaMujazaFiTarikhIslami, 1450AH/1450YasirCabdRahman.MawsucatAkhlaq, 1400AH/1381SalimHasan.MawsucatMisrQadima
 
-## النهاية في غريب الحديث والأثر
-  النسخة: 0606IbnAthirMajdDin.NihayaFiGharib.Shamela0023691-ara1 (4844 ك.ب)
-  ✓ أُضيف: 2157 صفحة، 5 مجلد، 4.6 م.ب — تحقيق: طاهر أحمد الزاوى - محمود محمد الطناحي — المكتبة العلمية - بيروت، 1399هـ - 1979م
+## تقريب التهذيب
+  النسخة: 0852IbnHajarCasqalani.TaqribTahdhib.JK000121-ara1.completed (1854 ك.ب)
+  ✓ أُضيف: 690 صفحة، 1 مجلد، 1.7 م.ب — تحقيق: محمد عوامة — دار الرشيد
 
-## المفردات في غريب القرآن
-  النسخة: 0502RaghibIsbahani.Mufradat.Shamela0023636-ara1 (2179 ك.ب)
-  ✓ أُضيف: 882 صفحة، 1 مجلد، 2.1 م.ب — تحقيق: صفوان عدنان الداودي — دار القلم، الدار الشامية - دمشق بيروت
+## تهذيب التهذيب
+  النسخة: 0852IbnHajarCasqalani.TahdhibTahdhib.JK000134-ara1.mARkdown (11545 ك.ب)
+  ✓ أُضيف: 5103 صفحة، 12 مجلد، 11.0 م.ب — دار الفكر
 
-## لسان العرب
-  النسخة: 0711IbnManzurIfriqi.LisanCarab.Shamela0001687-ara1.mARkdown (29951 ك.ب)
-  ✓ أُضيف: 8095 صفحة، 16 مجلد، 28.5 م.ب — دار صادر - بيروت
+## الإصابة في تمييز الصحابة
+  النسخة: 0852IbnHajarCasqalani.IsabaFiTamyiz.JK000533-ara1.mARkdown (9534 ك.ب)
+  ✓ أُضيف: 5261 صفحة، 8 مجلد، 9.0 م.ب — تحقيق: علي محمد البجاوي — دار الجيل
 
-## القاموس المحيط
-  النسخة: 0817MajdDinFiruzabadi.QamusMuhit.Shamela0007283-ara1 (6172 ك.ب)
-  ✓ أُضيف: 1340 صفحة، 2 مجلد، 5.8 م.ب — تحقيق: مكتب تحقيق التراث في مؤسسة الرسالة — مؤسسة الرسالة للطباعة والنشر والتوزيع، بيروت - لبنان
+## الكاشف في معرفة من له رواية في الكتب الستة
+  النسخة: 0748Dhahabi.Kashif.Shia003276Vols-ara1.mARkdown (1549 ك.ب)
+  ✓ أُضيف: 1035 صفحة، 1 مجلد، 1.4 م.ب — تحقيق: قابلها بأصل مؤلفيهما وقدم لهما وعلق عليهما : محمد عوامة (دار القبلة للثقافة الاسلامية - جدة) وخرج نصوصهما : أحمد محمد نمر الخطيب (مؤسسة علوم القرآن - جدة)
 
-المضاف في هذا التشغيل: 4
+## ميزان الاعتدال في نقد الرجال
+  النسخة: 0748Dhahabi.MizanIctidal.JK001293BK1-ara1.mARkdown (5241 ك.ب)
+  ✓ أُضيف: 3310 صفحة، 7 مجلد، 4.9 م.ب — تحقيق: الشيخ علي محمد معوض والشيخ عادل أحمد عبدالموجود — دار الكتب العلمية
+
+## الجرح والتعديل
+  النسخة: 0327IbnAbiHatimRazi.JarhWaTacdil.Shamela0002170-ara1.completed (8016 ك.ب)
+  ✓ أُضيف: 4202 صفحة، 10 مجلد، 7.5 م.ب — طبعة مجلس دائرة المعارف العثمانية - بحيدر آباد الدكن - الهند
+
+المضاف في هذا التشغيل: 6
