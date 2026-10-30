@@ -1,0 +1,6 @@
+[
+ {"type":"CNAME","name":"send.dawahlibrary.org","content":"send.forge.rmta.net","proxied":false,"comment":"Resend SPF"},
+ {"type":"CNAME","name":"rsend.dawahlibrary.org","content":"rsend-apne1.forge.rmta.net","proxied":false,"comment":"Resend SPF"},
+ {"type":"TXT","name":"resend._domainkey.dawahlibrary.org","content":"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCsx67lqCPQQ1lgUurS9SQLDDrugKgYlyC4BoQdeNScFIYyuGahjYEVGgifj9m3uOgutyyhMaWmRPCFm6f8Npqd/alFduRaQMMIgWhxapJe7iYyVaYEIfmi89qy9EYpVVGu/7UnCM3+MzaSIBADJqUdO5/KddZqdGUnPwqKHUV+0QIDAQAB","comment":"Resend DKIM"},
+ {"type":"TXT","name":"_dmarc.dawahlibrary.org","content":"v=DMARC1; p=none;","comment":"Resend DMARC"}
+]

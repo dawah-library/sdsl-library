@@ -84,6 +84,12 @@ jobs:
           done
           z=$(curl -s "$CF/zones?name=dawahlibrary.org" -H "$H" | jq -r '.result[0].id // empty')
           if [ -z "$z" ]; then echo "::warning::النطاق ليس مُدارًا في Cloudflare: أضف عند مسجّل النطاق سجل CNAME للاسمين @ وwww إلى $sub"; exit 0; fi
+          # سجلات البريد (Resend) المنقولة من Vercel DNS، تُضاف إن لم تكن موجودة
+          jq -c '.[]' tools/dns-records.json | while read -r rec; do
+            nm=$(echo "$rec" | jq -r .name); ty=$(echo "$rec" | jq -r .type)
+            has=$(curl -s "$CF/zones/$z/dns_records?name=$nm&type=$ty" -H "$H" | jq '.result|length')
+            [ "$has" = 0 ] && curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$rec" | jq -r '"::notice::dns '"$nm"' '"$ty"': \(.success)"'
+          done
           for d in dawahlibrary.org www.dawahlibrary.org; do
             ids=$(curl -s "$CF/zones/$z/dns_records?name=$d" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id')
             body="{\"type\":\"CNAME\",\"name\":\"$d\",\"content\":\"$sub\",\"proxied\":true,\"comment\":\"Cloudflare Pages (كان Vercel)\"}"
