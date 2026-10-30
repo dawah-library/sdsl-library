@@ -16,7 +16,7 @@
       "maxDuration": 15
     },
     "api/gh.js": {
-      "maxDuration": 30
+      "maxDuration": 60
     },
     "api/remind.js": {
       "maxDuration": 60

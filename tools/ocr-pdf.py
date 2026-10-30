@@ -16,6 +16,11 @@ LANG = os.environ.get("OCR_LANG", "ara")
 AR = re.compile(r"[ء-ي]")
 
 
+def new_author_id(cat):
+    # أكبر رقم +1 (العدّ يكرر الأرقام بعد دمج كاتب أو حذفه)
+    return "w" + str(max([0] + [int(a["id"][1:]) for a in cat["authors"] if re.fullmatch(r"w\d+", a["id"])]) + 1)
+
+
 def norm(s):
     s = re.sub(r"[ً-ٰٟـ]", "", s or "")
     s = re.sub(r"[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه")
@@ -1010,7 +1015,15 @@ def main():
         if "offset" in cfg: entry["pdfOffset"] = int(cfg["offset"])
         if cfg.get("tags"): entry["tags"] = sorted(set(entry.get("tags", []) + cfg["tags"]))
         do_ocr = cfg.get("ocr", existing is None)
-        if not existing:
+        if not existing and cfg.get("set"):
+            # مجلد من عمل متعدد المجلدات (من «الإدارة ← كتاب متعدد المجلدات»): سجل لكل مجلد يجمعها set
+            vol = int(cfg.get("vol") or 1)
+            entry.update({"set": cfg["set"], "setTitle": (cfg.get("setTitle") or title).strip(), "vol": vol})
+            entry["title"] = entry["setTitle"] + " — ج " + str(vol)
+            if cfg.get("source"): entry["source"] = cfg["source"]
+        if not existing and cfg.get("authorId") and any(a["id"] == cfg["authorId"] for a in cat["authors"]):
+            entry["authorId"] = cfg["authorId"]
+        elif not existing:
             # المؤلف: مطابقة مع الموجود أو إضافة جديد
             aid = None
             if author:
@@ -1019,7 +1032,7 @@ def main():
                     if na and nb and (na == nb or (len(nb) >= 4 and (nb in na or na in nb))):
                         aid = a["id"]; break
                 if not aid:
-                    aid = "w" + str(sum(1 for a in cat["authors"] if re.fullmatch(r"w\d+", a["id"])) + 1)
+                    aid = new_author_id(cat)
                     cat["authors"].append({"id": aid, "name": author, "col": entry["col"], "bio": "", "auto": True})
             entry["authorId"] = aid or "a8"
         if do_ocr:
@@ -1035,14 +1048,14 @@ def main():
             card = make_card(pages, toc)
             if card:
                 entry["card"] = card; REPORT.append("- بطاقة التعريف: ✓")
-                if not author and not existing and card.get("author"):  # المؤلف من صفحة العنوان إن لم يُحدَّد عند الرفع
+                if not author and not existing and not cfg.get("authorId") and card.get("author"):  # المؤلف من صفحة العنوان إن لم يُحدَّد عند الرفع
                     nm = card["author"]
                     hit = next((a for a in cat["authors"] if norm(a["name"]) and (norm(a["name"]) in norm(nm) or norm(nm) in norm(a["name"]))), None)
                     if hit: entry["authorId"] = hit["id"]
                     else:
-                        aid = "w" + str(sum(1 for a in cat["authors"] if re.fullmatch(r"w\d+", a["id"])) + 1)
+                        aid = new_author_id(cat)
                         cat["authors"].append({"id": aid, "name": nm, "col": entry["col"], "bio": "", "auto": True}); entry["authorId"] = aid
-                if not existing and card.get("title") and re.match(r"^up[0-9a-z]+", entry.get("title", "")): entry["title"] = card["title"]
+                if not existing and not entry.get("set") and card.get("title") and re.match(r"^up[0-9a-z]+", entry.get("title", "")): entry["title"] = card["title"]
             if UNCERTAIN: shard["unc"] = {str(k): v for k, v in UNCERTAIN.items()}
             if UNREVIEWED: shard["unrev"] = UNREVIEWED[:]
             if LITE: shard["lite"] = sorted(LITE)
@@ -1054,6 +1067,9 @@ def main():
                           "unc": sum(len(v) for v in UNCERTAIN.values()), "unrev": len(UNREVIEWED), "lite": len(LITE),
                           "pdfOffset": entry.get("pdfOffset", 0)})
         if not existing: cat["books"].append(entry)
+        if entry.get("set"):  # عدد المجلدات في كل سجلات العمل
+            vs = [x for x in cat["books"] if x.get("set") == entry["set"]]
+            for x in vs: x["vols"] = max(len(vs), max(int(y.get("vol") or 0) for y in vs))
         print(f"   تم: {entry.get('n', '?')} صفحة")
         if ERRS: REPORT.append("- أخطاء Gemini: " + "، ".join("%s ×%d" % kv for kv in ERRS.most_common(6))); ERRS.clear()
         if STATS.get("digital"): REPORT.append("- منها إلكترونية: %d" % STATS["digital"])
