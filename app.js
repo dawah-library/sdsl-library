@@ -132,7 +132,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  <a class="col ar" href="#/articles"><b>المقالات</b><span>مقالات صوت السلف، مقسمة بالموضوع والكاتب</span><em>${ARTS().length} مقال</em></a>
  <a class="col fw" href="#/fatawa"><b>الفتاوى</b><span>فتاوى مشايخ الدعوة بتقسيمها الفني وبحسب الشيخ</span><em>${FATWAS().length} فتوى</em></a>
  <a class="col tr" href="#/library?c=turath"><b>${esc(COL.turath)}</b><span>كتب التراث الإسلامي والمراجع المعتمدة، وكتب العلماء والباحثين من خارج الدعوة</span><em>${BOOKS().filter(b=>bc(b)==="turath").length} كتاب</em></a></div>
- <a class="askcta" href="#/ask"><b>اسأل المكتبة</b><span>مساعد بحثي بالذكاء الاصطناعي يجيب من نصوص المكتبة مع الإحالة إلى الكتاب والصفحة. للأعضاء المسجلين.</span></a>
+ <a class="askcta" id="askcta" href="#/ask"><b>اسأل المكتبة</b><span>مساعد بحثي بالذكاء الاصطناعي يجيب من نصوص المكتبة مع الإحالة إلى الكتاب والصفحة. للأعضاء المسجلين.</span></a>
  <div class="grid"><a class="card" href="#/bayanat"><b>بيانات الدعوة</b><span>${BAYANAT().length} بيان</span></a><a class="card" href="#/furqan"><b>قضايا الفرقان</b><span>المؤلفات المنهجية</span></a><a class="card" href="#/tafrighat"><b>تفريغات</b><span>الدروس مفرّغة نصيًا</span></a><a class="card" href="#/posts"><b>منشورات</b><span>من صفحات المشايخ والكتّاب</span></a><a class="card" href="#/community"><b>مجتمع المكتبة</b><span>مختارات الأعضاء وتفاعلهم</span></a><a class="card" href="#/hifz"><b>حفظ المتون</b><span>بطاقات مراجعة متباعدة</span></a><a class="card" href="#/paths"><b>المسارات العلمية</b><span>برامج متدرجة بشهادة إتمام</span></a><a class="card" href="#/qa"><b>سؤال وجواب من الكتب</b><span>أسئلة وأجوبتها بنص الكتب</span></a><a class="card" href="#/tashjir"><b>تشجير الكتب</b><span>خرائط ذهنية للكتب</span></a><a class="card" href="#/audio"><b>صوتيات المكتبة</b><span>استمع إلى الكتب</span></a><a class="card" href="#/radio"><b>راديو المكتبة</b><span>بث متواصل من الكتب</span></a><a class="card" href="#/tarajim"><b>تراجم مشايخ الدعوة</b><span>${Object.keys(TJ.items).length} ترجمة</span></a><a class="card" href="#/authors"><b>المؤلفون</b><span>${lib.authors.length} مؤلفًا ومصدرًا</span></a><a class="card" href="#/qabasat"><b>قبسات</b><span>صمّم اقتباسًا وانشره</span></a><a class="card" href="#/search"><b>بحث متقدم</b><span>في العناوين والنصوص</span></a><a class="card" href="#/favs"><b>المفضلة</b><span>${S.favs.length} عنصر</span></a></div>
  <h2>مختارات اليوم</h2><div id="sugg"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
  ${(()=>{const by=k=>(x,y)=>(y[k]||"").localeCompare(x[k]||""),it=b=>`<a href="#/book/${b.id}"><b>${esc(b.setTitle||b.title)}</b><span>${esc(A(b.authorId).name||"")}</span></a>`,
@@ -140,6 +140,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
   return G.length?`<h2>جديد المكتبة</h2><div class="newg">${G.map(([t,h,l])=>`<section class="newc"><h3>${t}</h3>${l.slice(0,4).map(it).join("")}<a class="all" href="${h}">عرض الكل (${toAr(l.length)}) ←</a></section>`).join("")}</div>`:""})()}
  <h2>أقسام المكتبة</h2><div class="chips">${lib.topics.filter(t=>t.for!=="articles"&&BOOKS().some(b=>b.topicId===t.id)).map(t=>`<a class="chip" href="#/library?t=${t.id}">${esc(t.name)}</a>`).join("")}</div>
 `);
+ swx().then(s=>{const c=$("#askcta");if(c&&s.ask===false){c.classList.add("paused");c.querySelector("span").textContent="متوقف مؤقتًا، ويعود قريبًا بإذن الله."}});
  const seed=+today().replace(/-/g,"");suggest(3,seed,b=>(b.size||0)<1200000).then(s=>{SUG=s;const el=$("#sugg");if(el)el.innerHTML=s.map(qCard).join("")||'<p class="mut">لا توجد مقتطفات.</p>'})}
 
 /* ---------- المكتبة (الكتب) ---------- */
@@ -956,10 +957,13 @@ const AIEX=["ما شروط التوبة؟","اجمع ما ورد في المكت
 const AISTEPS=["يفهم السؤال ويخطط للبحث…","يبحث في الكتب والمقالات…","يقرأ سياق النصوص…","يوازن بين النصوص ويحلّلها…","يرتّب الإجابة ويوثّقها…"];
 const svcIcon=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 function aiStats(){const books=lib.books.filter(b=>!b.demo),arts=books.filter(isArt).length;return`${toAr(books.length-arts)} كتابًا • ${toAr(arts)} مقالًا وفتوى وبيانًا • ${toAr(new Set(books.map(b=>b.authorId)).size)} مؤلفًا`}
+let SWX=null;const swx=async()=>{if(SWX)return SWX;try{const r=await fetch("data/switches.json");SWX=r.ok?((await r.json()).s||{}):{}}catch(e){SWX={}}return SWX};
+const pausedNote=n=>`<div class="note warn" role="status">خدمة «${n}» متوقفة مؤقتًا، ونعمل على إعادتها قريبًا بإذن الله. يمكنك في هذه الأثناء استعمال <a href="#/search">البحث في نصوص المكتبة</a>.</div>`;
 async function vAsk(q){
  if(q.id&&Auth.user){try{CONV=(await Chats.get(q.id))||newConv()}catch(e){CONV=newConv()}}else if(!CONV||q.new||q.b||q.q||q.a||q.m)CONV=newConv();
  if(q.m&&SS.MODES[q.m])CONV.mode=q.m;
  let pre="";if(q.b&&B(q.b)){CONV.mode="explain";CONV.bookId=q.b;CONV.ctx={b:q.b,p:+q.p||1};pre=isArt(B(q.b))?"اشرح هذا المقال ولخّص أهم مسائله":"اشرح هذه الصفحة"}else if(q.q)pre=q.q;else if(q.a)pre=`ما أهم الموضوعات في كتب ${A(q.a).name}؟`;
+ if((await swx()).ask===false)setTimeout(()=>{const el=$("#app");if(el&&!el.querySelector(".note.warn"))el.insertAdjacentHTML("afterbegin",pausedNote("المساعد العلمي"))},0);
  const so=(v,l,c)=>`<option value="${v}"${c===v?" selected":""}>${l}</option>`,cb=CONV.bookId&&B(CONV.bookId),fresh=!CONV.messages.length;
  let recent="";if(fresh&&Auth.user){try{const l=(await Chats.list()).slice(0,4);if(l.length)recent=`<h3 class="aih">محادثاتك الأخيرة</h3><div class="airecent">${l.map(c=>`<a href="#/ask?id=${encodeURIComponent(c.id)}"><b>${esc(c.title||"محادثة")}</b><span>${esc(ago(c.updated_at))}</span></a>`).join("")}</div>`}catch(e){}}
  if(parse().p[0]!=="ask"&&parse().p[0]!=="ai")return;
