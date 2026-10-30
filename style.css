@@ -737,3 +737,7 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .almq cite{display:block;font-style:normal;font-size:.82rem;color:var(--mut);margin-top:2px;font-family:inherit}
 .almr q{font-weight:700;color:var(--ac)}.almr q::before{content:"«"}.almr q::after{content:"»"}.almm{padding-inline-start:18px;line-height:2}
 .mgreport{white-space:pre-wrap;font-size:.82rem;max-height:420px;overflow:auto;background:var(--sf);border:1px solid var(--line);border-radius:8px;padding:8px;direction:rtl}.mgreport .bad{color:#b42318}
+/* المصادر الإثرائية (ithra.js) */
+.col.ith{border-color:#6b5ca5}.bk.ith{border-inline-start:3px solid #6b5ca5}.src-note.ith{border-color:#6b5ca5}
+.ithsrc{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ithsrc .chip.x{background:#6b5ca5;color:#fff;border-color:#6b5ca5}
+.ithf{gap:6px;flex-wrap:wrap;align-items:center}.ithf>*{flex:1 1 150px}.ithf input[type=search]{flex:2 1 220px}

@@ -12,7 +12,7 @@ function cat() { if (!CAT) { CAT = read("data/catalog.json"); CAT.books = CAT.bo
 function aidx() { if (!AIDX) { try { AIDX = (read("data/articles/index.json").items || []).filter(x => !x.h); } catch (e) { return []; } } return AIDX; }
 const author = id => (cat().authors.find(a => a.id === id) || {});
 const topic = id => (cat().topics.find(t => t.id === id) || {});
-const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "المكتبة العامة" }; };
+const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "المكتبة العامة", ithra: L.col_ithra || "المصادر الإثرائية" }; };
 async function template(origin) {
   if (TPL) return TPL;
   try { TPL = fs.readFileSync(path.join(ROOT, "index.html"), "utf8"); }
@@ -46,6 +46,7 @@ const SECTIONS = {
   furqan: ["قضايا الفرقان", "المؤلفات المنهجية للدعوة السلفية في قضايا الفرقان."],
   tafrighat: ["تفريغات", "الدروس والشروح المفرغة نصيًا."],
   authors: ["المؤلفون", "مشايخ الدعوة السلفية وعلماء التراث في المكتبة."],
+  ithra: ["المصادر الإثرائية", "بحوث ودراسات ومقالات علمية وشرعية من مراكز ومجلات خارج المصادر الأساسية، بمصادرها وروابطها الأصلية."],
   tarajim: ["التراجم", "تراجم مشايخ الدعوة السلفية بمصر."],
   about: ["من نحن", "التعريف بمكتبة الدعوة السلفية الرقمية."],
   dawah: ["التعريف بالدعوة السلفية", "التعريف بالدعوة السلفية بمصر ومنهجها."],

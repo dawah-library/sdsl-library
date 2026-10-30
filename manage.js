@@ -67,7 +67,7 @@ const MG = (() => {
     return `${needGH()}<p class="mut">صفِّ المواد، ثم اختر واحدة أو أكثر لتعديلها أو نقلها أو إخفائها. كل عملية تُسجَّل ويمكن التراجع عنها من «سجل التعديلات». اضغط مطولًا (أو بالزر الأيمن) على أي بطاقة في المكتبة لإجراءات سريعة.</p>
     <form class="mgf" data-form="mgfilter"><div class="row">
      <div><label>النوع</label><select name="k">${[["", "الكل"], ["book", "الكتب"], ["art", "المقالات والفتاوى والبيانات"]].map(([v, l]) => `<option value="${v}"${F.k === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-     <div><label>القسم</label><select name="c"><option value="">الكل</option>${["dawah", "turath"].map(v => `<option value="${v}"${F.c === v ? " selected" : ""}>${esc(COL[v])}</option>`).join("")}</select></div>
+     <div><label>القسم</label><select name="c"><option value="">الكل</option>${["dawah", "turath", "ithra"].map(v => `<option value="${v}"${F.c === v ? " selected" : ""}>${esc(COL[v])}</option>`).join("")}</select></div>
      <div><label>الحالة</label><select name="h">${[["", "الكل"], ["0", "ظاهرة"], ["1", "مخفية"]].map(([v, l]) => `<option value="${v}"${F.h === v ? " selected" : ""}>${l}</option>`).join("")}</select></div></div>
      <div class="row"><div><label>المؤلف</label><select name="a">${opt(sortedAuthors(), F.a, "الكل")}</select></div>
      <div><label>التصنيف</label><select name="tp">${opt(lib.topics, F.t, "الكل")}</select></div>
@@ -97,7 +97,7 @@ const MG = (() => {
       <p class="mut">النقل إلى مؤلف آخر يكون عند ثبوت خطأ النسبة. لإضافة مؤلف جديد استعمل «الأقسام والأسماء ← المؤلفون».</p>
       <label>التصنيف</label><select name="topic">${one ? "" : '<option value="">— بلا تغيير —</option>'}${opt(lib.topics.filter(t => one ? (isArt(one) ? t.for === "articles" : t.for !== "articles") : true), one ? one.topicId : "")}</select>
       ${one ? `<label>موضوعات إضافية (تظهر المادة فيها أيضًا دون نسخة مكررة)</label><select name="tps" multiple size="5">${lib.topics.filter(t => (isArt(one) ? t.for === "articles" : t.for !== "articles") && t.id !== one.topicId).map(t => `<option value="${esc(t.id)}"${(one.tps || []).includes(t.id) ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select>` : ""}
-      <label>القسم</label><select name="col">${one ? "" : '<option value="">— بلا تغيير —</option>'}${["dawah", "turath"].map(v => `<option value="${v}"${one && (one.col || "dawah") === v ? " selected" : ""}>${esc(COL[v])}</option>`).join("")}</select>
+      <label>القسم</label><select name="col">${one ? "" : '<option value="">— بلا تغيير —</option>'}${["dawah", "turath", "ithra"].map(v => `<option value="${v}"${one && (one.col || "dawah") === v ? " selected" : ""}>${esc(COL[v])}</option>`).join("")}</select>
       ${!one && anyBook && ids.some(id => kindOfId(id) === "article") ? '<p class="note">التحديد يجمع كتبًا ومقالات؛ التصنيف يُطبَّق على ما يناسبه فقط.</p>' : ""}
       <label>ملاحظة السجل (اختياري)</label><input name="note" placeholder="مثال: تصحيح نسبة بعد المراجعة">
       <div class="savebar"><button class="btn p">${one ? "حفظ" : "مراجعة ثم تنفيذ"}</button> <span id="mgst" class="mut" role="status"></span></div></form>`);
