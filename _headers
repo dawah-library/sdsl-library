@@ -31,7 +31,13 @@
 /about.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/alam.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /app.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/askx.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /audio.js
@@ -49,6 +55,9 @@
 /dm.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/eds.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /export.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -56,6 +65,12 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /i18n.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/ithra.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/learn.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /manage.js
@@ -67,6 +82,9 @@
 /qa.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/releases.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /search.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -76,7 +94,13 @@
 /style.css
   Cache-Control: public, max-age=60, must-revalidate
 
+/tala.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /tashjir.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/team.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /words.js

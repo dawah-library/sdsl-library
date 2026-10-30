@@ -120,3 +120,11 @@ jobs:
           for x in $(curl -s "$CF/zones/$z/dns_records?name=*.dawahlibrary.org" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id'); do
             curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns *.dawahlibrary.org removed: \(.success)"' || true
           done
+      - name: "إشعار محركات البحث بالتحديث (IndexNow — Bing وYandex وغيرهما)"
+        if: steps.tok.outputs.ok == '1'
+        continue-on-error: true
+        run: |
+          K=d06f43ca0750d05af67a7238db81496c
+          U=$(python3 -c 'import json;b="https://dawahlibrary.org/";print(json.dumps([b+p for p in ["","library?c=dawah","library?c=turath","articles","fatawa","ithra","alam","talaea","tashjir","radio","audio","authors","about"]]))')
+          curl -s -o /dev/null -w "::notice::IndexNow → %{http_code}\n" -H "content-type: application/json" -d "{\"host\":\"dawahlibrary.org\",\"key\":\"$K\",\"keyLocation\":\"https://dawahlibrary.org/$K.txt\",\"urlList\":$U}" https://api.indexnow.org/indexnow
+
