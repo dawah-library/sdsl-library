@@ -1,0 +1,13 @@
+{
+ "_note": "مصادر الاستجلاب الدوري (tools/source-import.js). الترتيب = الأولوية (ب4-7). col: dawah للمصادر الأساسية، ithra للإثرائية. lic=link: لا إذن بإعادة النشر كاملًا فيُعرض الملخص والرابط. يُعدَّل من «الإدارة ← مراجعة المستجلب».",
+ "sources": [
+  {"id": "salafvoice", "name": "صوت السلف", "col": "dawah", "on": false, "note": "يُستورد بمهمته الخاصة (daily-import.js)"},
+  {"id": "anasalafy", "name": "موقع أنا السلفي", "col": "dawah", "on": true, "lists": ["https://anasalafy.com/ar/category/articles"], "linkRx": "https://anasalafy\\.com/ar/\\d{3,}-[^\"'\\s<>]+", "siteSuffix": "موقع أنا السلفي", "skipRx": "\\((?:مقطع|مرئي|صوتي)\\)", "perRun": 40, "delayMs": 2000},
+  {"id": "fath", "name": "بوابة الفتح", "col": "dawah", "on": true, "lists": ["https://fath-news.com/"], "linkRx": "https://fath-news\\.com/[^\"'\\s<>]*\\d{3,}[^\"'\\s<>]*", "skipRx": "^(خبر|عاجل|بالصور|فيديو)|يستقبل|يلتقي|يشارك|يهنئ|ينعى", "minChars": 1200, "perRun": 30, "delayMs": 2500, "note": "المقالات العلمية والشرعية فقط دون الأخبار (ب4-9)؛ كان يرفض الطلبات الآلية (403) عند الفحص"},
+  {"id": "alnour", "name": "الموقع الرسمي لحزب النور", "col": "dawah", "on": false, "lists": [], "note": "أضف رابط قسم المقالات (لا الأخبار) ثم فعّله"},
+  {"id": "salaf", "name": "مركز سلف للبحوث والدراسات", "col": "ithra", "lic": "link", "on": false, "lists": [], "note": "أضف رابط قائمة المقالات والبحوث، وغيّر lic إلى full إن أذن المركز بإعادة النشر"},
+  {"id": "furqan", "name": "مجلة الفرقان الكويتية", "col": "ithra", "lic": "link", "on": false, "lists": []},
+  {"id": "usus", "name": "أكاديمية أسس للأبحاث والعلوم", "col": "ithra", "lic": "link", "on": false, "lists": []},
+  {"id": "jusur", "name": "مركز جسور للبحوث والدراسات", "col": "ithra", "lic": "link", "on": false, "lists": [], "note": "مواده على فيسبوك: انظر الحلول في tools/facebook-sources.md"}
+ ]
+}

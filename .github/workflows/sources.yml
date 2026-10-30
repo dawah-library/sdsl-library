@@ -1,0 +1,44 @@
+name: الاستجلاب الدوري من المصادر
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * *"   # يوميًا: يضع الجديد في قائمة المراجعة ولا ينشر
+  push:
+    paths: ["tools/source-import.js", "data/sources.json"]
+permissions:
+  contents: write
+concurrency:
+  group: sources
+  cancel-in-progress: false
+jobs:
+  # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json). الإيقاف يشمل التشغيل اليدوي والآلي؛ وتعذر القراءة لا يوقف المهمة.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" import_sources)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح import_sources: $on"
+  build:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tools/source-import.js
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/import-review.json data/sources.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "الاستجلاب الدوري: قائمة المراجعة"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done

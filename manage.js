@@ -156,7 +156,7 @@ const MG = (() => {
   // ===== الخدمات والمفاتيح =====
   const SWITCHES = [
     ["خدمات الموقع", [["ask", "المساعد العلمي («اسأل المكتبة»)"], ["translate", "الترجمة السياقية وترجمة الصفحات"], ["import", "الاستيراد اليدوي من صوت السلف (api/import)"], ["notify", "التذكير وإشعارات الأجهزة"]]],
-    ["المهام الآلية (GitHub Actions)", [["all_jobs", "كل المهام الآلية (المفتاح الرئيسي)"], ["import_salafvoice", "استيراد مقالات صوت السلف اليومي"], ["ocr", "تحويل الكتب المصورة إلى نص"], ["tashkeel", "التشكيل"], ["curate", "انتقاء منشورات المشايخ وتدقيق سؤال وجواب"], ["tashjir", "تشجير الكتب"], ["import_turath", "استيراد كتب المكتبة العامة (OpenITI وturath.io)"], ["i18n", "ترجمة الأسماء والعناوين للواجهة الإنجليزية"], ["tts", "تحويل النص إلى صوت"], ["cards", "بطاقات تعريف الكتب"], ["gloss", "فهرس معاني الكلمات"], ["alam", "فهرس الأعلام والرواة"], ["review", "مراجعة الصفحات"]]]];
+    ["المهام الآلية (GitHub Actions)", [["all_jobs", "كل المهام الآلية (المفتاح الرئيسي)"], ["import_salafvoice", "استيراد مقالات صوت السلف اليومي"], ["ocr", "تحويل الكتب المصورة إلى نص"], ["tashkeel", "التشكيل"], ["curate", "انتقاء منشورات المشايخ وتدقيق سؤال وجواب"], ["tashjir", "تشجير الكتب"], ["import_turath", "استيراد كتب المكتبة العامة (OpenITI وturath.io)"], ["i18n", "ترجمة الأسماء والعناوين للواجهة الإنجليزية"], ["tts", "تحويل النص إلى صوت"], ["cards", "بطاقات تعريف الكتب"], ["gloss", "فهرس معاني الكلمات"], ["alam", "فهرس الأعلام والرواة"], ["import_sources", "الاستجلاب الدوري من المصادر (أنا السلفي، الفتح، الإثرائية…)"], ["review", "مراجعة الصفحات"]]]];
   async function swBody() {
     const box = $("#mgsw"); if (!box) return;
     let o; try { o = JSON.parse((await GH.get(SW)).text) || {}; } catch (e) { o = {}; }
@@ -408,6 +408,58 @@ const MG = (() => {
       st.textContent = "✓ بدأت إعادة المحاولة (مهمة الاستيراد)، والنتيجة في هذا التقرير بعد انتهائها."; } catch (e) { st.textContent = e.message; }
   }
 
+  // ===== مراجعة المستجلب وإدارة المصادر (الباب الرابع) =====
+  // الاستجلاب الدوري (tools/source-import.js) لا ينشر: يضع الجديد هنا بحالة pending حتى يعتمده المشرف بمؤلفه وقسمه وموضوعه.
+  const QP = "data/import-review.json", SP = "data/sources.json";
+  let QD = null, SD = null;
+  async function impBody(q) {
+    const box = $("#mgimp"); if (!box) return;
+    try { [QD, SD] = await Promise.all([GH.get(QP).then(r => JSON.parse(r.text)).catch(() => ({ items: [] })), GH.get(SP).then(r => JSON.parse(r.text)).catch(() => ({ sources: [] }))]); } catch (e) { box.textContent = e.message; return; }
+    const st = q.st || "pending", items = (QD.items || []).filter(x => x.st === st).slice(-200).reverse();
+    const authorsFor = col => lib.authors.filter(a => (a.col || "dawah") === col).sort((x, y) => x.name.localeCompare(y.name, "ar"));
+    const guess = x => { const n = norm(String(x.author || "").replace(/^(الشيخ|د|م|أ)\.?\/?\s*/, "")); if (!n) return ""; const a = lib.authors.find(a => (a.col || "dawah") === x.col && [a.name].concat(a.aliases || []).some(m => norm(m).includes(n) || n.includes(norm(m).replace(/^الشيخ\s*/, "")))); return a ? a.id : ""; };
+    box.innerHTML = `<p class="mut">الاستجلاب الدوري يضع المواد الجديدة هنا ولا ينشر شيئًا قبل اعتمادك؛ راجع العنوان والمؤلف والقسم والموضوع. آخر تشغيل: ${QD.lastRun ? new Date(QD.lastRun).toLocaleString("ar-EG") : "لم يعمل بعد"}.</p>
+     <nav class="chips">${[["pending", "بانتظار المراجعة"], ["approved", "المعتمد"], ["rejected", "المرفوض"]].map(([k, l]) => `<a class="chip${st === k ? " x" : ""}" href="#/admin?t=imports&st=${k}">${l} (${toAr((QD.items || []).filter(x => x.st === k).length)})</a>`).join("")}</nav>
+     <div class="mglist">${items.map(x => `<form class="mgrow imprev" data-form="mgimp" data-id="${esc(x.id)}"><span class="mgt"><b>${esc(x.t)}</b><br><span class="mut">${esc(x.srcName || x.src)} • ${esc(x.d || "بلا تاريخ")} • ${toAr((x.text || "").length)} حرفًا • <a href="${esc(x.u)}" target="_blank" rel="noopener">الأصل</a>${x.author ? " • في المصدر: " + esc(x.author) : ""}</span>
+        <details><summary>النص</summary><div class="mgreport">${esc((x.text || "").slice(0, 3000))}</div></details>
+        ${st === "pending" ? `<div class="row"><select name="a"><option value="">— المؤلف —</option>${authorsFor(x.col).map(a => `<option value="${a.id}"${a.id === guess(x) ? " selected" : ""}>${esc(a.name)}</option>`).join("")}<option value="__new">+ مؤلف جديد: ${esc(x.author || "")}</option></select>
+         <select name="tp">${lib.topics.filter(t => t.for === "articles").map(t => `<option value="${t.id}">${esc(topicLabel(t))}</option>`).join("")}</select>
+         <select name="col">${["dawah", "ithra"].map(c => `<option value="${c}"${c === x.col ? " selected" : ""}>${esc(COL[c])}</option>`).join("")}</select></div>
+         <input name="t" value="${esc(x.t)}"><input name="an" value="${esc(x.author || "")}" placeholder="اسم المؤلف الجديد">` : `<em class="tag">${x.st === "approved" ? "اعتُمد: " + esc(x.aid || "") : "رُفض" + (x.why ? ": " + esc(x.why) : "")}</em>`}</span>
+        ${st === "pending" ? `<span><button class="btn p s" name="go" value="ok">اعتماد ونشر</button><button class="btn s" name="go" value="no">رفض</button></span>` : ""}</form>`).join("") || '<p class="note">لا شيء هنا.</p>'}</div>
+     <h3>المصادر (بترتيب الأولوية)</h3><p class="mut">حدّد رابط قائمة المقالات لكل مصدر ثم فعّله؛ يُراجَع يوميًا، ويُسجَّل وقت آخر مراجعة ونتيجتها. تعديل المصادر يشغّل الاستجلاب فورًا.</p>
+     <div class="mglist">${(SD.sources || []).map((x, i) => `<form class="mgrow" data-form="mgsrc" data-i="${i}"><span class="mgt"><b>${esc(x.name)}</b> <em class="tag">${esc(COL[x.col] || x.col)}</em> ${x.lic === "link" ? '<em class="tag">ملخص ورابط</em>' : ""}<br>
+       <span class="mut">${x.state && x.state.lastRun ? "آخر مراجعة " + new Date(x.state.lastRun).toLocaleString("ar-EG") + (x.state.last ? ` — جديد ${toAr(x.state.last.added)}، متخطى ${toAr(x.state.last.skipped)}، أخطاء ${toAr(x.state.last.errs)}` : "") : "لم يُراجَع بعد"}${x.note ? " • " + esc(x.note) : ""}</span>
+       <input name="lists" value="${esc((x.lists || []).join(" "))}" placeholder="روابط قوائم المقالات (مفصولة بمسافة)"></span>
+       <span><label class="inl"><input type="checkbox" name="on"${x.on !== false && (x.lists || []).length ? " checked" : ""}${x.id === "salafvoice" ? " disabled" : ""}> مفعّل</label><button class="btn s">حفظ</button></span></form>`).join("")}</div>
+     ${(QD.errors || []).length ? `<details><summary>أخطاء الاستجلاب (${toAr(QD.errors.length)})</summary><pre class="mgreport">${QD.errors.slice(-60).map(e => esc(e.src + " — " + e.url + " — " + e.err)).join("\n")}</pre></details>` : ""}`;
+  }
+  async function impDecide(f, go) {
+    const id = f.dataset.id, x = (QD.items || []).find(y => y.id === id); if (!x) return;
+    const fd = new FormData(f);
+    if (go === "no") { const why = prompt("سبب الرفض (اختياري):", "") ; await GH.editJSON(QP, o => { const y = o.items.find(z => z.id === id); if (y) { y.st = "rejected"; y.why = why || ""; } return o; }, "مراجعة المستجلب: رفض " + id, true); toast("رُفض."); return route(); }
+    let aid = fd.get("a"), col = fd.get("col") || x.col, title = String(fd.get("t") || x.t).trim();
+    if (!aid) return toast("اختر المؤلف.");
+    try {
+      if (aid === "__new") { const n = String(fd.get("an") || "").trim(); if (!n) return toast("اكتب اسم المؤلف."); aid = (col === "ithra" ? "ix" : "w") + Date.now().toString(36); const au = { id: aid, name: n, col, bio: "", auto: true }; await GH.editJSON("data/catalog.json", c => { c.authors.push(au); return c; }, "مؤلف جديد من الاستجلاب: " + n, true); CAT.authors.push(au); }
+      const g = /^\d{4}-\d{2}/.test(x.d || "") ? x.d.slice(0, 7) : "undated", text = x.text || "";
+      const pages = text.length > 7000 ? text.split("\n").reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [text];
+      const body = x.lic === "link" ? [text.slice(0, 900) + "…\n\n[النص كاملًا في مصدره الأصلي]"] : pages;
+      await GH.editJSON("data/articles/" + g + ".json", o => { o = o || {}; o[id] = { pages: body }; return o; }, "استجلاب: " + title, true);
+      const item = { id, t: title, a: aid, tp: fd.get("tp"), c: x.srcName || "", d: x.d || "", u: x.u, f: g, n: body.length, ad: today(), src: x.src };
+      if (col !== "dawah") item.col = col; if (x.lic) item.lic = x.lic; if (x.lic === "link") item.sum = text.slice(0, 400);
+      await GH.editJSON("data/articles/index.json", o => { if (!o.items.some(y => y.id === id)) o.items.push(item); return o; }, "استجلاب: " + title, true);
+      ARTS_IDX.push(artFromIdx(item)); merge();
+      await GH.editJSON(QP, o => { const y = o.items.find(z => z.id === id); if (y) { y.st = "approved"; y.aid = aid; delete y.text; } return o; }, "مراجعة المستجلب: اعتماد " + id, true);
+      await log({ op: "add", kind: "article", ids: [id], changes: [{ id, kind: "article", field: "create", from: null, to: title }], note: "اعتماد مادة مستجلبة من " + (x.srcName || x.src) });
+      toast("نُشرت المادة."); route();
+    } catch (e) { alert(e.message); }
+  }
+  async function srcSave(f) {
+    const i = +f.dataset.i, lists = f.lists.value.split(/\s+/).filter(u => /^https:\/\//.test(u)), on = f.on.checked && lists.length > 0;
+    try { await GH.editJSON(SP, o => { const x = o.sources[i]; x.lists = lists; x.on = on; return o; }, "مصادر الاستجلاب: " + (SD.sources[i] || {}).name, false); toast(on ? "حُفظ وفُعّل، ويبدأ الاستجلاب خلال دقائق." : "حُفظ."); route(); } catch (e) { alert(e.message); }
+  }
+
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
   let lpT = 0, lpFired = false;
   const cardId = a => { const m = (a.getAttribute("href") || "").match(/#\/book\/([^/?]+)/); return m && decodeURIComponent(m[1]); };
@@ -446,14 +498,17 @@ const MG = (() => {
     else if (f.dataset.form === "mgvadd") addVol(f);
     else if (f.dataset.form === "mgvord") saveOrd(f);
     else if (f.dataset.form === "mgretry") retry(f);
+    else if (f.dataset.form === "mgimp") impDecide(f, (e.submitter && e.submitter.value) || "ok");
+    else if (f.dataset.form === "mgsrc") srcSave(f);
   }, true);
 
   return {
-    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["dups", "التكرار والتوحيد"], ["reports", "تقارير الاستيراد والفهرسة"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
+    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["dups", "التكرار والتوحيد"], ["imports", "مراجعة المستجلب"], ["reports", "تقارير الاستيراد والفهرسة"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
     body(tab, q) {
       if (tab === "items") { setTimeout(count, 0); return itemsBody(q); }
       if (tab === "log") { setTimeout(logBody, 0); return `${needGH()}<p class="mut">كل تعديل أو نقل أو إخفاء من «إدارة المواد»، وكل تغيير في مفاتيح الخدمات. «تراجع» يعيد القيم السابقة لما لم يتغير بعد العملية، ويُسجَّل التراجع نفسه.</p><div id="mglog" class="mut">جارٍ التحميل…</div>`; }
       if (tab === "vols") { setTimeout(wireVols, 0); return volsBody(); }
+      if (tab === "imports") { setTimeout(() => impBody(q), 0); return `${needGH()}<div id="mgimp" class="mut">جارٍ التحميل…</div>`; }
       if (tab === "reports") { setTimeout(repBody, 0); return `${needGH()}<div id="mgrep" class="mut">جارٍ تحميل التقارير…</div>`; }
       if (tab === "dups") { setTimeout(dupsBody, 0); return `${needGH()}<div id="mgdup" class="mut">جارٍ الفحص…</div>`; }
       if (tab === "switches") { setTimeout(swBody, 0); return `${needGH()}<div id="mgsw" class="mut">جارٍ التحميل…</div>`; }
