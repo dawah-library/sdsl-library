@@ -785,6 +785,60 @@
    "title": "القاموس المحيط",
    "authorName": "الفيروزآبادي",
    "topic": "t16"
+  },
+  {
+   "id": "taqrib",
+   "died": 852,
+   "author": "IbnHajarCasqalani|IbnHajar",
+   "book": "TaqribTahdhib|Taqrib",
+   "title": "تقريب التهذيب",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t18"
+  },
+  {
+   "id": "tahdhibtahdhib",
+   "died": 852,
+   "author": "IbnHajarCasqalani|IbnHajar",
+   "book": "TahdhibTahdhib",
+   "title": "تهذيب التهذيب",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t18"
+  },
+  {
+   "id": "isaba",
+   "died": 852,
+   "author": "IbnHajarCasqalani|IbnHajar",
+   "book": "IsabaFiTamyiz|Isaba",
+   "title": "الإصابة في تمييز الصحابة",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t18"
+  },
+  {
+   "id": "kashif",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "Kashif",
+   "title": "الكاشف في معرفة من له رواية في الكتب الستة",
+   "authorName": "الذهبي",
+   "topic": "t18"
+  },
+  {
+   "id": "mizan",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "MizanIctidal|Mizan",
+   "title": "ميزان الاعتدال في نقد الرجال",
+   "authorName": "الذهبي",
+   "topic": "t18"
+  },
+  {
+   "id": "jarhtadil",
+   "died": 327,
+   "author": "IbnAbiHatim|IbnAbiHatimRazi",
+   "book": "JarhWaTacdil|Jarh",
+   "title": "الجرح والتعديل",
+   "authorName": "ابن أبي حاتم الرازي",
+   "topic": "t18"
   }
  ]
 }

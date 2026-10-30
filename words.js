@@ -34,7 +34,7 @@ function wordMenu(w) {
   document.querySelectorAll(".wmenu,.rxpick").forEach(x => x.remove());
   const r = w.getBoundingClientRect(), d = document.createElement("div"), lang = (TRL.find(x => x[0] === (S.lang2 || "en")) || TRL[0])[1];
   d.className = "wmenu"; d.setAttribute("role", "menu");
-  d.innerHTML = `<b>${esc(w.textContent.replace(/[^؀-ۿ]/g, ""))}</b><button data-act="wsec" data-s="lug">📖 المعاني اللغوية</button><button data-act="wsec" data-s="shr">⚖️ في كتب الشريعة</button><button data-act="wsec" data-s="tr">🌐 ${esc(lang)}</button>`;
+  d.innerHTML = `<b>${esc(w.textContent.replace(/[^؀-ۿ]/g, ""))}</b><button data-act="wsec" data-s="lug">📖 المعاني اللغوية</button><button data-act="wsec" data-s="shr">⚖️ في كتب الشريعة</button><button data-act="wsec" data-s="tr">🌐 ${esc(lang)}</button><button data-act="walam">👤 العلم</button>`;
   d._w = w.textContent; d._ctx = wctx(w); const rb = w.closest(".rd"); d._b = rb && rb.dataset.id; d._p = rb && +rb.dataset.p;
   document.body.appendChild(d);
   const W = d.offsetWidth; d.style.top = (scrollY + r.top - d.offsetHeight - 10) + "px"; d.style.left = Math.max(8, Math.min(innerWidth - W - 8, r.left + r.width / 2 - W / 2)) + "px";
