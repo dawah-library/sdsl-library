@@ -26,7 +26,7 @@ const jacc = (a, b) => { let c = 0; b.forEach(x => a.has(x) && c++); return c / 
 
 // النص الرئيس للصفحة: أكثف كتلة فقرات عربية (بلا قوائم الروابط والقوائم الجانبية)
 function mainText(html, sel) {
-  let h = html.replace(/<(script|style|nav|footer|aside|noscript)[\s\S]*?<\/\1>/gi, " ");
+  let h = html.replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style|nav|footer|aside|noscript)[\s\S]*?<\/\1>/gi, " ");
   if (sel) { const m = h.match(new RegExp(sel, "i")); if (m) h = m[1] || m[0]; }
   const blocks = [];
   h.split(/<\/(?:div|section|article|td)>/i).forEach(b => {
@@ -34,20 +34,22 @@ function mainText(html, sel) {
     const len = paras.join(" ").length; if (len > 300 && links < len / 120) blocks.push({ len, paras });
   });
   blocks.sort((a, b) => b.len - a.len);
-  return blocks.length ? blocks[0].paras.join("\n") : "";
+  return blocks.length ? cssOut(blocks[0].paras.join("\n")) : "";
 }
 function meta(html, prop) { const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']*)["']`, "i")) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${prop}["']`, "i")); return m ? decode(m[1]).trim() : ""; }
 
 // نص من محتوى HTML جاهز (من واجهة ووردبريس أو خلاصة RSS)
-const htmlText = h => decode(String(h).replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<\/(p|div|h\d|li|blockquote)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, " ")).split("\n").map(x => x.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
+const htmlText = h => cssOut(decode(String(h).replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<\/(p|div|h\d|li|blockquote)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, " ")).split("\n").map(x => x.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n"));
+// أسطر تنسيق Word المتسربة (mso-…، font-family…) تُحذف، ويُنظَّف السطر منها
+const cssOut = t => t.split("\n").map(l => l.replace(/[\w-]+\s*:\s*[^;:\u0600-\u06FF]{1,60};/g, " ").replace(/\s+/g, " ").trim()).filter(l => (l.match(/[\u0621-\u064A]/g) || []).length > 3 && !/mso-|font-family|text-align|line-height/i.test(l)).join("\n");
 const tag = (x, n) => { const m = x.match(new RegExp(`<${n}[^>]*>([\\s\\S]*?)<\/${n}>`, "i")); return m ? m[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim() : ""; };
 // الاكتشاف الآلي لطريقة الجلب من رابط الموقع: واجهة ووردبريس ← خلاصة RSS ← خريطة الموقع ← روابط الصفحات المحددة (lists/linkRx) ← روابط الرئيسية
 async function discover(s, ctx, L) {
   const base = (s.base || "").replace(/\/$/, ""), out = []; out.mode = "";
   const fail = (u, e) => { ctx.errors.push({ src: s.id, url: u, err: e.message }); L(`تعذر ${u}: ${e.message}`); if (/HTTP 403/.test(e.message)) out.err = 1; };
   if (base && s.mode !== "html") {
-    try { const j = JSON.parse(await get(base + "/wp-json/wp/v2/posts?per_page=" + (s.perRun || 30) + (s.wpCats ? "&categories=" + s.wpCats : "") + "&_fields=id,date,link,title,content", 1));
-      if (Array.isArray(j) && j.length) { j.forEach(p => out.push({ id: "wp" + p.id, u: p.link, title: decode(htmlText(p.title && p.title.rendered || "")), date: String(p.date || "").slice(0, 10), html: p.content && p.content.rendered || "" })); out.mode = "wp-json"; return out; } } catch (e) { }
+    try { const j = JSON.parse(await get(base + "/wp-json/wp/v2/posts?per_page=" + (s.perRun || 30) + (s.wpCats ? "&categories=" + s.wpCats : "") + "&_embed=author&_fields=id,date,link,title,content,_embedded,_links", 1));
+      if (Array.isArray(j) && j.length) { j.forEach(p => out.push({ id: "wp" + p.id, u: p.link, title: decode(htmlText(p.title && p.title.rendered || "")), date: String(p.date || "").slice(0, 10), html: p.content && p.content.rendered || "", author: ((p._embedded && p._embedded.author && p._embedded.author[0]) || {}).name || "" })); out.mode = "wp-json"; return out; } } catch (e) { }
     for (const f of ["/feed", "/rss", "/feed.xml", "/rss.xml", "/ar/feed"]) {
       try { const x = await get(base + f, 1); if (!/<(rss|feed)\b/i.test(x)) continue;
         x.split(/<item\b|<entry\b/i).slice(1).forEach(it => { const u = decode(tag(it, "link") || ((it.match(/<link[^>]+href=["']([^"']+)/) || [])[1] || "")); if (!u) return;
@@ -84,8 +86,8 @@ async function runSource(s, ctx) {
     const u = en.u, key = String(en.id || (u.match(/\d{3,}/) || [u])[0]); if (seen.has(key)) continue;
     try {
       const html = en.html || await get(u); if (!en.html) await sleep(s.delayMs || 1500);
-      let title = en.title || meta(html, "og:title") || decode((html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || ""); title = title.replace(new RegExp("\\s*[-|–]\\s*" + (s.siteSuffix || "$^") + ".*$"), "").trim();
-      let author = ""; const am = title.match(/[.،]\s*(?:د\/|الشيخ\/|م\/|أ\/|د\.|الشيخ)\s*([^.()]+)$/); if (am) { author = am[1].trim(); title = title.slice(0, am.index).trim(); }
+      let title = en.title || meta(html, "og:title") || decode((html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || ""); title = title.replace(new RegExp("\\s*[-|–]\\s*(" + (s.siteSuffix || "$^") + ").*$"), "").trim();
+      let author = en.author || meta(html, "author") || meta(html, "article:author") || ((html.match(/(?:بقلم|كتبه|الكاتب)\s*[:：]\s*([^<\n]{3,40})/) || [])[1] || "").trim(); if (/^https?:|حزب النور|السلفي|^admin$/i.test(author)) author = ""; const am = title.match(/[.،]\s*(?:د\/|الشيخ\/|م\/|أ\/|د\.|الشيخ)\s*([^.()]+)$/); if (am) { author = am[1].trim(); title = title.slice(0, am.index).trim(); }
       const text = en.html ? htmlText(en.html) : mainText(html, s.contentRx), date = (en.date || meta(html, "article:published_time") || (html.match(/\b(20\d\d-\d\d-\d\d)/) || [])[1] || "").slice(0, 10);
       seen.add(key);
       const reason = /^(تهنئة|تعزية)|بخالص العزاء/.test(title) ? "تهنئة/تعزية" : (s.skipRx && new RegExp(s.skipRx).test(title)) ? "خارج النطاق (خبر/مقطع)" : text.length < (s.minChars || 600) ? "بلا نص كافٍ (مقطع مرئي أو صوتي)" : "";
