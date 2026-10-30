@@ -696,3 +696,5 @@ body.mk-t .rd p.ph:not(.ph2)::after{content:"";display:block;width:3.5em;height:
 .lookgrp{border:1px solid var(--line);border-radius:10px;padding:6px 12px 10px;margin:10px 0}.lookgrp legend{font-weight:600;padding:0 6px}
 .lookgrp .row>div{min-width:0}.colrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.colrow input[type=color]{width:44px;height:34px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
 .mklegend{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem}.mklegend i{font-style:normal;font-weight:600}
+
+footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{margin:6px 0;line-height:2}footer .fip{font-size:.85em}
