@@ -839,6 +839,42 @@
    "title": "الجرح والتعديل",
    "authorName": "ابن أبي حاتم الرازي",
    "topic": "t18"
+  },
+  {
+   "id": "qisasanbiya",
+   "died": 774,
+   "author": "IbnKathir",
+   "book": "QisasAnbiya",
+   "title": "قصص الأنبياء",
+   "authorName": "الحافظ ابن كثير",
+   "topic": "t5"
+  },
+  {
+   "id": "tuhfatatfal",
+   "died": 1198,
+   "author": "Jamzuri",
+   "book": "TuhfaAtfal|Tuhfat",
+   "title": "متن تحفة الأطفال والغلمان في تجويد القرآن",
+   "authorName": "سليمان الجمزوري",
+   "topic": "t12"
+  },
+  {
+   "id": "usulthalatha",
+   "died": 1206,
+   "author": "MuhammadIbnCabdWahhab|IbnCabdWahhab",
+   "book": "ThalathatUsul|UsulThalatha|Thalatha",
+   "title": "الأصول الثلاثة",
+   "authorName": "الشيخ محمد بن عبد الوهاب",
+   "topic": "t1"
+  },
+  {
+   "id": "shamail",
+   "died": 279,
+   "author": "Tirmidhi",
+   "book": "Shamail",
+   "title": "الشمائل المحمدية",
+   "authorName": "الترمذي",
+   "topic": "t3"
   }
  ]
 }
