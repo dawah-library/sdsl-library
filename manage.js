@@ -131,7 +131,7 @@ const MG = (() => {
     const items = (o && o.items) || [];
     box.innerHTML = items.length ? items.slice(0, 200).map(e => `<div class="mglog${e.undone ? " und" : ""}"><div><b>${esc(e.note || e.op)}</b> <span class="mut">• ${new Date(e.at).toLocaleString("ar-EG")} • ${esc(e.by && e.by.role || "")}</span>${e.undone ? ' <em class="tag">تُرُوجِع عنه</em>' : ""}</div>
       <details><summary>${toAr((e.changes || []).length)} تغييرًا على ${toAr((e.ids || []).length)} مادة</summary><ul>${(e.changes || []).slice(0, 60).map(c => `<li>${esc((raw().find(b => b.id === c.id) || {}).title || c.id)}: ${LABEL[c.field] || c.field} «${esc(fmtV(c.field, c.from))}» ← «${esc(fmtV(c.field, c.to))}»</li>`).join("")}</ul></details>
-      ${!e.undone && e.op !== "undo" && e.op !== "switch" && e.op !== "file" ? `<button class="btn s" data-act="mgundo" data-id="${esc(e.id)}">تراجع</button>` : ""}</div>`).join("") : '<p class="note">لا توجد تعديلات مسجلة بعد.</p>';
+      ${!e.undone && e.op !== "undo" && e.op !== "switch" && e.op !== "file" && e.op !== "mark" ? `<button class="btn s" data-act="mgundo" data-id="${esc(e.id)}">تراجع</button>` : ""}</div>`).join("") : '<p class="note">لا توجد تعديلات مسجلة بعد.</p>';
     box._items = items;
   }
   async function undo(id) {

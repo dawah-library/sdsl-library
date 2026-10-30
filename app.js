@@ -14,8 +14,18 @@ const CFG=Object.assign({supabaseUrl:"",supabaseAnonKey:"",askEndpoint:"api/ask"
 const SITENAME="المكتبة الرقمية للدعوة السلفية بمصر";
 const siteLink=(h)=>{const base=(CFG.siteUrl||location.origin+"/").replace(/\/?$/,"/");return base+String(h||"").replace(/^#?\/?/,"")};
 const HERE=()=>"#"+(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;
-const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",admin:false,favs:[],seen:0,look:false},ls.get("set",{}));
+const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",admin:false,favs:[],seen:0,look:false,
+ fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:false,mkh:false,mkt:false,lead:true},ls.get("set",{}));
 const saveS=()=>ls.set("set",S);
+// إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
+const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:false,mkh:false,mkt:false,lead:true};
+const Prefs={keys:Object.keys(LOOKDEF).concat(["mode"]),t:0,
+ // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
+ push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
+  await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
+ // عند الدخول: تُطبَّق تفضيلات الحساب إن كانت أحدث مما على الجهاز
+ pull(){try{const p=Auth.user&&Auth.user.user_metadata&&Auth.user.user_metadata.prefs;if(!p||!p.v||(S.prefsAt||0)>=(p.at||0))return;
+  this.keys.forEach(k=>{if(p.v[k]!==undefined)S[k]=p.v[k]});S.prefsAt=p.at;saveS();applyLook();if(typeof refreshPage==="function")refreshPage()}catch(e){}}};
 const toAr=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
 const fmtDate=d=>{if(!d)return"";const x=new Date(d);return isNaN(x)?esc(d):x.toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"})};
 const today=()=>new Date().toISOString().slice(0,10);
@@ -32,7 +42,18 @@ const PAGES=[["paper","ورقي","#fbf7ee","#2a241a"],["white","أبيض","#ffff
 function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
  const pg=PAGES.find(p=>p[0]===S.pg)||PAGES[0];loadFont(S.font);
  r.style.setProperty("--rf",`"${S.font}",serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
- r.style.setProperty("--pg",pg[2]);r.style.setProperty("--pgink",pg[3]);r.style.setProperty("--pgline",["night","black"].includes(pg[0])?"rgba(255,255,255,.14)":"rgba(0,0,0,.12)")}
+ const bg=S.bg||pg[2],ink=S.ink||pg[3],dark=lum(bg)<.4;
+ r.style.setProperty("--pg",bg);r.style.setProperty("--pgink",ink);r.style.setProperty("--pgline",dark?"rgba(255,255,255,.14)":"rgba(0,0,0,.12)");
+ // الباب ٦: الكثافة والمحاذاة والمسافات وعرض القراءة والاقتباسات والعناوين والتمييز البصري
+ const W={s:"32em",m:"40em",l:"48em",x:"100%"};r.style.setProperty("--rw",S.fw||400);r.style.setProperty("--rps",(S.ps??.35)+"em");r.style.setProperty("--rmax",W[S.w]||W.m);
+ r.style.setProperty("--ra",S.align||(S.fmt==="plain"?"right":"justify"));
+ if(S.qf)loadFont(S.qf);r.style.setProperty("--qf",S.qf?`"${S.qf}",serif`:"inherit");r.style.setProperty("--qs",S.qs||1);r.style.setProperty("--qw",S.qw||400);r.style.setProperty("--qa",S.qa||"inherit");r.style.setProperty("--qm",(S.qm??.6)+"em");
+ r.style.setProperty("--qc",S.qc||"inherit");r.style.setProperty("--hs",S.hs||1);r.style.setProperty("--hc",S.hc||"inherit");
+ // درجات التمييز تناسب لون الصفحة (فاتحة أو داكنة)
+ r.style.setProperty("--mkq",dark?"#7fd3a0":"#1d6b3e");r.style.setProperty("--mkh",dark?"#9cc2ff":"#1d4f91");r.style.setProperty("--mkt",dark?"#ff9a8a":"#a8261b");r.style.setProperty("--mkm",dark?"#e2bf6a":"#8a5a12");
+ const cl=document.body.classList;cl.toggle("mk-q",!!S.mkq);cl.toggle("mk-h",!!S.mkh);cl.toggle("mk-t",!!S.mkt);cl.toggle("rd-lead",S.lead!==false);cl.toggle("rd-auto",S.dir==="auto")}
+// إضاءة لون (٠ داكن – ١ فاتح) لاختيار درجات التمييز المناسبة
+function lum(c){const m=/^#?([0-9a-f]{6})$/i.exec(String(c||"").trim());if(!m)return 1;const n=parseInt(m[1],16);return(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255}
 
 /* ---------- البيانات ---------- */
 let CAT={version:0,authors:[],topics:[],books:[]},LOCAL={catalog:{authors:[],topics:[],books:[]},shards:{},deleted:[]};
@@ -295,14 +316,53 @@ function origTash(b){if(!b||!b.pages)return false;if(ORIG_TASH.has(b.id))return 
 const hasTash=b=>!!(b&&(TK.info(b)||origTash(b)||bc(b)==="dawah"));
 const shownText=(b,i)=>{const t=b.pages[i]||"";return S.tash?(TK.get(b,t)||t):strip(t)};
 const expTash=t=>S.tash?t:strip(t);
+/* الباب ٦: تمييز الآيات ﴿…﴾، والأحاديث «…» بعد ذكر النبي ﷺ، والاقتباسات «…» الطويلة (٥ كلمات فأكثر)، ورؤوس الفقرات المعروفة.
+   يعيد مواضع بالحروف داخل السطر؛ يُصحَّح الخطأ من الإدارة (paintMarks)، والنص الأصلي لا يتغير. */
+// الحديث: ذكر النبي ﷺ متكلمًا قبل «» مباشرة (قال ﷺ: / قال رسول الله ﷺ: / حديث: / قال النبي ﷺ لعمه: …)، لا من يخاطبه (لرسول الله، يا رسول الله، إلى النبي).
+// قيس على ٤٠ كتابًا من مكتبة الدعوة: ٢٠٩٨ موضعًا، وكل العينات المفحوصة أحاديث فعلًا.
+const HDSPK="(?:رسول الله|النبي|نبينا)";
+const HDCUE=new RegExp("(?:ﷺ|صلى الله عليه وسلم|صلى الله عليه وآله وسلم|عليه الصلاة والسلام|(?:قال|يقول|فقال|وقال|ويقول|قول|قوله|وقوله|وقول|عن|حديث|خطب)\\s+"+HDSPK+"|حديث|في الحديث)(?:\\s*\\([^)]{0,6}\\))?\\s*(?:أنه\\s+)?(?:فقال|قال|يقول)?\\s*[:،]?\\s*$");
+const HDCUE2=new RegExp("(?:قال|يقول|فقال|وقال|ويقول)\\s+"+HDSPK+"\\s*(?:ﷺ|صلى الله عليه وسلم)?(?:(?!قال|يقول|قالت)[^«»:،.؟]){1,35}:\\s*$");
+const HDADDR=/(?:(?:^|\s)(?:لرسول الله|للنبي|لنبينا)|(?:^|\s)(?:إلى|يا|عند|مع)\s+(?:رسول الله|النبي|نبينا))\s*(?:ﷺ|صلى الله عليه وسلم)?\s*(?:\([^)]{0,6}\))?\s*(?:قال|فقال)?\s*[:،]?\s*$/;
+const isHdCue=b=>(HDCUE.test(b)||HDCUE2.test(b))&&!HDADDR.test(b);
+const LEADRX=/^\s*(و?(?:فائدة(?: \S+)?|فوائد|تنبيه|تنبيهات|مسألة|المسألة \S+|فصل|قاعدة|ضابط|تعريف\S*|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|أولا|ثانيا|ثالثا|رابعا|خامسا|سادسا|سابعا|ثامنا|تاسعا|عاشرا|الجواب|السؤال|س|ج|الدليل|الشاهد|الخلاصة|خلاصة القول|ملحوظة|ملاحظة|تعليق|المعنى|المعنى الإجمالي|وجه الدلالة|الراجح|الحكم|الحكمة|الفرق|قلت|أقول|الشرح|الإعراب|التخريج))\s*[:：]/;
+function lineMarks(l){const sp=[],t=String(l);let m;
+ const rq=/﴿[^﴾]*﴾?/g;while((m=rq.exec(t)))sp.push({s:m.index,e:m.index+m[0].length,k:"qv"});
+ const rg=/«([^»]*)»?/g;while((m=rg.exec(t))){if(sp.some(x=>m.index>=x.s&&m.index<x.e))continue;const words=m[1].trim().split(/\s+/).filter(Boolean).length,before=strip(t.slice(Math.max(0,m.index-60),m.index));
+  const k=isHdCue(before)?"hd":words>=5?"qt":"";if(k)sp.push({s:m.index,e:m.index+m[0].length,k})}
+ const st=strip(t),lm=LEADRX.exec(st);let lead=0;if(lm){// موضع النقطتين في النص الأصلي (قد يكون مشكولًا)
+  const ci=t.search(/[:：]/);if(ci>0&&ci<80)lead=ci+1}
+ const nn=t.replace(/\s+/g,"").length||1,cov=k=>sp.filter(x=>x.k===k).reduce((a,x)=>a+t.slice(x.s,x.e).replace(/\s+/g,"").length,0)/nn;
+ const words=t.trim().split(/\s+/).length,p=words>=8&&cov("qt")>=.8?"pq":words>=4&&cov("qv")>=.85?"pv":"";
+ return{sp,lead,p}}
+function markOf(mk,a,b){if(mk.lead&&a<mk.lead)return"ld";const x=mk.sp.find(x=>a<x.e&&b>x.s);return x?x.k:""}
 function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tk=S.tash&&bk?TK.get(bk,text):null;const tx0=S.tash?(tk||text):strip(text);
  // الحواشي: ما بعد سطر الشرطات ____ يُعرض حواشي أسفل الصفحة (ظاهرة أو مطوية بحسب اختيار القارئ)
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
  const tocPg=bk&&tx.split("\n").filter(l=>TOCL.test(l.trim())).length>=4;
  return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tl=line.trim();if(/^\|.*\|$/.test(tl)){if(/^\|[\s:|-]+\|$/.test(tl))return"";return"<tr>"+tl.slice(1,-1).split("|").map(c=>"<td>"+esc(c.trim()).replace(/&lt;br&gt;/g,"<br>")+"</td>").join("")+"</tr>"}const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
-  const inner=l.split(/(\s+)/).map(w=>w.trim()?`<span class="w${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`:w).join("");
-  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
+  const mk=head?{sp:[],lead:0,p:""}:lineMarks(l);let pos=0;
+  const inner=l.split(/(\s+)/).map(w=>{const a=pos;pos+=w.length;if(!w.trim())return w;const mc=markOf(mk,a,pos);return`<span class="w${mc?" "+mc:""}${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`}).join("");
+  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p${mk.p?` class="${mk.p}"`:""}>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
+/* تصحيحات التمييز من الإدارة (data/marks/<الكتاب>.json): {p:{"<الصفحة>":{h:بصمة النص,m:[[فقرة,من,إلى,صنف]]}}}.
+   تُطبَّق فقط إن لم يتغير نص الصفحة، وتُحمَّل للكتب المعلَّمة marks في الفهرس وحدها. */
+const MARKS=new Map();
+async function marksOf(b){if(!b||!b.marks)return null;let m=MARKS.get(b.id);if(m&&m.v===b.marks)return m.d;
+ try{const r=await fetch(`data/marks/${encodeURIComponent(b.id)}.json?v=${b.marks}`);const d=r.ok?await r.json():null;MARKS.set(b.id,{v:b.marks,d});return d}catch(e){return null}}
+async function paintMarks(rd){const b=B(rd.dataset.id),pg=+rd.dataset.p;if(!b||!b.marks||!b.pages)return;const d=await marksOf(b),e=d&&d.p&&d.p[pg];if(!e||e.h!==fnv(b.pages[pg-1]||""))return;
+ const ps=rd.querySelectorAll(":scope > p");e.m.forEach(([pi,a,z,k])=>{const ws=ps[pi]&&ps[pi].querySelectorAll(".w");if(!ws)return;for(let i=a;i<=z&&i<ws.length;i++){ws[i].classList.remove("qv","hd","qt","ld");if(k!=="none")ws[i].classList.add(k)}})}
+// تحديد المشرف: الفقرة ورقما أول كلمة وآخرها
+function selWords(){const g=getSelection();if(!g.rangeCount)return null;const r=g.getRangeAt(0),w=n=>(n.nodeType===1?n:n.parentElement).closest(".w"),a=w(r.startContainer),z=w(r.endContainer);if(!a||!z)return null;
+ const p=a.closest("p");if(!p||p!==z.closest("p"))return{err:"حدّد داخل فقرة واحدة."};const rd=p.closest(".rd[data-id]");if(!rd)return null;
+ const ws=[...p.querySelectorAll(".w")],ps=[...rd.querySelectorAll(":scope > p")];return{rd,pi:ps.indexOf(p),a:ws.indexOf(a),z:ws.indexOf(z)}}
+async function saveMark(k){const s0=selWords();if(!s0||s0.err)return toast(s0?s0.err:"حدّد النص أولًا.");if(!GH.on)return toast("التصحيح يحتاج حساب مشرف.");
+ const id=s0.rd.dataset.id,pg=+s0.rd.dataset.p,b=B(id),h=fnv(b.pages[pg-1]||""),ent=[s0.pi,s0.a,s0.z,k];
+ try{await GH.editJSON("data/marks/"+id+".json",o=>{o=o&&o.p?o:{v:1,p:{}};const e=o.p[pg]&&o.p[pg].h===h?o.p[pg]:{h,m:[]};e.m=e.m.filter(x=>!(x[0]===ent[0]&&x[1]===ent[1]&&x[2]===ent[2]));e.m.push(ent);o.p[pg]=e;return o},"تصحيح تمييز: "+(b.setTitle||b.title)+" ص "+pg,true);
+  const v=Date.now();await GH.editJSON("data/catalog.json",c=>{const x=c.books.find(y=>y.id===id);if(x)x.marks=v;c.version=Date.now();return c},"تصحيح تمييز (فهرس): "+(b.setTitle||b.title),true);
+  [CAT.books.find(y=>y.id===id),b].forEach(x=>{if(x)x.marks=v});MARKS.delete(id);
+  if(typeof MG!=="undefined")MG.log({op:"mark",kind:"book",ids:[id],changes:[{id,kind:"book",field:"mark",from:"آلي",to:{qv:"آية",hd:"حديث",qt:"اقتباس",none:"بلا تمييز"}[k]+` (ص ${pg})`}],note:"تصحيح تمييز في «"+(b.setTitle||b.title)+"»"}).catch(()=>{});
+  closeSheet();try{getSelection().removeAllRanges()}catch(e){}refreshPage();toast("حُفظ التصحيح، ويظهر للجميع خلال دقائق.")}catch(e){toast(e.message)}}
 function chapterOf(b,p){let c="";(b.toc||[]).forEach(x=>{if(x.p<=p)c=x.t});return c}
 /* ---------- النسخة المصورة (PDF) ---------- */
 const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -411,11 +471,42 @@ function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط
  <label for="lmode">طريقة التنقل بين الصفحات</label><div class="seg" id="lmode" role="radiogroup">${[["page","أفقي: صفحة صفحة"],["scroll","عمودي: تمرير متصل"]].map(([v,t])=>`<button type="button" role="radio" data-mode="${v}" aria-checked="${(S.mode||"page")===v}">${t}</button>`).join("")}</div>
  <label class="inl"><input type="checkbox" id="lfmt"${S.fmt!=="plain"?" checked":""}> تنسيق الكتاب المطبوع (محاذاة الأسطر، وبداية الفقرة، وتوسيط العناوين)</label>
  <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label>
- <label class="inl"><input type="checkbox" id="lfn"${S.fn==="fold"?" checked":""}> طيّ الحواشي (تُفتح بالضغط)</label>`}
-function wireLook(){const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.fmt=$("#lfmt")&&!$("#lfmt").checked?"plain":"print";S.theme=$("#lth").value;saveS();applyLook();refreshPage()};
+ <label class="inl"><input type="checkbox" id="lfn"${S.fn==="fold"?" checked":""}> طيّ الحواشي (تُفتح بالضغط)</label>
+ ${lookMore()}`}
+// الباب ٦: إعدادات العرض الإضافية؛ كل عنصر data-k يُحفظ في S بنوعه (data-t)
+function lookMore(){const o=(k,arr)=>arr.map(([v,t])=>`<option value="${v}"${String(S[k]??"")===String(v)?" selected":""}>${t}</option>`).join("");
+ const col=(k,lbl)=>`<div class="colrow"><label for="lk-${k}">${lbl}</label><input type="color" id="lk-${k}" data-k="${k}" data-t="color" value="${S[k]||"#000000"}"${S[k]?"":' data-unset="1"'}><button type="button" class="btn s" data-lkclr="${k}">${S[k]?"افتراضي":"(افتراضي)"}</button></div>`;
+ return`<fieldset class="lookgrp"><legend>النص</legend><div class="row">
+  <div><label for="lk-fw">كثافة الخط</label><select id="lk-fw" data-k="fw" data-t="num">${o("fw",[[400,"عادي"],[500,"متوسط"],[700,"عريض"]])}</select></div>
+  <div><label for="lk-align">المحاذاة</label><select id="lk-align" data-k="align" data-t="str">${o("align",[["","تلقائية"],["justify","ضبط الطرفين"],["right","يمين"],["center","وسط"]])}</select></div>
+  <div><label for="lk-dir">اتجاه الكتابة</label><select id="lk-dir" data-k="dir" data-t="str">${o("dir",[["rtl","من اليمين"],["auto","تلقائي لكل فقرة"]])}</select></div></div>
+  <label for="lk-ps">المسافة بين الفقرات</label><input id="lk-ps" type="range" min="0" max="1.6" step=".05" data-k="ps" data-t="num" value="${S.ps??.35}">
+  <label for="lk-w">عرض مساحة القراءة</label><select id="lk-w" data-k="w" data-t="str">${o("w",[["s","ضيق"],["m","متوسط"],["l","واسع"],["x","كامل الشاشة"]])}</select>
+  <label class="inl"><input type="checkbox" data-k="lead" data-t="bool"${S.lead!==false?" checked":""}> إبراز رؤوس الفقرات (فائدة: تنبيه: مسألة: أولًا: …)</label></fieldset>
+ <fieldset class="lookgrp"><legend>الألوان</legend>${col("bg","لون الخلفية")}${col("ink","لون النص")}<p class="mut" style="margin:4px 0 0">يتقدّمان على لون الصفحة المختار أعلاه.</p></fieldset>
+ <fieldset class="lookgrp"><legend>الاقتباسات</legend><p class="mut" style="margin:0">النصوص بين «» من خمس كلمات فأكثر، والفقرة التي هي اقتباس كلها تُعرض كتلة مستقلة.</p><div class="row">
+  <div><label for="lk-qf">الخط</label><select id="lk-qf" data-k="qf" data-t="str"><option value="">كخط النص</option>${fontOpts(S.qf||"").replace(/ selected/g,"").replace(`value="${S.qf}"`,`value="${S.qf}" selected`)}</select></div>
+  <div><label for="lk-qw">الكثافة</label><select id="lk-qw" data-k="qw" data-t="num">${o("qw",[[400,"عادي"],[500,"متوسط"],[700,"عريض"]])}</select></div>
+  <div><label for="lk-qa">المحاذاة</label><select id="lk-qa" data-k="qa" data-t="str">${o("qa",[["","كالنص"],["justify","ضبط الطرفين"],["right","يمين"],["center","وسط"]])}</select></div></div>
+  <label for="lk-qs">الحجم</label><input id="lk-qs" type="range" min=".8" max="1.35" step=".05" data-k="qs" data-t="num" value="${S.qs||1}">
+  <label for="lk-qm">المسافة حول الاقتباس</label><input id="lk-qm" type="range" min="0" max="1.6" step=".1" data-k="qm" data-t="num" value="${S.qm??.6}">${col("qc","لون الاقتباس")}</fieldset>
+ <fieldset class="lookgrp"><legend>العناوين</legend><label for="lk-hs">حجم العناوين</label><input id="lk-hs" type="range" min=".9" max="1.6" step=".05" data-k="hs" data-t="num" value="${S.hs||1}">${col("hc","لون العناوين")}</fieldset>
+ <fieldset class="lookgrp"><legend>تنسيق بصري اختياري</legend>
+  <label class="inl"><input type="checkbox" data-k="mkq" data-t="bool"${S.mkq?" checked":""}> تمييز الآيات القرآنية بالأخضر</label>
+  <label class="inl"><input type="checkbox" data-k="mkh" data-t="bool"${S.mkh?" checked":""}> تمييز الأحاديث النبوية بالأزرق</label>
+  <label class="inl"><input type="checkbox" data-k="mkt" data-t="bool"${S.mkt?" checked":""}> تمييز العناوين الفرعية بالأحمر، وعناوين الفصول بنمط خاص</label>
+  <p class="mut" style="margin:4px 0 0">التعرّف آلي: الآيات بين ﴿﴾، والأحاديث بين «» بعد ذكر النبي ﷺ. إن أخطأ في موضع يصححه المشرف من شريط التحديد.</p></fieldset>
+ <button type="button" class="btn" data-act="lookreset">إعادة كل إعدادات العرض إلى الافتراضي</button>`}
+function wireLook(){
+ // عناصر الباب ٦ (data-k)
+ const save=()=>{saveS();applyLook();refreshPage();Prefs.push()};
+ $$("#sheetB [data-k]").forEach(e=>{e.oninput=e.onchange=()=>{const k=e.dataset.k,t=e.dataset.t;S[k]=t==="bool"?e.checked:t==="num"?+e.value:e.value;if(t==="color"){delete e.dataset.unset;const b=$(`[data-lkclr="${k}"]`);if(b)b.textContent="افتراضي"}save()}});
+ $$("#sheetB [data-lkclr]").forEach(b=>b.onclick=()=>{S[b.dataset.lkclr]="";b.textContent="(افتراضي)";save()});
+ const rs=$("#sheetB [data-act=lookreset]");if(rs)rs.onclick=()=>{Object.assign(S,LOOKDEF);save();openSheet("مظهر الصفحة",lookHtml(),wireLook)};
+ const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.fmt=$("#lfmt")&&!$("#lfmt").checked?"plain":"print";S.theme=$("#lth").value;saveS();applyLook();refreshPage();Prefs.push()};
  ["#lf","#ls","#ll","#lt","#lth","#lfn","#lfmt"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
- $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
+ $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();Prefs.push();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
  $$("[data-mode]").forEach(m=>m.onclick=()=>{if(S.mode===m.dataset.mode)return;S.mode=m.dataset.mode;saveS();$$("[data-mode]").forEach(x=>x.setAttribute("aria-checked",x===m));const c=cur();closeSheet();if(c){LASTREAD=null;history.replaceState(null,"","/book/"+c.b.id+"/"+c.p);route()}})}
 function refreshPage(){$$(".rd[data-id]").forEach(rb=>{const b=B(rb.dataset.id);if(b&&b.pages){rb.innerHTML=pageHtml(b.pages[+rb.dataset.p-1],parse().q.h,uncOf(b,+rb.dataset.p-1),b);paintNotes(rb)}})}
 /* شريط تقدم القراءة أعلى الشاشة */
@@ -1219,7 +1310,7 @@ const actPosts=()=>lib.books.filter(b=>!b.demo&&bc(b)==="dawah").map(b=>({id:"ac
 const findPost=id=>(typeof MP!=="undefined"&&MP.get(id))||(POSTS||[]).find(x=>x.id===id)||(/^act-/.test(id)?actPosts().find(x=>x.id===id):null);
 const pName=x=>x.authorId?A(x.authorId).name:x.member?(x.name||"عضو"):(x.name||"مكتبة الدعوة السلفية الرقمية");
 const Cloud={role:"member",author:null,isSheikh(){return this.on()&&!!Auth.user&&this.role==="sheikh"},on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
- async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;try{const {data}=await Auth.sb.from("profiles").select("role,author_id").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null}}catch(e){}
+ async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null}}catch(e){}
   if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}}};
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
@@ -1324,7 +1415,7 @@ function hlWords(rd,notes){const ws=[...rd.querySelectorAll(".w")],tk=ws.map(w=>
   for(let i=0;i<=tk.length-q.length;i++){let ok=true;for(let j=0;j<q.length&&ok;j++){const a=tk[i+j],x=q[j];ok=q.length===1?a.includes(x):j===0?a.endsWith(x):j===q.length-1?a.startsWith(x):a===x}
    if(ok){for(let j=0;j<q.length;j++){const w=ws[i+j];w.classList.add("hl");w.dataset.note=n.id;w.style.setProperty("--hl",(NCOL[n.color]||NCOL.y)[1])}
     if(n.note)ws[i+q.length-1].insertAdjacentHTML("afterend",`<button class="nmk" data-act="noteopen" data-id="${n.id}" aria-label="تعليقك">✎</button>`);break}}})}
-async function paintNotes(rd){rd=rd||$("#rb");if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p);if(l.length)hlWords(rd,l)}catch(e){}}
+async function paintNotes(rd){rd=rd||$("#rb");if(rd)paintMarks(rd);if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p);if(l.length)hlWords(rd,l)}catch(e){}}
 function noteDlg(n){const isNew=!n.id;openDlg(`<h3>${isNew?"تعليق خاص على النص":"تعليقك"}</h3><blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote)}</blockquote>
  <form data-form="note"><label>تعليقك (لا يراه غيرك)</label><textarea name="note" style="min-height:110px" placeholder="فائدة، أو سؤال، أو ربط بموضع آخر…">${esc(n.note||"")}</textarea>
  <label>لون التظليل</label><div class="swatches">${Object.entries(NCOL).map(([k,[t,c]])=>`<label class="swl"><input type="radio" name="color" value="${k}"${(n.color||"y")===k?" checked":""}><span style="background:${c}" title="${t}"></span></label>`).join("")}</div>
@@ -1616,7 +1707,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  const fr=e.target.closest(".rd .fnr"),dg=x=>String(x).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
  if(fr&&!el){const k=dg(fr.dataset.fn||fr.textContent.replace(/[^\d٠-٩]/g,"")),fb=fr.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>dg(x.textContent).replace(/[^\d]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
  if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return}if(!el)return;const a=el.dataset.act;
- if(a==="closeDlg")dlg().close();else if(a==="navback")NAV.back();else if(a==="shareSite"){const url=siteLink("#/").replace(/#\/?$/,"").replace(/\/?$/,"/"),title="مكتبة الدعوة السلفية الرقمية";
+ if(a==="closeDlg")dlg().close();else if(a==="navback")NAV.back();else if(a==="selmark"){const s0=selWords();if(!s0||s0.err)return toast(s0?s0.err:"حدّد النص أولًا.");openSheet("تصحيح التمييز الآلي",`<p class="mut">يُطبَّق على الكلمات المحددة في هذه الصفحة للجميع.</p><div class="tools-grid">${[["qv","آية قرآنية"],["hd","حديث نبوي"],["qt","اقتباس"],["none","إزالة التمييز"]].map(([k,t])=>`<button data-act="selmarkk" data-k="${k}">${t}</button>`).join("")}</div>`)}else if(a==="selmarkk")saveMark(el.dataset.k);else if(a==="shareSite"){const url=siteLink("#/").replace(/#\/?$/,"").replace(/\/?$/,"/"),title="مكتبة الدعوة السلفية الرقمية";
   if(navigator.share){try{await navigator.share({title,text:title+": كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وكتب التراث، للقراءة والبحث.",url})}catch(x){}}
   else{try{await navigator.clipboard.writeText(url);toast("نُسخ رابط المكتبة: "+url)}catch(x){openDlg(`<h3>رابط المكتبة</h3><p>انسخ الرابط:</p><input id="sharl" readonly value="${esc(url)}" style="width:100%;direction:ltr">`);const i=$("#sharl");if(i){i.focus();i.select()}}}}
  else if(a==="bcdel"){if(confirm("حذف هذا الإشعار؟")){await Auth.sb.from("broadcasts").delete().eq("id",el.dataset.id);bcList()}}
@@ -1697,7 +1788,7 @@ const selRd=()=>{const n=getSelection().anchorNode;return n&&(n.nodeType===1?n:n
 // فيُعاد التحديد قبل تنفيذ الإجراء، ويُؤجَّل إخفاء الشريط قليلًا حتى لا يختفي الزر تحت الإصبع.
 let SELC=null,selHideT=0;const selOk=()=>{const s=String(getSelection()).trim();return(s.length>12||/\S\s+\S/.test(s))&&!!selRd()};
 document.addEventListener("selectionchange",()=>{clearTimeout(selHideT);const q=$("#selq");
- if(selOk()){try{SELC={r:getSelection().getRangeAt(0).cloneRange(),t:Date.now()}}catch(x){}q.hidden=false;return}
+ if(selOk()){try{SELC={r:getSelection().getRangeAt(0).cloneRange(),t:Date.now()}}catch(x){}q.hidden=false;const mb=$("#selq [data-act=selmark]");if(mb)mb.hidden=!(typeof isAdmin==="function"&&isAdmin());return}
  selHideT=setTimeout(()=>{if(!selOk())q.hidden=true},500)});
 (()=>{const q=$("#selq");if(!q)return;["pointerdown","mousedown"].forEach(ev=>q.addEventListener(ev,e=>{if(e.target.closest("button"))e.preventDefault()}));
  q.addEventListener("click",()=>{clearTimeout(selHideT);const g=getSelection();if(!String(g).trim()&&SELC&&Date.now()-SELC.t<300000){try{g.removeAllRanges();g.addRange(SELC.r)}catch(x){}}},true)})();
