@@ -54,6 +54,9 @@ const isReadBook=b=>/^المكتبة المقروءة/.test(b.c||"");
 const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس صوتية/.test(b.source||"");
 const kindOf=b=>!isArt(b)||isReadBook(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
 let _SM=null,_SMn=-1;const setMin=k=>{if(_SMn!==lib.books.length){_SM={};lib.books.forEach(x=>{if(x.set&&(_SM[x.set]==null||x.vol<_SM[x.set]))_SM[x.set]=x.vol});_SMn=lib.books.length}return _SM[k]};
+// شريط مجلدات العمل في صفحة الكتاب (الباب ٣.٤): كل المجلدات ظاهرة مع تمييز الحالي
+const volStrip=b=>{if(!b.set)return"";const vs=lib.books.filter(x=>x.set===b.set).sort((x,y)=>(x.vol||0)-(y.vol||0));if(vs.length<2)return"";
+ return`<nav class="volstrip" aria-label="مجلدات الكتاب"><b>المجلدات (${toAr(vs.length)})</b><div class="chips">${vs.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1"${x.id===b.id?' aria-current="page"':""}>${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`).join("")}</div></nav>`};
 const VOL2=b=>!!(b.set&&b.vol>setMin(b.set)),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
 const COL={dawah:"مكتبة الدعوة السلفية",turath:"المكتبة العامة"}; // المعرّف الداخلي turath باقٍ في الروابط والبيانات
 const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
@@ -101,7 +104,7 @@ const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q
 /* ---------- الرئيسية ---------- */
 function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1>مكتبة الدعوة السلفية الرقمية</h1>
- <p class="ayah" lang="ar">قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ ٱلْمُشْرِكِينَ ﴿١٠٨﴾ <span class="ayref">[يوسف: ١٠٨]</span></p>
+ <p class="ayah" lang="ar">قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ ٱلْمُشْرِكِينَ ﴿١٠٨﴾ <span class="ayref">[يوسف]</span></p>
  <form class="sbox" data-form="quick"><input name="q" type="search" placeholder="ابحث في الكتب والمقالات والمؤلفين" aria-label="بحث"><button class="btn p">بحث</button></form></section>
  ${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p])=>b&&p>1).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}
  <div class="cols"><a class="col" href="#/library?c=dawah"><b>مكتبة الدعوة السلفية</b><span>كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور</span><em>${BOOKS().filter(b=>bc(b)==="dawah").length} كتاب</em></a>
@@ -373,6 +376,17 @@ const GH={repo:CFG.repo||"dawah-library/sdsl-library",branch:CFG.branch||"main",
  async put(path,data,msg,sha){const bytes=data instanceof Uint8Array?data:new TextEncoder().encode(data);if(sha===undefined)sha=await this.sha(path);
   const body={message:msg,content:this.b64(bytes),branch:this.branch};if(sha)body.sha=sha;
   return(await this.api("/contents/"+encodeURI(path),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json()},
+ // حفظ عدة ملفات في إيداع واحد (يقلل عمليات النشر): عبر خادم الحفظ للمشرفين، أو Git Data API بالمفتاح المباشر.
+ // files: [{path, text}] ؛ يُقسَّم تلقائيًا إلى دفعات تحت حد حجم الطلب
+ async batch(files,msg,onStatus){const MAX=3e6,groups=[[]];let sz=0;for(const f of files){const n=(f.text||"").length*1.1+200;if(groups[groups.length-1].length&&(sz+n>MAX||groups[groups.length-1].length>=40)){groups.push([]);sz=0}groups[groups.length-1].push(f);sz+=n}
+  for(let g=0;g<groups.length;g++){const part=groups.length>1?` (دفعة ${g+1} من ${groups.length})`:"";if(onStatus)onStatus(`جارٍ الحفظ${part}…`);
+   if(this.proxied){const r=await fetch((CFG.ghProxy||"api/gh")+"?batch=1",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(Auth.token||"")},body:JSON.stringify({message:msg+part,branch:this.branch,files:groups[g]})});
+    if(!r.ok){let m="";try{m=(await r.json()).message}catch(e){}throw new Error(m||"تعذر الحفظ ("+r.status+")")}continue}
+   const j=async(p,o)=>(await this.api(p,o)).json(),ref=await j("/git/ref/heads/"+this.branch),base=await j("/git/commits/"+ref.object.sha),tree=[];
+   for(const f of groups[g]){const b=await j("/git/blobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:f.text,encoding:"utf-8"})});tree.push({path:f.path,mode:"100644",type:"blob",sha:b.sha})}
+   const t=await j("/git/trees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base_tree:base.tree.sha,tree})});
+   const c=await j("/git/commits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg+part,tree:t.sha,parents:[ref.object.sha]})});
+   await this.api("/git/refs/heads/"+this.branch,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({sha:c.sha})})}},
  // يعدّل ملف JSON بأمان: يقرأ آخر نسخة ثم يطبق التعديل ثم يحفظ، ويعيد المحاولة عند التعارض
  async editJSON(path,fn,msg,compact){for(let t=0;t<3;t++){let cur;try{cur=await this.get(path)}catch(e){cur={sha:null,text:"null"}}
    const obj=fn(JSON.parse(cur.text));try{return await this.put(path,JSON.stringify(obj,null,compact?0:1),msg,cur.sha||null)}catch(e){if(!/تعارض/.test(e.message)||t===2)throw e}}}};
@@ -477,7 +491,7 @@ async function vBook(id,p,h){
  const scroll=S.mode==="scroll"&&pv==="text"&&!art&&n>1;
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[id];S.lastBy[id]=p;{const ks=Object.keys(S.lastBy);if(ks.length>40)delete S.lastBy[ks[0]]}saveS();
  const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
- const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]} • <button class="linkbtn" data-act="card">بطاقة الكتاب</button></div>${b.card&&b.card.summary&&p===1?`<p class="rsum">${esc(b.card.summary)}</p>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}</div>`;
+ const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]} • <button class="linkbtn" data-act="card">بطاقة الكتاب</button></div>${b.card&&b.card.summary&&p===1?`<p class="rsum">${esc(b.card.summary)}</p>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}${volStrip(b)}</div>`;
  const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div>${fatwa?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}</div>`:"";
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
@@ -1001,6 +1015,20 @@ function ghBox(){return GH.proxied?`<div class="ghbox on"><b>✓ الإدارة 
  <li>Permissions ← Repository permissions ← <b>Contents: Read and write</b>.</li><li>Generate token، ثم انسخه والصقه هنا. يُحفظ على هذا الجهاز فقط، ولكل مشرف أن ينشئ مفتاحه.</li></ol></details></div>`}
 async function ghLogin(f){const t=String(new FormData(f).get("t")).trim(),err=$("#gherr");err.textContent="جارٍ التحقق…";GH.token=t;
  try{await GH.verify();toast("تم الدخول. الإدارة المباشرة مفعّلة على هذا الجهاز.");S.admin=true;saveS();route()}catch(e){GH.token="";err.textContent=e.message}}
+// يرفع ملف PDF واحدًا إلى صندوق التحويل مع إعداداته (cfg): مخزن الموقع أولًا، وإلا أجزاء في المستودع. يستعمله رفع الكتب المصورة ورفع المجلدات
+async function pdfUpload(file,base,cfg,say){say=say||(()=>{});
+   await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
+   // الأسرع: رفع الملف كاملًا إلى مخزن الموقع (Supabase Storage) دفعة واحدة، ثم رابط تنزيل مؤقت يأخذه التحويل
+   let viaStore=false;if(GH.proxied&&Cloud.on()&&file.size<=50*1048576){try{say(`جارٍ رفع ${cfg.title} (${toAr(Math.round(file.size/1048576))} ميجابايت)…`);
+    const S_=Auth.sb.storage.from("inbox"),{error:ue}=await S_.upload(base+".pdf",file,{contentType:"application/pdf",upsert:true});if(ue)throw ue;
+    // لا يُحفظ رابط موقَّع في المستودع العام: يُحفظ اسم الملف فقط، ويطلب التحويل رابطًا مؤقتًا من الخادم
+    await GH.put("ocr-inbox/"+base+".store",base+".pdf","ملف كتاب مصور: "+cfg.title,null);await GH.put("ocr-inbox/"+base+".ready","0","اكتمل رفع: "+cfg.title,null);viaStore=true}catch(e){console.warn("storage upload",e)}}
+   if(viaStore)return "store";
+   const bytes=new Uint8Array(await file.arrayBuffer());
+   if(GH.proxied){const CH=2500000,n=Math.ceil(bytes.length/CH);for(let k=0;k<n;k++){say(`جارٍ رفع ${cfg.title}: الجزء ${toAr(k+1)} من ${toAr(n)}…`);await GH.put("ocr-inbox/"+base+".pdf.part"+String(k+1).padStart(3,"0"),bytes.subarray(k*CH,(k+1)*CH),"رفع كتاب مصور (جزء "+(k+1)+"): "+cfg.title,null)}
+    await GH.put("ocr-inbox/"+base+".ready",String(n),"اكتمل رفع: "+cfg.title,null)}
+   else await GH.put("ocr-inbox/"+base+".pdf",bytes,"رفع كتاب مصور: "+cfg.title);
+   return "repo"}
 async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(x=>x&&x.size),st=$("#pdfst");if(!files.length)return;
  const big=files.filter(x=>x.size>45*1048576);if(big.length){st.textContent="ملفات أكبر من 45 ميجابايت: "+big.map(x=>x.name).join("، ")+". قسّمها أو ارفعها إلى مجلد ocr-inbox مباشرة.";return}
  const btn=f.querySelector("button");btn.disabled=true;const done=[],link=files.length===1?fd.get("book"):"";
@@ -1010,17 +1038,7 @@ async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(
    st.textContent=`جارٍ رفع ${files.length>1?"الكتاب "+toAr(i+1)+" من "+toAr(files.length)+": ":""}${nm}…`;
    const base="up"+Date.now().toString(36)+i,cfg={title:(files.length===1&&String(fd.get("title")||"").trim())||parts[0],author:author0||parts[1]||undefined,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};
    if(tags.length)cfg.tags=tags;if(link)cfg.book=link;
-   await GH.put("ocr-inbox/"+base+".json",JSON.stringify(cfg,null,1),"إعدادات كتاب مصور: "+cfg.title);
-   // الأسرع: رفع الملف كاملًا إلى مخزن الموقع (Supabase Storage) دفعة واحدة، ثم رابط تنزيل مؤقت يأخذه التحويل
-   let viaStore=false;if(GH.proxied&&Cloud.on()&&file.size<=50*1048576){try{st.textContent=`جارٍ رفع ${cfg.title} (${toAr(Math.round(file.size/1048576))} ميجابايت)…`;
-    const S_=Auth.sb.storage.from("inbox"),{error:ue}=await S_.upload(base+".pdf",file,{contentType:"application/pdf",upsert:true});if(ue)throw ue;
-    // لا يُحفظ رابط موقَّع في المستودع العام: يُحفظ اسم الملف فقط، ويطلب التحويل رابطًا مؤقتًا من الخادم
-    await GH.put("ocr-inbox/"+base+".store",base+".pdf","ملف كتاب مصور: "+cfg.title,null);await GH.put("ocr-inbox/"+base+".ready","0","اكتمل رفع: "+cfg.title,null);viaStore=true}catch(e){console.warn("storage upload",e)}}
-   if(viaStore){done.push(cfg.title);continue}
-   const bytes=new Uint8Array(await file.arrayBuffer());
-   if(GH.proxied){const CH=2500000,n=Math.ceil(bytes.length/CH);for(let k=0;k<n;k++){st.textContent=`جارٍ رفع ${cfg.title}: الجزء ${toAr(k+1)} من ${toAr(n)}…`;await GH.put("ocr-inbox/"+base+".pdf.part"+String(k+1).padStart(3,"0"),bytes.subarray(k*CH,(k+1)*CH),"رفع كتاب مصور (جزء "+(k+1)+"): "+cfg.title,null)}
-    await GH.put("ocr-inbox/"+base+".ready",String(n),"اكتمل رفع: "+cfg.title,null)}
-   else await GH.put("ocr-inbox/"+base+".pdf",bytes,"رفع كتاب مصور: "+cfg.title);done.push(cfg.title)}
+   await pdfUpload(file,base,cfg,t=>st.textContent=t);done.push(cfg.title)}
   st.innerHTML=`✓ رُفع ${toAr(done.length)} ${done.length>1?"كتب":"كتاب"}: ${done.map(esc).join("، ")}.<br>${link&&!fd.get("ocr")?"سيُربط بالكتاب خلال دقيقة.":"بدأ التحويل إلى نص على خوادم GitHub (نحو دقيقة لكل 10–15 صفحة)، ثم تظهر الكتب في أقسامها تلقائيًا. تابع التقدم من تبويب Actions في المستودع."}`;f.reset()}
  catch(e){st.textContent=(done.length?"رُفع: "+done.join("، ")+". ثم توقف: ":"")+e.message}finally{btn.disabled=false}}
 async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=String(fd.get("text")||"").trim();if(!text)return;
@@ -1094,7 +1112,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <div class="row"><button class="btn p nf" data-act="expUpd">تنزيل ملف التحديث</button><label class="btn nf" style="margin:0">استيراد ملف تحديث<input type="file" id="impf" accept=".json" hidden></label></div>
   <h3>المضاف والمعدَّل على هذا الجهاز</h3>${LOCAL.catalog.books.map(b=>`<div class="bk"><b>${esc(b.title||b.id)}</b><span>${isArt(b)?"مقال":"كتاب"}${b.edited?" • معدَّل "+b.edited:""}</span> <button class="btn s" data-act="delb" data-id="${b.id}">حذف من الجهاز</button></div>`).join("")||'<p class="mut">لا يوجد.</p>'}`;
  else if(tab==="struct")body=structBody();
- else if(/^(items|log|switches)$/.test(tab)&&(Cloud.staff()||GH.on))body=MG.body(tab,q);
+ else if(/^(items|vols|log|switches)$/.test(tab)&&(Cloud.staff()||GH.on))body=MG.body(tab,q);
  else if(tab==="msgs"){location.hash="#/messages";return}
  else if(tab==="community"){location.hash="#/community?k=admin";return}
  else if(tab==="sheikhs"){body='<div id="shadm" class="mut">جارٍ التحميل…</div>';setTimeout(shAdmin,0)}
