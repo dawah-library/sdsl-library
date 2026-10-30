@@ -6,19 +6,19 @@
    لا حذف نهائي: «الإخفاء» يحجب المادة عن الزوار ويبقيها للمشرفين وفي السجل. */
 const MG = (() => {
   const LOG = "data/admin-log.json", SW = "data/switches.json", PER = 50;
-  const FIELDS = { title: ["title", "t"], author: ["authorId", "a"], topic: ["topicId", "tp"], col: ["col", "col"], hidden: ["hidden", "h"], set: ["set", "set"], setTitle: ["setTitle", "setTitle"], vol: ["vol", "vol"], vols: ["vols", "vols"] };
-  const LABEL = { title: "العنوان", author: "المؤلف", topic: "التصنيف", col: "القسم", hidden: "الإخفاء", set: "العمل", setTitle: "عنوان العمل", vol: "رقم المجلد", vols: "عدد المجلدات", file: "ملف النص", create: "إضافة" };
+  const FIELDS = { title: ["title", "t"], author: ["authorId", "a"], topic: ["topicId", "tp"], col: ["col", "col"], hidden: ["hidden", "h"], set: ["set", "set"], setTitle: ["setTitle", "setTitle"], vol: ["vol", "vol"], vols: ["vols", "vols"], ed: ["ed", "ed"] };
+  const LABEL = { title: "العنوان", author: "المؤلف", topic: "التصنيف", col: "القسم", hidden: "الإخفاء", set: "العمل", setTitle: "عنوان العمل", vol: "رقم المجلد", vols: "عدد المجلدات", file: "ملف النص", create: "إضافة", mergedInto: "دُمج في", ed: "الطبعة" };
   const kindOfId = id => (CAT.books.some(b => b.id === id) ? "book" : "article");
   const raw = () => CAT.books.filter(b => !b.demo).concat(ARTS_IDX);
   const sel = new Set();
   let F = {};
   const who = () => ({ role: (typeof Cloud !== "undefined" && Cloud.role) || (GH.token ? "key" : "?"), uid: Auth.user ? String(Auth.user.id).slice(0, 8) : "" });
-  const fmtV = (field, v) => field === "author" ? (A(v).name || v) : field === "topic" ? (T(v).name || v) : field === "col" ? (COL[v] || v || COL.dawah) : field === "hidden" ? (v ? "مخفي" : "ظاهر") : String(v ?? "");
+  const fmtV = (field, v) => field === "author" ? (A(v).name || v) : field === "topic" ? (T(v).name || v) : field === "col" ? (COL[v] || v || COL.dawah) : field === "hidden" ? (v ? "مخفي" : "ظاهر") : field === "ed" ? (v && typeof v === "object" ? (typeof ED !== "undefined" ? ED.label(v, 1) : JSON.stringify(v)) + (v.main ? " (المعتمدة)" : "") : String(v ?? "—")) : String(v ?? "");
   // المواد المحمّلة كلها بأسماء حقول الكتب (المقالات تُحوَّل بـ artFromIdx)، أما الملفات فالمقالات فيها بأسماء مختصرة
   const cur = (it, field) => field === "col" ? (it.col || "dawah") : field === "hidden" ? !!it.hidden : it[FIELDS[field][0]];
 
   // يطبّق قائمة تغييرات [{id,field,to}] على الملفات (آخر نسخة من المستودع)، ويعيد التغييرات الفعلية بقيمها السابقة
-  async function apply(list, op, note) {
+  async function apply(list, op, note, quiet) {
     if (!GH.on) throw new Error("الحفظ يحتاج حساب مشرف (أو مفتاح الإدارة المباشرة).");
     const books = list.filter(c => kindOfId(c.id) === "book"), arts = list.filter(c => kindOfId(c.id) === "article"), done = [];
     const run = (rows, kind) => obj => {
@@ -41,7 +41,7 @@ const MG = (() => {
       const k = FIELDS[c.field][0]; if (c.field === "hidden" && !c.to) delete x[k]; else x[k] = c.to;
     });
     merge();
-    if (done.length) await log({ op, kind: [...new Set(done.map(c => c.kind))].join("+"), ids: [...new Set(done.map(c => c.id))], changes: done, note });
+    if (done.length && !quiet) await log({ op, kind: [...new Set(done.map(c => c.kind))].join("+"), ids: [...new Set(done.map(c => c.id))], changes: done, note });
     return done;
   }
   async function log(e) {
@@ -136,6 +136,7 @@ const MG = (() => {
   }
   async function undo(id) {
     const box = $("#mglog"), e = (box && box._items || []).find(x => x.id === id); if (!e) return;
+    if (e.op === "amerge") { try { await unmergeAuthor(e); } catch (err) { alert(err.message); } return; }
     if (e.op === "add") { if (!confirm("التراجع عن الإضافة يُخفي المواد المضافة (" + toAr((e.ids || []).length) + ") ولا يحذفها. متابعة؟")) return;
       try { await apply((e.ids || []).filter(i => raw().some(b => b.id === i)).map(i => ({ id: i, field: "hidden", to: true })), "undo", "«" + (e.note || e.op) + "»");
         await GH.editJSON(LOG, o => { const x = (o.items || []).find(y => y.id === id); if (x) x.undone = new Date().toISOString(); return o; }, "سجل التعديلات: تعليم تراجع", true); toast("أُخفيت المواد المضافة."); logBody(); } catch (err) { alert(err.message); } return; }
@@ -304,6 +305,85 @@ const MG = (() => {
     try { await apply(ch, "edit", "ترتيب مجلدات «" + title + "»"); st.textContent = "✓ حُفظ."; ordBox(setId); } catch (e) { st.textContent = e.message; }
   }
 
+  // ===== كشف التكرار وتوحيد السجلات (ب2-16، ب2-46) =====
+  // المؤلف: الاسم نفسه بعد التطبيع، أو اسم قصير كلماته كلها في الاسم الأطول مع اتفاق الاسم الأول والأخير (سعيد السواح ⊂ سعيد محمد السواح).
+  // الدمج لا يحذف: ينقل المواد (بالسجل) ويضيف الاسم إلى الأسماء البديلة ويعلّم السجل القديم mergedInto فيحوَّل رابطه إلى المؤلف الموحَّد.
+  const TITLES = /^(الشيخ|الدكتور|د|م|أ|المهندس|الإمام|الامام|الحافظ|العلامة|الأستاذ|الاستاذ|فضيلة|المحقق)$/;
+  const nameToks = s => norm(String(s || "").replace(/[‎‏‪-‮⁦-⁩﻿]/g, "")).replace(/[.\-ـ]/g, " ").split(/\s+/).filter(w => w && !TITLES.test(w)).map(w => w === "ابو" || w === "أبو" ? "ابو" : w);
+  const sameish = (x, y) => { const a = nameToks(x), b = nameToks(y); if (!a.length || !b.length) return 0; const ja = a.join(" "), jb = b.join(" "); if (ja === jb) return 2;
+    const [s, l] = a.length <= b.length ? [a, b] : [b, a]; if (s.length < 2) return 0; const L = new Set(l);
+    return s.every(w => L.has(w)) && s[0] === l[0] && s[s.length - 1] === l[l.length - 1] ? 1 : 0; };
+  const DISTINCT = "data/dup-distinct.json"; // أزواج قرر المشرف أنها لشخصين مختلفين
+  let distinct = null;
+  async function loadDistinct() { if (distinct) return distinct; try { distinct = new Set((JSON.parse((await GH.get(DISTINCT)).text).pairs || [])); } catch (e) { distinct = new Set(); } return distinct; }
+  const pairKey = (a, b) => [a, b].sort().join("|");
+  function authorDups() {
+    const as = CAT.authors.filter(a => !a.mergedInto), out = [], cnt = id => raw().filter(b => b.authorId === id).length;
+    const seen = new Set();
+    for (let i = 0; i < as.length; i++) for (let j = i + 1; j < as.length; j++) {
+      const x = as[i], y = as[j]; if ((x.col || "dawah") !== (y.col || "dawah")) continue;
+      const names = [x.name].concat(x.aliases || []), names2 = [y.name].concat(y.aliases || []);
+      let k = 0; names.forEach(n => names2.forEach(m => { k = Math.max(k, sameish(n, m)); }));
+      if (x.id === y.id) k = 3; // السجل نفسه مكرر في الفهرس
+      if (!k || (x.died && y.died && x.died !== y.died)) continue; // سنة الوفاة المختلفة تعني شخصين
+      const key = pairKey(x.id, y.id) + (x.id === y.id ? "#" + i : ""); if (seen.has(key)) continue; seen.add(key);
+      const cx = cnt(x.id), cy = cnt(y.id);
+      out.push({ x, y, k, cx, cy, key: pairKey(x.id, y.id) });
+    }
+    return out;
+  }
+  function itemDups() {
+    const g = new Map();
+    const sets = new Set(); raw().filter(b => !b.hidden && !(b.set && (sets.has(b.set) || !sets.add(b.set)))).forEach(b => { const t = norm((b.setTitle || b.title || "").replace(/[«»"'()\[\]،,.:؛؟!\-–—]/g, " ")).replace(/\s+/g, " ").trim(); if (t.length < 4) return;
+      const k = (isArt(b) ? "a" : "b") + "|" + b.authorId + "|" + t; (g.get(k) || g.set(k, []).get(k)).push(b); });
+    return [...g.values()].filter(l => l.length > 1 && !(l.every(b => b.ed && b.ed.w) && new Set(l.map(b => b.ed.w)).size === 1)); // الطبعات المربوطة ليست تكرارًا
+  }
+  async function dupsBody() {
+    const box = $("#mgdup"); if (!box) return;
+    const D = await loadDistinct(), ad = authorDups().filter(p => !D.has(p.key)), id = itemDups();
+    const an = a => `<b>${esc(a.name)}</b> <span class="mut">(${esc(a.id)}${a.died ? "، ت " + toAr(a.died) + "هـ" : ""})</span>`;
+    box.innerHTML = `<p class="mut">يقارن الأسماء بعد إزالة الألقاب والتشكيل وتوحيد الهمزات، ويقترح ما يحتمل أنه سجل واحد. <b>تحقّق من الهوية قبل الدمج</b>: الدمج ينقل الكتب والمقالات ويُبقي الاسم القديم اسمًا بديلًا يطابقه الاستيراد مستقبلًا، ويحوّل رابط المؤلف القديم، ويمكن التراجع عنه من «سجل التعديلات».</p>
+     <h3>مؤلفون محتمل تكرارهم (${toAr(ad.length)})</h3>
+     <div class="mglist">${ad.map(p => { const [keep, drop] = p.x.id === p.y.id ? [p.x, p.y] : (p.cy > p.cx ? [p.y, p.x] : [p.x, p.y]);
+       return `<div class="mgrow"><span class="mgt">${an(p.x)} — ${toAr(p.cx)} مادة<br>${an(p.y)} — ${toAr(p.cy)} مادة<br><em class="tag">${p.k === 3 ? "سجل مكرر بالمعرّف نفسه" : p.k === 2 ? "الاسم نفسه" : "اسم مختصر من الآخر"}</em></span>
+        <span><button class="btn p s" data-act="mgamerge" data-keep="${esc(keep.id)}" data-drop="${esc(drop.id)}"${p.x.id === p.y.id ? ' data-same="1"' : ""}>${p.x.id === p.y.id ? "حذف السجل المكرر" : "دمج «" + esc(drop.name) + "» في «" + esc(keep.name) + "»"}</button>
+        ${p.x.id === p.y.id ? "" : `<button class="btn s" data-act="mgamerge" data-keep="${esc(drop.id)}" data-drop="${esc(keep.id)}">العكس</button><button class="btn s" data-act="mgdistinct" data-key="${esc(p.key)}">شخصان مختلفان</button>`}</span></div>`; }).join("") || '<p class="note">لا يوجد تكرار محتمل في المؤلفين.</p>'}</div>
+     <h3>مواد بالعنوان نفسه للمؤلف نفسه (${toAr(id.length)})</h3>
+     <div class="mglist">${id.map(l => `<div class="mgrow"><span class="mgt"><b>${esc(l[0].setTitle || l[0].title)}</b> — ${esc(A(l[0].authorId).name)}<br>${l.map(b => `<a href="#/book/${encodeURIComponent(b.id)}/1">${esc(b.id)}</a> <span class="mut">(${toAr(b.n || 0)} ص${b.source ? "، " + esc(b.source.slice(0, 50)) : ""})</span>`).join("<br>")}</span>
+       <span>${l.slice(1).map(b => `<button class="btn s" data-act="mghide1" data-id="${esc(b.id)}" data-v="1">إخفاء ${esc(b.id)}</button>`).join(" ")}</span></div>`).join("") || '<p class="note">لا توجد مواد مكررة.</p>'}</div>
+     <p class="mut">ملاحظة: إن كانت المادتان طبعتين مختلفتين للكتاب نفسه فلا تُخفِ إحداهما؛ اربطهما من «طبعات الكتاب».</p>`;
+  }
+  async function mergeAuthor(keepId, dropId, same) {
+    const keep = CAT.authors.find(a => a.id === keepId), drop = CAT.authors.find(a => a.id === dropId); if (!keep || !drop) return;
+    if (same) { if (!confirm("السجل «" + keep.name + "» مكرر في الفهرس بالمعرّف نفسه. إزالة النسخة الزائدة؟ (المواد لا تتأثر)")) return;
+      await GH.editJSON("data/catalog.json", c => { let seen = false; c.authors = c.authors.filter(a => a.id !== keepId || (seen ? false : (seen = true))); c.version = Date.now(); return c; }, "إزالة سجل مؤلف مكرر: " + keep.name, true);
+      let seen = false; CAT.authors = CAT.authors.filter(a => a.id !== keepId || (seen ? false : (seen = true))); merge();
+      await log({ op: "file", kind: "author", ids: [keepId], changes: [{ id: keepId, kind: "author", field: "create", from: "سجلان", to: "سجل واحد" }], note: "إزالة سجل مكرر للمؤلف «" + keep.name + "»" });
+      toast("أُزيل السجل المكرر."); return dupsBody(); }
+    const items = raw().filter(b => b.authorId === dropId);
+    if (!confirm(`دمج «${drop.name}» (${toAr(items.length)} مادة) في «${keep.name}»؟\nتأكد أنهما الشخص نفسه.`)) return;
+    try {
+      const done = items.length ? await apply(items.map(b => ({ id: b.id, field: "author", to: keepId })), "move", "دمج المؤلف «" + drop.name + "» في «" + keep.name + "»", true) : [];
+      await GH.editJSON("data/catalog.json", c => { const k = c.authors.find(a => a.id === keepId), d = c.authors.find(a => a.id === dropId); if (!k || !d) return c;
+        k.aliases = [...new Set((k.aliases || []).concat([d.name], d.aliases || []).filter(n => n !== k.name))];
+        if (!k.photo && d.photo) k.photo = d.photo; if (!k.bio && d.bio) k.bio = d.bio; if (!k.died && d.died) k.died = d.died;
+        d.mergedInto = keepId; d.mergedAt = today(); c.version = Date.now(); return c; }, "دمج المؤلف «" + drop.name + "» في «" + keep.name + "»", true);
+      keep.aliases = [...new Set((keep.aliases || []).concat([drop.name]))]; drop.mergedInto = keepId; merge();
+      await log({ op: "amerge", kind: "author", ids: [dropId, keepId], changes: [{ id: dropId, kind: "author", field: "mergedInto", from: null, to: keepId }].concat(done), note: "دمج المؤلف «" + drop.name + "» في «" + keep.name + "»" });
+      toast("دُمج المؤلفان، ونُقل " + toAr(done.length) + " مادة."); dupsBody();
+    } catch (e) { alert(e.message); }
+  }
+  async function unmergeAuthor(e) { // تراجع عن الدمج: إعادة المواد وإلغاء mergedInto
+    const ch = e.changes || [], m = ch.find(c => c.field === "mergedInto"); if (!m) return false;
+    const items = raw(), back = ch.filter(c => c.field === "author").filter(c => { const it = items.find(b => b.id === c.id); return it && it.authorId === c.to; }).map(c => ({ id: c.id, field: "author", to: c.from }));
+    if (!confirm(`فك الدمج وإعادة ${toAr(back.length)} مادة إلى مؤلفها السابق؟`)) return true;
+    if (back.length) await apply(back, "undo", "فك دمج المؤلف");
+    await GH.editJSON("data/catalog.json", c => { const d = c.authors.find(a => a.id === m.id), k = c.authors.find(a => a.id === m.to); if (d) { delete d.mergedInto; delete d.mergedAt; } if (k && d) k.aliases = (k.aliases || []).filter(n => n !== d.name); c.version = Date.now(); return c; }, "فك دمج مؤلف", true);
+    const d = CAT.authors.find(a => a.id === m.id); if (d) delete d.mergedInto; merge();
+    await GH.editJSON(LOG, o => { const x = (o.items || []).find(y => y.id === e.id); if (x) x.undone = new Date().toISOString(); return o; }, "سجل التعديلات: تعليم تراجع", true);
+    toast("فُكّ الدمج."); logBody(); return true;
+  }
+
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
   let lpT = 0, lpFired = false;
   const cardId = a => { const m = (a.getAttribute("href") || "").match(/#\/book\/([^/?]+)/); return m && decodeURIComponent(m[1]); };
@@ -329,6 +409,8 @@ const MG = (() => {
     else if (a === "mghide") { if (!sel.size) return toast("حدّد مادة أولًا."); hide([...sel], el.dataset.v === "1"); }
     else if (a === "mghide1") { closeSheet(); hide([el.dataset.id], el.dataset.v === "1"); }
     else if (a === "mgundo") undo(el.dataset.id);
+    else if (a === "mgamerge") mergeAuthor(el.dataset.keep, el.dataset.drop, el.dataset.same === "1");
+    else if (a === "mgdistinct") { if (!confirm("تعليمهما شخصين مختلفين فلا يُقترح دمجهما مرة أخرى؟")) return; GH.editJSON(DISTINCT, o => { o = o && o.pairs ? o : { v: 1, pairs: [] }; if (!o.pairs.includes(el.dataset.key)) o.pairs.push(el.dataset.key); return o; }, "تكرار المؤلفين: شخصان مختلفان", true).then(() => { (distinct || (distinct = new Set())).add(el.dataset.key); dupsBody(); }).catch(err => alert(err.message)); }
   });
   document.addEventListener("change", e => { const c = e.target.closest("[data-mgid]"); if (!c) return; c.checked ? sel.add(c.dataset.mgid) : sel.delete(c.dataset.mgid); count(); });
   document.addEventListener("submit", e => {
@@ -342,13 +424,14 @@ const MG = (() => {
   }, true);
 
   return {
-    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
+    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["dups", "التكرار والتوحيد"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
     body(tab, q) {
       if (tab === "items") { setTimeout(count, 0); return itemsBody(q); }
       if (tab === "log") { setTimeout(logBody, 0); return `${needGH()}<p class="mut">كل تعديل أو نقل أو إخفاء من «إدارة المواد»، وكل تغيير في مفاتيح الخدمات. «تراجع» يعيد القيم السابقة لما لم يتغير بعد العملية، ويُسجَّل التراجع نفسه.</p><div id="mglog" class="mut">جارٍ التحميل…</div>`; }
       if (tab === "vols") { setTimeout(wireVols, 0); return volsBody(); }
+      if (tab === "dups") { setTimeout(dupsBody, 0); return `${needGH()}<div id="mgdup" class="mut">جارٍ الفحص…</div>`; }
       if (tab === "switches") { setTimeout(swBody, 0); return `${needGH()}<div id="mgsw" class="mut">جارٍ التحميل…</div>`; }
       return null;
-    }, apply, undo, log, sets, volFromName
+    }, apply, undo, log, sets, volFromName, sameish, nameToks
   };
 })();

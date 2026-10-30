@@ -18,7 +18,7 @@ module.exports = (req, res) => {
   ["library?c=dawah", "library?c=turath", "articles", "fatawa", "bayanat", "furqan", "tafrighat", "posts", "authors", "tarajim", "about", "dawah", "history", "contact", "ask"].forEach(p => add(p, null, "0.8"));
   cat.books.filter(b => !b.demo && !b.hidden).forEach(b => add("book/" + b.id + "/1", b.added, b.col === "dawah" ? "0.9" : "0.7"));
   arts.filter(a => !a.h).forEach(a => add("book/" + a.id + "/1", a.d, "0.6"));
-  cat.authors.forEach(a => add("author/" + a.id, null, "0.6"));
+  cat.authors.filter(a => !a.mergedInto).forEach(a => add("author/" + a.id, null, "0.6")); // المدموج يُفهرس بالسجل الموحَّد
   posts.filter(p => !p.demo).forEach(p => add("post/" + p.id, p.date, "0.4"));
   res.setHeader("content-type", "application/xml; charset=utf-8");
   res.status(200).end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`);

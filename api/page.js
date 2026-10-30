@@ -76,7 +76,7 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
     return r;
   }
   if (v === "author" && seg[1]) {
-    const a = author(seg[1]); if (!a.name) { r.noindex = true; return r; }
+    let a = author(seg[1]); if (a.mergedInto) { a = author(a.mergedInto); r.canon = "author/" + a.id; } if (!a.name) { r.noindex = true; return r; } // المدموج يعرض المؤلف الموحَّد برابطه المعتمد
     const books = cat().books.filter(b => b.authorId === a.id && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))), arts = aidx().filter(x => x.a === a.id);
     r.title = a.name + " — " + SITE; r.desc = cut(a.bio || `كتب ${a.name} ومقالاته في ${SITE}: ${books.length} كتابًا و${arts.length} مقالًا وفتوى.`, 180); r.type = "profile";
     const ph = a.photo ? base + String(a.photo).replace(/^\//, "") : undefined; if (ph) r.image = ph;
@@ -100,7 +100,7 @@ module.exports = async (req, res) => {
     const host = req.headers["x-forwarded-host"] || req.headers.host, origin = "https://" + host, base = (process.env.SITE_URL || "https://dawahlibrary.org").replace(/\/$/, "") + "/";
     const u = new URL(req.url, origin), p = u.searchParams.get("__p") || "/"; ["__p", "first", "rest"].forEach(k => u.searchParams.delete(k));
     const q = Object.fromEntries(u.searchParams), qs = u.searchParams.toString();
-    const r = await build(p, q, base), canon = base + p.replace(/^\//, "") + (qs && !/^\/book\//.test(p) ? "?" + qs : "");
+    const r = await build(p, q, base), canon = base + (r.canon || p.replace(/^\//, "")) + (qs && !/^\/book\//.test(p) ? "?" + qs : "");
     r.desc = r.desc || "المكتبة الرقمية للدعوة السلفية بمصر: كتب المشايخ ومقالات صوت السلف وكتب التراث، مع البحث والقراءة والقبسات ومساعد بحثي.";
     const img = r.image || base + "assets/og.jpg";
     const head = `<link rel="canonical" href="${esc(canon)}">

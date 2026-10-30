@@ -973,6 +973,42 @@ def rereview(bid):
     open(os.path.join(ROOT, "tools", "ocr-report.md"), "w", encoding="utf-8").write("# تقرير آخر تحويل — %s UTC\n\n" % datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M") + "\n".join(REPORT) + "\n")
 
 
+def ref_pages(bid):
+    """نص طبعة سابقة للكتاب نفسه (ب2-56..58): مرجع لكشف مواضع الشك فقط، ولا يُنقل منه شيء."""
+    for d in (os.path.join(DATA, "books"), os.path.join(ROOT, "vols")):
+        f = os.path.join(d, bid + ".json")
+        if os.path.exists(f):
+            try: return json.load(open(f, encoding="utf-8")).get("pages") or []
+            except Exception: return []
+    return []
+
+
+def ref_compare(pages, ref):
+    """لكل صفحة: أقرب موضع في الطبعة المرجعية (بتداخل الكلمات)، فإن اتفقا في أغلب الكلمات تُضاف الكلمات المختلفة إلى مواضع الشك
+    ليراها المراجع، ويبقى نص الطبعة الجديدة كما قُرئ (لا استبدال تلقائي — ب2-58، ب2-66)."""
+    if not ref: return 0
+    rw = [_words(t) for t in ref]; rset = [Counter(w) for w in rw]; hit = 0; flagged = 0
+    for i, t in enumerate(pages):
+        a = _words(t)
+        if len(a) < 30: continue
+        # النافذة: الصفحة المقابلة بالتناسب ± ١٥ صفحة ثم البحث في الكل إن لم يُعثر
+        c = int(i * len(ref) / max(1, len(pages)))
+        cand = list(range(max(0, c - 15), min(len(ref), c + 16)))
+        best = max(cand, key=lambda j: sum(min(v, rset[j][w]) for w, v in Counter(a).items())) if cand else None
+        if best is None: continue
+        pool = Counter(rw[best] + (rw[best + 1] if best + 1 < len(rw) else []) + (rw[best - 1] if best else []))
+        miss = [w for w in a if pool[w] <= 0]
+        if len(miss) > len(a) * 0.25: continue  # لا مقابل مطابق في الطبعة الأخرى (زيادة أو حذف في الطبعة)
+        hit += 1
+        orig = {}  # الكلمة كما وردت في الصفحة (لتُظلَّل في واجهة المراجعة)
+        for tok in re.findall(r"\S+", t):
+            for w in _words(tok): orig.setdefault(w, re.sub(r"^[^\u0621-\u064A]+|[^\u0621-\u064A\u064B-\u0652]+$", "", tok))
+        new = [orig.get(w, w) for w in dict.fromkeys(miss)]; new = [w for w in new if w not in UNCERTAIN.get(i, [])][:10]
+        if new: UNCERTAIN[i] = (UNCERTAIN.get(i, []) + new)[:40]; flagged += len(new)
+    REPORT.append("- مقارنة بالطبعة المرجعية: قوبلت %d صفحة، وعُلّمت %d كلمة مختلفة للمراجعة (لم يُنقل شيء من الطبعة الأخرى)" % (hit, flagged))
+    return hit
+
+
 def main():
     if ONLY.startswith("rereview:"): return rereview(ONLY.split(":", 1)[1])
     if not os.path.isdir(INBOX):
@@ -1021,6 +1057,9 @@ def main():
             entry.update({"set": cfg["set"], "setTitle": (cfg.get("setTitle") or title).strip(), "vol": vol})
             entry["title"] = entry["setTitle"] + " — ج " + str(vol)
             if cfg.get("source"): entry["source"] = cfg["source"]
+        if not existing and isinstance(cfg.get("ed"), dict):  # طبعة من عمل قائم («طبعات الكتاب» في صفحة الكتاب)
+            entry["ed"] = {k: v for k, v in cfg["ed"].items() if k in ("w", "n", "y", "pub", "tah", "note") and v}
+            if cfg.get("source"): entry["source"] = cfg["source"]
         if not existing and cfg.get("authorId") and any(a["id"] == cfg["authorId"] for a in cat["authors"]):
             entry["authorId"] = cfg["authorId"]
         elif not existing:
@@ -1037,6 +1076,7 @@ def main():
             entry["authorId"] = aid or "a8"
         if do_ocr:
             pages = ocr(dest)
+            if cfg.get("refBook"): ref_compare(pages, ref_pages(cfg["refBook"]))
             toc = make_toc(pages)
             pl = printed_labels(len(pages))
             ptoc = toc_from_printed(pages, pl or ["ص %d" % (i + 1) for i in range(len(pages))])

@@ -48,10 +48,15 @@ async function main() {
   const authorId = name => {
     const b = bare(name || "صوت السلف"); if (!b) return "a8";
     // الأسماء البديلة (aliases) تطابَق تامًّا أولًا، ثم الاسم الرسمي بالاحتواء
-    const exact = cat.authors.find(a => (a.col || "dawah") === "dawah" && (a.aliases || []).some(x => bare(x) === b));
+    const live = cat.authors.filter(a => (a.col || "dawah") === "dawah" && !a.mergedInto); // المدموج يُطابَق باسمه البديل في السجل الموحَّد
+    const exact = live.find(a => (a.aliases || []).some(x => bare(x) === b));
     if (exact) return exact.id;
-    const hit = cat.authors.find(a => (a.col || "dawah") === "dawah" && (bare(a.name) === b || bare(a.name).includes(b) || b.includes(bare(a.name))) && bare(a.name).length >= 4);
+    const hit = live.find(a => (bare(a.name) === b || bare(a.name).includes(b) || b.includes(bare(a.name))) && bare(a.name).length >= 4);
     if (hit) return hit.id;
+    // الاسم المختصر من الآخر مع اتفاق الاسم الأول والأخير (سعيد السواح ~ سعيد محمد السواح): يُنسب ويُسجَّل للمراجعة في «التكرار والتوحيد»
+    const tk = x => bare(x).split(/\s+/).filter(Boolean), nb = tk(name);
+    const near = nb.length >= 2 && live.find(a => [a.name].concat(a.aliases || []).some(n => { const t = tk(n), [S, L] = t.length <= nb.length ? [t, nb] : [nb, t]; return S.length >= 2 && S[0] === L[0] && S[S.length - 1] === L[L.length - 1] && S.every(w => L.includes(w)); }));
+    if (near) { (st.nearAuthors = st.nearAuthors || []).push(name.trim() + " → " + near.id); log("  ~ نُسب إلى «" + near.name + "» بتقارب الاسم: " + name.trim()); return near.id; }
     const id = "w" + (Math.max(0, ...cat.authors.filter(a => /^w\d+$/.test(a.id)).map(a => +a.id.slice(1))) + 1); // أكبر رقم +1 (العدّ يكرر الأرقام بعد الدمج)
     cat.authors.push({ id, name: name.trim(), col: "dawah", bio: "", auto: true });
     st.newAuthors.push(name.trim()); log("  + كاتب جديد: " + name.trim());
@@ -76,8 +81,8 @@ async function main() {
 
   const sampled = {};
   // دمج الكتّاب المكررين (مثل «عبد المنعم» و«عبدالمنعم») مع إعادة ربط مقالاتهم
-  for (const w of cat.authors.filter(a => a.auto)) {
-    const twin = cat.authors.find(a => !a.auto && (a.col || "dawah") === "dawah" && bare(a.name).length >= 4 && (bare(a.name) === bare(w.name) || bare(a.name).includes(bare(w.name)) || bare(w.name).includes(bare(a.name))));
+  for (const w of cat.authors.filter(a => a.auto && !a.mergedInto)) {
+    const twin = cat.authors.find(a => !a.auto && !a.mergedInto && (a.col || "dawah") === "dawah" && bare(a.name).length >= 4 && (bare(a.name) === bare(w.name) || bare(a.name).includes(bare(w.name)) || bare(w.name).includes(bare(a.name))));
     if (twin) { idx.items.forEach(x => { if (x.a === w.id) x.a = twin.id; }); cat.authors = cat.authors.filter(a => a !== w); log("  = دُمج الكاتب «" + w.name + "» في «" + twin.name + "»"); }
   }
   // فتاوى صوت السلف لا تذكر اسم المفتي، والموقع هو الموقع الرسمي للشيخ ياسر برهامي؛ تُنسب إليه افتراضيًا (fatwaAuthor في import-state.json، أو "" لإلغاء ذلك)
@@ -96,6 +101,13 @@ async function main() {
       const a = html ? extract(html, url) : null;
       await sleep(st.delayMs);
       if (!a || !a.text || a.text.length < 200 || !a.title) { log(`${id}: لا يوجد مقال`); return "miss"; }
+      { // إعادة نشر مقال قائم بنصه (مثل «من تراث الدعوة»): لا يُستورد مرة ثانية (ب2-16)
+        const T = t => norm(String(t || "").replace(/\(?من تراث الدعوة\)?/g, "").replace(/[«»"'()\[\]،,.:؛؟!\-–—]/g, " ")).replace(/\s+/g, " ").trim();
+        const tw = idx.items.find(x => !x.h && T(x.t) === T(a.title));
+        if (tw) { const old = ((loadGroup(tw.f)[tw.id] || {}).pages || []).join(" "), sh = s => { const w = norm(s).split(/\s+/), o = new Set(); for (let i = 0; i + 3 <= w.length; i++) o.add(w.slice(i, i + 3).join(" ")); return o; };
+          const A1 = sh(old), B1 = sh(a.text); let c = 0; B1.forEach(x => A1.has(x) && c++); const j = c / Math.max(1, A1.size + B1.size - c);
+          if (j >= 0.85) { (st.skipped = st.skipped || []).push(sid); have.add(sid); log(`${id}: تخطٍّ (إعادة نشر ${tw.id} بنصه، تطابق ${Math.round(j * 100)}٪) ${a.title}`); return "have"; } }
+      }
       if (isGreeting(a.title)) { (st.skipped = st.skipped || []).push(sid); have.add(sid); log(`${id}: تخطٍّ (تهنئة/تعزية) ${a.title}`); return "have"; }
       errs = 0; if (id > st.latestHint) st.latestHint = id;
       const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
