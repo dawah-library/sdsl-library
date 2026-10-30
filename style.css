@@ -710,3 +710,4 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .top .brand{flex:0 0 auto}.top .tools{flex:1 1 auto;justify-content:flex-end}
 @media (max-width:520px){.top .shareb{display:none}.top .tools{gap:4px}}
 .lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0 16px}.lvl{background:var(--sf);border:1px solid var(--line);border-inline-start:4px solid var(--gold);border-radius:10px;padding:10px 12px}.lvl b{display:block;color:var(--ac)}.lvl span{font-size:.88em;color:var(--mut)}.lv-mid{border-inline-start-color:#54a0ff}.lv-hard{border-inline-start-color:#a55eea}
+.grid.newsec .card.hl{border:2px solid var(--gold);background:color-mix(in srgb,var(--gold) 9%,var(--sf))}
