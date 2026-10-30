@@ -1,1 +1,1 @@
-{"v":1,"items":[]}
+{"v":1,"items":[],"errors":[{"src":"anasalafy","url":"https://anasalafy.com/ar/category/articles","err":"terminated"},{"src":"fath","url":"https://fath-news.com/","err":"HTTP 403"}],"lastRun":"2026-10-30T18:59:23.512Z","results":[{"id":"salafvoice","off":true},{"id":"anasalafy","added":0,"skipped":0,"errs":1},{"id":"fath","added":0,"skipped":0,"errs":1},{"id":"alnour","off":true},{"id":"salaf","off":true},{"id":"furqan","off":true},{"id":"usus","off":true},{"id":"jusur","off":true}]}
