@@ -72,7 +72,8 @@ jobs:
         run: |
           B="https://${{ steps.dep.outputs.sub }}"; fail=0; sleep 15
           chk(){ c=$(curl -s -o /tmp/b -w "%{http_code}" "$B$1"); echo "::notice::$1 → $c $(grep -o '<title>[^<]*' /tmp/b | head -1)"; [ "$c" = "$2" ] || fail=1; }
-          chk / 200; chk /book/umdafiqh/3 200; chk /book/sv2562 200; chk /author/w53 200; chk /app.js 200; chk /data/catalog.json 200; chk /sitemap.xml 200; chk /api/pages?check=1 200
+          chk / 200; chk /book/umdafiqh/3 200; chk /book/sv2562 200; chk /author/w53 200; chk /app.js 200; chk /data/catalog.json 200; chk /sitemap.xml 200
+          c=$(curl -s -o /dev/null -w "%{http_code}" "$B/api/pages?check=1"); [ "$c" = 200 ] || echo "::warning::الكتب المصورة: مفاتيح R2 ناقصة ($c)"
           [ $fail = 0 ]
       - name: ربط النطاق
         if: steps.tok.outputs.ok == '1' && inputs.domain
