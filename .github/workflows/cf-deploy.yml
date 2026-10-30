@@ -93,11 +93,11 @@ jobs:
           for d in dawahlibrary.org www.dawahlibrary.org; do
             ids=$(curl -s "$CF/zones/$z/dns_records?name=$d" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id')
             body="{\"type\":\"CNAME\",\"name\":\"$d\",\"content\":\"$sub\",\"proxied\":true,\"comment\":\"Cloudflare Pages (كان Vercel)\"}"
-            first=$(echo "$ids" | head -1)
-            if [ -n "$first" ]; then curl -s -X PUT "$CF/zones/$z/dns_records/$first" -H "$H" -H "content-type: application/json" -d "$body" | jq -r '"::notice::dns '"$d"' updated: \(.success)"'
-            else curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$body" | jq -r '"::notice::dns '"$d"' created: \(.success)"'; fi
-            # بإذن صاحب المكتبة (٣٠ أكتوبر ٢٠٢٦): حذف سجلات A/AAAA/CNAME القديمة الباقية (كانت تشير إلى Vercel)
-            for x in $(echo "$ids" | sed '1d;/^$/d'); do curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns '"$d"' old record removed: \(.success)"' || true; done
+            # بإذن صاحب المكتبة (٣٠ أكتوبر ٢٠٢٦): حذف سجلات A/AAAA/CNAME القديمة (كانت تشير إلى Vercel) ثم إنشاء CNAME إلى Pages
+            cur=$(curl -s "$CF/zones/$z/dns_records?name=$d&type=CNAME" -H "$H" | jq -r '.result[0].content // empty')
+            if [ "$cur" = "$sub" ]; then echo "::notice::dns $d already → $sub"; continue; fi
+            for x in $ids; do curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns '"$d"' old record removed: \(.success)"' || true; done
+            curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$body" | jq -r '"::notice::dns '"$d"' → pages: \(.success) \(.errors[0].message // "")"' || true
           done
           for x in $(curl -s "$CF/zones/$z/dns_records?name=*.dawahlibrary.org" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id'); do
             curl -s -X DELETE "$CF/zones/$z/dns_records/$x" -H "$H" | jq -r '"::notice::dns *.dawahlibrary.org removed: \(.success)"' || true
