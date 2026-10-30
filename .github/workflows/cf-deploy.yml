@@ -83,6 +83,8 @@ jobs:
             curl -s -X POST "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$P/domains" -H "$H" -H "content-type: application/json" -d "{\"name\":\"$d\"}" | jq -r '"::notice::domain '"$d"': " + (if .success then "added" else (.errors[0].message // "?") end)'
           done
           z=$(curl -s "$CF/zones?name=dawahlibrary.org" -H "$H" | jq -r '.result[0].id // empty')
+          curl -s "$CF/zones?name=dawahlibrary.org" -H "$H" | jq -r '"::notice::zone status: \(.result[0].status // "none") ns=\(.result[0].name_servers // [] | join(","))"' || true
+          for d in dawahlibrary.org www.dawahlibrary.org; do echo "::notice::live $d → $(curl -s -o /dev/null -w '%{http_code} %{remote_ip}' https://$d/ || echo fail) $(curl -sI https://$d/ | grep -i '^server:' | tr -d '\r')"; done
           if [ -z "$z" ]; then echo "::warning::النطاق ليس مُدارًا في Cloudflare: أضف عند مسجّل النطاق سجل CNAME للاسمين @ وwww إلى $sub"; exit 0; fi
           # سجلات البريد (Resend) المنقولة من Vercel DNS، تُضاف إن لم تكن موجودة
           jq -c '.[]' tools/dns-records.json | while read -r rec; do
