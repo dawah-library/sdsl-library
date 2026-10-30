@@ -75,6 +75,16 @@ jobs:
           chk(){ c=$(curl -s -o /tmp/b -w "%{http_code}" "$B$1"); echo "::notice::$1 → $c $(grep -o '<title>[^<]*' /tmp/b | head -1)"; [ "$c" = "$2" ] || fail=1; }
           chk / 200; chk /quizzes 200; chk /summary 200; chk /talaea 200; chk /releases 200; chk /learn.js 200; chk /tala.js 200; chk /data/sx/_docs.json 200; chk /book/umdafiqh/3 200; chk /book/sv2562 200; chk /author/w53 200; chk /app.js 200; chk /data/catalog.json 200; chk /sitemap.xml 200
           c=$(curl -s -o /dev/null -w "%{http_code}" "$B/api/pages?check=1"); [ "$c" = 200 ] || echo "::warning::الكتب المصورة: مفاتيح R2 ناقصة ($c)"
+          L=https://dawahlibrary.org
+          v(){ curl -s "$L/$1" | grep -q "$2" && echo "::notice::✓ $3" || echo "::warning::✗ $3"; }
+          v index.html 'aria-label="مكتبة الدعوة السلفية الرقمية — الرئيسية"' "الرأس بلا اسم"
+          v app.js 'class="callig"' "العنوان المشكول"
+          v app.js 'يوسف: ١٠٨' "مرجع الآية"
+          v index.html 'learn.js' "سكربت الاختبارات والاختصار"
+          v index.html 'tala.js' "سكربت الطلائع"
+          v index.html 'askx.js' "سكربت المساعد الجديد"
+          v data/quizzes/index.json 'majmufatawa' "فهرس الاختبارات"
+          v sw.js "$(grep -o 'sdsl-v[0-9]*' sw.js | head -1)" "إصدار عامل الخدمة الحالي"
           for d in dawahlibrary.org www.dawahlibrary.org; do echo "::notice::live $d → $(curl -s -o /dev/null -w '%{http_code}' https://$d/ 2>&1 || echo "fail $?")"; done
           [ $fail = 0 ]
       - name: ربط النطاق
