@@ -11,7 +11,7 @@ on:
         required: false
         default: ""
   push:
-    paths: ["tools/turath-list.json"]
+    paths: ["tools/turath-list.json", "data/retry.json"]
 permissions:
   contents: write
   id-token: write
@@ -40,10 +40,20 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: إعادة المحاولة من «تقارير الاستيراد» (data/retry.json)
+        id: retry
+        run: |
+          only=""
+          if [ "${{ github.event_name }}" = "push" ] && git diff --name-only HEAD~1 HEAD | grep -qx data/retry.json; then
+            only=$(python3 -c 'import json;print(",".join((json.load(open("data/retry.json")).get("turath") or [])))')
+          fi
+          echo "only=$only" >> "$GITHUB_OUTPUT"; echo "إعادة المحاولة: ${only:-لا}"
       - name: الاستيراد
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ONLY: ${{ github.event.inputs.only }}
+          ONLY: ${{ github.event.inputs.only || steps.retry.outputs.only }}
           REPLACE: ${{ github.event.inputs.replace }}
         run: python3 tools/import-turath.py
       - name: الحفظ

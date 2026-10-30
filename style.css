@@ -736,3 +736,4 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .almq{margin:6px 0;padding:6px 10px;border-inline-start:3px solid var(--ac);font-family:Amiri,serif;font-size:1.02rem;line-height:1.9;background:color-mix(in srgb,var(--ac) 5%,transparent)}
 .almq cite{display:block;font-style:normal;font-size:.82rem;color:var(--mut);margin-top:2px;font-family:inherit}
 .almr q{font-weight:700;color:var(--ac)}.almr q::before{content:"«"}.almr q::after{content:"»"}.almm{padding-inline-start:18px;line-height:2}
+.mgreport{white-space:pre-wrap;font-size:.82rem;max-height:420px;overflow:auto;background:var(--sf);border:1px solid var(--line);border-radius:8px;padding:8px;direction:rtl}.mgreport .bad{color:#b42318}

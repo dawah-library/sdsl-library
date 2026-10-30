@@ -1220,7 +1220,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  else if(tab==="quizzes"&&(Cloud.staff()||GH.on)){body='<div id="qzadm" class="mut">جارٍ التحميل…</div>';LRN.admin(q).then(h=>{const el=$("#qzadm");if(el){el.className="";el.innerHTML=h}})}
  else if(tab==="talaea"&&(Cloud.staff()||GH.on)){body='<div id="taladm" class="mut">جارٍ التحميل…</div>';TALA.admin().then(h=>{const el=$("#taladm");if(el){el.className="";el.innerHTML=h}})}
  else if(tab==="releases"&&(Cloud.staff()||GH.on)){body='<div id="reladm" class="mut">جارٍ التحميل…</div>';REL.admin().then(h=>{const el=$("#reladm");if(el){el.className="";el.innerHTML=h}})}
- else if(/^(items|vols|dups|log|switches)$/.test(tab)&&(Cloud.staff()||GH.on))body=MG.body(tab,q);
+ else if(/^(items|vols|dups|reports|log|switches)$/.test(tab)&&(Cloud.staff()||GH.on))body=MG.body(tab,q);
  else if(tab==="msgs"){location.hash="#/messages";return}
  else if(tab==="community"){location.hash="#/community?k=admin";return}
  else if(tab==="sheikhs"){body='<div id="shadm" class="mut">جارٍ التحميل…</div>';setTimeout(shAdmin,0)}

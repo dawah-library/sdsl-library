@@ -384,6 +384,28 @@ const MG = (() => {
     toast("فُكّ الدمج."); logBody(); return true;
   }
 
+  // ===== تقارير الاستيراد والفهرسة وإعادة المحاولة (ب2-18) =====
+  const RAW = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/" + p + "?t=" + Date.now();
+  const REPORTS = [["tools/turath-report.md", "استيراد كتب المكتبة العامة (OpenITI)"], ["tools/ocr-report.md", "تحويل الكتب المصورة"], ["data/import-log.txt", "الاستيراد اليومي من صوت السلف"], ["tools/alam-report.md", "فهرس الأعلام والرواة"], ["tools/dedupe-report.md", "التكرار"], ["tools/health-report.md", "الصيانة اليومية"]];
+  async function repBody() {
+    const box = $("#mgrep"); if (!box) return;
+    const [txts, list] = await Promise.all([Promise.all(REPORTS.map(([p]) => fetch(RAW(p)).then(r => r.ok ? r.text() : "").catch(() => ""))), fetch(RAW("tools/turath-list.json")).then(r => r.json()).catch(() => ({ books: [] }))]);
+    const byTitle = new Map((list.books || []).map(b => [norm(b.title), b.id]));
+    // الكتب التي تعذر استيرادها: أقسام «## العنوان» تليها سطور ✗
+    const fails = []; (txts[0] || "").split(/\n(?=## )/).forEach(sec => { const m = sec.match(/^## (.+)\n([\s\S]*)/); if (m && /✗/.test(m[2])) fails.push({ t: m[1].trim(), why: (m[2].match(/✗[^\n]*/) || [""])[0].slice(0, 220), id: byTitle.get(norm(m[1].trim())) }); });
+    const lines = t => esc(t).split("\n").slice(-400).map(l => /✗|خطأ|تعذر|فشل|error/i.test(l) ? `<b class="bad">${l}</b>` : /^#+ /.test(l) ? `<b>${l.replace(/^#+ /, "")}</b>` : l).join("\n");
+    box.innerHTML = `<p class="mut">تقارير آخر تشغيل للمهام الآلية، وما تعذر استيراده أو فهرسته وسببه. صحّح السبب (مثل اسم الكتاب في OpenITI في tools/turath-list.json أو رفع الملف)، ثم أعد المحاولة.</p>
+     <h3>كتب تعذر استيرادها (${toAr(fails.length)})</h3>${fails.length ? `<form data-form="mgretry"><div class="mglist">${fails.map(f => `<label class="mgrow"><input type="checkbox" name="id" value="${esc(f.id || "")}"${f.id ? "" : " disabled"}><span class="mgt"><b>${esc(f.t)}</b><br><span class="mut">${esc(f.why)}</span></span></label>`).join("")}</div>
+       <div class="savebar"><button class="btn p">إعادة محاولة المحدد</button> <span id="mgrst" class="mut" role="status"></span></div></form>` : '<p class="mut">لا شيء.</p>'}
+     ${REPORTS.map(([p, l], i) => `<details${i === 0 ? "" : ""}><summary><b>${esc(l)}</b> <span class="mut">(${esc(p)})</span></summary><pre class="mgreport">${txts[i] ? lines(txts[i]) : "لا تقرير بعد."}</pre></details>`).join("")}`;
+  }
+  async function retry(f) {
+    const ids = new FormData(f).getAll("id").filter(Boolean), st = $("#mgrst"); if (!ids.length) return st.textContent = "اختر كتابًا.";
+    try { await GH.editJSON("data/retry.json", o => Object.assign({}, o || {}, { v: 1, at: new Date().toISOString(), turath: ids }), "إعادة محاولة الاستيراد: " + ids.join("، "), false);
+      await log({ op: "file", kind: "book", ids, changes: ids.map(id => ({ id, kind: "book", field: "file", from: null, to: "إعادة محاولة الاستيراد" })), note: "إعادة محاولة استيراد " + ids.length + " كتاب" });
+      st.textContent = "✓ بدأت إعادة المحاولة (مهمة الاستيراد)، والنتيجة في هذا التقرير بعد انتهائها."; } catch (e) { st.textContent = e.message; }
+  }
+
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
   let lpT = 0, lpFired = false;
   const cardId = a => { const m = (a.getAttribute("href") || "").match(/#\/book\/([^/?]+)/); return m && decodeURIComponent(m[1]); };
@@ -421,14 +443,16 @@ const MG = (() => {
     else if (f.dataset.form === "mgvnew") newWork(f);
     else if (f.dataset.form === "mgvadd") addVol(f);
     else if (f.dataset.form === "mgvord") saveOrd(f);
+    else if (f.dataset.form === "mgretry") retry(f);
   }, true);
 
   return {
-    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["dups", "التكرار والتوحيد"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
+    tabs: () => [["items", "إدارة المواد"], ["vols", "كتاب متعدد المجلدات"], ["dups", "التكرار والتوحيد"], ["reports", "تقارير الاستيراد والفهرسة"], ["log", "سجل التعديلات"]].concat(isAdmin() ? [["switches", "الخدمات والمفاتيح"]] : []),
     body(tab, q) {
       if (tab === "items") { setTimeout(count, 0); return itemsBody(q); }
       if (tab === "log") { setTimeout(logBody, 0); return `${needGH()}<p class="mut">كل تعديل أو نقل أو إخفاء من «إدارة المواد»، وكل تغيير في مفاتيح الخدمات. «تراجع» يعيد القيم السابقة لما لم يتغير بعد العملية، ويُسجَّل التراجع نفسه.</p><div id="mglog" class="mut">جارٍ التحميل…</div>`; }
       if (tab === "vols") { setTimeout(wireVols, 0); return volsBody(); }
+      if (tab === "reports") { setTimeout(repBody, 0); return `${needGH()}<div id="mgrep" class="mut">جارٍ تحميل التقارير…</div>`; }
       if (tab === "dups") { setTimeout(dupsBody, 0); return `${needGH()}<div id="mgdup" class="mut">جارٍ الفحص…</div>`; }
       if (tab === "switches") { setTimeout(swBody, 0); return `${needGH()}<div id="mgsw" class="mut">جارٍ التحميل…</div>`; }
       return null;
