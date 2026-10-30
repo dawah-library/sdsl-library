@@ -6,14 +6,14 @@
    لا حذف نهائي: «الإخفاء» يحجب المادة عن الزوار ويبقيها للمشرفين وفي السجل. */
 const MG = (() => {
   const LOG = "data/admin-log.json", SW = "data/switches.json", PER = 50;
-  const FIELDS = { title: ["title", "t"], author: ["authorId", "a"], topic: ["topicId", "tp"], col: ["col", "col"], hidden: ["hidden", "h"], set: ["set", "set"], setTitle: ["setTitle", "setTitle"], vol: ["vol", "vol"], vols: ["vols", "vols"], ed: ["ed", "ed"] };
-  const LABEL = { title: "العنوان", author: "المؤلف", topic: "التصنيف", col: "القسم", hidden: "الإخفاء", set: "العمل", setTitle: "عنوان العمل", vol: "رقم المجلد", vols: "عدد المجلدات", file: "ملف النص", create: "إضافة", mergedInto: "دُمج في", ed: "الطبعة" };
+  const FIELDS = { title: ["title", "t"], author: ["authorId", "a"], topic: ["topicId", "tp"], col: ["col", "col"], hidden: ["hidden", "h"], set: ["set", "set"], setTitle: ["setTitle", "setTitle"], vol: ["vol", "vol"], vols: ["vols", "vols"], ed: ["ed", "ed"], tps: ["tps", "tps"] };
+  const LABEL = { title: "العنوان", author: "المؤلف", topic: "التصنيف", col: "القسم", hidden: "الإخفاء", set: "العمل", setTitle: "عنوان العمل", vol: "رقم المجلد", vols: "عدد المجلدات", file: "ملف النص", create: "إضافة", mergedInto: "دُمج في", ed: "الطبعة", tps: "موضوعات إضافية" };
   const kindOfId = id => (CAT.books.some(b => b.id === id) ? "book" : "article");
   const raw = () => CAT.books.filter(b => !b.demo).concat(ARTS_IDX);
   const sel = new Set();
   let F = {};
   const who = () => ({ role: (typeof Cloud !== "undefined" && Cloud.role) || (GH.token ? "key" : "?"), uid: Auth.user ? String(Auth.user.id).slice(0, 8) : "" });
-  const fmtV = (field, v) => field === "author" ? (A(v).name || v) : field === "topic" ? (T(v).name || v) : field === "col" ? (COL[v] || v || COL.dawah) : field === "hidden" ? (v ? "مخفي" : "ظاهر") : field === "ed" ? (v && typeof v === "object" ? (typeof ED !== "undefined" ? ED.label(v, 1) : JSON.stringify(v)) + (v.main ? " (المعتمدة)" : "") : String(v ?? "—")) : String(v ?? "");
+  const fmtV = (field, v) => field === "author" ? (A(v).name || v) : field === "topic" ? (T(v).name || v) : field === "col" ? (COL[v] || v || COL.dawah) : field === "hidden" ? (v ? "مخفي" : "ظاهر") : field === "tps" ? (Array.isArray(v) && v.length ? v.map(t => T(t).name || t).join("، ") : "—") : field === "ed" ? (v && typeof v === "object" ? (typeof ED !== "undefined" ? ED.label(v, 1) : JSON.stringify(v)) + (v.main ? " (المعتمدة)" : "") : String(v ?? "—")) : String(v ?? "");
   // المواد المحمّلة كلها بأسماء حقول الكتب (المقالات تُحوَّل بـ artFromIdx)، أما الملفات فالمقالات فيها بأسماء مختصرة
   const cur = (it, field) => field === "col" ? (it.col || "dawah") : field === "hidden" ? !!it.hidden : it[FIELDS[field][0]];
 
@@ -27,7 +27,7 @@ const MG = (() => {
         const x = by.get(c.id); if (!x) return; const k = FIELDS[c.field][kind === "book" ? 0 : 1];
         const from = c.field === "col" ? (x[k] || "dawah") : c.field === "hidden" ? !!x[k] : x[k];
         if (from === c.to) return;
-        if (c.field === "hidden" && !c.to) delete x[k]; else if (c.field === "col" && c.to === "dawah" && kind === "article") delete x[k]; else x[k] = c.to;
+        if ((c.field === "hidden" || c.field === "tps") && !c.to) delete x[k]; else if (c.field === "col" && c.to === "dawah" && kind === "article") delete x[k]; else x[k] = c.to;
         done.push({ id: c.id, kind, field: c.field, from, to: c.to });
       });
       if (kind === "book") obj.version = Date.now(); return obj;
@@ -38,7 +38,7 @@ const MG = (() => {
     // المحلي: يظهر الأثر فورًا
     done.forEach(c => {
       const x = c.kind === "book" ? CAT.books.find(b => b.id === c.id) : ARTS_IDX.find(b => b.id === c.id); if (!x) return;
-      const k = FIELDS[c.field][0]; if (c.field === "hidden" && !c.to) delete x[k]; else x[k] = c.to;
+      const k = FIELDS[c.field][0]; if ((c.field === "hidden" || c.field === "tps") && !c.to) delete x[k]; else x[k] = c.to;
     });
     merge();
     if (done.length && !quiet) await log({ op, kind: [...new Set(done.map(c => c.kind))].join("+"), ids: [...new Set(done.map(c => c.id))], changes: done, note });
@@ -96,6 +96,7 @@ const MG = (() => {
       <select name="author">${one ? "" : '<option value="">— بلا تغيير —</option>'}${opt(sortedAuthors(), one ? one.authorId : "")}</select>
       <p class="mut">النقل إلى مؤلف آخر يكون عند ثبوت خطأ النسبة. لإضافة مؤلف جديد استعمل «الأقسام والأسماء ← المؤلفون».</p>
       <label>التصنيف</label><select name="topic">${one ? "" : '<option value="">— بلا تغيير —</option>'}${opt(lib.topics.filter(t => one ? (isArt(one) ? t.for === "articles" : t.for !== "articles") : true), one ? one.topicId : "")}</select>
+      ${one ? `<label>موضوعات إضافية (تظهر المادة فيها أيضًا دون نسخة مكررة)</label><select name="tps" multiple size="5">${lib.topics.filter(t => (isArt(one) ? t.for === "articles" : t.for !== "articles") && t.id !== one.topicId).map(t => `<option value="${esc(t.id)}"${(one.tps || []).includes(t.id) ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select>` : ""}
       <label>القسم</label><select name="col">${one ? "" : '<option value="">— بلا تغيير —</option>'}${["dawah", "turath"].map(v => `<option value="${v}"${one && (one.col || "dawah") === v ? " selected" : ""}>${esc(COL[v])}</option>`).join("")}</select>
       ${!one && anyBook && ids.some(id => kindOfId(id) === "article") ? '<p class="note">التحديد يجمع كتبًا ومقالات؛ التصنيف يُطبَّق على ما يناسبه فقط.</p>' : ""}
       <label>ملاحظة السجل (اختياري)</label><input name="note" placeholder="مثال: تصحيح نسبة بعد المراجعة">
@@ -108,9 +109,10 @@ const MG = (() => {
     const topicOk = (id, tid) => { const t = lib.topics.find(x => x.id === tid); return t && ((kindOfId(id) === "article") === (t.for === "articles")); };
     ids.forEach(id => {
       if (one && fd.get("title").trim() && fd.get("title").trim() !== one.title) list.push({ id, field: "title", to: fd.get("title").trim() });
+      if (one) { const tp = fd.getAll("tps").filter(t => t !== (fd.get("topic") || one.topicId)), old = one.tps || []; if (tp.join() !== old.join()) list.push({ id, field: "tps", to: tp.length ? tp : null }); }
       ["author", "topic", "col"].forEach(k => { const v = fd.get(k); if (v && (k !== "topic" || topicOk(id, v))) list.push({ id, field: k, to: v }); });
     });
-    const items = raw(), real = list.filter(c => { const it = items.find(b => b.id === c.id); return it && cur(it, c.field) !== c.to; });
+    const items = raw(), real = list.filter(c => { const it = items.find(b => b.id === c.id); return it && JSON.stringify(cur(it, c.field) ?? null) !== JSON.stringify(c.to ?? null); });
     if (!real.length) { st.textContent = "لا تغيير."; return; }
     if (!one && !confirm(`سيُطبَّق ${real.length} تغييرًا على ${new Set(real.map(c => c.id)).size} مادة. متابعة؟`)) return;
     f.querySelector("button").disabled = true; st.textContent = "جارٍ الحفظ…";
