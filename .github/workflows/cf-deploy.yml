@@ -88,7 +88,7 @@ jobs:
           jq -c '.[]' tools/dns-records.json | while read -r rec; do
             nm=$(echo "$rec" | jq -r .name); ty=$(echo "$rec" | jq -r .type)
             has=$(curl -s "$CF/zones/$z/dns_records?name=$nm&type=$ty" -H "$H" | jq '.result|length')
-            [ "$has" = 0 ] && curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$rec" | jq -r '"::notice::dns '"$nm"' '"$ty"': \(.success)"'
+            [ "$has" = 0 ] && curl -s -X POST "$CF/zones/$z/dns_records" -H "$H" -H "content-type: application/json" -d "$rec" | jq -r '"::notice::dns '"$nm"' '"$ty"': \(.success)"' || true
           done
           for d in dawahlibrary.org www.dawahlibrary.org; do
             ids=$(curl -s "$CF/zones/$z/dns_records?name=$d" -H "$H" | jq -r '.result[]|select(.type=="A" or .type=="AAAA" or .type=="CNAME")|.id')
