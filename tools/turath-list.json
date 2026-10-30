@@ -875,6 +875,636 @@
    "title": "الشمائل المحمدية",
    "authorName": "الترمذي",
    "topic": "t3"
+  },
+  {
+   "id": "darutaarud",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "DarTacarud|Darc",
+   "title": "درء تعارض العقل والنقل",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "imantay",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Iman",
+   "title": "كتاب الإيمان",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "saremmaslul",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "SarimMaslul",
+   "title": "الصارم المسلول على شاتم الرسول",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tadmuriyya",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Tadmuriyya",
+   "title": "الرسالة التدمرية",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "hamawiyya",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Hamawiyya",
+   "title": "الفتوى الحموية الكبرى",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "istiqama",
+   "died": 728,
+   "author": "IbnTaymiyya",
+   "book": "Istiqama",
+   "title": "الاستقامة",
+   "authorName": "شيخ الإسلام ابن تيمية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tariqhijratayn",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "TariqHijratayn",
+   "title": "طريق الهجرتين وباب السعادتين",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "ruh",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "Ruh",
+   "title": "الروح",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "shifaalil",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "ShifaCalil|Shifa",
+   "title": "شفاء العليل",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "badaifawaid",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "BadaiFawaid|Badaic",
+   "title": "بدائع الفوائد",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "hadiarwah",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "HadiArwah",
+   "title": "حادي الأرواح إلى بلاد الأفراح",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "ijtimajuyush",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "IjtimacJuyush|Ijtima",
+   "title": "اجتماع الجيوش الإسلامية",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "fathbarirajab",
+   "died": 795,
+   "author": "IbnRajab",
+   "book": "FathBari",
+   "title": "فتح الباري شرح صحيح البخاري (ابن رجب)",
+   "authorName": "ابن رجب الحنبلي",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "lataif",
+   "died": 795,
+   "author": "IbnRajab",
+   "book": "LataifMacarif|Lataif",
+   "title": "لطائف المعارف",
+   "authorName": "ابن رجب الحنبلي",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "dhayltabaqat",
+   "died": 795,
+   "author": "IbnRajab",
+   "book": "DhaylTabaqat|Dhayl",
+   "title": "ذيل طبقات الحنابلة",
+   "authorName": "ابن رجب الحنبلي",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tibyannawawi",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "Tibyan",
+   "title": "التبيان في آداب حملة القرآن",
+   "authorName": "الإمام النووي",
+   "topic": "t12",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "rawdatalibin",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "RawdaTalibin|Rawda",
+   "title": "روضة الطالبين",
+   "authorName": "الإمام النووي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "minhajtalibin",
+   "died": 676,
+   "author": "Nawawi",
+   "book": "MinhajTalibin",
+   "title": "منهاج الطالبين",
+   "authorName": "الإمام النووي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "nuzhanazar",
+   "died": 852,
+   "author": "IbnHajar",
+   "book": "NuzhaNazar|Nuzha",
+   "title": "نزهة النظر في توضيح نخبة الفكر",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t13",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "talkhishabir",
+   "died": 852,
+   "author": "IbnHajar",
+   "book": "TalkhisHabir",
+   "title": "التلخيص الحبير",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "durarkamina",
+   "died": 852,
+   "author": "IbnHajar",
+   "book": "DurarKamina",
+   "title": "الدرر الكامنة في أعيان المائة الثامنة",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tadhkirahuffaz",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "TadhkiratHuffaz|Tadhkira",
+   "title": "تذكرة الحفاظ",
+   "authorName": "الذهبي",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kabair",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "Kabair",
+   "title": "الكبائر",
+   "authorName": "الذهبي",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "uluww",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "Culuw|Uluw",
+   "title": "العلو للعلي الغفار",
+   "authorName": "الذهبي",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tarikhislam",
+   "died": 748,
+   "author": "Dhahabi",
+   "book": "TarikhIslam",
+   "title": "تاريخ الإسلام",
+   "authorName": "الذهبي",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "sunankubra",
+   "died": 458,
+   "author": "Bayhaqi",
+   "book": "SunanKubra",
+   "title": "السنن الكبرى",
+   "authorName": "الإمام البيهقي",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "asmasifat",
+   "died": 458,
+   "author": "Bayhaqi",
+   "book": "AsmaWaSifat|Asma",
+   "title": "الأسماء والصفات",
+   "authorName": "الإمام البيهقي",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "shuabiman",
+   "died": 458,
+   "author": "Bayhaqi",
+   "book": "ShucabIman|Shucab",
+   "title": "شعب الإيمان",
+   "authorName": "الإمام البيهقي",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "dalailnubuwwa",
+   "died": 458,
+   "author": "Bayhaqi",
+   "book": "DalailNubuwwa|Dalail",
+   "title": "دلائل النبوة",
+   "authorName": "الإمام البيهقي",
+   "topic": "t5",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "itiqadbay",
+   "died": 458,
+   "author": "Bayhaqi",
+   "book": "Ictiqad",
+   "title": "الاعتقاد والهداية إلى سبيل الرشاد",
+   "authorName": "الإمام البيهقي",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "muhalla",
+   "died": 456,
+   "author": "IbnHazm",
+   "book": "Muhalla",
+   "title": "المحلى بالآثار",
+   "authorName": "الإمام ابن حزم",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "ihkamhazm",
+   "died": 456,
+   "author": "IbnHazm",
+   "book": "IhkamFiUsul|Ihkam",
+   "title": "الإحكام في أصول الأحكام",
+   "authorName": "الإمام ابن حزم",
+   "topic": "t14",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "fisal",
+   "died": 456,
+   "author": "IbnHazm",
+   "book": "Fisal|Fasl",
+   "title": "الفصل في الملل والأهواء والنحل",
+   "authorName": "الإمام ابن حزم",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "maratibijma",
+   "died": 456,
+   "author": "IbnHazm",
+   "book": "MaratibIjmac|Maratib",
+   "title": "مراتب الإجماع",
+   "authorName": "الإمام ابن حزم",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "ahkamquranarabi",
+   "died": 543,
+   "author": "IbnCarabi|IbnArabi",
+   "book": "AhkamQuran",
+   "title": "أحكام القرآن (ابن العربي)",
+   "authorName": "أبو بكر بن العربي",
+   "topic": "t2",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "awasim",
+   "died": 543,
+   "author": "IbnCarabi|IbnArabi",
+   "book": "CawasimMinQawasim|Cawasim",
+   "title": "العواصم من القواصم",
+   "authorName": "أبو بكر بن العربي",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "umdaahkam",
+   "died": 600,
+   "author": "CabdGhaniMaqdisi|CabdGhani|Maqdisi",
+   "book": "CumdatAhkam|Cumda",
+   "title": "عمدة الأحكام من كلام خير الأنام",
+   "authorName": "الحافظ عبد الغني المقدسي",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "jamiusul",
+   "died": 606,
+   "author": "IbnAthir|MajdDin",
+   "book": "JamicUsul",
+   "title": "جامع الأصول في أحاديث الرسول",
+   "authorName": "مجد الدين ابن الأثير",
+   "topic": "t3",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kamiltarikh",
+   "died": 630,
+   "author": "IbnAthir|CizzDin",
+   "book": "KamilFiTarikh|Kamil",
+   "title": "الكامل في التاريخ",
+   "authorName": "عز الدين ابن الأثير",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "usdghaba",
+   "died": 630,
+   "author": "IbnAthir|CizzDin",
+   "book": "UsdGhaba",
+   "title": "أسد الغابة في معرفة الصحابة",
+   "authorName": "عز الدين ابن الأثير",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kafiqudama",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "Kafi",
+   "title": "الكافي في فقه الإمام أحمد",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "muqniqudama",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "Muqnic",
+   "title": "المقنع",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tawwabin",
+   "died": 620,
+   "author": "IbnQudama",
+   "book": "Tawwabin",
+   "title": "التوابين",
+   "authorName": "ابن قدامة المقدسي",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "muqaddimasalah",
+   "died": 643,
+   "author": "IbnSalah",
+   "book": "CulumHadith|Muqaddima|MacrifaAnwac",
+   "title": "مقدمة ابن الصلاح (معرفة أنواع علوم الحديث)",
+   "authorName": "ابن الصلاح",
+   "topic": "t13",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "fatawasalah",
+   "died": 643,
+   "author": "IbnSalah",
+   "book": "Fatawa",
+   "title": "فتاوى ابن الصلاح",
+   "authorName": "ابن الصلاح",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "fathqadir",
+   "died": 1250,
+   "author": "Shawkani",
+   "book": "FathQadir",
+   "title": "فتح القدير",
+   "authorName": "الشوكاني",
+   "topic": "t2",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "irshadfuhul",
+   "died": 1250,
+   "author": "Shawkani",
+   "book": "IrshadFuhul|Irshad",
+   "title": "إرشاد الفحول",
+   "authorName": "الشوكاني",
+   "topic": "t14",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "sayljarrar",
+   "died": 1250,
+   "author": "Shawkani",
+   "book": "SaylJarrar",
+   "title": "السيل الجرار",
+   "authorName": "الشوكاني",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "badrtali",
+   "died": 1250,
+   "author": "Shawkani",
+   "book": "BadrTalic",
+   "title": "البدر الطالع",
+   "authorName": "الشوكاني",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tarikhbaghdad",
+   "died": 463,
+   "author": "KhatibBaghdadi",
+   "book": "TarikhBaghdad|TarikhMadinatSalam",
+   "title": "تاريخ بغداد",
+   "authorName": "الخطيب البغدادي",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kifayakhatib",
+   "died": 463,
+   "author": "KhatibBaghdadi",
+   "book": "Kifaya",
+   "title": "الكفاية في علم الرواية",
+   "authorName": "الخطيب البغدادي",
+   "topic": "t13",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "faqihmutafaqqih",
+   "died": 463,
+   "author": "KhatibBaghdadi",
+   "book": "FaqihWaMutafaqqih|Faqih",
+   "title": "الفقيه والمتفقه",
+   "authorName": "الخطيب البغدادي",
+   "topic": "t14",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "iqtidailm",
+   "died": 463,
+   "author": "KhatibBaghdadi",
+   "book": "IqtidaCilm|Iqtida",
+   "title": "اقتضاء العلم العمل",
+   "authorName": "الخطيب البغدادي",
+   "topic": "t6",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kashfshubuhat",
+   "died": 1206,
+   "author": "MuhammadIbnCabdWahhab|IbnCabdWahhab",
+   "book": "KashfShubuhat",
+   "title": "كشف الشبهات",
+   "authorName": "الشيخ محمد بن عبد الوهاب",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "masailjahiliyya",
+   "died": 1206,
+   "author": "MuhammadIbnCabdWahhab|IbnCabdWahhab",
+   "book": "MasailJahiliyya",
+   "title": "مسائل الجاهلية",
+   "authorName": "الشيخ محمد بن عبد الوهاب",
+   "topic": "t1",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "adabmashy",
+   "died": 1206,
+   "author": "MuhammadIbnCabdWahhab|IbnCabdWahhab",
+   "book": "AdabMashy",
+   "title": "آداب المشي إلى الصلاة",
+   "authorName": "الشيخ محمد بن عبد الوهاب",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tawilmukhtalif",
+   "died": 276,
+   "author": "IbnQutayba",
+   "book": "TawilMukhtalifHadith|Mukhtalif",
+   "title": "تأويل مختلف الحديث",
+   "authorName": "ابن قتيبة الدينوري",
+   "topic": "t13",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tawilmushkil",
+   "died": 276,
+   "author": "IbnQutayba",
+   "book": "TawilMushkilQuran|Mushkil",
+   "title": "تأويل مشكل القرآن",
+   "authorName": "ابن قتيبة الدينوري",
+   "topic": "t12",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "maarifqutayba",
+   "died": 276,
+   "author": "IbnQutayba",
+   "book": "Macarif",
+   "title": "المعارف",
+   "authorName": "ابن قتيبة الدينوري",
+   "topic": "t18",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "daliltalib",
+   "died": 1033,
+   "author": "MarciKarmi|Karmi",
+   "book": "DalilTalib",
+   "title": "دليل الطالب لنيل المطالب",
+   "authorName": "مرعي الكرمي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "ghayatmuntaha",
+   "died": 1033,
+   "author": "MarciKarmi|Karmi",
+   "book": "GhayatMuntaha",
+   "title": "غاية المنتهى",
+   "authorName": "مرعي الكرمي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "kashshafqina",
+   "died": 1051,
+   "author": "Buhuti",
+   "book": "KashshafQinac|Kashshaf",
+   "title": "كشاف القناع عن متن الإقناع",
+   "authorName": "البهوتي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "sharhmuntaha",
+   "died": 1051,
+   "author": "Buhuti",
+   "book": "DaqaiqUliNuha|SharhMuntaha",
+   "title": "دقائق أولي النهى لشرح المنتهى",
+   "authorName": "البهوتي",
+   "topic": "t4",
+   "batch": "ب5-2026-10-30"
   }
  ]
 }
