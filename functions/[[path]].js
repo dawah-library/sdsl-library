@@ -18,5 +18,8 @@ export async function onRequest(ctx) {
   if (p === "/robots.txt") return run(sitemap, ctx, { url: "/api/sitemap?robots=1", preload: ["data/catalog.json"], retry: true });
   if (/\.[a-z0-9]{2,5}$/i.test(p)) return ctx.next(); // ملف ثابت غير مستثنى صراحة
   const sub = p.replace(/^\/+/, "/");
-  return run(page, ctx, { url: "/api/page?__p=" + encodeURIComponent(sub) + (u.search ? "&" + u.search.slice(1) : ""), preload: ["index.html", "data/catalog.json"], retry: true });
+  const r = await run(page, ctx, { url: "/api/page?__p=" + encodeURIComponent(sub) + (u.search ? "&" + u.search.slice(1) : ""), preload: ["index.html", "data/catalog.json"], retry: true });
+  if (u.hostname.endsWith(".pages.dev")) { // النسخة على نطاق Cloudflare الفرعي لا تُفهرس: المعتمد dawahlibrary.org وحده
+    const h = new Headers(r.headers); h.set("X-Robots-Tag", "noindex"); return new Response(r.body, { status: r.status, headers: h }); }
+  return r;
 }

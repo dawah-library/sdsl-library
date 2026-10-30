@@ -102,7 +102,7 @@ module.exports = async (req, res) => {
     const u = new URL(req.url, origin), p = u.searchParams.get("__p") || "/"; ["__p", "first", "rest"].forEach(k => u.searchParams.delete(k));
     const q = Object.fromEntries(u.searchParams), qs = u.searchParams.toString();
     const r = await build(p, q, base), canon = base + (r.canon || p.replace(/^\//, "")) + (qs && !/^\/book\//.test(p) ? "?" + qs : "");
-    r.desc = r.desc || "المكتبة الرقمية للدعوة السلفية بمصر: كتب المشايخ ومقالات صوت السلف وكتب التراث، مع البحث والقراءة والقبسات ومساعد بحثي.";
+    r.desc = r.desc || "المكتبة الرقمية للدعوة السلفية بمصر: كتب المشايخ ومقالاتهم وفتاواهم، والمكتبة العامة لكتب التراث، والمصادر الإثرائية، مع البحث والقراءة والتشجير والأعلام والمساعد العلمي وقسم الطلائع.";
     const img = r.image || base + "assets/og.jpg";
     const head = `<link rel="canonical" href="${esc(canon)}">
 <meta property="og:site_name" content="${esc(SITE)}"><meta property="og:locale" content="ar_AR"><meta property="og:type" content="${r.type}">
