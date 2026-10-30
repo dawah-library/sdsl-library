@@ -222,3 +222,8 @@
 - **«المصادر الإثرائية»** col=ithra (ithra.js، #/ithra): src، url، lic (link = ملخص ورابط)، sum، ik. مستبعدة من BOOKS/ARTS. مؤلفوها col=ithra.
 - **الاستجلاب الدوري** tools/source-import.js + data/sources.json + sources.yml (يوميًا 05:23 UTC، وعند تعديل المصادر): لا ينشر؛ قائمة data/import-review.json تُعتمد من «الإدارة ← مراجعة المستجلب». أنا السلفي مفعّل؛ الفتح يرفض (403)؛ حزب النور والمصادر الإثرائية تنتظر روابطها. حلول فيسبوك في tools/facebook-sources.md.
 - **موضوعات إضافية** tps (inTopic)، والبحث داخل الكتاب يعبر المجلدات.
+
+## ٣٠ أكتوبر (ليلًا ٣): ظهور النسخة القديمة في جوجل
+- sdsl-library.vercel.app كان يعرض نسخة قديمة (آخر نشر قبل حظر Vercel). **أُوقف مشروع Vercel (pause_project)** فصار يعيد 503؛ لا تُعِد تشغيله (unpause) إلا بعد نشر توجيه 301 إلى dawahlibrary.org عند رفع الحظر.
+- نطاق pages.dev يرسل X-Robots-Tag: noindex لصفحاته، وخريطة الموقع فيها lastmod من نسخة الفهرس.
+- يلزم المالك: إضافة dawahlibrary.org في Google Search Console وإرسال sitemap.xml وطلب إزالة sdsl-library.vercel.app.
