@@ -53,7 +53,7 @@ const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس ص�
 const kindOf=b=>!isArt(b)||isReadBook(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
 let _SM=null,_SMn=-1;const setMin=k=>{if(_SMn!==lib.books.length){_SM={};lib.books.forEach(x=>{if(x.set&&(_SM[x.set]==null||x.vol<_SM[x.set]))_SM[x.set]=x.vol});_SMn=lib.books.length}return _SM[k]};
 const VOL2=b=>!!(b.set&&b.vol>setMin(b.set)),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement");
-const COL={dawah:"مكتبة الدعوة السلفية",turath:"تراث"};
+const COL={dawah:"مكتبة الدعوة السلفية",turath:"المكتبة العامة"}; // المعرّف الداخلي turath باقٍ في الروابط والبيانات
 const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
 const PL=(b,i)=>SS.label(b,i);
 async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجود");if(b.pages)return b;
@@ -105,7 +105,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  <div class="cols"><a class="col" href="#/library?c=dawah"><b>مكتبة الدعوة السلفية</b><span>كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور</span><em>${BOOKS().filter(b=>bc(b)==="dawah").length} كتاب</em></a>
  <a class="col ar" href="#/articles"><b>المقالات</b><span>مقالات صوت السلف، مقسمة بالموضوع والكاتب</span><em>${ARTS().length} مقال</em></a>
  <a class="col fw" href="#/fatawa"><b>الفتاوى</b><span>فتاوى مشايخ الدعوة بتقسيمها الفني وبحسب الشيخ</span><em>${FATWAS().length} فتوى</em></a>
- <a class="col tr" href="#/library?c=turath"><b>تراث</b><span>المكتبة الإسلامية العامة: كتب الإسلام الكبرى والمراجع المعتمدة</span><em>${BOOKS().filter(b=>bc(b)==="turath").length} كتاب</em></a></div>
+ <a class="col tr" href="#/library?c=turath"><b>${esc(COL.turath)}</b><span>كتب التراث الإسلامي والمراجع المعتمدة، وكتب العلماء والباحثين من خارج الدعوة</span><em>${BOOKS().filter(b=>bc(b)==="turath").length} كتاب</em></a></div>
  <a class="askcta" href="#/ask"><b>اسأل المكتبة</b><span>مساعد بحثي بالذكاء الاصطناعي يجيب من نصوص المكتبة مع الإحالة إلى الكتاب والصفحة. للأعضاء المسجلين.</span></a>
  <div class="grid"><a class="card" href="#/bayanat"><b>بيانات الدعوة</b><span>${BAYANAT().length} بيان</span></a><a class="card" href="#/furqan"><b>قضايا الفرقان</b><span>المؤلفات المنهجية</span></a><a class="card" href="#/tafrighat"><b>تفريغات</b><span>الدروس مفرّغة نصيًا</span></a><a class="card" href="#/posts"><b>منشورات</b><span>من صفحات المشايخ والكتّاب</span></a><a class="card" href="#/community"><b>مجتمع المكتبة</b><span>مختارات الأعضاء وتفاعلهم</span></a><a class="card" href="#/hifz"><b>حفظ المتون</b><span>بطاقات مراجعة متباعدة</span></a><a class="card" href="#/paths"><b>المسارات العلمية</b><span>برامج متدرجة بشهادة إتمام</span></a><a class="card" href="#/qa"><b>سؤال وجواب من الكتب</b><span>أسئلة وأجوبتها بنص الكتب</span></a><a class="card" href="#/tashjir"><b>تشجير الكتب</b><span>خرائط ذهنية للكتب</span></a><a class="card" href="#/audio"><b>صوتيات المكتبة</b><span>استمع إلى الكتب</span></a><a class="card" href="#/radio"><b>راديو المكتبة</b><span>بث متواصل من الكتب</span></a><a class="card" href="#/tarajim"><b>تراجم مشايخ الدعوة</b><span>${Object.keys(TJ.items).length} ترجمة</span></a><a class="card" href="#/authors"><b>المؤلفون</b><span>${lib.authors.length} مؤلفًا ومصدرًا</span></a><a class="card" href="#/qabasat"><b>قبسات</b><span>صمّم اقتباسًا وانشره</span></a><a class="card" href="#/search"><b>بحث متقدم</b><span>في العناوين والنصوص</span></a><a class="card" href="#/favs"><b>المفضلة</b><span>${S.favs.length} عنصر</span></a></div>
  <h2>مختارات اليوم</h2><div id="sugg"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
@@ -118,22 +118,24 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
 /* ---------- المكتبة (الكتب) ---------- */
 function sideList(title,arr,key,cur,url,count,wide){return`<details${wide?" open":""}><summary>${title}</summary><div class="sidebox"><a class="fl${!cur?" on":""}" href="${url({[key]:"",pg:1})}">الكل <span>${count("")}</span></a>${arr.filter(x=>key==="t"||count(x.id)||x.id===cur).map(x=>`<a class="fl${x.id===cur?" on":""}${count(x.id)?"":" zero"}" href="${url({[key]:x.id,pg:1})}">${esc(x.name)}${key==="a"?died(x):""} <span>${count(x.id)}</span></a>`).join("")}</div></details>`}
 function vLibrary(q){
- const f={c:q.c||"",t:q.t||"",a:q.a||"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
- const inC=BOOKS().filter(b=>!f.c||bc(b)===f.c);
+ const f={c:q.c||"",k:q.c==="turath"&&/^(article|fatwa|tafrigh)$/.test(q.k||"")?q.k:"",t:q.t||"",a:q.a||"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
+ // المكتبة العامة: كتب، ومقالات، وفتاوى، وتفريغات (k) — تصفية للسجلات نفسها دون نسخها
+ const genK=k=>lib.books.filter(b=>!b.demo&&bc(b)==="turath"&&(k==="tafrigh"?isTranscript(b):isArt(b)&&kindOf(b)===k));
+ const inC=f.k?genK(f.k):BOOKS().filter(b=>!f.c||bc(b)===f.c);
  let r=inC.filter(b=>(!f.t||b.topicId===f.t)&&(!f.a||b.authorId===f.a));
  if(f.q.trim()){const w=norm(f.q).split(/\s+/).filter(Boolean);r=r.filter(b=>w.every(k=>norm(b.title+" "+A(b.authorId).name).includes(k)))}
  r=f.s==="title"?[...r].sort((x,y)=>x.title.localeCompare(y.title,"ar")):f.s==="died"?[...r].sort((x,y)=>(A(x.authorId).died||9999)-(A(y.authorId).died||9999)):[...r].sort((x,y)=>(y.added||"").localeCompare(x.added||""));
  const np=Math.max(1,Math.ceil(r.length/PER));f.pg=Math.max(1,Math.min(f.pg,np));
- const url=o=>{const n=Object.assign({},f,o),p=new URLSearchParams();["c","t","a","q","s"].forEach(k=>{if(n[k]&&!(k==="s"&&n[k]==="new"))p.set(k,n[k])});if(n.pg>1)p.set("pg",n.pg);return"#/library"+(p.toString()?"?"+p:"")};
+ const url=o=>{const n=Object.assign({},f,o),p=new URLSearchParams();["c","k","t","a","q","s"].forEach(k=>{if(n[k]&&!(k==="s"&&n[k]==="new"))p.set(k,n[k])});if(n.pg>1)p.set("pg",n.pg);return"#/library"+(p.toString()?"?"+p:"")};
  const cnt=key=>id=>inC.filter(b=>!id||b[key==="t"?"topicId":"authorId"]===id).length;
- const title=f.t?T(f.t).name:f.c?COL[f.c]:"المكتبة",bio=f.c==="turath"?"المكتبة الإسلامية العامة: كتب الإسلام الكبرى والمراجع العلمية المعتمدة بين أهل العلم، ليستفيد منها الباحث مع تراث مشايخ الدعوة السلفية.":f.c==="dawah"?"كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور.":"";
- const tabs=`<div class="tabs" role="tablist">${[["","كل الكتب"],["dawah",COL.dawah],["turath",COL.turath]].map(([v,l])=>`<a role="tab" aria-selected="${f.c===v}" href="${url({c:v,a:"",t:"",pg:1})}">${l}</a>`).join("")}<a role="tab" aria-selected="false" href="#/articles">المقالات</a></div>`;
+ const title=f.t?T(f.t).name:f.c?COL[f.c]:"المكتبة",bio=f.c==="turath"?"كتب التراث الإسلامي والمراجع المعتمدة بين أهل العلم، وكتب العلماء والباحثين المعاصرين من خارج الدعوة السلفية، ليستفيد منها الباحث مع تراث مشايخ الدعوة السلفية.":f.c==="dawah"?"كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور.":"";
+ const tabs=`<div class="tabs" role="tablist">${[["","كل الكتب"],["dawah",COL.dawah],["turath",COL.turath]].map(([v,l])=>`<a role="tab" aria-selected="${f.c===v}" href="${url({c:v,a:"",t:"",pg:1})}">${l}</a>`).join("")}<a role="tab" aria-selected="false" href="#/articles">المقالات</a></div>`+(f.c==="turath"?`<div class="tabs sub" role="tablist" aria-label="أقسام المكتبة العامة">${[["","الكتب"],["article","المقالات"],["fatwa","الفتاوى"],["tafrigh","التفريغات"]].map(([v,l])=>`<a role="tab" aria-selected="${f.k===v}" href="${url({k:v,t:"",a:"",pg:1})}">${l} <span class="mut">(${toAr((v?genK(v):BOOKS().filter(b=>bc(b)==="turath")).length)})</span></a>`).join("")}</div>`:"");
  const chips=[f.t&&`<a class="chip x" href="${url({t:"",pg:1})}">${esc(T(f.t).name)} ✕</a>`,f.a&&`<a class="chip x" href="${url({a:"",pg:1})}">${esc(A(f.a).name)} ✕</a>`,f.q&&`<a class="chip x" href="${url({q:"",pg:1})}">«${esc(f.q)}» ✕</a>`].filter(Boolean).join(" ");
  const sorts=[["new","الأحدث"],["title","العنوان"],["died","وفاة المؤلف"]].map(([v,l])=>`<a href="${url({s:v,pg:1})}"${f.s===v?' style="font-weight:700"':""}>${l}</a>`).join(" • ");
  view(`${tabs}<h2>${esc(title)} <span class="mut">(${r.length})</span></h2>${bio?`<p class="mut">${esc(bio)}</p>`:""}<div class="lib"><aside class="side">${sideList("الأقسام",lib.topics.filter(t=>t.for!=="articles"),"t",f.t,url,cnt("t"),wide)}${sideList("المؤلفون",lib.authors,"a",f.a,url,cnt("a"),wide)}</aside><section>
- <form class="sbox" style="margin:0 0 8px;max-width:none" data-form="libq">${["c","t","a","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين هذا القسم" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
+ <form class="sbox" style="margin:0 0 8px;max-width:none" data-form="libq">${["c","k","t","a","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين هذا القسم" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
  <div class="row" style="margin-bottom:6px"><span class="chips">${chips}</span><span class="mut nf">الترتيب: ${sorts}</span></div>
- ${r.slice((f.pg-1)*PER,f.pg*PER).map(bookCard).join("")||'<div class="note">لا توجد كتب مطابقة.</div>'}
+ ${r.slice((f.pg-1)*PER,f.pg*PER).map(f.k?anyCard:bookCard).join("")||(f.k&&!inC.length?`<div class="note">لا توجد ${({article:"مقالات",fatwa:"فتاوى",tafrigh:"تفريغات"})[f.k]} في المكتبة العامة بعد. تُضاف من «الإدارة» باختيار القسم «${esc(COL.turath)}».</div>`:'<div class="note">لا توجد كتب مطابقة.</div>')}
  ${np>1?`<div class="pgn"><a class="btn s" ${f.pg>1?`href="${url({pg:f.pg-1})}"`:'aria-disabled="true"'}>السابقة</a><span class="mut">صفحة ${f.pg} من ${np}</span><a class="btn s" ${f.pg<np?`href="${url({pg:f.pg+1})}"`:'aria-disabled="true"'}>التالية</a></div>`:""}</section></div>`)}
 
 /* ---------- قوائم المقالات والفتاوى والبيانات ---------- */
@@ -168,7 +170,7 @@ function vList(kind,q){const L=LISTS[kind],all=L.items();
 /* ---------- المؤلفون: الصفحة الجامعة ---------- */
 function vAuthors(){const g=(title,col)=>{const as=lib.authors.filter(a=>(a.col||"dawah")===col).map(a=>({a,c:counts(a.id)})).filter(x=>x.c.books||x.c.arts||x.c.fatwas||x.c.st||col==="dawah");
   return`<h2>${title}</h2><div class="grid">${as.map(({a})=>`<a class="card acard" href="#/author/${a.id}" data-author="${a.id}">${avatar(a)}<div><b>${esc(a.name)}</b><span>${a.died?`ت ${a.died}هـ • `:""}${countLine(a.id)}</span></div></a>`).join("")}</div>`};
- view(`<p class="mut" style="margin-top:14px">اضغط مطولًا على اسم أي مؤلف لترى تعريفه الموجز. <a href="#/tarajim">تراجم مشايخ الدعوة</a></p>`+g("مشايخ الدعوة السلفية والكتّاب","dawah")+g("علماء التراث","turath"))}
+ view(`<p class="mut" style="margin-top:14px">اضغط مطولًا على اسم أي مؤلف لترى تعريفه الموجز. <a href="#/tarajim">تراجم مشايخ الدعوة</a></p>`+g("مشايخ الدعوة السلفية والكتّاب","dawah")+g("مؤلفو المكتبة العامة","turath"))}
 function vAuthor(id,q){const a=A(id),mine=lib.books.filter(b=>b.authorId===id&&!VOL2(b)),byDate=l=>l.sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  const T_={books:mine.filter(b=>kindOf(b)==="book"),articles:byDate(mine.filter(b=>kindOf(b)==="article")),fatawa:byDate(mine.filter(b=>kindOf(b)==="fatwa")),bayanat:byDate(mine.filter(b=>kindOf(b)==="statement")),tafrighat:mine.filter(isTranscript)};
  const NAMES={books:"الكتب",articles:"المقالات",fatawa:"الفتاوى",bayanat:"البيانات",tafrighat:"التفريغات"},ROUTE={articles:"articles",fatawa:"fatawa",bayanat:"bayanat"};
@@ -198,7 +200,7 @@ function vAbout(){view(`<div class="page"><h2>من نحن</h2>
  <h3>ماذا تجد في المكتبة</h3><ul>
  <li><b>مكتبة الدعوة:</b> كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور.</li>
  <li><b>المقالات والفتاوى والبيانات:</b> تُستورد يوميًا من موقع صوت السلف، مقسمة كما فيه وبحسب الكاتب.</li>
- <li><b>تراث:</b> كتب الإسلام الكبرى والمراجع المعتمدة في التفسير والحديث والفقه والعقيدة واللغة والتاريخ.</li>
+ <li><b>المكتبة العامة:</b> كتب الإسلام الكبرى والمراجع المعتمدة في التفسير والحديث والفقه والعقيدة واللغة والتاريخ.</li>
  <li><b>تراجم مشايخ الدعوة</b>، وقسم <b>قضايا الفرقان</b>، و<b>التفريغات</b>.</li></ul>
  <h3>خدمات المكتبة</h3><ul><li>قارئ بمظهر الكتاب الورقي، بخطوط وألوان متعددة، وفهرس وبحث داخل الكتاب.</li><li>بحث في العناوين والنصوص بأنواع متعددة.</li><li>شرح الكلمات من مختار الصحاح بالضغط عليها، وترجمة الصفحات.</li><li>«قبسات»: تصميم الاقتباسات ومشاركتها بهوية المكتبة.</li><li>«اسأل المكتبة»: مساعد بحثي يجيب من نصوص المكتبة مع الإحالة (للأعضاء).</li><li>العمل دون إنترنت، والتصدير بصيغ متعددة.</li></ul>
  <h3>مصادر النصوص</h3><p>كتب التراث وبعض كتب المشايخ من المكتبة الشاملة عبر مشروع OpenITI المفتوح، والمقالات والفتاوى من موقع صوت السلف، مع ذكر المصدر في كل كتاب ومقال.</p>
@@ -518,8 +520,8 @@ const TTS={on:false,paused:false,i:0,cont:false,rate:+(ls.get("ttsRate",1))||1,
  stop(){this.on=false;this.cont=false;try{speechSynthesis.cancel()}catch(e){}$$(".rd p.tts").forEach(x=>x.classList.remove("tts"));const b=$("#ttsbar");if(b)b.hidden=true}};
 if("speechSynthesis"in window)speechSynthesis.onvoiceschanged=()=>{};
 function turn(d,p0){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=p0||+rb.dataset.p+d;if(p<1||p>b.pages.length)return;
- if($("#scr")){let sec=$(`.spg[data-p="${p}"]`);if(!sec){const ps=[...$$("#scr .spg")].map(x=>+x.dataset.p);if(p===Math.min(...ps)-1)scrAdd(b,-1);else if(p===Math.max(...ps)+1)scrAdd(b,1);else{LASTREAD=null;location.hash=`#/book/${b.id}/${p}`;return}sec=$(`.spg[data-p="${p}"]`)}
-  if(sec){scrSet(b,p);scrollTo({top:sec.getBoundingClientRect().top+scrollY-(S.full?8:96),behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}return}const h=parse().q.h;location.hash=`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`}
+ if($("#scr")){let sec=$(`.spg[data-p="${p}"]`);if(!sec){const ps=[...$$("#scr .spg")].map(x=>+x.dataset.p);if(p===Math.min(...ps)-1)scrAdd(b,-1);else if(p===Math.max(...ps)+1)scrAdd(b,1);else{LASTREAD=null;go(`#/book/${b.id}/${p}`);return}sec=$(`.spg[data-p="${p}"]`)}
+  if(sec){scrSet(b,p);scrollTo({top:sec.getBoundingClientRect().top+scrollY-(S.full?8:96),behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}return}const h=parse().q.h;go(`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`)}
 
 /* ---------- الحوارات ---------- */
 const dlg=()=>$("#dlg");
@@ -632,7 +634,7 @@ function quoteText(){const t=$("#qt").value.trim(),s=$("#qs").value.trim();const
  return`«${t}»`+(s?`\n— ${s}`:"")+`\n${SITENAME}`+(link?`\n${link}`:"")}
 async function vQabasat(q){const pq=pendingQ;
  view(`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
- <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">تراث</option></select><button class="btn" data-act="moreSug">مقتطفات أخرى</button></div>
+ <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">المكتبة العامة</option></select><button class="btn" data-act="moreSug">مقتطفات أخرى</button></div>
  <div id="sugl"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
  <h2>صمّم الاقتباس</h2><div class="studio">
  <label for="qt">النص</label><textarea id="qt"></textarea>
@@ -906,14 +908,14 @@ const tCount=id=>lib.books.filter(b=>b.topicId===id&&!VOL2(b)).length;
 function topicRows(list,kind){return list.map(t=>{const n=tCount(t.id);return`<div class="trow" data-id="${esc(t.id)}" data-kind="${kind}"><input class="tn" value="${esc(t.name)}" aria-label="اسم القسم">${kind==="articles"?`<input class="tp" value="${esc(t.parent||"")}" placeholder="القسم الأعلى (اختياري)" aria-label="القسم الأعلى">`:""}<span class="mut tc">${toAr(n)}</span><button type="button" class="btn s" data-act="tup" aria-label="أعلى">▲</button><button type="button" class="btn s" data-act="tdown" aria-label="أسفل">▼</button><button type="button" class="btn s" data-act="tdel"${n?' disabled title="انقل ما فيه أولًا"':""}>حذف</button></div>`}).join("")}
 function structBody(){const L=CAT.labels||{};
  return`${needGH()}<form data-form="struct">
- <h3>الأقسام الرئيسية</h3><div class="row"><div><label>اسم مكتبة الدعوة</label><input name="col_dawah" value="${esc(COL.dawah)}"></div><div><label>اسم مكتبة التراث</label><input name="col_turath" value="${esc(COL.turath)}"></div></div>
+ <h3>الأقسام الرئيسية</h3><div class="row"><div><label>اسم مكتبة الدعوة</label><input name="col_dawah" value="${esc(COL.dawah)}"></div><div><label>اسم المكتبة العامة</label><input name="col_turath" value="${esc(COL.turath)}"></div></div>
  <details><summary>أسماء روابط القائمة العليا</summary><div class="navl">${NAVDEF.map(([h,t])=>`<label>${esc(t)}</label><input name="nav:${esc(h)}" value="${esc(L["nav:"+h]||t)}">`).join("")}</div></details>
  <h3>التقسيم الموضوعي للكتب</h3><p class="mut">غيّر الأسماء، ورتّبها بالأسهم، واحذف الفارغ منها. الرقم عدد الكتب في القسم.</p>
  <div class="tlist" id="tl-books">${topicRows(lib.topics.filter(t=>t.for!=="articles"),"books")}</div><button type="button" class="btn s" data-act="tadd" data-kind="books">+ قسم جديد للكتب</button>
  <h3>تصنيفات المقالات والفتاوى</h3>
  <div class="tlist" id="tl-articles">${topicRows(lib.topics.filter(t=>t.for==="articles"),"articles")}</div><button type="button" class="btn s" data-act="tadd" data-kind="articles">+ تصنيف جديد للمقالات</button>
  <div class="savebar"><button class="btn p">حفظ الأقسام والأسماء</button><span id="structst" class="mut" role="status"></span></div></form>
- <h3>المؤلفون</h3><form data-form="authedit"><label>اختر المؤلف</label><select name="id" id="aesel"><option value="">— اختر —</option>${[...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")).map(a=>`<option value="${a.id}">${esc(a.name)} (${a.col==="turath"?"تراث":"الدعوة"})</option>`).join("")}</select>
+ <h3>المؤلفون</h3><form data-form="authedit"><label>اختر المؤلف</label><select name="id" id="aesel"><option value="">— اختر —</option>${[...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")).map(a=>`<option value="${a.id}">${esc(a.name)} (${a.col==="turath"?"العامة":"الدعوة"})</option>`).join("")}</select>
  <div id="aefields" hidden><div class="row"><div><label>الاسم</label><input name="name"></div><div><label>سنة الوفاة (هـ، للمتوفين)</label><input name="died" type="number"></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="turath">${esc(COL.turath)}</option></select></div></div>
  <div class="row" style="align-items:center"><div id="aeprev"></div><div><label>الصورة المصغرة (اختياري)</label><input type="file" name="photo" accept="image/*"><label class="inl"><input type="checkbox" name="nophoto" value="1"> إزالة الصورة واستعمال الحرف الأول</label></div></div>
  <label>نبذة مختصرة</label><textarea name="bio" style="min-height:90px"></textarea><button class="btn p" style="margin-top:8px">حفظ بيانات المؤلف</button> <span id="aest" class="mut"></span></div></form>`}
@@ -1483,7 +1485,7 @@ const PG_ICON=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke
 const SECS=[
  {h:"#/",n:"الرئيسية",i:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',is:(p)=>!p[0]},
  {h:"#/library?c=dawah",n:"الدعوة",i:'<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',is:(p,q)=>p[0]==="library"&&q.c==="dawah"},
- {h:"#/library?c=turath",n:"التراث",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
+ {h:"#/library?c=turath",n:"العامة",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
  {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"},
  {h:"#/community",n:"المجتمع",i:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 14.3c3.2-.5 6.5 1.6 6.5 5.7"/>',is:(p)=>p[0]==="community"},
  {h:"#/qa",n:"سؤال وجواب",i:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6"/><circle cx="12" cy="16.9" r=".6" fill="currentColor"/>',is:(p)=>p[0]==="qa"},
@@ -1532,22 +1534,70 @@ function renderTicker(){const t=$("#ticker"),key=b=>(b.added||"")+"|"+(b.date||"
  const one=n.map(b=>`<a href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b> <span>— ${isArt(b)?"مقال: ":""}${esc(A(b.authorId).name)}</span></a>`).join("");$("#tt").innerHTML=one+one;$("#tt").style.setProperty("--dur",(n.length*7)+"s");t.hidden=false}
 function parse(){const h=(location.hash.startsWith("#/")?location.hash.slice(1):"")||(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;const[p,qs]=h.split("?");return{p:p.split("/").filter(Boolean).map(decodeURIComponent).map((x,i)=>i?x:x.toLowerCase().replace(/\.html$/,"")),q:Object.fromEntries(new URLSearchParams(qs||""))}}
 (function(){const b=document.querySelector('[data-act="uilang"]');if(b)b.textContent=S.ui==="en"?"ع":"EN"})();
-function route(){const{p,q}=parse(),v=p[0];if(v!=="book"&&TTS.on)TTS.stop();Pager.onRoute();applyLabels();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
+function route(){const{p,q}=parse(),v=p[0];if(typeof NAV!=="undefined")NAV.ui();if(v!=="book"&&TTS.on)TTS.stop();Pager.onRoute();applyLabels();$("#selq").hidden=true;closeSheet();document.body.classList.toggle("reading",v==="book");if(v!=="book")document.body.classList.remove("reading-full");
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="community")return vCommunity(q);if(v==="qa")return vQA(q,p[1]);if(v==="hifz")return vHifz(q);if(v==="paths")return vPaths(q,p[1]);if(v==="dm")return vDM(p[1]);if(v==="tashjir")return vTashjir(q,p[1]);if(v==="audio")return vAudio(q,p[1]);if(v==="radio")return vRadio(q,p[1]);if(v==="post")return vPost(p[1]);if(v==="member")return vMember(p[1]);if(v==="messages")return vMessages();if(v==="furqan")return vFurqan();if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory(q,p[1]);if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book"){const r=vBook(p[1],+p[2],q.h);if(q.tts)Promise.resolve(r).then(()=>setTimeout(()=>{if(typeof AP!=="undefined"&&AP.el&&!AP.el.paused)AP.toggle(false);TTS.start()},700));return r}if(v==="search")return vSearch(q);
  if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);if(v==="mine")return vMine(q);vHome()}
 /* الروابط: يكتبها الموقع بصيغة #/… ويحوّلها إلى روابط عادية (/book/…) تفهمها محركات البحث وتُشارك كما هي */
 const toPath=h=>{const p=String(h).replace(/^#/,"");return p.startsWith("/")?p:"/"+p};
-function go(h,replace){history[replace?"replaceState":"pushState"](null,"",toPath(h));route()}
-window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));route()});
-window.addEventListener("popstate",route);
+/* التنقل والرجوع (الباب ٢٢): لكل خطوة رقم i في history.state، فيُعرف هل في التطبيق خطوة سابقة،
+   ويُحفظ موضع التمرير لكل خطوة ويُستعاد عند الرجوع، وزر رجوع الجهاز يغلق النافذة أو اللوحة المفتوحة أولًا بدل مغادرة الصفحة،
+   وفي التطبيق المثبّت لا يُغلق الرجوع التطبيقَ إن فُتح على صفحة داخلية (تُدرج الرئيسية تحتها). */
+const NAV=(()=>{const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v)}catch(e){}};
+ const _rs=history.replaceState.bind(history),_ps=history.pushState.bind(history);
+ const N={restoring:false,cur:null,rawPush:(st,u)=>{_ps(st,"",u);N.mark()},
+  next(){const n=(+ss("navMax")||0)+1;ss("navMax",n);return n},
+  i(){return(history.state&&history.state.i)||0},base(){return +ss("navBase")||0},
+  ys(){try{return JSON.parse(ss("navY")||"{}")}catch(e){return{}}},
+  save(){if(N.restoring)return;const y=N.ys();y[N.i()]=Math.round(scrollY);const k=Object.keys(y);if(k.length>200)delete y[k[0]];ss("navY",JSON.stringify(y))},
+  mark(){N.cur={s:history.state,u:location.pathname+location.search}},
+  canBack(){return N.i()>N.base()},
+  parent(){const{p}=parse(),v=p[0],b=v==="book"&&typeof B==="function"?B(p[1]):null;
+   if(b)return isArt(b)?(kindOf(b)==="fatwa"?"#/fatawa":kindOf(b)==="statement"?"#/bayanat":"#/articles"):"#/library?c="+bc(b);
+   return({author:"#/authors",tarjama:"#/tarajim",post:"#/posts",member:"#/community",topic:"#/library"})[v]||"#/"},
+  back(){if(N.canBack())history.back();else go(N.parent())},
+  restore(y){N.restoring=true;const t0=Date.now();(function tick(){const max=document.documentElement.scrollHeight-innerHeight;
+   if(max>=y-4||Date.now()-t0>2500){scrollTo(0,Math.min(y,Math.max(0,max)));setTimeout(()=>{N.restoring=false},120);return}setTimeout(tick,80)})()},
+  overlay(){const sh=$("#sheet"),d=$("#dlg");if(d&&d.open){d.close();return true}if(sh&&!sh.hidden){closeSheet();return true}
+   if(document.body.classList.contains("reading-full")&&typeof setFull==="function"){setFull(false);return true}return false},
+  ui(){const bb=$("#backbtn");if(bb)bb.hidden=parse().p.length===0},
+  // فتح نافذة أو لوحة يضيف خطوة في التاريخ (m) يستهلكها زر الرجوع فيغلقها؛ وإغلاقها باليد يزيل الخطوة
+  mopen(){if(!(history.state&&history.state.m)){_ps({i:N.i(),m:1},"",location.pathname+location.search);N.mark()}},
+  mclose(){if(N.popping)return;if(history.state&&history.state.m){N.skip=true;history.back()}}};
+ history.replaceState=(st,t,u)=>{_rs(st==null&&history.state&&history.state.i!=null?{i:history.state.i}:st,t,u);N.mark()};
+ history.pushState=(st,t,u)=>{N.save();_ps(st==null?{i:N.next()}:st,t,u);N.mark()};
+ if(!history.state||history.state.i==null){const i=N.next();ss("navBase",String(i));
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  const deep=(location.hash.startsWith("#/")?location.hash.length>2:location.pathname!=="/"&&location.pathname!=="/index.html");
+  if(standalone&&deep){const u=location.pathname+location.search+location.hash;_rs({i},"","/");_ps({i:N.next()},"",u)}else _rs({i},"",location.href)}
+ N.mark();let st=0;addEventListener("scroll",()=>{clearTimeout(st);st=setTimeout(N.save,150)},{passive:true});
+ return N})();
+{const _od=openDlg,_os=openSheet,_cs=closeSheet;
+ openDlg=function(){const r=_od.apply(this,arguments);NAV.mopen();return r};
+ openSheet=function(){const r=_os.apply(this,arguments);NAV.mopen();return r};
+ closeSheet=function(){const sh=$("#sheet"),was=sh&&!sh.hidden;const r=_cs.apply(this,arguments);if(was)NAV.mclose();return r};
+ const d=$("#dlg");if(d)d.addEventListener("close",()=>NAV.mclose())}
+function go(h,replace){const sameBook=(a,b)=>{const m=x=>(String(x).match(/^\/book\/([^/?]+)/)||[])[1];return m(a)&&m(a)===m(b)};
+ // تقليب صفحات الكتاب نفسه لا يضيف خطوات، فالرجوع يعود إلى ما قبل الكتاب لا إلى الصفحة السابقة
+ if(sameBook(toPath(h),location.pathname))replace=true;
+ if(replace)history.replaceState(null,"",toPath(h));else history.pushState(null,"",toPath(h));route();NAV.ui()}
+window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#/")){history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
+window.addEventListener("popstate",()=>{
+ if(NAV.skip){NAV.skip=false;NAV.mark();return}
+ // زر رجوع الجهاز مع نافذة مفتوحة: تُغلق النافذة؛ فإن كانت الخطوة خطوتها (m) انتهى الأمر، وإلا أُعيد الرابط كما كان
+ NAV.popping=true;const had=NAV.overlay();NAV.popping=false;
+ if(had){const c=NAV.cur;if(c&&c.s&&c.s.m&&history.state&&history.state.i===c.s.i){NAV.mark();return}if(c)NAV.rawPush(c.s,c.u);return}
+ const y=NAV.ys()[NAV.i()];NAV.restoring=true;NAV.mark();route();NAV.ui();
+ if(parse().p[0]!=="book"&&y>0)NAV.restore(y);else setTimeout(()=>{NAV.restoring=false},150)});
 document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#/"]');if(!a||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank")return;e.preventDefault();const h=a.getAttribute("href");if(toPath(h)!==location.pathname+location.search)go(h);else route()});
 document.addEventListener("click",async e=>{const el=e.target.closest("[data-act]"),w=e.target.closest(".rd .w");
  const fr=e.target.closest(".rd .fnr"),dg=x=>String(x).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
  if(fr&&!el){const k=dg(fr.dataset.fn||fr.textContent.replace(/[^\d٠-٩]/g,"")),fb=fr.closest(".rd").querySelector(".fnb");const hit=fb&&[...fb.querySelectorAll("p")].find(x=>dg(x.textContent).replace(/[^\d]/g," ").trim().split(/\s+/)[0]===k);if(hit){openSheet("الحاشية "+k,`<p class="rdfn">${esc(hit.textContent)}</p>`);return}}
  if(w&&!el){if(String(getSelection()).trim())return;if(w.dataset.note)return noteOpen(w.dataset.note);return}if(!el)return;const a=el.dataset.act;
- if(a==="closeDlg")dlg().close();
+ if(a==="closeDlg")dlg().close();else if(a==="navback")NAV.back();else if(a==="shareSite"){const url=siteLink("#/").replace(/#\/?$/,"").replace(/\/?$/,"/"),title="مكتبة الدعوة السلفية الرقمية";
+  if(navigator.share){try{await navigator.share({title,text:title+": كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وكتب التراث، للقراءة والبحث.",url})}catch(x){}}
+  else{try{await navigator.clipboard.writeText(url);toast("نُسخ رابط المكتبة: "+url)}catch(x){openDlg(`<h3>رابط المكتبة</h3><p>انسخ الرابط:</p><input id="sharl" readonly value="${esc(url)}" style="width:100%;direction:ltr">`);const i=$("#sharl");if(i){i.focus();i.select()}}}}
  else if(a==="bcdel"){if(confirm("حذف هذا الإشعار؟")){await Auth.sb.from("broadcasts").delete().eq("id",el.dataset.id);bcList()}}
  else if(a==="mark")toggleMark();else if(a==="selnote")selNote();else if(a==="noteopen")noteOpen(el.dataset.id);else if(a==="plan")planDlg();else if(a==="bell")Bell.open();
  else if(a==="notedel"){if(NOTE_EDIT&&confirm("حذف هذا التعليق والتظليل؟")){try{await Mine.delNote(NOTE_EDIT);dlg().close();$$(`.rd[data-id="${NOTE_EDIT.book_id}"]`).forEach(r=>{hlWords(r,[]);paintNotes(r)});toast("حُذف التعليق")}catch(x){alert(x.message)}}}
@@ -1560,8 +1610,9 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="feedMore")feedMore();
  else if(a==="fntoggle"){el.closest(".fns").classList.toggle("fold")}
  else if(a==="tts"){closeSheet();TTS.start()}else if(a==="ttsp")TTS.toggle();else if(a==="ttss")TTS.stop();
- else if(a==="selprint"||a==="selcopy"){const s0=String(getSelection()).trim(),rb=selRd()||$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
-  if(a==="selcopy"){try{await navigator.clipboard.writeText(s0+"\n— "+src+"\n"+link);toast("نُسخ النص مع مصدره")}catch(x){}return}
+ else if(a==="selprint"||a==="selcopy"||a==="selshare"){const s0=String(getSelection()).trim(),rb=selRd()||$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
+  if(a==="selshare"){const txt=s0+"\n— "+src;if(navigator.share){try{await navigator.share({title:src,text:txt,url:link})}catch(x){}return}try{await navigator.clipboard.writeText(txt+"\n"+link);toast("المشاركة غير متاحة في هذا المتصفح؛ نُسخ النص مع مصدره ورابطه")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}
+  if(a==="selcopy"){try{await navigator.clipboard.writeText(s0+"\n— "+src+"\n"+link);toast("نُسخ النص مع مصدره")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}
   const w2=window.open("","_blank");if(!w2)return toast("اسمح بالنوافذ المنبثقة للطباعة");w2.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(src)}</title><style>body{font-family:Amiri,"Traditional Arabic",serif;font-size:20px;line-height:2.1;margin:2cm;text-align:justify}footer{margin-top:1.5em;border-top:1px solid #999;padding-top:.5em;font-size:14px;color:#444}</style></head><body>${s0.split("\n").filter(Boolean).map(l=>"<p>"+esc(l)+"</p>").join("")}<footer>${esc(src)}<br>${esc(SITENAME)} — ${esc(link)}</footer><script>onload=()=>{print()}<\/script></body></html>`);w2.document.close()}
  else if(a==="revlist"){const id=el.dataset.id,box=$("#rv-"+id);box.innerHTML='<p class="mut">جارٍ التحميل…</p>';const b=await loadBook(id).catch(()=>null);const u=(b&&b.unc)||{},ks=Object.keys(u).map(Number).sort((x,y)=>x-y),ur=(b&&b.unrev)||[];
   box.innerHTML=(ks.map(i=>`<a class="chip" href="#/book/${id}/${i+1}">${esc(PL(b,i)||"ص "+(i+1))}: ${u[i].slice(0,4).map(esc).join("، ")}${u[i].length>4?"…":""}</a>`).join(" ")||'<p class="mut">لا توجد كلمات معلَّمة.</p>')+(ur.length?`<p class="mut">صفحات لم يراجعها Gemini: ${ur.slice(0,60).map(i=>`<a href="#/book/${id}/${i+1}">${toAr(i+1)}</a>`).join("، ")}</p>`:"")}
@@ -1621,7 +1672,14 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  else if(k==="addbook")addBook(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
  else if(k==="signin"||k==="signup")authSubmit(f,k);else if(k==="ask")askSubmit(f)});
 const selRd=()=>{const n=getSelection().anchorNode;return n&&(n.nodeType===1?n:n.parentElement).closest(".rd[data-id]")};
-document.addEventListener("selectionchange",()=>{const s=String(getSelection()).trim();$("#selq").hidden=!((s.length>12||/\S\s+\S/.test(s))&&selRd())});
+// شريط النص المحدد: يُحفظ آخر تحديد صالح، لأن لمس الزر في بعض متصفحات الجوال (سفاري) يُلغي التحديد قبل وصول اللمسة،
+// فيُعاد التحديد قبل تنفيذ الإجراء، ويُؤجَّل إخفاء الشريط قليلًا حتى لا يختفي الزر تحت الإصبع.
+let SELC=null,selHideT=0;const selOk=()=>{const s=String(getSelection()).trim();return(s.length>12||/\S\s+\S/.test(s))&&!!selRd()};
+document.addEventListener("selectionchange",()=>{clearTimeout(selHideT);const q=$("#selq");
+ if(selOk()){try{SELC={r:getSelection().getRangeAt(0).cloneRange(),t:Date.now()}}catch(x){}q.hidden=false;return}
+ selHideT=setTimeout(()=>{if(!selOk())q.hidden=true},500)});
+(()=>{const q=$("#selq");if(!q)return;["pointerdown","mousedown"].forEach(ev=>q.addEventListener(ev,e=>{if(e.target.closest("button"))e.preventDefault()}));
+ q.addEventListener("click",()=>{clearTimeout(selHideT);const g=getSelection();if(!String(g).trim()&&SELC&&Date.now()-SELC.t<300000){try{g.removeAllRanges();g.addRange(SELC.r)}catch(x){}}},true)})();
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#sheet").hidden){closeSheet();return}if($("#rb")&&e.key==="f"&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)){setFull(!S.full);return}if(!$("#rb")||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName)||dlg().open)return;if(e.key==="ArrowLeft")turn(1);else if(e.key==="ArrowRight")turn(-1)});
 
 /* ---------- الإقلاع ---------- */

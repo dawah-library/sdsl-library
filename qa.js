@@ -20,7 +20,7 @@ async function vQA(q, bid) {
   view(`<div class="cmhero qa"><div><h2>سؤال وجواب من الكتب</h2><p>أسئلة وأجوبتها بنصها كما وردت في كتب المكتبة وفتاواها: «س… ج…»، و«فإن قيل… قيل»، و«سُئل… فأجاب»، والأبواب المعنونة بسؤال. كل جواب منقول بلفظه مع موضعه في الكتاب، وليس من صياغة الذكاء الاصطناعي.</p></div>
   <div class="row"><button class="btn" data-act="qaexp">⇩ تصدير المختار (<span id="qasel">${toAr(QA.sel.size)}</span>)</button></div></div>
   <form class="stepper" data-form="qasearch"><input name="q" type="search" value="${esc(s)}" placeholder="ابحث في الأسئلة: الصلاة، التوبة، البدعة…" aria-label="ابحث في الأسئلة"><button class="btn p">بحث</button></form>
-  <div class="tabs" role="tablist">${[["", "الكل"], ["dawah", "كتب الدعوة"], ["fatwa", "الفتاوى"], ["turath", "التراث"]].concat(isAdmin() ? [["flag", "🚩 علّمها التدقيق"]] : []).map(([v, l]) => `<a role="tab" aria-selected="${f === v}" href="#/qa${v || s ? "?" + new URLSearchParams(Object.assign(v ? { c: v } : {}, s ? { q: s } : {})) : ""}">${l}</a>`).join("")}</div>
+  <div class="tabs" role="tablist">${[["", "الكل"], ["dawah", "كتب الدعوة"], ["fatwa", "الفتاوى"], ["turath", "المكتبة العامة"]].concat(isAdmin() ? [["flag", "🚩 علّمها التدقيق"]] : []).map(([v, l]) => `<a role="tab" aria-selected="${f === v}" href="#/qa${v || s ? "?" + new URLSearchParams(Object.assign(v ? { c: v } : {}, s ? { q: s } : {})) : ""}">${l}</a>`).join("")}</div>
   <div id="qalist" class="qalist"><p class="mut">جارٍ التحميل…</p></div><div id="qamore"></div>`);
   let L = await QA.index();
   if (bid) L = L.filter(r => r[2] === bid || r[2].startsWith(bid + "-v"));

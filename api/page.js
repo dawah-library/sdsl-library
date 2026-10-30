@@ -12,7 +12,7 @@ function cat() { if (!CAT) CAT = read("data/catalog.json"); return CAT; }
 function aidx() { if (!AIDX) { try { AIDX = read("data/articles/index.json").items || []; } catch (e) { AIDX = []; } } return AIDX; }
 const author = id => (cat().authors.find(a => a.id === id) || {});
 const topic = id => (cat().topics.find(t => t.id === id) || {});
-const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "تراث" }; };
+const COL = () => { const L = cat().labels || {}; return { dawah: L.col_dawah || "مكتبة الدعوة السلفية", turath: L.col_turath || "المكتبة العامة" }; };
 async function template(origin) {
   if (TPL) return TPL;
   try { TPL = fs.readFileSync(path.join(ROOT, "index.html"), "utf8"); }
@@ -34,7 +34,7 @@ async function findItem(id, origin) {
   return { b: { id, title: x.t, authorId: x.a, topicId: x.tp, date: x.d, type: "article", col: "dawah", url: x.u }, pages };
 }
 const SECTIONS = {
-  library: ["المكتبة", "كتب مشايخ الدعوة السلفية بمصر وكتب التراث الإسلامي، للقراءة والبحث."],
+  library: ["المكتبة", "كتب مشايخ الدعوة السلفية بمصر، والمكتبة العامة: كتب التراث الإسلامي والمراجع وكتب العلماء والباحثين من خارج الدعوة، للقراءة والبحث."],
   articles: ["المقالات", "مقالات موقع صوت السلف مصنفة بالموضوع والكاتب."],
   fatawa: ["الفتاوى", "فتاوى مشايخ الدعوة السلفية مصنفة بالأبواب الفقهية."],
   bayanat: ["بيانات الدعوة السلفية", "بيانات الدعوة السلفية بمصر مرتبة بالتاريخ."],

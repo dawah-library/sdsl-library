@@ -91,7 +91,7 @@
     solve: "العضو يعرض مشكلة أو حالة عملية (تربوية أو دعوية أو أسرية أو نفسية أو في طلب العلم): افهمها، ثم اعرض ما في نصوص المكتبة من توجيهات ذات صلة موثقة، ثم اقترح خطوات عملية مرتبة قابلة للتطبيق مبنية عليها. هذا نصح وتوجيه وليس فتوى، وما يحتاج فتوى أو مختصًا فنبّه عليه."
   };
   const TOOLS = [
-    { name: "search_library", description: "يبحث في نصوص كتب المكتبة ومقالاتها وفتاواها ويعيد أفضل المقاطع مع مرجع كل مقطع (ref) واسم الكتاب أو المقال والمؤلف والصفحة.", input_schema: { type: "object", properties: { query: { type: "string", description: "كلمات البحث بالعربية" }, collection: { type: "string", enum: ["", "dawah", "turath"], description: "dawah لكتب مشايخ الدعوة ومقالاتهم، turath لكتب التراث، أو فارغ للكل" }, book_id: { type: "string", description: "اختياري: معرف كتاب محدد" }, author_id: { type: "string", description: "اختياري: معرف مؤلف (من list_authors)" }, type: { type: "string", enum: ["", "book", "article"], description: "اختياري: كتب فقط أو مقالات وفتاوى فقط" }, k: { type: "integer", description: "عدد النتائج (الافتراضي 8، الأقصى 15)" } }, required: ["query"] } },
+    { name: "search_library", description: "يبحث في نصوص كتب المكتبة ومقالاتها وفتاواها ويعيد أفضل المقاطع مع مرجع كل مقطع (ref) واسم الكتاب أو المقال والمؤلف والصفحة.", input_schema: { type: "object", properties: { query: { type: "string", description: "كلمات البحث بالعربية" }, collection: { type: "string", enum: ["", "dawah", "turath"], description: "dawah لكتب مشايخ الدعوة ومقالاتهم، turath للمكتبة العامة (كتب التراث والمراجع وكتب العلماء والباحثين من خارج الدعوة)، أو فارغ للكل" }, book_id: { type: "string", description: "اختياري: معرف كتاب محدد" }, author_id: { type: "string", description: "اختياري: معرف مؤلف (من list_authors)" }, type: { type: "string", enum: ["", "book", "article"], description: "اختياري: كتب فقط أو مقالات وفتاوى فقط" }, k: { type: "integer", description: "عدد النتائج (الافتراضي 8، الأقصى 15)" } }, required: ["query"] } },
     { name: "get_page", description: "يعيد النص الكامل لصفحة من كتاب أو مقال بمرجعها، مثل riyad:31. استعمله لقراءة سياق مقطع وجدته.", input_schema: { type: "object", properties: { ref: { type: "string" } }, required: ["ref"] } },
     { name: "book_outline", description: "يعيد بيانات كتاب: عنوانه ومؤلفه وعدد صفحاته وفهرس أبوابه مع أرقام الصفحات.", input_schema: { type: "object", properties: { book_id: { type: "string" } }, required: ["book_id"] } },
     { name: "list_authors", description: "يعيد قائمة المؤلفين في المكتبة بمعرفاتهم وعدد كتبهم ومقالاتهم.", input_schema: { type: "object", properties: {} } },
@@ -108,11 +108,11 @@
     }
     if (name === "list_authors") {
       const c = {}; lib.books.forEach(b => { if (!b.demo) c[b.authorId] = (c[b.authorId] || 0) + 1; });
-      return lib.authors.filter(a => c[a.id]).map(a => ({ id: a.id, name: a.name, collection: a.col === "turath" ? "تراث" : "مكتبة الدعوة السلفية", died: a.died, items: c[a.id] }));
+      return lib.authors.filter(a => c[a.id]).map(a => ({ id: a.id, name: a.name, collection: a.col === "turath" ? "المكتبة العامة" : "مكتبة الدعوة السلفية", died: a.died, items: c[a.id] }));
     }
     if (name === "list_books") {
       const tw = input.title ? terms(input.title) : [];
-      const r = catalog(lib).filter(b => (!scope.col || (scope.col === "turath") === (b.collection === "تراث")) && (!input.type || (input.type === "article") === (b.kind === "مقال")) && (!input.author_id || (lib.books.find(x => x.id === b.id) || {}).authorId === input.author_id) && tw.every(t => norm(b.title).includes(t)));
+      const r = catalog(lib).filter(b => (!scope.col || (scope.col === "turath") === (b.collection === "المكتبة العامة")) && (!input.type || (input.type === "article") === (b.kind === "مقال")) && (!input.author_id || (lib.books.find(x => x.id === b.id) || {}).authorId === input.author_id) && tw.every(t => norm(b.title).includes(t)));
       return { total: r.length, items: r.slice(0, 80) };
     }
     throw new Error("أداة غير معروفة");

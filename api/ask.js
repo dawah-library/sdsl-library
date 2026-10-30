@@ -215,7 +215,7 @@ ${out.full ? `<h3>تجربة كاملة للمساعد</h3><p>${out.full.crash ?
 
     const deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(mode);
     const system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
-      (scope.col ? "\nنطاق البحث: " + (scope.col === "turath" ? "كتب التراث فقط." : "كتب مشايخ الدعوة السلفية فقط.") : "") +
+      (scope.col ? "\nنطاق البحث: " + (scope.col === "turath" ? "المكتبة العامة فقط (كتب التراث والمراجع وكتب العلماء والباحثين من خارج الدعوة)." : "كتب مشايخ الدعوة السلفية فقط.") : "") +
       (scope.bookId ? "\nنطاق البحث: كتاب واحد معرفه " + scope.bookId + "." : "");
     const msgs = turns.slice(), used = [], t0 = Date.now(), budget = (+process.env.SDSL_MAX_SECONDS || 240) * 1000;
     const maxRounds = provider === "gemini" ? (deep ? 7 : 5) : (deep ? 14 : 8);
