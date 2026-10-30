@@ -1,0 +1,24 @@
+name: رفع إصدار عامل الخدمة آليًا
+# عامل الخدمة يقدّم ملفات الواجهة من جهاز الزائر (لخفض طلبات Vercel)،
+# فيجب رفع رقم إصداره مع كل تغيير في الواجهة. هذه المهمة تفعل ذلك تلقائيًا.
+on:
+  push:
+    branches: [main]
+    paths: ["*.js", "*.css", "index.html", "vendor/**", "assets/**", "manifest.webmanifest", "data/i18n-en.json"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: sw-version, cancel-in-progress: false }
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/sw-bump.py | tee /tmp/out
+      - name: حفظ
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "sdsl-bot"; git config user.email "bot@dawahlibrary.org"
+          git add sw.js tools/sw-hash.txt
+          git commit -m "رفع إصدار عامل الخدمة آليًا ($(cat /tmp/out))"
+          for i in 1 2 3; do git pull --rebase -q && git push && exit 0; sleep 5; done; exit 1
