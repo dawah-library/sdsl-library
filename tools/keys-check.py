@@ -25,6 +25,18 @@ for n in names:
         except Exception as e: st = "error"
     out.append({"name": n, "status": st, "type": "AQ" if k.startswith("AQ.") else "AIza" if k.startswith("AIza") else "other"})
     print(n, st)
-res = {"models": [m for m in models if "gemini" in m], "at": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ"), "keys": out, "working": sum(1 for x in out if x["status"] in ("ok", "quota"))}
+# تجربة نماذج الصوت بأول مفتاح يعمل
+tts = {}
+k0 = next((os.environ[x["name"]] for x in out if x["status"] == "ok"), None)
+for m in ["gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts"]:
+    if not k0: break
+    b = json.dumps({"contents": [{"parts": [{"text": "اقرأ بالعربية الفصحى: بِسْمِ اللَّهِ، الْحَمْدُ لِلَّهِ."}]}], "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": "Charon"}}}}}).encode()
+    try:
+        j = json.load(urllib.request.urlopen(urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % m, data=b, headers={"content-type": "application/json", "x-goog-api-key": k0}), timeout=120))
+        tts[m] = "ok:%d" % len(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+    except urllib.error.HTTPError as e: tts[m] = "http%d %s" % (e.code, e.read()[:150].decode("utf-8", "ignore"))
+    except Exception as e: tts[m] = "err " + str(e)[:100]
+    print(m, tts[m])
+res = {"tts": tts, "models": [m for m in models if "gemini" in m], "at": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ"), "keys": out, "working": sum(1 for x in out if x["status"] in ("ok", "quota"))}
 json.dump(res, open(os.path.join(R, "data", "keys-status.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("العاملة:", res["working"], "من", len(out))
