@@ -206,13 +206,59 @@ const KUR = (() => {
   /* ---------- التفريغات في القارئ: كما أُلقي / منسَّق ومدقَّق / بأسلوب كتابي ---------- */
   const TFE = new Map();
   async function tfReader(b, p) {
-    if (!(b.tags || []).includes("tafrigh")) return; const rb = $("#rb"), paper = $("#paper"); if (!rb || !paper || $(".tfseg")) return;
+    if (!(typeof isTranscript === "function" ? isTranscript(b) : (b.tags || []).includes("tafrigh"))) return; const rb = $("#rb"), paper = $("#paper"); if (!rb || !paper || $(".tfseg")) return;
     if (!TFE.has(b.id)) TFE.set(b.id, getJ("tfedit/" + b.id + ".json")); const d = await TFE.get(b.id), pg = d && d.pages && d.pages[String(p)];
     if (!pg || $(".tfseg")) return; const v = S.tfv || "o";
-    paper.insertAdjacentHTML("afterbegin", `<div class="seg tfseg" role="radiogroup" aria-label="نص التفريغ">${[["o", "كما أُلقي"], ["f", "منسَّق ومدقَّق"], ["r", "بأسلوب كتابي"]].map(([k, t]) => `<button type="button" role="radio" data-tfv="${k}" aria-checked="${v === k}">${t}</button>`).join("")}</div><p class="mut tfnote" ${v === "r" ? "" : "hidden"}>صياغة المكتبة بتصرف لكلام الشيخ، بلا زيادة ولا نقص في المعنى؛ والأصل ما أُلقي.</p>`);
+    paper.insertAdjacentHTML("afterbegin", `<div class="seg tfseg" role="radiogroup" aria-label="نص التفريغ">${[["o", "كما أُلقي"], ["f", "منسَّق ومدقَّق"], ["r", "بأسلوب كتابي"]].map(([k, t]) => `<button type="button" role="radio" data-tfv="${k}" aria-checked="${v === k}">${t}</button>`).join("")}</div><p class="mut tfnote" ${v === "r" ? "" : "hidden"}>صياغة المكتبة بتصرف لكلام الشيخ، بلا زيادة ولا نقص في المعنى؛ والأصل ما أُلقي.</p><p class="tflink"><a href="#/tfbook/${esc(b.id)}?v=${v === "r" ? "r" : "f"}">📘 اقرأ النسخة المحررة كاملة ككتاب معد للنشر والطباعة</a></p>`);
     const orig = rb.innerHTML, set = k => { rb.innerHTML = k === "o" ? orig : pageHtml(pg[k] || "", "", [], null); $$(".tfseg [data-tfv]").forEach(x => x.setAttribute("aria-checked", x.dataset.tfv === k)); const n = $(".tfnote"); if (n) n.hidden = k !== "r"; };
     if (v !== "o") set(v);
     $$(".tfseg [data-tfv]").forEach(x => x.onclick = () => { S.tfv = x.dataset.tfv; saveS(); set(x.dataset.tfv); });
   }
-  return { view: open, tahrir, tfReader, layout, draw };
+  /* ---------- النسخة المحررة للتفريغ (#/tfbook/<id>): كتاب معد للنشر والطباعة ----------
+     صفحة عنوان، وتنبيه التحرير، وفهرس من العناوين، وفصول متصلة بنص «منسَّق ومدقَّق» أو «بأسلوب كتابي»، مع إحالة صفحات الأصل اختيارًا. */
+  async function tfBook(q, id) {
+    const b0 = B(id); if (!b0) return view('<p class="note">التفريغ غير موجود.</p>');
+    view('<p class="mut" style="padding:30px;text-align:center">جارٍ إعداد النسخة المحررة…</p>');
+    let b; try { b = await loadBook(id); } catch (e) { return view(`<p class="note">${esc(e.message)}</p>`); }
+    if (!TFE.has(id)) TFE.set(id, getJ("tfedit/" + id + ".json")); const d = await TFE.get(id);
+    const v = q.v === "r" ? "r" : "f", refs = q.ref === "1", a = A(b.authorId), title = b.setTitle || b.title;
+    if (!d || !d.pages || !Object.keys(d.pages).length) return view(`<p><a href="#/tafrighat">← التفريغات</a></p><h2>${esc(title)}</h2><div class="note">النسخة المحررة لهذا التفريغ قيد الإعداد؛ تُجهَّز آليًا بعد اكتمال تحويله ومراجعته، ثم تظهر هنا.${isAdmin() ? ` <button class="btn s" data-tfq="${esc(id)}">قدّمه في طابور التجهيز</button>` : ""}</div><p><a class="btn" href="#/book/${esc(id)}/1">اقرأ التفريغ كما رُفع</a></p>`);
+    const n = b.pages.length, edited = Object.keys(d.pages).length, chs = []; let cur = { t: "", ps: [] }, last = "";
+    for (let i = 1; i <= n; i++) {
+      const e = d.pages[String(i)], raw = e ? (e[v] || e.f || "") : String(b.pages[i - 1] || "").split(/^\s*_{4,}\s*$/m)[0];
+      String(raw).split(/\n+/).map(l => l.trim()).filter(Boolean).forEach((l, k) => {
+        if (/^#{1,3}\s/.test(l)) { const h = l.replace(/^#+\s*/, "").trim(); if (norm(h) === norm(cur.t || "") || chs.some(c => norm(c.t) === norm(h) && c.p >= i - 1)) return; /* عنوان مكرر في رأس الصفحة */ if (cur.ps.length || cur.t) chs.push(cur); cur = { t: h, p: i, ps: [] }; return; }
+        // وصل الجملة المقطوعة بين صفحتين
+        if (k === 0 && cur.ps.length && !/[.؟!:»)\]]$/.test(cur.ps[cur.ps.length - 1].t)) { cur.ps[cur.ps.length - 1].t += " " + l; return; }
+        cur.ps.push({ t: l, p: i, raw: !e });
+      });
+    }
+    if (cur.ps.length || cur.t) chs.push(cur);
+    for (let i = chs.length - 1; i > 0; i--) if (!chs[i - 1].ps.length && chs[i - 1].t && chs[i].t) { chs[i].t = chs[i - 1].t + " — " + chs[i].t; chs[i].p = chs[i - 1].p; chs.splice(i - 1, 1); } // عنوان بلا نص يُضم إلى ما بعده
+    const ch2 = chs.map((c, i) => Object.assign(c, { t: c.t || (i === 0 ? "تمهيد" : "تابع"), id: "tfc" + i }));
+    const html = `<header class="tfb-title"><p class="tfb-site">${esc(SITENAME)}</p><h1>${esc(title)}</h1><p class="tfb-au">${esc(a.name || "")}${died(a)}</p><p class="tfb-sub">${v === "r" ? "تفريغ محرَّر بأسلوب كتابي" : "تفريغ منسَّق ومدقَّق"}</p>${b.source ? `<p class="tfb-src">${esc(b.source)}</p>` : ""}</header>
+      <section class="tfb-note"><h2>تنبيه التحرير</h2><p>${v === "r" ? "هذه النسخة صياغة كتابية أعدّتها المكتبة لكلام الشيخ في دروسه المفرّغة، بلا زيادة في المعنى ولا نقص ولا تغيير لرأي أو ترجيح، مع حذف ما لا يناسب الكتابة من التكرار والاستطراد الشفهي. فالعبارات عبارات المكتبة والمضمون مضمون الشيخ؛ ويُرجع إلى النص كما أُلقي عند النقل الحرفي." : "هذه النسخة ألفاظ الشيخ نفسها بعد تصحيح أخطاء التفريغ الإملائية والنحوية الظاهرة، ووضع علامات الترقيم والفقرات والعناوين، وحذف الحشو الكلامي والتكرار اللفظي الذي لا يضيف معنى."} والآيات والأحاديث بلفظها. ${edited < n ? `<b>حُرِّر ${toAr(edited)} من ${toAr(n)} صفحة حتى الآن، وما لم يُحرَّر بعد يظهر كما رُفع.</b>` : ""}</p></section>
+      <nav class="tfb-toc"><h2>الفهرس</h2><ol>${ch2.map(c => `<li><a href="#${c.id}" data-tfgo="${c.id}">${esc(c.t)}</a>${refs ? ` <small>(ص ${toAr(c.p || 1)} من الأصل)</small>` : ""}</li>`).join("")}</ol></nav>
+      ${ch2.map(c => `<section class="tfb-ch" id="${c.id}"><h2>${esc(c.t)}</h2>${c.ps.map(x => `<p${x.raw ? ' class="tfb-raw"' : ""}>${esc(x.t)}${refs ? ` <small class="tfb-ref">[ص ${toAr(x.p)}]</small>` : ""}</p>`).join("")}</section>`).join("")}
+      <footer class="tfb-end"><p>— تم بحمد الله —</p><p class="mut">${esc(SITENAME)} • dawahlibrary.org • أُعدّت هذه النسخة في ${esc(d.built || "")}</p></footer>`;
+    const u = o => "#/tfbook/" + encodeURIComponent(id) + "?" + new URLSearchParams(Object.assign({ v, ref: refs ? "1" : "" }, o)).toString().replace(/&?ref=(&|$)/, "$1");
+    view(`<p><a href="#/tafrighat">← التفريغات</a></p>
+      <div class="row tfbtools"><div class="seg" role="radiogroup"><a role="radio" aria-checked="false" href="#/book/${esc(id)}/1">كما رُفع</a><a role="radio" aria-checked="${v === "f"}" href="${u({ v: "f" })}">منسَّق ومدقَّق</a><a role="radio" aria-checked="${v === "r"}" href="${u({ v: "r" })}">بأسلوب كتابي</a></div>
+       <a class="btn s" href="${u({ ref: refs ? "" : "1" })}">${refs ? "إخفاء" : "إظهار"} صفحات الأصل</a><button class="btn p s" data-tfb="pdf">طباعة / PDF</button><button class="btn s" data-tfb="doc">Word</button>${b.pdf ? `<a class="btn s" href="#/book/${esc(id)}/1">المصورة كما رُفعت</a>` : ""}</div>
+      <article class="tfbook" id="tfbook">${html}</article>`);
+    window.__tfb = { html, title, v };
+  }
+  const TFB_CSS = `@page{size:A5;margin:18mm 15mm 18mm}body{font-family:Amiri,'Traditional Arabic',serif;font-size:13.5pt;line-height:1.95;color:#111;direction:rtl}
+    .tfb-title{text-align:center;page-break-after:always;padding-top:45mm}.tfb-title h1{font-size:26pt;color:#0f5c4d;margin:10mm 0 4mm}.tfb-site{color:#7a6a4a}.tfb-au{font-size:16pt}.tfb-sub{color:#0f5c4d}.tfb-src{font-size:10pt;color:#555}
+    .tfb-note{page-break-after:always;font-size:11.5pt}.tfb-toc{page-break-after:always}.tfb-toc ol{line-height:2.1}.tfb-toc a{color:#111;text-decoration:none}
+    .tfb-ch{page-break-before:always}.tfb-ch h2{color:#0f5c4d;text-align:center;border-bottom:1px solid #b88a2e;padding-bottom:3mm}.tfb-ch p{text-align:justify;text-indent:1.5em;margin:0 0 2mm}.tfb-ref{color:#998;font-size:8pt}.tfb-end{text-align:center;margin-top:12mm}`;
+  document.addEventListener("click", async e => {
+    const g = e.target.closest("[data-tfgo]"); if (g) { e.preventDefault(); const t = document.getElementById(g.dataset.tfgo); if (t) t.scrollIntoView({ behavior: "smooth" }); return; }
+    const q0 = e.target.closest("[data-tfq]"); if (q0) { e.preventDefault(); try { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); await GH.editJSON("data/tfedit/_queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = [{ id: q0.dataset.tfq }].concat(o.items.filter(x => (x.id || x) !== q0.dataset.tfq)); return o; }, "تجهيز تفريغ: " + q0.dataset.tfq); toast("أُضيف في أول الطابور"); } catch (x) { toast(x.message); } return; }
+    const el = e.target.closest("[data-tfb]"); if (!el || !window.__tfb) return; e.preventDefault(); const T_ = window.__tfb;
+    const doc = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(T_.title)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap"><style>${TFB_CSS}</style></head><body>${T_.html}`;
+    if (el.dataset.tfb === "pdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة"); w.document.write(doc + `<script>onload=()=>setTimeout(()=>print(),700)<\/script></body></html>`); w.document.close(); }
+    else dl((T_.title || "tafrigh").replace(/[\\/:*?"<>|]+/g, " ").slice(0, 80) + ".doc", doc.replace("<html", '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"') + "</body></html>", "application/msword");
+  });
+  return { view: open, tahrir, tfReader, tfBook, layout, draw };
 })();
