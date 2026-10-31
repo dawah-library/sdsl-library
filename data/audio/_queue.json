@@ -89,6 +89,12 @@
    "voice": "gemini:Enceladus",
    "rate": "-5%",
    "force": 1
+  },
+  {
+   "id": "aclamsalaf",
+   "voice": "gemini:Enceladus",
+   "rate": "-5%",
+   "force": 1
   }
  ]
 }
