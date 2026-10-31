@@ -278,3 +278,9 @@
 - **التخريج:** tools/takhrij.py <كتاب> → data/takhrij/<كتاب>.json؛ الحقل tkh في الفهرس يُظهر الرابط؛ #/takhrij/<كتاب>. علو الهمة: ٦٩ حديثًا، وُجدت ٥٢.
 - **مطابقة المصورة:** tools/pdf-match.py + pdf-match.yml (أسبوعيًّا وعند تعديله): يجلب المصورة بـ OIDC، يقارن عينة صفحات (pdftotext أو Tesseract)، يصحح pdfOffset ويضيف الضعيفة إلى unrev. التقرير tools/match-report.md.
 - **فيسبوك:** حسابات type=facebook في sources.json من «مراجعة المستجلب»؛ fbDiscover عبر Graph API برمز السر FB_TOKENS (JSON) أو FB_PAGE_TOKEN؛ والحسابات الشخصية يدويًّا (نموذج mgfbpost). التفاصيل tools/facebook-sources.md.
+
+## ٣١ أكتوبر (عصرًا): الطلائع والإثرائي والمطابقة
+- **الطلائع:** تعريف «من نحن وماذا نريد» (مقال مصطفى دياب، النص في tools/pages/talaea-intro.txt)، وقسما البنين والفتيات (GEN في tala.js: m قدوات، sk/act لكل مرحلة، tp أقسام المقالات)، والقسم الحالي SX_ من معامل s أو ملف الطفل g. الإلحاق التلقائي autoTala(b) وقت العرض (لا بيانات تُكتب): الوسم tala:tN/tala:g|b من نماذج الرفع، أو القسم st7/at9، أو العنوان (KID_RX/TEEN_RX/YOUTH_RX/GIRL_RX)، أو الكاتب w5؛ ويُستبعد ADULT_RX والفتاوى والمكتبة العامة وما في planHide.
+- **الإثرائي كامل:** lic فارغ لسلف والفرقان؛ source-import.js يرقّي ما نُشر ملخصًا إلى نصه الكامل (wp-json أو الصفحة)، وithra-publish.py ينشر الجديد كاملًا.
+- **أداة جلب صفحة:** page-text.yml (workflow_dispatch: url, name) → tools/pages/<name>.txt للمواقع المحجوبة عن الجلسة.
+- **المطابقة:** نجح التشغيل الثاني (ترويسة متصفح). كل الكتب بلا إزاحة؛ «الجامع لأحكام الصيام» تطابقه ١٥٪ فأُحيلت صفحاته كلها إلى unrev.

@@ -1171,7 +1171,7 @@ async function pdfUpload(file,base,cfg,say){say=say||(()=>{});
 async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(x=>x&&x.size),st=$("#pdfst");if(!files.length)return;
  const big=files.filter(x=>x.size>45*1048576);if(big.length){st.textContent="ملفات أكبر من 45 ميجابايت: "+big.map(x=>x.name).join("، ")+". قسّمها أو ارفعها إلى مجلد ocr-inbox مباشرة.";return}
  const btn=f.querySelector("button");btn.disabled=true;const done=[],link=files.length===1?fd.get("book"):"";
- const tags=[];if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
+ const tags=talaTags(fd);if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
  let author0=String(fd.get("author")||"");if(author0==="__new")author0=String(fd.get("authornew")||"").trim();else if(author0)author0=A(author0).name;
  try{for(let i=0;i<files.length;i++){const file=files[i],nm=file.name.replace(/\.pdf$/i,"").replace(/[_]+/g," ").trim(),parts=nm.split(/\s+-\s+/);
    st.textContent=`جارٍ رفع ${files.length>1?"الكتاب "+toAr(i+1)+" من "+toAr(files.length)+": ":""}${nm}…`;
@@ -1226,6 +1226,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <div class="row"><div><label>تقسيم الصفحات</label><select name="split"><option value="mark">عند السطر ----- أو فاصل الصفحة</option><option value="auto">تلقائيًا بالحجم</option></select></div><div><label>حجم الصفحة التلقائي (حرف)</label><input name="size" type="number" value="1800"></div></div>
   <label>الفهرس (سطر لكل عنوان: العنوان|رقم الصفحة)</label><textarea name="toc" style="min-height:60px"></textarea>
   <div class="row"><div><label>رابط النسخة المصورة PDF (اختياري)</label><input name="pdf" type="url" placeholder="https://archive.org/download/…/book.pdf" dir="ltr"></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div>
+  <fieldset class="secs"><legend>موجّه للطلائع (٥–٢٠ سنة)؟ يظهر في قسم الطلائع</legend>${[["t1","٥–٧"],["t2","٨–١٠"],["t3","١١–١٣"],["t4","١٤–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <label class="inl"><input type="checkbox" name="tafrigh" value="1"> هذا تفريغ لدروس صوتية</label><label>ضمن «قضايا الفرقان» (اختياري)</label><select name="furqan"><option value="">—</option>${FURQAN.map(([n])=>`<option>${esc(n)}</option>`).join("")}</select>
   <button class="btn p" style="margin-top:10px">حفظ الكتاب</button></form>`;
  else if(tab==="tafrigh")body=`<p class="mut">ارفع تفريغات الدروس والشروح الصوتية فتُجهَّز وتُنسب إلى الشيخ وتظهر في <a href="#/tafrighat">التفريغات</a> وفي صفحة الشيخ. يقبل Word (.docx) والنص (.txt) وملفات الترجمة النصية للمقاطع (.srt/.vtt)، أو لصق النص.</p>
@@ -1241,6 +1242,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
  else if(tab==="article")body=`<form data-form="addart"><label>عنوان المقال</label><input name="title" required>
   <div class="row"><div><label>الكاتب</label>${authSel("aid","dawah")}</div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for==="articles"))}</select></div><div><label>تاريخ النشر</label><input name="date" type="date" value="${today()}"></div></div>
   <label>رابط المصدر (اختياري)</label><input name="url" type="url" placeholder="https://salafvoice.com/article.aspx?a=…">
+  <fieldset class="secs"><legend>موجّه للطلائع (٥–٢٠ سنة)؟ يظهر في قسم الطلائع</legend>${[["t1","٥–٧"],["t2","٨–١٠"],["t3","١١–١٣"],["t4","١٤–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <label>نص المقال</label><textarea name="text" required style="min-height:220px"></textarea><p class="mut">السطر الذي يبدأ بـ «# » يظهر عنوانًا فرعيًا.</p><button class="btn p">حفظ المقال</button></form>`;
  else if(tab==="pdf")body=GH.on?`<p class="mut">ارفع ملف PDF لكتاب مصور، فيُحفظ في المكتبة وتُتاح نسخته المصورة في القارئ، ويُحوَّل إلى نص آليًا على خوادم GitHub. والنص الآلي يحتاج مراجعة، ويمكن تصحيحه من القارئ بزر «تعديل النص».</p>
   <form data-form="ghpdf"><label>ملفات PDF (يمكن اختيار عدة كتب معًا، حتى 45 ميجابايت للملف)</label><input type="file" name="file" accept="application/pdf,.pdf" multiple required>
@@ -1292,10 +1294,12 @@ function splitPages(t,mode,size){t=t.replace(/\r/g,"").trim();if(mode==="mark")r
  const ps=[];let cur="";t.split(/\n+/).forEach(par=>{if(cur&&(cur+par).length>size){ps.push(cur.trim());cur=""}cur+=par+"\n"});if(cur.trim())ps.push(cur.trim());return ps}
 async function saveItem(meta,pages,toc){if(GH.on)return ghSaveBook(meta,pages,toc);LOCAL.catalog.books=byId(LOCAL.catalog.books,[Object.assign(meta,{n:pages.length,size:JSON.stringify(pages).length,added:meta.added||new Date().toISOString()})]);
  LOCAL.shards[meta.id]={id:meta.id,pages,toc:toc||[]};await DB.set("local",LOCAL);SH.delete(meta.id);merge();renderTicker()}
+// وسم «موجّه للطلائع» عند الرفع: tala:t1…t4 مع tala:b/tala:g للبنين أو الفتيات (يقرؤه قسم الطلائع)
+const talaTags=fd=>{const t=fd.getAll("tala").map(k=>"tala:"+k);if(t.length&&fd.get("talag"))t.push("tala:"+fd.get("talag"));return t};
 async function addBook(f){const fd=new FormData(f);try{let text=String(fd.get("text")||"");const file=fd.get("file");if(file&&file.size)text=await file.text();if(!text.trim())throw new Error("أدخل نص الكتاب");
  const col=fd.get("col"),aid=await newAuthor(fd,"aid",col),pages=splitPages(text,fd.get("split"),+fd.get("size")||1800);
  const toc=String(fd.get("toc")||"").split("\n").map(l=>l.split("|")).filter(x=>x[0]&&+x[1]).map(x=>({t:x[0].trim(),p:+x[1]}));
- const tags=[];if(fd.get("tafrigh"))tags.push("tafrigh");if(fd.get("furqan"))tags.push("furqan:"+fd.get("furqan"));const meta={id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col,type:"book",source:String(fd.get("source")||"")};
+ const tags=talaTags(fd);if(fd.get("tafrigh"))tags.push("tafrigh");if(fd.get("furqan"))tags.push("furqan:"+fd.get("furqan"));const meta={id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col,type:"book",source:String(fd.get("source")||"")};
  if(tags.length)meta.tags=tags;if(fd.get("pdf")){meta.pdf=String(fd.get("pdf")).trim();meta.pdfOffset=+fd.get("off")||0}
  if(!dupOk(meta.title,aid,false))return;
  await saveItem(meta,pages,toc);
@@ -1345,7 +1349,7 @@ async function addTafrigh(f){const fd=new FormData(f),st=$("#tfgst");try{const R
  st.textContent="";alert(`حُفظ ${R.length>1?R.length+" دروس":"التفريغ"} في «التفريغات» ✓`);f.reset();$("#tfgpv").innerHTML=""}catch(e){st.textContent="";alert(e.message)}}
 async function addArticle(f){const fd=new FormData(f);try{const text=String(fd.get("text")||"").trim();if(!text)throw new Error("أدخل نص المقال");const aid=await newAuthor(fd,"aid","dawah");if(!dupOk(fd.get("title"),aid,true))return;
  const pages=text.length>7000?splitPages(text,"auto",5000):[text];
- await saveItem({id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col:"dawah",type:"article",date:fd.get("date")||today(),url:String(fd.get("url")||"")},pages,[]);
+ await saveItem(Object.assign({id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col:"dawah",type:"article",date:fd.get("date")||today(),url:String(fd.get("url")||"")},talaTags(fd).length?{tags:talaTags(fd)}:{}),pages,[]);
  alert("تم حفظ المقال");f.reset()}catch(e){alert(e.message)}}
 function matchAuthor(name){if(!name)return"";const n=norm(name).replace(/^(الشيخ|د\.?|الدكتور|م\.?|أ\.?)\s*/,"");return(lib.authors.find(a=>norm(a.name).includes(n)||n.includes(norm(a.name).replace(/^الشيخ\s*/,"")))||{}).id||""}
 function matchTopic(cat){if(!cat)return"at1";const parts=String(cat).split(/[›>\/|]/).map(s=>norm(s.trim())).reverse();for(const p of parts){const t=lib.topics.find(t=>t.for==="articles"&&norm(t.name)===p);if(t)return t.id}return"at1"}

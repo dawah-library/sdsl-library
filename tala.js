@@ -30,7 +30,7 @@ const TALA = (() => {
       <h3>سُلّم القراءة</h3><p class="mut">كتب ومقالات مختارة من المكتبة لكل مرحلة، مرتبة مستويات من الأسهل إلى الأصعب، ولكل قراءة سؤال تأمل ونجوم.</p><div class="talag">${D.tracks.map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/ladder?k=${k}"><i aria-hidden="true">📚</i><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
       <p><a class="btn" href="#/talaea/parents">👪 ركن الوالدين: المنهجية ومتابعة القراءة</a></p>
       <h3>الألعاب التعليمية</h3><div class="talag">${GAMES.map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
-      <h3>مكتبة الطلائع</h3>${kidBooks("").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
+      <h3>مكتبة الطلائع</h3><p class="mut">${D.tracks.map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks("").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
       <p class="note">إلى الوالدين: هذا القسم بلا إعلانات ولا روابط خارجية ولا تعليقات أو مراسلة، ونجوم الطفل تُحفظ على هذا الجهاز وحده. نص القرآن الكريم في الألعاب من مصحف المكتبة دون تغيير.</p></div>`);
   }
   const view_ = h => view(h);
@@ -42,6 +42,7 @@ const TALA = (() => {
      <h3>🎮 ألعاب تناسب هذه المرحلة</h3><div class="talag">${gamesFor(t[0]).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}${sq}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
      ${sg && t[0] !== "t1" ? (() => { const L = lib.books.filter(b => isArt(b) && !b.hidden && GEN[sg].tp.some(tp => inTopic(b, tp)) && (b.n || 9e9) < (t[0] === "t2" ? 2500 : 6000)).slice(-24).reverse(); return L.length ? `<h3>📰 مقالات ${esc(GEN[sg].n)}</h3><div class="list">${L.map(bookCard).join("")}</div>` : ""; })() : ""}
      ${(() => { const r = ((PLc && PLc.reads) || {})[t[0]] || []; return r.length ? `<h3>📰 مقالات للطلائع</h3><p class="mut">مقالات كُتبت للفتيان أنفسهم: «فتية الإسلام» وكتّاب الناشئة.</p><div class="list">${r.map(id => B(id)).filter(Boolean).slice(0, 30).map(bookCard).join("")}</div>` : ""; })()}
+     ${autoBlock(t[0], sg)}
      <h3>كتب وقصص المسار</h3>${bs.map(bookCard).join("") || '<div class="note">لم تُضف كتب لهذا المسار بعد.</div>'}</div>`);
   }
   // ---------- الألعاب ----------
@@ -88,6 +89,27 @@ const TALA = (() => {
   };
   let SX_ = ""; const sx = () => SX_; // قسم البنين/الفتيات الحالي: من معامل الصفحة s، وإلا من ملف الطفل
   const models = s => GEN[s] ? `<h3>${GEN[s].ic} قدواتنا</h3><div class="talask">${GEN[s].m.map(([n, d]) => `<div><b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}</div>` : "";
+
+  // ---------- الإلحاق التلقائي بالطلائع: كل كتاب أو مقال أو بحث يُرفع أو يُستورد ويناسب سن ٥–٢٠ يظهر في مرحلته فورًا ----------
+  // من مكتبة الدعوة ومصادر المكتبة الرئيسية؛ بالقسم («فتية الإسلام»، «شبابنا»…) أو كاتب الطلائع (مصطفى دياب) أو العنوان الموجّه للصغار والطلاب والفتيات،
+  // أو بوسم الإدارة tala:tN عند الرفع. تُستبعد الفتاوى وما في قائمة الاستبعاد (D.planHide من «إدارة الطلائع»)، وما كُتب للآباء يبقى في ركن الوالدين.
+  const KID_RX = /للأطفال|للصغار|يا صغيري|طفلي الصغير|حكاية|قصة للأطفال|قصص للأطفال/, TEEN_RX = /فتية|الفتيان|الناشئ|أعلام في زمن الصبا|(^|\s)(الطلاب|طلاب المدارس|الطالب|يا طالب)(\s|$|[.!؟،])|الامتحان|المذاكرة|الثانوية|الإجازة الصيفية|تحت العشرين|الطلائع|المراهق|يا بني|يا بنيّ/,
+    YOUTH_RX = /الشباب|شبابنا|يا شباب|أيها الشاب|شاب /, GIRL_RX = /^(إلى|رسالة إلى|يا)\s*(أختي|الفتاة|فتاة|بنتي|ابنتي|الفتيات)|أختي (الفتاة|المسلمة|الحبيبة|الصغيرة)|للفتيات|يا فتاة/, ADULT_RX = /قانون|الزنا|حزب|انتخاب|البرلمان|التكفير|النسوية|بيان|تطالب|محاكمة|الحراك|جرائم|الشذوذ|الطلاق|الزواج العرفي|غزة رمز/, PARENT_RX = /تربية|الآباء|الوالدين|الأم |أولادنا|أبنائنا|المربي|معلم/;
+  function autoTala(b) {
+    if (!b || b.hidden || (D.planHide || []).includes(b.id) || kindOf(b) === "fatwa" || kindOf(b) === "statement" || bc(b) === "turath") return null;
+    const tg = (b.tags || []).filter(t => /^tala:t\d$/.test(t)).map(t => t.slice(5)); if (tg.length) return { k: tg, g: (b.tags || []).includes("tala:g") ? "g" : (b.tags || []).includes("tala:b") ? "b" : "" };
+    const t = b.title || "", tp = b.topicId, girl = GIRL_RX.test(t) || (b.tags || []).includes("tala:g");
+    if (ADULT_RX.test(t)) return null;
+    if ((PARENT_RX.test(t) && !TEEN_RX.test(t)) || /إلى (معلمي|الآباء|الأمهات|المربين|أولياء|الوالدين)|المربي|تربية (الأبناء|الأولاد|الطفل)/.test(t)) return null;
+    let k = null;
+    if (tp === "st7") k = ["t3", "t4"]; else if (tp === "at9") k = ["t4"];
+    else if (KID_RX.test(t)) k = ["t1", "t2"]; else if (TEEN_RX.test(t)) k = ["t3", "t4"]; else if (YOUTH_RX.test(t) || girl) k = ["t4"];
+    else if (b.authorId === "w5" && tp !== "at8" && tp !== "at10") k = ["t3", "t4"];
+    return k ? { k, g: girl ? "g" : "" } : null;
+  }
+  const autoList = (k, sg) => lib.books.filter(b => { const r = autoTala(b); return r && r.k.includes(k) && (!r.g || !sg || r.g === sg); }).filter(b => !VOL2(b)).sort((a, b) => (b.date || b.added || "").localeCompare(a.date || a.added || ""));
+  const autoBlock = (k, sg) => { const L = autoList(k, sg); if (!L.length) return ""; const bk = L.filter(b => kindOf(b) === "book"), ar = L.filter(b => kindOf(b) !== "book");
+    return `<h3>📚 من مكتبة الدعوة للطلائع <span class="mut">(${toAr(L.length)})</span></h3><p class="mut">كتب ومقالات وبحوث موجّهة لهذه السن، تُضاف هنا تلقائيًّا كلما رُفعت أو استُوردت.</p>${bk.map(bookCard).join("")}<div class="list">${ar.slice(0, 40).map(bookCard).join("")}</div>${ar.length > 40 ? `<details><summary>المزيد (${toAr(ar.length - 40)})</summary><div class="list">${ar.slice(40).map(bookCard).join("")}</div></details>` : ""}`; };
   // ---------- ملف كل مرحلة عمرية: المهارات المستهدفة، والأنشطة الأسبوعية، والألعاب المناسبة بصعوبتها، والكتب ----------
   // الألعاب على أنماط مواقع الألعاب التعليمية الكبرى (المطابقة، البحث عن الكلمات، المسابقات، الترتيب، الذاكرة) بمحتوى شرعي موثق.
   const STG = {
@@ -244,7 +266,7 @@ const TALA = (() => {
      <form data-form="talasave"><h3>المسارات العمرية</h3>${D.tracks.map(([k, n, a], i) => `<div class="row"><input name="tn${i}" value="${esc(n)}" aria-label="اسم المسار"><input name="ta${i}" value="${esc(a)}" aria-label="العمر"><input name="tb${i}" value="${esc(((D.books || {})[k] || []).join(" "))}" placeholder="معرّفات الكتب مفصولة بمسافة" aria-label="كتب المسار"></div>`).join("")}
      <h3>أسئلة «صح أم خطأ» (${toAr((D.facts || []).length)})</h3><p class="mut">سطر لكل سؤال بالصيغة: المعلومة | صح أو خطأ | الشرح</p>
      <textarea name="facts" rows="12" style="width:100%">${esc((D.facts || []).map(f => [f.q, f.a ? "صح" : "خطأ", f.why || ""].join(" | ")).join("\n"))}</textarea>
-     <h3>استبعاد من سُلّم القراءة</h3><p class="mut">معرّفات مقالات أو كتب لا تناسب الأطفال (مفصولة بمسافة)؛ يُعاد بناء السلم آليًا (tools/tala-curate.py) بعد الحفظ.</p><textarea name="hide" rows="2" style="width:100%">${esc((D.planHide || []).join(" "))}</textarea>
+     <h3>استبعاد من سُلّم القراءة ومن الإلحاق التلقائي</h3><p class="mut">معرّفات مقالات أو كتب لا تناسب الأطفال (مفصولة بمسافة)؛ يُعاد بناء السلم آليًا (tools/tala-curate.py) بعد الحفظ.</p><textarea name="hide" rows="2" style="width:100%">${esc((D.planHide || []).join(" "))}</textarea>
      <div class="savebar"><button class="btn p">حفظ</button> <span id="talast" class="mut"></span></div></form>`;
   }
   document.addEventListener("submit", async e => {
@@ -314,5 +336,5 @@ const TALA = (() => {
   });
   document.addEventListener("change", e => { const el = e.target.closest("[data-act=talatrack]"); if (!el) return; const x = kids().find(y => y.id === el.dataset.id); if (x) { x.track = el.value; saveS(); toast("تغيّرت المرحلة."); } });
 
-  return { view: show, admin };
+  return { view: show, admin, autoTala };
 })();
