@@ -58,6 +58,9 @@ def catalog():
 FN = re.compile(r"^\s*_{4,}\s*$", re.M)
 
 
+LEX = []
+
+
 def clean(t):
     """نص الصفحة كما يُقرأ: بلا حواشٍ ولا علامات تنسيق ولا أرقام إحالات."""
     t = str(t or "")
@@ -69,6 +72,8 @@ def clean(t):
     t = re.sub(r"\[(?:مخطوط|رسم[^\]]*|جدول[^\]]*|صورة[^\]]*)\]", " ", t)
     t = re.sub(r"^#+\s*", "", t, flags=re.M)
     t = t.replace("**", "").replace("ﷺ", " صلى الله عليه وسلم ").replace("ﷻ", " جل جلاله ")
+    for w, r in LEX:  # قاموس النطق من الإدارة (data/audio/_lexicon.json): كلمة كاملة ← نطقها
+        t = re.sub(r"(?<![\u0621-\u064A])" + re.escape(w) + r"(?![\u0621-\u064A])", r, t)
     t = re.sub(r"[﴿﴾{}]", " ", t)
     t = re.sub(r"\(\s*[\d٠-٩]{1,3}\s*\)", " ", t)  # أرقام الحواشي
     t = re.sub(r"^\s*[-–—]?\s*[\d٠-٩]{1,4}\s*[-–—]?\s*$", "", t, flags=re.M)  # أرقام الصفحات المنفردة
@@ -407,12 +412,37 @@ async def samples():
     log("عينات الأصوات:", len(done), "جديدة من", len(names))
 
 
+def del_book(it, lst):
+    """حذف الكتاب المسموع (من الإدارة): إصداره وملف بيانه وسطره في القائمة؛ ثم إعادة تسجيله (redo) أو استبعاده من التلقائي."""
+    bid = it["id"]
+    gh("release", "delete", "audio-" + bid, "-R", REPO, "--yes", "--cleanup-tag", check=False)
+    p = os.path.join(AUD, bid + ".json")
+    if os.path.exists(p):
+        os.remove(p)
+    lst.pop(bid, None)
+    jsave(os.path.join(AUD, "_list.json"), lst)
+    sp = os.path.join(AUD, "_settings.json"); st = jload(sp, {}); skip = set(st.get("skip") or [])
+    if it.get("redo"):
+        skip.discard(bid)
+        it.clear(); it.update({"id": bid})  # يبقى في الطابور فيُسجَّل من جديد بالصوت الافتراضي
+        REPORT.append("%s: حُذف التسجيل ويُعاد تسجيله" % bid)
+        st["skip"] = sorted(skip); jsave(sp, st)
+        commit("صوتيات: حذف «%s» لإعادة تسجيله" % bid)
+        return False
+    skip.add(bid); st["skip"] = sorted(skip); jsave(sp, st)
+    REPORT.append("%s: حُذف التسجيل" % bid)
+    commit("صوتيات: حذف «%s»" % bid)
+    return True
+
+
 async def main():
     os.makedirs(AUD, exist_ok=True)
     if os.environ.get("TTS_SAMPLES"):
         return await samples()
     global VOICE
     VOICE = jload(os.path.join(AUD, "_settings.json"), {}).get("voice") or VOICE  # الصوت الافتراضي الذي تختاره الإدارة
+    global LEX
+    LEX = [x for x in jload(os.path.join(AUD, "_lexicon.json"), {}).get("words", []) if len(x) == 2 and x[0]]
     qp = os.path.join(AUD, "_queue.json")
     q = jload(qp, {"items": []})
     lst = jload(os.path.join(AUD, "_list.json"), {})
@@ -423,7 +453,8 @@ async def main():
     if os.environ.get("TTS_AUTO") == "1" and not only:  # التحويل التلقائي (قرار المدير ٣١ أكتوبر): كتب مكتبة الدعوة أولًا، الأقصر فالأطول، ثم المختار من المكتبة العامة
         cat = catalog(); have = {i["id"] for i in items}
         pick = set(jload(os.path.join(AUD, "_auto.json"), {}).get("turath") or [])
-        cands = [b for b in cat["books"] if not b.get("hidden") and not b.get("demo") and b.get("type", "book") == "book" and not b.get("vf") and b["id"] not in have
+        skip = set(jload(os.path.join(AUD, "_settings.json"), {}).get("skip") or [])
+        cands = [b for b in cat["books"] if b["id"] not in skip and not b.get("hidden") and not b.get("demo") and b.get("type", "book") == "book" and not b.get("vf") and b["id"] not in have
                  and ((b.get("col") or "dawah") == "dawah" or b["id"] in pick) and not (lst.get(b["id"], {}).get("n") and lst[b["id"]].get("n", 0) >= lst[b["id"]].get("of", 1))]
         cands.sort(key=lambda b: (0 if (b.get("col") or "dawah") == "dawah" else 1, b.get("n") or 9999))
         items += [{"id": b["id"]} for b in cands[:int(os.environ.get("TTS_AUTO_BOOKS", "6"))]]
@@ -435,7 +466,7 @@ async def main():
             left_items.append(it)
             continue
         try:
-            ok = rec_book(it, lst) if it.get("rec") else await tts_book(it, lst)
+            ok = del_book(it, lst) if it.get("del") else rec_book(it, lst) if it.get("rec") else await tts_book(it, lst)
         except Exception as e:
             log("خطأ في", it.get("id"), e)
             REPORT.append("%s: خطأ — %s" % (it.get("id"), str(e)[:160]))
