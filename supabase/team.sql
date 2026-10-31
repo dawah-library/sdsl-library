@@ -36,6 +36,9 @@ create table if not exists public.team_posts (
   created_at timestamptz not null default now()
 );
 create index if not exists team_posts_thread on public.team_posts (thread_id, created_at);
+create index if not exists team_posts_user_idx on public.team_posts (user_id);
+create index if not exists team_threads_assignee_idx on public.team_threads (assignee);
+create index if not exists team_threads_created_by_idx on public.team_threads (created_by);
 
 -- سجل القرارات والتعديلات الإدارية (لا يُعدَّل ولا يُحذف من الواجهة)
 create table if not exists public.team_audit (
@@ -59,9 +62,9 @@ alter table public.team_audit enable row level security;
 drop policy if exists "team threads read" on public.team_threads;
 create policy "team threads read" on public.team_threads for select using (public.team_sees(team_threads));
 drop policy if exists "team threads insert" on public.team_threads;
-create policy "team threads insert" on public.team_threads for insert with check (public.is_staff() and created_by = auth.uid() and (members is null or auth.uid() = any(members)));
+create policy "team threads insert" on public.team_threads for insert with check (public.is_staff() and created_by = (select auth.uid()) and (members is null or (select auth.uid()) = any(members)));
 drop policy if exists "team threads update" on public.team_threads;
-create policy "team threads update" on public.team_threads for update using (public.team_sees(team_threads) and (created_by = auth.uid() or assignee = auth.uid() or public.is_admin()))
+create policy "team threads update" on public.team_threads for update using (public.team_sees(team_threads) and (created_by = (select auth.uid()) or assignee = (select auth.uid()) or public.is_admin()))
   with check (public.is_staff());
 drop policy if exists "team threads delete" on public.team_threads;
 create policy "team threads delete" on public.team_threads for delete using (public.is_admin() and public.team_sees(team_threads));
@@ -69,14 +72,14 @@ create policy "team threads delete" on public.team_threads for delete using (pub
 drop policy if exists "team posts read" on public.team_posts;
 create policy "team posts read" on public.team_posts for select using (exists (select 1 from public.team_threads t where t.id = thread_id and public.team_sees(t)));
 drop policy if exists "team posts insert" on public.team_posts;
-create policy "team posts insert" on public.team_posts for insert with check (user_id = auth.uid() and exists (select 1 from public.team_threads t where t.id = thread_id and public.team_sees(t)));
+create policy "team posts insert" on public.team_posts for insert with check (user_id = (select auth.uid()) and exists (select 1 from public.team_threads t where t.id = thread_id and public.team_sees(t)));
 drop policy if exists "team posts delete" on public.team_posts;
-create policy "team posts delete" on public.team_posts for delete using (user_id = auth.uid() or public.is_admin());
+create policy "team posts delete" on public.team_posts for delete using (user_id = (select auth.uid()) or public.is_admin());
 
 drop policy if exists "team audit read" on public.team_audit;
 create policy "team audit read" on public.team_audit for select using (public.is_staff());
 drop policy if exists "team audit insert" on public.team_audit;
-create policy "team audit insert" on public.team_audit for insert with check (public.is_staff() and actor = auth.uid());
+create policy "team audit insert" on public.team_audit for insert with check (public.is_staff() and actor = (select auth.uid()));
 
 -- تحديث وقت النقاش عند الرد، وإشعارات الفريق الداخلية (جرس الإشعارات)
 create or replace function public.team_notify() returns trigger

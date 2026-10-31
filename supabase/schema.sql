@@ -23,7 +23,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 drop policy if exists "profiles read" on public.profiles;
-create policy "profiles read" on public.profiles for select using (id = auth.uid() or public.is_staff());
+create policy "profiles read" on public.profiles for select using (id = (select auth.uid()) or public.is_staff());
 drop policy if exists "profiles admin update" on public.profiles;
 create policy "profiles admin update" on public.profiles for update using (public.is_admin()) with check (public.is_admin());
 
@@ -60,7 +60,7 @@ create table if not exists public.conversations (
 alter table public.conversations enable row level security;
 drop policy if exists "own conversations" on public.conversations;
 create policy "own conversations" on public.conversations for all
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 -- 3) تصحيحات يقترحها القراء
 create table if not exists public.corrections (
@@ -73,9 +73,9 @@ create table if not exists public.corrections (
 );
 alter table public.corrections enable row level security;
 drop policy if exists "corrections insert own" on public.corrections;
-create policy "corrections insert own" on public.corrections for insert with check (auth.uid() = user_id and status = 'pending');
+create policy "corrections insert own" on public.corrections for insert with check ((select auth.uid()) = user_id and status = 'pending');
 drop policy if exists "corrections read" on public.corrections;
-create policy "corrections read" on public.corrections for select using (user_id = auth.uid() or public.is_staff());
+create policy "corrections read" on public.corrections for select using (user_id = (select auth.uid()) or public.is_staff());
 drop policy if exists "corrections staff update" on public.corrections;
 create policy "corrections staff update" on public.corrections for update using (public.is_staff());
 
@@ -91,9 +91,9 @@ alter table public.post_reactions enable row level security;
 drop policy if exists "reactions read" on public.post_reactions;
 create policy "reactions read" on public.post_reactions for select using (true);
 drop policy if exists "reactions own insert" on public.post_reactions;
-create policy "reactions own insert" on public.post_reactions for insert with check (auth.uid() = user_id);
+create policy "reactions own insert" on public.post_reactions for insert with check ((select auth.uid()) = user_id);
 drop policy if exists "reactions own delete" on public.post_reactions;
-create policy "reactions own delete" on public.post_reactions for delete using (auth.uid() = user_id);
+create policy "reactions own delete" on public.post_reactions for delete using ((select auth.uid()) = user_id);
 
 create table if not exists public.post_saves (
   post_id text not null,
@@ -103,7 +103,7 @@ create table if not exists public.post_saves (
 );
 alter table public.post_saves enable row level security;
 drop policy if exists "saves own" on public.post_saves;
-create policy "saves own" on public.post_saves for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "saves own" on public.post_saves for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create table if not exists public.post_comments (
   id bigserial primary key,
@@ -117,9 +117,9 @@ alter table public.post_comments enable row level security;
 drop policy if exists "comments read" on public.post_comments;
 create policy "comments read" on public.post_comments for select using (true);
 drop policy if exists "comments own insert" on public.post_comments;
-create policy "comments own insert" on public.post_comments for insert with check (auth.uid() = user_id);
+create policy "comments own insert" on public.post_comments for insert with check ((select auth.uid()) = user_id);
 drop policy if exists "comments delete" on public.post_comments;
-create policy "comments delete" on public.post_comments for delete using (auth.uid() = user_id or public.is_staff());
+create policy "comments delete" on public.post_comments for delete using ((select auth.uid()) = user_id or public.is_staff());
 create index if not exists post_comments_post on public.post_comments (post_id, created_at);
 
 create or replace view public.post_stats with (security_invoker = true) as
@@ -141,7 +141,7 @@ create table if not exists public.bookmarks (
 );
 alter table public.bookmarks enable row level security;
 drop policy if exists "bookmarks own" on public.bookmarks;
-create policy "bookmarks own" on public.bookmarks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "bookmarks own" on public.bookmarks for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 -- تعليقات القارئ وتظليله الخاص (لا يراها غيره)
 create table if not exists public.notes (
@@ -155,7 +155,7 @@ create table if not exists public.notes (
 );
 alter table public.notes enable row level security;
 drop policy if exists "notes own" on public.notes;
-create policy "notes own" on public.notes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "notes own" on public.notes for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create index if not exists notes_user_book on public.notes (user_id, book_id);
 
 -- مشاريع القراءة (ورد يومي وتذكير)
@@ -171,7 +171,7 @@ create table if not exists public.reading_plans (
 );
 alter table public.reading_plans enable row level security;
 drop policy if exists "plans own" on public.reading_plans;
-create policy "plans own" on public.reading_plans for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "plans own" on public.reading_plans for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 -- إشعارات العضو (تذكير الورد وغيره)
 create table if not exists public.notifications (
@@ -182,11 +182,11 @@ create table if not exists public.notifications (
 );
 alter table public.notifications enable row level security;
 drop policy if exists "notifications own read" on public.notifications;
-create policy "notifications own read" on public.notifications for select using (auth.uid() = user_id);
+create policy "notifications own read" on public.notifications for select using ((select auth.uid()) = user_id);
 drop policy if exists "notifications own update" on public.notifications;
-create policy "notifications own update" on public.notifications for update using (auth.uid() = user_id);
+create policy "notifications own update" on public.notifications for update using ((select auth.uid()) = user_id);
 drop policy if exists "notifications own delete" on public.notifications;
-create policy "notifications own delete" on public.notifications for delete using (auth.uid() = user_id);
+create policy "notifications own delete" on public.notifications for delete using ((select auth.uid()) = user_id);
 
 -- إشعارات عامة يرسلها المشرف لكل الأعضاء
 create table if not exists public.broadcasts (
@@ -212,7 +212,7 @@ create table if not exists public.push_subs (
 );
 alter table public.push_subs enable row level security;
 drop policy if exists "push own" on public.push_subs;
-create policy "push own" on public.push_subs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "push own" on public.push_subs for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 -- =========================================================
 -- 5) اجعل حسابك مديرًا للمكتبة:
@@ -442,4 +442,4 @@ alter table public.study_paths add column if not exists hour_utc int;
 alter table public.study_paths add column if not exists last_sent date;
 alter table public.study_paths enable row level security;
 drop policy if exists "study_paths own" on public.study_paths;
-create policy "study_paths own" on public.study_paths for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "study_paths own" on public.study_paths for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
