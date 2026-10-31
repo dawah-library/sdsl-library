@@ -19,4 +19,8 @@ if miss_m: out.append("ملفات خدمات جديدة لم تُدرج في ا�
 if out:
     open(os.path.join(ROOT, ".about-missing.txt"), "w", encoding="utf-8").write("\n".join(out))
     print("\n".join("::warning::" + x for x in out)); sys.exit(1)
+# فحص بنيوي: كل عنصر في ABOUT_SECS مصفوفة (فاصلة ناقصة بين عنصرين تجعل JavaScript يقرؤهما فهرسة فتتعطل الصفحة)
+import subprocess as _sp
+_r = _sp.run(["node", "-e", "const s=require('fs').readFileSync(process.argv[1],'utf8');const m=s.match(/const ABOUT_SECS = (\\[[\\s\\S]*?\\n\\]);/);const S=eval(m[1]);let b=[];S.forEach(([t,L])=>L.forEach((x,j)=>{if(!Array.isArray(x)||x.length<2)b.push(t+' #'+(j+1))}));if(b.length){console.log(b.join(', '));process.exit(1)}", "about.js"], capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _r.returncode: print("::warning::خلل في بنية ABOUT_SECS (فاصلة ناقصة؟): " + (_r.stdout or _r.stderr).strip()); sys.exit(1)
 print("صفحة التعريف بالمكتبة تشمل كل الخدمات (%d صفحة، %d ملفًا)." % (len(routes), len(mods)))
