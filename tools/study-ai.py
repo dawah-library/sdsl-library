@@ -171,9 +171,7 @@ def quiz_book(bid, cat):
         r = T.gemini(QUIZ_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" (" + toc_title(sh, a) + ")") if toc_title(sh, a) else "",
                                         ne=ne, nm=nm, nh=nh, text=text_of(pages, a, z)[:60000]))
         if not r:
-            if len(T.EXH) >= len(T.KEYS):
-                return None
-            continue
+            return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
         got = []
         for q in r.get("qs", []):
             if not isinstance(q, dict) or not valid(q):
@@ -288,9 +286,7 @@ def summ_book(bid, cat):
             work[key] = None; continue
         r = T.gemini(SUMM_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + toc_title(sh, a)) if toc_title(sh, a) else "", text=txt[:70000]))
         if not r or not r.get("r50"):
-            if len(T.EXH) >= len(T.KEYS):
-                return None
-            continue
+            return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
         st = " ".join(T.norm(" ".join(body(pages[i]) for i in range(a - 1, z))))
         srcg = set()
         tk = st.split()

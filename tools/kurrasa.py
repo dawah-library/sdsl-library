@@ -177,9 +177,7 @@ def build(bid, cat):
             work[key] = None; continue
         r = T.gemini(SEC_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + "، ".join(chap)) if chap else "", text=text[:80000]))
         if not r:
-            if len(T.EXH) >= len(T.KEYS):
-                return None
-            continue
+            return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
         bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x]
         qs = [b for b in bl if b["k"] == "qs"]
         bl = [b for b in bl if b["k"] != "qs"] + qs[:1]  # أسئلة القسم في آخره

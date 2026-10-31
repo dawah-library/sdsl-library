@@ -94,7 +94,7 @@ if GKEYS:  # في التحويل المتوازي يبدأ كل جهاز بمف�
     _k = int(os.environ.get("GEMINI_KEY_START", "0") or 0) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
 GKEY = GKEYS[0] if GKEYS else ""
 KI = [0]
-GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-flash-lite-latest"] if m]
+GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"] if m]  # الأولوية لتجهيز الكتب المصورة: تأخذ حصص نماذج التشجير والاختبارات قبل النموذج الخفيف
 GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
 PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
 - حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.

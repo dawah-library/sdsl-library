@@ -71,6 +71,7 @@ jobs:
           TK_MAX_PAGES: ${{ github.event.inputs.pages || '1200' }}
           TK_MAX_MIN: "300"
           TK_GEMINI_MODEL: "gemini-3.5-flash"   # حصة يومية مستقلة عن التحويل (gemini-flash-latest)
+          TK_PRO_MODEL: "gemini-3.1-pro-preview"   # لا يزاحم مراجعة التحويل (gemini-pro-latest)
         run: python3 tools/tashkeel.py
       - name: الحفظ
         if: always()
