@@ -9,7 +9,7 @@ const V="sdsl-v112",CORE=["./","index.html","style.css","config.js","i18n.js","d
 const DATA="sdsl-data",TTL_DEF=15*60e3,TTL={"/data/posts.json":5*60e3,"/data/fawaid.json":10*60e3};
 const isCore=p=>p==="/"||p==="/index.html"||/^\/(assets|vendor)\//.test(p)||/^\/[a-z0-9-]+\.(js|css|webmanifest)$/.test(p)&&p!=="/sw.js";
 const stamp=async(x)=>{const h=new Headers(x.headers);h.set("x-sw-at",String(Date.now()));return new Response(await x.blob(),{status:x.status,statusText:x.statusText,headers:h})};
-self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(CORE.map(u=>fetch(u).then(x=>x.ok&&c.put(u,x)).catch(()=>{})))));self.skipWaiting()});
+self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(CORE.map(u=>fetch(u,{cache:"reload"}).then(x=>x.ok&&c.put(u,x)).catch(()=>{})))));self.skipWaiting()});
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==DATA).map(x=>caches.delete(x)))).then(()=>clients.claim())));
 self.addEventListener("fetch",e=>{const r=e.request;if(r.method!=="GET")return;const u=new URL(r.url);
  if(u.origin===location.origin){const p=u.pathname;

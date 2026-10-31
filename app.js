@@ -1852,7 +1852,9 @@ async function boot(){if(location.hash.startsWith("#/"))history.replaceState(nul
  merge();
  if(S.seen&&CAT.version&&S.seen!==CAT.version){const b=$("#banner");b.hidden=false;b.textContent="تم تحديث المكتبة بمحتوى جديد."}
  S.seen=CAT.version;saveS();
- if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;location.reload()}});navigator.serviceWorker.register("sw.js").then(r=>r.update&&r.update()).catch(()=>{})}
+ if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;location.reload()}});navigator.serviceWorker.register("sw.js").then(r=>{r.update&&r.update();
+  // التطبيق المثبت على الهاتف يعود من الخلفية دون إعادة تحميل: يُفحص وجود إصدار جديد عند كل عودة (مرة كل ١٠ دقائق على الأكثر)
+  let last=Date.now();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-last>600e3){last=Date.now();try{r.update()}catch(e){}}})}).catch(()=>{})}
  renderTicker();await Auth.init();route()}
 boot();
 
