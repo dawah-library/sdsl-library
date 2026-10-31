@@ -1407,9 +1407,39 @@ function vTarajim(q){q=q||{};const tab=q.t==="aam"?"aam":"dawah",s=(q.q||"").tri
   ${det.length?`<h3>تراجم مفصلة</h3><div class="tgrid">${det.map(a=>{const t=tj(a.id);return`<a class="tcard" href="#/tarjama/${a.id}">${av(a)}<b>${esc(a.name)}</b><p>${esc(t.brief)}</p><em>${countLine(a.id)}</em></a>`}).join("")}</div>`:""}
   ${rest.length?`<h3>مشايخ وكتّاب مكتبة الدعوة</h3><p class="mut">تُستكمل تراجمهم المفصلة تباعًا من مصادر موثقة تراجعها الإدارة.</p><div class="tgrid">${rest.map(([a])=>`<a class="tcard" href="#/author/${a.id}" data-author="${a.id}">${av(a)}<b>${esc(a.name)}</b>${a.bio?`<p>${esc(a.bio.slice(0,160))}</p>`:""}<em>${countLine(a.id)}</em></a>`).join("")}</div>`:""}
   ${!det.length&&!rest.length?'<p class="mut">لا نتائج.</p>':""}<p class="note">${esc(TJ.note||"")}</p>`)}
+ if(tab==="aam"&&q.m!=="lib")return vA3lam(q,tabs);
  const im=lib.authors.filter(a=>a.col==="turath"&&!a.mergedInto&&hit(a)).sort((x,y)=>(parseInt(x.died)||9999)-(parseInt(y.died)||9999));
- view(`<h2>التراجم</h2><p class="mut">أئمة المكتبة العامة مرتبون بسنة الوفاة، ولكل إمام كتبه في المكتبة وترجمته منقولة بنصها من كتب التراجم المحفوظة فيها (سير أعلام النبلاء، وتهذيب التهذيب، والإصابة…). وللبحث في نحو ستين ألف علم وراوٍ: <a href="#/alam">التعريف بالأعلام والرواة</a>.</p>${tabs}
+ view(`<h2>التراجم</h2><p><a href="#/tarajim?t=aam">← موسوعة أعلام المسلمين</a></p><p class="mut">أئمة المكتبة العامة مرتبون بسنة الوفاة، ولكل إمام كتبه في المكتبة وترجمته منقولة بنصها من كتب التراجم المحفوظة فيها (سير أعلام النبلاء، وتهذيب التهذيب، والإصابة…). وللبحث في نحو ستين ألف علم وراوٍ: <a href="#/alam">التعريف بالأعلام والرواة</a>.</p>${tabs}
  <div class="tgrid">${im.map(a=>`<div class="tcard">${av(a)}<b><a href="#/author/${a.id}" data-author="${a.id}">${esc(a.name)}</a></b>${a.died?`<p class="mut">ت ${esc(String(a.died))}${/هـ/.test(a.died)?"":"هـ"}</p>`:""}${a.bio?`<p>${esc(a.bio.slice(0,160))}</p>`:""}<em>${countLine(a.id)}</em><a class="btn s nf" href="#/alam?q=${encodeURIComponent(a.name.replace(/^(الإمام|الحافظ|العلامة|شيخ الإسلام|الشيخ)\s*/,""))}">ترجمته في كتب التراجم</a></div>`).join("")||'<p class="mut">لا نتائج.</p>'}</div>`)}
+/* موسوعة أعلام المسلمين (التراجم العامة): من «سير أعلام النبلاء» مرتبة زمنيًّا بالقرون (بحسب طبقات الذهبي)، أو موضوعيًّا بالفنون،
+   لكل علم ترجمة موجزة بنصها وموضعها، ومراجع للتوسع من كتب التراجم والجرح والتعديل في المكتبة (data/a3lam من tools/a3lam.py). */
+const A3={ix:null,c:new Map()};
+const a3get=async c=>{if(!A3.c.has(c))A3.c.set(c,fetch("data/a3lam/c"+c+".json").then(r=>r.ok?r.json():[]).catch(()=>[]));return A3.c.get(c)};
+const CENT=["","القرن الأول","القرن الثاني","القرن الثالث","القرن الرابع","القرن الخامس","القرن السادس","القرن السابع"];
+async function vA3lam(q,tabs){
+ if(!A3.ix){try{A3.ix=await (await fetch("data/a3lam/_index.json")).json()}catch(e){A3.ix={fields:[],c:{}}}}
+ const F=A3.ix.fields||[],FL=k=>(F.find(x=>x[0]===k)||[k,k])[1],s=(q.q||"").trim(),ws=s?norm(s).split(/\s+/).filter(Boolean):[],c=+q.c||(ws.length?0:1),f=q.f||"",o=q.o==="f"?"f":"t";
+ const u=x=>{const p=new URLSearchParams(Object.assign({t:"aam"},{c:q.c||"",f,o,q:s},x));[...p.keys()].forEach(k=>!p.get(k)&&p.delete(k));return"#/tarajim?"+p};
+ view(`<h2>التراجم</h2>${tabs.replace(/<form[\s\S]*<\/form>/,"")}<p class="mut">موسوعة أعلام المسلمين: ${toAr(Object.values(A3.ix.c).reduce((n,x)=>n+x.n,0))} علمًا من «سير أعلام النبلاء» للذهبي، مرتبين زمنيًّا بطبقاتهم أو موضوعيًّا بفنونهم، ولكل علم ترجمة موجزة بنصها وموضعها، ومراجع للتوسع في كتب التراجم والجرح والتعديل بالمكتبة. <a href="#/tarajim?t=aam&m=lib">أئمة المكتبة العامة ومؤلفاتهم</a> • <a href="#/alam">البحث في ستين ألف علم وراوٍ</a></p>
+ <div class="tabs sub" role="tablist">${[["t","الترتيب الزمني"],["f","الترتيب الموضوعي"]].map(([k,l])=>`<a role="tab" aria-selected="${o===k}" href="${u({o:k})}">${l}</a>`).join("")}</div>
+ <nav class="chips a3c">${CENT.slice(1).map((n,i)=>`<a class="chip${c===i+1?" x":""}" href="${u({c:i+1})}">${n} <small>${toAr((A3.ix.c[i+1]||{}).n||0)}</small></a>`).join("")}<a class="chip${!c?" x":""}" href="${u({c:"",q:s||""})}">كل القرون</a></nav>
+ <nav class="chips a3f"><a class="chip${!f?" x":""}" href="${u({f:""})}">كل الفنون</a>${F.map(([k,l])=>`<a class="chip${f===k?" x":""}" href="${u({f:k})}">${esc(l)}</a>`).join("")}</nav>
+ <form class="stepper" data-form="a3q"><input name="q" type="search" value="${esc(s)}" placeholder="ابحث باسم العلم أو لقبه أو بلده"><button class="btn p">بحث</button></form>
+ <div id="a3l" class="mut">جارٍ التحميل…</div>`);
+ const cs=c?[c]:[1,2,3,4,5,6,7],all=(await Promise.all(cs.map(a3get))).flatMap((L,i)=>L.map(z=>Object.assign({c:cs[i]},z)));
+ let L=all.filter(z=>(!f||z.f.includes(f))&&(!ws.length||ws.every(w=>norm(z.n+" "+z.x).includes(w))));
+ if(ws.length){const sc=z=>{const n=norm(z.n);return(ws.every(w=>n.includes(w))?2:0)+(n.startsWith(ws[0])||n.includes(" "+ws[0])?1:0)};L=L.map(z=>[sc(z),z]).sort((a,b)=>b[0]-a[0]||a[1].c-b[1].c).map(x=>x[1])}
+ const el=$("#a3l");if(!el)return;el.className="";
+ const card=z=>`<div class="a3"><b>${esc(z.n)}</b><div class="a3m">${z.f.filter(x=>x!=="other").map(x=>`<span class="tag">${esc(FL(x))}</span>`).join("")}<span class="mut">${CENT[z.c]} تقريبًا</span></div><p>${esc(z.x)}</p>
+  <div class="a3r"><span class="mut">مراجع للتوسع:</span> <a href="#/book/${esc(z.b)}/${z.p}">سير أعلام النبلاء ${esc(z.pl||"")}</a>${(z.r||[]).map(r=>` • <a href="#/book/${esc(r[1])}/${r[2]}">${esc(r[0].replace(/ ل.*$/,""))} ${esc(r[3]||"")}</a>`).join("")} • <a href="#/alam?q=${encodeURIComponent(z.n)}">كل ما ورد عنه في المكتبة</a>${A3D?` • <a href="${A3D(z.n)}" target="_blank" rel="noopener">ترجمته في الدرر السنية ↗</a>`:""}</div></div>`;
+ const PER=60,pg=Math.max(1,+q.pg||1),pages=Math.ceil(L.length/PER);
+ let body;
+ if(o==="f"){const g=new Map();L.forEach(z=>{const k=z.f[0];if(!g.has(k))g.set(k,[]);g.get(k).push(z)});body=[...g.entries()].sort((a,b)=>F.findIndex(x=>x[0]===a[0])-F.findIndex(x=>x[0]===b[0])).map(([k,l])=>`<details class="a3g"${f||ws.length?" open":""}><summary><b>${esc(FL(k))}</b> <span class="mut">(${toAr(l.length)})</span></summary>${l.slice(0,f||ws.length?400:40).map(card).join("")}${l.length>(f||ws.length?400:40)?`<p><a class="btn s" href="${u({f:k})}">عرض الكل</a></p>`:""}</details>`).join("")}
+ else body=L.slice((pg-1)*PER,pg*PER).map((z,i,arr)=>(i===0||arr[i-1].c!==z.c?`<h3 class="a3h">${CENT[z.c]}</h3>`:"")+card(z)).join("")+(pages>1?`<div class="pgn">${pg>1?`<a class="btn s" href="${u({pg:pg-1})}">السابقة</a>`:""}<span class="mut">صفحة ${toAr(pg)} من ${toAr(pages)}</span>${pg<pages?`<a class="btn s" href="${u({pg:pg+1})}">التالية</a>`:""}</div>`:"");
+ el.innerHTML=`<p class="mut">${toAr(L.length)} علمًا${c?" في "+CENT[c]:""}${f?" • "+esc(FL(f)):""}. القرن تقريبي بحسب طبقات الذهبي، والمراجع الإضافية مطابقة بالاسم فتُراجع.</p>`+(body||'<p class="mut">لا نتائج.</p>')}
+// الدرر السنية ترفض الجلب الآلي (403)، فالرابط بحث عن العلم داخل موقعها يفتحه القارئ بنفسه
+const A3D=n=>"https://www.google.com/search?q="+encodeURIComponent("site:dorar.net "+n.split(" ").slice(0,5).join(" "));
+document.addEventListener("submit",e=>{const f=e.target;if(!f.dataset||f.dataset.form!=="a3q")return;e.preventDefault();e.stopImmediatePropagation();const v=f.q.value.trim();location.hash="#/tarajim?t=aam"+(v?"&q="+encodeURIComponent(v):"")},true);
 document.addEventListener("submit",e=>{const f=e.target;if(!f.dataset||f.dataset.form!=="tjq")return;e.preventDefault();e.stopImmediatePropagation();const p=new URLSearchParams();if(f.t.value==="aam")p.set("t","aam");if(f.q.value.trim())p.set("q",f.q.value.trim());go("#/tarajim"+(p+""?"?"+p:""))},true);
 function vTarjama(id){const a=A(id),t=tj(id);if(!t)return vAuthor(id,{});
  const c=counts(id),art=t.article&&B(t.article);
