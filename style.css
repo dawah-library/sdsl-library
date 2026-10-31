@@ -771,3 +771,8 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .mjnav{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:1.8rem;cursor:pointer;flex:none}@media (max-width:600px){.mjnav{position:absolute;bottom:14px}.mjnav[data-fb=next]{left:14px}.mjnav[data-fb=prev]{right:14px}}
 .majsecd{border:1px solid var(--line);border-radius:10px;margin:12px 0;padding:8px 12px}.majsecd legend input{font-weight:700}.majit{border-bottom:1px dashed var(--line);padding:8px 0}.majbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 @media print{body *{visibility:hidden}#majissue,#majissue *{visibility:visible}#majissue{position:absolute;inset:0 0 auto 0;border:0;max-width:none}.noprint,#majissue .sbox{display:none!important}.majitem{break-inside:avoid-page}.majsec{break-before:page}}
+/* الخلاصة المنظمة في «اختصار الكتب» */
+.sumorg{border:1px solid var(--line,#d6dfda);border-radius:12px;padding:10px 14px;margin:0 0 14px;background:var(--card,#fff)}
+.sumorg summary{cursor:pointer;line-height:1.7}
+.sumorg h4{margin:12px 0 4px;color:var(--brand,#0f5c4d)}
+.sumorg ul{margin:4px 0;padding-inline-start:18px}.sumorg li{margin:4px 0;line-height:1.8}

@@ -59,8 +59,29 @@ const LRN = (() => {
      <div class="chips" role="radiogroup" aria-label="نسبة الاختصار">${RATIOS.map(([v, l]) => `<a class="chip${v === r ? " x" : ""}" role="radio" aria-checked="${v === r}" href="${u(v)}">${v ? toAr(v) + "٪ — " : ""}${l}</a>`).join("")}</div>
      <p class="mut">المختصر: ${toAr(A.sw)} كلمة من ${toAr(A.ow)} (${toAr(Math.round(A.sw * 100 / Math.max(1, A.ow)))}٪)، في ${toAr(A.res.length)} بابًا.</p>
      <div class="row" style="margin:6px 0 12px"><button class="btn p" data-act="sumpdf" data-b="${esc(b.id)}" data-r="${r}">تحميل المختصر PDF</button> <a class="btn" href="#/book/${esc(b.id)}/1">قراءة الأصل</a></div>
+     <div id="sumorg"></div>
      <article class="sumtx">${absHtml(A, true) || '<div class="note">لا يتسع نص هذا الكتاب للاختصار.</div>'}</article>`);
+    sumOrg(b);
   }
+  // «الخلاصة المنظمة»: خلاصة الكتاب وأقسامه وأبوابه من تشجيره (data/tashjir) — صياغة آلية دققت كل نقطة بنص صفحتها،
+  // مع رابط كل باب إلى موضعه؛ وإن لم يُشجَّر الكتاب بعد يطلبه المشرف بضغطة فيُعدّ آليًا.
+  async function sumOrg(b) {
+    const box = $("#sumorg"); if (!box || typeof TSJ === "undefined") return;
+    const L = await TSJ.index(), inf = L[b.id];
+    if (!inf || !(inf.ok || isAdmin())) {
+      box.innerHTML = isAdmin() && typeof GH !== "undefined" && GH.on ? `<div class="note">لا توجد خلاصة منظمة لهذا الكتاب بعد. <button class="btn s" data-act="sumreq" data-b="${esc(b.id)}">اطلب إعداد الخلاصة والتشجير</button> <span id="sumreqs" class="mut"></span></div>` : ""; return; }
+    const m = await TSJ.map(b.id); if (!m || !m.c) return;
+    const pg = p => `<a href="#/book/${esc(b.id)}/${(p && p[0]) || 1}">${p && p[0] ? "ص " + toAr(p[0]) + (p[1] && p[1] !== p[0] ? "–" + toAr(p[1]) : "") : ""}</a>`;
+    box.innerHTML = `<details class="sumorg" open><summary><b>الخلاصة المنظمة للكتاب</b> <span class="mut">— صياغة آلية مدققة بنص الصفحات، فراجع الأصل عند الاستشهاد</span></summary>
+      ${m.s ? `<p class="brief">${esc(m.s)}</p>` : ""}
+      ${m.c.map(g => `<section><h4>${esc(g.t)} <small class="mut">${pg(g.p)}</small></h4>${g.s ? `<p>${esc(g.s)}</p>` : ""}<ul>${(g.c || []).map(ch => `<li><b>${esc(ch.t)}</b> <small class="mut">${pg(ch.p)}</small>${ch.s ? `<br>${esc(ch.s)}` : ""}</li>`).join("")}</ul></section>`).join("")}
+      <p><a class="btn s" href="#/tashjir/${esc(b.id)}">عرض التشجير التفصيلي</a></p></details>`;
+  }
+  document.addEventListener("click", async e => {
+    const el = e.target.closest('[data-act="sumreq"]'); if (!el) return; e.preventDefault(); el.disabled = true;
+    try { await GH.editJSON("data/tashjir/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(x => (x.id || x) !== el.dataset.b); o.items.unshift({ id: el.dataset.b }); return o; }, "طلب خلاصة وتشجير: " + el.dataset.b); const s = $("#sumreqs"); if (s) s.textContent = "أُضيف في أول الطابور؛ يُعدّ خلال ساعات."; }
+    catch (x) { toast(x.message); el.disabled = false; }
+  });
   const A_ = b => (typeof A === "function" ? A(b.authorId).name : "") || "";
   function pdf(id, r) {
     const b = B(id); if (!b || !b.pages) return;
