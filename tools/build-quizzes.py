@@ -52,9 +52,20 @@ def _qaok(f):  # كتب «سؤال وجواب» الكافية (٨ فأكثر) �
     try: return len([x for x in json.loads(open(f, encoding="utf-8").read())["items"] if len(x.get("q", "")) >= 30 and len(x.get("a", "")) >= 30 and not re.match(r"^\(?\d*\)?\s*هل\s", x["q"].strip())]) >= 8
     except Exception: return False
 QAOK = {pathlib.Path(f).stem for f in glob.glob(str(R / "data/qa/*.json")) if _qaok(f)}
+# الكتب التي لها اختبارات محرَّرة (tools/study-ai.py) لا تُستبدل بالأسئلة الآلية؛ يُحدَّث فهرسها فقط
+AI = set()
+for f in glob.glob(str(Q / "*.json")):
+    try:
+        d = json.loads(pathlib.Path(f).read_text(encoding="utf-8"))
+        if isinstance(d, dict) and d.get("ai"):
+            AI.add(d["b"]); lv = {}
+            for q in d.get("qs", []):
+                if q.get("ok"): lv[q["lvl"]] = lv.get(q["lvl"], 0) + 1
+            items[d["b"]] = {"b": d["b"], "n": sum(lv.values()), "lv": lv, "ai": 1}
+    except Exception: pass
 PATHB = {x for p in json.loads((R / "data/paths.json").read_text(encoding="utf-8"))["paths"] for x in p["books"]}
 for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة من نصها (كتب الدعوة والمتون القصيرة)
-    if b.get("hidden") or b.get("vf") or b.get("type") == "article" or bid in QAOK: continue
+    if b.get("hidden") or b.get("vf") or b.get("type") == "article" or bid in QAOK or bid in AI: continue
     if (b.get("col") or "dawah") != "dawah" and (b.get("n") or 0) > 400 and bid not in PATHB and not b.get("upl"): continue  # كتب المسارات العلمية تُختبر كلها
     pages = book_pages(bid)
     if len(pages) < 5: continue
@@ -74,7 +85,7 @@ for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة 
 
 for f in sorted(glob.glob(str(R / "data/qa/*.json"))):
     bid = pathlib.Path(f).stem
-    if bid.startswith("_") or bid not in cat or cat[bid].get("hidden"): continue
+    if bid.startswith("_") or bid not in cat or cat[bid].get("hidden") or bid in AI: continue
     qa = [x for x in json.loads(open(f, encoding="utf-8").read())["items"] if len(x.get("q", "")) >= 30 and len(x.get("a", "")) >= 30 and not re.match(r"^\(?\d*\)?\s*هل\s", x["q"].strip())]
     if len(qa) < 8: continue
     out_f = Q / (bid + ".json")

@@ -839,3 +839,4 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .tld{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:4px}@media(max-width:600px){.tlr{grid-template-columns:86px 1fr}}
 .recg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:8px 0}.recc{display:flex;flex-direction:column;gap:3px;background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-decoration:none;color:inherit}.recc b{font-family:var(--rf);line-height:1.5}.recc small{color:var(--ac);font-size:.78rem}.recc:hover{border-color:var(--ac)}.recend{max-width:860px;margin:14px auto}
 .vmissc{opacity:.55;border-style:dashed!important;cursor:default}.vmiss .mgt b{color:#b54708}.vbtns{display:inline-flex;gap:2px}.vbtns .btn{padding:0 6px;min-height:28px}
+.sumwarn{background:color-mix(in srgb,#e6a700 14%,var(--sf));border-color:#e6a700}
