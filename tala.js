@@ -379,10 +379,16 @@ const TALA = (() => {
           <p><a class="btn s" href="#/book/${esc(b.id)}/1">📖 قراءة المستوى كاملًا</a> <a class="btn s" href="#/quizzes/${esc(b.id)}?l=easy">✅ اختبار المستوى</a></p></div>`;
       }
     }
-    const sup = (M.support || {})[k] || [];
+    const sup = ((M.support || {})[k] || []).slice();
+    { // ما يُستورد لاحقًا من مقالات الشيخ مصطفى دياب والأستاذ محمود عمارة يُضم تلقائيًا بحسب قسمه في «صوت السلف»
+      const listed = new Set(Object.values(M.support || {}).flat().flatMap(g => g[1]).concat(M.parents || []));
+      const STG = { t1: ["at10"], t2: ["at10", "st7", "at6"], t3: ["at9", "at7", "at5", "st7"], t4: ["at9", "at7", "at5", "at1"] };
+      const more = lib.books.filter(b => isArt(b) && !b.hidden && (M.authors || ["w5", "w107"]).includes(b.authorId) && !listed.has(b.id) && STG[k].some(tp => inTopic(b, tp)) && !(k === "t1" && (b.n || 0) > 3000));
+      if (more.length) sup.push(["مقالات أخرى للشيخ مصطفى دياب والأستاذ محمود عمارة", more.slice(-30).reverse().map(b => b.id)]);
+    }
     body += sup.length ? `<h3>🌱 التدعيم التربوي: قصص وتوجيهات وأنشطة</h3><p class="mut">من مقالات الشيخ مصطفى دياب وكتبه، مع نشاط عملي لكل مجموعة.</p>${sup.map(([g, ids]) => { const it = ids.map(id => B(id)).filter(Boolean); if (!it.length) return ""; return `<div class="card mjgrp"><h4>${esc(g)}</h4><ol class="mjarts">${it.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a>${done["a:" + x.id] ? " ✓" : ""}</li>`).join("")}</ol>
       <div class="mjacts">${actsFor(g).map(([i, a]) => `<span>${i} ${esc(a)}</span>`).join("")}</div></div>`; }).join("")}` : "";
-    const par = (M.parents || []).map(id => B(id)).filter(Boolean);
+    const par = [...new Set((M.parents || []).concat(lib.books.filter(b => isArt(b) && !b.hidden && b.authorId === "w107" && inTopic(b, "at10")).map(b => b.id)))].map(id => B(id)).filter(Boolean);
     body += par.length ? `<details class="card"><summary><b>👪 للوالدين والمربين</b></summary><ul>${par.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="mut">— ${esc(A(x.authorId).name)}</span></li>`).join("")}</ul></details>` : "";
     body += (M.soon || []).length ? `<p class="mut">قريبًا في القسم: ${M.soon.map(esc).join("؛ ")}.</p>` : "";
     view_(head(t[1] + " — " + t[2], true) + `<nav class="chips">${D.tracks.map(([kk, n]) => `<a class="chip${kk === k ? " x" : ""}" href="#/talaea/manhaj?k=${kk}">${esc(n)}</a>`).join("")}</nav><h2 class="talat">📘 منهج ${esc(t[1])}</h2>${body}
