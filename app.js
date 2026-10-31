@@ -710,7 +710,10 @@ function editDlg(){const rb=$("#rb"),b=B(rb.dataset.id),p=+rb.dataset.p;openDlg(
 
 /* ---------- القبسات ---------- */
 let pendingQ=null;
-const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080"},ls.get("qset",{}));let QIMG=null;
+const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080",fz:100,lh:1.8,al:"center",sa:true,sb:true,wm:"corner",url:true},ls.get("qset",{}));
+// المصدر «الكاتب — الكتاب، الصفحة»: يُظهر منه ما يختاره المستخدم
+const qSrc=s=>{const p=String(s||"").split(" — ");return p.length<2?(Q.sa||Q.sb?s:""):[Q.sa&&p[0],Q.sb&&p.slice(1).join(" — ")].filter(Boolean).join(" — ")};
+const SITEHOST=()=>siteLink("").replace(/^https?:\/\//,"").replace(/\/$/,"");let QIMG=null;
 const saveQ=()=>{const c=Object.assign({},Q);ls.set("qset",c)};
 const PLAINS=["#0f5c4d","#08332b","#5a3f12","#7a1f2b","#1d3557","#2b2d42","#000000","#ffffff","#f7f0dc","#e8f2ec"];
 const IDS=["زمردي مزخرف","رقّ عتيق","محراب","ليل وقبس","عاجي ونقش"];
@@ -744,17 +747,22 @@ async function draw(){const cv=$("#cv");if(!cv)return;const my=++drawing;
  else if(Q.bg==="plain"){c.fillStyle=Q.plain;c.fillRect(0,0,W,H);const dark=lum(Q.plain)<.5;st={ink:dark?"#ffffff":"#14231f",acc:dark?"#e3be6a":"#0f5c4d",area:{x:110,y:130,w:W-220,h:H-380}}}
  else st=drawId(c,W,H,Q.idx,emb);
  if(Q.ink==="light")st.ink="#ffffff";if(Q.ink==="dark")st.ink="#14231f";
- const text=($("#qt").value.trim()||"…"),src=$("#qs").value.trim(),cm=$("#qc").value.trim(),A_=st.area;
- const reserve=(src?70:0)+(cm?60:0);let fs=Math.round(W*.064),L;
- for(;fs>24;fs-=2){c.font=`${fs}px "${Q.font}", serif`;L=wrap(c,text,A_.w);if(L.length*fs*1.8<=A_.h-reserve)break}
- const lh=fs*1.8,blockH=L.length*lh+reserve;let y=A_.y+(A_.h-blockH)/2+fs;c.textAlign="center";c.fillStyle=st.ink;
- L.forEach(l=>{c.fillText(l,W/2,y);y+=lh});
- if(src){y+=14;c.fillStyle=st.acc;c.font=`600 ${Math.round(fs*.55)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText("— "+src,W/2,y);y+=50}
- if(cm){c.fillStyle=st.ink;c.globalAlpha=.85;c.font=`${Math.round(fs*.5)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText(cm,W/2,y);c.globalAlpha=1}
- // العلامة المائية الثابتة: شعار المكتبة المرسوم + اسمها في الزاوية
- c.font=`600 27px "IBM Plex Sans Arabic", sans-serif`;const tw=c.measureText(SITENAME).width,ph=100,pw=tw+ph+30,px=34,py=H-ph-34;
+ const text=($("#qt").value.trim()||"…"),src=qSrc($("#qs").value.trim()),cm=$("#qc").value.trim(),A_=Object.assign({},st.area);
+ if(Q.wm==="bar")A_.h-=40;
+ const reserve=(src?70:0)+(cm?60:0);let fs=Math.round(W*.064*(Q.fz||100)/100),L;
+ for(;fs>20;fs-=2){c.font=`${fs}px "${Q.font}", serif`;L=wrap(c,text,A_.w);if(L.length*fs*Q.lh<=A_.h-reserve)break}
+ const lh=fs*Q.lh,blockH=L.length*lh+reserve,ax=Q.al==="right"?A_.x+A_.w:Q.al==="left"?A_.x:W/2;let y=A_.y+(A_.h-blockH)/2+fs;c.textAlign=Q.al||"center";c.fillStyle=st.ink;
+ L.forEach(l=>{c.fillText(l,ax,y);y+=lh});
+ if(src){y+=14;c.fillStyle=st.acc;c.font=`600 ${Math.round(fs*.55)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText("— "+src,ax,y);y+=50}
+ if(cm){c.fillStyle=st.ink;c.globalAlpha=.85;c.font=`${Math.round(fs*.5)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText(cm,ax,y);c.globalAlpha=1}
+ c.textAlign="center";
+ // بصمة هوية المكتبة (لا تُلغى): زاوية، أو شريط سفلي، أو علامة مائية على كامل الصورة مع الزاوية
+ if(Q.wm==="tile"){c.save();c.globalAlpha=.07;c.fillStyle=st.ink;c.font=`600 30px "IBM Plex Sans Arabic", sans-serif`;c.textAlign="center";c.translate(W/2,H/2);c.rotate(-Math.PI/6);for(let yy=-H;yy<H;yy+=170)for(let xx=-W;xx<W;xx+=560)c.fillText(SITENAME,xx+(yy/170%2?280:0),yy);c.restore()}
+ const host=Q.url?SITEHOST():"";
+ if(Q.wm==="bar"){const bh=86;c.fillStyle="rgba(255,255,255,.93)";c.fillRect(0,H-bh,W,bh);if(emb)c.drawImage(emb,W-bh-14,H-bh+8,bh-16,bh-16);c.fillStyle="#0a4a50";c.textAlign="right";c.font=`600 28px "IBM Plex Sans Arabic", sans-serif`;c.fillText(SITENAME,W-bh-26,H-bh/2+(host?-4:10));if(host){c.font=`500 21px "IBM Plex Sans Arabic", sans-serif`;c.fillStyle="#5b6b66";c.fillText(host,W-bh-26,H-bh/2+26)}}
+ else{c.font=`600 27px "IBM Plex Sans Arabic", sans-serif`;const tw=c.measureText(SITENAME).width,ph=100,pw=tw+ph+30,px=34,py=H-ph-34;
  c.fillStyle="rgba(255,255,255,.9)";c.beginPath();c.roundRect?c.roundRect(px,py,pw,ph,16):c.rect(px,py,pw,ph);c.fill();
- if(emb)c.drawImage(emb,px+pw-ph+6,py+6,ph-12,ph-12);c.fillStyle="#0a4a50";c.textAlign="right";c.fillText(SITENAME,px+pw-ph+2,py+ph/2+10);
+ if(emb)c.drawImage(emb,px+pw-ph+6,py+6,ph-12,ph-12);c.fillStyle="#0a4a50";c.textAlign="right";c.fillText(SITENAME,px+pw-ph+2,py+ph/2+(host?-2:10));if(host){c.font=`500 20px "IBM Plex Sans Arabic", sans-serif`;c.fillStyle="#5b6b66";c.fillText(host,px+pw-ph+2,py+ph/2+28)}}
  if(Q.logo&&logo){const lw=92,lh2=lw*logo.height/logo.width;c.fillStyle="rgba(255,255,255,.92)";c.beginPath();c.roundRect?c.roundRect(W-lw-50,36,lw+16,lh2+16,12):c.rect(W-lw-50,36,lw+16,lh2+16);c.fill();c.drawImage(logo,W-lw-42,44,lw,lh2)}
  // هوية جهة الداعية أو المركز (اختيارية، محفوظة على جهازه): شعارها واسمها أعلى يسار التصميم
  const org=ls.get("qorg",{});if(org.n||org.img){let oi=null;if(org.img){oi=ORGIMG&&ORGIMG.src===org.img?ORGIMG:await new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=org.img});ORGIMG=oi}if(my!==drawing)return;
@@ -763,7 +771,7 @@ async function draw(){const cv=$("#cv");if(!cv)return;const my=++drawing;
   if(oi){const r=Math.min(ih/oi.width,ih/oi.height);c.drawImage(oi,bx+14,by+8+(ih-oi.height*r)/2,oi.width*r,oi.height*r)}
   if(org.n){c.fillStyle="#14231f";c.textAlign="left";c.fillText(org.n,bx+14+(ih?ih+18:0),by+bh/2+9)}}}
 let ORGIMG=null;
-function quoteText(){const t=$("#qt").value.trim(),s=$("#qs").value.trim();const link=siteLink(pendingQ&&pendingQ.ref?`#/book/${pendingQ.ref.b}/${pendingQ.ref.p}`:"");
+function quoteText(){const t=$("#qt").value.trim(),s=qSrc($("#qs").value.trim());const link=Q.url?siteLink(pendingQ&&pendingQ.ref?`#/book/${pendingQ.ref.b}/${pendingQ.ref.p}`:""):"";
  return`«${t}»`+(s?`\n— ${s}`:"")+`\n${SITENAME}`+(link?`\n${link}`:"")}
 async function vQabasat(q){const pq=pendingQ;
  view(`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
@@ -778,6 +786,9 @@ async function vQabasat(q){const pq=pendingQ;
  <div id="qp-id" class="ids" style="margin-top:8px"></div>
  <div id="qp-plain" class="row" style="margin-top:8px"><div class="swatches nf">${PLAINS.map(p=>`<button class="sw" data-plain="${p}" aria-label="لون ${p}" style="background:${p}"></button>`).join("")}</div><input type="color" id="qcol" value="${Q.plain}" aria-label="لون مخصص" class="nf"></div>
  <div id="qp-photo" style="margin-top:8px"><input type="file" id="qimg" accept="image/*" aria-label="اختر صورة"><label for="qdim">تعتيم الصورة لوضوح النص</label><input type="range" id="qdim" min="0" max=".8" step=".05" value="${Q.dim}"></div>
+ <fieldset class="secs"><legend>تنسيق النص</legend><div class="row"><div><label for="qfz">حجم الخط <output id="qfzv">${Q.fz}٪</output></label><input type="range" id="qfz" min="60" max="150" step="5" value="${Q.fz}"></div><div><label for="qlh">تباعد الأسطر <output id="qlhv">${Q.lh}</output></label><input type="range" id="qlh" min="1.3" max="2.6" step=".1" value="${Q.lh}"></div><div><label for="qal">المحاذاة</label><select id="qal"><option value="center">وسط</option><option value="right">يمين</option><option value="left">يسار</option></select></div></div>
+ <label class="inl"><input type="checkbox" id="qsa"${Q.sa?" checked":""}> اسم الكاتب</label><label class="inl"><input type="checkbox" id="qsb"${Q.sb?" checked":""}> اسم الكتاب والصفحة</label><label class="inl"><input type="checkbox" id="qurl"${Q.url?" checked":""}> رابط الموقع</label></fieldset>
+ <div class="row"><div><label for="qwm">بصمة هوية المكتبة</label><select id="qwm"><option value="corner">ختم في الزاوية</option><option value="bar">شريط سفلي</option><option value="tile">علامة مائية على كامل الصورة</option></select></div></div>
  <label class="inl"><input type="checkbox" id="qlogo"${Q.logo?" checked":""}> إظهار شعار الدعوة السلفية</label>
  <canvas id="cv" width="1080" height="1080" aria-label="معاينة القبسة"></canvas>
  <p class="mut" style="text-align:center">العلامة المائية لشعار المكتبة واسمها ثابتة في زاوية كل قبسة.</p>
@@ -795,6 +806,9 @@ async function vQabasat(q){const pq=pendingQ;
  $("#qimg").onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{QIMG=i;Q.bg="photo";sync();draw()};i.src=u};
  $("#qdim").oninput=e=>{Q.dim=+e.target.value;saveQ();draw()};
  $("#qlogo").onchange=e=>{Q.logo=e.target.checked;saveQ();draw()};
+ $("#qal").value=Q.al;$("#qwm").value=Q.wm;
+ $("#qfz").oninput=e=>{Q.fz=+e.target.value;$("#qfzv").textContent=toAr(Q.fz)+"٪";saveQ();draw()};$("#qlh").oninput=e=>{Q.lh=+e.target.value;$("#qlhv").textContent=toAr(Q.lh);saveQ();draw()};
+ [["qal","al"],["qwm","wm"]].forEach(([i,k])=>$("#"+i).onchange=e=>{Q[k]=e.target.value;saveQ();draw()});[["qsa","sa"],["qsb","sb"],["qurl","url"]].forEach(([i,k])=>$("#"+i).onchange=e=>{Q[k]=e.target.checked;saveQ();draw()});
  $("#qfont").onchange=e=>{Q.font=e.target.value;saveQ();draw()};$("#qz").onchange=e=>{Q.size=e.target.value;saveQ();draw()};$("#qi").onchange=e=>{Q.ink=e.target.value;saveQ();draw()};
  ["#qt","#qs","#qc"].forEach(i=>$(i).oninput=()=>{draw()});
  const msg=t=>{$("#qmsg").textContent=t;setTimeout(()=>{if($("#qmsg"))$("#qmsg").textContent=""},2500)};
@@ -1781,7 +1795,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="tts"){closeSheet();TTS.start()}else if(a==="ttsp")TTS.toggle();else if(a==="ttss")TTS.stop();
  else if(a==="selprint"||a==="selcopy"||a==="selshare"){const s0=String(getSelection()).trim(),rb=selRd()||$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
   if(a==="selshare"){const txt=s0+"\n— "+src;if(navigator.share){try{await navigator.share({title:src,text:txt,url:link})}catch(x){}return}try{await navigator.clipboard.writeText(txt+"\n"+link);toast("المشاركة غير متاحة في هذا المتصفح؛ نُسخ النص مع مصدره ورابطه")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}
-  if(a==="selcopy"){try{await navigator.clipboard.writeText(s0+"\n— "+src+"\n"+link);toast("نُسخ النص مع مصدره")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}
+  if(a==="selcopy"){const sp=[Q.sa&&A(b.authorId).name,Q.sb&&(b.setTitle||b.title)+(PL(b,i)?"، "+PL(b,i):"")].filter(Boolean).join(" — ");try{await navigator.clipboard.writeText(s0+(sp?"\n— "+sp:"")+"\n"+SITENAME+(Q.url?"\n"+link:""));toast("نُسخ النص مع مصدره")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}
   const w2=window.open("","_blank");if(!w2)return toast("اسمح بالنوافذ المنبثقة للطباعة");w2.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(src)}</title><style>body{font-family:Amiri,"Traditional Arabic",serif;font-size:20px;line-height:2.1;margin:2cm;text-align:justify}footer{margin-top:1.5em;border-top:1px solid #999;padding-top:.5em;font-size:14px;color:#444}</style></head><body>${s0.split("\n").filter(Boolean).map(l=>"<p>"+esc(l)+"</p>").join("")}<footer>${esc(src)}<br>${esc(SITENAME)} — ${esc(link)}</footer><script>onload=()=>{print()}<\/script></body></html>`);w2.document.close()}
  else if(a==="revlist"){const id=el.dataset.id,box=$("#rv-"+id);box.innerHTML='<p class="mut">جارٍ التحميل…</p>';const b=await loadBook(id).catch(()=>null);const u=(b&&b.unc)||{},ks=Object.keys(u).map(Number).sort((x,y)=>x-y),ur=(b&&b.unrev)||[];
   box.innerHTML=(ks.map(i=>`<a class="chip" href="#/book/${id}/${i+1}">${esc(PL(b,i)||"ص "+(i+1))}: ${u[i].slice(0,4).map(esc).join("، ")}${u[i].length>4?"…":""}</a>`).join(" ")||'<p class="mut">لا توجد كلمات معلَّمة.</p>')+(ur.length?`<p class="mut">صفحات لم يراجعها Gemini: ${ur.slice(0,60).map(i=>`<a href="#/book/${id}/${i+1}">${toAr(i+1)}</a>`).join("، ")}</p>`:"")}
