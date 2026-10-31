@@ -5,7 +5,7 @@ import json, os, re, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "i18n-cat-en.json")
-KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 10)] if k.strip()]
+KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
 PROMPT = """You are an expert translator of classical and modern Islamic Arabic literature. For each item give its established English rendering:
 - Book titles: the conventional English form used by scholars (transliterated title in standard academic style, then a colon and a faithful English meaning when helpful), e.g. "فتح الباري شرح صحيح البخاري" -> "Fath al-Bari: Commentary on Sahih al-Bukhari"; "العقيدة الواسطية" -> "Al-Aqidah al-Wasitiyyah (The Wasiti Creed)". Keep volume markers as "— Vol. N".
 - Person names: standard transliteration (e.g. "ابن قيم الجوزية" -> "Ibn Qayyim al-Jawziyyah", "الشيخ ياسر برهامي" -> "Shaykh Yasir Burhami").

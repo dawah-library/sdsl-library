@@ -79,8 +79,8 @@ def clean_page(t):
 
 
 # ---------- التحويل بالذكاء الاصطناعي (Gemini) إن وُجد المفتاح، وإلا Tesseract ----------
-# يمكن إضافة مفاتيح Gemini أخرى من حسابات Google مختلفة (GEMINI_API_KEY_2 … _5) فتتضاعف الحصة اليومية المجانية
-GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 10)] if k.strip()]
+# يمكن إضافة مفاتيح Gemini أخرى من حسابات Google مختلفة (GEMINI_API_KEY_2 … _20) فتتضاعف الحصة اليومية المجانية
+GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
 # محرك إضافي مجاني: GitHub Models (نماذج OpenAI عبر رمز GitHub Actions نفسه، بلا حساب ولا مفتاح جديد) — يعمل بجوار Gemini
 GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
 GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
