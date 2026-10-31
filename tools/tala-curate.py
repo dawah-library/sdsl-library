@@ -41,8 +41,8 @@ POOL = {  # (موضوعات، أقصى طول بالحروف، عدد)
 BOOKS = {  # (الكتاب، من، إلى، عنوان المستوى) — مقاطع قصيرة متدرجة
     "t1": [("arbain", 1, 81, 6), ("qisasanbiya", 1, 60, 4)],
     "t2": [("arbain", 1, 81, 5), ("fusul", 1, 68, 5), ("qisasanbiya", 1, 120, 6), ("amalyawm", 1, 60, 4), ("makarimakhlaq", 1, 60, 4), ("ajurrumiyya", 1, 32, 3), ("nahwwadih", 1, 60, 3)],
-    "t3": [("p92d51e73", 1, 200, 8), ("aclamsalaf", 1, 222, 8), ("lumca", 1, 39, 6), ("ajurrumiyya", 1, 32, 6), ("tuhfatatfal", 1, 30, 5), ("usulthalatha", 1, 40, 5), ("adabdunyadin", 1, 120, 6), ("qatr", 1, 34, 4), ("suwarsahaba", 1, 200, 6), ("suwarsahabiyyat", 1, 150, 6)],
-    "t4": [("uluwhimma", 1, 200, 10), ("wasitiyya", 1, 72, 8), ("tawhid", 1, 145, 10), ("waraqat", 1, 25, 6), ("p4289f23d", 1, 150, 10), ("ajurrihamala", 1, 123, 10), ("shamail", 1, 120, 8), ("tadhkirasami", 1, 150, 8), ("adabshariyya", 1, 150, 8), ("suwartabiin", 1, 200, 8)],
+    "t3": [("p92d51e73", 1, 200, 8), ("aclamsalaf", 1, 222, 8), ("lumca", 1, 39, 6), ("ajurrumiyya", 1, 32, 6), ("tuhfatatfal", 1, 30, 5), ("usulthalatha", 1, 40, 5), ("adabdunyadin", 1, 120, 6), ("qatr", 1, 34, 4), ("suwarsahaba", 1, 200, 6), ("suwarsahabiyyat", 1, 150, 6), ("adhkiya", 1, 120, 6), ("farajbaadshidda", 1, 100, 6)],
+    "t4": [("uluwhimma", 1, 200, 10), ("wasitiyya", 1, 72, 8), ("tawhid", 1, 145, 10), ("waraqat", 1, 25, 6), ("p4289f23d", 1, 150, 10), ("ajurrihamala", 1, 123, 10), ("shamail", 1, 120, 8), ("tadhkirasami", 1, 150, 8), ("adabshariyya", 1, 150, 8), ("suwartabiin", 1, 200, 8), ("saydkhatir", 1, 200, 8), ("mukhtasarminhaj", 1, 200, 8), ("sifatsafwa", 1, 150, 8)],
 }
 LV = {"t1": 4, "t2": 4, "t3": 5, "t4": 6}  # عناصر في كل مستوى
 

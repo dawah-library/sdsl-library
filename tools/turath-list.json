@@ -1679,6 +1679,73 @@
    ],
    "hidden": true,
    "batch": "tala"
+  },
+  {
+   "id": "adhkiya",
+   "died": 597,
+   "author": "IbnJawzi",
+   "book": "Adhkiya",
+   "title": "الأذكياء",
+   "authorName": "ابن الجوزي",
+   "topic": "t17",
+   "tags": [
+    "tala:t3",
+    "tala:t4"
+   ],
+   "batch": "tala"
+  },
+  {
+   "id": "saydkhatir",
+   "died": 597,
+   "author": "IbnJawzi",
+   "book": "SaydKhatir|Sayd",
+   "title": "صيد الخاطر",
+   "authorName": "ابن الجوزي",
+   "topic": "t6",
+   "tags": [
+    "tala:t4"
+   ],
+   "batch": "tala"
+  },
+  {
+   "id": "sifatsafwa",
+   "died": 597,
+   "author": "IbnJawzi",
+   "book": "SifatSafwa|Sifa",
+   "title": "صفة الصفوة",
+   "authorName": "ابن الجوزي",
+   "topic": "t18",
+   "tags": [
+    "tala:t4"
+   ],
+   "batch": "tala"
+  },
+  {
+   "id": "mukhtasarminhaj",
+   "died": 689,
+   "author": "IbnQudamaMaqdisi|NajmDin|IbnQudama",
+   "book": "MukhtasarMinhajQasidin|Mukhtasar",
+   "title": "مختصر منهاج القاصدين",
+   "authorName": "نجم الدين ابن قدامة",
+   "topic": "t6",
+   "tags": [
+    "tala:t4"
+   ],
+   "batch": "tala"
+  },
+  {
+   "id": "farajbaadshidda",
+   "died": 384,
+   "author": "Tanukhi",
+   "book": "FarajBacdShidda|Faraj",
+   "title": "الفرج بعد الشدة",
+   "authorName": "التنوخي",
+   "topic": "t17",
+   "tags": [
+    "tala:t3",
+    "tala:t4"
+   ],
+   "batch": "tala"
   }
  ]
 }

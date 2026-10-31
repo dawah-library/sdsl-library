@@ -227,3 +227,8 @@
 - sdsl-library.vercel.app كان يعرض نسخة قديمة (آخر نشر قبل حظر Vercel). **أُوقف مشروع Vercel (pause_project)** فصار يعيد 503؛ لا تُعِد تشغيله (unpause) إلا بعد نشر توجيه 301 إلى dawahlibrary.org عند رفع الحظر.
 - نطاق pages.dev يرسل X-Robots-Tag: noindex لصفحاته، وخريطة الموقع فيها lastmod من نسخة الفهرس.
 - يلزم المالك: إضافة dawahlibrary.org في Google Search Console وإرسال sitemap.xml وطلب إزالة sdsl-library.vercel.app.
+
+## ٣١ أكتوبر (فجرًا): تفعيل الصوتيات بقرار المدير
+- **الصوتيات مفعّلة دون انتظار اعتماد التشكيل (قرار المدير ٣١ أكتوبر):** tts.yml يعمل مرتين يوميًا وعند تعديل data/audio/_queue.json أو _auto.json، وTTS_AUTO يملأ الطابور بكتب الدعوة (الأقصر أولًا) ثم كتب المكتبة العامة المختارة للبث (data/audio/_auto.json من «إدارة الصوتيات ← البث المتواصل»). ok=1 افتراضيًا فتُنشر فورًا.
+- tts.py يقرأ النص المشكول المدقق من data/tashkeel متى طابقت بصمته نص الصفحة، ومع TTS_REFRESH تُعاد الصفحة إذا تغيّر نصها.
+- أصوات Gemini اختيارية (gemini:Charon…) بحصة مفاتيح Gemini.

@@ -219,6 +219,24 @@ def mp3_secs(path):
         return round(os.path.getsize(path) / 6000.0, 1)  # 48 كيلوبت/ث تقريبًا
 
 
+def _fnv(s):
+    h = 0x811c9dc5
+    for c in s: h ^= ord(c); h = (h * 0x01000193) & 0xffffffff
+    d, out = "0123456789abcdefghijklmnopqrstuvwxyz", ""
+    while True:
+        h, r = divmod(h, 36); out = d[r] + out
+        if not h: return out
+
+
+_TK = {}
+def tashkeel_text(bid, p, raw):
+    """النص المشكول المدقق للصفحة إن وُجد ولم يتغير نصها بعده (data/tashkeel)، فيتحسن النطق كثيرًا؛ وإلا النص كما هو."""
+    k = (p - 1) // 50; key = (bid, k)
+    if key not in _TK: _TK[key] = jload(os.path.join(ROOT, "data", "tashkeel", bid, "%d.json" % k), {})
+    e = _TK[key].get(str(p))
+    return e["t"] if e and e.get("h") == _fnv(raw) and e.get("t") else raw
+
+
 async def tts_book(item, lst):
     bid = item["id"]
     sh = shard(bid)
@@ -243,7 +261,7 @@ async def tts_book(item, lst):
     for p in range(first, min(last, len(pages)) + 1):
         if only_p and p not in only_p:
             continue
-        tx = clean(pages[p - 1])
+        tx = clean(tashkeel_text(bid, p, pages[p - 1]))
         cur = man["pages"].get(str(p))
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
@@ -301,7 +319,7 @@ def save_book(man, b, lst, total):
     ps = man["pages"]
     secs = sum(v.get("d", 0) for v in ps.values()) + sum(r.get("d", 0) for r in man.get("rec", []))
     prev = lst.get(man["id"]) or {}
-    lst[man["id"]] = {"ok": prev.get("ok", 0), "n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
+    lst[man["id"]] = {"ok": prev.get("ok", 1), "n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
                       "t": man["title"], "a": b.get("authorId", ""), "c": b.get("col", ""), "rec": len(man.get("rec", [])), "upd": time.strftime("%Y-%m-%d"),
                       "ds": [round((ps.get(str(i)) or {}).get("d", 0)) for i in range(1, total + 1)],
                       "rd": [[r.get("f"), round(r.get("d", 0)), r.get("t", "")] for r in man.get("rec", [])]}
@@ -354,6 +372,13 @@ async def main():
     items = q.get("items", [])
     if only:
         items = [{"id": x} for x in only] + [i for i in items if i["id"] not in only]
+    if os.environ.get("TTS_AUTO") == "1" and not only:  # التحويل التلقائي (قرار المدير ٣١ أكتوبر): كتب مكتبة الدعوة أولًا، الأقصر فالأطول، ثم المختار من المكتبة العامة
+        cat = catalog(); have = {i["id"] for i in items}
+        pick = set(jload(os.path.join(AUD, "_auto.json"), {}).get("turath") or [])
+        cands = [b for b in cat["books"] if not b.get("hidden") and not b.get("demo") and b.get("type", "book") == "book" and not b.get("vf") and b["id"] not in have
+                 and ((b.get("col") or "dawah") == "dawah" or b["id"] in pick) and not (lst.get(b["id"], {}).get("n") and lst[b["id"]].get("n", 0) >= lst[b["id"]].get("of", 1))]
+        cands.sort(key=lambda b: (0 if (b.get("col") or "dawah") == "dawah" else 1, b.get("n") or 9999))
+        items += [{"id": b["id"]} for b in cands[:int(os.environ.get("TTS_AUTO_BOOKS", "6"))]]
     if os.environ.get("TTS_REFRESH") == "1":  # الكتب المسموعة التي تغيّر نصها بعد التدقيق
         items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not any(i["id"] == k for i in items)]
     left_items = []

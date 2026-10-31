@@ -1,7 +1,13 @@
 name: صوتيات المكتبة (تحويل النص إلى صوت)
 # مجاني بالكامل: أصوات Edge العصبية العربية عبر edge-tts، والملفات الصوتية في «إصدارات» المستودع (خارج مساحة R2 والموقع)
-# موقوف بقرار الإدارة (٢٤ أكتوبر): لا تسجيل حتى يُعتمد تصحيح الكتب نصيًا وتشكيلها. التشغيل يدوي فقط مع تأكيد الاعتماد.
+# مُفعَّل بقرار المدير (٣١ أكتوبر): يعمل يوميًا تلقائيًا لكتب مكتبة الدعوة (الأقصر أولًا) ثم ما تختاره الإدارة من المكتبة العامة،
+# بالنص المشكول المدقق متى توفر، ويعيد الصفحات التي تغيّر نصها أو تشكيلها.
 on:
+  schedule:
+    - cron: "33 0 * * *"   # يوميًا
+    - cron: "33 12 * * *"  # جولة ثانية
+  push:
+    paths: ["data/audio/_queue.json", "data/audio/_auto.json"]
   workflow_dispatch:
     inputs:
       books:
@@ -16,10 +22,6 @@ on:
         description: "معرّفات كتب يُعاد تسجيلها كاملة"
         required: false
         default: ""
-      approved:
-        description: "اكتب: معتمد — بعد اعتماد الإدارة لتصحيح النص وتشكيله"
-        required: true
-        default: ""
 permissions:
   contents: write
   id-token: write
@@ -30,7 +32,6 @@ jobs:
   tts:
     runs-on: ubuntu-latest
     timeout-minutes: 340
-    if: github.event.inputs.approved == 'معتمد'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,6 +45,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TTS_COMMIT: "1"
+          TTS_AUTO: ${{ github.event.inputs.books == '' && '1' || '0' }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
