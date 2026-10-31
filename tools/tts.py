@@ -73,7 +73,7 @@ def clean(t):
     t = re.sub(r"-*\s*NO PAGE\s*NO\s*-*", " ", t, flags=re.I)
     t = re.sub(r"\[\[[^\]]*\]\]", " ", t)
     t = re.sub(r"\[(?:مخطوط|رسم[^\]]*|جدول[^\]]*|صورة[^\]]*)\]", " ", t)
-    t = re.sub(r"^#+\s*", "", t, flags=re.M)
+    t = re.sub(r"^(#+|@@|<<)\s*", "", t, flags=re.M)
     t = t.replace("**", "").replace("ﷺ", " صلى الله عليه وسلم ").replace("ﷻ", " جل جلاله ")
     for w, r in LEX:  # قاموس النطق من الإدارة (data/audio/_lexicon.json): كلمة كاملة ← نطقها
         t = re.sub(r"(?<![\u0621-\u064A])" + re.escape(w) + r"(?![\u0621-\u064A])", r, t)

@@ -4,7 +4,7 @@
 (function (G) {
   "use strict";
   const strip = s => String(s).replace(/[ً-ٰٟۖ-ۭـ]/g, "");
-  const plain = s => String(s).replace(/^# /gm, "");
+  const plain = s => String(s).replace(/^(# |@@ |<< )/gm, "");  // علامات العنوان والمحاذاة (وسط/يسار) من التحويل
   const norm = s => strip(s).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").toLowerCase();
   const STOP = new Set("في من على عن الى إلى ما ماذا هل كيف لماذا متى اين أين هو هي هم ذلك هذا هذه التي الذي الذين كان كانت ان أن إن او أو ثم مع عند كل بين قد لا لم لن حتى اذا إذا يا و ف ب ل اريد أريد اشرح وضح بين ابحث عن حكم قول قال".split(" ").map(norm));
   const cache = new WeakMap();

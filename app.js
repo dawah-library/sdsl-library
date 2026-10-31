@@ -15,17 +15,19 @@ const SITENAME="المكتبة الرقمية للدعوة السلفية بمص
 const siteLink=(h)=>{const base=(CFG.siteUrl||location.origin+"/").replace(/\/?$/,"/");return base+String(h||"").replace(/^#?\/?/,"")};
 const HERE=()=>"#"+(location.pathname.replace(/^\/index\.html$/,"/")||"/")+location.search;
 const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",admin:false,favs:[],seen:0,look:false,
- fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:false,mkh:false,mkt:false,lead:true},ls.get("set",{}));
+ fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true},ls.get("set",{}));
 const saveS=()=>ls.set("set",S);
+// ترحيل مرة واحدة: تلوين الآيات والأحاديث وتمييز العناوين صار افتراضيًا (ويبقى للقارئ إطفاؤه من «المظهر»)
+if(!S.lk2){S.mkq=true;S.mkh=true;S.mkt=true;S.lk2=1;saveS()}
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
-const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:false,mkh:false,mkt:false,lead:true};
-const Prefs={keys:Object.keys(LOOKDEF).concat(["mode","shelves","shelfNames","rgoal","spread","mtn"]),t:0,
+const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
+const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
   await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
  // عند الدخول: تُطبَّق تفضيلات الحساب إن كانت أحدث مما على الجهاز
  pull(){try{const p=Auth.user&&Auth.user.user_metadata&&Auth.user.user_metadata.prefs;if(!p||!p.v||(S.prefsAt||0)>=(p.at||0))return;
-  this.keys.forEach(k=>{if(p.v[k]!==undefined)S[k]=p.v[k]});S.prefsAt=p.at;saveS();applyLook();if(typeof refreshPage==="function")refreshPage()}catch(e){}}};
+  this.keys.forEach(k=>{if(p.v[k]!==undefined)S[k]=p.v[k]});if(!p.v.lk2){S.mkq=S.mkh=S.mkt=true;S.lk2=1;this.push()}S.prefsAt=p.at;saveS();applyLook();if(typeof refreshPage==="function")refreshPage()}catch(e){}}};
 const toAr=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
 const fmtDate=d=>{if(!d)return"";const x=new Date(d);return isNaN(x)?esc(d):x.toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"})};
 const today=()=>new Date().toISOString().slice(0,10);
@@ -330,7 +332,7 @@ const arD=s=>+String(s).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d))
 function pageByLabel(b,n){if(!b||!b.pages)return 0;let m=LBLMAP.get(b);if(!m){m=new Map();for(let i=0;i<b.pages.length;i++){const x=/([\d٠-٩]+)\s*$/.exec(PL(b,i)||"");if(x&&!m.has(arD(x[1])))m.set(arD(x[1]),i+1)}LBLMAP.set(b,m)}return m.get(n)||0}
 // دمج الأسطر المكسورة: السطر الذي لا ينتهي بعلامة وقف يتصل بما بعده في فقرة واحدة
 function joinLines(tx){if(S.merge===false)return tx;const L=tx.split("\n"),o=[];for(const l of L){const t=l.trim(),prev=o.length?o[o.length-1]:null;
- if(prev!==null&&t&&prev.trim()&&!/^#/.test(prev)&&!/^#|^[-•*]\s|^[(\[]?[\d٠-٩]{1,3}[)\].-]\s|^\*\*\*/.test(t)&&!/[.؟!:؛»)\]"*]\s*$/.test(prev)&&!/^\|/.test(t)&&!/^\|/.test(prev.trim())&&!/\s{3,}/.test(prev.trim())&&!TOCL.test(prev))o[o.length-1]=prev.trimEnd()+" "+t;else o.push(l)}return o.join("\n")}
+ if(prev!==null&&t&&prev.trim()&&!/^#/.test(prev)&&!/^#|^[-•*]\s|^[(\[]?[\d٠-٩]{1,3}[)\].-]\s|^\*\*\*/.test(t)&&!/[.؟!:؛»)\]"*]\s*$/.test(prev)&&!/^\|/.test(t)&&!/^\|/.test(prev.trim())&&!/\s{3,}/.test(prev.trim())&&!/\s\.\.\.\s|^(@@|<<) /.test(prev)&&!/\s\.\.\.\s|^(@@|<<) /.test(t)&&!TOCL.test(prev))o[o.length-1]=prev.trimEnd()+" "+t;else o.push(l)}return o.join("\n")}
 /* التشكيل المدقق: نسخة مشكولة منفصلة عن نص الكتاب (data/tashkeel)، تُعرض مع «إظهار التشكيل» إذا طابقت بصمتُها نصَّ الصفحة الحالي */
 const fnv=s=>{let h=0x811c9dc5;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,0x01000193)>>>0}return h.toString(36)};
 const TK={list:null,busy:false,ch:new Map(),
@@ -355,11 +357,11 @@ const HDSPK="(?:رسول الله|النبي|نبينا)";
 const HDCUE=new RegExp("(?:ﷺ|صلى الله عليه وسلم|صلى الله عليه وآله وسلم|عليه الصلاة والسلام|(?:قال|يقول|فقال|وقال|ويقول|قول|قوله|وقوله|وقول|عن|حديث|خطب)\\s+"+HDSPK+"|حديث|في الحديث)(?:\\s*\\([^)]{0,6}\\))?\\s*(?:أنه\\s+)?(?:فقال|قال|يقول)?\\s*[:،]?\\s*$");
 const HDCUE2=new RegExp("(?:قال|يقول|فقال|وقال|ويقول)\\s+"+HDSPK+"\\s*(?:ﷺ|صلى الله عليه وسلم)?(?:(?!قال|يقول|قالت)[^«»:،.؟]){1,35}:\\s*$");
 const HDADDR=/(?:(?:^|\s)(?:لرسول الله|للنبي|لنبينا)|(?:^|\s)(?:إلى|يا|عند|مع)\s+(?:رسول الله|النبي|نبينا))\s*(?:ﷺ|صلى الله عليه وسلم)?\s*(?:\([^)]{0,6}\))?\s*(?:قال|فقال)?\s*[:،]?\s*$/;
-const isHdCue=b=>(HDCUE.test(b)||HDCUE2.test(b))&&!HDADDR.test(b);
+const isHdCue=b=>{b=String(b).replace(/[-–—]/g," ");return(HDCUE.test(b)||HDCUE2.test(b))&&!HDADDR.test(b)};// «قال - صلى الله عليه وسلم -:»
 const LEADRX=/^\s*(و?(?:فائدة(?: \S+)?|فوائد|تنبيه|تنبيهات|مسألة|المسألة \S+|فصل|قاعدة|ضابط|تعريف\S*|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|أولا|ثانيا|ثالثا|رابعا|خامسا|سادسا|سابعا|ثامنا|تاسعا|عاشرا|الجواب|السؤال|س|ج|الدليل|الشاهد|الخلاصة|خلاصة القول|ملحوظة|ملاحظة|تعليق|المعنى|المعنى الإجمالي|وجه الدلالة|الراجح|الحكم|الحكمة|الفرق|قلت|أقول|الشرح|الإعراب|التخريج))\s*[:：]/;
 function lineMarks(l){const sp=[],t=String(l);let m;
- const rq=/﴿[^﴾]*﴾?/g;while((m=rq.exec(t)))sp.push({s:m.index,e:m.index+m[0].length,k:"qv"});
- const rg=/«([^»]*)»?/g;while((m=rg.exec(t))){if(sp.some(x=>m.index>=x.s&&m.index<x.e))continue;const words=m[1].trim().split(/\s+/).filter(Boolean).length,before=strip(t.slice(Math.max(0,m.index-60),m.index));
+ const rq=/﴿[^﴾]*﴾?|\{[^{}]*[\u0621-\u064A][^{}]*[\u0621-\u064A][^{}]*\}/g;while((m=rq.exec(t)))sp.push({s:m.index,e:m.index+m[0].length,k:"qv"});// الآيات بين ﴿ ﴾ أو { } (طريقة كثير من الكتب الإلكترونية)
+ const rg=/«([^»]*)»?|[“"]([^"”]{8,}?)["”]/g;while((m=rg.exec(t))){if(sp.some(x=>m.index>=x.s&&m.index<x.e))continue;const words=(m[1]||m[2]||"").trim().split(/\s+/).filter(Boolean).length,before=strip(t.slice(Math.max(0,m.index-60),m.index));
   const k=isHdCue(before)?"hd":words>=5?"qt":"";if(k)sp.push({s:m.index,e:m.index+m[0].length,k})}
  const st=strip(t),lm=LEADRX.exec(st);let lead=0;if(lm){// موضع النقطتين في النص الأصلي (قد يكون مشكولًا)
   const ci=t.search(/[:：]/);if(ci>0&&ci<80)lead=ci+1}
@@ -372,10 +374,12 @@ function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  const fnHtml=fnt?`<div class="fns${S.fn==="fold"?" fold":""}"><button class="fnt" data-act="fntoggle">الحواشي (${toAr(fnt.split("\n").filter(Boolean).length)})</button><div class="fnb">${fnt.split("\n").filter(Boolean).map(l=>`<p>${esc(l).replace(/^(\(?[\d٠-٩]{1,3}\)?)/,'<b>$1</b>')}</p>`).join("")}</div></div>`:"";
  const tocPg=bk&&tx.split("\n").filter(l=>TOCL.test(l.trim())).length>=4;
- return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tl=line.trim();if(/^\|.*\|$/.test(tl)){if(/^\|[\s:|-]+\|$/.test(tl))return"";return"<tr>"+tl.slice(1,-1).split("|").map(c=>"<td>"+esc(c.trim()).replace(/&lt;br&gt;/g,"<br>")+"</td>").join("")+"</tr>"}const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
+ return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tl=line.trim();if(/^\|.*\|$/.test(tl)){if(/^\|[\s:|-]+\|$/.test(tl))return"";return"<tr>"+tl.slice(1,-1).split("|").map(c=>"<td>"+esc(c.trim()).replace(/&lt;br&gt;/g,"<br>")+"</td>").join("")+"</tr>"}const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;let al="";if(/^@@ /.test(line)){al="pc";line=line.slice(3)}else if(/^<< /.test(line)){al="pe";line=line.slice(3)}else if(/^\s*(بِ?سْ?مِ?\s+(ٱ|ا)?للَّ?هِ?\s+(ٱ|ا)?لرَّ?حْ?مَ?[ـٰ]?ن?ِ?\s+(ٱ|ا)?لرَّ?حِ?يمِ?|\*\s*\*\s*\*|[*•۞✿❁]{1,5})\s*$/.test(strip(line)))al="pc";
+  const bayt=!al&&/\S\s\.\.\.\s\S/.test(line)&&line.length<220;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
   const mk=head?{sp:[],lead:0,p:""}:lineMarks(l);let pos=0;
   const inner=l.split(/(\s+)/).map(w=>{const a=pos;pos+=w.length;if(!w.trim())return w;const mc=markOf(mk,a,pos);return`<span class="w${mc?" "+mc:""}${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`}).join("");
-  return head?`<p class="ph${h2?" ph2":""}">${inner}</p>`:`<p${mk.p?` class="${mk.p}"`:""}>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
+  if(bayt&&!head){const i2=inner.replace(/<span class="w[^"]*">\.\.\.<\/span>/,'</span><span class="bsep" aria-hidden="true"></span><span class="s2">');if(i2!==inner)return`<p class="bayt${mk.p?" "+mk.p:""}"><span class="s1">${i2}</span></p>`}
+  const cls=[head?"ph"+(h2?" ph2":""):mk.p,al].filter(Boolean).join(" ");return head?`<p class="${cls}">${inner}</p>`:`<p${cls?` class="${cls}"`:""}>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
 /* تصحيحات التمييز من الإدارة (data/marks/<الكتاب>.json): {p:{"<الصفحة>":{h:بصمة النص,m:[[فقرة,من,إلى,صنف]]}}}.
    تُطبَّق فقط إن لم يتغير نص الصفحة، وتُحمَّل للكتب المعلَّمة marks في الفهرس وحدها. */
 const MARKS=new Map();

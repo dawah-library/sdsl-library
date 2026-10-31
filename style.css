@@ -859,3 +859,9 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .mrep,.mmodes{gap:6px;flex-wrap:wrap}.mmodes a{font-size:.9rem}.mtext input{font:inherit;border:0;border-bottom:2px solid var(--ac);background:transparent;text-align:center}.mtext input.ok{border-color:#2e7d32;color:#2e7d32}.mtext input.no{border-color:#c62828;color:#c62828}
 .mord{display:flex;flex-direction:column;gap:6px}.mo{text-align:right;font-family:var(--rf);white-space:normal}#mordout li.ok{color:#2e7d32}#mordout li.no{color:#c62828}
 .mdiff del{color:#c62828;text-decoration:line-through}.mdiff ins{background:#fff3cd;text-decoration:none}.mtd{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:8px 14px;margin:8px 0}.mtd h4{margin:4px 0}
+/* محاذاة الأسطر كما في المصورة (@@ وسط، << يسار)، والشعر بيتًا بشطرين متقابلين */
+.rd p.pc{text-align:center!important;text-indent:0!important}.rd p.pe{text-align:left!important;text-indent:0!important}
+.rd p.bayt{display:flex;justify-content:center;flex-wrap:wrap;gap:0 2.2em;text-indent:0!important;text-align:center!important;margin:.25em 0}
+.rd p.bayt .s1,.rd p.bayt .s2{display:inline-block;min-width:min(40%,16em);text-align:center}
+.rd p.bayt .bsep{display:inline-block;width:0}
+@media(max-width:520px){.rd p.bayt{flex-direction:column;gap:0}.rd p.bayt .s2{padding-inline-start:2em}}
