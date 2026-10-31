@@ -66,7 +66,7 @@ const LRN = (() => {
        <h3>كتب مقترحة للاختصار</h3><div class="newg">${sug.map(x => `<a class="newc" style="text-decoration:none;color:inherit" href="#/summary?b=${encodeURIComponent(x.id)}&r=20"><b>${esc(x.title)}</b><br><span class="mut">${esc(A_(x))}</span></a>`).join("")}</div>`); }
     view(intro + `<p class="mut">جارٍ تحميل الكتاب…</p>`);
     try { await loadBook(b.id); } catch (e) { return view(intro + `<div class="note">تعذر تحميل نص الكتاب: ${esc(e.message)}</div>`); }
-    const AI = await getJ("data/summ/" + b.id + ".json"), mode = AI && AI.chs && AI.chs.length && q.m !== "x" ? "ai" : "x";
+    const SL = (await getJ("data/summ/_list.json")) || {}, AI = SL[b.id] ? await getJ("data/summ/" + b.id + ".json") : null, mode = AI && AI.chs && AI.chs.length && q.m !== "x" ? "ai" : "x";
     const tabs = AI && AI.chs && AI.chs.length ? `<div class="tabs" role="tablist" style="margin-top:10px"><a role="tab" aria-selected="${mode === "ai"}" href="#/summary?b=${encodeURIComponent(b.id)}&r=25">مختصر محرَّر (بتصرف يسير)</a><a role="tab" aria-selected="${mode === "x"}" href="#/summary?b=${encodeURIComponent(b.id)}&r=20&m=x">مختصر بنص المؤلف (جمل منتقاة)</a></div>` : "";
     if (mode === "ai") return aiSummary(b, AI, q, intro, tabs);
     const sec = q.s != null && q.s !== "" ? +q.s : -1, full = sec >= 0 ? abridge(b, r, -1) : null, A = abridge(b, r, sec), _f = full || A;
