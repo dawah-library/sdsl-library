@@ -1,0 +1,114 @@
+name: كراسات المكتبة وتجهيز التفريغات
+on:
+  schedule:
+    - cron: "10 22 * * *"   # يوميًا: الكراسات التي تختارها الإدارة، ثم التفريغات التي لم تُجهَّز
+  push:
+    paths: ["data/kurrasa/_queue.json", "data/tfedit/_queue.json"]
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "معرّفات كتب (اختياري)"
+        required: false
+        default: ""
+      do:
+        description: "kurrasa,tafrigh أو أحدهما"
+        required: false
+        default: "kurrasa,tafrigh"
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: edu-ai
+  cancel-in-progress: false
+jobs:
+  # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json). الإيقاف يشمل التشغيل اليدوي والآلي؛ وتعذر القراءة لا يوقف المهمة.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" edu_ai)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح edu_ai: $on"
+  build:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+      - name: الكراسات
+        continue-on-error: true
+        if: ${{ contains(github.event.inputs.do || 'kurrasa,tafrigh', 'kurrasa') }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          KR_ONLY: ${{ github.event.inputs.books }}
+          KR_COMMIT: "1"
+          KR_MINUTES: "150"
+        run: python3 tools/kurrasa.py
+      - name: تجهيز التفريغات
+        if: ${{ contains(github.event.inputs.do || 'kurrasa,tafrigh', 'tafrigh') }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          TF_ONLY: ${{ github.event.inputs.books }}
+          TF_COMMIT: "1"
+          TF_MINUTES: "120"
+        run: python3 tools/tafrigh-fmt.py
+      - name: الحفظ
+        if: always()
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/kurrasa data/tfedit
+          git diff --cached --quiet && exit 0
+          git commit -qm "الكراسات والتفريغات: تحديث"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
+      - name: إشعار
+        if: always()
+        run: 'for f in .kr-report.txt .tf-report.txt; do [ -s $f ] && python3 tools/notify.py "$(cat $f)"; done; true'

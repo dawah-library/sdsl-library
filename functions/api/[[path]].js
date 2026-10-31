@@ -12,9 +12,10 @@ import remind from "../../api/remind.js";
 import sitemap from "../../api/sitemap.js";
 import tglink from "../../api/tglink.js";
 import translate from "../../api/translate.js";
+import edit from "../../api/edit.js";
 
 // المساعد العلمي: وسيط خفيف، والبحث في المتصفح على الفهرس المقلوب data/sx (انظر askx.js)
-const H = { gh, import: imp, mpost, notify, page, pages, r2put, remind, sitemap, tglink, translate, ask };
+const H = { gh, import: imp, mpost, notify, page, pages, r2put, remind, sitemap, tglink, translate, ask, edit };
 const DATA = { page: ["index.html", "data/catalog.json"], sitemap: ["data/catalog.json"], translate: ["data/catalog.json"], mpost: ["data/catalog.json"] };
 
 export async function onRequest(ctx) {

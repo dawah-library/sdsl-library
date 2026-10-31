@@ -305,3 +305,9 @@
 - study.js: reader (صفحتان متقابلتان S.spread، شريط نتائج البحث، اختصارات e.code)، hub (خدمات الكتاب)، recommend/recHtml (توصيات بأسبابها، و«ماذا تقرأ بعده؟»)، lexicon (#/lexicon من data/gloss والتشجير والدفتر)، timeline (#/timeline من data/a3lam/_index.json ووفيات المؤلفين).
 - طابور الصوتيات: أضيفت الكتب المسجلة لتحديث صفحاتها الصامتة (لا يعاد تسجيل غيرها إلا مع TTS_REFRESH=1).
 - المؤجل بإذن المالك: أندية القراءة (تمس حسابات الأعضاء).
+
+## الاختبارات والاختصارات المحرَّرة، والكراسات، وتجهيز التفريغات (2026-10-31)
+- tools/study-ai.py + study-ai.yml (الطابور data/study-queue.json، المفتاح study_ai): اختبارات src=ai (سهل/متوسط/متقدم، يُعرض ١٥/٣٠/٥٠، المخزون ×١.٥) بعبارة أصل مُتحقَّق منها (ctx) وتعليل (e) وجولة مراجعة؛ ومختصر data/summ/<id>.json بدرجات r50/r25/r10 وk وlit. build-quizzes.py لا يمس ملفات ai.
+- tools/kurrasa.py + kurrasa.js (#/kurrasat): كتل points/def/table/compare/map/steps/quote/note/qs، تُرسم على canvas (KUR.layout/draw)؛ الطابور data/kurrasa/_queue.json، والقائمة _list.json (ok).
+- tools/tafrigh-fmt.py → data/tfedit/<id>.json {pages:{n:{f,r}}}؛ مبدّل في القارئ للتفريغات (KUR.tfReader). api/edit.js (#/tahrir) للأعضاء: proof/fmt/rw/short (المفتاح edit، الحد SDSL_EDIT_HOURLY).
+- edu-ai.yml يشغّل الكراسات ثم التفريغات يوميًا وعند تعديل الطابورين (المفتاح edu_ai).

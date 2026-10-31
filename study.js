@@ -185,7 +185,8 @@ const STUDY = (() => {
     if (others.length) it.push(`<a href="#/author/${esc(b.authorId)}">📚 ${others.length === 1 ? "كتاب آخر" : others.length === 2 ? "كتابان آخران" : toAr(others.length) + (others.length > 10 ? " كتابًا آخر" : " كتب أخرى")} لـ${esc(a.name.replace(/^(الشيخ|الإمام|د\.)\s*/, "").split(" ").slice(0, 3).join(" "))}</a>`);
     it.push(`<a href="#/compare?a=${encodeURIComponent(b.id)}">🆚 قارنه بكتاب</a>`, `<button class="linkbtn" data-act="shelfadd">📚 أضف إلى رف</button>`);
     const notes = (S.marks || []).length; void notes;
-    rh.insertAdjacentHTML("beforeend", `<details class="bkhub"${p === 1 ? " open" : ""}><summary>خدمات الكتاب</summary><nav aria-label="خدمات الكتاب">${it.join("")}<span class="hubaud"></span><span class="hubtj"></span><span class="hubtm"></span></nav></details>`);
+    rh.insertAdjacentHTML("beforeend", `<details class="bkhub"${p === 1 ? " open" : ""}><summary>خدمات الكتاب</summary><nav aria-label="خدمات الكتاب">${it.join("")}<span class="hubkur"></span><span class="hubaud"></span><span class="hubtj"></span><span class="hubtm"></span></nav></details>`);
+    try { const r = await fetch("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/kurrasa/_list.json?t=" + Math.floor(Date.now() / 300e3)); const L = r.ok ? await r.json() : {}, x = L[b.id]; if (x && (x.ok || isAdmin())) { const el = rh.querySelector(".hubkur"); if (el) el.innerHTML = `<a href="#/kurrasat/${esc(b.id)}">📘 كراسة المذاكرة</a>`; } } catch (e) { }
     try { if (typeof AUDIO !== "undefined") { const L = await AUDIO.load(), x = L[id] || L[b.id]; if (AUDIO.ready(x)) { const el = rh.querySelector(".hubaud"); if (el) el.innerHTML = `<a href="#/audio/${esc(L[id] ? id : b.id)}">🎧 استمع إلى الكتاب${x.preview ? " (معاينة)" : ""}</a>`; } } } catch (e) { }
     try { if (typeof TSJ !== "undefined") { const L = await TSJ.index(), x = L[id]; if (x && (x.ok || isAdmin())) { const el = rh.querySelector(".hubtj"); if (el) el.innerHTML = `<a href="#/tashjir/${esc(id)}">🌳 الخريطة الذهنية</a>`; const m = await TSJ.map(id); if (m && (m.m || []).length) { const t = rh.querySelector(".hubtm"); if (t) t.innerHTML = `<a href="#/lexicon?b=${esc(id)}">📖 ${toAr(m.m.length)} مصطلحًا</a>`; } } } } catch (e) { }
   }
@@ -252,7 +253,7 @@ const STUDY = (() => {
   const HITS = new Map();
   function reader(b, p, h, o) {
     const desk = document.querySelector(".desk"), paper = document.getElementById("paper"); if (!desk || !paper) return;
-    const n = b.pages.length; if (!o.art) hub(b, p);
+    const n = b.pages.length; if (!o.art) hub(b, p); if (typeof KUR !== "undefined") KUR.tfReader(b, p);
     if (!o.art && n > 1 && (p === n || (desk.classList.contains("spreadon") && p + 1 === n))) { const r = recommend(4, [b.id]); if (r.length) desk.insertAdjacentHTML("afterend", `<section class="recend"><h3>📚 ماذا تقرأ بعده؟</h3>${recHtml(r)}<p class="mut"><button class="linkbtn" data-act="shelfadd">ضع هذا الكتاب على رف «قرأت»</button></p></section>`); }
     if (S.spread && innerWidth >= 1100 && !o.scroll && o.pv === "text" && !o.art && n > 1) {
       const q = p < n ? p + 1 : 0;

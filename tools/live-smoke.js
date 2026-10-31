@@ -5,7 +5,7 @@ const BASE = process.env.SITE_URL || "https://dawahlibrary.org/";
 const R = ["", "#/dawah", "#/library", "#/library?c=turath", "#/articles", "#/fatawa", "#/bayanat", "#/posts", "#/community", "#/audio", "#/radio", "#/ask", "#/tarajim", "#/tarajim?t=aam",
   "#/alam", "#/history", "#/about", "#/furqan", "#/ithra", "#/qa", "#/book/uluwhimma/5", "#/author/a1", "#/authors", "#/search?q=%D8%A7%D9%84%D8%AA%D9%88%D8%AD%D9%8A%D8%AF", "#/mine", "#/hifz",
   "#/tashjir", "#/quizzes", "#/paths", "#/paths/aqida1", "#/releases", "#/talaea", "#/talaea?s=g", "#/talaea/track?k=t3&s=b", "#/qabasat", "#/tafrighat", "#/summary?b=uluwhimma&r=10",
-  "#/contact", "#/majalla", "#/majalla/i1", "#/takhrij/uluwhimma", "#/mine?t=stats", "#/mine?t=shelves", "#/compare", "#/lexicon", "#/lexicon?q=%D8%A7%D9%84%D8%A8%D8%AF%D8%B9%D8%A9", "#/timeline", "#/account"];
+  "#/contact", "#/majalla", "#/majalla/i1", "#/takhrij/uluwhimma", "#/mine?t=stats", "#/mine?t=shelves", "#/compare", "#/lexicon", "#/lexicon?q=%D8%A7%D9%84%D8%A8%D8%AF%D8%B9%D8%A9", "#/timeline", "#/kurrasat", "#/tahrir", "#/account"];
 (async () => {
   const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true }), p = await ctx.newPage(), bad = [];
   let errs = []; p.on("pageerror", e => errs.push("JS: " + e.message.slice(0, 160)));
