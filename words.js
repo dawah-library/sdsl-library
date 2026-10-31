@@ -257,12 +257,50 @@ async function hadithSheet(sel) {
   const txt = strip(String(sel)).replace(/\s+/g, " ").trim(), core = txt.replace(/^.*?(?:صلى الله عليه وسلم|ﷺ)\s*[:«"]?\s*/, "").replace(/^(?:قال|يقول)\s*[:«"]?\s*/, "") || txt;
   const q = phPrep(core.split(" ").length >= 4 ? core : txt);
   openSheet("شرح الحديث", `<div class="wsheet"><p class="phq">«${esc(txt.length > 220 ? txt.slice(0, 220) + "…" : txt)}»</p>
+  <details class="wsec hdsec" open><summary>📝 الشرح الإجمالي وفوائد الحديث</summary><div id="hdai" class="mut">جارٍ الإعداد…</div></details>
+  <details class="wsec hdsec"><summary>🔤 غريب الكلمات</summary><div id="hdgh" class="mut">جارٍ البحث في «النهاية في غريب الحديث» والمعاجم…</div></details>
+  <details class="wsec hdsec"><summary>📚 مواضعه في كتب السنة</summary><div id="hdloc" class="mut">جارٍ البحث في كتب السنة…</div></details>
+  <details class="wsec hdsec"><summary>📖 مواضعه في شروح الحديث</summary>
   <p class="mut" style="margin:6px 0">اختر كتاب الشرح ليُبحث فيه عن الحديث (تُحمّل مجلداته أول مرة):</p>
   <div class="row hdbtns">${HADITH_SH.map(([p, t]) => `<button class="btn s" data-act="hdsrch" data-p="${p}">${esc(t)}</button>`).join("")}<button class="btn s p" data-act="hdall">ابحث فيها كلها</button></div>
-  <div id="hdres"></div>
+  <div id="hdres"></div></details>
   <div class="row" style="margin-top:10px"><a class="btn s nf" target="_blank" rel="noopener" href="https://dorar.net/hadith/search?q=${encodeURIComponent(core.split(" ").slice(0, 12).join(" "))}">الحكم والشرح في الدرر السنية ↗</a><a class="btn s nf" href="#/ask?q=${encodeURIComponent("اشرح حديث: «" + txt.slice(0, 400) + "» وخرّجه، مستعينًا بشروح السنة في المكتبة (فتح الباري وشرح النووي وغيرهما) مع الإحالة")}" data-act="closeSheet">💬 اسأل المساعد</a></div></div>`);
   window.__hd = { q, phrase: core, hits: [], done: new Set() };
+  hdExtra(window.__hd, txt, core);
 }
+// المدخل يخص الكلمة: يبدأ بها، أو يذكر جذرها بين قوسين كما في «النهاية» (طرق)
+const hdHead = (t, w, kk) => { t = String(t || ""); let rs = []; try { rs = roots(w) || []; } catch (e) { } return norm(t.slice(0, 40)).replace(/^\W+/, "").startsWith(kk) || rs.some(r => r && t.slice(0, 200).includes("(" + r + ")")); };
+// أقسام نافذة الحديث: مواضعه في كتب السنة (فهرس البحث)، وغريب كلماته (النهاية والمعاجم)، والشرح الإجمالي والفوائد (المساعد مستندًا إلى شروح المكتبة)
+const HD_SUNNA = /^(bukhari|muslim|abudawud|tirmidhi|nasai|ibnmajah|musnadahmad|muwatta|darimi|sunankubra|riyad|bulugh|umdaahkam|arbain|adabmufrad|shamail|masabih|jamiusul|shuabiman|baghawisunna|talkhishabir)(-v\d+)?$/;
+async function hdExtra(st, txt, core) {
+  const words = [...new Set(core.split(/\s+/).map(w => w.replace(/[^\u0621-\u064A]/g, "")).filter(w => w.length >= 4))].slice(0, 30);
+  // ١- مواضعه في كتب السنة
+  (async () => { const el = $("#hdloc"); let r = null; try { r = await SX.search(core.split(" ").slice(0, 14).join(" "), { k: 30 }); } catch (e) { }
+    if (window.__hd !== st || !el) return; const L = (r || []).filter(h => HD_SUNNA.test(h.ref.split(":")[0])).slice(0, 10);
+    el.className = ""; el.innerHTML = L.length ? L.map(h => { const [b, p] = h.ref.split(":"); return `<div class="gitem"><a href="#/book/${esc(b)}/${p}" data-act="closeSheet"><b>${esc(h.book)}</b> <span class="mut">${esc(h.page || "")}</span></a><p>${esc(String(h.text || "").slice(0, 260))}</p></div>`; }).join("") : '<p class="mut">لم يُعثر على مواضعه في كتب السنة المفهرسة. جرّب تحديد جزء أقصر من متن الحديث.</p>'; })();
+  // ٢- غريب الكلمات: المعاجم وكتب الغريب أولًا
+  (async () => { const el = $("#hdgh"), out = []; const B_ = await GL.meta().catch(() => ({}));
+    for (const w of words) { if (out.length >= 8) break; let es = []; try { es = await GL.lookup(w); } catch (e) { } const kk = GL.key(w), lx = es.filter(e => (e[2] === "l" || /nihaya|mukhtar|lisan|qamus|maqayis|sihah|mufradat/.test(e[0])) && hdHead(e[3], w, kk)).sort((a, b) => (/nihaya/.test(b[0]) ? 1 : 0) - (/nihaya/.test(a[0]) ? 1 : 0) || a[4] - b[4]);
+      if (lx[0]) out.push([w, lx[0]]); }
+    if (window.__hd !== st || !el) return; el.className = "";
+    el.innerHTML = out.length ? out.map(([w, e]) => { const b = B(e[0]); return `<div class="gitem"><b>${esc(w)}</b>: ${esc(String(e[3]).slice(0, 300))}<br><a class="mut" href="#/book/${esc(e[0])}/${e[1]}" data-act="closeSheet">${esc(b ? (b.setTitle || b.title) : e[0])} • ص ${toAr(e[1])}</a></div>`; }).join("") : '<p class="mut">لم تُعثر على كلمات غريبة في المعاجم المفهرسة.</p>'; })();
+  // ٣- الشرح الإجمالي والفوائد
+  const el = $("#hdai"); if (!el) return;
+  if (typeof AI === "undefined" || !AI.viaServer || !Auth.token) {
+    el.className = ""; el.innerHTML = `<p>يُعدّ المساعد العلمي شرحًا موجزًا للحديث وفوائده من شروح السنة في المكتبة للأعضاء المسجلين. <a href="#/account" data-act="closeSheet">سجّل الدخول</a>، أو ابحث في الشروح أدناه.</p>`; return; }
+  el.innerHTML = '<p class="mut">يبحث المساعد في شروح السنة بالمكتبة…</p>';
+  const prompt = `حديث: «${txt.slice(0, 600)}»\nابحث عنه في شروح الحديث بالمكتبة (فتح الباري، شرح النووي، عون المعبود، تحفة الأحوذي، جامع العلوم والحكم وغيرها)، ثم اكتب بإيجاز وبهذه العناوين:\n## الشرح الإجمالي\n(ثلاثة إلى خمسة أسطر)\n## من فوائد الحديث\n(أربع إلى سبع نقاط)\n## مصادر الشرح\n(الكتب والصفحات التي اعتمدت عليها)\nلا تزد على ما في الشروح، ولا تحكم على الحديث إلا بنقل حكم من كتاب في المكتبة مع عزوه.`;
+  try { const ans = await AI.viaServer({ turns: [{ role: "user", content: prompt }], mode: "explain", onText: t => { if (window.__hd === st) { el.className = ""; el.innerHTML = md(t); } }, onStatus: t => { if (window.__hd === st && !el.dataset.t) el.innerHTML = `<p class="mut">${esc(t)}</p>`; } });
+    if (window.__hd === st) { el.className = ""; el.innerHTML = md(ans) + '<p class="mut" style="font-size:.8rem">شرح آلي من المساعد العلمي مستند إلى شروح المكتبة؛ راجع المصدر عند الاستشهاد.</p>'; } }
+  catch (e) { if (window.__hd === st) { el.className = ""; el.innerHTML = e && e.text ? md(e.text) : `<p class="mut">تعذر الشرح الآلي الآن${e && e.code === "quota" ? " (انتهت حصة الساعة)" : ""}؛ ابحث في الشروح أدناه.</p>`; } }
+}
+// لمس الحديث المميَّز في القارئ (عند تفعيل «تمييز الأحاديث») يفتح نافذته
+document.addEventListener("click", e => {
+  const w = e.target.closest(".rd .w.hd"); if (!w || !document.body.classList.contains("mk-h") || String(getSelection()).trim()) return;
+  const p = w.closest("p"), ws = [...p.querySelectorAll(".w")], i = ws.indexOf(w); let a = i, z = i;
+  while (a > 0 && ws[a - 1].classList.contains("hd")) a--; while (z < ws.length - 1 && ws[z + 1].classList.contains("hd")) z++;
+  hadithSheet(ws.slice(a, z + 1).map(x => x.textContent).join(" "));
+});
 async function hdSearch(pre, btn) {
   const st = window.__hd; if (!st || st.done.has(pre)) return; st.done.add(pre); btn.disabled = true; const label = btn.textContent;
   const list = lib.books.filter(b => b.id === pre || b.id.startsWith(pre + "-v"));
