@@ -73,6 +73,9 @@
 /learn.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/majalla.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /manage.js
   Cache-Control: public, max-age=60, must-revalidate
 
