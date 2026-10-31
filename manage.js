@@ -388,7 +388,7 @@ const MG = (() => {
 
   // ===== تقارير الاستيراد والفهرسة وإعادة المحاولة (ب2-18) =====
   const RAW = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/" + p + "?t=" + Date.now();
-  const REPORTS = [["tools/turath-report.md", "استيراد كتب المكتبة العامة (OpenITI)"], ["tools/ocr-report.md", "تحويل الكتب المصورة"], ["data/import-log.txt", "الاستيراد اليومي من صوت السلف"], ["tools/alam-report.md", "فهرس الأعلام والرواة"], ["tools/dedupe-report.md", "التكرار"], ["tools/health-report.md", "الصيانة اليومية"]];
+  const REPORTS = [["tools/turath-report.md", "استيراد كتب المكتبة العامة (OpenITI)"], ["tools/ocr-report.md", "تحويل الكتب المصورة"], ["data/import-log.txt", "الاستيراد اليومي من صوت السلف"], ["tools/alam-report.md", "فهرس الأعلام والرواة"], ["tools/dedupe-report.md", "التكرار"], ["tools/health-report.md", "الصيانة اليومية"], ["data/keys-status.json", "حالة مفاتيح Gemini (بالأسماء فقط)"]];
   async function repBody() {
     const box = $("#mgrep"); if (!box) return;
     const [txts, list] = await Promise.all([Promise.all(REPORTS.map(([p]) => fetch(RAW(p)).then(r => r.ok ? r.text() : "").catch(() => ""))), fetch(RAW("tools/turath-list.json")).then(r => r.json()).catch(() => ({ books: [] }))]);

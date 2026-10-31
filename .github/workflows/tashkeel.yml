@@ -3,6 +3,7 @@ name: تشكيل الكتب (تشكيل مدقق نحويًا ولغويًا)
 on:
   schedule:
     - cron: "10 21 * * *"   # بعد جولتي التدقيق النصي اليوميتين، بما بقي من الحصة المجانية
+    - cron: "10 11 * * *"   # جولة ثانية (تتسع بتعدد المفاتيح)
   push:
     paths: ["data/tashkeel/_queue.json"]
   workflow_dispatch:
@@ -66,7 +67,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           TK_ONLY: ${{ github.event.inputs.books }}
-          TK_MAX_PAGES: ${{ github.event.inputs.pages || '400' }}
+          TK_MAX_PAGES: ${{ github.event.inputs.pages || '1200' }}
           TK_MAX_MIN: "300"
         run: python3 tools/tashkeel.py
       - name: الحفظ
