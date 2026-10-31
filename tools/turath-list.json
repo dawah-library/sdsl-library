@@ -853,10 +853,16 @@
    "id": "tuhfatatfal",
    "died": 1198,
    "author": "Jamzuri",
-   "book": "TuhfaAtfal|Tuhfat",
+   "book": "Tuhfa+Atfal",
    "title": "متن تحفة الأطفال والغلمان في تجويد القرآن",
    "authorName": "سليمان الجمزوري",
-   "topic": "t12"
+   "topic": "t12",
+   "scan": true,
+   "repos": [
+    "1200AH",
+    "1225AH",
+    "1175AH"
+   ]
   },
   {
    "id": "usulthalatha",
@@ -1334,17 +1340,29 @@
    "title": "فتح القدير",
    "authorName": "الشوكاني",
    "topic": "t2",
-   "batch": "ب5-2026-10-30"
+   "batch": "ب5-2026-10-30",
+   "scan": true,
+   "repos": [
+    "1275AH",
+    "1250AH",
+    "1300AH"
+   ]
   },
   {
    "id": "irshadfuhul",
    "died": 1250,
    "author": "Shawkani",
-   "book": "IrshadFuhul|Irshad",
+   "book": "IrshadFuhul",
    "title": "إرشاد الفحول",
    "authorName": "الشوكاني",
    "topic": "t14",
-   "batch": "ب5-2026-10-30"
+   "batch": "ب5-2026-10-30",
+   "scan": true,
+   "repos": [
+    "1275AH",
+    "1250AH",
+    "1300AH"
+   ]
   },
   {
    "id": "sayljarrar",
@@ -1354,7 +1372,13 @@
    "title": "السيل الجرار",
    "authorName": "الشوكاني",
    "topic": "t4",
-   "batch": "ب5-2026-10-30"
+   "batch": "ب5-2026-10-30",
+   "scan": true,
+   "repos": [
+    "1275AH",
+    "1250AH",
+    "1300AH"
+   ]
   },
   {
    "id": "badrtali",
@@ -1364,7 +1388,13 @@
    "title": "البدر الطالع",
    "authorName": "الشوكاني",
    "topic": "t18",
-   "batch": "ب5-2026-10-30"
+   "batch": "ب5-2026-10-30",
+   "scan": true,
+   "repos": [
+    "1275AH",
+    "1250AH",
+    "1300AH"
+   ]
   },
   {
    "id": "tarikhbaghdad",
@@ -1440,7 +1470,7 @@
    "id": "tawilmukhtalif",
    "died": 276,
    "author": "IbnQutayba",
-   "book": "TawilMukhtalifHadith|Mukhtalif",
+   "book": "TawilMukhtalafHadith|TawilMukhtalif",
    "title": "تأويل مختلف الحديث",
    "authorName": "ابن قتيبة الدينوري",
    "topic": "t13",
