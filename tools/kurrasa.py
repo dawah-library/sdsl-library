@@ -209,6 +209,9 @@ def main():
     for bid in todo[: int(os.environ.get("KR_MAX", "4"))]:
         if time.time() > T.DEADLINE[0] or (T.KEYS and len(T.EXH) >= len(T.KEYS)):
             break
+        bb = next((x for x in cat["books"] if x["id"] == bid), {})
+        if bb.get("ocr") and (bb.get("unrev") or bb.get("lite")):  # الأولوية للتدقيق: تُعدّ الكراسة بعد اكتمال مراجعة النص على الصور
+            print("  ينتظر اكتمال التدقيق:", bid, flush=True); continue
         print("كراسة:", bid, flush=True)
         try:
             k = build(bid, cat)

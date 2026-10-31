@@ -5,7 +5,7 @@
     و«صح أم خطأ» (العبارة كما في الكتاب، أو بكلمة مبدلة تجعلها خطأ، ويُعرض نص الكتاب بعد الإجابة).
   - لا تُستعمل جمل فيها آية أو حديث أو صلاة على النبي ﷺ في التبديل والحذف، صونًا للنصوص الشرعية.
   - التجديد: تُختار جمل مختلفة كل أسبوع (البذرة = الكتاب + رقم الأسبوع)، وتبقى أسئلة الإدارة اليدوية كما هي."""
-import json, glob, random, re, pathlib, datetime
+import json, glob, os, random, re, pathlib, datetime
 R = pathlib.Path(__file__).resolve().parent.parent; Q = R / "data" / "quizzes"; Q.mkdir(exist_ok=True)
 cat = {b["id"]: b for b in json.loads((R / "data/catalog.json").read_text(encoding="utf-8"))["books"]}
 def cut(s, n):
@@ -22,7 +22,12 @@ def sents(pages):
         for s_ in re.split(r"(?<=[.؟!])\s+|\n+", body):
             s_ = s_.strip().lstrip("#").strip(); w = s_.split()
             if 9 <= len(w) <= 28 and not SACRED.search(s_) and not re.search(r"\d{3,}|[A-Za-z]", s_): yield i + 1, s_
+TEXTQ = os.environ.get("QUIZ_TEXT", "0") == "1"  # الأسئلة الآلية من جمل الكتب أُوقفت: كثير منها مقتطع بلا سياق وبدائله بلا معنى؛ وتحل محلها الاختبارات المحرَّرة (tools/study-ai.py)
+
+
 def textq(bid, pages, rnd):
+    if not TEXTQ:
+        return []
     S = list(sents(pages)); out = []
     if len(S) < 30: return out
     vocab = [w for _, s_ in S for w in s_.split() if len(w) >= 4 and re.fullmatch(r"[\u0621-\u064A\u064B-\u0652]+", w) and w not in STOP]
@@ -75,7 +80,11 @@ for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة 
     out_f = Q / (bid + ".json"); old = json.loads(out_f.read_text(encoding="utf-8")) if out_f.exists() else {"qs": []}
     manual = [q for q in old.get("qs", []) if q.get("src") not in ("qa", "text")]
     tq = textq(bid, pages, random.Random("%s-%d" % (bid, WEEK)))
-    if len(tq) < 9 and not manual: continue
+    if len(tq) < 9 and not manual:
+        if out_f.exists() and any(q.get("src") == "text" for q in old.get("qs", [])):  # تنظيف الأسئلة الآلية القديمة
+            out_f.write_text(json.dumps({"v": 1, "b": bid, "at": str(datetime.date.today()), "qs": []}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            items.pop(bid, None)
+        continue
     allq = manual + tq
     out_f.write_text(json.dumps({"v": 1, "b": bid, "at": str(datetime.date.today()), "qs": allq}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     lv = {}
@@ -94,8 +103,11 @@ for f in sorted(glob.glob(str(R / "data/qa/*.json"))):
     rnd = random.Random("%s-%d" % (bid, WEEK)); qs = []
     rnd.shuffle(qa)
     for x in qa[:60]:
-        a = cut(x["a"], 220); others = [cut(y["a"], 220) for y in qa if y is not x]
-        dis = [o for o in rnd.sample(others, min(len(others), 6)) if o != a][:3]
+        a = cut(x["a"], 220)
+        # البدائل: أجوبة الكتاب الأقرب إلى موضوع السؤال (كلمات مشتركة)، فلا يُعرف الجواب بمجرد بعد البدائل عن المسألة
+        kw = {w for w in re.findall(r"[\u0621-\u064A]{4,}", x["q"] + " " + x["a"][:200]) if w not in STOP}
+        others = sorted((y for y in qa if y is not x), key=lambda y: (-len(kw & set(re.findall(r"[\u0621-\u064A]{4,}", y["q"] + " " + y["a"][:200]))), rnd.random()))
+        dis = [o for o in (cut(y["a"], 220) for y in others[:8]) if o != a and o[:60] != a[:60]][:3]
         if len(dis) < 3: continue
         opts = dis + [a]; rnd.shuffle(opts)
         qs.append({"id": "qa" + x["id"], "type": "mcq", "lvl": "hard", "q": cut(x["q"], 400), "opts": opts, "a": a, "p": x.get("p", 1), "ok": True, "src": "qa"})

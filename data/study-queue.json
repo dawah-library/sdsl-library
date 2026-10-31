@@ -97,6 +97,336 @@
     "quiz",
     "summ"
    ]
+  },
+  {
+   "id": "waraqat",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ajurrumiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "qatr",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "shudhur",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tahawiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "usulthalatha",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "adabmashy",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "muqusul",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "kashfshubuhat",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tadhkirasami",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "wasitiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "rafmalam",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ubudiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tawhid",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "wabil",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ajurriakhlaq",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "maratibijma",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "furqanawliya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "fawaid",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "iqtidailm",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tibyannawawi",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tadmuriyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "shamail",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "fusul",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "fiqhlugha",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "umdafiqh",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tawilmushkil",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "imantay",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "lataif",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "hamawiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "awasim",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "risala",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "mukhtasarminhaj",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ibnsalah",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "daliltalib",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tawilmukhtalif",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tariqhijratayn",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "umdaahkam",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "riyad",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "sharhtahawiyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "barbahari",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "masailjahiliyya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "siyasa",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "makarimakhlaq",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "kabair",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "adhkiya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "uluww",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ruh",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tawwabin",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "ijtimajuyush",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "tuhfatmawdud",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "shifaalil",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "adabdunya",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "adabdunyadin",
+   "do": [
+    "quiz"
+   ]
+  },
+  {
+   "id": "itiqadbay",
+   "do": [
+    "quiz"
+   ]
   }
  ]
 }

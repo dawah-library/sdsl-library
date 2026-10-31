@@ -44,6 +44,9 @@ BOOKS = {  # (الكتاب، من، إلى، عنوان المستوى) — مق
     "t3": [("p92d51e73", 1, 200, 8), ("aclamsalaf", 1, 222, 8), ("lumca", 1, 39, 6), ("ajurrumiyya", 1, 32, 6), ("tuhfatatfal", 1, 30, 5), ("usulthalatha", 1, 40, 5), ("adabdunyadin", 1, 120, 6), ("qatr", 1, 34, 4), ("suwarsahaba", 1, 200, 6), ("suwarsahabiyyat", 1, 150, 6), ("adhkiya", 1, 120, 6), ("farajbaadshidda", 1, 100, 6)],
     "t4": [("uluwhimma", 1, 200, 10), ("wasitiyya", 1, 72, 8), ("tawhid", 1, 145, 10), ("waraqat", 1, 25, 6), ("p4289f23d", 1, 150, 10), ("ajurrihamala", 1, 123, 10), ("shamail", 1, 120, 8), ("tadhkirasami", 1, 150, 8), ("adabshariyya", 1, 150, 8), ("suwartabiin", 1, 200, 8), ("saydkhatir", 1, 200, 8), ("mukhtasarminhaj", 1, 200, 8), ("sifatsafwa", 1, 150, 8)],
 }
+PRI = {"w5", "w107"}  # الشيخ مصطفى دياب والأستاذ محمود عمارة: الأساس والمرجع في محتوى الطلائع (data/tala-manhaj.json)
+for k, ids in {"t1": ["p817362d4", "p2bbce0f0"], "t2": ["p981b8b1b", "peb296fa1"], "t3": ["pd0e9a575"], "t4": ["pd0e9a575"]}.items():
+    BOOKS[k] = [(i, 1, (B.get(i) or {}).get("n") or 100, 8) for i in ids if i in B and not (B[i].get("unrev") or B[i].get("lite"))] + BOOKS[k]  # «الأساس» بعد اكتمال تدقيقه، و«أوقف الشمس»
 LV = {"t1": 4, "t2": 4, "t3": 5, "t4": 6}  # عناصر في كل مستوى
 
 def main():
@@ -57,7 +60,7 @@ def main():
             t = text_of(x)
             if not (300 < len(t) <= mx) or BAD.search(t[:4000]): continue
             arts.append((tops.index(x["tp"]), len(t), x))
-        arts.sort(key=lambda a: (a[1], a[0]))
+        arts.sort(key=lambda a: (0 if a[2].get("a") in PRI else 1, a[1], a[0]))  # مقالات مشايخ الطلائع أولًا
         # تنويع الموضوعات: بالتناوب بين الموضوعات
         byt = collections.defaultdict(list)
         for a in arts: byt[a[0]].append(a)

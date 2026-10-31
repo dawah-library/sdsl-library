@@ -491,6 +491,7 @@ async def main():
         pick = set(jload(os.path.join(AUD, "_auto.json"), {}).get("turath") or [])
         skip = set(jload(os.path.join(AUD, "_settings.json"), {}).get("skip") or [])
         cands = [b for b in cat["books"] if b["id"] not in skip and not b.get("hidden") and not b.get("demo") and b.get("type", "book") == "book" and not b.get("vf") and b["id"] not in have
+                 and not (b.get("ocr") and (b.get("unrev") or b.get("lite")))  # الأولوية للتدقيق: لا صوت قبل اكتمال مراجعة النص على الصور
                  and ((b.get("col") or "dawah") == "dawah" or b.get("upl") or b["id"] in pick) and not (lst.get(b["id"], {}).get("n") and lst[b["id"]].get("n", 0) >= lst[b["id"]].get("of", 1))]
         cands.sort(key=lambda b: (0 if (b.get("col") or "dawah") == "dawah" else 1, b.get("n") or 9999))
         items += [{"id": b["id"]} for b in cands[:int(os.environ.get("TTS_AUTO_BOOKS", "6"))]]

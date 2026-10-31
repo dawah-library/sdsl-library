@@ -931,7 +931,7 @@ def plan():
             # المراجعة الدورية تلقائية لكتب مكتبة الدعوة، وغيرها حسب الطلب المباشر (data/review-requests.json)
             need = [b for b in cat["books"] if (b.get("col") == "dawah" or b.get("upl") or b["id"] in req) and (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             need.sort(key=lambda b: (-(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))  # الأحوج أولًا
-            books += ["rereview:" + b["id"] for b in need][:6]
+            books += ["rereview:" + b["id"] for b in need][:int(os.environ.get("OCR_REREVIEW_BOOKS", "10"))]  # التدقيق أولًا: عشرة كتب في الجولة
         if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
         else:  # لا مسودات للكتب الإلكترونية (طبقة نص سليمة)

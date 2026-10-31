@@ -193,7 +193,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
     Object.keys(share).forEach(t => qs.push(...(by[t] || []).splice(0, Math.round(want * share[t]))));
     shuffle(Object.values(by).flat()).forEach(x => { if (qs.length < want) qs.push(x); });
     qs.splice(want); const qs2 = shuffle(qs); qs.length = 0; qs.push(...qs2);
-    if (!b || !qs.length) return view(`<p><a href="#/quizzes">اختبارات الكتب</a> ›</p><div class="note">لا توجد أسئلة معتمدة لهذا المستوى بعد.</div>`);
+    if (!b || !qs.length) return view(`<p><a href="#/quizzes">اختبارات الكتب</a> ›</p><div class="note">أسئلة هذا الكتاب قيد الإعداد: تُعدّ له اختبارات محرَّرة متدرجة تامة السياق، تُراجَع مرة ثانية قبل نشرها، وتظهر هنا قريبًا.</div>`);
     CUR = { b: id, l, qs };
     view(`<p><a href="#/quizzes">اختبارات الكتب</a> › ${esc(b.title)}</p><h2>اختبار: ${esc(b.title)} <span class="mut">— ${LV[l]} (${toAr(qs.length)} سؤالًا)</span></h2>
      <nav class="chips">${Object.keys(LV).map(k => `<a class="chip${k === l ? " x" : ""}" href="#/quizzes/${esc(id)}?l=${k}">${LV[k]} — ${toAr(QN[k])} سؤالًا</a>`).join("")}</nav>${qs.length < QN[l] ? `<p class="mut">المتاح الآن في هذا المستوى ${toAr(qs.length)} سؤالًا، ويكتمل العدد بعد إعداد الأسئلة المحرَّرة للكتاب.</p>` : ""}
