@@ -271,6 +271,10 @@ def main():
             if not source_of(meta):
                 log("  (بيانات الرأس: " + " | ".join("%s=%s" % (k, v[:50]) for k, v in list(meta.items())[:14]) + ")")
             entries, total = build(item, meta, pages, ver["name"], cat)
+            for e in entries:  # كتب معاصرة محفوظة الحقوق: تُستورد مخفية حتى تؤكد الإدارة الإذن، وقسم وموضوع ووسوم محددة
+                if item.get("hidden"): e["hidden"] = True; e["rights"] = item.get("rights") or "معاصر: يُنشر بعد تأكيد إذن المؤلف أو الناشر"
+                if item.get("col"): e["col"] = item["col"]
+                if item.get("tags"): e["tags"] = sorted(set(e.get("tags", []) + item["tags"]))
             ids = set(e["id"] for e in entries)
             cat["books"] = [x for x in cat["books"] if x["id"] not in ids and x.get("set") != item["id"]] + entries
             log("  ✓ أُضيف: %d صفحة، %d مجلد، %.1f م.ب — %s" % (len(pages), len(entries), total / 1048576, source_of(meta) or "بلا بيانات طبعة"))

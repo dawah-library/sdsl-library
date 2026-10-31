@@ -12,7 +12,7 @@ const TALA = (() => {
   const star = n => { st().stars += n; saveS(); const el = $("#tstars"); if (el) el.textContent = toAr(st().stars); };
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
-  const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"]];
+  const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
   const head = (t, back) => `<div class="tala"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
   async function show(q, sub) {
     await load();
@@ -48,6 +48,9 @@ const TALA = (() => {
     }
     if (g === "tf") { const fs = shuffle(D.facts || []).slice(0, 10); if (!fs.length) return view_(head("صح أم خطأ؟", true) + '<div class="note">تُضاف الأسئلة قريبًا.</div></div>'); G = { fs, i: 0, s: 0 }; return tfRound(); }
     if (g === "memory") return memory();
+    if (g === "harakat") { G = { i: 0, s: 0 }; return harakat(); }
+    if (g === "word") { const Qs = await quran(); const ws = []; Qs.filter(x => x.n >= 93).forEach(x => x.ayat.forEach(a => String(a).split(/\s+/).forEach(w => { const b = w.replace(/[^\u0621-\u064A]/g, ""); if (b.length >= 3 && b.length <= 6 && !/[ٱۜ-ۭ]/.test(w)) ws.push([w, b]); })));
+      G = { ws: shuffle(ws).slice(0, 10), i: 0, s: 0 }; return wordRound(); }
     location.hash = "#/talaea";
   }
   const sname = s => esc(s.name.replace(/^سُورَةُ\s*/, ""));
@@ -76,6 +79,22 @@ const TALA = (() => {
     G = { cards, open: [], done: 0, moves: 0 };
     view_(head("ذاكرة الحروف", true) + `<p>اقلب بطاقتين في كل مرة، وطابق الحرفين المتشابهين.</p><div class="talamem">${cards.map((c, i) => `<button class="mcard" data-act="tala-mem" data-i="${i}" aria-label="بطاقة ${toAr(i + 1)}"><span>${c}</span></button>`).join("")}</div><p class="mut" id="tmv">المحاولات: ٠</p></div>`);
   }
+  // التأسيس اللغوي للمراحل الأولى: الحرف بالحركات الثلاث والسكون والتنوين
+  const HN = [["َ", "الفتحة"], ["ُ", "الضمة"], ["ِ", "الكسرة"], ["ْ", "السكون"], ["ً", "تنوين الفتح"], ["ٌ", "تنوين الضم"], ["ٍ", "تنوين الكسر"]];
+  const LN = { ب: "الباء", ت: "التاء", ث: "الثاء", ج: "الجيم", ح: "الحاء", خ: "الخاء", د: "الدال", ذ: "الذال", ر: "الراء", ز: "الزاي", س: "السين", ش: "الشين", ص: "الصاد", ض: "الضاد", ط: "الطاء", ظ: "الظاء", ع: "العين", غ: "الغين", ف: "الفاء", ق: "القاف", ك: "الكاف", ل: "اللام", م: "الميم", ن: "النون", ه: "الهاء", و: "الواو", ي: "الياء" };
+  function harakat() {
+    if (G.i >= 10) { star(G.s >= 8 ? 3 : 1); return view_(head("حروف وحركات", true) + `<h2 class="talat">انتهت الجولة!</h2><p>أصبت ${toAr(G.s)} من ${toAr(10)} ⭐</p><a class="btn p" href="#/talaea/games?g=harakat&r=${Date.now()}">جولة جديدة</a></div>`); }
+    const L = shuffle(Object.keys(LN))[0], hs = shuffle(HN.slice(0, G.i < 5 ? 3 : 7)).slice(0, 3), want = hs[0];
+    G.want = want[0];
+    view_(head("حروف وحركات", true) + `<p class="mut">السؤال ${toAr(G.i + 1)} من ${toAr(10)}</p><p class="talaq">اختر <b>${LN[L]}</b> مع <b>${want[1]}</b></p>
+      <div class="talao harak">${shuffle(hs).map(h => `<button class="btn talaopt big" data-act="tala-hk" data-v="${h[0]}">${L}${h[0]}</button>`).join("")}</div><div id="tfb" hidden></div></div>`);
+  }
+  function wordRound() {
+    if (G.i >= G.ws.length) { star(G.s >= 7 ? 3 : 1); return view_(head("ركّب الكلمة", true) + `<h2 class="talat">أحسنت!</h2><p>ركّبت ${toAr(G.s)} من ${toAr(G.ws.length)} كلمات ⭐</p><a class="btn p" href="#/talaea/games?g=word&r=${Date.now()}">كلمات أخرى</a></div>`); }
+    const [full, bare] = G.ws[G.i]; G.pick = ""; G.bare = bare;
+    view_(head("ركّب الكلمة", true) + `<p class="mut">الكلمة ${toAr(G.i + 1)} من ${toAr(G.ws.length)} — من سور جزء عمّ</p><p class="talaq quran">${esc(full)}</p><p>اضغط الحروف بالترتيب لتكتب الكلمة:</p>
+      <p class="talaq" id="wpick">…</p><div class="talao">${shuffle([...bare].map((c, k) => [c, k])).map(([c, k]) => `<button class="btn talaopt big" data-act="tala-wd" data-c="${c}">${c}</button>`).join("")}</div><div id="tfb" hidden></div></div>`);
+  }
   const fb = (ok, html) => { const el = $("#tfb"); el.hidden = false; el.className = "talafb " + (ok ? "ok" : "no"); el.innerHTML = html; };
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=tala-]"); if (!el) return; e.preventDefault(); e.stopImmediatePropagation(); const a = el.dataset.act;
@@ -94,6 +113,14 @@ const TALA = (() => {
       document.querySelectorAll(".talaopt").forEach(b => b.disabled = true);
       fb(ok, `${ok ? "أحسنت! ⭐" : "ليست صحيحة."} ${f.a ? "المعلومة صحيحة." : "المعلومة خاطئة."}${f.why ? `<p>${esc(f.why)}</p>` : ""}<button class="btn p" data-act="tala-tfn">التالي</button>`);
     } else if (a === "tala-tfn") { G.i++; tfRound(); }
+    else if (a === "tala-hk") { const ok = el.dataset.v === G.want; if (ok) { G.s++; star(1); } document.querySelectorAll(".talaopt").forEach(b => b.disabled = true); el.classList.add(ok ? "right" : "wrong");
+      fb(ok, `${ok ? "أحسنت! ⭐" : "ليست هذه؛ انظر إلى الحركة فوق الحرف أو تحته."}<button class="btn p" data-act="tala-hkn">التالي</button>`); }
+    else if (a === "tala-hkn") { G.i++; harakat(); }
+    else if (a === "tala-wd") { const c = el.dataset.c, need = G.bare[G.pick.length];
+      if (c === need) { G.pick += c; el.disabled = true; el.classList.add("right"); $("#wpick").textContent = G.pick;
+        if (G.pick === G.bare) { G.s++; star(1); fb(true, `أحسنت! ⭐ <button class="btn p" data-act="tala-wdn">التالي</button>`); } }
+      else { el.classList.add("wrong"); setTimeout(() => el.classList.remove("wrong"), 500); } }
+    else if (a === "tala-wdn") { G.i++; wordRound(); }
     else if (a === "tala-mem") {
       const i = +el.dataset.i; if (el.classList.contains("on") || G.open.length === 2) return;
       el.classList.add("on"); G.open.push(i);

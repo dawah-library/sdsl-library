@@ -750,3 +750,4 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .tjzoom{gap:6px;align-items:center;margin:6px 0}.tjwrap{cursor:grab;overflow:auto;touch-action:pan-x pan-y}.tjwrap .tj{transition:transform .15s}
 .rsched .rprog{padding:6px 0;border-top:1px dashed var(--line)}.rsched .rprog.live{color:var(--ac);font-weight:600}
 .apfind{margin:4px 0 8px}.aptext .hit{background:#f6d58a;border-radius:3px}
+.talao.harak .btn.big,.talao .btn.big{font-size:2rem;min-width:70px;font-family:Amiri,serif}

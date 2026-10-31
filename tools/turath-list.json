@@ -1595,6 +1595,90 @@
    "authorName": "ابن السني",
    "topic": "t11",
    "batch": "tala"
+  },
+  {
+   "id": "suwarsahaba",
+   "died": 0,
+   "scan": true,
+   "repos": [
+    "1425AH",
+    "1450AH",
+    "1400AH"
+   ],
+   "author": "Basha|CabdRahmanRafat",
+   "book": "SuwarMin+Sahaba",
+   "title": "صور من حياة الصحابة",
+   "authorName": "عبد الرحمن رأفت الباشا",
+   "topic": "t18",
+   "tags": [
+    "tala:t2",
+    "tala:t3"
+   ],
+   "hidden": true,
+   "batch": "tala"
+  },
+  {
+   "id": "suwartabiin",
+   "died": 0,
+   "scan": true,
+   "repos": [
+    "1425AH",
+    "1450AH",
+    "1400AH"
+   ],
+   "author": "Basha|CabdRahmanRafat",
+   "book": "SuwarMin+Tabic",
+   "title": "صور من حياة التابعين",
+   "authorName": "عبد الرحمن رأفت الباشا",
+   "topic": "t18",
+   "tags": [
+    "tala:t3",
+    "tala:t4"
+   ],
+   "hidden": true,
+   "batch": "tala"
+  },
+  {
+   "id": "suwarsahabiyyat",
+   "died": 0,
+   "scan": true,
+   "repos": [
+    "1425AH",
+    "1450AH",
+    "1400AH"
+   ],
+   "author": "Basha|CabdRahmanRafat",
+   "book": "SuwarMin+Sahabiyyat",
+   "title": "صور من حياة الصحابيات",
+   "authorName": "عبد الرحمن رأفت الباشا",
+   "topic": "t18",
+   "tags": [
+    "tala:t3",
+    "tala:t4"
+   ],
+   "hidden": true,
+   "batch": "tala"
+  },
+  {
+   "id": "nahwwadih",
+   "died": 0,
+   "scan": true,
+   "repos": [
+    "1425AH",
+    "1450AH",
+    "1400AH"
+   ],
+   "author": "Jarim|CaliJarim",
+   "book": "NahwWadih",
+   "title": "النحو الواضح في قواعد اللغة العربية",
+   "authorName": "علي الجارم ومصطفى أمين",
+   "topic": "t15",
+   "tags": [
+    "tala:t2",
+    "tala:t3"
+   ],
+   "hidden": true,
+   "batch": "tala"
   }
  ]
 }
