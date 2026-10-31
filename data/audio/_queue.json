@@ -1,1 +1,10 @@
-{"items":[{"id":"tibyannawawi","voice":"gemini:Enceladus","rate":"-5%","force":1}]}
+{
+ "items": [
+  {
+   "id": "tibyannawawi",
+   "voice": "gemini:Enceladus",
+   "rate": "-5%",
+   "force": 1
+  }
+ ]
+}
