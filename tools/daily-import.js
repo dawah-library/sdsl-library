@@ -87,7 +87,8 @@ async function main() {
   }
   // فتاوى صوت السلف لا تذكر اسم المفتي، والموقع هو الموقع الرسمي للشيخ ياسر برهامي؛ تُنسب إليه افتراضيًا (fatwaAuthor في import-state.json، أو "" لإلغاء ذلك)
   const isFatwa = c => /^(أسئلة|الاستفتاء|من فقه الواقع)/.test(c || "");
-  if (st.fatwaAuthor) idx.items.forEach(x => { if (x.a === "a8" && isFatwa(x.c)) { x.a = st.fatwaAuthor; x.fa = 1; } });
+  // النسبة للشيخ ياسر برهامي: ما كُتب باسمه، والفتاوى ذات السؤال فقط؛ ما سواه من إعداد صوت السلف يبقى لـ a8 (قرار المدير ٣١ أكتوبر)
+  const isQA = t => /السؤال|الجواب|[؟?]|يسأل|سائل|الرسالة\s*:/.test(String(t || "").slice(0, 500));
   const groups = {}; const loadGroup = g => groups[g] || (groups[g] = readJSON(path.join(ADIR, g + ".json"), {}));
   let got = 0, errs = 0, stop = false;
   // معالجة رقم واحد: "ok" أو "miss" أو "have" أو "err"
@@ -118,7 +119,7 @@ async function main() {
       const g = /^\d{4}-\d{2}/.test(a.date) ? a.date.slice(0, 7) : "undated";
       const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
       loadGroup(g)[sid] = { pages: text };
-      const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category);
+      const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category) && isQA(a.text);
       idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : aid0, ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
       have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
       return "ok";

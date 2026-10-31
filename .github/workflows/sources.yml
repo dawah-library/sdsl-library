@@ -35,10 +35,12 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node tools/source-import.js
+      # المصادر الإثرائية المفعّل نشرها آليًّا (auto): ملخص ورابط، بلا نص كامل
+      - run: python3 tools/ithra-publish.py
       - run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"
-          git add data/import-review.json data/sources.json
+          git add data/import-review.json data/sources.json data/articles data/catalog.json
           git diff --cached --quiet && exit 0
           git commit -qm "الاستجلاب الدوري: قائمة المراجعة"
           for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done

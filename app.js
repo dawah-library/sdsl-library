@@ -711,7 +711,7 @@ function editDlg(){const rb=$("#rb"),b=B(rb.dataset.id),p=+rb.dataset.p;openDlg(
 
 /* ---------- القبسات ---------- */
 let pendingQ=null;
-const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080",fz:100,lh:1.8,al:"center",sa:true,sb:true,wm:"corner",url:true},ls.get("qset",{}));
+const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080",fz:100,fw:400,lh:1.8,al:"center",sa:true,sb:true,wm:"corner",url:true},ls.get("qset",{}));
 // المصدر «الكاتب — الكتاب، الصفحة»: يُظهر منه ما يختاره المستخدم
 const qSrc=s=>{const p=String(s||"").split(" — ");return p.length<2?(Q.sa||Q.sb?s:""):[Q.sa&&p[0],Q.sb&&p.slice(1).join(" — ")].filter(Boolean).join(" — ")};
 const SITEHOST=()=>siteLink("").replace(/^https?:\/\//,"").replace(/\/$/,"");let QIMG=null;
@@ -751,9 +751,11 @@ async function draw(){const cv=$("#cv");if(!cv)return;const my=++drawing;
  const text=($("#qt").value.trim()||"…"),src=qSrc($("#qs").value.trim()),cm=$("#qc").value.trim(),A_=Object.assign({},st.area);
  if(Q.wm==="bar")A_.h-=40;
  const reserve=(src?70:0)+(cm?60:0);let fs=Math.round(W*.064*(Q.fz||100)/100),L;
- for(;fs>20;fs-=2){c.font=`${fs}px "${Q.font}", serif`;L=wrap(c,text,A_.w);if(L.length*fs*Q.lh<=A_.h-reserve)break}
- const lh=fs*Q.lh,blockH=L.length*lh+reserve,ax=Q.al==="right"?A_.x+A_.w:Q.al==="left"?A_.x:W/2;let y=A_.y+(A_.h-blockH)/2+fs;c.textAlign=Q.al||"center";c.fillStyle=st.ink;
- L.forEach(l=>{c.fillText(l,ax,y);y+=lh});
+ for(;fs>20;fs-=2){c.font=`${Q.fw||400} ${fs}px "${Q.font}", serif`;L=wrap(c,text,A_.w);if(L.length*fs*Q.lh<=A_.h-reserve)break}
+ const jus=Q.al==="justify",lh=fs*Q.lh,blockH=L.length*lh+reserve,ax=Q.al==="right"||jus?A_.x+A_.w:Q.al==="left"?A_.x:W/2;let y=A_.y+(A_.h-blockH)/2+fs;c.textAlign=jus?"right":Q.al||"center";c.fillStyle=st.ink;
+ // المحاذاة المستقيمة من الجانبين: توزيع الفراغ بين الكلمات، إلا السطر الأخير من كل فقرة
+ const lastOf=new Set();{let k=0;text.split("\n").forEach(par=>{k+=wrap(c,par,A_.w).length;lastOf.add(k-1)})}
+ L.forEach((l,i)=>{const w=l.split(" ");if(jus&&w.length>1&&!lastOf.has(i)){const ws=w.map(x=>c.measureText(x).width),gap=(A_.w-ws.reduce((a,b)=>a+b,0))/(w.length-1);let x=ax;w.forEach((x_,k)=>{c.fillText(x_,x,y);x-=ws[k]+gap})}else c.fillText(l,ax,y);y+=lh});
  if(src){y+=14;c.fillStyle=st.acc;c.font=`600 ${Math.round(fs*.55)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText("— "+src,ax,y);y+=50}
  if(cm){c.fillStyle=st.ink;c.globalAlpha=.85;c.font=`${Math.round(fs*.5)}px "IBM Plex Sans Arabic", sans-serif`;c.fillText(cm,ax,y);c.globalAlpha=1}
  c.textAlign="center";
@@ -787,7 +789,7 @@ async function vQabasat(q){const pq=pendingQ;
  <div id="qp-id" class="ids" style="margin-top:8px"></div>
  <div id="qp-plain" class="row" style="margin-top:8px"><div class="swatches nf">${PLAINS.map(p=>`<button class="sw" data-plain="${p}" aria-label="لون ${p}" style="background:${p}"></button>`).join("")}</div><input type="color" id="qcol" value="${Q.plain}" aria-label="لون مخصص" class="nf"></div>
  <div id="qp-photo" style="margin-top:8px"><input type="file" id="qimg" accept="image/*" aria-label="اختر صورة"><label for="qdim">تعتيم الصورة لوضوح النص</label><input type="range" id="qdim" min="0" max=".8" step=".05" value="${Q.dim}"></div>
- <fieldset class="secs"><legend>تنسيق النص</legend><div class="row"><div><label for="qfz">حجم الخط <output id="qfzv">${Q.fz}٪</output></label><input type="range" id="qfz" min="60" max="150" step="5" value="${Q.fz}"></div><div><label for="qlh">تباعد الأسطر <output id="qlhv">${Q.lh}</output></label><input type="range" id="qlh" min="1.3" max="2.6" step=".1" value="${Q.lh}"></div><div><label for="qal">المحاذاة</label><select id="qal"><option value="center">وسط</option><option value="right">يمين</option><option value="left">يسار</option></select></div></div>
+ <fieldset class="secs"><legend>تنسيق النص</legend><div class="row"><div><label for="qfz">حجم الخط <output id="qfzv">${Q.fz}٪</output></label><input type="range" id="qfz" min="60" max="150" step="5" value="${Q.fz}"></div><div><label for="qlh">تباعد الأسطر <output id="qlhv">${Q.lh}</output></label><input type="range" id="qlh" min="1.3" max="2.6" step=".1" value="${Q.lh}"></div><div><label for="qal">المحاذاة</label><select id="qal"><option value="center">وسط</option><option value="right">يمين</option><option value="left">يسار</option><option value="justify">مستقيمة من الجانبين</option></select></div><div><label for="qfw">سُمك الخط</label><select id="qfw"><option value="400">عادي</option><option value="700">عريض</option></select></div></div>
  <label class="inl"><input type="checkbox" id="qsa"${Q.sa?" checked":""}> اسم الكاتب</label><label class="inl"><input type="checkbox" id="qsb"${Q.sb?" checked":""}> اسم الكتاب والصفحة</label><label class="inl"><input type="checkbox" id="qurl"${Q.url?" checked":""}> رابط الموقع</label></fieldset>
  <div class="row"><div><label for="qwm">بصمة هوية المكتبة</label><select id="qwm"><option value="corner">ختم في الزاوية</option><option value="bar">شريط سفلي</option><option value="tile">علامة مائية على كامل الصورة</option></select></div></div>
  <label class="inl"><input type="checkbox" id="qlogo"${Q.logo?" checked":""}> إظهار شعار الدعوة السلفية</label>
@@ -807,7 +809,7 @@ async function vQabasat(q){const pq=pendingQ;
  $("#qimg").onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{QIMG=i;Q.bg="photo";sync();draw()};i.src=u};
  $("#qdim").oninput=e=>{Q.dim=+e.target.value;saveQ();draw()};
  $("#qlogo").onchange=e=>{Q.logo=e.target.checked;saveQ();draw()};
- $("#qal").value=Q.al;$("#qwm").value=Q.wm;
+ $("#qal").value=Q.al;$("#qwm").value=Q.wm;$("#qfw").value=String(Q.fw||400);$("#qfw").onchange=e=>{Q.fw=+e.target.value;saveQ();draw()};
  $("#qfz").oninput=e=>{Q.fz=+e.target.value;$("#qfzv").textContent=toAr(Q.fz)+"٪";saveQ();draw()};$("#qlh").oninput=e=>{Q.lh=+e.target.value;$("#qlhv").textContent=toAr(Q.lh);saveQ();draw()};
  [["qal","al"],["qwm","wm"]].forEach(([i,k])=>$("#"+i).onchange=e=>{Q[k]=e.target.value;saveQ();draw()});[["qsa","sa"],["qsb","sb"],["qurl","url"]].forEach(([i,k])=>$("#"+i).onchange=e=>{Q[k]=e.target.checked;saveQ();draw()});
  $("#qfont").onchange=e=>{Q.font=e.target.value;saveQ();draw()};$("#qz").onchange=e=>{Q.size=e.target.value;saveQ();draw()};$("#qi").onchange=e=>{Q.ink=e.target.value;saveQ();draw()};

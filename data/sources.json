@@ -228,7 +228,8 @@
      "errs": 0
     }
    },
-   "wpCats": "9,2,14,21,10,7,778"
+   "wpCats": "9,2,14,21,10,7,778",
+   "auto": true
   },
   {
    "id": "furqan",
@@ -288,7 +289,8 @@
      "skipped": 11,
      "errs": 0
     }
-   }
+   },
+   "auto": true
   },
   {
    "id": "usus",
