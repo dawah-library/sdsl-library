@@ -376,8 +376,43 @@ def rec_book(item, lst):
     return True
 
 
+SAMPLE = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ، الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ، وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللَّهِ. أَمَّا بَعْدُ: فَإِنَّ طَلَبَ الْعِلْمِ مِنْ أَفْضَلِ الْقُرُبَاتِ، وَبِهِ يَعْرِفُ الْعَبْدُ رَبَّهُ وَيَعْبُدُهُ عَلَى بَصِيرَةٍ."
+
+
+async def samples():
+    """عينات الأصوات للاختيار في «إدارة الصوتيات»: إصدار audio-voices، ملف لكل صوت (gemini-Charon.mp3، ar-SA-HamedNeural.mp3…)."""
+    V = jload(os.path.join(AUD, "_voices.json"), {})
+    names = ["gemini:" + v[0] for v in V.get("gemini", [])] + [v[0] for v in V.get("edge", [])]
+    have = set()
+    r = gh("release", "view", "audio-voices", "-R", REPO, "--json", "assets", check=False)
+    if r.returncode == 0:
+        have = {a["name"] for a in json.loads(r.stdout).get("assets", [])}
+    ensure_release("audio-voices", "عينات أصوات الصوتيات")
+    tmp = os.path.join(ROOT, ".voices"); os.makedirs(tmp, exist_ok=True)
+    files, done = [], []
+    for v in names:
+        fn = v.replace(":", "-") + ".mp3"
+        if fn in have and os.environ.get("TTS_SAMPLES") != "all":
+            continue
+        try:
+            if v.startswith("gemini:"):
+                speak_gemini(SAMPLE, v.split(":", 1)[1], os.path.join(tmp, fn))
+            else:
+                await speak(SAMPLE, v, "-5%", os.path.join(tmp, fn))
+            files.append(os.path.join(tmp, fn)); done.append(v)
+        except Exception as e:
+            log("عينة", v, "تعذرت:", str(e)[:150])
+    if files:
+        upload("audio-voices", files)
+    log("عينات الأصوات:", len(done), "جديدة من", len(names))
+
+
 async def main():
     os.makedirs(AUD, exist_ok=True)
+    if os.environ.get("TTS_SAMPLES"):
+        return await samples()
+    global VOICE
+    VOICE = jload(os.path.join(AUD, "_settings.json"), {}).get("voice") or VOICE  # الصوت الافتراضي الذي تختاره الإدارة
     qp = os.path.join(AUD, "_queue.json")
     q = jload(qp, {"items": []})
     lst = jload(os.path.join(AUD, "_list.json"), {})

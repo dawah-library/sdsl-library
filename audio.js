@@ -24,7 +24,8 @@ const AUDIO = {
     const p = (async () => { for (const u of [RAW("data/audio/" + bid + ".json") + "?t=" + Math.floor(Date.now() / 300e3), "data/audio/" + bid + ".json"]) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { } } return null; })();
     this.man.set(bid, p); return p;
   },
-  url: (bid, f) => "https://github.com/" + AREPO() + "/releases/download/audio-" + bid + "/" + f,
+  // عبر ممرّ الموقع (functions/au) ليُرسل بنوع audio/mpeg فيعمل على iPhone؛ وفي غير نطاق الموقع مباشرة من GitHub
+  url: (bid, f) => (/dawahlibrary\.org$|\.pages\.dev$/.test(location.hostname) ? "/au/" + bid + "/" : "https://github.com/" + AREPO() + "/releases/download/audio-" + bid + "/") + f,
   page: p => "p" + String(p).padStart(4, "0") + ".mp3",
   ready: x => x && x.n > 0
 };
@@ -385,9 +386,15 @@ async function vAudioAdmin() {
   let RC = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); if (data && data.value) RC = data.value; } catch (e) { }
   const books = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.col === y.col ? 0 : x.col === "dawah" ? -1 : 1) || (x.n || 0) - (y.n || 0));
   const opt = books.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${b.n ? " (" + toAr(b.n) + " ص)" : ""}${L[b.id] ? " ✓" : ""}</option>`).join("");
-  const voices = [["gemini:Charon", "Gemini «Charon» — رجل، طبقة طبيعية (الافتراضي، أحدث نماذج Gemini)"], ["gemini:Orus", "Gemini «Orus» — رجل، رصين"], ["gemini:Kore", "Gemini «Kore» — امرأة"], ["ar-SA-HamedNeural", "حامد — رجل، فصحى (سعودي)"], ["ar-EG-ShakirNeural", "شاكر — رجل (مصري)"], ["ar-KW-FahedNeural", "فهد — رجل (كويتي)"], ["ar-AE-HamdanNeural", "حمدان — رجل"], ["ar-SA-ZariyahNeural", "زارية — امرأة"], ["ar-EG-SalmaNeural", "سلمى — امرأة"]];
-  $("#aadm").className = ""; $("#aadm").innerHTML = `<div class="card"><h3>تحويل كتاب إلى صوت (مجانًا)</h3><p class="note">▶ التحويل إلى صوت يعمل تلقائيًا مرتين يوميًا: كتب مكتبة الدعوة أولًا (الأقصر فالأطول)، ثم كتب المكتبة العامة المختارة للبث، بالنص المشكول المدقق متى توفر، وتُعاد الصفحة إذا تغيّر نصها أو تشكيلها. الطلبات هنا تُقدَّم على التلقائي.</p><p class="mut">يُحوَّل الكتاب صفحةً صفحة بأصوات عصبية عربية، وتُحفظ الملفات في إصدارات المستودع على GitHub دون تكلفة، ويظهر الكتاب في «صوتيات المكتبة» و«الراديو» تباعًا. الصفحات التي يتغير نصها بعد التدقيق يُعاد تسجيلها تلقائيًا كل ليلة.</p>
-  <form data-form="audq"><label>الكتاب</label><select name="b" required>${opt}</select><label>الصوت</label><select name="v">${voices.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><label>السرعة</label><select name="r"><option value="-10%">أبطأ قليلًا</option><option value="-5%" selected>معتدلة</option><option value="+0%">عادية</option><option value="+10%">أسرع</option></select><button class="btn p" style="margin-top:8px">أضف إلى طابور التحويل</button> <span id="audqs" class="mut"></span></form></div>
+  let VV = { gemini: [], edge: [] }; try { const r = await fetch(RAW("data/audio/_voices.json") + "?t=" + Math.floor(Date.now() / 600e3)); if (r.ok) VV = await r.json(); } catch (e) { }
+  let AS = {}; try { const r = await fetch(RAW("data/audio/_settings.json") + "?t=" + Date.now()); if (r.ok) AS = await r.json(); } catch (e) { }
+  const defV = AS.voice || "gemini:Charon";
+  const vOpts = sel => `<optgroup label="أصوات Gemini الأحدث (طبيعية)">${VV.gemini.map(([n, d]) => `<option value="gemini:${n}"${sel === "gemini:" + n ? " selected" : ""}>${n} — ${esc(d)}</option>`).join("")}</optgroup><optgroup label="أصوات Microsoft (مجانية دائمًا)">${VV.edge.map(([n, d]) => `<option value="${n}"${sel === n ? " selected" : ""}>${esc(d)}</option>`).join("")}</optgroup>`;
+  const voices = VV.gemini.map(v => ["gemini:" + v[0], v[0] + " — " + v[1]]).concat(VV.edge.map(v => [v[0], v[1]]));
+  $("#aadm").className = ""; $("#aadm").innerHTML = `<div class="card"><h3>الصوت الافتراضي للتحويل التلقائي</h3><p class="mut">يُسجَّل به كل كتاب جديد يدخل التحويل التلقائي، والكتاب الذي بدأ بصوت يكمل به. استمع إلى العينة قبل الاختيار. إذا نفدت حصة مفاتيح Gemini في يوم أكمل التحويل بصوت «حامد» المجاني.</p>
+  <form data-form="audset" class="row"><select name="v" id="audd">${vOpts(defV)}</select><button type="button" class="btn s" data-act="vsample" data-for="audd">▶ عينة</button><button class="btn p">حفظ</button> <span id="audss" class="mut"></span></form></div>
+  <div class="card"><h3>تحويل كتاب إلى صوت (مجانًا)</h3><p class="note">▶ التحويل إلى صوت يعمل تلقائيًا مرتين يوميًا: كتب مكتبة الدعوة أولًا (الأقصر فالأطول)، ثم كتب المكتبة العامة المختارة للبث، بالنص المشكول المدقق متى توفر، وتُعاد الصفحة إذا تغيّر نصها أو تشكيلها. الطلبات هنا تُقدَّم على التلقائي.</p><p class="mut">يُحوَّل الكتاب صفحةً صفحة بأصوات عصبية عربية، وتُحفظ الملفات في إصدارات المستودع على GitHub دون تكلفة، ويظهر الكتاب في «صوتيات المكتبة» و«الراديو» تباعًا. الصفحات التي يتغير نصها بعد التدقيق يُعاد تسجيلها تلقائيًا كل ليلة.</p>
+  <form data-form="audq"><label>الكتاب</label><select name="b" required>${opt}</select><label>الصوت</label><div class="row"><select name="v" id="audv">${vOpts(defV)}</select><button type="button" class="btn s" data-act="vsample" data-for="audv">▶ عينة</button></div><label class="chk"><input type="checkbox" name="fz" value="1"> إعادة تسجيل الكتاب كاملًا بهذا الصوت (إن كان مسجلًا من قبل)</label><label>السرعة</label><select name="r"><option value="-10%">أبطأ قليلًا</option><option value="-5%" selected>معتدلة</option><option value="+0%">عادية</option><option value="+10%">أسرع</option></select><button class="btn p" style="margin-top:8px">أضف إلى طابور التحويل</button> <span id="audqs" class="mut"></span></form></div>
   <div class="card"><h3>رفع تسجيل صوتي بشري</h3><p class="mut">درس أو قراءة مسجلة لكتاب (mp3 أو m4a، حتى ٥٠ ميجابايت للملف). يُنقل إلى إصدارات المستودع ويظهر في صفحة الكتاب المسموع.</p>
   <form data-form="audrec"><label>الكتاب</label><select name="b" required>${opt}</select><label>عنوان التسجيل</label><input name="t" maxlength="120" placeholder="مثال: شرح الباب الأول" required><label>يبدأ من صفحة</label><input name="p" type="number" min="1" value="1"><label>الملف</label><input name="f" type="file" accept="audio/*" required><button class="btn p" style="margin-top:8px">رفع التسجيل</button> <span id="audrs" class="mut"></span></form></div>
   <div class="card"><h3>طابور التحويل</h3>${(Q.items || []).length ? `<ol>${Q.items.map(it => `<li>${esc((B(it.id) || {}).title || it.id)} ${it.rec ? "— 🎙 " + esc(it.rec.t || "") : "— " + esc(it.voice || "")}${it.err ? ` <span class="warn">(تعثّر ${toAr(it.err)})</span>` : ""}</li>`).join("")}</ol>` : '<p class="mut">الطابور فارغ.</p>'}
@@ -413,6 +420,16 @@ async function vAudioAdmin() {
 }
 
 /* ---------- الأحداث ---------- */
+// عينة الصوت المختار (إصدار audio-voices تولّده مهمة «عينات أصوات الصوتيات»)
+let VSAMPLE = null;
+document.addEventListener("click", e => {
+  const el = e.target.closest('[data-act="vsample"]'); if (!el) return; e.preventDefault();
+  const v = ($("#" + el.dataset.for) || {}).value; if (!v) return;
+  if (VSAMPLE) { VSAMPLE.pause(); if (VSAMPLE.dataset.v === v) { VSAMPLE = null; el.textContent = "▶ عينة"; return; } }
+  VSAMPLE = new Audio(AUDIO.url("voices", v.replace(":", "-") + ".mp3")); VSAMPLE.dataset.v = v; el.textContent = "■ إيقاف";
+  VSAMPLE.onended = () => { el.textContent = "▶ عينة"; VSAMPLE = null; };
+  VSAMPLE.play().catch(() => { el.textContent = "▶ عينة"; VSAMPLE = null; toast("عينة هذا الصوت لم تُجهَّز بعد؛ تُولَّد خلال دقائق."); });
+});
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act; if (!/^(ap|rd|rc|rp)/.test(a)) return;
   if (el.tagName !== "A") e.preventDefault();
@@ -448,14 +465,18 @@ document.addEventListener("change", e => {
   else if (el.dataset.act === "apsleep" && el.value !== "") AP.sleep(el.value === "end" ? "end" : +el.value);
 });
 document.addEventListener("submit", async e => {
-  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audrec|rcadd|rpadd|raauto)$/.test(f.dataset.form)) return;
+  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audset|audrec|rcadd|rpadd|raauto)$/.test(f.dataset.form)) return;
   e.preventDefault(); e.stopImmediatePropagation(); const btn = f.querySelector("button"); btn.disabled = true;
   try {
     if (f.dataset.form === "audq") {
       if (!GH.on) throw new Error("فعّل الإدارة المباشرة (سجّل الدخول بحساب المدير) أولًا.");
-      const it = { id: f.b.value, voice: f.v.value, rate: f.r.value };
+      const it = Object.assign({ id: f.b.value, voice: f.v.value, rate: f.r.value }, f.fz && f.fz.checked ? { force: 1 } : {});
       await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(x => x.id !== it.id || x.rec); o.items.push(it); return o; }, "صوتيات: طلب تحويل «" + ((B(it.id) || {}).title || it.id) + "»");
       $("#audqs").textContent = "أضيف إلى الطابور؛ يبدأ التحويل خلال دقائق، ويصلك إشعار عند الانتهاء."; btn.disabled = false;
+    } else if (f.dataset.form === "audset") {
+      if (!GH.on) throw new Error("فعّل الإدارة المباشرة (سجّل الدخول بحساب المدير) أولًا.");
+      const v = f.v.value; await GH.editJSON("data/audio/_settings.json", o => Object.assign(o || {}, { voice: v, at: new Date().toISOString() }), "صوتيات: الصوت الافتراضي " + v);
+      $("#audss").textContent = "حُفظ؛ يُستعمل في التحويل القادم."; btn.disabled = false;
     } else if (f.dataset.form === "audrec") {
       if (!GH.on || !Cloud.on()) throw new Error("رفع التسجيلات يحتاج تسجيل الدخول بحساب المشرف.");
       const file = f.f.files[0]; if (!file) throw new Error("اختر الملف"); if (file.size > 50 * 1048576) throw new Error("الحد ٥٠ ميجابايت للملف الواحد.");
