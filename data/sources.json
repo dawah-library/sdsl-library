@@ -983,7 +983,7 @@
    "col": "dawah",
    "lic": "",
    "author": "(غير معروف: mdarjup)",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -997,7 +997,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "note": "مُتجاهَل بطلب الإدارة"
   },
   {
    "id": "fb-mohamadalazhary1",
@@ -1355,7 +1356,7 @@
    "col": "dawah",
    "lic": "",
    "author": "(غير معروف: bsm.server)",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -1369,7 +1370,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "note": "مُتجاهَل بطلب الإدارة"
   },
   {
    "id": "fb-ayhabshahyn79828",
