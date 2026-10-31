@@ -16,7 +16,8 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "dawah-library/sdsl-library")
 T0 = time.time()
 MAXMIN = float(os.environ.get("TTS_MAX_MIN", "300"))
 CONC = int(os.environ.get("TTS_CONC", "6"))
-VOICE = os.environ.get("TTS_VOICE", "ar-SA-HamedNeural")
+VOICE = os.environ.get("TTS_VOICE", "gemini:Charon")  # الافتراضي: أصوات Gemini الأحدث، وعند نفاد الحصة Edge
+EDGE_FALLBACK = os.environ.get("TTS_EDGE_FALLBACK", "ar-SA-HamedNeural")
 VOICES = {"ar-SA-HamedNeural": "حامد (سعودي)", "ar-EG-ShakirNeural": "شاكر (مصري)", "ar-SA-ZariyahNeural": "زارية", "ar-EG-SalmaNeural": "سلمى",
           "ar-AE-HamdanNeural": "حمدان", "ar-KW-FahedNeural": "فهد (كويتي)", "ar-QA-MoazNeural": "معاذ", "ar-JO-TaimNeural": "تيم"}
 WORK = os.path.join(ROOT, ".tts-work")
@@ -157,7 +158,9 @@ def phrases(text, words):
     return out
 
 
-GEM_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
+# الأحدث أولًا، ثم الأقدم عند عدم توفره أو نفاد حصته
+GEM_TTS_MODELS = [m for m in os.environ.get("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts,gemini-3.1-flash-tts-preview,gemini-2.5-flash-preview-tts").split(",") if m.strip()]
+GEM_DEAD = set()  # (مفتاح، نموذج) نفدت حصته في هذا التشغيل
 
 
 def speak_gemini(text, voice, path, style=""):
@@ -169,15 +172,21 @@ def speak_gemini(text, voice, path, style=""):
     prompt = (style or "اقرأ النص التالي بالعربية الفصحى قراءة علمية هادئة واضحة، مع مراعاة التشكيل كما هو، دون زيادة أو حذف:") + "\n\n" + text
     body = _j.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}).encode()
     err = None
-    for k in keys:
+    import urllib.error
+    pairs = [(m, k) for m in GEM_TTS_MODELS for k in keys if (k, m) not in GEM_DEAD]
+    for m, k in pairs:
         try:
-            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{GEM_TTS_MODEL}:generateContent", data=body, headers={"content-type": "application/json", "x-goog-api-key": k})
+            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent", data=body, headers={"content-type": "application/json", "x-goog-api-key": k})
             j = _j.load(urllib.request.urlopen(req, timeout=300))
             pcm = base64.b64decode(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
             with tempfile.NamedTemporaryFile(suffix=".pcm", delete=False) as f: f.write(pcm)
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", f.name, "-b:a", "48k", path], check=True)
             os.unlink(f.name)
             break
+        except urllib.error.HTTPError as e:
+            err = e
+            if e.code in (429, 404, 403): GEM_DEAD.add((k, m))
+            continue
         except Exception as e:
             err = e; continue
     else:
@@ -191,7 +200,10 @@ def speak_gemini(text, voice, path, style=""):
 
 async def speak(text, voice, rate, path):
     if str(voice).startswith("gemini:"):  # محرك Gemini بدل Edge
-        return speak_gemini(text, voice.split(":", 1)[1], path)
+        try: return speak_gemini(text, voice.split(":", 1)[1], path)
+        except Exception as e:  # نفدت حصة كل المفاتيح: يكمل بصوت Edge المجاني فلا يتوقف التحويل
+            log("Gemini TTS غير متاح الآن (%s)، يكمل بصوت %s" % (str(e)[:120], EDGE_FALLBACK))
+            voice, rate = EDGE_FALLBACK, "-5%"
     import edge_tts
     buf, words, sents = bytearray(), [], []
     try:
@@ -250,6 +262,7 @@ async def tts_book(item, lst):
     tag = "audio-" + bid
     mp = os.path.join(AUD, bid + ".json")
     man = jload(mp, {"id": bid, "v": voice, "rel": tag, "pages": {}, "rec": []})
+    if not item.get("voice") and man.get("pages") and man.get("v"): voice = man["v"]  # كتاب بدأ بصوت يكمل به فلا تختلط الأصوات
     if man.get("v") != voice and item.get("force"):
         man["pages"] = {}
     man["v"] = voice
