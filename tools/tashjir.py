@@ -24,32 +24,42 @@ def norm(s):
     return re.sub(r"[^ء-ي0-9 ]+", " ", s).split()
 
 
+# لكل نموذج حصة يومية مستقلة لكل مفتاح: تُوزَّع الخدمات على نماذج مختلفة (TJ_MODEL لكل مهمة) ويُنتقل إلى البديل عند نفاد الحصة
+MODELS = list(dict.fromkeys([MODEL] + [x.strip() for x in os.environ.get("TJ_FALLBACK", "gemini-flash-latest,gemini-2.5-flash,gemini-3.5-flash").split(",") if x.strip()]))
+MEXH = set()  # (مفتاح، نموذج) نفدت حصته اليومية أو النموذج غير متاح
+
+
 def gemini(prompt, schema_hint=""):
     for k in range(len(KEYS)):
         if k in EXH:
             continue
-        for attempt in range(3):
-            if time.time() > DEADLINE[0] + 20 * 60:  # حد صارم قبل مهلة المهمة (330 د) حتى لا تُلغى ويضيع المنجز
-                print("  تجاوز المهلة؛ أُوقفت طلبات Gemini", flush=True)
-                return None
-            try:
-                body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                                   "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json", "maxOutputTokens": 30000}}).encode()
-                req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body,
-                                             headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
-                with urllib.request.urlopen(req, timeout=150) as r:
-                    j = json.loads(r.read())
-                t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
-                return json.loads(re.sub(r"^```json|```$", "", t.strip()))
-            except urllib.error.HTTPError as e:
-                msg = e.read()[:300].decode("utf-8", "ignore")
-                print("  Gemini", e.code, msg[:120], flush=True)
-                if e.code == 429 and re.search(r"day|PerDay", msg, re.I):
-                    EXH.add(k); break
-                time.sleep(20 * (attempt + 1))
-            except Exception as e:
-                print("  خطأ", str(e)[:120], flush=True)
-                time.sleep(5 * (attempt + 1))
+        for model in MODELS:
+            if (k, model) in MEXH:
+                continue
+            for attempt in range(3):
+                if time.time() > DEADLINE[0] + 20 * 60:  # حد صارم قبل مهلة المهمة حتى لا تُلغى ويضيع المنجز
+                    print("  تجاوز المهلة؛ أُوقفت طلبات Gemini", flush=True)
+                    return None
+                try:
+                    body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                                       "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json", "maxOutputTokens": 30000}}).encode()
+                    req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model, data=body,
+                                                 headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
+                    with urllib.request.urlopen(req, timeout=150) as r:
+                        j = json.loads(r.read())
+                    t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
+                    return json.loads(re.sub(r"^```json|```$", "", t.strip()))
+                except urllib.error.HTTPError as e:
+                    msg = e.read()[:300].decode("utf-8", "ignore")
+                    print("  Gemini", model, e.code, msg[:100], flush=True)
+                    if (e.code == 429 and re.search(r"day|PerDay", msg, re.I)) or e.code in (400, 403, 404):
+                        MEXH.add((k, model)); break  # إلى النموذج البديل
+                    time.sleep(20 * (attempt + 1))
+                except Exception as e:
+                    print("  خطأ", str(e)[:120], flush=True)
+                    time.sleep(5 * (attempt + 1))
+        if all((k, m) in MEXH for m in MODELS):
+            EXH.add(k)
     return None
 
 

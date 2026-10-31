@@ -72,6 +72,7 @@ jobs:
           KR_ONLY: ${{ github.event.inputs.books }}
           KR_COMMIT: "1"
           KR_MINUTES: "150"
+          TJ_MODEL: "gemini-3.8-flash"
         run: python3 tools/kurrasa.py
       - name: تجهيز التفريغات
         if: ${{ contains(github.event.inputs.do || 'kurrasa,tafrigh', 'tafrigh') }}
@@ -99,6 +100,7 @@ jobs:
           TF_ONLY: ${{ github.event.inputs.books }}
           TF_COMMIT: "1"
           TF_MINUTES: "120"
+          TJ_MODEL: "gemini-3.8-flash"
         run: python3 tools/tafrigh-fmt.py
       - name: الحفظ
         if: always()

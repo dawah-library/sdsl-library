@@ -71,6 +71,7 @@ jobs:
           ST_DO: ${{ github.event.inputs.do || 'quiz,summ' }}
           ST_COMMIT: "1"   # إيداع بعد كل كتاب
           ST_MINUTES: "290"
+          TJ_MODEL: "gemini-3.6-flash"
         run: python3 tools/study-ai.py
       - name: الحفظ
         if: always()

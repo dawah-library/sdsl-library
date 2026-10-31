@@ -66,6 +66,7 @@ jobs:
           TJ_ONLY: ${{ github.event.inputs.books }}
           TJ_COMMIT: "1"   # إيداع بعد كل كتاب وكل بضعة فصول
           TJ_MINUTES: "290"
+          TJ_MODEL: "gemini-3.7-flash"   # حصة مستقلة عن التحويل والتشكيل، وبدائله عند نفادها في tools/tashjir.py
         run: python3 tools/tashjir.py
       - name: الحفظ
         if: always()

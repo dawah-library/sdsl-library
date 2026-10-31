@@ -21,6 +21,7 @@ MAXMIN = float(os.environ.get("TK_MAX_MIN", "300"))
 GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
 GMODEL = os.environ.get("TK_GEMINI_MODEL", "gemini-flash-latest")
 PRO = os.environ.get("TK_PRO_MODEL", "gemini-pro-latest")
+G2 = os.environ.get("TK_GEMINI_FALLBACK", "gemini-2.5-flash")  # بديل بحصة مستقلة إذا نفدت حصة النموذج الأساسي في كل المفاتيح
 GHM = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
 GHM_MODEL = os.environ.get("TK_GHM_MODEL", "openai/gpt-4.1")
 MAX_PAGES = int(os.environ.get("TK_MAX_PAGES", "400"))
@@ -167,7 +168,7 @@ def call(engine, prompt, slot=0):
     """engine: g (Gemini flash) أو pro (Gemini Pro) أو ghm. يعيد النص أو None (نفاد الحصة)."""
     keys = list(range(len(GKEYS)))
     order = keys[slot % max(1, len(keys)):] + keys[:slot % max(1, len(keys))]
-    tries = [("ghm", None)] if engine == "ghm" else [(engine, k) for k in order]
+    tries = [("ghm", None)] if engine == "ghm" else [(engine, k) for k in order] + ([("g2", k) for k in order] if engine == "g" and G2 != GMODEL else [])
     for eng, k in tries:
         if (eng, k) in EXH:
             continue
@@ -176,7 +177,7 @@ def call(engine, prompt, slot=0):
                 if eng == "ghm":
                     t = ghm(prompt)
                 else:
-                    t = gemini(prompt, GMODEL if eng == "g" else PRO, GKEYS[k])
+                    t = gemini(prompt, GMODEL if eng == "g" else G2 if eng == "g2" else PRO, GKEYS[k])
                 if t:
                     return t
                 break
