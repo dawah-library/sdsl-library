@@ -74,7 +74,7 @@ const bc=b=>b.col||"dawah",isArt=b=>b.type==="article";
 const inTopic=(b,t)=>b.topicId===t||!!(b.tps&&b.tps.includes(t));
 const isStatement=b=>b.topicId==="at17"||/بيانات|(^|›\s*)بيان/.test(b.c||"")||/^بيان(\s|ات)/.test(b.title||"");
 const isReadBook=b=>/^المكتبة المقروءة/.test(b.c||"");
-const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس صوتية/.test(b.source||"");
+const isTranscript=b=>!b.notf&&((b.tags||[]).includes("tafrigh")||/تفريغ|دروس صوتية/.test(b.source||""));// notf: كتاب في أصله وإن ذُكر في مصدره التفريغ
 const kindOf=b=>!isArt(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
 let _SM=null,_SMn=-1;const setMin=k=>{if(_SMn!==lib.books.length){_SM={};lib.books.forEach(x=>{if(x.set&&(_SM[x.set]==null||x.vol<_SM[x.set]))_SM[x.set]=x.vol});_SMn=lib.books.length}return _SM[k]};
 // شريط مجلدات العمل في صفحة الكتاب (الباب ٣.٤): كل المجلدات ظاهرة مع تمييز الحالي
@@ -1132,7 +1132,7 @@ function metaDlg(){const c=cur();if(!c)return;closeSheet();const b=c.b;if(isArt(
  openDlg(`<h3>بيانات الكتاب</h3>${needGH()}<form data-form="bookmeta" data-id="${b.id}"><label>العنوان</label><input name="title" value="${esc(b.set?b.setTitle||b.title:b.title)}">
  <div class="row"><div><label>المؤلف</label><select name="aid">${o([...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")),b.authorId)}</select></div><div><label>القسم</label><select name="col"><option value="dawah"${bc(b)==="dawah"?" selected":""}>${esc(COL.dawah)}</option><option value="turath"${bc(b)==="turath"?" selected":""}>${esc(COL.turath)}</option></select></div><div><label>الموضوع</label><select name="tid">${o(lib.topics.filter(t=>t.for!=="articles"),b.topicId)}</select></div></div>
  <label>بيانات الطبعة أو المصدر</label><input name="source" value="${esc(b.source||"")}">
- <fieldset class="secs"><legend>يظهر أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"${tags.includes("tafrigh")?" checked":""}> التفريغات</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"${tags.includes("furqan:"+n)?" checked":""}> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
+ <fieldset class="secs"><legend>يظهر أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"${isTranscript(b)?" checked":""}> التفريغات</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"${tags.includes("furqan:"+n)?" checked":""}> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
  ${b.set?`<p class="mut">يُطبَّق التعديل على مجلدات الكتاب كلها (${toAr(b.vols)}).</p>`:""}
  <div class="row" style="margin-top:8px"><button class="btn p nf">حفظ</button>${(b.pdfLocal||b.pdf)&&/^pdf\//.test(b.pdfLocal||b.pdf)?`<button type="button" class="btn nf" data-act="reocr" data-id="${b.id}">إعادة تحويل النص بالذكاء الاصطناعي</button>`:""}<button type="button" class="btn nf danger" data-act="bookdel" data-id="${b.id}">حذف الكتاب من المكتبة</button></div><p id="bmst" class="mut"></p></form>`)}
 async function reocr(id){const b=B(id),st=$("#bmst");if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
@@ -1142,7 +1142,7 @@ async function saveBookMeta(f){const st=$("#bmst"),fd=new FormData(f),id=f.datas
  const tags=(b.tags||[]).filter(t=>t!=="tafrigh"&&!t.startsWith("furqan:"));if(fd.get("tafrigh"))tags.push("tafrigh");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
  const title=String(fd.get("title")).trim(),up={authorId:fd.get("aid"),col:fd.get("col"),topicId:fd.get("tid"),source:String(fd.get("source")||"").trim(),tags};
  const ids=b.set?lib.books.filter(x=>x.set===b.set).map(x=>x.id):[id];st.textContent="جارٍ الحفظ…";
- const apply=c=>{let n=0;c.books.forEach(x=>{if(!ids.includes(x.id))return;n++;Object.assign(x,up);if(!x.tags.length)delete x.tags;if(x.set){x.setTitle=title;x.title=title+" — ج "+x.vol}else x.title=title});if(!n)throw new Error("الكتاب غير موجود في الفهرس المنشور.");c.version=Date.now();return c};
+ const apply=c=>{let n=0;c.books.forEach(x=>{if(!ids.includes(x.id))return;n++;Object.assign(x,up);if(!x.tags.length)delete x.tags;if(!fd.get("tafrigh")&&/تفريغ|دروس صوتية/.test(up.source))x.notf=1;else delete x.notf;if(x.set){x.setTitle=title;x.title=title+" — ج "+x.vol}else x.title=title});if(!n)throw new Error("الكتاب غير موجود في الفهرس المنشور.");c.version=Date.now();return c};
  try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات كتاب: "+title,true);apply(CAT);merge();dlg().close();toast("حُفظت بيانات الكتاب، وتظهر للجميع خلال دقيقة.");route()}catch(e){st.textContent=e.message}}
 async function deleteBook(id){const b=B(id);if(!b||!GH.on)return alert("فعّل الإدارة المباشرة أولًا.");
  const ids=b.set?lib.books.filter(x=>x.set===b.set).map(x=>x.id):[id];if(!confirm(`حذف «${b.setTitle||b.title}»${ids.length>1?" بمجلداته ("+toAr(ids.length)+")":""} من المكتبة؟ يُحذف من الفهرس فيختفي من الموقع.`))return;

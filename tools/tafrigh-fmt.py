@@ -111,7 +111,7 @@ def main():
     only = [x for x in os.environ.get("TF_ONLY", "").split(",") if x]
     todo = only or [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
     if not only:
-        tf = [b for b in cat["books"] if ("tafrigh" in (b.get("tags") or []) or re.search(r"تفريغ|دروس صوتية", b.get("source") or "")) and not b.get("hidden") and not b.get("demo")
+        tf = [b for b in cat["books"] if not b.get("notf") and ("tafrigh" in (b.get("tags") or []) or re.search(r"تفريغ|دروس صوتية", b.get("source") or "")) and not b.get("hidden") and not b.get("demo")
               and not (b.get("unrev") or b.get("lite")) and not (lst.get(b["id"]) or {}).get("done")]
         tf.sort(key=lambda b: b.get("n") or 999)
         todo += [b["id"] for b in tf if b["id"] not in todo]
