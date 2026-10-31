@@ -186,6 +186,44 @@ const MG = (() => {
   const arDig = s => String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
   const volFromName = n => { const m = arDig(n.replace(/\.(txt|pdf)$/i, "")).match(/(?:ج|جزء|مجلد|vol|v|part)[\s_.-]*(\d{1,3})|(\d{1,3})(?!.*\d)/i); return m ? +(m[1] || m[2]) : null; };
   const sets = () => { const m = new Map(); raw().filter(b => b.set).forEach(b => { const x = m.get(b.set) || { id: b.set, title: b.setTitle || b.title, vols: [] }; x.vols.push(b); m.set(b.set, x); }); m.forEach(x => x.vols.sort((a, b) => (a.vol || 0) - (b.vol || 0))); return [...m.values()].sort((a, b) => a.title.localeCompare(b.title, "ar")); };
+  // الأعمال التي ما زالت مجلداتها في صندوق التحويل (ocr-inbox): تُتاح لإضافة مجلد إليها قبل اكتمال التحويل
+  let PEND = null;
+  async function pendingSets(force) {
+    if (PEND && !force) return PEND; const m = new Map();
+    try {
+      const L = await (await GH.api("/contents/ocr-inbox?ref=" + GH.branch)).json();
+      await Promise.all((Array.isArray(L) ? L : []).filter(x => /\.json$/.test(x.name)).map(async x => {
+        try { const c = await (await fetch("https://raw.githubusercontent.com/" + GH.repo + "/" + GH.branch + "/ocr-inbox/" + encodeURIComponent(x.name) + "?t=" + Date.now())).json();
+          if (c && c.set) { const s = m.get(c.set) || { id: c.set, title: c.setTitle || c.title, cfg: c, vols: [] }; s.vols.push({ vol: +c.vol || 0, f: x.name.replace(/\.json$/, "") }); m.set(c.set, s); } } catch (e) { }
+      }));
+    } catch (e) { }
+    m.forEach(s => s.vols.sort((a, b) => a.vol - b.vol)); return (PEND = m);
+  }
+  // بيانات العمل المشتركة لأي مجلد جديد: من مجلد منشور، أو من إعدادات مجلد قيد التحويل
+  async function volBase(setId) {
+    const f = raw().find(b => b.set === setId);
+    if (f) return { setTitle: f.setTitle || f.title.replace(/\s+—\s+ج\s+\d+$/, ""), authorId: f.authorId, topicId: f.topicId, col: f.col || "dawah", source: f.source || "", tags: f.tags };
+    const P = (await pendingSets()).get(setId); if (!P) throw new Error("العمل غير موجود.");
+    const c = P.cfg; return { setTitle: c.setTitle || c.title, authorId: c.authorId, topicId: c.topic, col: c.col || "dawah", source: c.source || "", tags: c.tags };
+  }
+  // رفع مجلد (PDF للتحويل أو نص) إلى عمل؛ ex: سجل المجلد القائم بالرقم نفسه (للاستبدال)
+  async function putVol(setId, base, vol, file, ex, say) {
+    const pend = (await pendingSets()).get(setId);
+    if (!ex && pend && pend.vols.some(v => v.vol === vol)) throw new Error("المجلد " + toAr(vol) + " مرفوع وقيد التحويل الآن؛ انتظر اكتماله ثم استبدله إن لزم.");
+    if (/\.pdf$/i.test(file.name)) {
+      await pdfUpload(file, "up" + Date.now().toString(36) + "v" + vol, Object.assign({ title: base.setTitle, setTitle: base.setTitle, set: setId, vol, authorId: base.authorId, topic: base.topicId, col: base.col, source: base.source, ocr: true }, base.tags ? { tags: base.tags } : {}, ex ? { book: ex.id } : {}), say);
+      await log({ op: "file", kind: "book", ids: [ex ? ex.id : setId], changes: [{ id: ex ? ex.id : setId + "/ج" + vol, kind: "book", field: "file", from: ex ? ex.title : null, to: file.name }], note: (ex ? "استبدال" : "رفع") + " المجلد " + vol + " من «" + base.setTitle + "» للتحويل" });
+      if (pend) pend.vols.push({ vol, f: "" });
+      return "✓ رُفع المجلد " + toAr(vol) + " للتحويل، ويظهر في مكانه بعد اكتماله.";
+    }
+    const pages = toPagesOf(await file.text()); if (!pages.length) throw new Error("الملف فارغ.");
+    const id = ex ? ex.id : setId + "-v" + String(vol).padStart(2, "0"), sh = { id, pages, toc: [] }, sz = JSON.stringify(sh).length;
+    const meta = Object.assign({}, ex || { set: setId, setTitle: base.setTitle, authorId: base.authorId, topicId: base.topicId, col: base.col, type: "book", source: base.source, added: today() }, base.tags && !ex ? { tags: base.tags } : {}, { id, vol, title: volTitle(base.setTitle, vol), n: pages.length, size: sz });
+    await saveTextVols([meta], [sh], (ex ? "استبدال" : "إضافة") + " المجلد " + vol + " من «" + base.setTitle + "»");
+    if (ex) await log({ op: "file", kind: "book", ids: [id], changes: [{ id, kind: "book", field: "file", from: "النص السابق (في تاريخ المستودع)", to: file.name }], note: "استبدال نص المجلد " + vol + " من «" + base.setTitle + "»" });
+    if (raw().some(b => b.set === setId)) await syncVols(setId);
+    return "✓ حُفظ المجلد " + toAr(vol) + "، ويظهر خلال دقيقة.";
+  }
   const volTitle = (t, v) => t + (v ? " — ج " + v : " — المقدمة");
   const toPagesOf = text => splitPages(text, /\n-{3,}\n|\f/.test(text) ? "mark" : "auto", 1800);
   function volsBody() {
@@ -202,15 +240,21 @@ const MG = (() => {
      <div id="mgvrows" class="mglist"></div><p id="mgvdup" class="note" hidden></p>
      <div class="savebar"><button class="btn p">حفظ العمل ومجلداته</button> <span id="mgvst" class="mut" role="status"></span></div></form></details>
     <details><summary><b>٢) إضافة مجلد إلى عمل قائم</b> (أو تحويل كتاب مفرد إلى عمل متعدد المجلدات)</summary><form data-form="mgvadd">
-     <label>العمل</label><select name="set" required><option value="">— اختر —</option><optgroup label="أعمال متعددة المجلدات">${S.map(x => `<option value="set:${esc(x.id)}">${esc(x.title)} (${nVol(x.vols.length, 1)})</option>`).join("")}</optgroup><optgroup label="كتب مفردة (تصير المجلد الأول)">${singles.map(b => `<option value="book:${esc(b.id)}">${esc(b.title)}</option>`).join("")}</optgroup></select>
+     <label>العمل</label><select name="set" required><option value="">— اختر —</option><optgroup label="أعمال متعددة المجلدات">${S.map(x => `<option value="set:${esc(x.id)}">${esc(x.title)} (${nVol(x.vols.length, 1)})</option>`).join("")}</optgroup><optgroup label="أعمال قيد التحويل" data-pend="add"></optgroup><optgroup label="كتب مفردة (تصير المجلد الأول)">${singles.map(b => `<option value="book:${esc(b.id)}">${esc(b.title)}</option>`).join("")}</optgroup></select>
      <div class="row"><div><label>رقم المجلد</label><input name="vol" type="number" min="0" required></div><div><label>الملف (.txt أو PDF)</label><input type="file" name="file" accept=".txt,text/plain,.pdf,application/pdf" required></div></div>
      <p class="mut">إن كان رقم المجلد موجودًا يُسأل قبل استبدال نصه، ويبقى النص السابق في تاريخ المستودع.</p>
      <div class="savebar"><button class="btn p">إضافة المجلد</button> <span id="mgvast" class="mut" role="status"></span></div></form></details>
-    <details><summary><b>٣) ترتيب مجلدات عمل وتصحيح أرقامها واستبدال ملفاتها</b></summary>
-     <label>العمل</label><select id="mgvord"><option value="">— اختر —</option>${S.map(x => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join("")}</select><div id="mgvordbox"></div></details>`;
+    <details id="mgvd3"><summary><b>٣) مجلدات العمل: ترتيبها وأرقامها، والناقص منها ورفعه، واستبدال ملفاتها</b></summary>
+     <label>العمل</label><select id="mgvord"><option value="">— اختر —</option><optgroup label="أعمال منشورة">${S.map(x => `<option value="${esc(x.id)}">${esc(x.title)} (${nVol(x.vols.length, 1)})</option>`).join("")}</optgroup><optgroup label="أعمال قيد التحويل" data-pend="ord"></optgroup></select><div id="mgvordbox"></div></details>`;
   }
-  function wireVols() {
+  function wireVols(q) {
     const f = $('form[data-form="mgvnew"]'); if (!f) return;
+    pendingSets(true).then(P => { const S = new Set(sets().map(x => x.id)), ps = [...P.values()].filter(x => !S.has(x.id));
+      const a = $('[data-pend="add"]'), o = $('[data-pend="ord"]');
+      if (a) { a.innerHTML = ps.map(x => `<option value="pend:${esc(x.id)}">${esc(x.title)} (${toAr(x.vols.length)} قيد التحويل: ج ${x.vols.map(v => toAr(v.vol)).join("، ")})</option>`).join(""); if (!ps.length) a.remove(); }
+      if (o) { o.innerHTML = ps.map(x => `<option value="${esc(x.id)}">${esc(x.title)} (قيد التحويل)</option>`).join(""); if (!ps.length) o.remove(); }
+      if (q && q.s) { const sel = $("#mgvord"); if (sel && [...sel.options].some(op => op.value === q.s)) { sel.value = q.s; $("#mgvd3").open = true; ordBox(q.s); $("#mgvd3").scrollIntoView({ block: "start" }); } }
+    });
     f.files.onchange = () => {
       const fs = [...f.files.files].map((x, i) => ({ x, v: volFromName(x.name) })); let next = 1;
       fs.sort((a, b) => (a.v ?? 999) - (b.v ?? 999) || a.x.name.localeCompare(b.x.name, "ar", { numeric: true }));
@@ -235,7 +279,7 @@ const MG = (() => {
     if (created.length) await log({ op: "add", kind: "book", ids: created, changes: created.map(id => ({ id, kind: "book", field: "create", from: null, to: (metas.find(m => m.id === id) || {}).title })), note });
   }
   async function syncVols(setId) { // عدد المجلدات في كل سجلات العمل
-    const vs = raw().filter(b => b.set === setId), n = Math.max(vs.length, ...vs.map(b => +b.vol || 0));
+    const vs = raw().filter(b => b.set === setId), n = Math.max(vs.length, ...vs.map(b => +b.vol || 0), ...vs.map(b => +b.vols || 0)); // يُحفظ العدد الكلي المعلن ولو نقصت مجلدات
     const ch = vs.filter(b => b.vols !== n).map(b => ({ id: b.id, field: "vols", to: n }));
     if (ch.length) await apply(ch, "edit", "عدد مجلدات «" + (vs[0].setTitle || "") + "»");
   }
@@ -263,46 +307,47 @@ const MG = (() => {
   }
   async function addVol(f) {
     const st = $("#mgvast"), fd = new FormData(f), file = f.file.files[0], vol = +fd.get("vol"), [kind, ref] = String(fd.get("set")).split(":");
-    if (!file || !ref) return; f.querySelector("button").disabled = true;
+    if (!file || !ref || !vol && vol !== 0) return; f.querySelector("button").disabled = true;
     try {
-      let setId = ref, first;
+      let setId = ref;
       if (kind === "book") { // تحويل كتاب مفرد إلى المجلد الأول من عمل
-        first = raw().find(b => b.id === ref); setId = "s" + Date.now().toString(36);
+        const first = raw().find(b => b.id === ref); setId = "s" + Date.now().toString(36);
         if (vol === 1) throw new Error("الكتاب نفسه سيصير المجلد ١؛ اختر رقمًا آخر للمجلد الجديد.");
         await apply([{ id: first.id, field: "set", to: setId }, { id: first.id, field: "setTitle", to: first.title }, { id: first.id, field: "vol", to: 1 }, { id: first.id, field: "title", to: volTitle(first.title, 1) }], "edit", "تحويل «" + first.title + "» إلى عمل متعدد المجلدات");
-      } else first = raw().find(b => b.set === setId);
-      const setTitle = first.setTitle || first.title.replace(/\s+—\s+ج\s+\d+$/, ""), ex = raw().find(b => b.set === setId && +b.vol === vol);
-      if (ex && !confirm(`المجلد ${toAr(vol)} موجود («${ex.title}»). استبدال نصه؟`)) throw new Error("أُلغي.");
-      if (/\.pdf$/i.test(file.name)) {
-        await pdfUpload(file, "up" + Date.now().toString(36) + "v" + vol, Object.assign({ title: setTitle, setTitle, set: setId, vol, authorId: first.authorId, topic: first.topicId, col: first.col || "dawah", source: first.source || "", ocr: true }, ex ? { book: ex.id } : {}), t => st.textContent = t);
-        await log({ op: "file", kind: "book", ids: [ex ? ex.id : setId], changes: [{ id: ex ? ex.id : setId + "/ج" + vol, kind: "book", field: "file", from: ex ? ex.title : null, to: file.name }], note: "رفع المجلد " + vol + " من «" + setTitle + "» للتحويل" });
-        st.textContent = "✓ رُفع للتحويل، ويظهر بعد اكتماله.";
-      } else {
-        const pages = toPagesOf(await file.text()); if (!pages.length) throw new Error("الملف فارغ.");
-        const id = ex ? ex.id : setId + "-v" + String(vol).padStart(2, "0"), sh = { id, pages, toc: [] }, sz = JSON.stringify(sh).length;
-        const meta = Object.assign({}, ex || { set: setId, setTitle, authorId: first.authorId, topicId: first.topicId, col: first.col || "dawah", type: "book", source: first.source || "", added: today() }, { id, vol, title: volTitle(setTitle, vol), n: pages.length, size: sz });
-        await saveTextVols([meta], [sh], (ex ? "استبدال" : "إضافة") + " المجلد " + vol + " من «" + setTitle + "»");
-        if (ex) await log({ op: "file", kind: "book", ids: [id], changes: [{ id, kind: "book", field: "file", from: "النص السابق (في تاريخ المستودع)", to: file.name }], note: "استبدال نص المجلد " + vol + " من «" + setTitle + "»" });
-        st.textContent = "✓ حُفظ المجلد " + toAr(vol) + "، ويظهر خلال دقيقة.";
       }
-      await syncVols(setId);
+      const base = await volBase(setId), ex = raw().find(b => b.set === setId && +b.vol === vol);
+      if (ex && !confirm(`المجلد ${toAr(vol)} موجود («${ex.title}»). استبدال نصه؟`)) throw new Error("أُلغي.");
+      st.textContent = await putVol(setId, base, vol, file, ex, t => st.textContent = t); f.reset();
     } catch (e) { st.textContent = e.message; } finally { f.querySelector("button").disabled = false; }
   }
-  function ordBox(setId) {
+  async function ordBox(setId) {
     const box = $("#mgvordbox"); if (!setId) { box.innerHTML = ""; return; }
-    const x = sets().find(s => s.id === setId); if (!x) return;
-    box.innerHTML = `<form data-form="mgvord" data-set="${esc(setId)}"><label>عنوان العمل</label><input name="st" value="${esc(x.title)}">
-     <div class="mglist">${x.vols.map(b => `<div class="mgrow"><label>ج <input type="number" min="0" name="v:${esc(b.id)}" value="${+b.vol || 0}" style="width:70px"></label><span class="mgt">${esc(b.title)} <span class="mut">(${toAr(b.n || 0)} صفحة)</span></span><label class="btn s">استبدال النص<input type="file" accept=".txt,text/plain" data-rep="${esc(b.id)}" hidden></label></div>`).join("")}</div>
-     <div class="savebar"><button class="btn p">حفظ الترتيب والعنوان</button> <span id="mgvost" class="mut" role="status"></span></div></form>`;
-    $$("[data-rep]").forEach(inp => inp.onchange = async () => { const b = raw().find(y => y.id === inp.dataset.rep), file = inp.files[0], st = $("#mgvost"); if (!file || !confirm("استبدال نص «" + b.title + "» بالملف " + file.name + "؟")) return;
-      try { const pages = toPagesOf(await file.text()), sh = { id: b.id, pages, toc: [] }; await saveTextVols([Object.assign({}, b, { n: pages.length, size: JSON.stringify(sh).length })], [sh], "استبدال نص «" + b.title + "»");
-        await log({ op: "file", kind: "book", ids: [b.id], changes: [{ id: b.id, kind: "book", field: "file", from: "النص السابق (في تاريخ المستودع)", to: file.name }], note: "استبدال نص «" + b.title + "»" }); st.textContent = "✓ استُبدل النص."; } catch (e) { st.textContent = e.message; } });
+    box.innerHTML = '<p class="mut">جارٍ التحميل…</p>';
+    const x = sets().find(s => s.id === setId) || { id: setId, title: "", vols: [] }, P = (await pendingSets()).get(setId), pv = P ? P.vols.filter(v => !x.vols.some(b => +b.vol === v.vol)) : [];
+    if (!x.title && P) x.title = P.title;
+    const have = new Set([...x.vols.map(b => +b.vol || 0), ...pv.map(v => v.vol)]), declared = Math.max(0, ...x.vols.map(b => +b.vols || 0));
+    const total = Math.max(declared - (have.has(0) ? 1 : 0), ...have, 1), miss = []; // المقدمة (ج ٠) لا تُعد من المجلدات المرقّمة for (let v = 1; v <= total; v++) if (!have.has(v)) miss.push(v);
+    box.innerHTML = `<form data-form="mgvord" data-set="${esc(setId)}">${x.vols.length ? `<div class="row"><div><label>عنوان العمل</label><input name="st" value="${esc(x.title)}"></div><div><label>عدد مجلدات العمل كاملًا</label><input name="tot" type="number" min="1" value="${total}" style="width:90px"></div></div>` : `<p><b>${esc(x.title)}</b> — كل مجلداته قيد التحويل؛ يمكنك رفع الناقص منها الآن، والترتيب يُتاح بعد اكتمال التحويل.</p>`}
+     <div class="mglist">${x.vols.map(b => `<div class="mgrow" data-row="${esc(b.id)}"><span class="vbtns"><button type="button" class="btn s" data-mv="-1" aria-label="تقديم">▲</button><button type="button" class="btn s" data-mv="1" aria-label="تأخير">▼</button></span><label>ج <input type="number" min="0" name="v:${esc(b.id)}" value="${+b.vol || 0}" style="width:70px"></label><span class="mgt"><a href="#/book/${esc(b.id)}/1">${esc(b.title)}</a> <span class="mut">(${toAr(b.n || 0)} صفحة)</span></span><label class="btn s">استبدال الملف<input type="file" accept=".txt,text/plain,.pdf,application/pdf" data-rep="${esc(b.id)}" hidden></label></div>`).join("")}
+      ${pv.map(v => `<div class="mgrow"><span class="mgt">ج ${toAr(v.vol)} — <span class="tag">قيد التحويل إلى نص</span></span></div>`).join("")}
+      <div class="mgrow"><span class="mgt">مجلد آخر برقم</span><input type="number" min="0" id="mgvnn" value="${total + 1}" style="width:70px"><label class="btn s">اختر ملفه (PDF أو نص)<input type="file" accept=".txt,text/plain,.pdf,application/pdf" data-miss="" hidden></label></div>
+      ${miss.map(v => `<div class="mgrow vmiss"><span class="mgt">ج ${toAr(v)} — <b>ناقص</b></span><label class="btn s p">رفع المجلد ${toAr(v)} (PDF أو نص)<input type="file" accept=".txt,text/plain,.pdf,application/pdf" data-miss="${v}" hidden></label></div>`).join("")}</div>
+     <p class="mut">لإضافة مجلد برقم أكبر: زد «عدد مجلدات العمل كاملًا» واحفظ، فيظهر المجلد الناقص هنا للرفع. والأسهم تبدّل رقم المجلد مع ما قبله أو بعده.</p>
+     ${x.vols.length ? `<div class="savebar"><button class="btn p">حفظ الترتيب والعنوان والعدد</button> <span id="mgvost" class="mut" role="status"></span></div>` : `<span id="mgvost" class="mut" role="status"></span>`}</form>`;
+    const st = () => $("#mgvost");
+    $$("#mgvordbox [data-mv]").forEach(bt => bt.onclick = () => { const row = bt.closest(".mgrow"), rows = [...$$("#mgvordbox .mgrow[data-row]")], i = rows.indexOf(row), j = i + +bt.dataset.mv; if (j < 0 || j >= rows.length) return;
+      const a = row.querySelector("input[type=number]"), b = rows[j].querySelector("input[type=number]"); [a.value, b.value] = [b.value, a.value]; if (+bt.dataset.mv < 0) rows[j].before(row); else rows[j].after(row); });
+    $$("#mgvordbox [data-rep]").forEach(inp => inp.onchange = async () => { const b = raw().find(y => y.id === inp.dataset.rep), file = inp.files[0]; if (!file || !confirm("استبدال «" + b.title + "» بالملف " + file.name + "؟" + (/\.pdf$/i.test(file.name) ? "\n(يُحوَّل إلى نص ثم يحل محل النص الحالي)" : ""))) return;
+      try { st().textContent = await putVol(setId, await volBase(setId), +b.vol || 0, file, b, t => st().textContent = t); } catch (e) { st().textContent = e.message; } });
+    $$("#mgvordbox [data-miss]").forEach(inp => inp.onchange = async () => { const file = inp.files[0], v = inp.dataset.miss === "" ? +$("#mgvnn").value : +inp.dataset.miss; if (!file) return; if (inp.dataset.miss === "" && raw().some(b => b.set === setId && +b.vol === v)) { st().textContent = "المجلد " + toAr(v) + " موجود؛ استبدله من صفّه."; return; } inp.disabled = true;
+      try { st().textContent = await putVol(setId, await volBase(setId), v, file, null, t => st().textContent = t); setTimeout(() => ordBox(setId), 800); } catch (e) { st().textContent = e.message; inp.disabled = false; } });
   }
   async function saveOrd(f) {
     const st = $("#mgvost"), setId = f.dataset.set, x = sets().find(s => s.id === setId), title = f.st.value.trim(), ch = [];
     const nv = x.vols.map(b => ({ b, v: +f["v:" + b.id].value }));
     if (new Set(nv.map(r => r.v)).size !== nv.length) return st.textContent = "أرقام المجلدات مكررة.";
     nv.forEach(({ b, v }) => { if ((+b.vol || 0) !== v) ch.push({ id: b.id, field: "vol", to: v }); const t = volTitle(title, v); if (b.title !== t) ch.push({ id: b.id, field: "title", to: t }); if (b.setTitle !== title) ch.push({ id: b.id, field: "setTitle", to: title }); });
+    const tot = Math.max(+f.tot.value || 0, ...nv.map(r => r.v)); nv.forEach(({ b }) => { if ((+b.vols || 0) !== tot) ch.push({ id: b.id, field: "vols", to: tot }); });
     if (!ch.length) return st.textContent = "لا تغيير.";
     try { await apply(ch, "edit", "ترتيب مجلدات «" + title + "»"); st.textContent = "✓ حُفظ."; ordBox(setId); } catch (e) { st.textContent = e.message; }
   }
@@ -537,7 +582,7 @@ const MG = (() => {
     body(tab, q) {
       if (tab === "items") { setTimeout(count, 0); return itemsBody(q); }
       if (tab === "log") { setTimeout(logBody, 0); return `${needGH()}<p class="mut">كل تعديل أو نقل أو إخفاء من «إدارة المواد»، وكل تغيير في مفاتيح الخدمات. «تراجع» يعيد القيم السابقة لما لم يتغير بعد العملية، ويُسجَّل التراجع نفسه.</p><div id="mglog" class="mut">جارٍ التحميل…</div>`; }
-      if (tab === "vols") { setTimeout(wireVols, 0); return volsBody(); }
+      if (tab === "vols") { setTimeout(() => wireVols(q), 0); return volsBody(); }
       if (tab === "imports") { setTimeout(() => impBody(q), 0); return `${needGH()}<div id="mgimp" class="mut">جارٍ التحميل…</div>`; }
       if (tab === "reports") { setTimeout(repBody, 0); return `${needGH()}<div id="mgrep" class="mut">جارٍ تحميل التقارير…</div>`; }
       if (tab === "dups") { setTimeout(dupsBody, 0); return `${needGH()}<div id="mgdup" class="mut">جارٍ الفحص…</div>`; }

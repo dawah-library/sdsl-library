@@ -78,8 +78,9 @@ const isTranscript=b=>(b.tags||[]).includes("tafrigh")||/تفريغ|دروس ص�
 const kindOf=b=>!isArt(b)?"book":isFatwa(b)?"fatwa":isStatement(b)?"statement":"article";
 let _SM=null,_SMn=-1;const setMin=k=>{if(_SMn!==lib.books.length){_SM={};lib.books.forEach(x=>{if(x.set&&(_SM[x.set]==null||x.vol<_SM[x.set]))_SM[x.set]=x.vol});_SMn=lib.books.length}return _SM[k]};
 // شريط مجلدات العمل في صفحة الكتاب (الباب ٣.٤): كل المجلدات ظاهرة مع تمييز الحالي
-const volStrip=b=>{if(!b.set)return"";const vs=lib.books.filter(x=>x.set===b.set).sort((x,y)=>(x.vol||0)-(y.vol||0));if(vs.length<2)return"";
- return`<nav class="volstrip" aria-label="مجلدات الكتاب"><b>المجلدات (${toAr(vs.length)})</b><div class="chips">${vs.map(x=>`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1"${x.id===b.id?' aria-current="page"':""}>${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`).join("")}</div></nav>`};
+const volStrip=b=>{if(!b.set)return"";const vs=lib.books.filter(x=>x.set===b.set).sort((x,y)=>(x.vol||0)-(y.vol||0)),h0=vs.some(x=>!+x.vol),tot=Math.max(vs.length-(h0?1:0),...vs.map(x=>(+x.vols||0)-(h0?1:0)),...vs.map(x=>+x.vol||0));if(tot<2&&!isAdmin())return"";
+ const have=new Set(vs.map(x=>+x.vol||0)),miss=[];for(let v=1;v<=tot;v++)if(!have.has(v))miss.push(v);const chips=vs.map(x=>({v:+x.vol||0,h:`<a class="chip${x.id===b.id?" x":""}" href="#/book/${x.id}/1"${x.id===b.id?' aria-current="page"':""}>${x.vol?"ج "+toAr(x.vol):"المقدمة"}</a>`})).concat(miss.map(v=>({v,h:`<span class="chip vmissc" title="لم يُضف بعد">ج ${toAr(v)}</span>`}))).sort((x,y)=>x.v-y.v);
+ return`<nav class="volstrip" aria-label="مجلدات الكتاب"><b>المجلدات (${toAr(tot)}${h0?" ومقدمة":""})</b><div class="chips">${chips.map(c=>c.h).join("")}${isAdmin()?`<a class="chip" href="#/admin?t=vols&s=${encodeURIComponent(b.set)}">⚙ إدارة المجلدات${miss.length?" • ناقص "+toAr(miss.length):""}</a>`:""}</div></nav>`};
 const VOL2=b=>!!(b.set&&b.vol>setMin(b.set))||(typeof ED!=="undefined"&&!!b.ed&&ED.secondary(b)),BOOKS=()=>lib.books.filter(b=>kindOf(b)==="book"&&!VOL2(b)&&bc(b)!=="ithra"),ARTS=()=>lib.books.filter(b=>kindOf(b)==="article"&&bc(b)!=="ithra"),FATWAS=()=>lib.books.filter(b=>kindOf(b)==="fatwa"&&bc(b)!=="ithra"),BAYANAT=()=>lib.books.filter(b=>kindOf(b)==="statement"&&bc(b)!=="ithra");
 const COL={dawah:"مكتبة الدعوة السلفية",turath:"المكتبة العامة",ithra:"المصادر الإثرائية"}; // المعرّف الداخلي turath باقٍ في الروابط والبيانات
 const died=a=>a&&a.died?` (ت ${a.died}هـ)`:"";
@@ -596,7 +597,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
   <button data-act="qhint">صمّم الاقتباس</button>
   ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
   <button data-act="share">مشاركة الرابط</button>
-  ${S.admin||GH.on?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button><button data-act="eds">طبعات الكتاب</button>':""}
+  ${S.admin||GH.on?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button><button data-act="eds">طبعات الكتاب</button><a class="btn" href="#/admin?t=vols${b.set?"&s="+encodeURIComponent(b.set):""}" data-act="closeSheet">${b.set?"مجلدات الكتاب وترتيبها":"إضافة مجلد (تحويله إلى عمل متعدد المجلدات)"}</a>':""}
  </div>
  <p class="mut" style="margin-top:12px">${esc(b.title)} — ${esc(A(b.authorId).name)}${b.source?"<br>"+esc(b.source):""}${b.license?"<br>"+esc(b.license):""}</p>`)}
 function setFull(on){S.full=on;saveS();document.body.classList.toggle("reading-full",on&&document.body.classList.contains("reading"));

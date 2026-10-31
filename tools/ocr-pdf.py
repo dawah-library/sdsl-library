@@ -1155,7 +1155,7 @@ def main():
         if not existing: cat["books"].append(entry)
         if entry.get("set"):  # عدد المجلدات في كل سجلات العمل
             vs = [x for x in cat["books"] if x.get("set") == entry["set"]]
-            for x in vs: x["vols"] = max(len(vs), max(int(y.get("vol") or 0) for y in vs))
+            for x in vs: x["vols"] = max(len(vs), max(int(y.get("vol") or 0) for y in vs), max(int(y.get("vols") or 0) for y in vs))
         print(f"   تم: {entry.get('n', '?')} صفحة")
         if ERRS: REPORT.append("- أخطاء Gemini: " + "، ".join("%s ×%d" % kv for kv in ERRS.most_common(6))); ERRS.clear()
         if STATS.get("digital"): REPORT.append("- منها إلكترونية: %d" % STATS["digital"])
