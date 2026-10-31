@@ -1,0 +1,23 @@
+name: حارس المهام (تشغيل ما فاتته الجدولة)
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_run:
+    workflows: ["النشر على Cloudflare Pages"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: watchdog
+  cancel-in-progress: true
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/watchdog.py
