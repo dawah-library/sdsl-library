@@ -4,6 +4,9 @@
 لا يُفشل المهمة أبدًا إن تعذر الإرسال."""
 import json, os, sys, re, urllib.request
 
+# الموقع خلف جدار Cloudflare يرفض توقيع urllib الافتراضي (خطأ 1010): ترويسة متصفح لكل الطلبات
+_UA_OPENER = urllib.request.build_opener(); _UA_OPENER.addheaders = [("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 sdsl-bot")]; urllib.request.install_opener(_UA_OPENER)
+
 SITE = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
 
 

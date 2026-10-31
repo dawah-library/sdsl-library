@@ -14,7 +14,10 @@
 وإلا يخرج بهدوء.
 لا يحذف شيئًا من المستودع.
 """
-import json, os, subprocess, sys, tempfile, datetime
+import json, os, subprocess, sys, tempfile, datetime, urllib.request
+
+# الموقع خلف جدار Cloudflare يرفض توقيع urllib الافتراضي (خطأ 1010): ترويسة متصفح لكل الطلبات
+_UA_OPENER = urllib.request.build_opener(); _UA_OPENER.addheaders = [("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 sdsl-bot")]; urllib.request.install_opener(_UA_OPENER)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CAT = os.path.join(ROOT, "data", "catalog.json")

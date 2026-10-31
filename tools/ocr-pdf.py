@@ -10,6 +10,9 @@
 """
 import json, os, re, subprocess, sys, tempfile, hashlib, shutil, datetime, base64, time, urllib.request, urllib.error
 
+# الموقع خلف جدار Cloudflare يرفض توقيع urllib الافتراضي (خطأ 1010): ترويسة متصفح لكل الطلبات
+_UA_OPENER = urllib.request.build_opener(); _UA_OPENER.addheaders = [("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 sdsl-bot")]; urllib.request.install_opener(_UA_OPENER)
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INBOX, PDFDIR, DATA = os.path.join(ROOT, "ocr-inbox"), os.path.join(ROOT, "pdf"), os.path.join(ROOT, "data")
 LANG = os.environ.get("OCR_LANG", "ara")

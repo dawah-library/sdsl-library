@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: استدعاء خدمة التذكير
-        run: curl -sS --max-time 120 https://dawahlibrary.org/api/remind || true
+        run: curl -sS -A "Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0 sdsl-bot" --max-time 120 https://dawahlibrary.org/api/remind || true
       - uses: actions/checkout@v4
         if: failure()
       - name: إشعار عند التعثر
