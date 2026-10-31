@@ -1,33 +1,49 @@
-# تقرير استيراد كتب التراث — 2026-10-31 01:46 UTC
+# تقرير استيراد كتب التراث — 2026-10-31 01:53 UTC
 
-## متن تحفة الأطفال والغلمان في تجويد القرآن
-  ✓ وُجد بالبحث الموسع: 1225AH/1208SulaymanJamzuriAffandi/1208SulaymanJamzuriAffandi.TuhfatAtfal
-  النسخة: 1208SulaymanJamzuriAffandi.TuhfatAtfal.Shamela0009632-ara1 (7 ك.ب)
-  (بيانات الرأس: 000.SortField=Shamela_0009632 | 000.BookURI=NOCODE | 010.AuthorAKA=NODATA | 010.AuthorNAME=سليمان بن محمد الجمزوري (المتوفى: بعد 1198هـ) | 011.AuthorBORN=NOTGIVEN | 011.AuthorDIED=NOTGIVEN | 019.AuthorDIED=NODATA | 020.BookTITLE=تحفة الأطفال والغلمان في تجويد القرآن | 020.BookTITLESUB=NODATA | 021.BookSUBJ=علوم القرآن | 022.BookVOLS=1 | 025.BookLANG=NODATA | 029.BookTITLEalt=NODATA | 030.LibURI=Shamela_0009632)
-  ✓ أُضيف: 9 صفحة، 1 مجلد، 0.0 م.ب — بلا بيانات طبعة
+## القواعد الحسان لتفسير القرآن
+  ✗ لم يُعثر على الكتاب عند 1376CabdRahmanSacdi. كتبه: TaysirKarimRahman
 
-## فتح القدير
-  ✓ وُجد بالبحث الموسع: 1275AH/1255Shawkani/1255Shawkani.FathQadir
-  النسخة: 1255Shawkani.FathQadir.Shamela0023623-ara1 (14437 ك.ب)
-  ✓ أُضيف: 3585 صفحة، 7 مجلد، 13.8 م.ب — دار ابن كثير، دار الكلم الطيب - دمشق، بيروت
+## بهجة قلوب الأبرار وقرة عيون الأخيار
+  ✗ لم يُعثر على الكتاب عند 1376CabdRahmanSacdi. كتبه: TaysirKarimRahman
 
-## إرشاد الفحول
-  ✓ وُجد بالبحث الموسع: 1275AH/1255Shawkani/1255Shawkani.IrshadFuhul
-  النسخة: 1255Shawkani.IrshadFuhul.Shamela0011437-ara1 (1726 ك.ب)
-  ✓ أُضيف: 961 صفحة، 1 مجلد، 1.6 م.ب — تحقيق: الشيخ أحمد عزو عناية، دمشق - كفر بطنا — دار الكتاب العربي
+## القول السديد شرح كتاب التوحيد
+  ✗ لم يُعثر على الكتاب عند 1376CabdRahmanSacdi. كتبه: TaysirKarimRahman
 
-## السيل الجرار
-  ✓ وُجد بالبحث الموسع: 1275AH/1255Shawkani/1255Shawkani.SaylJarrar
-  النسخة: 1255Shawkani.SaylJarrar.Shamela0007342-ara1 (3606 ك.ب)
-  ✓ أُضيف: 1079 صفحة، 2 مجلد، 3.4 م.ب — دار ابن حزم
+## التنكيل بما في تأنيب الكوثري من الأباطيل
+  ✗ لم يُعثر على المؤلف. مؤلفو سنة 1386 في 1400AH: 1386CabdRahmanRafici, 1386FakhriBarudi, 1386KaramBustani, 1386SayyidQutb, 1386TahirTanahi
 
-## البدر الطالع
-  ✓ وُجد بالبحث الموسع: 1275AH/1255Shawkani/1255Shawkani.BadrTalic
-  النسخة: 1255Shawkani.BadrTalic.JK000998-ara1.completed (1857 ك.ب)
-  ✓ أُضيف: 893 صفحة، 1 مجلد، 1.8 م.ب — تحقيق: بلا — دار المعرفة
+## حلية طالب العلم
+  ✗ لم يُعثر على الكتاب عند 1429BakrIbnCabdAllah. كتبه: TabaqatNassabin
 
-## تأويل مختلف الحديث
-  النسخة: 0276IbnQutaybaDinawari.TawilMukhtalafHadith.Shamela0007292-ara1.mARkdown (594 ك.ب)
-  ✓ أُضيف: 440 صفحة، 1 مجلد، 0.6 م.ب — المكتب الاسلامي - مؤسسة الإشراق
+## معجم المناهي اللفظية
+  ✗ لم يُعثر على الكتاب عند 1429BakrIbnCabdAllah. كتبه: TabaqatNassabin
+
+## الموسوعة الفقهية الكويتية
+  ✗ لم يُعثر عليه بالبحث الموسع في 1450AH, 1425AH, 1400AH, 1375AH. أقرب العناوين: 1450AH/1450Anonymous.MawsucatRijalZaydiyya, 1450AH/1450Burnu.MawsucatQawacidFiqhiyya, 1450AH/1450DarTaqrib.MawsucaQuraniyya, 1450AH/1450Maghrawi.MawsucatMawaqifSalaf, 1450AH/1450MajmacFikrIslami.MawsucatMuallifiImamiya, 1450AH/1450MawsucaShicriya.MucjamShucara, 1450AH/1450MuhammadHadiYusufi.MawsucatTarikhIslam, 1450AH/1450MuhammadTawfiqSahli.MawsucatAmthalShacbiyyaFalastiniyya, 1450AH/1450Multiple.MawsucaMujazaFiTarikhIslami, 1450AH/1450YasirCabdRahman.MawsucatAkhlaq, 1400AH/1381SalimHasan.MawsucatMisrQadima
+
+## تحفة المودود بأحكام المولود
+  النسخة: 0751IbnQayyimJawziyya.TuhfatMawdud.Shamela0006266-ara1 (466 ك.ب)
+  ✓ أُضيف: 310 صفحة، 1 مجلد، 0.4 م.ب — تحقيق: عبد القادر الأرناؤوط — مكتبة دار البيان - دمشق
+
+## الآداب الشرعية
+  النسخة: 0763IbnMuflihMaqdisi.AdabSharciyya.Shamela0021582-ara1 (3215 ك.ب)
+  ✓ أُضيف: 1530 صفحة، 4 مجلد، 3.1 م.ب — عالم الكتب
+
+## أدب الدنيا والدين
+  النسخة: 0450AbuHasanMawardi.AdabDunyaWaDin.Shamela0000765-ara1 (856 ك.ب)
+  ✓ أُضيف: 343 صفحة، 1 مجلد، 0.8 م.ب — دار مكتبة الحياة
+
+## تذكرة السامع والمتكلم في أدب العالم والمتعلم
+  النسخة: 0733IbnJamacaBadrDinHamawi.TadhkiratSamic.ShamAY0034810-ara1 (182 ك.ب)
+  (بيانات الرأس: المؤلف=الشيخ العالم بدر الدين أبو عبد الله محمد بن إبراهي | bkid=34810 | Shamela_short_metadata_record= | الكتاب=تذكرة السامع والمتكلم في أدب العالم والمتعلم | ملاحظة=[هذا الكتاب من كتب المستودع بموقع المكتبة الشاملة] | auth=ابن جماعة، بدر الدين | Lng=أبو عبد الله، محمد بن إبراهيم بن سعد الله بن جماعة | max=73 | bk=تذكرة السامع والمتكلم في أدب العالم والمتعلم | authinf=ابن جماعة (639 - 733 ه = 1241 - 1333 م) ¶ محمد بن  | ndata=بسم الله763C5E7A- (1/72) | bkord=8955 | archive=24 | عدد الأجزاء=1)
+  ✓ أُضيف: 68 صفحة، 1 مجلد، 0.2 م.ب — بلا بيانات طبعة
+
+## مكارم الأخلاق
+  النسخة: 0281IbnAbiDunya.MakarimAkhlaq.JK000015-ara1.mARkdown (270 ك.ب)
+  ✓ أُضيف: 140 صفحة، 1 مجلد، 0.3 م.ب — تحقيق: مجدي السيد إبراهيم — مكتبة القرآن
+
+## عمل اليوم والليلة
+  النسخة: 0364IbnSunniDinawari.CamalYawmWaLayl.Shamela0013132-ara1 (564 ك.ب)
+  ✓ أُضيف: 1474 صفحة، 1 مجلد، 0.5 م.ب — تحقيق: كوثر البرني — دار القبلة للثقافة الإسلامية ومؤسسة علوم القرآن - جدة / بيروت
 
 المضاف في هذا التشغيل: 6
