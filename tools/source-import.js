@@ -108,7 +108,11 @@ async function runSource(s, ctx) {
       let dup = null; if (tw) dup = tw.id; else if (qd) dup = qd.id;
       if (!dup) { const S1 = shingles(text); for (const x of ctx.q.items.slice(-400)) if (x.text && jacc(S1, shingles(x.text)) > 0.8) { dup = x.id; break; } }
       if (dup) { skipped++; L(`مكرر (${dup}): ${title}`); continue; }
-      ctx.q.items.push({ id: s.id + key, src: s.id, srcName: s.name, col: s.col || "dawah", u, t: title, author, d: date, text: text.slice(0, 60000), st: "pending", at: new Date().toISOString(), lic: s.lic || "" });
+      if (s.type === "facebook" && (s.to || "posts") === "posts" && s.auto) { // نشر تلقائي في «المنشورات» دون مراجعة (باختيار الإدارة لهذا الحساب)
+        const pp = path.join(DATA, "posts.json"), P = readJSON(pp, { items: [] }), pid = "fb" + s.id.replace(/^fb-/, "").slice(0, 12) + key;
+        if (!P.items.some(x => x.id === pid || (x.url && x.url === u))) { P.items.unshift(Object.assign({ id: pid, date: date || new Date().toISOString().slice(0, 10), text: text.slice(0, 20000), url: u, src: "فيس بوك" }, s.aid ? { authorId: s.aid } : {})); fs.writeFileSync(pp, JSON.stringify(P)); }
+        added++; L(`+ نُشر في المنشورات: ${title}`); continue; }
+      ctx.q.items.push({ id: s.id + key, src: s.id, srcName: s.name, col: s.col || "dawah", u, t: title, author, d: date, text: text.slice(0, 60000), st: "pending", at: new Date().toISOString(), lic: s.lic || "", to: s.type === "facebook" ? (s.to || "posts") : "" });
       added++; L(`+ للمراجعة: ${title}${author ? " — " + author : ""}`);
     } catch (e) { errs++; ctx.errors.push({ src: s.id, url: u, err: e.message }); L(`خطأ ${u}: ${e.message}`); if (/HTTP 4(03|29)/.test(e.message)) { L("المصدر يرفض الطلبات الآلية الآن؛ توقف."); break; } }
   }
@@ -120,7 +124,7 @@ async function runSource(s, ctx) {
   const conf = readJSON(SRC, { sources: [] }), only = process.argv[2];
   const ctx = { idx: readJSON(IDX, { items: [] }), q: readJSON(Q, { v: 1, items: [] }), errors: [] };
   const res = [];
-  for (const s of conf.sources) { if (only && s.id !== only) continue; if (s.on === false || !((s.lists || []).length || s.base)) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
+  for (const s of conf.sources) { if (only && s.id !== only) continue; if (s.on === false || !((s.lists || []).length || s.base || s.type === "facebook")) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
   ctx.q.items = ctx.q.items.slice(-3000); ctx.q.errors = ctx.errors.slice(-200); ctx.q.lastRun = new Date().toISOString(); ctx.q.results = res;
   // ترقية المنشور ملخصًا إلى النص الكامل حين يصير مصدره «كاملًا» (lic فارغ): يُجلب نص كل مادة من رابطها مرة واحدة
   const full = new Map(conf.sources.filter(s => s.col === "ithra" && s.lic !== "link" && s.on !== false).map(s => [s.id, s])); let up = 0;

@@ -2,7 +2,8 @@ name: الاستجلاب الدوري من المصادر
 on:
   workflow_dispatch:
   schedule:
-    - cron: "23 5 * * *"   # يوميًا: يضع الجديد في قائمة المراجعة ولا ينشر
+    - cron: "23 5 * * *"   # يوميًا: يضع الجديد في قائمة المراجعة (ومنشورات فيسبوك المفعّل نشرها تلقائيًا تُنشر)
+    - cron: "47 16 * * *"  # جولة مسائية لمنشورات فيسبوك وغيرها
   push:
     paths: ["tools/source-import.js", "data/sources.json"]
 permissions:
@@ -43,7 +44,7 @@ jobs:
       - run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"
-          git add data/import-review.json data/sources.json data/articles data/catalog.json
+          git add data/import-review.json data/sources.json data/articles data/catalog.json data/posts.json
           git diff --cached --quiet && exit 0
           git commit -qm "الاستجلاب الدوري: قائمة المراجعة"
           for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
