@@ -94,6 +94,9 @@
 /social.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/study.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /style.css
   Cache-Control: public, max-age=60, must-revalidate
 
