@@ -1,5 +1,7 @@
 name: تشجير الكتب (للكتب التي تختارها الإدارة)
 on:
+  schedule:
+    - cron: "25 14 * * *"   # يوميًا لما بقي في الطابور
   push:
     paths: ["data/tashjir/_queue.json"]
   workflow_dispatch:
@@ -33,7 +35,7 @@ jobs:
     needs: gate
     if: ${{ needs.gate.outputs.on == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
       - name: التشجير

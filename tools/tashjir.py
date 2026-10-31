@@ -4,7 +4,7 @@
 ثلاثة مستويات: تشجير عام للكتاب (أقسامه الكبرى)، ومتوسط للفصول والأبواب، وتفصيلي للموضوعات ونقاطها.
 كل عقدة مربوطة بصفحاتها، ولكل نقطة تفصيلية عبارة قصيرة منقولة بلفظها من الكتاب يُتحقق من وجودها في الصفحة (v=1)،
 وما لم يُعثر عليه يُعلَّم v=0 للمراجعة. ثم جولة تدقيق علمي ثانية تقارن كل نقطة بنص صفحتها وتصحح أو تحذف.
-المخرجات: data/tashjir/<كتاب>.json و data/tashjir/_list.json (ok=0 حتى تعتمده الإدارة).
+المخرجات: data/tashjir/<كتاب>.json و data/tashjir/_list.json (ok=1: يُنشر مباشرة، وللإدارة إيقافه).
 """
 import json, os, re, sys, time, urllib.request, urllib.error
 
@@ -96,15 +96,45 @@ def chapters(sh, n):
     return out
 
 
+ARTS = None
+
+
+def source(bid, cat):
+    """الكتاب أو المقال: (العنوان، المؤلف، الصفحات، الفهرس) أو None إن لم يوجد."""
+    global ARTS
+    au = {a["id"]: a["name"] for a in cat["authors"]}
+    b = next((x for x in cat["books"] if x["id"] == bid), None)
+    if b:
+        for p in (os.path.join(ROOT, "data", "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")):
+            if os.path.exists(p):
+                sh = json.load(open(p, encoding="utf-8"))
+                return b.get("setTitle") or b["title"], au.get(b.get("authorId"), ""), sh.get("pages") or [], sh
+        return None
+    if ARTS is None:
+        ip = os.path.join(ROOT, "data", "articles", "index.json")
+        ARTS = {x["id"]: x for x in json.load(open(ip, encoding="utf-8"))["items"]} if os.path.exists(ip) else {}
+    x = ARTS.get(bid)
+    if not x:
+        return None
+    g = json.load(open(os.path.join(ROOT, "data", "articles", x["f"] + ".json"), encoding="utf-8"))
+    pages = []
+    for pg in (g.get(bid) or {}).get("pages") or []:  # المقال الطويل يُقسَّم مقاطع (~٣٠٠٠ حرف) تُعامل كالصفحات
+        cur = ""
+        for para in (pg or "").split("\n"):
+            if len(cur) + len(para) > 3000 and cur:
+                pages.append(cur); cur = ""
+            cur += para + "\n"
+        if cur.strip():
+            pages.append(cur)
+    return x["t"], au.get(x.get("a"), ""), pages, {}
+
+
 def build(bid, cat):
-    b = next(x for x in cat["books"] if x["id"] == bid)
-    au = next((a["name"] for a in cat["authors"] if a["id"] == b.get("authorId")), "")
-    sh = None
-    for p in (os.path.join(ROOT, "data", "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")):
-        if os.path.exists(p):
-            sh = json.load(open(p, encoding="utf-8")); break
-    pages = sh["pages"]
-    title = b.get("setTitle") or b["title"]
+    src = source(bid, cat)
+    if not src or not any((p or "").strip() for p in src[2]):
+        print("  غير موجود أو بلا نص:", bid, flush=True)
+        return "missing"
+    title, au, pages, sh = src
     chs = []
     for a, z in chapters(sh, len(pages)):
         text = "\n".join("[ص %d]\n%s" % (i + 1, re.sub(r"^\s*_{4,}[\s\S]*$", "", pages[i] or "", flags=re.M)[:4000]) for i in range(a - 1, z))
@@ -177,20 +207,34 @@ def main():
     only = [x for x in os.environ.get("TJ_ONLY", "").split(",") if x]
     todo = only or [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
     done = []
-    for bid in todo[: int(os.environ.get("TJ_MAX", "2"))]:
+    drop = []
+    t0 = time.time()
+    for bid in todo[: int(os.environ.get("TJ_MAX", "6"))]:
+        if time.time() - t0 > 60 * float(os.environ.get("TJ_MINUTES", "280")) or (KEYS and len(EXH) >= len(KEYS)):
+            break
         print("تشجير:", bid, flush=True)
-        m = build(bid, cat)
+        try:
+            m = build(bid, cat)
+        except Exception as e:  # خطأ في كتاب لا يوقف البقية
+            print("  خطأ في", bid, str(e)[:200], flush=True); m = None
+        if m == "missing":
+            drop.append(bid); continue
         if not m:
             continue
         json.dump(m, open(os.path.join(OUT, bid + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         n = sum(1 for g in m["c"] for ch in g["c"] for tp in ch.get("c", []) for pt in tp.get("c", []))
-        lst[bid] = {"t": m["t"], "n": n, "upd": m["built"], "ok": (lst.get(bid) or {}).get("ok", 0)}
+        # يُنشر مباشرة (بقرار المالك)، وللإدارة إيقاف عرضه من صفحته
+        lst[bid] = {"t": m["t"], "n": n, "upd": m["built"], "ok": (lst.get(bid) or {}).get("ok", 1)}
         done.append(bid)
-    q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) not in done]
+        # حفظ بعد كل كتاب حتى لا يضيع المنجز إن انقطعت المهمة
+        q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) not in done + drop]
+        json.dump(q, open(qp, "w", encoding="utf-8"), ensure_ascii=False)
+        json.dump(lst, open(lp, "w", encoding="utf-8"), ensure_ascii=False)
+    q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) not in done + drop]
     json.dump(q, open(qp, "w", encoding="utf-8"), ensure_ascii=False)
     json.dump(lst, open(lp, "w", encoding="utf-8"), ensure_ascii=False)
     if done:
-        open(os.path.join(ROOT, ".tj-report.txt"), "w", encoding="utf-8").write("🌳 <b>تشجير الكتب</b>: جُهّز تشجير %s، وينتظر اعتمادك للعرض." % "، ".join("«%s»" % lst[d]["t"] for d in done))
+        open(os.path.join(ROOT, ".tj-report.txt"), "w", encoding="utf-8").write("🌳 <b>تشجير الكتب</b>: جُهّز تشجير %s، ونُشر في صفحة التشجير." % "، ".join("«%s»" % lst[d]["t"] for d in done))
 
 
 if __name__ == "__main__":
