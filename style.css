@@ -868,3 +868,7 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .mjser{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.mjs{flex:1;min-width:180px;display:flex;flex-direction:column;gap:2px;background:color-mix(in srgb,var(--ac) 8%,var(--sf));border:1px solid var(--line);border-radius:12px;padding:10px;text-decoration:none;color:inherit}.mjs b{font-family:var(--rf);font-size:1.1rem;color:var(--ac)}.mjs.soon{border-style:dashed;opacity:.8}.mjarr{font-style:normal;color:var(--mut)}
 .mjsub summary{cursor:pointer;padding:4px 0}.mjsub ol{line-height:2}.mjdone{font-size:.8rem;margin-inline-start:6px}.mjdone.on{color:#2e7d32;font-weight:700}
 .mjacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.mjacts span{background:color-mix(in srgb,var(--gold,#b88a2e) 14%,var(--sf));border-radius:12px;padding:3px 10px;font-size:.85rem}.mjarts{line-height:1.9}
+/* منشورات فيسبوك المستجلبة: إطار وشريط بلون فيسبوك وأيقونته بجوار الكاتب وتاريخ نشره على حسابه */
+.post.pfb{border-inline-start:4px solid #1877f2;background:linear-gradient(90deg,transparent,color-mix(in srgb,#1877f2 5%,transparent))}
+.post .fbi{width:1em;height:1em;color:#1877f2;vertical-align:-.12em;margin-inline-start:4px}
+.post.pfb header .mut a{color:#1877f2}
