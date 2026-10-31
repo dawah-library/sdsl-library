@@ -1,0 +1,35 @@
+name: مطابقة النسخ المصورة بالنصية
+on:
+  workflow_dispatch:
+    inputs:
+      books: { description: "معرّفات كتب (اختياري)", required: false, default: "" }
+      apply: { description: "تطبيق التصحيحات (1/0)", required: false, default: "1" }
+  schedule:
+    - cron: "41 3 * * 1"   # أسبوعيًّا
+  push:
+    paths: ["tools/pdf-match.py"]
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: pdf-match
+  cancel-in-progress: false
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils tesseract-ocr tesseract-ocr-ara >/dev/null
+      - name: المطابقة
+        env:
+          MATCH_ONLY: ${{ github.event.inputs.books }}
+          MATCH_APPLY: ${{ github.event.inputs.apply || '1' }}
+        run: python3 tools/pdf-match.py
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/match tools/match-report.md data/catalog.json data/books
+          git diff --cached --quiet && exit 0
+          git commit -qm "مطابقة النسخ المصورة بالنصية: تقرير وتصحيحات"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
