@@ -118,19 +118,22 @@ function spEst(f, books) {
   const st = spState(books, p); if (!st.left) { el.textContent = "أتممت كتب المسار."; return; }
   el.textContent = `بقي ${pgs2(st.left)}: تقرأ ${pgs2(st.daily)} في كل يوم قراءة (نحو ${toAr(st.mins)} دقيقة)، وتختم ${fdate(st.end)}${st.late ? " — التاريخ المختار مضى" : ""}.`;
 }
-async function vPaths(q, pid) {
+async function vPaths(q, pid, sub, bid) {
   const P = await loadPaths(); try { await SP.load(); } catch (e) { }
   if (pid === "new") return spEdit(q.e);
+  // اختبار كتاب من كتب المسار داخل قسم المسارات (أسئلة data/quizzes المراجَعة؛ والنتيجة تُحسب في تقدم المسار)
+  if (sub === "q" && bid && typeof LRN !== "undefined") { await LRN.vQuizzes(q, bid); const r = (P.find(x => x.id === pid) || {}).t || "المسار"; $("#app").insertAdjacentHTML("afterbegin", `<p><a href="#/paths/${encodeURIComponent(pid)}">← ${esc(r)}</a></p>`); return; }
   const mine = (SP.rows || []).filter(r => r.custom), rec = P.find(x => x.id === pid), own = SP.get(pid);
   const p = rec ? Object.assign({}, rec, { plan: own && own.plan }) : own && own.custom ? { id: own.id, t: own.title, d: "مسار اخترت كتبه بنفسك.", books: (own.books || []).filter(id => B(id)), plan: own.plan, custom: 1 } : null;
   if (pid) {
     if (!p) return view('<p class="note">المسار غير موجود.</p><p><a href="#/paths">← المسارات العلمية</a></p>');
-    const quiz = ls.get("pquiz", {}), pcts = p.books.map(pathPct), done = p.books.every((id, i) => pcts[i] >= 90 && quiz[id]), st = spState(p.books, p.plan, p.id);
+    const qix = await pqIndex(), qres = S.qres || [], quiz = Object.assign({}, ls.get("pquiz", {}), Object.fromEntries(qres.map(r => [r.b, r.at]))), best = id => qres.filter(r => r.b === id).reduce((m, r) => Math.max(m, Math.round(100 * r.s / Math.max(1, r.n))), -1), pcts = p.books.map(pathPct), done = p.books.every((id, i) => pcts[i] >= 90 && quiz[id]), st = spState(p.books, p.plan, p.id);
     view(`<p><a href="#/paths">← المسارات العلمية</a></p><div class="cmhero ph"><div><h2>${esc(p.t)}</h2><p>${esc(p.d)}</p></div>${p.custom ? `<div class="row"><a class="btn s nf" href="#/paths/new?e=${encodeURIComponent(p.id)}">تعديل الكتب</a><button class="btn s" data-act="spdel" data-id="${esc(p.id)}">حذف</button></div>` : ""}</div>
     <div class="card"><div class="prog"><i style="width:${st.pct}%"></i></div><small class="mut">قرأت ${toAr(st.pct)}٪ من المسار (${toAr(st.read)} من ${toAr(st.total)} صفحة)</small>${Auth.user ? spSummary(st, p.plan) : `<p class="note"><a href="#/account">سجّل الدخول</a> لتضع خطة قراءة بمدة وورد يومي وتذكير.</p>`}</div>
+    ${Auth.user && !(p.plan && p.plan.mode === "timed") ? `<div class="card spsub"><b>اشترك في المسار وذكّرني يوميًّا</b><p class="mut">ورد ١٠ صفحات يوميًّا، وتذكير في الثامنة مساءً على جرس الموقع وإشعارات الجهاز والبريد، ويمكنك تعديل الخطة بعد ذلك.</p><button class="btn p" data-act="spsub" data-id="${esc(p.id)}">🔔 اشترك وذكّرني</button></div>` : ""}
     ${Auth.user ? `<details class="card"${p.plan ? "" : " open"}><summary><b>${p.plan ? "تعديل خطة القراءة" : "ضع خطة لقراءة هذا المسار"}</b></summary>${spPlanForm(p.id, p.plan, p.books)}</details>` : ""}
-    <ol class="pathl">${p.books.map((id, i) => { const b = B(id); return `<li class="${pcts[i] >= 90 ? "done" : ""}"><div><b>${esc(b.setTitle || b.title)}</b><span class="mut">${esc(A(b.authorId).name)}${b.n ? " • " + toAr(b.n) + " صفحة" : ""}</span><div class="prog"><i style="width:${pcts[i]}%"></i></div><small class="mut">قرأت ${toAr(pcts[i])}٪${quiz[id] ? " • ✓ اختبرت نفسك" : ""}</small></div>
-    <div class="row"><a class="btn s p nf" href="#/book/${id}/${Math.max(1, (S.lastBy || {})[id] || 1)}">${pcts[i] ? "أكمل" : "ابدأ"}</a><a class="btn s nf" href="#/ask?q=${encodeURIComponent("اختبرني في كتاب «" + (b.setTitle || b.title) + "» بعشرة أسئلة متدرجة مع الإجابات وتعليلها")}" data-act="pquiz" data-id="${id}">اختبر نفسك</a></div></li>`; }).join("")}</ol>
+    <ol class="pathl">${p.books.map((id, i) => { const b = B(id); return `<li class="${pcts[i] >= 90 ? "done" : ""}"><div><b>${esc(b.setTitle || b.title)}</b><span class="mut">${esc(A(b.authorId).name)}${b.n ? " • " + toAr(b.n) + " صفحة" : ""}</span><div class="prog"><i style="width:${pcts[i]}%"></i></div><small class="mut">قرأت ${toAr(pcts[i])}٪${best(id) >= 0 ? " • ✓ نتيجة الاختبار " + toAr(best(id)) + "٪" : quiz[id] ? " • ✓ اختبرت نفسك" : ""}</small></div>
+    <div class="row"><a class="btn s p nf" href="#/book/${id}/${Math.max(1, (S.lastBy || {})[id] || 1)}">${pcts[i] ? "أكمل" : "ابدأ"}</a>${qix.has(id) ? `<a class="btn s nf" href="#/paths/${encodeURIComponent(p.id)}/q/${encodeURIComponent(id)}">📝 اختبار الكتاب</a>` : `<a class="btn s nf" href="#/ask?q=${encodeURIComponent("اختبرني في كتاب «" + (b.setTitle || b.title) + "» بعشرة أسئلة متدرجة مع الإجابات وتعليلها")}" data-act="pquiz" data-id="${id}">اختبر نفسك (المساعد)</a>`}</div></li>`; }).join("")}</ol>
     ${done ? `<div class="card cert"><h3>أتممت المسار، بارك الله فيك</h3><p>نزّل شهادة إتمام القراءة باسمك.</p><form data-form="cert" data-id="${p.id}" class="stepper"><input name="n" required maxlength="60" placeholder="اسمك كما تريده في الشهادة" value="${esc((Auth.user && Auth.user.name) || "")}"><button class="btn p">نزّل الشهادة</button></form></div>` : `<p class="mut">تُتاح شهادة إتمام القراءة عند بلوغ ٩٠٪ من كل كتاب في المسار واختبار نفسك فيه.</p>`}`);
     const f = $('form[data-form="spplan"]'); if (f) { spEst(f, p.books); f.oninput = f.onchange = () => spEst(f, p.books); }
     return;
@@ -138,8 +141,25 @@ async function vPaths(q, pid) {
   const card = (id, t, books, plan, tag) => { const st = spState(books, plan, Auth.user ? id : null); return `<a class="card" href="#/paths/${encodeURIComponent(id)}"><b>${esc(t)}</b><span>${toAr(books.length)} كتب • ${toAr(st.pct)}٪${plan && plan.mode === "timed" && st.left ? " • " + pgs2(st.daily) + " يوميًا • الختم " + st.end.toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) : ""}${tag || ""}</span><i class="prog" style="--w:${st.pct}%"></i></a>`; };
   view(`<div class="cmhero ph"><div><h2>المسارات العلمية</h2><p>اختر مسارًا رشحته المكتبة، أو اصنع مسارك بنفسك من كتبها. ولكل مسار خطة اختيارية: بلا مدة، أو بمدة وورد يومي بالصفحات أو بالدقائق، مع أيام إجازة وتذكير.</p></div></div>
   <h3>مساراتي</h3>${Auth.user ? `<div class="grid">${mine.map(r => card(r.id, r.title, (r.books || []).filter(id => B(id)), r.plan)).join("")}<a class="card spnew" href="#/paths/new"><b>＋ اصنع مسارك</b><span>اختر الكتب وترتيبها بنفسك</span></a></div>` : `<p class="note"><a href="#/account">سجّل الدخول</a> لتصنع مسارك الخاص وتضع خطة لقراءته.</p>`}
-  <h3>مسارات مرشحة من المكتبة</h3><div class="grid">${P.map(p => { const o = SP.get(p.id); return card(p.id, p.t, p.books, o && o.plan, o && o.plan && o.plan.mode === "timed" ? " • ✓ لك خطة" : ""); }).join("")}</div>`);
+  <h3>مسارات مرشحة من المكتبة</h3><p class="mut">لكل علم ثلاثة مستويات متدرجة: مبتدئ فمتوسط فمتقدم، ولكل كتاب اختباره داخل المسار.</p>
+  <nav class="chips">${[...new Set(P.filter(p => !p.hide).map(p => p.sci))].map(k => `<a class="chip" href="#/paths" data-spgo="sp-${k}">${esc((P.find(p => p.sci === k) || {}).st || k)}</a>`).join("")}</nav>
+  ${[...new Set(P.filter(p => !p.hide).map(p => p.sci))].map(k => { const L = P.filter(p => p.sci === k && !p.hide).sort((a, b) => a.lvl - b.lvl); return `<section class="spsci" id="sp-${k}"><h3>${esc(L[0].st)}</h3><div class="grid">${L.map(p => { const o = SP.get(p.id); return card(p.id, ["", "١. مبتدئ", "٢. متوسط", "٣. متقدم"][p.lvl] || p.t, p.books, o && o.plan, (o && o.plan && o.plan.mode === "timed" ? " • ✓ لك خطة" : "") + `<br><small>${esc(p.d)}</small>`); }).join("")}</div></section>`; }).join("")}`);
 }
+// الكتب التي لها اختبارات مراجَعة (data/quizzes/index.json)
+let PQIX = null;
+async function pqIndex() { if (!PQIX) { try { const j = await (await fetch("data/quizzes/index.json")).json(); PQIX = new Set((j.items || []).filter(x => x.n > 0).map(x => x.b)); } catch (e) { PQIX = new Set(); } } return PQIX; }
+document.addEventListener("click", e => { const g = e.target.closest("[data-spgo]"); if (!g) return; e.preventDefault(); const el = document.getElementById(g.dataset.spgo); if (el) el.scrollIntoView({ behavior: "smooth" }); });
+// الاشتراك السريع: خطة ورد يومي ١٠ صفحات وتذكير ٨ مساءً، مع طلب إشعارات الجهاز
+document.addEventListener("click", async e => {
+  const el = e.target.closest('[data-act="spsub"]'); if (!el) return; e.preventDefault(); el.disabled = true;
+  try {
+    const pid = el.dataset.id, rec = (await loadPaths()).find(x => x.id === pid), old = SP.get(pid);
+    await SP.save({ id: pid, title: old ? old.title : rec && rec.t, books: old ? old.books : rec ? rec.books : [], custom: old ? !!old.custom : false, plan: { mode: "timed", by: "pages", daily: 10, off: [], at: "20:00", email: true, mpp: 2 } });
+    spSync("plan").catch(() => { });
+    try { if (typeof pushOn === "function" && typeof Notification !== "undefined" && Notification.permission !== "granted") await pushOn(); } catch (x) { toast(x.message); }
+    toast("اشتركت في المسار، وسيصلك التذكير يوميًّا"); route();
+  } catch (x) { el.disabled = false; alert(x.message || x); }
+});
 /* صانع المسار الخاص */
 function spEdit(eid) {
   if (!Auth.user) return view('<p class="note"><a href="#/account">سجّل الدخول</a> لتصنع مسارك الخاص.</p>');

@@ -48,9 +48,14 @@ def book_pages(bid):
     try: return json.loads(f.read_text(encoding="utf-8")).get("pages") or []
     except Exception: return []
 
+def _qaok(f):  # كتب «سؤال وجواب» الكافية (٨ فأكثر) تُختبر منها؛ وما قلّ عن ذلك يُختبر من نصه
+    try: return len([x for x in json.loads(open(f, encoding="utf-8").read())["items"] if len(x.get("q", "")) >= 30 and len(x.get("a", "")) >= 30 and not re.match(r"^\(?\d*\)?\s*هل\s", x["q"].strip())]) >= 8
+    except Exception: return False
+QAOK = {pathlib.Path(f).stem for f in glob.glob(str(R / "data/qa/*.json")) if _qaok(f)}
+PATHB = {x for p in json.loads((R / "data/paths.json").read_text(encoding="utf-8"))["paths"] for x in p["books"]}
 for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة من نصها (كتب الدعوة والمتون القصيرة)
-    if b.get("hidden") or b.get("vf") or b.get("type") == "article" or (R / "data/qa" / (bid + ".json")).exists(): continue
-    if (b.get("col") or "dawah") != "dawah" and (b.get("n") or 0) > 400: continue
+    if b.get("hidden") or b.get("vf") or b.get("type") == "article" or bid in QAOK: continue
+    if (b.get("col") or "dawah") != "dawah" and (b.get("n") or 0) > 400 and bid not in PATHB: continue  # كتب المسارات العلمية تُختبر كلها
     pages = book_pages(bid)
     if len(pages) < 5: continue
     sh = json.loads((R / "data/books" / (bid + ".json")).read_text(encoding="utf-8"))
