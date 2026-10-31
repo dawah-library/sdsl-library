@@ -103,18 +103,44 @@ const STUDY = (() => {
     openSheet("أضف إلى رف", `<div class="row" style="flex-direction:column;gap:6px">${keys.map(k => `<label class="inl"><input type="checkbox" data-act="shtog" data-k="${esc(k)}" data-id="${esc(id)}"${(sh[k] || []).includes(id) ? " checked" : ""}> ${esc(shelfName(k))}</label>`).join("")}</div><p><a href="#/mine?t=shelves" data-act="closeSheet">رفوفي</a></p>`);
   }
 
+
+  // ---------- التوصيات: بذور من القراءة الأخيرة والرفوف، ودرجات للموضوع والمؤلف والشرح، مع سبب كل اقتراح ----------
+  function recommend(k, seedIds) {
+    const W = new Map(), add = (id, w) => { const b = B(id); if (b) W.set(b.set || b.id, (W.get(b.set || b.id) || 0) + w); };
+    if (seedIds) seedIds.forEach(id => add(id, 3));
+    else { Object.keys(S.lastBy || {}).slice(-10).forEach((id, i, a) => add(id, 1 + i / a.length * 2)); const sh = shelves(); (sh.now || []).forEach(id => add(id, 2)); (sh.done || []).forEach(id => add(id, 1.5)); }
+    const seeds = [...W.entries()].map(([id, w]) => [B(id), w]).filter(x => x[0]);
+    const want = new Set((shelves().want || [])), seen = new Set([...Object.keys(S.lastBy || {}), ...(shelves().done || []), ...seeds.map(x => x[0].id)].map(id => (B(id) || {}).set || id));
+    if (!seeds.length) return BOOKS().filter(b => !isArt(b) && !VOL2(b) && !b.hidden && bc(b) === "dawah" && b.card && (b.n || 0) > 20 && (b.n || 0) < 250 && !seen.has(b.set || b.id)).sort((a, b) => (a.n || 0) - (b.n || 0)).slice(0, k).map(b => ({ b, why: "بداية مناسبة: كتاب قصير من مكتبة الدعوة" }));
+    const out = [];
+    BOOKS().forEach(b => {
+      if (isArt(b) || VOL2(b) || b.hidden || b.demo || seen.has(b.set || b.id)) return;
+      let sc = 0, why = "";
+      for (const [s0, w] of seeds) {
+        if (b.sharh && (b.sharh === s0.id || b.sharh === s0.set)) { sc += 5 * w; why = why || `شرح لكتاب قرأته: «${s0.setTitle || s0.title}»`; }
+        if (s0.sharh && (s0.sharh === b.id || s0.sharh === b.set)) { sc += 5 * w; why = why || `الكتاب الذي شرحه «${s0.setTitle || s0.title}»`; }
+        if (b.topicId && b.topicId === s0.topicId) { sc += 3 * w; why = why || `في موضوع كتاب «${s0.setTitle || s0.title}»`; }
+        if (b.authorId === s0.authorId) { sc += 2 * w; why = why || `للمؤلف نفسه: ${A(b.authorId).name}`; }
+      }
+      if (!sc) return;
+      if (want.has(b.set || b.id)) { sc += 4; why = "على رفك «سأقرأ»"; }
+      if (bc(b) === "dawah") sc += 1; if (b.card) sc += .5; if ((b.n || 0) > 600) sc -= 1;
+      out.push({ b, why, sc });
+    });
+    return out.sort((a, b) => b.sc - a.sc).slice(0, k);
+  }
+  const recHtml = l => `<div class="recg">${l.map(({ b, why }) => `<a class="recc" href="#/book/${esc(b.id)}/1"><b>${esc(b.setTitle || b.title)}</b><span class="mut">${esc(A(b.authorId).name)}</span><small>💡 ${esc(why)}</small></a>`).join("")}</div>`;
   // ---------- الرئيسية: لوحة الطالب ----------
   async function home(el) {
     if (!el) return; const st = stats(), g = goal(), pct = Math.min(100, Math.round(st.today * 100 / g));
     let due = 0; try { if (typeof HZ !== "undefined") due = HZ.due().length; } catch (e) { }
     const sp = (typeof SP !== "undefined" && SP.rows || []).find(r => r.plan && r.plan.mode === "timed");
-    const recent = Object.keys(S.lastBy || {}).slice(-6).map(B).filter(Boolean), tps = new Set(recent.map(b => b.topicId)), seen = new Set(Object.keys(S.lastBy || {}));
-    const sug = lib.books.filter(b => !isArt(b) && !VOL2(b) && !b.hidden && tps.has(b.topicId) && !seen.has(b.id)).sort((a, b) => (bc(a) === "dawah" ? 0 : 1) - (bc(b) === "dawah" ? 0 : 1) || (a.n || 0) - (b.n || 0)).slice(0, 4);
+    const sug = recommend(4);
     el.innerHTML = `<div class="sthome"><a class="sth" href="#/mine?t=stats"><b>🌱 هدف اليوم</b><div class="bar"><i style="width:${pct}%"></i></div><span>${toAr(st.today)} من ${toAr(g)} دقيقة${st.streak > 1 ? ` • 🔥 ${toAr(st.streak)} أيام` : ""}</span></a>
       ${due ? `<a class="sth" href="#/hifz"><b>🔁 مراجعة اليوم</b><span>${toAr(due)} بطاقة مستحقة</span></a>` : ""}
       ${sp ? `<a class="sth" href="#/paths/${encodeURIComponent(sp.id)}"><b>🎯 مسارك</b><span>${esc(sp.title || "")}</span></a>` : `<a class="sth" href="#/paths"><b>🎯 اختر مسارًا علميًا</b><span>١١ علمًا بثلاثة مستويات</span></a>`}
       <a class="sth" href="#/mine?t=book"><b>📒 دفتري</b><span>فوائدك من الكتب في مكان واحد</span></a></div>
-      ${sug.length ? `<h2>مقترح لك</h2><p class="mut">من موضوعات ما قرأته مؤخرًا.</p><div class="newg">${sug.map(b => `<a class="newc" style="text-decoration:none;color:inherit" href="#/book/${b.id}/1"><b>${esc(b.setTitle || b.title)}</b><br><span class="mut">${esc(A(b.authorId).name)}</span></a>`).join("")}</div>` : ""}`;
+      ${sug.length ? `<h2>مقترح لك</h2><p class="mut">بحسب ما قرأته وما في رفوفك ودفترك.</p>${recHtml(sug)}` : ""}`;
   }
 
 
@@ -146,11 +172,88 @@ const STUDY = (() => {
     if (el.dataset.act === "cmpgo") return pane(el.dataset.el, el.dataset.id, document.getElementById(el.dataset.el).dataset.term || "", +el.dataset.k);
     const b = B(el.dataset.id); try { await navigator.clipboard.writeText(cite(b, +el.dataset.p)); toast("نُسخت الإحالة"); } catch (x) { } });
 
+
+  // ---------- بطاقة الكتاب الموحدة: كل ما يتصل بالكتاب في شريط واحد (الصوت، التشجير، الخلاصة، الاختبار، الشروح والتفريغات، كتب المؤلف، المقارنة، الرفوف) ----------
+  async function hub(b, p) {
+    const rh = document.querySelector(".rhead"); if (!rh || rh.querySelector(".bkhub")) return;
+    const id = b.set || b.id, a = A(b.authorId), it = [];
+    const sharh = BOOKS().filter(x => x.sharh && (x.sharh === b.id || x.sharh === b.set) && !x.hidden && !VOL2(x));
+    const others = BOOKS().filter(x => x.authorId === b.authorId && (x.set || x.id) !== id && !x.hidden && !VOL2(x) && !isArt(x));
+    it.push(`<a href="#/summary?b=${encodeURIComponent(b.id)}&r=20">🧾 الخلاصة</a>`, `<a href="#/quizzes/${encodeURIComponent(b.id)}?l=easy">✅ اختبر فهمك</a>`);
+    if (sharh.length) it.push(`<a href="#/book/${encodeURIComponent(sharh[0].id)}/1">🎙 ${sharh.length > 1 ? toAr(sharh.length) + " شروح وتفريغات" : "شرح صوتي مفرَّغ"}</a>`);
+    if (b.sharh && B(b.sharh)) it.push(`<a href="#/book/${encodeURIComponent(b.sharh)}/1">📘 الكتاب المشروح: ${esc((B(b.sharh).setTitle || B(b.sharh).title).slice(0, 40))}</a>`);
+    if (others.length) it.push(`<a href="#/author/${esc(b.authorId)}">📚 ${others.length === 1 ? "كتاب آخر" : others.length === 2 ? "كتابان آخران" : toAr(others.length) + (others.length > 10 ? " كتابًا آخر" : " كتب أخرى")} لـ${esc(a.name.replace(/^(الشيخ|الإمام|د\.)\s*/, "").split(" ").slice(0, 3).join(" "))}</a>`);
+    it.push(`<a href="#/compare?a=${encodeURIComponent(b.id)}">🆚 قارنه بكتاب</a>`, `<button class="linkbtn" data-act="shelfadd">📚 أضف إلى رف</button>`);
+    const notes = (S.marks || []).length; void notes;
+    rh.insertAdjacentHTML("beforeend", `<details class="bkhub"${p === 1 ? " open" : ""}><summary>خدمات الكتاب</summary><nav aria-label="خدمات الكتاب">${it.join("")}<span class="hubaud"></span><span class="hubtj"></span><span class="hubtm"></span></nav></details>`);
+    try { if (typeof AUDIO !== "undefined") { const L = await AUDIO.load(), x = L[id] || L[b.id]; if (AUDIO.ready(x)) { const el = rh.querySelector(".hubaud"); if (el) el.innerHTML = `<a href="#/audio/${esc(L[id] ? id : b.id)}">🎧 استمع إلى الكتاب${x.preview ? " (معاينة)" : ""}</a>`; } } } catch (e) { }
+    try { if (typeof TSJ !== "undefined") { const L = await TSJ.index(), x = L[id]; if (x && (x.ok || isAdmin())) { const el = rh.querySelector(".hubtj"); if (el) el.innerHTML = `<a href="#/tashjir/${esc(id)}">🌳 الخريطة الذهنية</a>`; const m = await TSJ.map(id); if (m && (m.m || []).length) { const t = rh.querySelector(".hubtm"); if (t) t.innerHTML = `<a href="#/lexicon?b=${esc(id)}">📖 ${toAr(m.m.length)} مصطلحًا</a>`; } } } } catch (e) { }
+  }
+
+  // ---------- معجم المصطلحات: تعريفات الكتب نفسها (فهرس المعاني data/gloss)، ومصطلحات عرّفها المؤلفون في التشجير، ومصطلحات قيّدها القارئ ----------
+  const CORE = ["التوحيد", "الإيمان", "العبادة", "الشرك", "البدعة", "السنة", "الإخلاص", "التقوى", "النفاق", "الولاء", "الإحسان", "التوكل", "الاجتهاد", "التقليد", "الإجماع", "القياس", "المصلحة", "النسخ", "العام", "المطلق", "الواجب", "المندوب", "المكروه", "المباح", "الركن", "الشرط", "الصحيح", "الحسن", "الضعيف", "المتواتر", "الآحاد", "المرسل", "الصحابي", "العدالة", "الزهد", "الورع", "الحكمة", "الفقه", "الخلافة", "البيعة", "الجهاد", "الحسبة", "الربا", "الغرر"];
+  async function lexicon(q) {
+    const term = String(q.q || "").trim(), bid = q.b || "";
+    view(`<h2>معجم المصطلحات</h2><p class="mut">تعريف المصطلحات من نصوص المكتبة نفسها: المعاجم، وكتب التفسير والحديث والفقه وأصوله والعقيدة، ومصطلحات عرّفها المؤلفون في كتبهم المشجَّرة، وما قيّدته أنت في دفترك «مصطلحًا». كل تعريف بإحالته إلى الكتاب والصفحة.</p>
+      <form class="stepper" data-form="lex"><input name="q" type="search" value="${esc(term)}" placeholder="اكتب المصطلح (مثل: البدعة)" aria-label="المصطلح"><button class="btn p">ابحث</button></form>
+      ${term ? "" : `<nav class="chips lexcore">${CORE.map(t => `<a class="chip" href="#/lexicon?q=${encodeURIComponent(t)}">${t}</a>`).join("")}</nav>`}
+      <div id="lexres" class="mut">جارٍ التحميل…</div>`);
+    const box = () => document.getElementById("lexres"), nt = norm(term);
+    // مصطلحات التشجير
+    let tj = [];
+    try { if (typeof TSJ !== "undefined") { const L = await TSJ.index(); const ids = Object.keys(L).filter(k => (L[k].ok || isAdmin()) && (!bid || k === bid)); for (const k of ids.slice(0, 60)) { const m = await TSJ.map(k); (m && m.m || []).forEach(x => tj.push(Object.assign({ b: k, bt: m.t }, x))); } } } catch (e) { }
+    if (nt) tj = tj.filter(x => norm(x.t).includes(nt) || nt.includes(norm(x.t)));
+    // مصطلحات القارئ
+    let mine = []; try { if (typeof Mine !== "undefined" && Mine.allNotes) mine = (await Mine.allNotes()).filter(n => n.kind === "t" && (!bid || n.book_id === bid) && (!nt || norm((n.quote || "") + " " + (n.note || "")).includes(nt))); } catch (e) { }
+    // تعريفات الكتب من فهرس المعاني
+    let gl = [], cats = {};
+    if (term && typeof GL !== "undefined") { try { const w = term.split(/\s+/).filter(x => x.length > 1).sort((x, y) => y.length - x.length)[0] || term; gl = await GL.lookup(w); cats = await GL.meta(); } catch (e) { } }
+    const PR = { d: 0, h: 1, m: 2, a: 3, q: 4, l: 5 }; gl.sort((x, y) => (x[4] || 0) - (y[4] || 0) || (PR[x[2]] ?? 9) - (PR[y[2]] ?? 9));
+    const el = box(); if (!el) return; el.className = "";
+    const sec = (t, h) => h ? `<section class="lexsec"><h3>${t}</h3>${h}</section>` : "";
+    const bl = (b, p) => { const x = B(b); return x ? `<a href="#/book/${esc(b)}/${+p || 1}">${esc(x.setTitle || x.title)}${p ? " — " + esc(PL(x, p - 1) || "ص " + toAr(p)) : ""}</a>` : esc(b); };
+    const G = {}; gl.slice(0, 80).forEach(e => { const c = (cats[e[0]] || "other"); (G[c] = G[c] || []).push(e); });
+    const CAT = typeof GCAT !== "undefined" ? GCAT : {}, TY = typeof GTYP !== "undefined" ? GTYP : {};
+    el.innerHTML = (bid && B(bid) ? `<p class="note">مصطلحات كتاب «${esc(B(bid).setTitle || B(bid).title)}» — <a href="#/lexicon">المعجم كله</a></p>` : "")
+      + sec("📖 عرّفها المؤلفون في كتبهم", tj.slice(0, 150).map(x => `<div class="lexi"><b>${esc(x.t)}</b><p>${esc(x.d)}</p><small class="mut">${bl(x.b, x.p)}</small></div>`).join(""))
+      + Object.entries(G).map(([c, l]) => sec("📚 " + (CAT[c] || "في كتب المكتبة"), l.map(e => `<div class="lexi"><small class="tag">${esc(TY[e[2]] || "")}</small><p>${esc(e[3] || "")}</p><small class="mut">${bl(e[0], e[1])}</small></div>`).join(""))).join("")
+      + sec("📒 من دفتري", mine.map(n => { const x = B(n.book_id); return `<div class="lexi"><b>${esc(n.note || "")}</b><p>${esc(n.quote || "")}</p><small class="mut">${x ? bl(n.book_id, n.page) : ""}</small></div>`; }).join(""))
+      || `<p class="note">${term ? `لم أجد تعريفًا صريحًا لـ«${esc(term)}» في فهرس المعاني بعد. جرّب صيغة أخرى للكلمة، أو <a href="#/search?q=${encodeURIComponent(term)}">ابحث عنها في نصوص المكتبة</a>، أو <a href="#/ask?q=${encodeURIComponent("ما تعريف " + term + "؟")}">اسأل المساعد</a>.` : "اختر مصطلحًا أو اكتبه في البحث. وتظهر هنا مصطلحات الكتب المشجَّرة ومصطلحاتك من الدفتر."}</p>`;
+    if (term && (tj.length || gl.length)) el.insertAdjacentHTML("beforeend", `<p class="mut">لمزيد: <a href="#/search?q=${encodeURIComponent(term)}">مواضع «${esc(term)}» في نصوص المكتبة</a> • <a href="#/ask?q=${encodeURIComponent("ما تعريف " + term + " لغة واصطلاحًا؟")}">اسأل المساعد</a></p>`);
+  }
+  document.addEventListener("submit", e => { const f = e.target.closest("[data-form=lex]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); location.hash = "#/lexicon?q=" + encodeURIComponent(f.q.value.trim()); }, true);
+
+  // ---------- الخط الزمني للعلماء والعلوم: القرون الهجرية، وأعلام كل قرن بعلومهم (سير أعلام النبلاء)، ومؤلفو المكتبة بوفياتهم وكتبهم ----------
+  const FC = { sahaba: "#0f5c4d", khulafa: "#8a5a2b", quran: "#1f6f8b", fiqh: "#6b4fa3", hadith: "#b88a2e", lugha: "#a3462f", tarikh: "#3c7a3b", zuhd: "#2f5e9e", other: "#9aa5a1" };
+  const ORD = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر"];
+  const kt = n => n === 1 ? "كتاب واحد" : n === 2 ? "كتابان" : toAr(n) + (n < 11 ? " كتب" : " كتابًا");
+  async function timeline(q) {
+    let ix = { fields: [], c: {} }; try { ix = await (await fetch("data/a3lam/_index.json")).json(); } catch (e) { }
+    const F = ix.fields || [], f = q.f || "", FL = k => (F.find(x => x[0] === k) || [k, k])[1];
+    const nb = id => BOOKS().filter(b => b.authorId === id && !b.hidden && !VOL2(b)).length;
+    const au = lib.authors.filter(a => +a.died > 0 && !a.mergedInto && nb(a.id)), by = {}; au.forEach(a => { const c = Math.ceil(+a.died / 100); (by[c] = by[c] || []).push(a); });
+    const max = Math.max(15, ...Object.keys(by).map(Number)), top = Math.max(1, ...Object.values(ix.c || {}).map(x => f ? (x.f || {})[f] || 0 : x.n || 0));
+    const rows = [];
+    for (let c = 1; c <= max; c++) {
+      const x = (ix.c || {})[c], as = (by[c] || []).sort((a, b) => a.died - b.died);
+      if (!x && !as.length) { rows.push(`<li class="tlr tle"><span class="tlc">القرن ${ORD[c] || toAr(c)}</span></li>`); continue; }
+      const segs = x ? Object.entries(x.f || {}).filter(([k]) => !f || k === f).sort((a, b) => b[1] - a[1]) : [];
+      const tot = f ? (x && x.f && x.f[f]) || 0 : (x && x.n) || 0;
+      rows.push(`<li class="tlr"><span class="tlc">القرن ${ORD[c] || toAr(c)}<small>${toAr((c - 1) * 100 + 1)}–${toAr(c * 100)}هـ</small></span><div class="tlb">
+        ${x ? `<a class="tlbar" href="#/tarajim?t=aam&c=${c}${f ? "&f=" + f : ""}" title="${toAr(tot)} ترجمة في سير أعلام النبلاء" style="width:${Math.max(4, 100 * tot / top)}%">${segs.map(([k, v]) => `<i style="flex:${v};background:${FC[k] || "#999"}" title="${esc(FL(k))}: ${toAr(v)}"></i>`).join("")}</a><small class="mut">${toAr(tot)} ${f ? esc(FL(f)) : "علَمًا"} في «السير»</small>` : ""}
+        ${as.length ? `<div class="tla">${as.map(a => `<a href="#/author/${esc(a.id)}" data-author="${esc(a.id)}">${esc(a.name)} <small>ت ${toAr(a.died)}هـ • ${kt(nb(a.id))}</small></a>`).join("")}</div>` : ""}</div></li>`);
+    }
+    const now = lib.authors.filter(a => !a.died && (a.col || "dawah") === "dawah" && !a.mergedInto && !a.auto && nb(a.id) >= 2).sort((a, b) => nb(b.id) - nb(a.id)).slice(0, 30);
+    view(`<h2>الخط الزمني للعلماء والعلوم</h2><p class="mut">القرون الهجرية وأعلام كل قرن مصنَّفين بعلومهم (من «سير أعلام النبلاء» في المكتبة، حتى القرن السابع)، ومؤلفو كتب المكتبة بسنوات وفاتهم وعدد كتبهم. اضغط الشريط لتراجم القرن، والاسم لصفحة المؤلف وكتبه.</p>
+      <nav class="chips tlf"><a class="chip${f ? "" : " x"}" href="#/timeline">كل العلوم</a>${F.map(([k, n]) => `<a class="chip${f === k ? " x" : ""}" href="#/timeline?f=${k}"><i class="tld" style="background:${FC[k]}"></i>${esc(n)}</a>`).join("")}</nav>
+      <ol class="tl">${rows.join("")}<li class="tlr"><span class="tlc">المعاصرون<small>مشايخ الدعوة</small></span><div class="tlb"><div class="tla">${now.map(a => `<a href="#/author/${esc(a.id)}" data-author="${esc(a.id)}">${esc(a.name)} <small>${kt(nb(a.id))}</small></a>`).join("")}</div></div></li></ol>`);
+  }
   // ---------- القارئ: صفحتان متقابلتان، والتنقل بين نتائج البحث داخل الكتاب، واختصارات لوحة المفاتيح ----------
   const HITS = new Map();
   function reader(b, p, h, o) {
     const desk = document.querySelector(".desk"), paper = document.getElementById("paper"); if (!desk || !paper) return;
-    const n = b.pages.length;
+    const n = b.pages.length; if (!o.art) hub(b, p);
+    if (!o.art && n > 1 && (p === n || (desk.classList.contains("spreadon") && p + 1 === n))) { const r = recommend(4, [b.id]); if (r.length) desk.insertAdjacentHTML("afterend", `<section class="recend"><h3>📚 ماذا تقرأ بعده؟</h3>${recHtml(r)}<p class="mut"><button class="linkbtn" data-act="shelfadd">ضع هذا الكتاب على رف «قرأت»</button></p></section>`); }
     if (S.spread && innerWidth >= 1100 && !o.scroll && o.pv === "text" && !o.art && n > 1) {
       const q = p < n ? p + 1 : 0;
       desk.classList.add("spreadon");
@@ -209,5 +312,5 @@ const STUDY = (() => {
     if (f.dataset.form === "nbq") { const v = f.q.value.trim(); location.hash = "#/mine?t=book" + (v ? "&q=" + encodeURIComponent(v) : ""); }
     else { const n = f.n.value.trim(); if (!n) return; const sh = shelves(), k = "c" + Date.now().toString(36); sh[k] = []; S.shelfNames = Object.assign(S.shelfNames || {}, { [k]: n }); saveS(); push(); route(); }
   }, true);
-  return { KINDS, mine, home, stats, cite, shelfName, compare, reader };
+  return { KINDS, mine, home, stats, cite, shelfName, compare, reader, lexicon, timeline, recommend };
 })();
