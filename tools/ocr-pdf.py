@@ -220,8 +220,8 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             ERRS["%s رد فارغ (%s)" % (models[0], c.get("finishReason"))] += 1
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
         except urllib.error.HTTPError as e:
-            msg = e.read()[:600].decode("utf-8", "ignore")
-            daily = e.code == 429 and re.search(r"PerDay|per day|daily", msg, re.I)
+            msg = e.read()[:4000].decode("utf-8", "ignore")
+            daily = e.code == 429 and re.search(r"PerDay|per day|daily", msg, re.I) and not re.search(r"PerMinute", msg)
             ERRS["%s %s%s" % (models[0], e.code, " (الحصة اليومية)" if daily else "")] += 1
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
             if e.code == 404 and len(models) > 1: models.pop(0); continue

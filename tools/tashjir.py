@@ -50,9 +50,10 @@ def gemini(prompt, schema_hint=""):
                     t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
                     return json.loads(re.sub(r"^```json|```$", "", t.strip()))
                 except urllib.error.HTTPError as e:
-                    msg = e.read()[:300].decode("utf-8", "ignore")
+                    msg = e.read()[:4000].decode("utf-8", "ignore")
                     print("  Gemini", model, e.code, msg[:100], flush=True)
-                    if (e.code == 429 and re.search(r"day|PerDay", msg, re.I)) or e.code in (400, 403, 404):
+                    # نفاد الحصة اليومية (رسالته «exceeded your current quota» وتفصيلها PerDay في آخرها) أو نموذج غير متاح: إلى البديل فورًا
+                    if (e.code == 429 and re.search(r"PerDay|per day|exceeded your current quota", msg, re.I) and not re.search(r"PerMinute", msg)) or e.code in (400, 403, 404):
                         MEXH.add((k, model)); break  # إلى النموذج البديل
                     time.sleep(20 * (attempt + 1))
                 except Exception as e:

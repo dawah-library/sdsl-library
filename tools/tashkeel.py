@@ -182,7 +182,7 @@ def call(engine, prompt, slot=0):
                     return t
                 break
             except urllib.error.HTTPError as e:
-                msg = e.read()[:400].decode("utf-8", "ignore")
+                msg = e.read()[:4000].decode("utf-8", "ignore")
                 ERRS.append("%s %s %s" % (eng, e.code, re.sub(r"\s+", " ", msg)[:160]))
                 if e.code == 429 and re.search(r"day|daily|PerDay|UserByDay|quota", msg, re.I) and not re.search(r"PerMinute|per minute", msg, re.I):
                     with LOCK:
