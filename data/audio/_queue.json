@@ -77,6 +77,12 @@
    "voice": "gemini:Enceladus",
    "rate": "-5%",
    "force": 1
+  },
+  {
+   "id": "pf2a3a079",
+   "voice": "gemini:Enceladus",
+   "rate": "-5%",
+   "force": 1
   }
  ]
 }
