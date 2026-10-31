@@ -1,159 +1,77 @@
-# استكشاف المصادر — 2026-10-31 17:14
+# استكشاف المصادر — 2026-10-31 17:56
 
-## https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8
+## https://salafvoice.com/article.aspx?a=23022
 - الحالة: 200
-- العنوان: نتائج البحث عن &laquo;مصطفى دياب&raquo;
-            - موقع أنا السلفي
+- العنوان: ��� ����� | ������� ��������
 - خلاصات: لا توجد
 - أقسام محتملة:
-  - https://anasalafy.com/ar/search | بحث متقدم
-  - https://anasalafy.com/ar/category/sounds | المكتبة الصوتية
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D9%88%D8%AF-%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D8%AD%D9%85%D9%8A%D8%AF | محمود عبدالحميد
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%87%D9%8A%D8%AB%D9%85-%D8%AA%D9%88%D9%81%D9%8A%D9%82 | هيثم توفيق
-  - https://anasalafy.com/ar/category/%D8%B1%D8%AC%D8%A8-%D8%A3%D8%A8%D9%88%D8%A8%D8%B3%D9%8A%D8%B3%D8%A9 | رجب أبوبسيسة
-  - https://anasalafy.com/ar/category/%D9%85%D9%84%D9%81%D8%A7%D8%AA-%D8%AE%D8%A7%D8%B5%D8%A9 | ملفات خاصة
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B1%D9%85%D8%B6%D8%A7%D9%86-%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%83 | شهر رمضان المبارك
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%A3%D9%82%D8%B5%D9%89-%D9%88%D9%81%D9%84%D8%B3%D8%B7%D9%8A%D9%86 | المسجد الأقصى وفلسطين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%82%D8%B6%D8%A7%D9%8A%D8%A7-%D8%A7%D9%84%D9%85%D9%86%D9%87%D8%AC%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D9%81%D9%83%D8%B1%D9%8A%D8%A9-%D9%84%D9%84%D8%AF%D8%B9%D9%88%D8%A9-%D8%A7%D9%84%D8%B3%D9%84%D9%81%D9%8A%D8%A9 | القضايا المنهجية والفكرية للدعوة السلفية
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AD%D8%AC-%D8%B1%D8%AD%D9%84%D8%A9-%D8%A7%D9%84%D9%85%D8%BA%D9%81%D8%B1%D8%A9 | الحج... رحلة المغفرة
-  - https://anasalafy.com/ar/category/%D8%A8%D8%B1%D8%A7%D9%85%D8%AC-%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9 | برامج الشيخ أحمد حطيبة
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%B1%D8%B3%D9%88%D9%84-%D8%A7%D9%84%D9%84%D9%87 | محمد رسول الله
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-%D9%84%D9%85%D8%A7%D8%B0%D8%A7 | اللغة العربية.. لماذا؟
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B4%D8%B9%D8%A8%D8%A7%D9%86-%D9%81%D8%B6%D8%A7%D8%A6%D9%84-%D9%88-%D8%A3%D8%AD%D9%83%D8%A7%D9%85 | شهر شعبان .. فضائل و أحكام ..
-  - https://anasalafy.com/ar/category/books | الكتب
-  - https://anasalafy.com/ar/category/%D8%B5%D9%88%D8%AA-%D8%A7%D9%84%D8%AF%D8%B9%D9%88%D8%A9 | صوت الدعوة
-  - https://anasalafy.com/ar/category/%D9%86%D8%B4%D8%B1%D8%A9-%D8%A7%D9%84%D8%B3%D8%A8%D9%8A%D9%84 | نشرة السبيل
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9 | العقيدة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AA%D9%81%D8%B3%D9%8A%D8%B1 | التفسير
+  - https://salafvoice.com/article.aspx?a=15217 | 
+  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
+  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
+  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
+  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
+  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
+  - https://salafvoice.com/article.aspx?a=25753 | 2026-10-26 ��� ������� (1)
+  - https://salafvoice.com/article.aspx?a=25754 | 2026-10-26 ��� ������ ������ ����� ����� �� ������
+  - https://salafvoice.com/article.aspx?a=25755 | 2026-10-26 ������� �������� ������� ���� ��� ��� �
+  - https://salafvoice.com/article.aspx?a=25756 | 2026-10-26 ����� ���������� ������ ��� ������� ���
+  - https://salafvoice.com/moshref_article | ���� ������
+  - https://salafvoice.com/article.aspx?a=32 | ������
+  - https://salafvoice.com/article.aspx?a=21032 | 
+  - https://salafvoice.com/article.aspx?a=19714 | 
 - أنماط الروابط الأكثر:
-  - /ar/SLUG (83)
-  - /ar/category/SLUG (74)
-  - /ar/tags/SLUG (17)
-  - /ar/author/SLUG (11)
-  - /ar (3)
-  - /ar/search (2)
-  - /ar/admin (1)
-  - /ar/logout (1)
-  - /ar/category/sounds (1)
-  - /ar/category/books (1)
+  - /class.aspx?… (19)
+  - /article.aspx?… (13)
+  - /Default.aspx (1)
+  - /default.aspx (1)
+  - /www.salafvoice.com (1)
+  - /moshref_article (1)
+  - /ContactUs.aspx?… (1)
+  - /ContactUs.aspx (1)
 - عينة روابط:
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D9%81%D8%B1%D9%8A%D8%AF-258 | أحمد فريد
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9-358 | أحمد حطيبة
+  - https://salafvoice.com/article.aspx?a=15217 | 
+  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
+  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
+  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
+  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
+  - https://salafvoice.com/class.aspx?id=181 | ������� ������
+  - https://salafvoice.com/class.aspx?id=183 | �������
+  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
 
-## https://anasalafy.com/ar/writers
-- الحالة: 404
-
-## https://anasalafy.com/ar/category/articles
+## https://salafvoice.com/article.aspx?a=43
 - الحالة: 200
-- العنوان: ركن المقالات - موقع أنا السلفي
+- العنوان: ��� ����� | ��� ��� ������
 - خلاصات: لا توجد
 - أقسام محتملة:
-  - https://anasalafy.com/ar/search | بحث متقدم
-  - https://anasalafy.com/ar/category/sounds | المكتبة الصوتية
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D9%88%D8%AF-%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D8%AD%D9%85%D9%8A%D8%AF | محمود عبدالحميد
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%87%D9%8A%D8%AB%D9%85-%D8%AA%D9%88%D9%81%D9%8A%D9%82 | هيثم توفيق
-  - https://anasalafy.com/ar/category/%D8%B1%D8%AC%D8%A8-%D8%A3%D8%A8%D9%88%D8%A8%D8%B3%D9%8A%D8%B3%D8%A9 | رجب أبوبسيسة
-  - https://anasalafy.com/ar/category/%D9%85%D9%84%D9%81%D8%A7%D8%AA-%D8%AE%D8%A7%D8%B5%D8%A9 | ملفات خاصة
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B1%D9%85%D8%B6%D8%A7%D9%86-%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%83 | شهر رمضان المبارك
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%A3%D9%82%D8%B5%D9%89-%D9%88%D9%81%D9%84%D8%B3%D8%B7%D9%8A%D9%86 | المسجد الأقصى وفلسطين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%82%D8%B6%D8%A7%D9%8A%D8%A7-%D8%A7%D9%84%D9%85%D9%86%D9%87%D8%AC%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D9%81%D9%83%D8%B1%D9%8A%D8%A9-%D9%84%D9%84%D8%AF%D8%B9%D9%88%D8%A9-%D8%A7%D9%84%D8%B3%D9%84%D9%81%D9%8A%D8%A9 | القضايا المنهجية والفكرية للدعوة السلفية
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AD%D8%AC-%D8%B1%D8%AD%D9%84%D8%A9-%D8%A7%D9%84%D9%85%D8%BA%D9%81%D8%B1%D8%A9 | الحج... رحلة المغفرة
-  - https://anasalafy.com/ar/category/%D8%A8%D8%B1%D8%A7%D9%85%D8%AC-%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9 | برامج الشيخ أحمد حطيبة
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%B1%D8%B3%D9%88%D9%84-%D8%A7%D9%84%D9%84%D9%87 | محمد رسول الله
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-%D9%84%D9%85%D8%A7%D8%B0%D8%A7 | اللغة العربية.. لماذا؟
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B4%D8%B9%D8%A8%D8%A7%D9%86-%D9%81%D8%B6%D8%A7%D8%A6%D9%84-%D9%88-%D8%A3%D8%AD%D9%83%D8%A7%D9%85 | شهر شعبان .. فضائل و أحكام ..
-  - https://anasalafy.com/ar/category/books | الكتب
-  - https://anasalafy.com/ar/category/%D8%B5%D9%88%D8%AA-%D8%A7%D9%84%D8%AF%D8%B9%D9%88%D8%A9 | صوت الدعوة
-  - https://anasalafy.com/ar/category/%D9%86%D8%B4%D8%B1%D8%A9-%D8%A7%D9%84%D8%B3%D8%A8%D9%8A%D9%84 | نشرة السبيل
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9 | العقيدة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AA%D9%81%D8%B3%D9%8A%D8%B1 | التفسير
+  - https://salafvoice.com/article.aspx?a=21011 | 
+  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
+  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
+  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
+  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
+  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
+  - https://salafvoice.com/article.aspx?a=25753 | 2026-10-26 ��� ������� (1)
+  - https://salafvoice.com/article.aspx?a=25754 | 2026-10-26 ��� ������ ������ ����� ����� �� ������
+  - https://salafvoice.com/article.aspx?a=25755 | 2026-10-26 ������� �������� ������� ���� ��� ��� �
+  - https://salafvoice.com/article.aspx?a=25756 | 2026-10-26 ����� ���������� ������ ��� ������� ���
+  - https://salafvoice.com/moshref_article | ���� ������
+  - https://salafvoice.com/article.aspx?a=32 | ������
+  - https://salafvoice.com/article.aspx?a=19937 | 
+  - https://salafvoice.com/article.aspx?a=15217 | 
 - أنماط الروابط الأكثر:
-  - /ar/category/SLUG (166)
-  - /ar/SLUG (70)
-  - /ar/tags/SLUG (17)
-  - /ar/category/articles?… (16)
-  - /ar/author/SLUG (11)
-  - /ar (3)
-  - /ar/search (2)
-  - /ar/category/articles (2)
-  - /ar/admin (1)
-  - /ar/admin/taxonomies/4/edit (1)
+  - /class.aspx?… (20)
+  - /article.aspx?… (13)
+  - /Default.aspx (1)
+  - /default.aspx (1)
+  - /www.salafvoice.com (1)
+  - /moshref_article (1)
+  - /ContactUs.aspx?… (1)
+  - /ContactUs.aspx (1)
 - عينة روابط:
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D9%81%D8%B1%D9%8A%D8%AF-258 | أحمد فريد
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9-358 | أحمد حطيبة
-
-## https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9
-- الحالة: 200
-- العنوان: نتائج البحث عن &laquo;محمود عمارة&raquo;
-            - موقع أنا السلفي
-- خلاصات: لا توجد
-- أقسام محتملة:
-  - https://anasalafy.com/ar/search | بحث متقدم
-  - https://anasalafy.com/ar/category/sounds | المكتبة الصوتية
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D9%88%D8%AF-%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D8%AD%D9%85%D9%8A%D8%AF | محمود عبدالحميد
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%87%D9%8A%D8%AB%D9%85-%D8%AA%D9%88%D9%81%D9%8A%D9%82 | هيثم توفيق
-  - https://anasalafy.com/ar/category/%D8%B1%D8%AC%D8%A8-%D8%A3%D8%A8%D9%88%D8%A8%D8%B3%D9%8A%D8%B3%D8%A9 | رجب أبوبسيسة
-  - https://anasalafy.com/ar/category/%D9%85%D9%84%D9%81%D8%A7%D8%AA-%D8%AE%D8%A7%D8%B5%D8%A9 | ملفات خاصة
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B1%D9%85%D8%B6%D8%A7%D9%86-%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%83 | شهر رمضان المبارك
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%A3%D9%82%D8%B5%D9%89-%D9%88%D9%81%D9%84%D8%B3%D8%B7%D9%8A%D9%86 | المسجد الأقصى وفلسطين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%82%D8%B6%D8%A7%D9%8A%D8%A7-%D8%A7%D9%84%D9%85%D9%86%D9%87%D8%AC%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D9%81%D9%83%D8%B1%D9%8A%D8%A9-%D9%84%D9%84%D8%AF%D8%B9%D9%88%D8%A9-%D8%A7%D9%84%D8%B3%D9%84%D9%81%D9%8A%D8%A9 | القضايا المنهجية والفكرية للدعوة السلفية
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AD%D8%AC-%D8%B1%D8%AD%D9%84%D8%A9-%D8%A7%D9%84%D9%85%D8%BA%D9%81%D8%B1%D8%A9 | الحج... رحلة المغفرة
-  - https://anasalafy.com/ar/category/%D8%A8%D8%B1%D8%A7%D9%85%D8%AC-%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9 | برامج الشيخ أحمد حطيبة
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%B1%D8%B3%D9%88%D9%84-%D8%A7%D9%84%D9%84%D9%87 | محمد رسول الله
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-%D9%84%D9%85%D8%A7%D8%B0%D8%A7 | اللغة العربية.. لماذا؟
-  - https://anasalafy.com/ar/category/%D8%B4%D9%87%D8%B1-%D8%B4%D8%B9%D8%A8%D8%A7%D9%86-%D9%81%D8%B6%D8%A7%D8%A6%D9%84-%D9%88-%D8%A3%D8%AD%D9%83%D8%A7%D9%85 | شهر شعبان .. فضائل و أحكام ..
-  - https://anasalafy.com/ar/category/books | الكتب
-  - https://anasalafy.com/ar/category/%D8%B5%D9%88%D8%AA-%D8%A7%D9%84%D8%AF%D8%B9%D9%88%D8%A9 | صوت الدعوة
-  - https://anasalafy.com/ar/category/%D9%86%D8%B4%D8%B1%D8%A9-%D8%A7%D9%84%D8%B3%D8%A8%D9%8A%D9%84 | نشرة السبيل
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9 | العقيدة
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D8%AA%D9%81%D8%B3%D9%8A%D8%B1 | التفسير
-- أنماط الروابط الأكثر:
-  - /ar/SLUG (82)
-  - /ar/category/SLUG (74)
-  - /ar/tags/SLUG (17)
-  - /ar/author/SLUG (11)
-  - /ar (3)
-  - /ar/search (2)
-  - /ar/admin (1)
-  - /ar/logout (1)
-  - /ar/category/sounds (1)
-  - /ar/category/books (1)
-- عينة روابط:
-  - https://anasalafy.com/ar/category/%D8%B3%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%B3%D9%88%D8%A7%D8%AD-748 | سعيد السواح
-  - https://anasalafy.com/ar/category/%D8%B9%D8%B5%D8%A7%D9%85-%D8%AD%D8%B3%D9%86%D9%8A%D9%86-828 | عصام حسنين
-  - https://anasalafy.com/ar/category/%D9%85%D8%AC%D8%A7%D9%84%D8%B3-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D9%83%D8%A7%D9%81-637 | مجالس الاعتكاف
-  - https://anasalafy.com/ar/category/%D8%B3%D9%8A%D8%AF-%D8%AD%D8%B3%D9%8A%D9%86-%D8%A7%D9%84%D8%B9%D9%81%D8%A7%D9%86%D9%8A-401 | سيد حسين العفاني
-  - https://anasalafy.com/ar/category/%D9%85%D8%AD%D9%85%D8%AF-%D8%A5%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D9%82%D8%AF%D9%85-193 | محمد إسماعيل المقدم
-  - https://anasalafy.com/ar/category/%D8%A7%D9%84%D9%85%D9%83%D8%AA%D8%A8%D8%A9-%D8%A7%D9%84%D9%86%D8%A7%D8%B7%D9%82%D8%A9-148 | المكتبة الناطقة
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D9%81%D8%B1%D9%8A%D8%AF-258 | أحمد فريد
-  - https://anasalafy.com/ar/category/%D8%A3%D8%AD%D9%85%D8%AF-%D8%AD%D8%B7%D9%8A%D8%A8%D8%A9-358 | أحمد حطيبة
+  - https://salafvoice.com/article.aspx?a=21011 | 
+  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
+  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
+  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
+  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
+  - https://salafvoice.com/class.aspx?id=181 | ������� ������
+  - https://salafvoice.com/class.aspx?id=124 | ���� �������
+  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
