@@ -27,6 +27,9 @@ def gemini(prompt, schema_hint=""):
         if k in EXH:
             continue
         for attempt in range(3):
+            if time.time() > DEADLINE[0] + 20 * 60:  # حد صارم قبل مهلة المهمة (330 د) حتى لا تُلغى ويضيع المنجز
+                print("  تجاوز المهلة؛ أُوقفت طلبات Gemini", flush=True)
+                return None
             try:
                 body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
                                    "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json", "maxOutputTokens": 30000}}).encode()
@@ -191,7 +194,7 @@ def build(bid, cat):
     for k in range(0, len(pts), 25):
         part = pts[k:k + 25]
         items = "\n\n".join("نقطة %d: %s\nنص الصفحة %s: %s" % (i, pt.get("t", ""), pt.get("p"), (pages[int(pt.get("p") or 1) - 1] or "")[:1800]) for i, pt in enumerate(part))
-        rv = gemini(REV_PROMPT.format(title=title, items=items))
+        rv = None if time.time() > DEADLINE[0] else gemini(REV_PROMPT.format(title=title, items=items))
         if not rv:
             break
         for r in rv.get("r", []):
