@@ -162,10 +162,43 @@ async function radioChannels() {
   const all = ready.map(([id]) => id), byC = c => ready.filter(([id, x]) => (x.c || (B(id) || {}).col) === c).map(([id]) => id);
   const ch = [mk("mix", "مختارات المكتبة", "مقاطع متنوعة من كل الكتب المسموعة، تتجدد كل يوم", all, true), mk("dawah", "إذاعة الدعوة السلفية", "كتب مشايخ الدعوة السلفية كاملة متتابعة", byC("dawah")), mk("turath", "إذاعة التراث", "متون التراث وكتبه كاملة متتابعة", byC("turath"))];
   try { if (typeof Members !== "undefined" && Members.on()) { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); ((data && data.value && data.value.list) || []).forEach(c => { const ids = (c.books || []).filter(id => L[id] && AUDIO.ready(L[id])); if (ids.length) ch.push(mk("c-" + c.id, c.n, c.d || "قناة من إعداد الإدارة", ids, !!c.mix)); }); } } catch (e) { }
+  // البث المتواصل ٢٤ ساعة (ب12-33 … ب12-44): شبكة يومية متجددة بالساعات، ثلاثة أرباعها من مكتبة الدعوة وربعها من كتب المكتبة العامة
+  // التي تختارها الإدارة (radio_auto.turath)، وكل ساعة لها موضوع، ويتقدم كل كتاب يومًا بعد يوم فلا يتكرر المسموع.
+  try { const g = await radioGrid(L, ready); if (g) ch.unshift(g); } catch (e) { }
   // البرامج الإذاعية بمواعيد ثابتة (ب12-35 … ب12-38): البرنامج الجاري الآن قناة في المقدمة تبدأ من أول مواده عند موعده
   for (const pr of await radioPrograms()) { const live = progLive(pr); if (!live) continue; const ids = (pr.books || []).filter(id => L[id] && AUDIO.ready(L[id]) && !L[id].preview); if (!ids.length) continue;
     const c = mk("p-" + pr.id, "📡 " + pr.n, (pr.d || "برنامج إذاعي") + " • حتى " + live.end, ids, false); c.start = live.t0; c.prog = 1; ch.unshift(c); }
   return ch.filter(c => c.items.length);
+}
+const RTHEME = [[/أذكار|آداب|تزكية|رقائق/, "الأذكار والتزكية"], [/عقيد|توحيد|إيمان/, "العقيدة"], [/فقه|أصول/, "الفقه وأصوله"], [/سيرة|تاريخ|تراجم/, "السيرة والتراجم"], [/تفسير|قرآن/, "القرآن وعلومه"], [/حديث|سنة/, "الحديث"], [/فكر|منهج|دعوة|تربية|أسرة/, "الفكر والدعوة والتربية"]];
+// موضوع كل ساعة بتوقيت القاهرة: الفجر والصباح أذكار وتزكية، ثم العقيدة، والفقه ظهرًا، والسيرة عصرًا، والقرآن والحديث مساءً، والفكر والتربية ليلًا
+const RHOURS = [0, 0, 0, 0, 0, 0, 1, 1, 1, 4, 4, 2, 2, 2, 3, 3, 3, 5, 5, 6, 6, 1, 4, 0];
+let RAUTO = null;
+async function radioGrid(L, ready) {
+  if (RAUTO === null) { try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_auto").maybeSingle(); RAUTO = (data && data.value) || {}; } catch (e) { RAUTO = {}; } }
+  const ok = ready.map(([id]) => id).filter(id => B(id)), dawah = ok.filter(id => (B(id).col || "dawah") === "dawah"), tur = ok.filter(id => (RAUTO.turath || []).includes(id));
+  if (!dawah.length && !tur.length) return null;
+  const cai = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" })), day = Math.floor((Date.UTC(cai.getFullYear(), cai.getMonth(), cai.getDate()) - R_EPOCH) / 864e5);
+  const mid = Date.now() - ((cai.getHours() * 60 + cai.getMinutes()) * 60 + cai.getSeconds()) * 1000 - cai.getMilliseconds();
+  const share = RAUTO.dawahShare != null ? +RAUTO.dawahShare : 0.75, rnd = seeded(day * 104729 + 7), items = [], grid = [];
+  const tname = id => (T(B(id).topicId).name || "");
+  for (let h = 0; h < 24; h++) {
+    const th = RTHEME[RHOURS[h]], useT = tur.length && (rnd() > share || !dawah.length), pool = useT ? tur : dawah;
+    const fit = pool.filter(id => th[0].test(tname(id))), cand = fit.length ? fit : pool, bid = cand[Math.floor(rnd() * cand.length)];
+    const ds = (L[bid].ds || []).map((d, k) => ({ bid, p: k + 1, d, f: AUDIO.page(k + 1) })).filter(x => x.d > 0); if (!ds.length) continue;
+    const tot = ds.reduce((a, x) => a + x.d, 0); let off = (day * 3600 + h * 600) % Math.max(1, tot), i = 0; // يتقدم الكتاب كل يوم ساعة
+    while (off > ds[i].d) { off -= ds[i].d; i = (i + 1) % ds.length; }
+    let acc = 0; const blk = []; while (acc < 3600 && blk.length < ds.length) { const x = ds[i]; blk.push(x); acc += x.d; i = (i + 1) % ds.length; }
+    const scale = 3600 / acc; blk.forEach(x => items.push(Object.assign({}, x, { d: x.d, hour: h }))); // الساعة الأخيرة قد تزيد قليلًا فتتداخل
+    grid.push({ h, theme: th[1], bid, col: useT ? "turath" : "dawah" });
+  }
+  window.__rgrid = grid;
+  return { id: "24h", n: "📻 البث المتواصل", d: "برامج على مدار الساعة تتجدد يوميًا، أغلبها من كتب مكتبة الدعوة السلفية", ids: [...new Set(items.map(x => x.bid))], items, T: items.reduce((a, x) => a + x.d, 0), start: mid };
+}
+function radioGridHtml() {
+  const g = window.__rgrid; if (!g || !g.length) return "";
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" })).getHours();
+  return `<details class="card rsched"><summary><b>🕘 شبكة البث المتواصل اليوم</b> <small class="mut">بتوقيت القاهرة</small></summary>${g.map(x => { const b = B(x.bid); return `<div class="rprog${x.h === now ? " live" : ""}"><b>${String(x.h).padStart(2, "0")}:٠٠</b> <span>${esc(x.theme)}: ${esc(b ? b.setTitle || b.title : x.bid)}</span> <span class="mut">${x.col === "dawah" ? "مكتبة الدعوة" : "المكتبة العامة"}</span>${x.h === now ? ' <em class="tag on">الآن</em>' : ""}</div>`; }).join("")}</details>`;
 }
 let RPROG = null;
 async function radioPrograms() {
@@ -242,7 +275,7 @@ async function vAudioBook(bid) {
 async function vRadio(q, cid) {
   view(`<div class="radio"><div class="rdhead"><h2>📻 راديو المكتبة</h2><p>بث متواصل من كتب المكتبة المسموعة، يسمعه كل المستمعين في اللحظة نفسها كالإذاعة. يعمل في خلفية جهازك ولو أغلقت الشاشة.</p></div><div id="rdbox"><p class="mut">جارٍ ضبط الموجات…</p></div></div>`);
   const ch = await radioChannels(), box = $("#rdbox"); if (!box) return;
-  const sched = await radioScheduleHtml();
+  const sched = await radioScheduleHtml() + radioGridHtml();
   if (!ch.length) { box.innerHTML = AUDIO_SOON + sched; return; }
   const sel = ch.find(c => c.id === (cid || q.c)) || ch[0], live = AP.mode === "radio" && AP.ch && AP.ch.id === sel.id;
   const { i } = radioPos(sel), now = sel.items[i], nb = B(now.bid);
@@ -352,7 +385,7 @@ async function vAudioAdmin() {
   let RC = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); if (data && data.value) RC = data.value; } catch (e) { }
   const books = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.col === y.col ? 0 : x.col === "dawah" ? -1 : 1) || (x.n || 0) - (y.n || 0));
   const opt = books.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${b.n ? " (" + toAr(b.n) + " ص)" : ""}${L[b.id] ? " ✓" : ""}</option>`).join("");
-  const voices = [["ar-SA-HamedNeural", "حامد — رجل، فصحى (سعودي)"], ["ar-EG-ShakirNeural", "شاكر — رجل (مصري)"], ["ar-KW-FahedNeural", "فهد — رجل (كويتي)"], ["ar-AE-HamdanNeural", "حمدان — رجل"], ["ar-SA-ZariyahNeural", "زارية — امرأة"], ["ar-EG-SalmaNeural", "سلمى — امرأة"]];
+  const voices = [["gemini:Charon", "Gemini «Charon» — رجل، طبقة طبيعية (حصة Gemini المجانية)"], ["gemini:Orus", "Gemini «Orus» — رجل، رصين"], ["gemini:Kore", "Gemini «Kore» — امرأة"], ["ar-SA-HamedNeural", "حامد — رجل، فصحى (سعودي)"], ["ar-EG-ShakirNeural", "شاكر — رجل (مصري)"], ["ar-KW-FahedNeural", "فهد — رجل (كويتي)"], ["ar-AE-HamdanNeural", "حمدان — رجل"], ["ar-SA-ZariyahNeural", "زارية — امرأة"], ["ar-EG-SalmaNeural", "سلمى — امرأة"]];
   $("#aadm").className = ""; $("#aadm").innerHTML = `<div class="card"><h3>تحويل كتاب إلى صوت (مجانًا)</h3><p class="note">⏸ التسجيل الصوتي موقوف بقرار الإدارة حتى يُعتمد تصحيح الكتب نصيًا وتشكيلها. تُحفظ الطلبات في الطابور، ولا تُنفَّذ إلا بتشغيل يدوي مع كلمة «معتمد».</p><p class="mut">يُحوَّل الكتاب صفحةً صفحة بأصوات عصبية عربية، وتُحفظ الملفات في إصدارات المستودع على GitHub دون تكلفة، ويظهر الكتاب في «صوتيات المكتبة» و«الراديو» تباعًا. الصفحات التي يتغير نصها بعد التدقيق يُعاد تسجيلها تلقائيًا كل ليلة.</p>
   <form data-form="audq"><label>الكتاب</label><select name="b" required>${opt}</select><label>الصوت</label><select name="v">${voices.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><label>السرعة</label><select name="r"><option value="-10%">أبطأ قليلًا</option><option value="-5%" selected>معتدلة</option><option value="+0%">عادية</option><option value="+10%">أسرع</option></select><button class="btn p" style="margin-top:8px">أضف إلى طابور التحويل</button> <span id="audqs" class="mut"></span></form></div>
   <div class="card"><h3>رفع تسجيل صوتي بشري</h3><p class="mut">درس أو قراءة مسجلة لكتاب (mp3 أو m4a، حتى ٥٠ ميجابايت للملف). يُنقل إلى إصدارات المستودع ويظهر في صفحة الكتاب المسموع.</p>
@@ -365,6 +398,12 @@ async function vAudioAdmin() {
   window.__RC = RC;
   let RP = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_programs").maybeSingle(); if (data && data.value) RP = data.value; } catch (e) { }
   window.__RP = RP;
+  let RA = {}; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_auto").maybeSingle(); RA = (data && data.value) || {}; } catch (e) { }
+  window.__RA = RA;
+  $("#aadm").insertAdjacentHTML("beforeend", `<div class="card"><h3>📻 البث المتواصل ٢٤ ساعة</h3><p class="mut">شبكة يومية تتجدد آليًا: لكل ساعة موضوع (الأذكار فجرًا، العقيدة صباحًا، الفقه ظهرًا، السيرة عصرًا، القرآن والحديث مساءً)، ويتقدم كل كتاب يومًا بعد يوم. مكتبة الدعوة أولًا، وتُكمَّل من كتب المكتبة العامة التي تختارها هنا.</p>
+   <form data-form="raauto"><label>نصيب مكتبة الدعوة من الساعات</label><select name="share">${[[1, "كل الساعات"], [0.85, "٨٥٪"], [0.75, "٧٥٪ (مقترح)"], [0.6, "٦٠٪"]].map(([v, l]) => `<option value="${v}"${(RA.dawahShare ?? 0.75) == v ? " selected" : ""}>${l}</option>`).join("")}</select>
+   <label>كتب المكتبة العامة المسموعة في البث</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && L[id].ok && B(id) && (B(id).col === "turath")).map(id => `<label class="inl"><input type="checkbox" name="rt" value="${id}"${(RA.turath || []).includes(id) ? " checked" : ""}> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<span class="mut">لا كتب مسموعة معتمدة من المكتبة العامة بعد.</span>'}</div>
+   <button class="btn p">حفظ</button></form></div>`);
   $("#aadm").insertAdjacentHTML("beforeend", `<div class="card"><h3>📅 البرامج الإذاعية بمواعيد ثابتة</h3><p class="mut">برنامج يُبث في موعده (بتوقيت القاهرة) في الأيام المحددة، ويظهر قناةً «على الهواء» في مقدمة الراديو، وفي جدول البرامج اليومي. مواده من الكتب المسموعة المعتمدة.</p>
    ${(RP.list || []).map((p, k) => `<div class="bk"><b>${esc(p.at)} — ${esc(p.n)}</b><span>${(p.days || []).length ? p.days.map(d => RDAYS[d]).join("، ") : "يوميًا"} • ${toAr(+p.dur || 60)} دقيقة • ${toAr((p.books || []).length)} كتاب</span><button class="btn s" data-act="rpdel" data-k="${k}">حذف</button></div>`).join("") || '<p class="mut">لا برامج بعد.</p>'}
    <form data-form="rpadd"><div class="row"><div><label>اسم البرنامج</label><input name="n" maxlength="60" required placeholder="مثال: مجلس العقيدة"></div><div><label>الموعد</label><input name="at" type="time" required value="20:00"></div><div><label>المدة (دقيقة)</label><input name="dur" type="number" min="10" max="600" value="60"></div></div>
@@ -409,7 +448,7 @@ document.addEventListener("change", e => {
   else if (el.dataset.act === "apsleep" && el.value !== "") AP.sleep(el.value === "end" ? "end" : +el.value);
 });
 document.addEventListener("submit", async e => {
-  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audrec|rcadd|rpadd)$/.test(f.dataset.form)) return;
+  const f = e.target.closest("[data-form]"); if (!f || !/^(audq|audrec|rcadd|rpadd|raauto)$/.test(f.dataset.form)) return;
   e.preventDefault(); e.stopImmediatePropagation(); const btn = f.querySelector("button"); btn.disabled = true;
   try {
     if (f.dataset.form === "audq") {
@@ -426,6 +465,9 @@ document.addEventListener("submit", async e => {
       const it = { id: f.b.value, rec: { f: name, t: f.t.value.trim(), p: +f.p.value || 1, by: (Auth.user && Auth.user.name) || "" } };
       await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).unshift(it); return o; }, "صوتيات: تسجيل «" + it.rec.t + "»");
       $("#audrs").textContent = "رُفع التسجيل؛ يظهر في صفحة الكتاب خلال دقائق."; f.reset(); btn.disabled = false;
+    } else if (f.dataset.form === "raauto") {
+      const RA = { dawahShare: +f.share.value, turath: [...f.querySelectorAll('input[name="rt"]:checked')].map(x => x.value) };
+      await CM.saveSetting("radio_auto", RA); RAUTO = null; toast("حُفظت إعدادات البث المتواصل"); route();
     } else if (f.dataset.form === "rpadd") {
       const books = [...f.querySelectorAll('input[name="pb"]:checked')].map(x => x.value), days = [...f.querySelectorAll('input[name="day"]:checked')].map(x => +x.value);
       const RP = window.__RP || { list: [] }; (RP.list = RP.list || []).push({ id: Date.now().toString(36), n: f.n.value.trim(), d: f.d.value.trim(), at: f.at.value, dur: +f.dur.value || 60, days, books });

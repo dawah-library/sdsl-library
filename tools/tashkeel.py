@@ -254,14 +254,12 @@ def tashkeel_page(src, slot):
 
 
 def ready_books(cat):
-    """الكتب المؤهلة للتشكيل: نصها غير مشكول، واكتمل تدقيقها إن كانت محوّلة آليًا."""
+    """الكتب المؤهلة للتشكيل: نصها غير مشكول. والمحوّلة آليًا تُشكَّل صفحاتها المدققة وحدها، وتُعاد الصفحة إن تغيّر نصها بعد التدقيق (بصمة FNV)."""
     out = []
     for b in cat["books"]:
         if b.get("demo") or b.get("type") in ("article", "fatwa", "statement"):
             continue
-        if b.get("ocr") and (b.get("unrev") or b.get("lite")):
-            continue
-        out.append(b)
+        out.append(b)  # المحوّل آليًا يُشكَّل صفحةً صفحة: الصفحات المدققة فقط (انظر main)، فلا ينتظر الكتاب اكتمال تدقيقه كله
     out.sort(key=lambda b: (0 if b.get("col") == "dawah" else 1, b.get("n") or 9999))
     return out
 
@@ -301,8 +299,9 @@ def main():
             continue
         chunks = {}
         todo = []
+        notyet = set(sh.get("lite") or []) | set(sh.get("unrev") or []) | {int(k) for k in (sh.get("unc") or {})}  # لم يكتمل تدقيقها النصي
         for i, t in enumerate(pages):
-            if len(skel(t)) < 20:
+            if len(skel(t)) < 20 or i in notyet:
                 continue
             k = i // CH
             if k not in chunks:

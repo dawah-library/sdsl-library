@@ -44,6 +44,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TTS_COMMIT: "1"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
           TTS_MAX_MIN: "320"
           TTS_ONLY: ${{ github.event.inputs.books }}
           TTS_FORCE: ${{ github.event.inputs.force }}

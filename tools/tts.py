@@ -157,7 +157,41 @@ def phrases(text, words):
     return out
 
 
+GEM_TTS_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
+
+
+def speak_gemini(text, voice, path, style=""):
+    """أصوات Gemini (طبقات صوتية أقرب إلى الطبيعية، ضمن الحصة المجانية لمفاتيح Gemini). الصوت: Charon أو Orus أو Kore…
+    لا يعيد مواضع الكلمات، فيُقدَّر توقيت الجمل بنسبة طولها إلى مدة المقطع."""
+    import base64, json as _j, urllib.request, tempfile
+    keys = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
+    if not keys: raise RuntimeError("لا مفتاح Gemini")
+    prompt = (style or "اقرأ النص التالي بالعربية الفصحى قراءة علمية هادئة واضحة، مع مراعاة التشكيل كما هو، دون زيادة أو حذف:") + "\n\n" + text
+    body = _j.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}).encode()
+    err = None
+    for k in keys:
+        try:
+            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{GEM_TTS_MODEL}:generateContent?key={k}", data=body, headers={"content-type": "application/json"})
+            j = _j.load(urllib.request.urlopen(req, timeout=300))
+            pcm = base64.b64decode(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+            with tempfile.NamedTemporaryFile(suffix=".pcm", delete=False) as f: f.write(pcm)
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", f.name, "-b:a", "48k", path], check=True)
+            os.unlink(f.name)
+            break
+        except Exception as e:
+            err = e; continue
+    else:
+        raise RuntimeError("Gemini TTS: %s" % err)
+    dur = mp3_secs(path) * 1000
+    sents = [x for x in re.split(r"(?<=[.؟!:؛])\s+|\n+", text) if x.strip()]
+    tot = sum(len(x) for x in sents) or 1; at = 0; out = []
+    for x in sents: out.append([int(at / tot * dur), x.strip()]); at += len(x)
+    return out
+
+
 async def speak(text, voice, rate, path):
+    if str(voice).startswith("gemini:"):  # محرك Gemini بدل Edge
+        return speak_gemini(text, voice.split(":", 1)[1], path)
     import edge_tts
     buf, words, sents = bytearray(), [], []
     try:
