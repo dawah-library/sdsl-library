@@ -101,6 +101,11 @@ async function main() {
       const a = html ? extract(html, url) : null;
       await sleep(st.delayMs);
       if (!a || !a.text || a.text.length < 200 || !a.title) { log(`${id}: لا يوجد مقال`); return "miss"; }
+      { // صفحة بلا نص مقال: التُقط شريط «مواد ذات صلة» (أسطر تبدأ بتاريخ) أو مسار التنقل بدل العنوان
+        const ls = a.text.split(/\n/).filter(l => l.trim()), dl = ls.filter(l => /^\d{4}-\d{2}-\d{2} /.test(l.trim())).length;
+        if (/^الرئيسية\s*»/.test(a.title) || (ls.length && dl / ls.length > 0.4)) { log(`${id}: لا يوجد مقال (شريط مواد ذات صلة)`); return "miss"; }
+        a.title = a.title.replace(/^\d{4}-\d{2}-\d{2}\s+/, "");
+      }
       { // إعادة نشر مقال قائم بنصه (مثل «من تراث الدعوة»): لا يُستورد مرة ثانية (ب2-16)
         const T = t => norm(String(t || "").replace(/\(?من تراث الدعوة\)?/g, "").replace(/[«»"'()\[\]،,.:؛؟!\-–—]/g, " ")).replace(/\s+/g, " ").trim();
         const tw = idx.items.find(x => !x.h && T(x.t) === T(a.title));

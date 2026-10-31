@@ -169,6 +169,7 @@ function vLibrary(q){
  view(`${tabs}<h2>${esc(title)} <span class="mut">(${r.length})</span></h2>${bio?`<p class="mut">${esc(bio)}</p>`:""}<div class="lib"><aside class="side">${sideList("الأقسام",lib.topics.filter(t=>t.for!=="articles"),"t",f.t,url,cnt("t"),wide)}${sideList("المؤلفون",lib.authors,"a",f.a,url,cnt("a"),wide)}</aside><section>
  <form class="sbox" style="margin:0 0 8px;max-width:none" data-form="libq">${["c","k","t","a","m","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="ابحث في عناوين هذا القسم" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
  ${showM||f.m?`<div class="tabs sub" role="tablist" aria-label="الفقه المذهبي">${[["","كل كتب الفقه"],...MADH].map(([v,l])=>`<a role="tab" aria-selected="${f.m===v}" href="${url({m:v,pg:1})}">${v?"المذهب "+l:l}</a>`).join("").replace("المذهب الفقه العام","الفقه العام")}</div>`:""}
+ ${f.t&&!f.k?relBox(f.t):""}
  <div class="row" style="margin-bottom:6px"><span class="chips">${chips}</span><span class="mut nf">الترتيب: ${sorts}</span></div>
  ${r.slice((f.pg-1)*PER,f.pg*PER).map(f.k?anyCard:bookCard).join("")||(f.k&&!inC.length?`<div class="note">لا توجد ${({article:"مقالات",fatwa:"فتاوى",tafrigh:"تفريغات"})[f.k]} في المكتبة العامة بعد. تُضاف من «الإدارة» باختيار القسم «${esc(COL.turath)}».</div>`:(f.m?`<div class="note">لا توجد بعدُ كتب في ${esc(f.m==="general"?"الفقه العام":"المذهب "+MADH.find(x=>x[0]===f.m)[1])} في المكتبة.</div>`:'<div class="note">لا توجد كتب مطابقة.</div>'))}
  ${np>1?`<div class="pgn"><a class="btn s" ${f.pg>1?`href="${url({pg:f.pg-1})}"`:'aria-disabled="true"'}>السابقة</a><span class="mut">صفحة ${f.pg} من ${np}</span><a class="btn s" ${f.pg<np?`href="${url({pg:f.pg+1})}"`:'aria-disabled="true"'}>التالية</a></div>`:""}</section></div>`)}
@@ -179,6 +180,18 @@ const LISTS={
  fatwa:{route:"fatawa",title:"الفتاوى",desc:"فتاوى مشايخ الدعوة السلفية، مقسمة تقسيمًا فنيًا كما في موقع صوت السلف، وبحسب الشيخ. فتاوى صوت السلف منسوبة إلى الشيخ ياسر برهامي المشرف العام على الموقع.",items:()=>FATWAS(),empty:"لا توجد فتاوى بعد؛ تُضاف يوميًا مع الاستيراد."},
  statement:{route:"bayanat",title:"بيانات الدعوة السلفية",desc:"بيانات الدعوة السلفية وحزب النور مرتبة زمنيًا، وتُضاف آليًا عند نشرها على صوت السلف.",items:()=>BAYANAT(),empty:"لم تُستورد بيانات بعد؛ تظهر هنا تلقائيًا كلما وصل الاستيراد اليومي إلى بيانات الدعوة على صوت السلف."}};
 const topicLabel=t=>t.parent?t.parent+" › "+t.name:t.name;
+// ربط الموضوعات: كل قسم كتب بأقسام المقالات والفتاوى المقابلة، وأبرز مؤلفيها (ب3-23)
+const TREL={t1:"st8 st12 st17 st46 st48 st49 st51 st60 st73",t19:"at1 st67 at4 st4 st71 st34 st80 st61 st33 st25",t20:"at7 st26 st36 at17 st37 st14",t2:"at15 st27",t12:"at15 st27",t3:"st85 at15",t13:"st85",t4:"st57 st19 st21 st42 st43 st45 st53 st59 st63 st78 st13 st20 st29 st38 st39 st40 st41 st44 st47 st56 st64 st74 st76 st28 st30 st31 st52 st62 st58 st72 st65 st68 st23 st18 st22",t14:"st70 st1",t5:"at6 st3 st84",t18:"at6 st3 st84 st79 at11",t6:"at5 st55 st83 st81",t11:"st27 st2",t17:"at14 st6 st9 st69",t15:"st10",t16:"st10",t7:"st24 st66 at2 at16 at13",t8:"at8 at9 at10 st7 st77 st54 st35"};
+function relBox(t){
+ const rel=TREL[t]?{bk:[t],ar:TREL[t].split(" ")}:{bk:Object.keys(TREL).filter(k=>TREL[k].split(" ").includes(t)),ar:[t]};
+ if(!rel.bk.length)return"";
+ const books=BOOKS().filter(b=>rel.bk.some(id=>inTopic(b,id))),items=[...ARTS(),...FATWAS()].filter(b=>rel.ar.some(id=>inTopic(b,id)));
+ const chips=rel.bk.filter(id=>id!==t&&books.some(b=>inTopic(b,id))).map(id=>`<a class="chip" href="#/library?t=${id}">📚 ${esc(T(id).name)}</a>`)
+  .concat([["article","articles"],["fatwa","fatawa"]].flatMap(([k,rt])=>rel.ar.filter(id=>id!==t&&items.some(b=>kindOf(b)===k&&inTopic(b,id))).map(id=>`<a class="chip" href="#/${rt}?t=${id}">${k==="fatwa"?"الفتاوى":"المقالات"}: ${esc(T(id).name)}</a>`)));
+ const n={};[...books,...items].forEach(b=>{n[b.authorId]=(n[b.authorId]||0)+1});
+ const au=Object.keys(n).sort((x,y)=>n[y]-n[x]).slice(0,8).map(id=>`<a class="chip" href="#/author/${id}" data-author="${id}">${esc(A(id).name)} <span class="mut">${toAr(n[id])}</span></a>`);
+ if(!chips.length&&!au.length)return"";
+ return`<details class="relbox"><summary>ذو صلة بهذا القسم</summary>${chips.length?`<div class="chips">${chips.join("")}</div>`:""}${au.length?`<p class="mut" style="margin:8px 0 4px">أبرز من كتب فيه</p><div class="chips">${au.join("")}</div>`:""}</details>`}
 function vList(kind,q){const L=LISTS[kind],all=L.items();
  const f={t:q.t||"",a:q.a||"",q:q.q||"",s:q.s||"new",pg:+q.pg||1},PER=20,wide=matchMedia("(min-width:760px)").matches;
  let r=all.filter(b=>(!f.t||inTopic(b,f.t))&&(!f.a||b.authorId===f.a));
@@ -199,7 +212,7 @@ function vList(kind,q){const L=LISTS[kind],all=L.items();
  view(`<h2>${L.title} <span class="mut">(${r.length})</span></h2><p class="mut">${L.desc}</p>${tabs}
  <div class="lib"><aside class="side">${sideList(kind==="fatwa"?"الأبواب":"الأقسام",topics,"t",f.t,url,cnt("t"),wide)}${sideList(kind==="fatwa"?"المشايخ":"الكُتّاب",authors,"a",f.a,url,cnt("a"),wide)}</aside><section>
  <form class="sbox" style="margin:8px 0;max-width:none" data-form="listq" data-route="${L.route}">${["t","a","s"].map(k=>`<input type="hidden" name="${k}" value="${esc(f[k])}">`).join("")}<input name="q" type="search" value="${esc(f.q)}" placeholder="${kind==="fatwa"?"ابحث في أسئلة الفتاوى":"ابحث في العناوين"}" aria-label="بحث في العناوين"><button class="btn">بحث</button></form>
- <div class="chips">${chips}</div>
+ <div class="chips">${chips}</div>${f.t?relBox(f.t):""}
  ${list||`<div class="note">${all.length?"لا توجد نتائج مطابقة.":L.empty}</div>`}
  ${np>1?`<div class="pgn"><a class="btn s" ${f.pg>1?`href="${url({pg:f.pg-1})}"`:'aria-disabled="true"'}>السابقة</a><span class="mut">صفحة ${f.pg} من ${np}</span><a class="btn s" ${f.pg<np?`href="${url({pg:f.pg+1})}"`:'aria-disabled="true"'}>التالية</a></div>`:""}</section></div>`)}
 
