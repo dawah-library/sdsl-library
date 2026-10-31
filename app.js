@@ -19,7 +19,7 @@ const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"p
 const saveS=()=>ls.set("set",S);
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
 const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:false,mkh:false,mkt:false,lead:true};
-const Prefs={keys:Object.keys(LOOKDEF).concat(["mode","shelves","shelfNames","rgoal"]),t:0,
+const Prefs={keys:Object.keys(LOOKDEF).concat(["mode","shelves","shelfNames","rgoal","spread"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
   await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
@@ -496,6 +496,7 @@ function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط
  <div><label for="lth">المظهر</label><select id="lth"><option value="auto"${S.theme==="auto"?" selected":""}>تلقائي</option><option value="light"${S.theme==="light"?" selected":""}>نهاري</option><option value="dark"${S.theme==="dark"?" selected":""}>ليلي</option></select></div></div>
  <label>حجم الخط</label><div class="stepper"><button class="btn" data-sz="-1" aria-label="تصغير الخط">أ−</button><input id="ls" type="range" min="1" max="2.4" step=".05" value="${S.size}" aria-label="حجم الخط"><button class="btn" data-sz="1" aria-label="تكبير الخط">أ+</button></div>
  <label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}">
+ <label class="chk"><input type="checkbox" data-k="spread" data-t="bool"${S.spread?" checked":""}> صفحتان متقابلتان كالكتاب المطبوع (على الشاشات العريضة)</label>
  <label>لون الصفحة</label><div class="swatches">${PAGES.map(p=>`<button class="swc" data-pg="${p[0]}" title="${p[1]}" aria-label="لون الصفحة: ${p[1]}" aria-pressed="${S.pg===p[0]}" style="background:${p[2]}"></button>`).join("")}</div>
  <label for="lmode">طريقة التنقل بين الصفحات</label><div class="seg" id="lmode" role="radiogroup">${[["page","أفقي: صفحة صفحة"],["scroll","عمودي: تمرير متصل"]].map(([v,t])=>`<button type="button" role="radio" data-mode="${v}" aria-checked="${(S.mode||"page")===v}">${t}</button>`).join("")}</div>
  <label class="inl"><input type="checkbox" id="lfmt"${S.fmt!=="plain"?" checked":""}> تنسيق الكتاب المطبوع (محاذاة الأسطر، وبداية الفقرة، وتوسيط العناوين)</label>
@@ -641,6 +642,7 @@ async function vBook(id,p,h){
  paintMark();$$(".rd[data-id]").forEach(r=>paintNotes(r));Mine.touch(id,p);
  if(TTS.cont){TTS.cont=false;setTimeout(()=>TTS.next(),400)}else if(TTS.on&&!same)TTS.stop();
  if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
+ if(typeof STUDY!=="undefined"&&STUDY.reader)STUDY.reader(b,p,h,{scroll,pv,art});
  const pp=$("#paper");let sx=0,sy=0;pp.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
  pp.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&!String(getSelection()))turn(dx>0?1:-1)},{passive:true})}
 /* ---------- القارئ الصوتي (صوت الجهاز، مجاني) ---------- */
@@ -656,7 +658,7 @@ const TTS={on:false,paused:false,i:0,cont:false,rate:+(ls.get("ttsRate",1))||1,
  toggle(){if(!this.on)return;this.paused=!this.paused;$("#ttsp").textContent=this.paused?"▶":"⏸";if(this.paused)speechSynthesis.cancel();else this.next()},
  stop(){this.on=false;this.cont=false;try{speechSynthesis.cancel()}catch(e){}$$(".rd p.tts").forEach(x=>x.classList.remove("tts"));const b=$("#ttsbar");if(b)b.hidden=true}};
 if("speechSynthesis"in window)speechSynthesis.onvoiceschanged=()=>{};
-function turn(d,p0){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=p0||+rb.dataset.p+d;if(p<1||p>b.pages.length)return;
+function turn(d,p0){const rb=$("#rb");if(!rb)return;const b=B(rb.dataset.id),p=p0||Math.max(1,Math.min(b.pages.length,+rb.dataset.p+d*($(".desk.spreadon")?2:1)));if(!p0&&p===+rb.dataset.p)return;if(p<1||p>b.pages.length)return;
  if($("#scr")){let sec=$(`.spg[data-p="${p}"]`);if(!sec){const ps=[...$$("#scr .spg")].map(x=>+x.dataset.p);if(p===Math.min(...ps)-1)scrAdd(b,-1);else if(p===Math.max(...ps)+1)scrAdd(b,1);else{LASTREAD=null;go(`#/book/${b.id}/${p}`);return}sec=$(`.spg[data-p="${p}"]`)}
   if(sec){scrSet(b,p);scrollTo({top:sec.getBoundingClientRect().top+scrollY-(S.full?8:96),behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}return}const h=parse().q.h;go(`#/book/${b.id}/${p}${h?"?h="+encodeURIComponent(h):""}`)}
 
@@ -1230,8 +1232,8 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <fieldset class="secs"><legend>موجّه للطلائع (٥–٢٠ سنة)؟ يظهر في قسم الطلائع</legend>${[["t1","٥–٧"],["t2","٨–١٠"],["t3","١١–١٣"],["t4","١٤–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <label class="inl"><input type="checkbox" name="tafrigh" value="1"> هذا تفريغ لدروس صوتية</label><label>ضمن «قضايا الفرقان» (اختياري)</label><select name="furqan"><option value="">—</option>${FURQAN.map(([n])=>`<option>${esc(n)}</option>`).join("")}</select>
   <button class="btn p" style="margin-top:10px">حفظ الكتاب</button></form>`;
- else if(tab==="tafrigh")body=`<p class="mut">ارفع تفريغات الدروس والشروح الصوتية فتُجهَّز وتُنسب إلى الشيخ وتظهر في <a href="#/tafrighat">التفريغات</a> وفي صفحة الشيخ. يقبل Word (.docx) والنص (.txt) وملفات الترجمة النصية للمقاطع (.srt/.vtt)، أو لصق النص.</p>
-  <form data-form="addtfg"><label>ملفات التفريغ (يمكن اختيار عدة ملفات)</label><input type="file" name="files" multiple accept=".docx,.txt,.md,.srt,.vtt,text/plain">
+ else if(tab==="tafrigh")body=`<p class="mut">ارفع تفريغات الدروس والشروح الصوتية فتُجهَّز وتُنسب إلى الشيخ وتظهر في <a href="#/tafrighat">التفريغات</a> وفي صفحة الشيخ. يقبل Word (.docx) والنص (.txt) وملفات الترجمة النصية للمقاطع (.srt/.vtt)، أو لصق النص، وكذلك <b>التفريغات المصورة PDF</b>: تُرفع وتُحوَّل إلى نص على خوادم GitHub (يقرأ الذكاء الاصطناعي كل صفحة ويراجعها)، وتبقى نسختها المصورة في القارئ، وتُنسب إلى الشيخ المختار وتظهر في التفريغات بعد التحويل.</p>
+  <form data-form="addtfg"><label>ملفات التفريغ (يمكن اختيار عدة ملفات)</label><input type="file" name="files" multiple accept=".docx,.txt,.md,.srt,.vtt,.pdf,text/plain,application/pdf">
   <div class="row"><div><label>طريقة الحفظ عند تعدد الملفات</label><select name="mode"><option value="series">سلسلة واحدة: كل ملف درس في فهرسها</option><option value="each">كل ملف درس مستقل (مجلدات سلسلة)</option></select></div><div><label>عنوان السلسلة أو الدرس</label><input name="title" placeholder="مثل: شرح كتاب التوحيد"></div></div>
   <div class="row"><div><label>الشيخ</label>${authSel("aid")}</div><div><label>القسم</label><select name="col"><option value="dawah">${COL.dawah}</option><option value="turath">${COL.turath}</option></select></div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for!=="articles"))}</select></div></div>
   <div class="row"><div><label>الكتاب المشروح (اختياري)</label><select name="sharh"><option value="">—</option>${BOOKS().map(b=>`<option value="${b.id}">${esc(b.setTitle||b.title)}</option>`).join("")}</select></div><div><label>رابط التسجيل الصوتي أو المرئي (اختياري)</label><input name="audio" type="url" dir="ltr" placeholder="https://"></div></div>
@@ -1245,7 +1247,7 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <label>رابط المصدر (اختياري)</label><input name="url" type="url" placeholder="https://salafvoice.com/article.aspx?a=…">
   <fieldset class="secs"><legend>موجّه للطلائع (٥–٢٠ سنة)؟ يظهر في قسم الطلائع</legend>${[["t1","٥–٧"],["t2","٨–١٠"],["t3","١١–١٣"],["t4","١٤–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <label>نص المقال</label><textarea name="text" required style="min-height:220px"></textarea><p class="mut">السطر الذي يبدأ بـ «# » يظهر عنوانًا فرعيًا.</p><button class="btn p">حفظ المقال</button></form>`;
- else if(tab==="pdf")body=GH.on?`<p class="mut">ارفع ملف PDF لكتاب مصور، فيُحفظ في المكتبة وتُتاح نسخته المصورة في القارئ، ويُحوَّل إلى نص آليًا على خوادم GitHub. والنص الآلي يحتاج مراجعة، ويمكن تصحيحه من القارئ بزر «تعديل النص».</p>
+ else if(tab==="pdf")body=GH.on?`<p class="mut">ارفع ملف PDF لكتاب مصور، فيُحفظ في المكتبة وتُتاح نسخته المصورة في القارئ، ويُحوَّل إلى نص آليًا على خوادم GitHub. والنص الآلي يحتاج مراجعة، ويمكن تصحيحه من القارئ بزر «تعديل النص». والكتاب المصور المرفوع إلى المكتبة العامة يأخذ الخدمات كلها ككتب مكتبة الدعوة: المراجعة الدورية على الصور، وبطاقة التعريف والفهرس، والتشكيل، والصوت، وفحص الآيات، والاختبارات، وسؤال وجواب، ومتابعة الإنجاز.</p>
   <form data-form="ghpdf"><label>ملفات PDF (يمكن اختيار عدة كتب معًا، حتى 45 ميجابايت للملف)</label><input type="file" name="file" accept="application/pdf,.pdf" multiple required>
   <label>العنوان</label><input name="title" placeholder="عند رفع عدة ملفات يُؤخذ عنوان كل كتاب من اسم ملفه">
   <p class="mut" style="font-size:.8rem">تسمية الملف «العنوان - المؤلف.pdf» تجعل المؤلف يُعرف تلقائيًا إن لم تختره.</p>
@@ -1328,18 +1330,28 @@ function tfgClean(t,o){t=String(t||"").replace(/\r/g,"").replace(/ /g," ");
  if(o.heads)t=t.split("\n").map(l=>TFGH.test(l.trim())?"# "+l.trim():l).join("\n");
  return t.replace(/[ \t]{2,}/g," ").replace(/\n{3,}/g,"\n\n").trim()}
 function tfgToc(pages){const toc=[];pages.forEach((p,i)=>p.split("\n").forEach(l=>{if(/^#\s+/.test(l))toc.push({t:l.replace(/^#\s+/,"").trim(),p:i+1})}));return toc}
-async function tfgBuild(f){const fd=new FormData(f),files=[...f.querySelector("[name=files]").files],o={ts:!!fd.get("ts"),join:!!fd.get("join"),heads:!!fd.get("heads")},size=+fd.get("size")||1800;
+const tfgPdfs=f=>[...f.querySelector("[name=files]").files].filter(x=>/\.pdf$/i.test(x.name)||x.type==="application/pdf");
+async function tfgBuild(f){const fd=new FormData(f),files=[...f.querySelector("[name=files]").files].filter(x=>!tfgPdfs(f).includes(x)),o={ts:!!fd.get("ts"),join:!!fd.get("join"),heads:!!fd.get("heads")},size=+fd.get("size")||1800;
  const parts=[];for(const fl of files)parts.push({name:tfgName(fl.name),text:tfgClean(await tfgFileText(fl),o)});
  const pasted=String(fd.get("text")||"").trim();if(pasted)parts.push({name:String(fd.get("title")||"").trim()||"تفريغ",text:tfgClean(pasted,o)});
  if(!parts.length)throw new Error("اختر ملفات التفريغ أو الصق النص");
  const title=String(fd.get("title")||"").trim(),series=fd.get("mode")==="series"||parts.length===1;
  if(series&&!title&&parts.length>1)throw new Error("اكتب عنوان السلسلة");
  return(series?[{title:title||parts[0].name,text:parts.length>1?parts.map(p=>"# "+p.name+"\n"+p.text).join("\n\n"):parts[0].text}]:parts.map((p,i)=>({title:(title?title+" — ":"")+p.name,text:p.text,no:i+1}))).map(r=>{const pages=splitPages(r.text,"auto",size);return Object.assign(r,{pages,toc:tfgToc(pages)})})}
-async function tfgPreview(f){const el=$("#tfgpv");try{const R=await tfgBuild(f);el.innerHTML=`<p><b>${toAr(R.length)} ${R.length>1?"سجلات":"سجل"}</b> سيُحفظ ${R.length>1?"كل منها":""} في «التفريغات» منسوبًا إلى المؤلف المختار:</p>`+R.map(r=>`<div class="bk"><b>${esc(r.title)}</b><span>${toAr(r.pages.length)} صفحة • ${toAr(r.toc.length)} عنوان في الفهرس</span><small class="mut">${esc(r.pages[0].slice(0,220))}…</small></div>`).join("")}catch(e){el.innerHTML=`<p class="note">${esc(e.message)}</p>`}}
-async function addTafrigh(f){const fd=new FormData(f),st=$("#tfgst");try{const R=await tfgBuild(f),col=fd.get("col"),aid=await newAuthor(fd,"aid",col);
+async function tfgPreview(f){const el=$("#tfgpv"),P=tfgPdfs(f),pv=P.length?`<p><b>${toAr(P.length)} ملف PDF مصور</b> سيُرفع ويُحوَّل إلى نص آليًا ثم يظهر في «التفريغات»: ${P.map(x=>esc(tfgName(x.name))).join("، ")}</p>`:"";
+ if(P.length&&P.length===f.querySelector("[name=files]").files.length&&!String(new FormData(f).get("text")||"").trim()){el.innerHTML=pv;return}
+ try{const R=await tfgBuild(f);el.innerHTML=pv+`<p><b>${toAr(R.length)} ${R.length>1?"سجلات":"سجل"}</b> سيُحفظ ${R.length>1?"كل منها":""} في «التفريغات» منسوبًا إلى المؤلف المختار:</p>`+R.map(r=>`<div class="bk"><b>${esc(r.title)}</b><span>${toAr(r.pages.length)} صفحة • ${toAr(r.toc.length)} عنوان في الفهرس</span><small class="mut">${esc(r.pages[0].slice(0,220))}…</small></div>`).join("")}catch(e){el.innerHTML=`<p class="note">${esc(e.message)}</p>`}}
+async function addTafrigh(f){const fd=new FormData(f),st=$("#tfgst"),P=tfgPdfs(f),onlyPdf=P.length&&P.length===f.querySelector("[name=files]").files.length&&!String(fd.get("text")||"").trim();try{const R=onlyPdf?[]:await tfgBuild(f),col=fd.get("col"),aid=await newAuthor(fd,"aid",col);
  const base={authorId:aid,topicId:fd.get("tid"),col,type:"book",tags:["tafrigh"].concat(fd.get("furqan")?["furqan:"+fd.get("furqan")]:[]),source:["تفريغ دروس صوتية",fd.get("by")&&"فرّغه: "+String(fd.get("by")).trim(),fd.get("date")&&"أُلقي في "+fd.get("date")].filter(Boolean).join(" — ")};
  if(fd.get("audio"))base.audio=String(fd.get("audio")).trim();if(fd.get("sharh"))base.sharh=fd.get("sharh");
  for(const r of R)if(!dupOk(r.title,aid,false))return;
+ // التفريغات المصورة: تُرفع إلى طابور التحويل بإعدادات التفريغ نفسها (النسبة والمصدر والتسجيل والكتاب المشروح)
+ if(P.length){if(!GH.on)throw new Error("رفع التفريغات المصورة يحتاج تفعيل الإدارة المباشرة (مفتاح المشرف).");const big=P.filter(x=>x.size>45*1048576);if(big.length)throw new Error("ملفات أكبر من 45 ميجابايت: "+big.map(x=>x.name).join("، "));
+  const ttl=String(fd.get("title")||"").trim(),ser=P.length>1&&fd.get("mode")==="series"&&ttl,sid="ut"+Date.now().toString(36);
+  for(let i=0;i<P.length;i++){const nm=tfgName(P[i].name),cfg={title:P.length===1&&ttl?ttl:nm,authorId:aid,author:A(aid).name,topic:fd.get("tid"),col,ocr:true,tags:base.tags,source:base.source};
+   if(base.audio)cfg.audio=base.audio;if(base.sharh)cfg.sharh=base.sharh;if(ser)Object.assign(cfg,{set:sid,setTitle:ttl,vol:i+1,title:ttl+" — "+nm});
+   await pdfUpload(P[i],"up"+Date.now().toString(36)+i,cfg,t=>{st.textContent=t})}
+  if(!R.length){st.textContent="";alert(`رُفع ${toAr(P.length)} ${P.length>1?"ملفات":"ملف"} PDF، وبدأ تحويلها إلى نص على خوادم GitHub (نحو دقيقة لكل 10–15 صفحة)، ثم تظهر في «التفريغات» منسوبة إلى ${A(aid).name} ✓`);f.reset();$("#tfgpv").innerHTML="";return}}
  const stamp=Date.now().toString(36),metas=R.map((r,i)=>Object.assign({id:"u"+stamp+(R.length>1?"-"+(i+1):""),title:r.title},base,R.length>1?{set:"u"+stamp,setTitle:String(fd.get("title")||"").trim()||r.title,vol:i+1,vols:R.length}:{}));
  st.textContent="جارٍ الحفظ…";
  if(GH.on){const files=R.map((r,i)=>{const sh={id:metas[i].id,pages:r.pages,toc:r.toc},s=JSON.stringify(sh);metas[i].n=r.pages.length;metas[i].size=s.length;metas[i].added=today();SH.set(metas[i].id,sh);return{path:"data/books/"+metas[i].id+".json",text:s}});

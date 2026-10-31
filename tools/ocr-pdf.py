@@ -665,7 +665,7 @@ def cards_job():
     for b in cat["books"]:
         if done >= limit: break
         if ids and b["id"] not in ids: continue
-        if not ids and (b.get("card") or b.get("col", "dawah") != "dawah" or b.get("type") == "article" or b.get("vf") or b.get("demo")): continue
+        if not ids and (b.get("card") or (b.get("col", "dawah") != "dawah" and not b.get("upl")) or b.get("type") == "article" or b.get("vf") or b.get("demo")): continue
         fp = os.path.join(DATA, "books", b["id"] + ".json")
         if not os.path.exists(fp): continue
         sh = json.load(open(fp, encoding="utf-8"))
@@ -923,7 +923,7 @@ def plan():
             cat = json.load(open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
             req = set((json.load(open(os.path.join(DATA, "review-requests.json"), encoding="utf-8")) if os.path.exists(os.path.join(DATA, "review-requests.json")) else {}).get("items", []))
             # المراجعة الدورية تلقائية لكتب مكتبة الدعوة، وغيرها حسب الطلب المباشر (data/review-requests.json)
-            need = [b for b in cat["books"] if (b.get("col") == "dawah" or b["id"] in req) and (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            need = [b for b in cat["books"] if (b.get("col") == "dawah" or b.get("upl") or b["id"] in req) and (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             need.sort(key=lambda b: (-(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))  # الأحوج أولًا
             books += ["rereview:" + b["id"] for b in need][:6]
         if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
@@ -1089,6 +1089,10 @@ def main():
         if not entry.get("img"): entry["pdf"] = f"pdf/{bid}.pdf"  # إن كان في مخزن R2 يبقى رابطه
         if "offset" in cfg: entry["pdfOffset"] = int(cfg["offset"])
         if cfg.get("tags"): entry["tags"] = sorted(set(entry.get("tags", []) + cfg["tags"]))
+        if not existing:
+            for k in ("source", "audio", "sharh"):
+                if cfg.get(k) and not entry.get(k): entry[k] = cfg[k]
+        if not existing and entry.get("col") != "dawah": entry["upl"] = True  # كتاب مصور رفعته الإدارة للمكتبة العامة: يأخذ كل الخدمات (مراجعة وتشكيل وصوت وفهارس واختبارات)
         do_ocr = cfg.get("ocr", existing is None)
         if not existing and cfg.get("set"):
             # مجلد من عمل متعدد المجلدات (من «الإدارة ← كتاب متعدد المجلدات»): سجل لكل مجلد يجمعها set

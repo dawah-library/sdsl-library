@@ -165,7 +165,7 @@ def main():
     q = load_quran()
     ix = Index(q)
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
-    ids = sys.argv[1:] or [b["id"] for b in cat["books"] if b.get("col", "dawah") == "dawah" and b.get("type", "book") == "book" and not b.get("demo")]
+    ids = sys.argv[1:] or [b["id"] for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book" and not b.get("demo")]
     os.makedirs(OUT, exist_ok=True)
     rep, summary = [], {}
     for bid in ids:

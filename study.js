@@ -145,6 +145,45 @@ const STUDY = (() => {
   document.addEventListener("click", async e => { const el = e.target.closest("[data-act=cmpgo],[data-act=cmpcite]"); if (!el) return; e.preventDefault();
     if (el.dataset.act === "cmpgo") return pane(el.dataset.el, el.dataset.id, document.getElementById(el.dataset.el).dataset.term || "", +el.dataset.k);
     const b = B(el.dataset.id); try { await navigator.clipboard.writeText(cite(b, +el.dataset.p)); toast("نُسخت الإحالة"); } catch (x) { } });
+
+  // ---------- القارئ: صفحتان متقابلتان، والتنقل بين نتائج البحث داخل الكتاب، واختصارات لوحة المفاتيح ----------
+  const HITS = new Map();
+  function reader(b, p, h, o) {
+    const desk = document.querySelector(".desk"), paper = document.getElementById("paper"); if (!desk || !paper) return;
+    const n = b.pages.length;
+    if (S.spread && innerWidth >= 1100 && !o.scroll && o.pv === "text" && !o.art && n > 1) {
+      const q = p < n ? p + 1 : 0;
+      desk.classList.add("spreadon");
+      if (q) {
+        paper.insertAdjacentHTML("afterend", `<article class="paper spread2" aria-label="صفحة ${q}"><div class="run"><span>${esc(b.title)}</span><span>${esc(chapterOf(b, q))}</span></div><div class="rd" data-id="${esc(b.id)}" data-p="${q}">${pageHtml(b.pages[q - 1], h, uncOf(b, q - 1), b)}</div><div class="foot">— ${toAr(q)} —${PL(b, q - 1) ? `<small>${esc(PL(b, q - 1))}</small>` : ""}</div></article>`);
+        try { paintNotes(document.querySelector(".spread2 .rd")); } catch (e) { }
+        const pg = document.querySelector(".pgb b"); if (pg) pg.textContent = toAr(p) + "–" + toAr(q);
+        const nx = document.querySelector("#rbar [data-act=next]"); if (nx) nx.disabled = q >= n;
+      }
+    }
+    if (h && n > 1) {
+      const k = b.id + "|" + h; let hits = HITS.get(k);
+      if (!hits) { const w = norm(h).split(/\s+/).filter(Boolean); hits = []; b.pages.forEach((t, i) => { const x = norm(plain(t)); if (w.every(z => x.includes(z))) hits.push(i + 1); }); HITS.set(k, hits); }
+      const i = hits.indexOf(p), prev = [...hits].reverse().find(x => x < p), next = hits.find(x => x > p), u = x => `#/book/${encodeURIComponent(b.id)}/${x}?h=${encodeURIComponent(h)}`;
+      desk.insertAdjacentHTML("beforebegin", `<div class="srchnav" role="navigation" aria-label="نتائج البحث في الكتاب"><span>🔎 «${esc(h)}»: ${hits.length ? (i >= 0 ? `الموضع ${toAr(i + 1)} من ${toAr(hits.length)} صفحة` : `${toAr(hits.length)} صفحة`) : "لا نتائج"}</span>
+        ${prev ? `<a class="btn s" href="${u(prev)}">→ السابق</a>` : ""}${next ? `<a class="btn s" href="${u(next)}">التالي ←</a>` : ""}<a class="btn s" href="#/book/${encodeURIComponent(b.id)}/${p}" aria-label="إنهاء البحث">✕</a></div>`);
+    }
+    const hint = document.querySelector(".hint"); if (hint && matchMedia("(pointer:fine)").matches && !hint.dataset.k) { hint.dataset.k = 1; hint.insertAdjacentHTML("beforeend", ' • اضغط <kbd>?</kbd> لاختصارات لوحة المفاتيح'); }
+  }
+  const KEYS = [["→ ←", "الصفحة السابقة / التالية"], ["Home / End", "أول الكتاب / آخره"], ["T", "الفهرس"], ["G", "الانتقال إلى صفحة"], ["S أو /", "البحث داخل الكتاب"], ["B", "علامة على الصفحة"], ["L", "استمع (قراءة صوتية)"], ["D", "صفحتان متقابلتان / صفحة واحدة"], ["+ / −", "تكبير الخط / تصغيره"], ["F", "ملء الشاشة"], ["N", "قيّد النص المحدد فائدة في دفتري"], ["?", "هذه القائمة"]];
+  document.addEventListener("keydown", e => {
+    const rb = document.getElementById("rb"); if (!rb || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName) || (document.getElementById("dlg") || {}).open) return;
+    const sh = document.getElementById("sheet"); if (sh && !sh.hidden) return;
+    const click = a => { const el = document.querySelector(`#rbar [data-act=${a}]`) || document.querySelector(`[data-act=${a}]`); if (el && !el.disabled) { e.preventDefault(); el.click(); } };
+    const b = B(rb.dataset.id); const c = e.code;
+    if (e.key === "?" || (c === "Slash" && e.shiftKey)) { e.preventDefault(); openDlg(`<h3>اختصارات لوحة المفاتيح في القارئ</h3><table class="kbt">${KEYS.map(([k, t]) => `<tr><td><kbd>${esc(k)}</kbd></td><td>${esc(t)}</td></tr>`).join("")}</table><p class="mut">تعمل الحروف بأي لغة للوحة المفاتيح.</p>`); return; }
+    if (c === "KeyT") click("toc"); else if (c === "KeyG") click("goto"); else if (c === "KeyB") click("mark"); else if (c === "KeyL") click("tts");
+    else if (c === "KeyS" || c === "Slash") { e.preventDefault(); click("more"); setTimeout(() => { const i = document.querySelector("[data-form=inbook] input"); if (i) i.focus(); }, 120); }
+    else if (c === "Home" && b) { e.preventDefault(); turn(0, 1); } else if (c === "End" && b) { e.preventDefault(); turn(0, b.pages.length); }
+    else if (c === "KeyD") { e.preventDefault(); S.spread = !S.spread; saveS(); push(); if (S.spread && innerWidth < 1100) toast("الصفحتان المتقابلتان تظهران على الشاشات العريضة"); route(); }
+    else if (c === "Equal" || c === "NumpadAdd" || c === "Minus" || c === "NumpadSubtract") { e.preventDefault(); S.size = Math.max(1, Math.min(2.4, +(S.size || 1.2) + (/Equal|Add/.test(c) ? .1 : -.1))); saveS(); applyLook(); push(); }
+    else if (c === "KeyN" && String(getSelection()).trim()) { const el = document.querySelector("[data-act=selfa]"); if (el) { e.preventDefault(); el.click(); } }
+  });
   // ---------- الأحداث ----------
   document.addEventListener("click", async e => {
     const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
@@ -170,5 +209,5 @@ const STUDY = (() => {
     if (f.dataset.form === "nbq") { const v = f.q.value.trim(); location.hash = "#/mine?t=book" + (v ? "&q=" + encodeURIComponent(v) : ""); }
     else { const n = f.n.value.trim(); if (!n) return; const sh = shelves(), k = "c" + Date.now().toString(36); sh[k] = []; S.shelfNames = Object.assign(S.shelfNames || {}, { [k]: n }); saveS(); push(); route(); }
   }, true);
-  return { KINDS, mine, home, stats, cite, shelfName, compare };
+  return { KINDS, mine, home, stats, cite, shelfName, compare, reader };
 })();

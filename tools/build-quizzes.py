@@ -55,7 +55,7 @@ QAOK = {pathlib.Path(f).stem for f in glob.glob(str(R / "data/qa/*.json")) if _q
 PATHB = {x for p in json.loads((R / "data/paths.json").read_text(encoding="utf-8"))["paths"] for x in p["books"]}
 for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة من نصها (كتب الدعوة والمتون القصيرة)
     if b.get("hidden") or b.get("vf") or b.get("type") == "article" or bid in QAOK: continue
-    if (b.get("col") or "dawah") != "dawah" and (b.get("n") or 0) > 400 and bid not in PATHB: continue  # كتب المسارات العلمية تُختبر كلها
+    if (b.get("col") or "dawah") != "dawah" and (b.get("n") or 0) > 400 and bid not in PATHB and not b.get("upl"): continue  # كتب المسارات العلمية تُختبر كلها
     pages = book_pages(bid)
     if len(pages) < 5: continue
     sh = json.loads((R / "data/books" / (bid + ".json")).read_text(encoding="utf-8"))

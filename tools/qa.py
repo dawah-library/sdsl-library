@@ -126,7 +126,7 @@ def main():
         if b.get("demo") or b["id"] in seen_ids:
             continue
         seen_ids.add(b["id"])
-        if typ == "book" and not (b.get("col") == "dawah" or base in TURATH):
+        if typ == "book" and not (b.get("col") == "dawah" or b.get("upl") or base in TURATH):
             continue
         pages = None
         if typ in ("article", "fatwa", "statement") and b.get("f"):

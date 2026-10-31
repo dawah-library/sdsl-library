@@ -7,6 +7,8 @@
 المخرجات: data/tashjir/<كتاب>.json و data/tashjir/_list.json (ok=1: يُنشر مباشرة، وللإدارة إيقافه).
 """
 import json, os, re, sys, time, urllib.request, urllib.error
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from frontmatter import content_range  # noqa: E402  صفحات العنوان والنشر والفهارس لا تُشجَّر
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "tashjir")
@@ -66,8 +68,11 @@ CH_PROMPT = """أنت باحث شرعي متقن تُعدّ خريطة ذهني�
 النص مقسّم بعلامات [ص N]. أخرج JSON بهذا الشكل حرفيًا:
 {{"t": "عنوان الفصل كما في الكتاب أو أقرب عنوان دال", "s": "خلاصة الفصل في جملة واحدة أمينة", "p": [{a}, {b}],
  "c": [ {{"t": "عنوان موضوع", "s": "خلاصته في جملة", "p": [من, إلى],
-          "c": [ {{"t": "نقطة موجزة (لا تزيد على ١٥ كلمة) تعبّر عن فكرة الكتاب بأمانة", "p": رقم_الصفحة, "q": "عبارة قصيرة من ٤ إلى ١٢ كلمة منقولة بلفظها حرفيًا من النص تدل على النقطة"}} ] }} ]}}
+          "c": [ {{"t": "نقطة موجزة (لا تزيد على ١٥ كلمة) تعبّر عن فكرة الكتاب بأمانة", "k": "نوعها", "p": رقم_الصفحة, "q": "عبارة قصيرة من ٤ إلى ١٢ كلمة منقولة بلفظها حرفيًا من النص تدل على النقطة"}} ] }} ],
+ "m": [ {{"t": "مصطلح عرّفه المؤلف في هذا الفصل", "d": "تعريفه بلفظ الكتاب أو أقرب ما يكون إليه", "p": رقم_الصفحة}} ]}}
+نوع النقطة k واحد من: تعريف، حكم، دليل، قاعدة، شرط، قسم، مثال، تنبيه، خلاف، فائدة، رد (على شبهة أو قول).
 القواعد: لا تُدخل رأيًا ولا معلومة من خارج النص؛ رتّب الموضوعات بترتيب ورودها؛ من ٣ إلى ٨ موضوعات، ولكل موضوع من ٢ إلى ٦ نقاط؛ الصفحات من الأرقام المذكورة فقط؛ العبارة q يجب أن تكون منسوخة كما هي.
+تجاهل تمامًا: صفحة العنوان، وبيانات الطبعة والنشر والحقوق والتوزيع، والفهارس، والإهداء، وأسماء الدور والمطابع؛ فلا تجعل منها موضوعًا ولا نقطة. والمصطلحات m ما عرّفه المؤلف صراحةً فقط (قد تكون فارغة).
 
 النص:
 {text}"""
@@ -142,7 +147,11 @@ def build(bid, cat):
     wp = os.path.join(OUT, "_work", bid + ".json")
     work = json.load(open(wp, encoding="utf-8")) if os.path.exists(wp) else {}
     chs = []
+    ca, cz = content_range(pages)
     for a, z in chapters(sh, len(pages)):
+        a, z = max(a, ca), min(z, cz)
+        if a > z:
+            continue
         key = "%d-%d" % (a, z)
         if key in work:
             if work[key]:
@@ -206,7 +215,12 @@ def build(bid, cat):
                     part[i]["r"] = "bad"
                 else:
                     part[i]["r"] = "ok"
-    m = {"id": bid, "t": title, "a": au, "s": top.get("s", ""), "p": [1, len(pages)], "c": groups, "built": time.strftime("%Y-%m-%d"), "model": MODEL}
+    terms = []
+    for ch in chs:
+        for x in ch.pop("m", None) or []:
+            if isinstance(x, dict) and x.get("t") and x.get("d") and not any(norm(x["t"]) == norm(y["t"]) for y in terms):
+                terms.append({"t": x["t"].strip(), "d": x["d"].strip(), "p": int(x.get("p") or ch["p"][0])})
+    m = {"id": bid, "t": title, "a": au, "s": top.get("s", ""), "p": [1, len(pages)], "c": groups, "m": terms, "built": time.strftime("%Y-%m-%d"), "model": MODEL}
     k = [0]
     def ids(n):  # معرّف ثابت لكل عقدة (للتصحيح اليدوي)
         k[0] += 1; n["i"] = k[0]
@@ -235,6 +249,42 @@ def commit(msg):
         if subprocess.run(["git", "push", "-q", "origin", "HEAD:main"], cwd=ROOT).returncode == 0:
             return
         time.sleep(5)
+
+
+FRONT_RX = re.compile(r"صفحة العنوان|بيانات (النشر|الطبع|الكتاب)|حقوق الطبع|منافذ (توزيع|النشر)|الناشر|دار النشر|الفهرس|فهرس الموضوعات")
+
+
+def prune(bid):
+    """تنقية خريطة قائمة: حذف فروع صفحة العنوان وبيانات النشر والفهارس، وإعادة حساب عدد النقاط."""
+    fp = os.path.join(OUT, bid + ".json")
+    m = json.load(open(fp, encoding="utf-8"))
+    src = source(bid, json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8")))
+    ca, cz = content_range(src[2]) if src else (1, 10 ** 6)
+
+    def bad(n):
+        p = n.get("p")
+        a, z = (p[0], p[-1]) if isinstance(p, list) and p else (p or 0, p or 0)
+        return (z and z < ca) or (a and a > cz) or bool(FRONT_RX.search(n.get("t", "")))
+
+    def walk(n):
+        n["c"] = [walk(c) for c in n.get("c", []) if not bad(c)]
+        n["c"] = [c for c in n["c"] if c.get("c") or c.get("q") or not isinstance(c.get("p"), list)]
+        return n
+    before = json.dumps(m, ensure_ascii=False)
+    for g in m.get("c", []):
+        walk(g)
+    m["c"] = [g for g in m["c"] if g.get("c")]
+    for g in m["c"]:  # نطاق كل غصن بعد التنقية
+        ps = [c["p"] for c in g["c"] if isinstance(c.get("p"), list)]
+        if ps:
+            g["p"] = [min(p[0] for p in ps), max(p[-1] for p in ps)]
+    if json.dumps(m, ensure_ascii=False) != before:
+        json.dump(m, open(fp, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        lp = os.path.join(OUT, "_list.json"); lst = json.load(open(lp, encoding="utf-8"))
+        if bid in lst:
+            lst[bid]["n"] = sum(1 for g in m["c"] for ch in g["c"] for tp in ch.get("c", []) for pt in tp.get("c", []))
+            json.dump(lst, open(lp, "w", encoding="utf-8"), ensure_ascii=False)
+        print("نُقّيت:", bid)
 
 
 def main():
@@ -287,4 +337,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "--prune":
+        for f in sorted(os.listdir(OUT)):
+            if f.endswith(".json") and not f.startswith("_"):
+                prune(f[:-5])
+    else:
+        main()

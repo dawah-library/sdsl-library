@@ -6,6 +6,8 @@ const TSJ = {
   async index() { if (!this.list) { try { const r = await fetch(this.raw("_list.json")); this.list = r.ok ? await r.json() : {}; } catch (e) { this.list = {}; } } return this.list; },
   async map(id) { if (!this.maps.has(id)) this.maps.set(id, fetch(this.raw(id + ".json")).then(r => r.ok ? r.json() : null).catch(() => null)); return this.maps.get(id); }
 };
+// أنواع النقاط (من مولّد التشجير): تُعرض أيقونة لكل نوع، وتُصفّى الخريطة بها
+const TJK = { "تعريف": "📖", "حكم": "⚖️", "دليل": "📜", "قاعدة": "📐", "شرط": "🔗", "قسم": "🗂️", "مثال": "💡", "تنبيه": "⚠️", "خلاف": "↔️", "فائدة": "✨", "رد": "🛡️" };
 const TJC = ["#0f5c4d", "#b88a2e", "#6b4fa3", "#1f6f8b", "#a3462f", "#3c7a3b", "#8a5a2b", "#2f5e9e"];
 const ov = (p, a, z) => !p || !(a || z) || (p[1] >= (a || 1) && p[0] <= (z || 1e9));
 function tjFilter(n, lvl, a, z, d = 0) {
@@ -19,7 +21,8 @@ function tjNode(n, d, ci, bid) {
   const pp = Array.isArray(n.p) ? n.p[0] : n.p, flag = n.v === 0 ? ' <span class="tjflag" title="العبارة لم تُطابق نص الصفحة">؟</span>' : n.r === "bad" ? ' <span class="tjflag">!</span>' : "";
   if (n.b) bid = n.b; // خرائط العلوم: كل غصن يشير إلى كتابه
   const go = n.u ? `<a class="tjp" href="${esc(n.u)}">${esc(n.ul || "افتح")}</a>` : "";
-  return `<li class="tjn d${d}" style="--c:${col}"><div class="tjcard">${go}${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
+  const kk = n.k && TJK[n.k] ? `<i class="tjk" title="${esc(n.k)}">${TJK[n.k]}</i>` : "";
+  return `<li class="tjn d${d}" style="--c:${col}"${n.k ? ` data-k="${esc(n.k)}"` : ""}><div class="tjcard">${go}${kk}${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
 }
 /* خرائط العلوم التفاعلية (ب7-27 … ب7-44): تُبنى من محتوى المكتبة الفعلي — موضوعات الكتب والمقالات والمتون وفهارس الكتب —
    فكل غصن رابط إلى كتاب أو باب بصفحته أو مقال، ولا تُنشأ علاقة علمية لم ترد في تصنيف المكتبة أو فهارس كتبها (ب7-42). */
@@ -39,14 +42,21 @@ function tjScience(k) {
 function tjMode(m) {
   const w = $("#tjwrap"), ul = w && w.querySelector(".tj"); if (!ul) return;
   if (!m) { try { m = localStorage.getItem("tjmode"); } catch (e) { } m = m || (matchMedia("(min-width:760px)").matches ? "mm" : "ls"); } else try { localStorage.setItem("tjmode", m); } catch (e) { }
-  ul.classList.toggle("mm", m === "mm"); w.classList.toggle("mmw", m === "mm");
-  document.querySelectorAll("[data-act=tjmm],[data-act=tjls]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act === "tj" + m)));
+  ul.classList.toggle("mm", m === "mm"); w.classList.toggle("mmw", m === "mm"); ul.hidden = m === "rd";
+  document.querySelectorAll("[data-act=tjmm],[data-act=tjls],[data-act=tjrd]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act === "tj" + m)));
+  w.classList.toggle("rdw", m === "rd");
+  const old = w.querySelector(".tjsvg"); if (old) old.remove();
+  if (m === "rd" && !TJS.init && window.__tj) { // الخريطة الكبيرة تبدأ مطوية عند الموضوعات، وتُفتح الأغصان بالضغط على «+»
+    TJS.init = 1; let cnt = 0; (function c(n) { cnt++; (n.c || []).forEach(c); })(window.__tj.tree);
+    if (cnt > 45) (function c(n, d, p) { if (d >= (cnt > 160 ? 1 : 2) && (n.c || []).length) TJS.coll.add(p); (n.c || []).forEach((x, i) => c(x, d + 1, p + "." + i)); })(window.__tj.tree, 0, "0");
+  }
+  if (m === "rd") { w.insertAdjacentHTML("beforeend", tjRadial(window.__tj && window.__tj.tree)); tjCenter(w); }
   if (m === "mm") w.scrollLeft = w.scrollWidth; // يبدأ من جذر الشجرة (يمين)
 }
 function tjZoom() {
   tjMode();
   const w = $("#tjwrap"); if (!w || w.dataset.z) return; w.dataset.z = 1; let sc = 1; const ul = w.querySelector(".tj");
-  const set = v => { sc = Math.min(2.5, Math.max(0.35, v)); ul.style.transform = `scale(${sc})`; ul.style.transformOrigin = "top right"; ul.style.width = (100 / sc) + "%"; const lb = $("#tjzl"); if (lb) lb.textContent = toAr(Math.round(sc * 100)) + "٪"; };
+  const set = v => { sc = Math.min(2.5, Math.max(0.25, v)); [ul, w.querySelector(".tjsvg")].filter(Boolean).forEach(x => { x.style.transform = `scale(${sc})`; x.style.transformOrigin = "top right"; }); ul.style.width = (100 / sc) + "%"; const lb = $("#tjzl"); if (lb) lb.textContent = toAr(Math.round(sc * 100)) + "٪"; };
   w.insertAdjacentHTML("beforebegin", `<div class="row tjzoom"><button class="btn s" data-z="1.2" aria-label="تكبير">＋</button><span id="tjzl">١٠٠٪</span><button class="btn s" data-z="0.83" aria-label="تصغير">－</button><button class="btn s" data-z="0">ملاءمة</button></div>`);
   w.parentElement.querySelectorAll("[data-z]").forEach(bt => bt.onclick = () => set(+bt.dataset.z ? sc * +bt.dataset.z : 1));
   w.addEventListener("wheel", e => { if (!e.ctrlKey) return; e.preventDefault(); set(sc * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
@@ -61,9 +71,9 @@ async function vTashjir(q, id) {
     const k = id.slice(2), tree = tjScience(k), S = TJ_SCI.find(x => x[0] === k); if (!tree) return view('<p class="note">الخريطة غير موجودة.</p>');
     view(`<p><a href="#/tashjir">← التشجير والخرائط</a></p><div class="tjhead"><h2>خريطة ${esc(S[1])}</h2><p class="mut">خريطة تفاعلية مبنية من محتوى المكتبة الفعلي: اضغط أي غصن لفتح الكتاب أو الباب أو المقال، وكبّر وصغّر واسحب للتنقل.</p></div>
      <nav class="chips">${TJ_SCI.map(([x, n]) => `<a class="chip${x === k ? " x" : ""}" href="#/tashjir/m:${x}">${esc(n)}</a>`).join("")}</nav>
-     <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button></span><button class="btn s" data-act="tjall">طيّ/فتح الكل</button><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjshare">مشاركة</button></div>
+     <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button><button data-act="tjrd" aria-pressed="false">شعاعية</button></span><button class="btn s" data-act="tjall">طيّ/فتح الكل</button><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjshare">مشاركة</button></div>
      <p class="mut tjnote">الفروع من تصنيف المكتبة وفهارس الكتب نفسها، لا علاقات مستنتجة آليًا. لاقتراح تصحيح: «تواصل معنا».</p>
-     <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, "")}</ul></div>`);
+     ${tjBar(tree)}<div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, "")}</ul></div>`);
     window.__tj = { m: tree, tree, id, lvl: 3 }; tjZoom(); return;
   }
   if (!id) {
@@ -86,14 +96,16 @@ async function vTashjir(q, id) {
   view(`<p><a href="#/tashjir">← تشجير الكتب</a></p><div class="tjhead"><h2>${esc(m.t)}</h2><p class="mut">${esc(m.a || "")}${inf.ok ? "" : " • معاينة للإدارة — غير منشور"}</p></div>
   <div class="seg tjlvl">${[[1, "عام"], [2, "متوسط"], [3, "تفصيلي"]].map(([v, l]) => `<a href="${url({ lvl: v })}" class="${v === lvl ? "on" : ""}">${l}</a>`).join("")}</div>
   <form class="row tjrange" data-form="tjrange" data-id="${id}" data-lvl="${lvl}"><label>من صفحة <input name="a" type="number" min="1" value="${a || ""}"></label><label>إلى صفحة <input name="z" type="number" min="1" value="${z || ""}"></label><button class="btn s">عرض النطاق</button>${a || z ? `<a class="btn s" href="${url({ from: "", to: "" }).replace(/&?(from|to)=(&|$)/g, "")}">الكتاب كله</a>` : ""}</form>
-  <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button></span><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
+  <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button><button data-act="tjrd" aria-pressed="false">شعاعية</button></span><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
   <p class="mut tjnote">التشجير مساعد على الفهم والمراجعة، وهو من إعداد آلي راجعته جولة تدقيق ثانية؛ والمرجع نص الكتاب بالضغط على رقم الصفحة. علامة «؟» تعني عبارة لم تطابق نص الصفحة بعد.</p>
-  <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, id)}</ul></div>`);
+  ${tjBar(m)}
+  <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, id)}</ul></div>${tjTerms(m, id)}`);
   window.__tj = { m, tree, id, lvl, a, z }; tjZoom();
 }
 function tjAdminForm(L) {
-  const bs = lib.books.filter(b => kindOf(b) === "book" && bc(b) === "dawah" && !b.demo && !VOL2(b));
-  return `<div class="card" style="margin-top:14px"><h3>اختيار كتاب للتشجير (للإدارة)</h3><p class="mut">لا يُشجَّر إلا ما تختاره هنا. يُفضَّل اختيار الكتب التي اكتمل تدقيق نصها ومطابقتها بالمصورة.</p><form data-form="tjq" class="stepper"><select name="b">${bs.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${L[b.id] ? " ✓" : ""}${b.unrev || b.lite ? " (لم يكتمل تدقيقه)" : ""}</option>`).join("")}</select><button class="btn p">شجّر هذا الكتاب</button></form></div>`;
+  const ok = b => kindOf(b) === "book" && !b.demo && !VOL2(b) && (b.col || "dawah") !== "ithra", bs = lib.books.filter(b => ok(b) && bc(b) === "dawah"), bt = lib.books.filter(b => ok(b) && bc(b) === "turath").sort((x, y) => (y.upl ? 1 : 0) - (x.upl ? 1 : 0));
+  const o = b => `<option value="${b.id}">${esc(b.setTitle || b.title)}${L[b.id] ? " ✓" : ""}${b.unrev || b.lite ? " (لم يكتمل تدقيقه)" : ""}</option>`;
+  return `<div class="card" style="margin-top:14px"><h3>اختيار كتاب للتشجير (للإدارة)</h3><p class="mut">لا يُشجَّر إلا ما تختاره هنا. يُفضَّل اختيار الكتب التي اكتمل تدقيق نصها ومطابقتها بالمصورة.</p><form data-form="tjq" class="stepper"><select name="b"><optgroup label="مكتبة الدعوة">${bs.map(o).join("")}</optgroup><optgroup label="المكتبة العامة">${bt.slice(0, 3000).map(o).join("")}</optgroup></select><button class="btn p">شجّر هذا الكتاب</button></form></div>`;
 }
 /* التصدير صورة: رسم الشجرة الظاهرة على لوحة */
 function tjCanvas() {
@@ -121,13 +133,17 @@ document.addEventListener("click", async e => {
   const el = e.target.closest("[data-act]"); if (!el || !/^tj/.test(el.dataset.act)) return; e.preventDefault(); const a = el.dataset.act, T = window.__tj;
   try {
     if (a === "tjpng" || a === "tjshare") {
-      await document.fonts.ready; const cv = tjCanvas(); if (!cv) return; const blob = await new Promise(r => cv.toBlob(r, "image/png")), name = "تشجير-" + (T.m.t || "") + ".png";
+      await document.fonts.ready; const cv = (document.querySelector("#tjwrap .tjsvg") && await tjSvgPng()) || tjCanvas(); if (!cv) return; const blob = await new Promise(r => cv.toBlob(r, "image/png")), name = "تشجير-" + (T.m.t || "") + ".png";
       if (a === "tjshare" && navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: "image/png" })] })) await navigator.share({ files: [new File([blob], name, { type: "image/png" })], text: T.m.t + " — " + SITENAME + (siteLink() ? "\n" + siteLink(location.hash || location.pathname + location.search) : "") }).catch(() => { });
       else if (a === "tjshare") { await navigator.clipboard.writeText((siteLink() || location.origin + "/") + location.hash.replace(/^#\//, "")); toast("نُسخ رابط التشجير بنطاقه ومستواه"); }
       else await dl(name, blob);
     }
-    else if (a === "tjpdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة"); await document.fonts.ready; const u = tjCanvas().toDataURL("image/png"); w.document.write(`<!doctype html><title>${esc(T.m.t)}</title><style>body{margin:0}img{width:100%}</style><img src="${u}"><script>onload=()=>setTimeout(()=>print(),300)<\/script>`); w.document.close(); }
-    else if (a === "tjmm" || a === "tjls") tjMode(a.slice(2));
+    else if (a === "tjpdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة"); await document.fonts.ready; const u = ((document.querySelector("#tjwrap .tjsvg") && await tjSvgPng()) || tjCanvas()).toDataURL("image/png"); w.document.write(`<!doctype html><title>${esc(T.m.t)}</title><style>body{margin:0}img{width:100%}</style><img src="${u}"><script>onload=()=>setTimeout(()=>print(),300)<\/script>`); w.document.close(); }
+    else if (a === "tjmm" || a === "tjls" || a === "tjrd") tjMode(a.slice(2));
+    else if (a === "tjquiz") { const w = $("#tjwrap"); const on = !w.classList.contains("tjquiz"); w.classList.toggle("tjquiz", on); el.setAttribute("aria-pressed", String(on)); w.querySelectorAll(".tjcard.shown").forEach(c => c.classList.remove("shown")); toast(on ? "وضع المراجعة: حاول تذكّر خلاصة كل غصن ثم اضغطه لتظهر" : "عادت الخلاصات ظاهرة"); }
+    else if (a === "tjkf") { TJS.k = TJS.k === el.dataset.k ? "" : el.dataset.k; document.querySelectorAll("[data-act=tjkf]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === TJS.k))); tjApply(); }
+    else if (a === "tjhz") { if (typeof HZ === "undefined" || !HZ.add) return toast("المراجعة غير متاحة"); const cards = []; const walk = (n, par) => { if (n.q && n.t && Array.isArray(n.p) === false) cards.push({ id: "tj" + T.id + "-" + (n.i || cards.length), b: n.b || T.id, p: +n.p || 1, cue: (par ? par + " — " : "") + (n.k ? n.k + ": " : "") + "تذكّر", text: n.t + "\n«" + n.q + "»" }); (n.c || []).forEach(c => walk(c, n.c && n.t && !n.q ? n.t : par)); }; walk(T.tree, ""); const k = HZ.add(cards); toast(k ? `أُضيفت ${toAr(k)} بطاقة إلى «حفظ المتون» للمراجعة المتباعدة` : cards.length ? "أُضيفت من قبل" : "لا نقاط في النطاق المعروض"); }
+    else if (a === "tjtm") { const t = el.dataset.t; try { await navigator.clipboard.writeText(t); toast("نُسخ التعريف"); } catch (x) { } }
     else if (a === "tjall") { const cards = document.querySelectorAll(".tj ul"); const hide = [...cards].some(u => !u.hidden); document.querySelectorAll(".tj .tjn.d1>ul,.tj .tjn.d2>ul,.tj .tjn.d3>ul").forEach(u => u.hidden = hide); }
     else if (a === "tjok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on && !confirm("هل راجعت التشجير وتريد عرضه للأعضاء؟")) return; await GH.editJSON("data/tashjir/_list.json", o => { if (o[el.dataset.id]) o[el.dataset.id].ok = on ? 1 : 0; return o; }, (on ? "اعتماد تشجير: " : "إيقاف تشجير: ") + el.dataset.id, true); TSJ.list = null; toast(on ? "اعتُمد التشجير" : "أوقف العرض"); route(); }
     else if (a === "tjedit") {
@@ -145,3 +161,91 @@ document.addEventListener("submit", async e => {
   if (f.dataset.form === "tjrange") { const p = new URLSearchParams({ lvl: f.dataset.lvl }); if (+f.a.value) p.set("from", f.a.value); if (+f.z.value) p.set("to", f.z.value); go("#/tashjir/" + f.dataset.id + "?" + p); return; }
   try { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const id = f.b.value; await GH.editJSON("data/tashjir/_queue.json", o => { o = o || { items: [] }; o.items = [{ id }].concat((o.items || []).filter(x => (x.id || x) !== id)); return o; }, "تشجير: «" + ((B(id) || {}).title || id) + "»"); toast("بدأ تشجير الكتاب؛ يصلك إشعار عند الانتهاء، ثم تراجعه وتعتمده"); } catch (x) { toast(x.message); }
 }, true);
+
+/* ---------- أدوات الخريطة: بحث فيها، وتصفية النقاط بأنواعها، ووضع المراجعة، وبطاقات الحفظ، ومصطلحات الكتاب ---------- */
+const TJS = { q: "", k: "", coll: new Set() };
+function tjBar(m) {
+  TJS.q = ""; TJS.k = ""; TJS.coll = new Set(); TJS.init = 0;
+  const ks = new Set(); (function w(n) { if (n.k) ks.add(n.k); (n.c || []).forEach(w); })(m);
+  return `<div class="tjbar"><input type="search" id="tjq" placeholder="ابحث في الخريطة…" aria-label="ابحث في الخريطة"><span id="tjqn" class="mut"></span>
+   <button class="btn s" data-act="tjquiz" aria-pressed="false" title="تُخفى الخلاصات والعبارات حتى تضغط الغصن">🧠 وضع المراجعة</button>
+   ${m.id || m.c ? `<button class="btn s" data-act="tjhz" title="كل نقطة بطاقة مراجعة متباعدة">🗂️ بطاقات المراجعة</button>` : ""}</div>
+   ${ks.size ? `<div class="chips tjks" role="group" aria-label="نوع النقطة">${[...ks].filter(k => TJK[k]).map(k => `<button class="chip" data-act="tjkf" data-k="${esc(k)}" aria-pressed="false">${TJK[k]} ${esc(k)}</button>`).join("")}</div>` : ""}`;
+}
+function tjTerms(m, id) {
+  const T = (m.m || []).filter(x => x.t && x.d); if (!T.length) return "";
+  return `<details class="card tjterms" open><summary><b>📖 مصطلحات عرّفها المؤلف في الكتاب</b> <span class="mut">(${toAr(T.length)})</span></summary><dl>${T.map(x => `<dt>${esc(x.t)} <a class="mut" href="#/book/${esc(id)}/${+x.p || 1}">ص ${toAr(+x.p || 1)}</a></dt><dd>${esc(x.d)}</dd>`).join("")}</dl><p class="mut"><a href="#/lexicon">معجم المصطلحات في المكتبة كلها ←</a></p></details>`;
+}
+// تطبيق البحث والتصفية على القائمة والخريطة الذهنية (وإعادة رسم الشعاعية)
+function tjApply() {
+  const w = $("#tjwrap"); if (!w) return; const q = norm(TJS.q || ""), k = TJS.k; let hits = 0;
+  w.querySelectorAll(".tj .tjn").forEach(li => { li.hidden = false; li.querySelector(":scope>.tjcard").classList.remove("hit"); });
+  if (k) w.querySelectorAll(".tj .tjn[data-k]").forEach(li => { if (li.dataset.k !== k) li.hidden = true; });
+  if (q) w.querySelectorAll(".tj .tjn").forEach(li => { const c = li.querySelector(":scope>.tjcard"); if (!li.hidden && norm(c.textContent).includes(q)) { c.classList.add("hit"); hits++; let u = li.parentElement; while (u && u.tagName === "UL" && !u.classList.contains("tj")) { u.hidden = false; u = u.parentElement.parentElement; } } });
+  const n = $("#tjqn"); if (n) n.textContent = q ? (hits ? toAr(hits) + " موضع" : "لا نتائج") : "";
+  if (q && window.__tj) (function c(n, p) { let h = norm((n.t || "") + " " + (n.s || "") + " " + (n.q || "")).includes(q); (n.c || []).forEach((x, i) => { if (c(x, p + "." + i)) { h = true; TJS.coll.delete(p); } }); return h; })(window.__tj.tree, "0"); // فتح الأغصان التي فيها نتائج
+  if (w.querySelector(".tjsvg")) { w.querySelector(".tjsvg").remove(); w.insertAdjacentHTML("beforeend", tjRadial(window.__tj && window.__tj.tree)); }
+  const f = w.querySelector(".tj .hit"); if (f && !w.querySelector(".tjsvg")) f.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+}
+document.addEventListener("input", e => { if (e.target.id !== "tjq") return; TJS.q = e.target.value.trim(); clearTimeout(TJS.t); TJS.t = setTimeout(tjApply, 250); });
+document.addEventListener("click", e => { const c = e.target.closest(".tjquiz .tjcard"); if (c && !e.target.closest("a,button")) c.classList.add("shown"); }, true);
+
+function tjCenter(w) { const g = w.querySelector('.tjsvg [data-path="0"] rect'); if (!g) return; const r = g.getBoundingClientRect(), wr = w.getBoundingClientRect(); w.scrollLeft += (r.left + r.width / 2) - (wr.left + wr.width / 2); w.scrollTop += (r.top + r.height / 2) - (wr.top + wr.height / 2); }
+/* ---------- الخريطة الشعاعية: الجذر في الوسط والأغصان على الجانبين بمنحنيات، تُطوى بالضغط ---------- */
+let TJ_CTX = null;
+function tjWrapText(t, max, font) {
+  TJ_CTX = TJ_CTX || document.createElement("canvas").getContext("2d"); TJ_CTX.font = font;
+  const ws = String(t || "").split(/\s+/), L = []; let l = "";
+  ws.forEach(s => { const tt = l ? l + " " + s : s; if (TJ_CTX.measureText(tt).width > max && l) { L.push(l); l = s; } else l = tt; }); if (l) L.push(l);
+  return L.slice(0, 4).map((x, i, a) => i === 3 && a.length === 4 && L.length > 4 ? x + "…" : x);
+}
+function tjRadial(tree) {
+  if (!tree) return "";
+  const F = '"IBM Plex Sans Arabic",Tahoma,sans-serif', q = norm(TJS.q || ""), k = TJS.k;
+  const keep = n => !k || !n.k || n.k === k;
+  const mk = (n, d, path, ci) => {
+    const fs = d === 0 ? 20 : d === 1 ? 16 : d === 2 ? 14 : 13, max = d === 0 ? 260 : d === 1 ? 230 : 210, font = `${d < 2 ? 700 : 500} ${fs}px ${F}`;
+    const lines = tjWrapText((n.k && TJK[n.k] ? TJK[n.k] + " " : "") + (n.t || ""), max, font);
+    TJ_CTX.font = font; const w = Math.max(70, ...lines.map(l => TJ_CTX.measureText(l).width)) + 28, lh = fs * 1.55;
+    const pp = Array.isArray(n.p) ? n.p[0] : n.p, h = lines.length * lh + (pp ? 18 : 0) + 16;
+    const kids = TJS.coll.has(path) ? [] : (n.c || []).filter(keep).map((c, i) => mk(c, d + 1, path + "." + i, d === 0 ? i : ci));
+    return { n, d, path, ci, w, h, lines, lh, fs, font, pp, kids, more: (n.c || []).length && TJS.coll.has(path), hit: q && norm((n.t || "") + " " + (n.s || "") + " " + (n.q || "")).includes(q) };
+  };
+  const root = mk(tree, 0, "0", 0), HG = 46, VG = 12;
+  const span = x => x.kids.length ? Math.max(x.h, x.kids.reduce((s, c) => s + span(c), 0) + VG * (x.kids.length - 1)) : x.h;
+  const place = (x, cx, cy, side) => { x.x = cx; x.y = cy; let y = cy - (x.kids.reduce((s, c) => s + span(c), 0) + VG * (x.kids.length - 1)) / 2; x.kids.forEach(c => { const sp = span(c); place(c, cx + side * (x.w / 2 + HG + c.w / 2), y + sp / 2, side); y += sp + VG; }); };
+  root.x = 0; root.y = 0;
+  const R = [], L = []; let hr = 0, hl = 0; root.kids.forEach(c => { if (hr <= hl) { R.push(c); hr += span(c) + VG; } else { L.push(c); hl += span(c) + VG; } });
+  const stack = (arr, side) => { let tot = arr.reduce((s, c) => s + span(c), 0) + VG * Math.max(0, arr.length - 1), y = -tot / 2; arr.forEach(c => { const sp = span(c); place(c, side * (root.w / 2 + HG * 1.6 + c.w / 2), y + sp / 2, side); y += sp + VG; }); };
+  stack(R, 1); stack(L, -1);
+  const all = []; (function w(x) { all.push(x); x.kids.forEach(w); })(root);
+  const minX = Math.min(...all.map(x => x.x - x.w / 2)) - 30, maxX = Math.max(...all.map(x => x.x + x.w / 2)) + 30, minY = Math.min(...all.map(x => x.y - x.h / 2)) - 30, maxY = Math.max(...all.map(x => x.y + x.h / 2)) + 30;
+  const W = maxX - minX, H = maxY - minY, bid = (window.__tj && window.__tj.id && !String(window.__tj.id).startsWith("m:")) ? window.__tj.id : "";
+  let edges = "", nodes = "";
+  (function w(x) {
+    x.kids.forEach(c => { const s = c.x > x.x ? 1 : -1, x1 = x.x + s * x.w / 2, x2 = c.x - s * c.w / 2, col = TJC[c.ci % TJC.length]; edges += `<path d="M${x1},${x.y} C${(x1 + x2) / 2},${x.y} ${(x1 + x2) / 2},${c.y} ${x2},${c.y}" stroke="${col}" stroke-width="${c.d === 1 ? 4 : c.d === 2 ? 2.6 : 1.8}" fill="none" stroke-linecap="round" opacity=".85"/>`; w(c); });
+    const col = TJC[x.ci % TJC.length], fill = x.d === 0 ? "#0f5c4d" : x.d === 1 ? col : "var(--sf,#fff)", tc = x.d < 2 ? "#fff" : "var(--ink,#14231f)", stroke = x.hit ? "#e6a700" : x.d < 2 ? "none" : col;
+    const b = x.n.b || bid, link = x.pp && b ? `#/book/${b}/${x.pp}` : x.n.u || "";
+    nodes += `<g class="tjg${x.hit ? " hit" : ""}" data-path="${x.path}"><title>${esc((x.n.t || "") + (x.n.s ? "\n" + x.n.s : "") + (x.n.q ? "\n«" + x.n.q + "»" : ""))}</title><rect x="${x.x - x.w / 2}" y="${x.y - x.h / 2}" width="${x.w}" height="${x.h}" rx="${x.d === 0 ? 18 : 12}" fill="${fill}" stroke="${stroke}" stroke-width="${x.hit ? 4 : 2}"/>`
+      + x.lines.map((l, i) => `<text x="${x.x}" y="${x.y - x.h / 2 + 8 + x.lh * (i + 0.78)}" text-anchor="middle" direction="rtl" font-family='${F}' font-size="${x.fs}" font-weight="${x.d < 2 ? 700 : 500}" fill="${tc}">${esc(l)}</text>`).join("")
+      + (x.pp ? `<a href="${esc(link)}"><text x="${x.x}" y="${x.y + x.h / 2 - 8}" text-anchor="middle" font-family='${F}' font-size="11" fill="${x.d < 2 ? "#e8f3ef" : col}">ص ${toAr(x.pp)}${Array.isArray(x.n.p) && x.n.p[1] !== x.n.p[0] ? "–" + toAr(x.n.p[1]) : ""}</text></a>` : "")
+      + ((x.n.c || []).length && x.d ? `<circle class="tjtg" data-path="${x.path}" cx="${x.x + (x.x >= 0 ? 1 : -1) * (x.w / 2 + 9)}" cy="${x.y}" r="9" fill="${col}"/><text pointer-events="none" x="${x.x + (x.x >= 0 ? 1 : -1) * (x.w / 2 + 9)}" y="${x.y + 4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${x.more ? "+" : "−"}</text>` : "") + "</g>";
+  })(root);
+  return `<svg class="tjsvg" xmlns="http://www.w3.org/2000/svg" width="${Math.round(W)}" height="${Math.round(H)}" viewBox="${minX} ${minY} ${W} ${H}" role="img" aria-label="خريطة شعاعية: ${esc(tree.t || "")}">${edges}${nodes}</svg>`;
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest(".tjsvg .tjtg"); if (!t) return; e.preventDefault(); const p = t.dataset.path;
+  TJS.coll.has(p) ? TJS.coll.delete(p) : TJS.coll.add(p); const w = $("#tjwrap"), s = w.querySelector(".tjsvg"), sx = w.scrollLeft, sy = w.scrollTop, tr = s.style.transform;
+  s.remove(); w.insertAdjacentHTML("beforeend", tjRadial(window.__tj.tree)); const n = w.querySelector(".tjsvg"); n.style.transform = tr; n.style.transformOrigin = "top right"; w.scrollLeft = sx; w.scrollTop = sy;
+});
+// تصدير الخريطة الشعاعية صورةً: رسم الـSVG على لوحة بخلفية الموقع
+async function tjSvgPng() {
+  const s = document.querySelector("#tjwrap .tjsvg"); if (!s) return null;
+  const c = s.cloneNode(true); c.style.transform = ""; const css = getComputedStyle(document.body);
+  let x = new XMLSerializer().serializeToString(c).replace(/var\(--sf,#fff\)/g, "#ffffff").replace(/var\(--ink,#14231f\)/g, "#14231f");
+  const img = new Image(), sc = Math.min(2, 8000 / Math.max(+s.getAttribute("width"), +s.getAttribute("height")));
+  await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(x); });
+  const cv = document.createElement("canvas"); cv.width = img.width * sc; cv.height = (img.height + 60) * sc; const g = cv.getContext("2d"); g.scale(sc, sc);
+  g.fillStyle = "#fbf7ee"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0); g.fillStyle = "#5b6b66"; g.font = '15px "IBM Plex Sans Arabic",Tahoma'; g.textAlign = "center"; g.direction = "rtl";
+  g.fillText(SITENAME + " — تشجير الكتب", img.width / 2, img.height + 36); void css; return cv;
+}

@@ -31,7 +31,7 @@ def main():
     spec = importlib.util.spec_from_file_location("o", os.path.join(ROOT, "tools", "ocr-pdf.py"))
     o = importlib.util.module_from_spec(spec); sys.argv = sys.argv[:1] + sys.argv[1:]; spec.loader.exec_module(o)
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
-    ids = sys.argv[1:] or [b["id"] for b in cat["books"] if b.get("ocr") and b.get("col", "dawah") == "dawah"]
+    ids = sys.argv[1:] or [b["id"] for b in cat["books"] if b.get("ocr") and (b.get("col", "dawah") == "dawah" or b.get("upl"))]
     os.makedirs(os.path.join(ROOT, "data", "audit"), exist_ok=True)
     rep = []
     for bid in ids:

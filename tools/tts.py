@@ -89,6 +89,37 @@ def clean(t):
     return t.strip()
 
 
+# ---------- ما لا يُقرأ صوتيًا: بيانات الكتاب والطبعة والنشر والفهارس (tools/frontmatter.py)، والعلامات والأرقام الخارجة عن المضمون ----------
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from frontmatter import PUB, TOCL, NUMSYM, skip_page as _skip  # noqa: E402
+SKIP_AUD = {}
+
+
+def skip_page(bid, p, n, raw):
+    return _skip(bid, p, n, raw, SKIP_AUD.get(bid))
+
+
+def speakable(t):
+    """حذف الأسطر والعلامات والأرقام التي لا تُقرأ: بيانات النشر، أسطر الفهرس، أرقام التعداد والإحالات والآيات، والزخارف."""
+    out = []
+    for l in t.split("\n"):
+        s = l.strip()
+        if not s or NUMSYM.match(s) or PUB.search(s) and len(s) < 160 or TOCL.search(s) and len(s) < 80 and not re.search(r"[.؟!]", s):
+            continue
+        s = re.sub(r"^\s*(\(?[\d٠-٩]{1,3}\)?|\(?[أ-ي]\))\s*[-–—.)]\s*", "", s)  # أرقام التعداد في أول السطر
+        s = re.sub(r"\[\s*[\u0621-\u064A\s]+\s*:\s*[\d٠-٩\-–، ]+\]", " ", s)  # [البقرة: ٢٥٥]
+        s = re.sub(r"\(\s*(ص|ج|رقم|ح|حديث رقم)\s*\.?\s*[\d٠-٩/\-– ،]+\)", " ", s)  # (ص ١٢) (ج ٢) (رقم ٣٤)
+        s = re.sub(r"\(\s*[\d٠-٩]{1,4}\s*/\s*[\d٠-٩]{1,4}\s*\)", " ", s)  # (٢/ ٣٤)
+        s = re.sub(r"\b(رقم|برقم|ح)\s*[:\(]?\s*[\d٠-٩]{1,6}\s*\)?", " ", s)  # البخاري برقم ١٢٣٤
+        s = re.sub(r"\[\s*[\d٠-٩]{1,4}\s*\]", " ", s)  # [١٢]
+        s = re.sub(r"[*•·■□◆◇●○★☆~|_=※◊❖✽❁]+", " ", s)
+        s = re.sub(r"[-–—ـ]{2,}", " ", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        if len(re.sub(r"[^\u0621-\u064Aa-zA-Z]", "", s)) >= 2:
+            out.append(s)
+    return "\n".join(out)
+
+
 def h(t):
     return hashlib.md5(t.encode("utf-8")).hexdigest()[:10]
 
@@ -279,7 +310,8 @@ async def tts_book(item, lst):
     for p in range(first, min(last, len(pages)) + 1):
         if only_p and p not in only_p:
             continue
-        tx = clean(tashkeel_text(bid, p, pages[p - 1]))
+        raw = tashkeel_text(bid, p, pages[p - 1])
+        tx = "" if skip_page(bid, p, len(pages), pages[p - 1]) else speakable(clean(raw))
         cur = man["pages"].get(str(p))
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
@@ -442,6 +474,7 @@ async def main():
     global VOICE
     VOICE = jload(os.path.join(AUD, "_settings.json"), {}).get("voice") or VOICE  # الصوت الافتراضي الذي تختاره الإدارة
     global LEX
+    SKIP_AUD.update(jload(os.path.join(AUD, "_settings.json"), {}).get("omit") or {})  # من الإدارة: {"<كتاب>": {"front": 4, "back": 6, "pages": [9]}}
     LEX = [x for x in jload(os.path.join(AUD, "_lexicon.json"), {}).get("words", []) if len(x) == 2 and x[0]]
     qp = os.path.join(AUD, "_queue.json")
     q = jload(qp, {"items": []})
@@ -455,7 +488,7 @@ async def main():
         pick = set(jload(os.path.join(AUD, "_auto.json"), {}).get("turath") or [])
         skip = set(jload(os.path.join(AUD, "_settings.json"), {}).get("skip") or [])
         cands = [b for b in cat["books"] if b["id"] not in skip and not b.get("hidden") and not b.get("demo") and b.get("type", "book") == "book" and not b.get("vf") and b["id"] not in have
-                 and ((b.get("col") or "dawah") == "dawah" or b["id"] in pick) and not (lst.get(b["id"], {}).get("n") and lst[b["id"]].get("n", 0) >= lst[b["id"]].get("of", 1))]
+                 and ((b.get("col") or "dawah") == "dawah" or b.get("upl") or b["id"] in pick) and not (lst.get(b["id"], {}).get("n") and lst[b["id"]].get("n", 0) >= lst[b["id"]].get("of", 1))]
         cands.sort(key=lambda b: (0 if (b.get("col") or "dawah") == "dawah" else 1, b.get("n") or 9999))
         items += [{"id": b["id"]} for b in cands[:int(os.environ.get("TTS_AUTO_BOOKS", "6"))]]
     if os.environ.get("TTS_REFRESH") == "1":  # الكتب المسموعة التي تغيّر نصها بعد التدقيق

@@ -279,9 +279,9 @@ def main():
     only = [x for x in os.environ.get("TK_ONLY", "").split(",") if x.strip()]
     books = {b["id"]: b for b in ready_books(cat)}
     if os.environ.get("TK_ALLOW_ALL", "0") != "1":  # بقرار الإدارة: خدمة التشكيل لكتب مكتبة الدعوة وحدها في هذه المرحلة
-        books = {i: b for i, b in books.items() if b.get("col") == "dawah"}
+        books = {i: b for i, b in books.items() if b.get("col") == "dawah" or b.get("upl")}
     # كتب الدعوة تُشكَّل تلقائيًا، والطابور يقدّم بعضها على بعض
-    auto = [i for i, b in books.items() if b.get("col") == "dawah" and i not in pri]
+    auto = [i for i, b in books.items() if (b.get("col") == "dawah" or b.get("upl")) and i not in pri]
     order = [i for i in (only or pri) if i in books] + ([] if only else auto)
     if not GKEYS and not GHM:
         log("لا محرك متاح")

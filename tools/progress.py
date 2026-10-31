@@ -45,7 +45,7 @@ def main():
     for it in fw.get("items", []):
         fw_n[it.get("b")] = fw_n.get(it.get("b"), 0) + 1
 
-    books = [b for b in cat["books"] if b.get("col", "dawah") == "dawah" and b.get("type", "book") == "book" and not b.get("demo")]
+    books = [b for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book" and not b.get("demo")]
     out, dispatch = {}, set()
     tj_have = set(tj) | {x.get("id") if isinstance(x, dict) else x for x in tjq.get("items", [])}
     au_have = set(au) | {x.get("id") if isinstance(x, dict) else x for x in auq.get("items", [])}
