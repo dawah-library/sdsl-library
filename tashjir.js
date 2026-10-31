@@ -35,7 +35,16 @@ function tjScience(k) {
   return root;
 }
 // التكبير والتصغير والسحب لكل الخرائط (ب7-39)
+// طريقة العرض: خريطة ذهنية (افتراضية على الشاشات العريضة) أو قائمة متدرجة (الجوال)؛ تُحفظ على الجهاز
+function tjMode(m) {
+  const w = $("#tjwrap"), ul = w && w.querySelector(".tj"); if (!ul) return;
+  if (!m) { try { m = localStorage.getItem("tjmode"); } catch (e) { } m = m || (matchMedia("(min-width:760px)").matches ? "mm" : "ls"); } else try { localStorage.setItem("tjmode", m); } catch (e) { }
+  ul.classList.toggle("mm", m === "mm"); w.classList.toggle("mmw", m === "mm");
+  document.querySelectorAll("[data-act=tjmm],[data-act=tjls]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act === "tj" + m)));
+  if (m === "mm") w.scrollLeft = w.scrollWidth; // يبدأ من جذر الشجرة (يمين)
+}
 function tjZoom() {
+  tjMode();
   const w = $("#tjwrap"); if (!w || w.dataset.z) return; w.dataset.z = 1; let sc = 1; const ul = w.querySelector(".tj");
   const set = v => { sc = Math.min(2.5, Math.max(0.35, v)); ul.style.transform = `scale(${sc})`; ul.style.transformOrigin = "top right"; ul.style.width = (100 / sc) + "%"; const lb = $("#tjzl"); if (lb) lb.textContent = toAr(Math.round(sc * 100)) + "٪"; };
   w.insertAdjacentHTML("beforebegin", `<div class="row tjzoom"><button class="btn s" data-z="1.2" aria-label="تكبير">＋</button><span id="tjzl">١٠٠٪</span><button class="btn s" data-z="0.83" aria-label="تصغير">－</button><button class="btn s" data-z="0">ملاءمة</button></div>`);
@@ -52,15 +61,15 @@ async function vTashjir(q, id) {
     const k = id.slice(2), tree = tjScience(k), S = TJ_SCI.find(x => x[0] === k); if (!tree) return view('<p class="note">الخريطة غير موجودة.</p>');
     view(`<p><a href="#/tashjir">← التشجير والخرائط</a></p><div class="tjhead"><h2>خريطة ${esc(S[1])}</h2><p class="mut">خريطة تفاعلية مبنية من محتوى المكتبة الفعلي: اضغط أي غصن لفتح الكتاب أو الباب أو المقال، وكبّر وصغّر واسحب للتنقل.</p></div>
      <nav class="chips">${TJ_SCI.map(([x, n]) => `<a class="chip${x === k ? " x" : ""}" href="#/tashjir/m:${x}">${esc(n)}</a>`).join("")}</nav>
-     <div class="row tjtools"><button class="btn s" data-act="tjall">طيّ/فتح الكل</button><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjshare">مشاركة</button></div>
+     <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button></span><button class="btn s" data-act="tjall">طيّ/فتح الكل</button><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjshare">مشاركة</button></div>
      <p class="mut tjnote">الفروع من تصنيف المكتبة وفهارس الكتب نفسها، لا علاقات مستنتجة آليًا. لاقتراح تصحيح: «تواصل معنا».</p>
      <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, "")}</ul></div>`);
     window.__tj = { m: tree, tree, id, lvl: 3 }; tjZoom(); return;
   }
   if (!id) {
     view(`<div class="cmhero tj"><div><h2>تشجير الكتب</h2><p>خرائط ذهنية لكتب مشايخ الدعوة توضّح بناء الكتاب وأفكاره: تشجير عام للكتاب، ومتوسط للفصول والأبواب، وتفصيلي للموضوعات ونقاطها، وكل غصن مربوط بصفحته.</p></div></div>
-     <h3>خرائط العلوم التفاعلية</h3><div class="agrid">${TJ_SCI.map(([k, n]) => `<a class="acard2" href="#/tashjir/m:${k}"><span class="acov" style="${avHue(k)}"><i>🗺️</i><em>${esc(n)}</em></span><b>${esc(n)}</b><small class="mut">الكتب والمتون والمقالات</small></a>`).join("")}</div>
-     <h3>تشجير الكتب</h3><div id="tjbox" class="mut">جارٍ التحميل…</div>`);
+     <h3>تشجير الكتب</h3><div id="tjbox" class="mut">جارٍ التحميل…</div>
+     <details class="tjsci"><summary>خرائط العلوم من محتوى المكتبة (فهارس الكتب وتصنيف المقالات)</summary><div class="agrid">${TJ_SCI.map(([k, n]) => `<a class="acard2" href="#/tashjir/m:${k}"><span class="acov" style="${avHue(k)}"><i>🗺️</i><em>${esc(n)}</em></span><b>${esc(n)}</b><small class="mut">الكتب والمتون والمقالات</small></a>`).join("")}</div></details>`);
     const L = await TSJ.index(), staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff);
     const box = $("#tjbox"); if (!box) return; box.className = "";
     box.innerHTML = (ids.length ? `<div class="agrid">${ids.map(k => { const b = B(k); return `<a class="acard2" href="#/tashjir/${k}"><span class="acov" style="${avHue(k)}"><i>🌳</i><em>${esc((b ? b.setTitle || b.title : L[k].t).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : L[k].t)}</b><small class="mut">${toAr(L[k].n || 0)} نقطة${L[k].ok ? "" : " • معاينة للإدارة"}</small></a>`; }).join("")}</div>` : `<div class="card soon"><h3>قريبًا بإذن الله</h3><p>تُشجَّر كتب الدعوة تباعًا بعد تدقيق نصوصها ومطابقتها بالنسخ المصورة، وتختار الإدارة الكتب المعروضة.</p></div>`)
@@ -77,7 +86,7 @@ async function vTashjir(q, id) {
   view(`<p><a href="#/tashjir">← تشجير الكتب</a></p><div class="tjhead"><h2>${esc(m.t)}</h2><p class="mut">${esc(m.a || "")}${inf.ok ? "" : " • معاينة للإدارة — غير منشور"}</p></div>
   <div class="seg tjlvl">${[[1, "عام"], [2, "متوسط"], [3, "تفصيلي"]].map(([v, l]) => `<a href="${url({ lvl: v })}" class="${v === lvl ? "on" : ""}">${l}</a>`).join("")}</div>
   <form class="row tjrange" data-form="tjrange" data-id="${id}" data-lvl="${lvl}"><label>من صفحة <input name="a" type="number" min="1" value="${a || ""}"></label><label>إلى صفحة <input name="z" type="number" min="1" value="${z || ""}"></label><button class="btn s">عرض النطاق</button>${a || z ? `<a class="btn s" href="${url({ from: "", to: "" }).replace(/&?(from|to)=(&|$)/g, "")}">الكتاب كله</a>` : ""}</form>
-  <div class="row tjtools"><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
+  <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button></span><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
   <p class="mut tjnote">التشجير مساعد على الفهم والمراجعة، وهو من إعداد آلي راجعته جولة تدقيق ثانية؛ والمرجع نص الكتاب بالضغط على رقم الصفحة. علامة «؟» تعني عبارة لم تطابق نص الصفحة بعد.</p>
   <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, id)}</ul></div>`);
   window.__tj = { m, tree, id, lvl, a, z }; tjZoom();
@@ -118,6 +127,7 @@ document.addEventListener("click", async e => {
       else await dl(name, blob);
     }
     else if (a === "tjpdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة"); await document.fonts.ready; const u = tjCanvas().toDataURL("image/png"); w.document.write(`<!doctype html><title>${esc(T.m.t)}</title><style>body{margin:0}img{width:100%}</style><img src="${u}"><script>onload=()=>setTimeout(()=>print(),300)<\/script>`); w.document.close(); }
+    else if (a === "tjmm" || a === "tjls") tjMode(a.slice(2));
     else if (a === "tjall") { const cards = document.querySelectorAll(".tj ul"); const hide = [...cards].some(u => !u.hidden); document.querySelectorAll(".tj .tjn.d1>ul,.tj .tjn.d2>ul,.tj .tjn.d3>ul").forEach(u => u.hidden = hide); }
     else if (a === "tjok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const on = el.dataset.on === "1"; if (on && !confirm("هل راجعت التشجير وتريد عرضه للأعضاء؟")) return; await GH.editJSON("data/tashjir/_list.json", o => { if (o[el.dataset.id]) o[el.dataset.id].ok = on ? 1 : 0; return o; }, (on ? "اعتماد تشجير: " : "إيقاف تشجير: ") + el.dataset.id, true); TSJ.list = null; toast(on ? "اعتُمد التشجير" : "أوقف العرض"); route(); }
     else if (a === "tjedit") {

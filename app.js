@@ -97,7 +97,9 @@ async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;le
  const w=async()=>{while(q.length){const b=q.shift();try{await loadBook(b.id)}catch(e){}onP&&onP(++i,n)}};await Promise.all([w(),w(),w()])}
 
 /* ---------- عرض عام ---------- */
-const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered()};
+const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered();tjLinks()};
+// رابط «التشجير» في رأس الكتاب متى نُشر تشجيره (أو للإدارة قبل النشر)
+function tjLinks(){const els=document.querySelectorAll(".tjlink[data-tj]");if(!els.length||typeof TSJ==="undefined")return;TSJ.index().then(L=>els.forEach(el=>{const k=el.dataset.tj,x=L[k];if(x&&(x.ok||isAdmin()))el.innerHTML=` • <a href="#/tashjir/${esc(k)}">🌳 تشجير الكتاب</a>`}))}
 /* صورة المؤلف المصغرة: صورته إن أُضيفت، وإلا الحرف الأول بلون مميز */
 // صورة مؤلف حُفظت للتو ولم يُنشر الموقع بعد: تُجلب مباشرة من المستودع
 const RAWGH="https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/";
@@ -609,7 +611,7 @@ async function vBook(id,p,h){
  const scroll=S.mode==="scroll"&&pv==="text"&&!art&&n>1;
  const same=LASTREAD&&LASTREAD.id===id,dir=same?(p>LASTREAD.p?"slide-l":p<LASTREAD.p?"slide-r":""):"";LASTREAD={id,p};S.last={id,p};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[id];S.lastBy[id]=p;{const ks=Object.keys(S.lastBy);if(ks.length>40)delete S.lastBy[ks[0]]}saveS();
  const a=A(b.authorId),label=PL(b,p-1),chap=chapterOf(b,p),fatwa=b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||"");
- const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]} • <button class="linkbtn" data-act="card">بطاقة الكتاب</button></div>${b.card&&b.card.summary&&p===1?`<p class="rsum">${esc(b.card.summary)}</p>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}${volStrip(b)}${typeof ED!=="undefined"?ED.strip(b):""}${typeof ITHRA!=="undefined"?ITHRA.note(b):""}</div>`;
+ const head=art?"":`<div class="rhead"><h2>${esc(b.title)}</h2><div class="mut"><a class="alink" href="#/author/${b.authorId}" data-author="${b.authorId}">${avatar(a,"sm")}${esc(a.name)}${died(a)}</a> • <a href="#/library?c=${bc(b)}&t=${b.topicId}">${esc(T(b.topicId).name)}</a> • ${COL[bc(b)]} • <button class="linkbtn" data-act="card">بطاقة الكتاب</button><span class="tjlink" data-tj="${esc(b.set||b.id)}"></span></div>${b.card&&b.card.summary&&p===1?`<p class="rsum">${esc(b.card.summary)}</p>`:""}${b.demo?'<p class="note">هذا نص تجريبي يُستبدل بالنص المعتمد.</p>':""}${volStrip(b)}${typeof ED!=="undefined"?ED.strip(b):""}${typeof ITHRA!=="undefined"?ITHRA.note(b):""}</div>`;
  const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`:""}</div>${fatwa&&bc(b)!=="ithra"?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}${typeof ITHRA!=="undefined"?ITHRA.note(b):""}</div>`:"";
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}

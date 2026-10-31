@@ -26,13 +26,13 @@ def gemini(prompt, schema_hint=""):
     for k in range(len(KEYS)):
         if k in EXH:
             continue
-        for attempt in range(5):
+        for attempt in range(3):
             try:
                 body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
                                    "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json", "maxOutputTokens": 30000}}).encode()
                 req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body,
                                              headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
-                with urllib.request.urlopen(req, timeout=300) as r:
+                with urllib.request.urlopen(req, timeout=150) as r:
                     j = json.loads(r.read())
                 t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
                 return json.loads(re.sub(r"^```json|```$", "", t.strip()))
@@ -135,10 +135,22 @@ def build(bid, cat):
         print("  غير موجود أو بلا نص:", bid, flush=True)
         return "missing"
     title, au, pages, sh = src
+    # ذاكرة التقدّم: الفصول المنجزة تُحفظ وتُودَع في المستودع، فتُستأنف من حيث توقفت إن انتهت مهلة المهمة
+    wp = os.path.join(OUT, "_work", bid + ".json")
+    work = json.load(open(wp, encoding="utf-8")) if os.path.exists(wp) else {}
     chs = []
     for a, z in chapters(sh, len(pages)):
+        key = "%d-%d" % (a, z)
+        if key in work:
+            if work[key]:
+                chs.append(work[key])
+            continue
+        if time.time() > DEADLINE[0]:
+            print("  انتهت مهلة الجولة؛ يُستأنف الكتاب في الجولة القادمة", flush=True)
+            return None
         text = "\n".join("[ص %d]\n%s" % (i + 1, re.sub(r"^\s*_{4,}[\s\S]*$", "", pages[i] or "", flags=re.M)[:4000]) for i in range(a - 1, z))
         if len(re.sub(r"\s", "", text)) < 300:
+            work[key] = None
             continue
         r = gemini(CH_PROMPT.format(title=title, author=au, a=a, b=z, text=text[:60000]))
         if not r:
@@ -149,8 +161,12 @@ def build(bid, cat):
         for tp in r.get("c", []):
             for pt in tp.get("c", []):
                 pt["v"] = 1 if found(pt.get("q", ""), pages, int(pt.get("p") or a)) else 0
-        chs.append(r)
+        chs.append(r); work[key] = r
+        os.makedirs(os.path.dirname(wp), exist_ok=True)
+        json.dump(work, open(wp, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         print("  الفصل %d-%d: %d موضوعات" % (a, z, len(r.get("c", []))), flush=True)
+        if len(work) % 6 == 0:
+            commit("تشجير «%s»: تقدّم (%d فصلًا)" % (title, len(work)))
     if not chs:
         return None
     top = gemini(BOOK_PROMPT.format(title=title, author=au, chs="\n".join("%d. %s — %s (ص %s)" % (i + 1, c.get("t", ""), c.get("s", ""), c.get("p")) for i, c in enumerate(chs)))) or {}
@@ -198,6 +214,26 @@ def build(bid, cat):
     return m
 
 
+DEADLINE = [time.time() + 3e4]
+
+
+def commit(msg):
+    """إيداع فوري في المستودع (حتى لا يضيع المنجز إن انتهت مهلة المهمة قبل خطوة الحفظ)."""
+    if os.environ.get("TJ_COMMIT") != "1":
+        return
+    import subprocess
+    run = lambda *a: subprocess.run(list(a), cwd=ROOT)
+    run("git", "add", "data/tashjir")
+    if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode == 0:
+        return
+    run("git", "commit", "-qm", msg)
+    for _ in range(5):
+        run("git", "pull", "-q", "--rebase", "-X", "theirs", "origin", "main")
+        if subprocess.run(["git", "push", "-q", "origin", "HEAD:main"], cwd=ROOT).returncode == 0:
+            return
+        time.sleep(5)
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
@@ -209,8 +245,14 @@ def main():
     done = []
     drop = []
     t0 = time.time()
+    DEADLINE[0] = t0 + 60 * float(os.environ.get("TJ_MINUTES", "280"))
+    # طلبات الإدارة أولًا، ثم الأقصر فالأطول (فيظهر المنجز سريعًا)
+    size = {b["id"]: b.get("n") or 9999 for b in cat["books"]}
+    req = {x["id"] for x in q.get("items", []) if isinstance(x, dict) and not x.get("auto")}
+    if not only:
+        todo.sort(key=lambda b: (0 if b in req else 1, size.get(b, 50)))
     for bid in todo[: int(os.environ.get("TJ_MAX", "6"))]:
-        if time.time() - t0 > 60 * float(os.environ.get("TJ_MINUTES", "280")) or (KEYS and len(EXH) >= len(KEYS)):
+        if time.time() > DEADLINE[0] or (KEYS and len(EXH) >= len(KEYS)):
             break
         print("تشجير:", bid, flush=True)
         try:
@@ -230,6 +272,10 @@ def main():
         q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) not in done + drop]
         json.dump(q, open(qp, "w", encoding="utf-8"), ensure_ascii=False)
         json.dump(lst, open(lp, "w", encoding="utf-8"), ensure_ascii=False)
+        wp = os.path.join(OUT, "_work", bid + ".json")
+        if os.path.exists(wp):
+            os.remove(wp)
+        commit("تشجير الكتب: «%s»" % m["t"])
     q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) not in done + drop]
     json.dump(q, open(qp, "w", encoding="utf-8"), ensure_ascii=False)
     json.dump(lst, open(lp, "w", encoding="utf-8"), ensure_ascii=False)

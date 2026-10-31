@@ -776,3 +776,23 @@ footer .fmis{max-width:640px;margin:6px auto;line-height:1.8}footer nav.flinks{m
 .sumorg summary{cursor:pointer;line-height:1.7}
 .sumorg h4{margin:12px 0 4px;color:var(--brand,#0f5c4d)}
 .sumorg ul{margin:4px 0;padding-inline-start:18px}.sumorg li{margin:4px 0;line-height:1.8}
+/* التشجير: عرض «خريطة ذهنية» أفقي (الكتاب في الطرف الأيمن وأغصانه تتفرع يسارًا بخطوط منحنية) — نفس العُقد بصنف mm */
+.tjview{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.tjview button{border:0;background:var(--sf);padding:4px 12px;cursor:pointer;font:inherit}.tjview button[aria-pressed=true]{background:var(--ac);color:var(--on)}
+.tjwrap.mmw{overflow:auto;padding:10px 4px 24px;background:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--ac) 14%,transparent) 1px,transparent 1.5px) 0 0/22px 22px;border-radius:14px;border:1px solid var(--line)}
+ul.tj.mm{display:inline-block;min-width:max-content}
+.tj.mm .tjn{display:flex;align-items:center;margin:0;padding:5px 0}
+.tj.mm ul{display:flex;flex-direction:column;padding-inline-start:46px;position:relative}
+.tj.mm ul::before{content:"";position:absolute;inset-inline-start:0;top:50%;width:23px;border-top:2.5px solid var(--c)}
+.tj.mm ul>.tjn::before{content:"";position:absolute;inset-inline-start:-23px;top:50%;bottom:auto;width:23px;height:0;border:0;border-top:2.5px solid var(--c);border-radius:0}
+.tj.mm ul>.tjn::after,.tj.mm ul>.tjn:not(:last-child)::after{content:"";position:absolute;inset-inline-start:-23px;top:0;bottom:0;border-inline-start:2.5px solid var(--c);width:0}
+.tj.mm ul>.tjn:first-child::after{top:50%;border-start-start-radius:14px}.tj.mm ul>.tjn:last-child::after{bottom:50%;border-end-start-radius:14px}.tj.mm ul>.tjn:only-child::after{display:none}
+.tj.mm .tjcard{flex:none;width:250px;max-width:250px;border-radius:16px;padding:9px 12px;border:2px solid color-mix(in srgb,var(--c) 55%,transparent);border-inline-start-width:2px;box-shadow:0 6px 18px color-mix(in srgb,var(--c) 14%,transparent)}
+.tj.mm .tjn.d0>.tjcard{width:280px;max-width:280px;border-radius:22px;padding:16px;text-align:center}.tj.mm .tjn.d0>.tjcard b{font-size:1.5rem;padding:0}
+.tj.mm .tjn.d1>.tjcard{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 85%,#fff),var(--c));color:#fff;border:0}.tj.mm .tjn.d1>.tjcard b{color:#fff}.tj.mm .tjn.d1>.tjcard p{color:#f1f6f4}.tj.mm .tjn.d1>.tjcard .tjp{color:#fff;background:rgba(255,255,255,.2)}
+.tj.mm .tjn.d2>.tjcard{background:color-mix(in srgb,var(--c) 10%,var(--sf))}
+.tj.mm .tjn.d3>.tjcard,.tj.mm .tjn.d4>.tjcard{width:230px;max-width:230px;font-size:.92rem;border-style:dashed}
+.tj.mm .tjcard b{font-size:1rem;padding-inline-end:52px}.tj.mm .tjcard p{font-size:.8rem}
+.tj.mm .tjn>ul[hidden]+*,.tj.mm .tjn:has(>ul[hidden])>.tjcard{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 35%,transparent)}
+@media print{.tjwrap.mmw{overflow:visible;border:0;background:none}}
+.tjsci{margin-top:18px}.tjsci summary{cursor:pointer;font-weight:700;color:var(--ac)}
+.tjview{flex:none}
