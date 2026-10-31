@@ -1,4 +1,9 @@
 {
+ "tts": {
+  "gemini-3.8-flash-tts": "ok:356316",
+  "gemini-3.1-flash-tts-preview": "ok:192000",
+  "gemini-2.5-flash-preview-tts": "ok:200384"
+ },
  "models": [
   "gemini-2.5-flash",
   "gemini-2.5-pro",
@@ -47,7 +52,7 @@
   "gemini-robotics-er-2-streaming-preview",
   "gemini-3.5-live-translate-preview"
  ],
- "at": "2026-10-31T02:38Z",
+ "at": "2026-10-31T02:42Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
