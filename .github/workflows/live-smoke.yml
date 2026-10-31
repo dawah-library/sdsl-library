@@ -1,0 +1,31 @@
+name: فحص الموقع الحي بالمتصفح
+on:
+  workflow_run:
+    workflows: ["النشر على Cloudflare Pages"]
+    types: [completed]
+  schedule:
+    - cron: "12 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write   # الإشعار عبر notify.py بهوية المهمة
+concurrency:
+  group: live-smoke
+  cancel-in-progress: true
+jobs:
+  smoke:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - run: sleep 60   # إتاحة الوقت لانتشار النشر الجديد
+        if: github.event_name == 'workflow_run'
+      - id: s
+        run: node tools/live-smoke.js
+      - name: إشعار الإدارة
+        if: failure()
+        run: '[ -s .smoke-report.txt ] && python3 tools/notify.py "$(cat .smoke-report.txt)" || true'
