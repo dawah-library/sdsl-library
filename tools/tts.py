@@ -171,7 +171,7 @@ def speak_gemini(text, voice, path, style=""):
     err = None
     for k in keys:
         try:
-            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{GEM_TTS_MODEL}:generateContent?key={k}", data=body, headers={"content-type": "application/json"})
+            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{GEM_TTS_MODEL}:generateContent", data=body, headers={"content-type": "application/json", "x-goog-api-key": k})
             j = _j.load(urllib.request.urlopen(req, timeout=300))
             pcm = base64.b64decode(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
             with tempfile.NamedTemporaryFile(suffix=".pcm", delete=False) as f: f.write(pcm)
