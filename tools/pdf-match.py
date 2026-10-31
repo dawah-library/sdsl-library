@@ -7,7 +7,8 @@
   - صفحة ضعيفة التشابه مع كل جاراتها ⇒ تُضاف إلى unrev في ملف الكتاب فيعيد التدقيق الدوري (ocr.yml rereview) قراءتها على الصورة.
   - التقرير: data/match/report.json و tools/match-report.md.
 المتغيرات: MATCH_ONLY (كتب بعينها)، MATCH_SAMPLE (٢٤)، MATCH_APPLY=1 (تطبيق التصحيحات)."""
-import json, os, re, subprocess, sys, tempfile, time, urllib.request, shutil
+import json, os, re, subprocess, sys, tempfile, time, urllib.request, urllib.error, shutil
+UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 sdsl-bot'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, 'data')
 def norm(s):
     s = re.sub(r'[ً-ْٰـ]', '', s or ''); s = re.sub(r'[أإآٱ]', 'ا', s).replace('ى', 'ي').replace('ة', 'ه')
@@ -17,13 +18,14 @@ def jac(a, b):
 def oidc_get(path):
     tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library", headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=30).read())["value"]
     site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
-    return json.loads(urllib.request.urlopen(urllib.request.Request(site + path, headers={"Authorization": "Bearer " + tok}), timeout=30).read())
+    try: return json.loads(urllib.request.urlopen(urllib.request.Request(site + path, headers={"Authorization": "Bearer " + tok, "User-Agent": UA}), timeout=30).read())
+    except urllib.error.HTTPError as e: raise RuntimeError("HTTP %d: %s" % (e.code, e.read()[:200].decode("utf-8", "ignore")))
 def get_pdf(bid, tmp):
     loc = os.path.join(ROOT, 'pdf', bid + '.pdf')
     if os.path.exists(loc): return loc
     dest = os.path.join(tmp, bid + '.pdf')
     url = oidc_get("/api/r2put?pdf=" + bid)["url"]
-    with urllib.request.urlopen(url, timeout=600) as r, open(dest, 'wb') as out: shutil.copyfileobj(r, out, 1 << 20)
+    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=600) as r, open(dest, 'wb') as out: shutil.copyfileobj(r, out, 1 << 20)
     return dest
 def npages(pdf):
     out = subprocess.run(['pdfinfo', pdf], capture_output=True, text=True).stdout
