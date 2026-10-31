@@ -65,6 +65,7 @@ jobs:
         if: steps.tok.outputs.ok == '1'
         id: dep
         run: |
+          mkdir -p /tmp/big; find . -path ./.git -prune -o -path ./node_modules -prune -o -type f -size +24M -print | while read f; do echo "::notice::خارج النشر (أكبر من ٢٥ م.ب، يُقرأ من المستودع): $f"; mv "$f" /tmp/big/; done
           npx wrangler pages deploy . --project-name "$P" --branch main --commit-dirty=true > /tmp/d.log 2>&1 || { tail -20 /tmp/d.log | sed 's/^/::error::/'; exit 1; }
           sub=$(curl -s "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$P" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq -r .result.subdomain)
           echo "::notice::https://$sub"; echo "sub=$sub" >> $GITHUB_OUTPUT

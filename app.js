@@ -404,7 +404,9 @@ const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const PDFDOCS=new Map();
 async function pdfDoc(url){url=new URL(url,document.baseURI).href;// pdf.js يحلّ الرابط من عنوان الصفحة لا من <base>، فنعطيه رابطًا كاملًا
 if(!window.pdfjsLib){await loadScript(PDFJS);window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace("pdf.min.js","pdf.worker.min.js")}
- let d=PDFDOCS.get(url);if(!d){d=window.pdfjsLib.getDocument(url).promise;PDFDOCS.set(url,d)}return d}
+ let d=PDFDOCS.get(url);if(!d){const raw=/\/pdf\/[^/]+\.pdf$/.test(new URL(url).pathname)&&new URL(url).origin===location.origin?"https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main"+new URL(url).pathname:null;
+  // الملف الأكبر من حد النشر (٢٥ م.ب) لا يُرفع مع الموقع: يُقرأ من المستودع مباشرة
+  d=window.pdfjsLib.getDocument(url).promise.catch(e=>{if(!raw)throw e;return window.pdfjsLib.getDocument(raw).promise});PDFDOCS.set(url,d)}return d}
 function pdfPageFor(b,p){const off=+b.pdfOffset||0,m=b.pdfByLabel&&b.pl&&/(\d+)\s*$/.exec(b.pl[p-1]||"");return(m?+m[1]:p)+off}
 function pdfCap(b,n,N){return`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(N)} في النسخة المصورة • ${b.img?`<button class="lnk" data-act="pdfdl">تنزيل الكتاب المصور</button>`:`<a href="${esc(b.pdf)}#page=${n}" target="_blank" rel="noopener">فتح الملف كاملًا</a>`}</p>${isAdmin()?`<div class="pdfcal"><span>هل الصورة تطابق النص؟ اضبطها:</span><button class="btn s" data-act="pdfoff" data-d="-1">الصورة السابقة</button><button class="btn s" data-act="pdfoff" data-d="1">الصورة التالية</button><button class="btn s p" data-act="pdfoffsave">حفظ المطابقة (${(+b.pdfOffset||0)>=0?"+":""}${toAr(+b.pdfOffset||0)})</button></div>`:""}`}
 // صور الصفحات في المخزن الخاص: روابط مؤقتة موقَّعة يطلبها العضو المسجل من /api/pages (عشر صفحات في الطلب)
