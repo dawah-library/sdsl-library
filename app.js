@@ -240,8 +240,9 @@ function vFurqan(i,q){const pool=lib.books.filter(b=>!b.demo&&bc(b)==="dawah"&&k
  view(`<h2>قضايا الفرقان</h2><p class="mut">المؤلفات والأبحاث العلمية المنهجية التي أصدرتها الدعوة السلفية في القضايا الكبرى، وأكثرها للشيخ ياسر برهامي. تظهر كتب السلسلة هنا وفي صفحة مؤلفها وفي أقسامها الموضوعية معًا.</p>
  <p class="note">تُرفع كتب سلسلة «قضايا الفرقان» عند توفر ملفاتها من الجمعية. ويظهر هنا الآن ما يتصل بكل قضية من المقالات المستوردة.</p>
  ${groups.map(([name,l],k)=>`<section class="tj-s"><h3><a href="#/furqan/${k+1}">${esc(name)}</a> <span class="mut">(${toAr(l.length)})</span></h3>${l.slice(0,8).map(anyCard).join("")||'<p class="mut">لا توجد مواد بعد.</p>'}${l.length>8?`<p><a href="#/furqan/${k+1}">عرض كل المواد (${toAr(l.length)}) ←</a></p>`:""}</section>`).join("")}`)}
-function vTafrighat(){const l=lib.books.filter(b=>!b.demo&&isTranscript(b));
- view(`<h2>تفريغات</h2><p class="mut">الدروس والشروح الصوتية لمشايخ الدعوة مفرّغة نصيًا، مرتبطة بمؤلفيها وبالكتب المشروحة.</p>${l.map(bookCard).join("")||'<p class="note">لا توجد تفريغات بعد.</p>'}<p class="note">تُضاف التفريغات من صفحة الإدارة (كتاب جديد مع وسم «تفريغ»)، أو بإرسال ملفاتها لنا.</p>`)}
+function vTafrighat(){const l=lib.books.filter(b=>!b.demo&&isTranscript(b)&&!VOL2(b));
+ const extra=b=>b.sharh&&B(b.sharh)||b.audio?`<p class="mut" style="margin:-6px 0 12px;font-size:.88rem">${b.sharh&&B(b.sharh)?`شرح لكتاب: <a href="#/book/${b.sharh}">${esc(B(b.sharh).setTitle||B(b.sharh).title)}</a>`:""}${b.sharh&&B(b.sharh)&&/^https:/.test(b.audio||"")?" • ":""}${/^https:/.test(b.audio||"")?`<a href="${esc(b.audio)}" target="_blank" rel="noopener">التسجيل الصوتي ↗</a>`:""}</p>`:"";
+ view(`<h2>تفريغات</h2><p class="mut">الدروس والشروح الصوتية لمشايخ الدعوة مفرّغة نصيًا، مرتبطة بمؤلفيها وبالكتب المشروحة.</p>${l.map(b=>bookCard(b)+extra(b)).join("")||'<p class="note">لا توجد تفريغات بعد.</p>'}<p class="note">تُضاف التفريغات من «الإدارة ← رفع تفريغات» (ملفات Word أو نص أو ترجمات المقاطع)، أو بإرسال ملفاتها لنا من <a href="#/contact">تواصل معنا</a>.</p>`)}
 
 /* ---------- الصفحات التعريفية ---------- */
 const WA="96566700232";
@@ -1211,7 +1212,7 @@ async function sysStatus(){const el=$("#sysst");if(!el)return;const R_=GH.repo,a
   <h3 style="font-size:1rem">المهام الآلية (التحويل والاستيراد والفهارس)</h3>${(runs.workflow_runs||[]).map(r=>`<div class="card"><b>${esc(r.name)}</b><span class="mut">${esc(ago(r.created_at))} • ${r.status==="completed"?(cs[r.conclusion]||r.conclusion):rs[r.status]||r.status} • <a href="${esc(r.html_url)}" target="_blank" rel="noopener">التفاصيل</a></span></div>`).join("")}`}
  catch(e){el.innerHTML='<p class="note">تعذر جلب الحالة الآن ('+esc(e.message)+').</p>'}}
 function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
- const T_=[["book","إضافة كتاب"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"],["tashkeel","التشكيل"],["sheikhs","حسابات المشايخ والمراسلة"]]:[]).concat(Cloud.staff()||GH.on?MG.tabs().concat([["releases","جديد الإصدارات"],["majalla","مجلة المكتبة"],["quizzes","اختبارات الكتب"],["talaea","الطلائع"]]):[]).concat(Cloud.staff()?[["prog","متابعة إنجاز الكتب"],["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"],["msgs","رسائل الأعضاء"],["community","مراقبة المجتمع"],["audio","الصوتيات والراديو"],["status","حالة النشر والتحويل"]]:[]);
+ const T_=[["book","إضافة كتاب"],["tafrigh","رفع تفريغات"],["pdf","كتاب مصور"],["article","إضافة مقال"],["post","إضافة منشور"],["import","استيراد من صوت السلف"],["update","ملف التحديث"],["offline","دون إنترنت"]].concat(isAdmin()?[["struct","الأقسام والأسماء"],["review","مراجعة التحويل"],["tashkeel","التشكيل"],["sheikhs","حسابات المشايخ والمراسلة"]]:[]).concat(Cloud.staff()||GH.on?MG.tabs().concat([["releases","جديد الإصدارات"],["majalla","مجلة المكتبة"],["quizzes","اختبارات الكتب"],["talaea","الطلائع"]]):[]).concat(Cloud.staff()?[["prog","متابعة إنجاز الكتب"],["corr","تصحيحات القراء"],["notify","إشعار للأعضاء"],["msgs","رسائل الأعضاء"],["community","مراقبة المجتمع"],["audio","الصوتيات والراديو"],["status","حالة النشر والتحويل"]]:[]);
  const authSel=(name,col)=>`<select name="${name}">${opt(lib.authors.filter(a=>!col||bc(a)===col))}<option value="__new">+ مؤلف جديد</option></select><input name="${name}new" placeholder="اسم المؤلف الجديد (عند اختيار «مؤلف جديد»)" style="margin-top:4px">`;
  let body="";
  if(tab==="book")body=`<form data-form="addbook"><label>العنوان</label><input name="title" required>
@@ -1223,6 +1224,16 @@ function vAdmin(q){const tab=q.t||"book",opt=(a,v)=>a.map(x=>`<option value="${x
   <div class="row"><div><label>رابط النسخة المصورة PDF (اختياري)</label><input name="pdf" type="url" placeholder="https://archive.org/download/…/book.pdf" dir="ltr"></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div>
   <label class="inl"><input type="checkbox" name="tafrigh" value="1"> هذا تفريغ لدروس صوتية</label><label>ضمن «قضايا الفرقان» (اختياري)</label><select name="furqan"><option value="">—</option>${FURQAN.map(([n])=>`<option>${esc(n)}</option>`).join("")}</select>
   <button class="btn p" style="margin-top:10px">حفظ الكتاب</button></form>`;
+ else if(tab==="tafrigh")body=`<p class="mut">ارفع تفريغات الدروس والشروح الصوتية فتُجهَّز وتُنسب إلى الشيخ وتظهر في <a href="#/tafrighat">التفريغات</a> وفي صفحة الشيخ. يقبل Word (.docx) والنص (.txt) وملفات الترجمة النصية للمقاطع (.srt/.vtt)، أو لصق النص.</p>
+  <form data-form="addtfg"><label>ملفات التفريغ (يمكن اختيار عدة ملفات)</label><input type="file" name="files" multiple accept=".docx,.txt,.md,.srt,.vtt,text/plain">
+  <div class="row"><div><label>طريقة الحفظ عند تعدد الملفات</label><select name="mode"><option value="series">سلسلة واحدة: كل ملف درس في فهرسها</option><option value="each">كل ملف درس مستقل (مجلدات سلسلة)</option></select></div><div><label>عنوان السلسلة أو الدرس</label><input name="title" placeholder="مثل: شرح كتاب التوحيد"></div></div>
+  <div class="row"><div><label>الشيخ</label>${authSel("aid")}</div><div><label>القسم</label><select name="col"><option value="dawah">${COL.dawah}</option><option value="turath">${COL.turath}</option></select></div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for!=="articles"))}</select></div></div>
+  <div class="row"><div><label>الكتاب المشروح (اختياري)</label><select name="sharh"><option value="">—</option>${BOOKS().map(b=>`<option value="${b.id}">${esc(b.setTitle||b.title)}</option>`).join("")}</select></div><div><label>رابط التسجيل الصوتي أو المرئي (اختياري)</label><input name="audio" type="url" dir="ltr" placeholder="https://"></div></div>
+  <div class="row"><div><label>المفرِّغ (اختياري)</label><input name="by" maxlength="80"></div><div><label>تاريخ الإلقاء (اختياري)</label><input name="date" maxlength="40" placeholder="مثل: ١٤٤٥ هـ"></div><div><label>حجم الصفحة (حرف)</label><input name="size" type="number" value="1800"></div></div>
+  <fieldset class="secs"><legend>تجهيز النص</legend><label class="inl"><input type="checkbox" name="ts" value="1" checked> حذف التوقيتات وأرقام المقاطع</label><label class="inl"><input type="checkbox" name="join" value="1" checked> دمج الأسطر المتقطعة في فقرات</label><label class="inl"><input type="checkbox" name="heads" value="1" checked> جعل «الدرس/المجلس/المحاضرة…» عناوين في الفهرس</label></fieldset>
+  <label>أو الصق نص التفريغ</label><textarea name="text" style="min-height:120px"></textarea>
+  <label>ضمن «قضايا الفرقان» (اختياري)</label><select name="furqan"><option value="">—</option>${FURQAN.map(([n])=>`<option>${esc(n)}</option>`).join("")}</select>
+  <div class="savebar"><button class="btn" type="button" data-act="tfgpv">معاينة التجهيز</button> <button class="btn p">حفظ التفريغ</button> <span id="tfgst" class="mut"></span></div></form><div id="tfgpv"></div>`;
  else if(tab==="article")body=`<form data-form="addart"><label>عنوان المقال</label><input name="title" required>
   <div class="row"><div><label>الكاتب</label>${authSel("aid","dawah")}</div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for==="articles"))}</select></div><div><label>تاريخ النشر</label><input name="date" type="date" value="${today()}"></div></div>
   <label>رابط المصدر (اختياري)</label><input name="url" type="url" placeholder="https://salafvoice.com/article.aspx?a=…">
@@ -1289,6 +1300,45 @@ async function addBook(f){const fd=new FormData(f);try{let text=String(fd.get("t
 const dupKey=t=>norm(String(t||"").replace(/[«»"'()\[\]،,.:؛؟!\-–—]/g," ")).replace(/\s+/g," ").trim();
 function dupOk(title,aid,art){const k=dupKey(title),hit=CAT.books.concat(ARTS_IDX.map(artFromIdx)).find(b=>b.authorId===aid&&isArt(b)===art&&dupKey(b.setTitle||b.title)===k);
  return!hit||confirm(`يوجد ${art?"مقال":"كتاب"} بالعنوان نفسه للمؤلف نفسه: «${hit.setTitle||hit.title}» (${hit.id}).${art?"":"\nإن كان طبعة أخرى فأضفه من «طبعات الكتاب» في صفحة الكتاب."}\nإضافة سجل جديد رغم ذلك؟`)}
+/* ---------- رفع التفريغات (دروس صوتية مفرغة) وتجهيزها ونسبتها إلى الشيخ ---------- */
+// يقبل Word (.docx) والنص (.txt/.md) وملفات الترجمة (.srt/.vtt) أو اللصق؛ كل ملف درس مستقل أو فصل في سلسلة واحدة
+async function docxText(file){const u=new Uint8Array(await file.arrayBuffer()),dv=new DataView(u.buffer);let e=u.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error("ملف Word غير صالح: "+file.name);
+ let o=dv.getUint32(e+16,true);const n=dv.getUint16(e+10,true);
+ for(let i=0;i<n;i++){const m=dv.getUint16(o+10,true),cs=dv.getUint32(o+20,true),nl=dv.getUint16(o+28,true),xl=dv.getUint16(o+30,true),cl=dv.getUint16(o+32,true),lo=dv.getUint32(o+42,true),name=new TextDecoder().decode(u.slice(o+46,o+46+nl));
+  if(name==="word/document.xml"){const st=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),raw=u.slice(st,st+cs);
+   const xml=m===0?new TextDecoder().decode(raw):await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+   return xml.replace(/<w:tab\/>/g," ").replace(/<w:br[^>]*\/>/g,"\n").replace(/<\/w:p>/g,"\n").replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
+  o+=46+nl+xl+cl}
+ throw new Error("لم يُعثر على نص في ملف Word: "+file.name)}
+const tfgFileText=f=>/\.docx$/i.test(f.name)?docxText(f):f.text();
+const TFGH=/^(الدرس|المحاضرة|المجلس|الحلقة|اللقاء|الشريط)\s+[^\n]{0,60}$/;
+const tfgName=n=>n.replace(/\.[^.]+$/,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim();
+function tfgClean(t,o){t=String(t||"").replace(/\r/g,"").replace(/ /g," ");
+ if(o.ts){t=t.replace(/^WEBVTT.*$/m,"").split("\n").filter(l=>!/^\s*\d+\s*$/.test(l)&&!/\d{1,2}:\d{2}(:\d{2})?([.,]\d+)?\s*-->/.test(l)).join("\n").replace(/[\[(]?\b\d{1,2}:\d{2}(:\d{2})?\b[\])]?/g,"")}
+ if(o.join){const L=t.split("\n").map(x=>x.trim());const out=[];const H=x=>/^#/.test(x)||o.heads&&TFGH.test(x);L.forEach(l=>{if(!l){out.push("");return}const last=out[out.length-1];if(last&&!/[.!؟?:؛»"]$/.test(last)&&!H(last)&&!H(l))out[out.length-1]=last+" "+l;else out.push(l)});t=out.join("\n")}
+ if(o.heads)t=t.split("\n").map(l=>TFGH.test(l.trim())?"# "+l.trim():l).join("\n");
+ return t.replace(/[ \t]{2,}/g," ").replace(/\n{3,}/g,"\n\n").trim()}
+function tfgToc(pages){const toc=[];pages.forEach((p,i)=>p.split("\n").forEach(l=>{if(/^#\s+/.test(l))toc.push({t:l.replace(/^#\s+/,"").trim(),p:i+1})}));return toc}
+async function tfgBuild(f){const fd=new FormData(f),files=[...f.querySelector("[name=files]").files],o={ts:!!fd.get("ts"),join:!!fd.get("join"),heads:!!fd.get("heads")},size=+fd.get("size")||1800;
+ const parts=[];for(const fl of files)parts.push({name:tfgName(fl.name),text:tfgClean(await tfgFileText(fl),o)});
+ const pasted=String(fd.get("text")||"").trim();if(pasted)parts.push({name:String(fd.get("title")||"").trim()||"تفريغ",text:tfgClean(pasted,o)});
+ if(!parts.length)throw new Error("اختر ملفات التفريغ أو الصق النص");
+ const title=String(fd.get("title")||"").trim(),series=fd.get("mode")==="series"||parts.length===1;
+ if(series&&!title&&parts.length>1)throw new Error("اكتب عنوان السلسلة");
+ return(series?[{title:title||parts[0].name,text:parts.length>1?parts.map(p=>"# "+p.name+"\n"+p.text).join("\n\n"):parts[0].text}]:parts.map((p,i)=>({title:(title?title+" — ":"")+p.name,text:p.text,no:i+1}))).map(r=>{const pages=splitPages(r.text,"auto",size);return Object.assign(r,{pages,toc:tfgToc(pages)})})}
+async function tfgPreview(f){const el=$("#tfgpv");try{const R=await tfgBuild(f);el.innerHTML=`<p><b>${toAr(R.length)} ${R.length>1?"سجلات":"سجل"}</b> سيُحفظ ${R.length>1?"كل منها":""} في «التفريغات» منسوبًا إلى المؤلف المختار:</p>`+R.map(r=>`<div class="bk"><b>${esc(r.title)}</b><span>${toAr(r.pages.length)} صفحة • ${toAr(r.toc.length)} عنوان في الفهرس</span><small class="mut">${esc(r.pages[0].slice(0,220))}…</small></div>`).join("")}catch(e){el.innerHTML=`<p class="note">${esc(e.message)}</p>`}}
+async function addTafrigh(f){const fd=new FormData(f),st=$("#tfgst");try{const R=await tfgBuild(f),col=fd.get("col"),aid=await newAuthor(fd,"aid",col);
+ const base={authorId:aid,topicId:fd.get("tid"),col,type:"book",tags:["tafrigh"].concat(fd.get("furqan")?["furqan:"+fd.get("furqan")]:[]),source:["تفريغ دروس صوتية",fd.get("by")&&"فرّغه: "+String(fd.get("by")).trim(),fd.get("date")&&"أُلقي في "+fd.get("date")].filter(Boolean).join(" — ")};
+ if(fd.get("audio"))base.audio=String(fd.get("audio")).trim();if(fd.get("sharh"))base.sharh=fd.get("sharh");
+ for(const r of R)if(!dupOk(r.title,aid,false))return;
+ const stamp=Date.now().toString(36),metas=R.map((r,i)=>Object.assign({id:"u"+stamp+(R.length>1?"-"+(i+1):""),title:r.title},base,R.length>1?{set:"u"+stamp,setTitle:String(fd.get("title")||"").trim()||r.title,vol:i+1,vols:R.length}:{}));
+ st.textContent="جارٍ الحفظ…";
+ if(GH.on){const files=R.map((r,i)=>{const sh={id:metas[i].id,pages:r.pages,toc:r.toc},s=JSON.stringify(sh);metas[i].n=r.pages.length;metas[i].size=s.length;metas[i].added=today();SH.set(metas[i].id,sh);return{path:"data/books/"+metas[i].id+".json",text:s}});
+  await GH.batch(files,"تفريغات: "+(fd.get("title")||metas[0].title),t=>{st.textContent=t});
+  await GH.editJSON("data/catalog.json",c=>{const ids=new Set(metas.map(m=>m.id));c.books=c.books.filter(b=>!ids.has(b.id)).concat(metas);c.version=Date.now();return c},"فهرس التفريغات: "+(fd.get("title")||metas[0].title),true);
+  CAT.books=CAT.books.filter(b=>!metas.some(m=>m.id===b.id)).concat(metas);merge();renderTicker()}
+ else for(let i=0;i<R.length;i++)await saveItem(metas[i],R[i].pages,R[i].toc);
+ st.textContent="";alert(`حُفظ ${R.length>1?R.length+" دروس":"التفريغ"} في «التفريغات» ✓`);f.reset();$("#tfgpv").innerHTML=""}catch(e){st.textContent="";alert(e.message)}}
 async function addArticle(f){const fd=new FormData(f);try{const text=String(fd.get("text")||"").trim();if(!text)throw new Error("أدخل نص المقال");const aid=await newAuthor(fd,"aid","dawah");if(!dupOk(fd.get("title"),aid,true))return;
  const pages=text.length>7000?splitPages(text,"auto",5000):[text];
  await saveItem({id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col:"dawah",type:"article",date:fd.get("date")||today(),url:String(fd.get("url")||"")},pages,[]);
@@ -1831,6 +1881,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="moreSug")fillSug();
  else if(a==="mkq"){const q=SUG[+el.dataset.i];if(!q)return;setQuote(q);if(parse().p[0]==="qabasat"){draw();$("#qt").scrollIntoView({behavior:"smooth",block:"center"})}else location.hash="#/qabasat"}
  else if(a==="scrup"){const c=cur();if(c)scrAdd(c.b,-1)}
+ else if(a==="tfgpv"){tfgPreview(el.closest("form"))}
  else if(a==="selq"){const s=String(getSelection()).trim(),rb=selRd()||$("#rb");if(s&&rb){const b=B(rb.dataset.id),i=+rb.dataset.p-1;pendingQ={t:s,src:A(b.authorId).name+" — "+b.title+(PL(b,i)?"، "+PL(b,i):""),ref:{b:b.id,p:i+1}};location.hash="#/qabasat"}}
  else if(a==="fav"){const id=parse().p[1];S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):[...S.favs,id];saveS();el.textContent=S.favs.includes(id)?"إزالة من المفضلة":"مفضلة"}
  else if(a==="copyp"){const rb=$("#rb"),b=B(rb.dataset.id),i=+rb.dataset.p-1;try{await navigator.clipboard.writeText(plain(shownText(b,i))+"\n— "+b.title+"، "+A(b.authorId).name+(PL(b,i)?"، "+PL(b,i):"")+"\n"+SITENAME+(siteLink()?"\n"+siteLink(`#/book/${b.id}/${i+1}`):""));el.textContent="تم النسخ"}catch(x){}}
@@ -1858,7 +1909,7 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
    if(nx.length&&confirm("لا نتائج في هذا المجلد. البحث في بقية المجلدات ("+toAr(nx.length)+")؟")){(async()=>{for(const v of nx){toast("جارٍ البحث في "+(v.vol?"ج "+toAr(v.vol):"المقدمة")+"…");let vb;try{vb=await loadBook(v.id)}catch(e){continue}
     for(let x=0;x<vb.pages.length;x++){const t=norm(plain(vb.pages[x]));if(w.every(k2=>t.includes(k2)))return location.hash=`#/book/${v.id}/${x+1}?h=${encodeURIComponent(h)}`}}alert("لا توجد نتائج في مجلدات هذا الكتاب")})();return}}
   alert("لا توجد نتائج في هذا الكتاب")}
- else if(k==="addbook")addBook(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
+ else if(k==="addbook")addBook(f);else if(k==="addtfg")addTafrigh(f);else if(k==="addart")addArticle(f);else if(k==="impsave")impSave(f);
  else if(k==="signin"||k==="signup")authSubmit(f,k);else if(k==="ask")askSubmit(f)});
 const selRd=()=>{const n=getSelection().anchorNode;return n&&(n.nodeType===1?n:n.parentElement).closest(".rd[data-id]")};
 // شريط النص المحدد: يُحفظ آخر تحديد صالح، لأن لمس الزر في بعض متصفحات الجوال (سفاري) يُلغي التحديد قبل وصول اللمسة،
