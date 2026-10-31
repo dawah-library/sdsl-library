@@ -142,6 +142,39 @@ def valid(q):
         return False
     if re.search(r"(في|من) الصفحة|رقم الصفحة|الطبعة|دار النشر", q["q"]):
         return False
+    return quality(q)
+
+
+AR = re.compile(r"[\u0621-\u064A]")
+PRON = re.compile(r"^\s*(هو|هي|هم|هما|ذلك|تلك|هذا|هذه|هؤلاء|وهو|وهي|فهو|فهي|ثم|لذلك|ولذلك|كما|أيضًا|أيضا)\b")
+def quality(q):
+    """فحص ثالث للجودة بعد المدقق: لا سؤال مبتور أو معلّق على ما قبله، ولا بدائل بلا معنى أو مكررة المعنى أو تكشف الجواب."""
+    s, t, a = q["q"].strip(), q["type"], str(q["a"]).strip()
+    w = s.split()
+    if len(w) < 6 or not AR.search(s) or PRON.match(s):
+        return False  # قصير أو يبدأ بضمير/إشارة لا يُعرف مرجعها
+    if t != "cloze" and "……" in s:
+        return False
+    if re.search(r"[،,:]\s*$|\(\s*$|«[^»]*$", s):
+        return False  # عبارة مبتورة
+    if t == "mcq":
+        o = q["opts"]
+        if any(len(x) < 2 or not AR.search(x) or re.search(r"…$|\.\.\.$", x) for x in o):
+            return False  # بديل فارغ أو مقطوع
+        nz = [" ".join(T.norm(x)) for x in o]
+        if len(set(nz)) < 4:
+            return False  # بديلان بمعنى واحد لفظًا
+        if " ".join(T.norm(a)) and " ".join(T.norm(a)) in " ".join(T.norm(s)) and len(T.norm(a)) >= 2:
+            return False  # الجواب منصوص في السؤال نفسه
+        lens = sorted(len(x) for x in o)
+        if lens[-1] > 3.5 * max(8, lens[0]) and len(a) == lens[-1]:
+            return False  # الجواب وحده طويل مفصّل والبدائل قصيرة: يُعرف بطوله
+        if re.search(r"^(كل|جميع) ما (سبق|ذكر)|^لا شيء مما|^(أ|ب) و (ب|ج)", " ".join(o)):
+            return False
+    if t == "tf" and (len(w) < 7 or "؟" in s):
+        return False  # «صح أم خطأ» عبارة خبرية تامة
+    if t == "cloze" and (s.count("……") != 1 or len(s.replace("……", "").split()) < 5):
+        return False
     return True
 
 

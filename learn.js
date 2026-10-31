@@ -229,7 +229,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
     const d = (await getJ(QF(id), true)) || { b: id, qs: [] };
     QD = d;
     h += `<h3>${esc(B(id).title)} — ${toAr(d.qs.length)} سؤالًا (${toAr(d.qs.filter(x => x.ok).length)} معتمد)</h3>
-     <div class="row"><button class="btn p" data-act="qzai" data-b="${esc(id)}" title="سهل ١٥، متوسط ٣٠، متقدم ٥٠ — متنوعة ومراجَعة؛ مع مختصر محرَّر بثلاث درجات">${d.ai ? "إعادة إعداد" : "إعداد"} الاختبار والمختصر المحرَّرين</button> <span id="qzais" class="mut"></span> <button class="btn" data-act="qzdraft" data-b="${esc(id)}">إنشاء مسودة آلية (٣٠ سؤالًا)</button> <button class="btn" data-act="qzadd">سؤال يدوي</button></div>
+     <div class="row"><button class="btn p" data-act="qzai" data-b="${esc(id)}" title="سهل ١٥، متوسط ٣٠، متقدم ٥٠ — متنوعة ومراجَعة؛ مع مختصر محرَّر بثلاث درجات">${d.ai ? "إعادة إعداد" : "إعداد"} الاختبار والمختصر المحرَّرين</button> <span id="qzais" class="mut"></span> <button class="btn" data-act="qzadd">سؤال يدوي</button></div>
      <form data-form="qzsave" data-b="${esc(id)}"><div id="qzlist">${d.qs.map(rowQ).join("")}</div><div class="savebar"><button class="btn p">حفظ الأسئلة</button> <span id="qzst" class="mut"></span></div></form>`;
     return h;
   }
