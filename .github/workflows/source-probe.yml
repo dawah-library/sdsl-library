@@ -1,0 +1,25 @@
+name: استكشاف المصادر
+on:
+  workflow_dispatch:
+    inputs:
+      sites: { description: "روابط مفصولة بمسافة (اختياري)", required: false, default: "" }
+  push:
+    paths: ["tools/source-probe.js"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tools/source-probe.js ${{ github.event.inputs.sites }}
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add tools/sources-probe.md tools/sources-probe.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "استكشاف المصادر: تقرير"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
