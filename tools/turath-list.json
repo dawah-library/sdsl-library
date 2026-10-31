@@ -1535,6 +1535,66 @@
    "authorName": "البهوتي",
    "topic": "t4",
    "batch": "ب5-2026-10-30"
+  },
+  {
+   "id": "tuhfatmawdud",
+   "died": 751,
+   "author": "IbnQayyim",
+   "book": "TuhfatMawdud|Tuhfa",
+   "title": "تحفة المودود بأحكام المولود",
+   "authorName": "ابن قيم الجوزية",
+   "topic": "t8",
+   "batch": "tala"
+  },
+  {
+   "id": "adabshariyya",
+   "died": 763,
+   "author": "IbnMuflih",
+   "book": "AdabSharciyya|Adab",
+   "title": "الآداب الشرعية",
+   "authorName": "ابن مفلح",
+   "topic": "t11",
+   "batch": "tala"
+  },
+  {
+   "id": "adabdunyadin",
+   "died": 450,
+   "author": "Mawardi",
+   "book": "AdabDunya",
+   "title": "أدب الدنيا والدين",
+   "authorName": "الماوردي",
+   "topic": "t11",
+   "batch": "tala"
+  },
+  {
+   "id": "tadhkirasami",
+   "died": 733,
+   "author": "IbnJamaca|IbnJamaa",
+   "book": "TadhkiratSamic|Tadhkira",
+   "title": "تذكرة السامع والمتكلم في أدب العالم والمتعلم",
+   "authorName": "ابن جماعة",
+   "topic": "t11",
+   "batch": "tala"
+  },
+  {
+   "id": "makarimakhlaq",
+   "died": 281,
+   "author": "IbnAbiDunya",
+   "book": "MakarimAkhlaq",
+   "title": "مكارم الأخلاق",
+   "authorName": "ابن أبي الدنيا",
+   "topic": "t11",
+   "batch": "tala"
+  },
+  {
+   "id": "amalyawm",
+   "died": 364,
+   "author": "IbnSunni",
+   "book": "CamalYawm|Camal",
+   "title": "عمل اليوم والليلة",
+   "authorName": "ابن السني",
+   "topic": "t11",
+   "batch": "tala"
   }
  ]
 }

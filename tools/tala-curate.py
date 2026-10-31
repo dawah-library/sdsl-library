@@ -34,15 +34,15 @@ def text_of(x):
 
 POOL = {  # (موضوعات، أقصى طول بالحروف، عدد)
     "t1": (["at6", "st9", "at15"], 1800, 12),
-    "t2": (["at6", "at15", "st9", "at5"], 3000, 18),
-    "t3": (["at6", "at5", "at15", "at9", "st55", "st9"], 5000, 24),
-    "t4": (["at9", "at5", "at7", "at15", "at6", "st55", "at1"], 8000, 30),
+    "t2": (["st7", "at6", "at15", "st9", "at5"], 3500, 20),
+    "t3": (["st7", "at6", "at5", "at15", "at9", "st55", "st9"], 6000, 28),
+    "t4": (["st7", "at9", "at5", "at7", "at15", "at6", "st55", "at1"], 9000, 32),
 }
 BOOKS = {  # (الكتاب، من، إلى، عنوان المستوى) — مقاطع قصيرة متدرجة
     "t1": [("arbain", 1, 81, 6), ("qisasanbiya", 1, 60, 4)],
-    "t2": [("arbain", 1, 81, 5), ("fusul", 1, 68, 5), ("qisasanbiya", 1, 120, 6)],
-    "t3": [("p92d51e73", 1, 200, 8), ("aclamsalaf", 1, 222, 8), ("lumca", 1, 39, 6), ("ajurrumiyya", 1, 32, 6), ("tuhfatatfal", 1, 30, 5), ("usulthalatha", 1, 40, 5)],
-    "t4": [("uluwhimma", 1, 200, 10), ("wasitiyya", 1, 72, 8), ("tawhid", 1, 145, 10), ("waraqat", 1, 25, 6), ("p4289f23d", 1, 150, 10), ("ajurrihamala", 1, 123, 10), ("shamail", 1, 120, 8)],
+    "t2": [("arbain", 1, 81, 5), ("fusul", 1, 68, 5), ("qisasanbiya", 1, 120, 6), ("amalyawm", 1, 60, 4), ("makarimakhlaq", 1, 60, 4)],
+    "t3": [("p92d51e73", 1, 200, 8), ("aclamsalaf", 1, 222, 8), ("lumca", 1, 39, 6), ("ajurrumiyya", 1, 32, 6), ("tuhfatatfal", 1, 30, 5), ("usulthalatha", 1, 40, 5), ("adabdunyadin", 1, 120, 6)],
+    "t4": [("uluwhimma", 1, 200, 10), ("wasitiyya", 1, 72, 8), ("tawhid", 1, 145, 10), ("waraqat", 1, 25, 6), ("p4289f23d", 1, 150, 10), ("ajurrihamala", 1, 123, 10), ("shamail", 1, 120, 8), ("tadhkirasami", 1, 150, 8), ("adabshariyya", 1, 150, 8)],
 }
 LV = {"t1": 4, "t2": 4, "t3": 5, "t4": 6}  # عناصر في كل مستوى
 
@@ -82,7 +82,16 @@ def main():
         seq = seq[: LV[k] * 12]
         plan["tracks"][k] = [seq[i:i + LV[k]] for i in range(0, len(seq), LV[k])]
     # دليل الوالدين: مقالات «أطفالنا» و«التربية والسلوك»
-    plan["parents"] = [x["id"] for x in sorted([x for x in idx if x["tp"] in ("at10", "st55") and not x.get("h") and not BAD.search(x["t"])], key=lambda x: x.get("d") or "")][-40:]
+    # «مقالات للطلائع»: ما كُتب للفتيان أنفسهم — قسم «فتية الإسلام»، وكتّاب الناشئة (مصطفى دياب، محمود عمارة…) — مرتبة بالمرحلة بحسب الطول
+    KA = set(tala.get("kidAuthors") or ["w5", "w107"])
+    kid = [x for x in idx if not x.get("h") and x["id"] not in ban and (x["tp"] in ("st7",) or (x["a"] in KA and x["tp"] in ("st7", "at9", "at10", "at5", "at7", "at15"))) and not BAD.search(x["t"])]
+    reads = {"t2": [], "t3": [], "t4": []}
+    for x in kid:
+        n = len(text_of(x))
+        if x["tp"] == "at10": continue  # «أطفالنا» للوالدين
+        reads["t2" if n <= 3500 else "t3" if n <= 7000 else "t4"].append(x["id"])
+    plan["reads"] = reads
+    plan["parents"] = [x["id"] for x in sorted([x for x in idx if (x["tp"] in ("at10", "st55") or (x["a"] in KA and x["tp"] == "at10")) and not x.get("h") and not BAD.search(x["t"])], key=lambda x: x.get("d") or "")][-40:]
     json.dump(plan, open(os.path.join(D, "tala-plan.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     for k, lv in plan["tracks"].items(): print(k, len(lv), "مستويات،", sum(len(l) for l in lv), "عنصرًا")
     print("دليل الوالدين:", len(plan["parents"]))

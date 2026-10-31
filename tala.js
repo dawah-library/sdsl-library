@@ -17,7 +17,7 @@ const TALA = (() => {
   async function show(q, sub) {
     await load();
     if (sub === "games" && q.g) return game(q.g, q);
-    if (sub === "track") return track(q.k);
+    if (sub === "track") { PLc = await plan(); return track(q.k); }
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
     if (sub === "parents") return parents();
     view_(head("عالم المعرفة والمرح للأطفال") + `<h2 class="talat">مرحبًا بك في الطلائع</h2><p>تعلّم القرآن والآداب والمعرفة، والعب ألعابًا مفيدة، واجمع النجوم!</p>
@@ -35,6 +35,7 @@ const TALA = (() => {
     view_(head(t[1] + " — " + t[2], true) + `<h2 class="talat">${esc(t[1])}</h2><p class="mut">${esc(t[2])}. ويمكن اختيار المستوى الأنسب لمهارة الطفل لا لعمره وحده.</p>
      <p><a class="btn p" href="#/talaea/ladder?k=${t[0]}">📚 سُلّم القراءة لهذه المرحلة</a></p>
      <h3>الألعاب</h3><div class="talag">${GAMES.map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
+     ${(() => { const r = ((PLc && PLc.reads) || {})[t[0]] || []; return r.length ? `<h3>📰 مقالات للطلائع</h3><p class="mut">مقالات كُتبت للفتيان أنفسهم: «فتية الإسلام» وكتّاب الناشئة.</p><div class="list">${r.map(id => B(id)).filter(Boolean).slice(0, 30).map(bookCard).join("")}</div>` : ""; })()}
      <h3>كتب وقصص المسار</h3>${bs.map(bookCard).join("") || '<div class="note">لم تُضف كتب لهذا المسار بعد.</div>'}</div>`);
   }
   // ---------- الألعاب ----------
@@ -120,7 +121,7 @@ const TALA = (() => {
     try { await GH.editJSON(P, o => ({ v: 1, tracks, facts, books, planHide: String(fd.get("hide") || "").split(/\s+/).filter(Boolean) }), "الطلائع: المسارات والأسئلة (" + facts.length + ")"); stt.textContent = "حُفظ ✓"; D = null; } catch (err) { stt.textContent = "تعذر الحفظ: " + err.message; }
   }, true);
   // ---------- سُلّم القراءة وملفات الأطفال وركن الوالدين ----------
-  let PL = null;
+  let PL = null, PLc = null;
   const plan = async () => PL || (PL = await fetch("data/tala-plan.json").then(r => r.ok ? r.json() : { tracks: {} }).catch(() => ({ tracks: {} })));
   const kids = () => (st().kids = st().kids || []);
   const kid = () => kids().find(x => x.id === st().cur) || kids()[0] || null;
