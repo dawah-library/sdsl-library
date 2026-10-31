@@ -57,7 +57,7 @@ class OidcUploader:
 
 
 def client():
-    if not (ENV["R2_ACCESS_KEY_ID"] and ENV["R2_SECRET_ACCESS_KEY"]):
+    if not (ENV["R2_ACCESS_KEY_ID"] and ENV["R2_SECRET_ACCESS_KEY"] and ENV["R2_ACCOUNT_ID"]):  # بلا رقم الحساب: رفع عبر الموقع برمز OIDC
         return OidcUploader()
     import boto3
     from botocore.config import Config
