@@ -44,7 +44,18 @@ const htmlText = h => cssOut(decode(String(h).replace(/<!--[\s\S]*?-->/g, " ").r
 const cssOut = t => t.split("\n").map(l => l.replace(/[\w-]+\s*:\s*[^;:\u0600-\u06FF]{1,60};/g, " ").replace(/\s+/g, " ").trim()).filter(l => (l.match(/[\u0621-\u064A]/g) || []).length > 3 && !/mso-|font-family|text-align|line-height/i.test(l)).join("\n");
 const tag = (x, n) => { const m = x.match(new RegExp(`<${n}[^>]*>([\\s\\S]*?)<\/${n}>`, "i")); return m ? m[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim() : ""; };
 // الاكتشاف الآلي لطريقة الجلب من رابط الموقع: واجهة ووردبريس ← خلاصة RSS ← خريطة الموقع ← روابط الصفحات المحددة (lists/linkRx) ← روابط الرئيسية
+// فيسبوك: واجهة Graph الرسمية برمز من الصفحة (السر FB_TOKENS: {"معرّف المصدر": "الرمز"} أو FB_PAGE_TOKEN عامًّا)؛ لا زحف على فيسبوك
+async function fbDiscover(s, ctx, L) {
+  let toks = {}; try { toks = JSON.parse(process.env.FB_TOKENS || "{}"); } catch (e) { }
+  const tok = toks[s.id] || toks[s.fb] || process.env.FB_PAGE_TOKEN, out = []; out.mode = "fb";
+  if (!tok) { out.mode = "fb-notoken"; L("لا رمز Graph لهذا الحساب؛ تُضاف منشوراته يدويًّا من الإدارة"); return out; }
+  try { const j = JSON.parse(await get("https://graph.facebook.com/v19.0/" + encodeURIComponent(s.fb) + "/posts?fields=id,message,created_time,permalink_url&limit=" + (s.perRun || 25) + "&access_token=" + encodeURIComponent(tok), 1));
+    (j.data || []).filter(p => p.message).forEach(p => { const msg = String(p.message); out.push({ id: "p" + String(p.id).replace(/\D/g, "").slice(-14), u: p.permalink_url || "https://www.facebook.com/" + p.id, title: msg.split("\n")[0].slice(0, 90), date: String(p.created_time || "").slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); }); }
+  catch (e) { ctx.errors.push({ src: s.id, url: "graph.facebook.com/" + s.fb, err: e.message }); L("تعذر Graph: " + e.message); }
+  return out;
+}
 async function discover(s, ctx, L) {
+  if (s.type === "facebook") return fbDiscover(s, ctx, L);
   const base = (s.base || "").replace(/\/$/, ""), out = []; out.mode = "";
   const fail = (u, e) => { ctx.errors.push({ src: s.id, url: u, err: e.message }); L(`تعذر ${u}: ${e.message}`); if (/HTTP 403/.test(e.message)) out.err = 1; };
   if (base && s.mode !== "html") {

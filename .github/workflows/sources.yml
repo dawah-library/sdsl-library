@@ -35,6 +35,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node tools/source-import.js
+        env:
+          FB_TOKENS: ${{ secrets.FB_TOKENS }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
       # المصادر الإثرائية المفعّل نشرها آليًّا (auto): ملخص ورابط، بلا نص كامل
       - run: python3 tools/ithra-publish.py
       - run: |

@@ -432,6 +432,14 @@ const MG = (() => {
        <span class="mut">${x.state && x.state.lastRun ? "آخر مراجعة " + new Date(x.state.lastRun).toLocaleString("ar-EG") + (x.state.last ? ` — جديد ${toAr(x.state.last.added)}، متخطى ${toAr(x.state.last.skipped)}، أخطاء ${toAr(x.state.last.errs)}` : "") : "لم يُراجَع بعد"}${x.note ? " • " + esc(x.note) : ""}</span>
        <input name="base" value="${esc(x.base || "")}" placeholder="رابط الموقع (يُكتشف آليًا: ووردبريس، RSS، خريطة الموقع، الرئيسية)"><input name="lists" value="${esc((x.lists || []).join(" "))}" placeholder="روابط قوائم مقالات إضافية (اختياري)">${x.state && x.state.mode ? `<span class="mut">طريقة الجلب: ${esc(x.state.mode)}</span>` : ""}</span>
        <span><label class="inl"><input type="checkbox" name="on"${x.on !== false && ((x.lists || []).length || x.base) ? " checked" : ""}${x.id === "salafvoice" ? " disabled" : ""}> مفعّل</label><button class="btn s">حفظ</button></span></form>`).join("")}</div>
+     <h3>حسابات فيسبوك</h3><p class="mut">اختر الصفحات والحسابات التي تُستجلب منشوراتها، فتدخل هذه القائمة للمراجعة قبل النشر. يجري الجلب عبر واجهة فيسبوك الرسمية (Graph API) برمز من الصفحة يُحفظ سرًّا في GitHub باسم <code>FB_TOKENS</code> ({"معرّف الحساب": "الرمز"})، ولا يُستعمل الزحف على فيسبوك. الحسابات الشخصية والصفحات التي لم تمنح رمزًا تُضاف منشوراتها يدويًّا من النموذج الثاني.</p>
+     <div class="mglist">${(SD.sources || []).map((x, i) => [x, i]).filter(([x]) => x.type === "facebook").map(([x, i]) => `<form class="mgrow" data-form="mgfb" data-i="${i}"><span class="mgt"><b>${esc(x.name)}</b> <em class="tag">${esc(({ page: "صفحة", person: "شخصية", group: "مجموعة" })[x.kind] || "صفحة")}</em> <em class="tag">${esc(COL[x.col] || x.col)}</em>${x.lic === "link" ? ' <em class="tag">ملخص ورابط</em>' : ""}<br><span class="mut">${esc(x.fb)}${x.author ? " • المؤلف: " + esc(x.author) : ""} • ${x.state && x.state.lastRun ? "آخر مراجعة " + new Date(x.state.lastRun).toLocaleString("ar-EG") + (x.state.last ? " — جديد " + toAr(x.state.last.added) : "") : "لم يُراجَع بعد"}${x.state && x.state.mode === "fb-notoken" ? " • ⚠️ لا رمز لهذا الحساب بعد" : ""}</span></span>
+       <span><label class="inl"><input type="checkbox" name="on"${x.on !== false ? " checked" : ""}> مفعّل</label><button class="btn s" name="go" value="save">حفظ</button><button class="btn s" name="go" value="del">إزالة الحساب</button></span></form>`).join("") || '<p class="mut">لا حسابات بعد.</p>'}</div>
+     <form class="card" data-form="mgfbadd"><b>إضافة حساب فيسبوك</b><div class="row"><div><label>الاسم</label><input name="name" required maxlength="80" placeholder="مثال: صفحة الشيخ فلان"></div><div><label>رابط الصفحة أو اسم المستخدم أو المعرّف</label><input name="fb" required maxlength="200" dir="ltr" placeholder="https://www.facebook.com/…"></div></div>
+      <div class="row"><div><label>النوع</label><select name="kind"><option value="page">صفحة</option><option value="person">حساب شخصي</option><option value="group">مجموعة</option></select></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="ithra">${esc(COL.ithra)}</option></select></div><div><label>النشر</label><select name="lic"><option value="">النص كاملًا (بإذن صاحب الحساب)</option><option value="link">ملخص ورابط</option></select></div><div><label>المؤلف في المكتبة (اختياري)</label><input name="author" maxlength="80" list="mgauthors"></div></div>
+      <datalist id="mgauthors">${lib.authors.slice(0, 600).map(a => `<option value="${esc(a.name)}">`).join("")}</datalist><button class="btn p">إضافة الحساب</button></form>
+     <form class="card" data-form="mgfbpost"><b>إضافة منشور من فيسبوك يدويًّا</b><div class="row"><div><label>الحساب</label><select name="src">${(SD.sources || []).filter(x => x.type === "facebook").map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("") || '<option value="">— أضف حسابًا أولًا —</option>'}</select></div><div><label>رابط المنشور</label><input name="u" required dir="ltr" placeholder="https://www.facebook.com/…"></div><div><label>التاريخ</label><input name="d" type="date" value="${today()}"></div></div>
+      <label>العنوان (اختياري؛ الافتراضي أول سطر)</label><input name="t" maxlength="160"><label>نص المنشور</label><textarea name="text" required rows="6"></textarea><button class="btn p">إضافة إلى المراجعة</button></form>
      ${(QD.errors || []).length ? `<details><summary>أخطاء الاستجلاب (${toAr(QD.errors.length)})</summary><pre class="mgreport">${QD.errors.slice(-60).map(e => esc(e.src + " — " + e.url + " — " + e.err)).join("\n")}</pre></details>` : ""}`;
   }
   async function impDecide(f, go) {
@@ -458,6 +466,25 @@ const MG = (() => {
   async function srcSave(f) {
     const i = +f.dataset.i, lists = f.lists.value.split(/\s+/).filter(u => /^https:\/\//.test(u)), base = /^https:\/\//.test(f.base.value.trim()) ? f.base.value.trim() : "", on = f.on.checked && (lists.length > 0 || !!base);
     try { await GH.editJSON(SP, o => { const x = o.sources[i]; x.lists = lists; x.base = base; x.on = on; return o; }, "مصادر الاستجلاب: " + (SD.sources[i] || {}).name, false); toast(on ? "حُفظ وفُعّل، ويبدأ الاستجلاب خلال دقائق." : "حُفظ."); route(); } catch (e) { alert(e.message); }
+  }
+
+  // ===== حسابات فيسبوك (data/sources.json: type=facebook) يجلبها tools/source-import.js عبر Graph API برمز FB_TOKENS =====
+  const fbId = v => { v = String(v || "").trim().replace(/\/+$/, ""); const m = v.match(/facebook\.com\/(?:profile\.php\?id=(\d+)|groups\/([^/?#]+)|([^/?#]+))/i); return m ? (m[1] || m[2] || m[3]) : v.replace(/^@/, ""); };
+  async function fbAdd(f) {
+    const fb = fbId(f.fb.value), name = f.name.value.trim(); if (!fb || !name) return toast("اكتب الاسم والرابط.");
+    const id = "fb-" + fb.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 30) || "fb-" + Date.now().toString(36);
+    try { await GH.editJSON(SP, o => { o.sources = o.sources || []; if (!o.sources.some(x => x.id === id)) o.sources.push({ id, type: "facebook", name, fb, kind: f.kind.value, col: f.col.value, lic: f.lic.value, author: f.author.value.trim(), on: true, minChars: 300, perRun: 25, delayMs: 1000 }); return o; }, "حساب فيسبوك للاستجلاب: " + name, false); toast("أُضيف الحساب؛ يُراجَع مع الاستجلاب الدوري."); route(); } catch (e) { alert(e.message); }
+  }
+  async function fbEdit(f, go) {
+    const i = +f.dataset.i, x = SD.sources[i]; if (!x) return;
+    if (go === "del" && !confirm("إزالة الحساب من الاستجلاب؟ (لا تُحذف المواد المنشورة منه)")) return;
+    try { await GH.editJSON(SP, o => { const k = o.sources.findIndex(y => y.id === x.id); if (k >= 0) { if (go === "del") o.sources.splice(k, 1); else o.sources[k].on = f.on.checked; } return o; }, (go === "del" ? "إزالة حساب فيسبوك: " : "حساب فيسبوك: ") + x.name, false); toast("حُفظ."); route(); } catch (e) { alert(e.message); }
+  }
+  async function fbPost(f) {
+    const s = (SD.sources || []).find(x => x.id === f.src.value); if (!s) return toast("أضف الحساب أولًا.");
+    const text = f.text.value.trim(), u = f.u.value.trim(); if (!/^https:\/\//.test(u) || text.length < 40) return toast("اكتب رابط المنشور ونصه.");
+    const t = f.t.value.trim() || text.split("\n")[0].slice(0, 90);
+    try { await GH.editJSON(QP, o => { o = o || { items: [] }; o.items = o.items || []; o.items.push({ id: s.id + "m" + Date.now().toString(36), src: s.id, srcName: s.name, col: s.col || "dawah", u, t, author: s.author || "", d: f.d.value || today(), text, st: "pending", at: new Date().toISOString(), lic: s.lic || "" }); return o; }, "منشور فيسبوك للمراجعة: " + t, true); toast("أُضيف إلى قائمة المراجعة."); route(); } catch (e) { alert(e.message); }
   }
 
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
@@ -500,6 +527,9 @@ const MG = (() => {
     else if (f.dataset.form === "mgretry") retry(f);
     else if (f.dataset.form === "mgimp") impDecide(f, (e.submitter && e.submitter.value) || "ok");
     else if (f.dataset.form === "mgsrc") srcSave(f);
+    else if (f.dataset.form === "mgfbadd") fbAdd(f);
+    else if (f.dataset.form === "mgfb") fbEdit(f, (e.submitter && e.submitter.value) || "save");
+    else if (f.dataset.form === "mgfbpost") fbPost(f);
   }, true);
 
   return {
