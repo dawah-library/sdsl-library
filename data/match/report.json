@@ -1,81 +1,314 @@
 {
- "at": "2026-10-31 07:10",
+ "at": "2026-10-31 07:12",
  "books": {
   "p6c9b38fc": {
    "t": "لماذا انتميت إلى الدعوة السلفية",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 99,
+   "pdfPages": 99,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.578,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [],
+   "fixed": []
   },
   "p25133794": {
    "t": "المنة شرح اعتقاد أهل السنة",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 472,
+   "pdfPages": 472,
+   "offset": 0,
+   "sample": 26,
+   "avg": 0.538,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [],
+   "fixed": []
   },
   "pf2a3a079": {
    "t": "فقه الأمر بالمعروف والنهي عن المنكر",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 168,
+   "pdfPages": 168,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.568,
+   "shift": 0,
+   "shiftShare": 1.0,
+   "weak": [],
+   "fixed": []
   },
   "p3b398246": {
    "t": "مواقف حزب النور  وقائع وكواليس",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 136,
+   "pdfPages": 136,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.871,
+   "shift": 0,
+   "shiftShare": 1.0,
+   "weak": [],
+   "fixed": []
   },
   "p2d64fddf": {
    "t": "الدعوة السلفية والعمل السياسي",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 66,
+   "pdfPages": 66,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.717,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [
+    0
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p60fd2fc2": {
    "t": "تزكية النفوس",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 160,
+   "pdfPages": 160,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.788,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [
+    0
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "pc64ccc07": {
    "t": "الجامع لأحكام الصيام وأعمال شهر رمضان",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 344,
+   "pdfPages": 344,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.146,
+   "shift": 0,
+   "shiftShare": 0.08,
+   "weak": [
+    16,
+    30,
+    44,
+    58,
+    72,
+    86,
+    114,
+    128,
+    142,
+    184,
+    198,
+    212,
+    226,
+    240,
+    254,
+    268,
+    282,
+    296,
+    310,
+    324,
+    338
+   ],
+   "fixed": [
+    "21 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "pd0e9a575": {
    "t": "أوقف الشمس",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 221,
+   "pdfPages": 221,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.626,
+   "shift": 0,
+   "shiftShare": 1.0,
+   "weak": [],
+   "fixed": []
   },
   "pa481e050": {
    "t": "أصول بلا أصول",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 311,
+   "pdfPages": 311,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.795,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [
+    0
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p26b6ca3f": {
    "t": "علم التلاوة",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 112,
+   "pdfPages": 112,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.554,
+   "shift": 0,
+   "shiftShare": 0.83,
+   "weak": [
+    0,
+    38,
+    90
+   ],
+   "fixed": [
+    "3 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p3f8e091b": {
    "t": "عقيدة أهل السنة والجماعة في مسائل الإيمان والكفر",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 160,
+   "pdfPages": 160,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.659,
+   "shift": 0,
+   "shiftShare": 0.92,
+   "weak": [
+    0
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p92d51e73": {
    "t": "رحلة السيرة",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 746,
+   "pdfPages": 746,
+   "offset": 0,
+   "sample": 26,
+   "avg": 0.682,
+   "shift": 0,
+   "shiftShare": 0.88,
+   "weak": [
+    745
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p1f54e4fb": {
    "t": "الإلحاد للمبتدئين",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 143,
+   "pdfPages": 143,
+   "offset": 0,
+   "sample": 25,
+   "avg": 0.613,
+   "shift": 0,
+   "shiftShare": 0.68,
+   "weak": [
+    0,
+    27,
+    52,
+    82,
+    107
+   ],
+   "fixed": [
+    "5 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p4289f23d": {
    "t": "وقفات تربوية مع السيرة النبوية",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 405,
+   "pdfPages": 405,
+   "offset": 0,
+   "sample": 22,
+   "avg": 0.765,
+   "shift": 0,
+   "shiftShare": 1.0,
+   "weak": [],
+   "fixed": []
   },
   "p51d75bb3": {
    "t": "تحصيل الزاد لتحقيق الجهاد",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 236,
+   "pdfPages": 236,
+   "offset": 0,
+   "sample": 26,
+   "avg": 0.704,
+   "shift": 0,
+   "shiftShare": 0.92,
+   "weak": [
+    0,
+    2
+   ],
+   "fixed": [
+    "2 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p472490cc": {
    "t": "كيف تُنال السعادة الحقيقية",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 192,
+   "pdfPages": 192,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.678,
+   "shift": 0,
+   "shiftShare": 0.92,
+   "weak": [
+    0,
+    186
+   ],
+   "fixed": [
+    "2 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "paee5db9e": {
    "t": "وعاشروهن بالمعروف",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 243,
+   "pdfPages": 243,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.73,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [
+    0
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "p87e82f12": {
    "t": "منهج ابن تيمية التجديدي",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 240,
+   "pdfPages": 240,
+   "offset": 0,
+   "sample": 24,
+   "avg": 0.776,
+   "shift": 0,
+   "shiftShare": 0.96,
+   "weak": [
+    2
+   ],
+   "fixed": [
+    "1 صفحة إلى إعادة القراءة على الصورة"
+   ]
   },
   "pdbfbb888": {
    "t": "الكواشف المضية عن لآلي رسالة العبودية",
-   "err": "HTTP Error 403: Forbidden"
+   "textPages": 176,
+   "pdfPages": 176,
+   "offset": 0,
+   "sample": 26,
+   "avg": 0.669,
+   "shift": 0,
+   "shiftShare": 0.92,
+   "weak": [
+    0,
+    2
+   ],
+   "fixed": [
+    "2 صفحة إلى إعادة القراءة على الصورة"
+   ]
   }
  }
 }
