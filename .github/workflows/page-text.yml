@@ -1,0 +1,24 @@
+name: جلب نص صفحة
+on:
+  workflow_dispatch:
+    inputs:
+      url: { description: "الرابط", required: true }
+      name: { description: "اسم الملف", required: true, default: "page" }
+permissions:
+  contents: write
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tools/page-text.js "${{ github.event.inputs.url }}" "${{ github.event.inputs.name }}"
+      - run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add tools/pages
+          git diff --cached --quiet && exit 0
+          git commit -qm "جلب نص صفحة: ${{ github.event.inputs.name }}"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
