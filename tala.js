@@ -12,7 +12,7 @@ const TALA = (() => {
   const star = n => { st().stars += n; saveS(); const el = $("#tstars"); if (el) el.textContent = toAr(st().stars); };
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
-  const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
+  const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["adhkar", "أذكار المسلم", "اختر الذكر المناسب لكل موقف من يومك", "🤲"], ["quiz", "مسابقة المعرفة", "أسئلة في العقيدة والسيرة والقرآن تناسب مرحلتك", "🏆"], ["ws", "البحث عن الكلمات", "ابحث عن كلمات مخبأة في شبكة الحروف", "🔍"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
   const head = (t, back) => `<div class="tala"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
   async function show(q, sub) {
     await load();
@@ -34,7 +34,8 @@ const TALA = (() => {
     const t = D.tracks.find(x => x[0] === k) || D.tracks[0], bs = kidBooks(t[0]);
     view_(head(t[1] + " — " + t[2], true) + `<h2 class="talat">${esc(t[1])}</h2><p class="mut">${esc(t[2])}. ويمكن اختيار المستوى الأنسب لمهارة الطفل لا لعمره وحده.</p>
      <p><a class="btn p" href="#/talaea/ladder?k=${t[0]}">📚 سُلّم القراءة لهذه المرحلة</a></p>
-     <h3>الألعاب</h3><div class="talag">${GAMES.map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
+     ${stageCard(t[0])}
+     <h3>🎮 ألعاب تناسب هذه المرحلة</h3><div class="talag">${gamesFor(t[0]).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
      ${(() => { const r = ((PLc && PLc.reads) || {})[t[0]] || []; return r.length ? `<h3>📰 مقالات للطلائع</h3><p class="mut">مقالات كُتبت للفتيان أنفسهم: «فتية الإسلام» وكتّاب الناشئة.</p><div class="list">${r.map(id => B(id)).filter(Boolean).slice(0, 30).map(bookCard).join("")}</div>` : ""; })()}
      <h3>كتب وقصص المسار</h3>${bs.map(bookCard).join("") || '<div class="note">لم تُضف كتب لهذا المسار بعد.</div>'}</div>`);
   }
@@ -47,11 +48,77 @@ const TALA = (() => {
       return g === "ayah" ? ayahRound(s, 0, 0) : orderRound(s);
     }
     if (g === "tf") { const fs = shuffle(D.facts || []).slice(0, 10); if (!fs.length) return view_(head("صح أم خطأ؟", true) + '<div class="note">تُضاف الأسئلة قريبًا.</div></div>'); G = { fs, i: 0, s: 0 }; return tfRound(); }
-    if (g === "memory") return memory();
+    const k = q.k || (kid() || {}).track || "t2";
+    if (g === "adhkar") { const n = k === "t1" ? 6 : 10; G = { list: shuffle(ADH).slice(0, n), i: 0, s: 0, n: k === "t1" ? 2 : 3 }; return adhkar(k); }
+    if (g === "quiz") { G = { list: shuffle(QZ[k] || QZ.t2), i: 0, s: 0 }; return quiz(k); }
+    if (g === "ws") return wsNew(k === "t1" ? "t2" : k);
+    if (g === "memory") return memory(k);
     if (g === "harakat") { G = { i: 0, s: 0 }; return harakat(); }
     if (g === "word") { const Qs = await quran(); const ws = []; Qs.filter(x => x.n >= 93).forEach(x => x.ayat.forEach(a => String(a).split(/\s+/).forEach(w => { const b = w.replace(/[^\u0621-\u064A]/g, ""); if (b.length >= 3 && b.length <= 6 && !/[ٱۜ-ۭ]/.test(w)) ws.push([w, b]); })));
       G = { ws: shuffle(ws).slice(0, 10), i: 0, s: 0 }; return wordRound(); }
     location.hash = "#/talaea";
+  }
+
+  // ---------- ملف كل مرحلة عمرية: المهارات المستهدفة، والأنشطة الأسبوعية، والألعاب المناسبة بصعوبتها، والكتب ----------
+  // الألعاب على أنماط مواقع الألعاب التعليمية الكبرى (المطابقة، البحث عن الكلمات، المسابقات، الترتيب، الذاكرة) بمحتوى شرعي موثق.
+  const STG = {
+    t1: { g: ["harakat", "memory", "adhkar", "ayah", "quiz"], lv: 1,
+      sk: [["إيماني", "معرفة الله الخالق وحبه، وأركان الإسلام بأسمائها"], ["قرآني", "حفظ قصار السور (الفاتحة والإخلاص والمعوذتين) بالتلقين"], ["لغوي", "تمييز الحروف والحركات الثلاث"], ["أخلاقي", "السلام والصدق وشكر النعمة وطاعة الوالدين"], ["حياتي", "أذكار الطعام والنوم والخلاء، والنظافة"]],
+      act: [["📖", "سورة الأسبوع", "يحفظ مع والده سورة قصيرة، ويسمّعها يوم الجمعة"], ["🍽️", "ذكر الطعام", "يقول «بسم الله» قبل الأكل و«الحمد لله» بعده كل يوم"], ["🌙", "قصة نبي قبل النوم", "يقرأ الوالد قصة من «قصص الأنبياء» ويسأل: ماذا تعلمنا؟"], ["🎨", "ارسم ما تعلمت", "يرسم مشهدًا من القصة (بلا ذوات أرواح)"], ["🤝", "أفشِ السلام", "يلقي السلام على أهل البيت عند الدخول"], ["🧹", "يد المساعدة", "يرتب ألعابه وغرفته مرة يوميًا"]] },
+    t2: { g: ["word", "ws", "ayah", "order", "adhkar", "tf", "quiz", "memory"], lv: 2,
+      sk: [["إيماني", "أركان الإيمان الستة، ومحبة النبي ﷺ"], ["قرآني", "حفظ جزء عمّ متدرجًا، وفهم معاني الكلمات"], ["لغوي", "القراءة الجهرية الصحيحة والإملاء"], ["أخلاقي", "الأمانة والرحمة وبر الوالدين"], ["معرفي", "قصص الأنبياء والسيرة النبوية الميسرة"], ["حياتي", "الصلاة في وقتها، والوضوء الصحيح"]],
+      act: [["📖", "خمس آيات", "يحفظ خمس آيات من جزء عمّ ويكتب كلمة جديدة تعلّمها"], ["⏰", "صلاتي في وقتها", "يحافظ على الصلوات الخمس في أوقاتها أسبوعًا كاملًا"], ["📚", "عشر دقائق قراءة", "يقرأ يوميًا من سُلّم القراءة"], ["✍️", "جملة جميلة", "يكتب جملة يصف بها نعمة من نعم الله"], ["💝", "صدقة صغيرة", "يتصدق من مصروفه ولو بالقليل"], ["🏠", "برّ اليوم", "يخدم والديه بعمل يختاره كل يوم"]] },
+    t3: { g: ["ws", "order", "ayah", "tf", "quiz", "word"], lv: 3,
+      sk: [["إيماني", "التوحيد وأقسامه بعبارة ميسرة (الأصول الثلاثة)"], ["قرآني", "التجويد العملي (تحفة الأطفال) وتدبر القصار"], ["لغوي", "مبادئ النحو (الآجرومية) والإعراب"], ["أخلاقي", "الحياء والصبر وحفظ اللسان"], ["معرفي", "تراجم الصحابة والسلف، والسيرة"], ["حياتي", "تنظيم الوقت والرياضة والقراءة الحرة"]],
+      act: [["📜", "حديث الأسبوع", "يحفظ حديثًا من الأربعين النووية ويشرحه بأسلوبه"], ["🧑‍🎓", "صحابي الأسبوع", "يقرأ ترجمة صحابي ويلخصها في خمسة أسطر"], ["📚", "عشرون دقيقة", "يقرأ يوميًا من كتب مرحلته"], ["🔤", "أعرب جملة", "يعرب جملة قصيرة من القرآن أو الحديث بعد درس الآجرومية"], ["🤲", "مشروع خير", "يشارك في عمل خيري مع الأسرة أو المسجد"], ["⚽", "قوة المؤمن", "يمارس رياضة ثلاث مرات في الأسبوع"]] },
+    t4: { g: ["quiz", "tf", "order", "ws", "ayah"], lv: 4,
+      sk: [["إيماني", "العقيدة الصحيحة بأدلتها (الواسطية وكتاب التوحيد)"], ["قرآني", "ورد يومي وتفسير ميسر ومراجعة المحفوظ"], ["لغوي", "الكتابة والخطابة والنحو المتوسط"], ["منهجي", "مبادئ أصول الفقه، والرد على الشبهات المعاصرة"], ["أخلاقي", "علو الهمة وتحمّل المسؤولية والعمل التطوعي"], ["حياتي", "مهارات الحاسوب والبحث العلمي وإدارة الوقت"]],
+      act: [["📖", "وردي اليومي", "جزء أو نصف جزء يوميًا مع مراجعة المحفوظ"], ["🎯", "مساري العلمي", "يسير في مستوى مبتدئ من «المسارات العلمية» بخطة وتذكير"], ["📝", "مقالة قصيرة", "يكتب مقالة في موضوع قرأه ويعرضها على والده"], ["🧭", "نقاش أسري", "يناقش والده في شبهة معاصرة وجوابها من كتاب «الإلحاد للمبتدئين»"], ["🤝", "تطوع", "ساعتان أسبوعيًا في خدمة نافعة"], ["💻", "مهارة جديدة", "يتعلم مهارة (خط، حاسوب، لغة) ويعرض ما أنجز"]] }
+  };
+  const actKey = (k, i) => "w" + Math.floor(Date.now() / 6048e5) + ":" + k + ":" + i;
+  const stageCard = k => { const x = STG[k]; if (!x) return ""; const A = st().act || {};
+    return `<h3>🎯 المهارات المستهدفة</h3><div class="talask">${x.sk.map(([c, d]) => `<div><b>${esc(c)}</b><span>${esc(d)}</span></div>`).join("")}</div>
+      <h3>✅ أنشطة الأسبوع</h3><p class="mut">علّم ما أنجزه الطفل هذا الأسبوع، ولكل نشاط نجمتان. تتجدد الأنشطة كل أسبوع.</p><div class="talaact">${x.act.map(([ic, t, d], i) => { const on = !!A[actKey(k, i)]; return `<label class="talaa${on ? " on" : ""}"><input type="checkbox" data-act="talaact" data-k="${k}" data-i="${i}"${on ? " checked" : ""}><i>${ic}</i><b>${esc(t)}</b><span>${esc(d)}</span></label>`; }).join("")}</div>`; };
+  const gamesFor = k => STG[k] ? STG[k].g.map(g => GAMES.find(x => x[0] === g)).filter(Boolean) : GAMES;
+  // أذكار المسلم اليومية (بنصوصها الثابتة ومصادرها) — لعبة مطابقة المناسبة بالذكر
+  const ADH = [["قبل الطعام", "بسم الله", "متفق عليه"], ["بعد الطعام", "الحمد لله الذي أطعمني هذا ورزقنيه من غير حول مني ولا قوة", "أبو داود والترمذي"], ["عند النوم", "باسمك اللهم أموت وأحيا", "البخاري"], ["عند الاستيقاظ", "الحمد لله الذي أحيانا بعد ما أماتنا وإليه النشور", "البخاري"],
+    ["دخول الخلاء", "اللهم إني أعوذ بك من الخبث والخبائث", "متفق عليه"], ["الخروج من الخلاء", "غفرانك", "أبو داود والترمذي"], ["الخروج من المنزل", "بسم الله توكلت على الله، ولا حول ولا قوة إلا بالله", "أبو داود والترمذي"], ["دخول المسجد", "اللهم افتح لي أبواب رحمتك", "مسلم"],
+    ["الخروج من المسجد", "اللهم إني أسألك من فضلك", "مسلم"], ["عند العطاس", "الحمد لله", "البخاري"], ["بعد الوضوء", "أشهد أن لا إله إلا الله وحده لا شريك له، وأشهد أن محمدًا عبده ورسوله", "مسلم"], ["عند الغضب", "أعوذ بالله من الشيطان الرجيم", "متفق عليه"]];
+  function adhkar(k) {
+    if (G.i >= G.list.length) { star(G.s >= G.list.length - 1 ? 3 : 1); return view_(head("أذكار المسلم", true) + `<div class="talawin"><h2>أحسنت! 🎉</h2><p>عرفت ${toAr(G.s)} من ${toAr(G.list.length)} أذكار.</p><a class="btn p" href="#/talaea/games?g=adhkar&k=${k || ""}&r=${Date.now()}">جولة جديدة</a></div></div>`); }
+    const q = G.list[G.i], opts = shuffle([q, ...shuffle(ADH.filter(x => x !== q)).slice(0, G.n - 1)]);
+    view_(head("أذكار المسلم", true) + `<p class="mut">السؤال ${toAr(G.i + 1)} من ${toAr(G.list.length)}</p><p class="talaq">ماذا نقول <b>${esc(q[0])}</b>؟</p><div class="talao col">${opts.map(o => `<button class="btn talaopt" data-act="tala-ad" data-ok="${o === q ? 1 : 0}">${esc(o[1])}</button>`).join("")}</div><div id="tfb" class="talafb" hidden></div></div>`);
+  }
+  // مسابقة المعرفة لكل مرحلة (اختيار من متعدد)
+  const QZ = {
+    t1: [["كم عدد الصلوات المفروضة في اليوم والليلة؟", "خمس", "ثلاث", "سبع"], ["ما أول سورة في المصحف؟", "الفاتحة", "البقرة", "الناس"], ["من خاتم الأنبياء والرسل؟", "محمد ﷺ", "عيسى عليه السلام", "موسى عليه السلام"], ["ماذا نقول قبل الطعام؟", "بسم الله", "سبحان الله", "الله أكبر"], ["في أي شهر نصوم؟", "رمضان", "شعبان", "رجب"], ["ماذا يقول من عطس؟", "الحمد لله", "بسم الله", "أستغفر الله"], ["إلى أين نتوجه في الصلاة؟", "الكعبة", "الجبل", "الشمس"], ["كم عدد أركان الإسلام؟", "خمسة", "ثلاثة", "عشرة"], ["ما اسم أم النبي ﷺ؟", "آمنة بنت وهب", "خديجة", "فاطمة"], ["من الذي خلقنا؟", "الله", "الشمس", "القمر"]],
+    t2: [["كم عدد سور القرآن الكريم؟", "١١٤", "١٠٠", "١٢٠"], ["ما أطول سورة في القرآن؟", "البقرة", "آل عمران", "النساء"], ["ما أقصر سورة في القرآن؟", "الكوثر", "الإخلاص", "العصر"], ["في أي مدينة وُلد النبي ﷺ؟", "مكة", "المدينة", "الطائف"], ["إلى أي مدينة هاجر النبي ﷺ؟", "المدينة", "مكة", "دمشق"], ["من النبي الذي التقمه الحوت؟", "يونس عليه السلام", "نوح عليه السلام", "صالح عليه السلام"], ["من النبي الذي صنع السفينة بأمر الله؟", "نوح عليه السلام", "هود عليه السلام", "شعيب عليه السلام"], ["كم ركعة في صلاة الفجر؟", "ركعتان", "ثلاث", "أربع"], ["ما الركن الخامس من أركان الإسلام؟", "الحج", "الصوم", "الزكاة"], ["كم عدد أركان الإيمان؟", "ستة", "خمسة", "أربعة"]],
+    t3: [["من أول خليفة للمسلمين بعد النبي ﷺ؟", "أبو بكر الصديق", "عمر بن الخطاب", "عثمان بن عفان"], ["في أي سنة من الهجرة كانت غزوة بدر؟", "الثانية", "الخامسة", "الثامنة"], ["من مؤذن رسول الله ﷺ المشهور؟", "بلال بن رباح", "سلمان الفارسي", "أنس بن مالك"], ["أي سورة تعدل ثلث القرآن؟", "الإخلاص", "الفاتحة", "يس"], ["ما أول ما نزل من القرآن؟", "اقرأ باسم ربك الذي خلق", "الفاتحة", "المدثر"], ["من الصحابي الملقّب بأمين هذه الأمة؟", "أبو عبيدة بن الجراح", "خالد بن الوليد", "الزبير بن العوام"], ["من النبي الذي كلّمه الله تكليمًا؟", "موسى عليه السلام", "إبراهيم عليه السلام", "داود عليه السلام"], ["كم عدد الأنبياء المذكورين بأسمائهم في القرآن؟", "خمسة وعشرون", "عشرة", "مئة"], ["من صاحب «صحيح البخاري»؟", "محمد بن إسماعيل البخاري", "مسلم بن الحجاج", "مالك بن أنس"], ["من كلّفه أبو بكر بجمع القرآن في الصحف؟", "زيد بن ثابت", "معاذ بن جبل", "أبي بن كعب"]],
+    t4: [["ما أقسام التوحيد الثلاثة؟", "الربوبية والألوهية والأسماء والصفات", "الصلاة والزكاة والصيام", "الإيمان والإسلام والإحسان"], ["ما شرطا قبول العمل الصالح؟", "الإخلاص لله ومتابعة النبي ﷺ", "كثرة العمل وطوله", "شهرة العامل"], ["من مؤلف «العقيدة الواسطية»؟", "ابن تيمية", "النووي", "ابن كثير"], ["من مؤلف «الأربعين النووية»؟", "يحيى بن شرف النووي", "ابن حجر", "الذهبي"], ["ما معنى «لا إله إلا الله»؟", "لا معبود بحق إلا الله", "لا خالق إلا الله فقط", "لا رازق إلا الله فقط"], ["أي حديث يُعدّ أصل النيات؟", "«إنما الأعمال بالنيات»", "«الدين النصيحة»", "«لا ضرر ولا ضرار»"], ["ما كتاب الإمام الشافعي في أصول الفقه؟", "الرسالة", "الموطأ", "المسند"], ["من الأئمة الأربعة المتبوعون؟", "أبو حنيفة ومالك والشافعي وأحمد", "البخاري ومسلم وأبو داود والترمذي", "أبو بكر وعمر وعثمان وعلي"], ["في أي حادثة كانت بيعة الرضوان؟", "صلح الحديبية", "فتح مكة", "غزوة أحد"], ["من مؤلف «كتاب التوحيد الذي هو حق الله على العبيد»؟", "محمد بن عبد الوهاب", "ابن القيم", "الآجري"]]
+  };
+  function quiz(k) {
+    if (G.i >= G.list.length) { star(G.s >= 8 ? 3 : G.s >= 5 ? 2 : 1); return view_(head("مسابقة المعرفة", true) + `<div class="talawin"><h2>انتهت المسابقة 🎉</h2><p>أجبت ${toAr(G.s)} من ${toAr(G.list.length)} إجابة صحيحة.</p><a class="btn p" href="#/talaea/games?g=quiz&k=${k}&r=${Date.now()}">مسابقة جديدة</a></div></div>`); }
+    const [q, a, ...w] = G.list[G.i];
+    view_(head("مسابقة المعرفة — " + ((D.tracks.find(t => t[0] === k) || [])[1] || ""), true) + `<p class="mut">السؤال ${toAr(G.i + 1)} من ${toAr(G.list.length)}</p><p class="talaq">${esc(q)}</p><div class="talao col">${shuffle([a, ...w]).map(o => `<button class="btn talaopt" data-act="tala-qz" data-ok="${o === a ? 1 : 0}">${esc(o)}</button>`).join("")}</div><div id="tfb" class="talafb" hidden></div></div>`);
+  }
+  // البحث عن الكلمات: شبكة حروف، تختار الحرف الأول ثم الأخير للكلمة (أفقيًّا من اليمين أو عموديًّا من الأعلى)
+  const WSW = { t2: [["أركان الإسلام", ["شهادة", "صلاة", "زكاة", "صيام", "حج"]], ["الصلوات", ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"]], ["الأنبياء", ["نوح", "هود", "صالح", "يونس", "موسى", "عيسى"]]],
+    t3: [["الخلفاء والصحابة", ["بكر", "عمر", "عثمان", "علي", "بلال", "خالد", "حمزة"]], ["مكارم الأخلاق", ["الصدق", "الأمانة", "الحلم", "الكرم", "الصبر", "العدل"]], ["الأنبياء", ["ابراهيم", "اسماعيل", "يوسف", "داود", "سليمان", "يحيى"]]],
+    t4: [["كتب السنة", ["البخاري", "مسلم", "الترمذي", "النسائي", "الموطأ"]], ["أعلام", ["الشافعي", "مالك", "احمد", "النووي", "الذهبي", "ابن", "تيمية"]], ["العلوم", ["التفسير", "الحديث", "الفقه", "النحو", "العقيدة"]]] };
+  function wsNew(k) {
+    const sets = WSW[k] || WSW.t2, [title, words] = sets[Math.floor(Math.random() * sets.length)], N = k === "t2" ? 8 : 10, g = Array.from({ length: N }, () => Array(N).fill("")), placed = [];
+    for (const w of shuffle(words)) { const L = [...w]; for (let t = 0; t < 200; t++) { const v = Math.random() < .5, r = Math.floor(Math.random() * (v ? N - L.length + 1 : N)), c = Math.floor(Math.random() * (v ? N : N - L.length + 1));
+      if (L.every((ch, i) => { const x = g[v ? r + i : r][v ? c : c + i]; return !x || x === ch; })) { L.forEach((ch, i) => g[v ? r + i : r][v ? c : c + i] = ch); placed.push({ w, r, c, v, n: L.length }); break; } } }
+    const AL = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي"; g.forEach(row => row.forEach((x, i) => { if (!x) row[i] = AL[Math.floor(Math.random() * AL.length)]; }));
+    G = { g, placed, found: [], sel: null, k, title, N };
+    wsDraw();
+  }
+  function wsDraw() {
+    const { g, placed, found, N, title, k } = G, on = new Set(); placed.filter(p => found.includes(p.w)).forEach(p => { for (let i = 0; i < p.n; i++) on.add((p.v ? p.r + i : p.r) * N + (p.v ? p.c : p.c + i)); });
+    view_(head("البحث عن الكلمات", true) + `<p class="talaq">${esc(title)}: ابحث عن الكلمات (أفقيًّا من اليمين أو عموديًّا من الأعلى). اضغط الحرف الأول ثم الأخير.</p>
+      <div class="talaws" style="--n:${N}">${g.map((row, r) => row.map((ch, c) => `<button class="wsc${on.has(r * N + c) ? " ok" : ""}${G.sel && G.sel[0] === r && G.sel[1] === c ? " sel" : ""}" data-act="tala-ws" data-r="${r}" data-c="${c}">${ch}</button>`).join("")).join("")}</div>
+      <div class="chips">${placed.map(p => `<span class="chip${found.includes(p.w) ? " x" : ""}">${esc(p.w)}${found.includes(p.w) ? " ✓" : ""}</span>`).join("")}</div>
+      ${found.length === placed.length ? `<div class="talawin"><h2>وجدت كل الكلمات! 🎉</h2><a class="btn p" href="#/talaea/games?g=ws&k=${k}&r=${Date.now()}">شبكة جديدة</a></div>` : ""}</div>`);
   }
   const sname = s => esc(s.name.replace(/^سُورَةُ\s*/, ""));
   function ayahRound(s, i, sc) {
@@ -74,8 +141,8 @@ const TALA = (() => {
     const f = G.fs[G.i];
     view_(head("صح أم خطأ؟", true) + `<p class="mut">السؤال ${toAr(G.i + 1)} من ${toAr(G.fs.length)}</p><p class="talaq">${esc(f.q)}</p><div class="talao"><button class="btn talaopt" data-act="tala-tf" data-v="1">✅ صح</button><button class="btn talaopt" data-act="tala-tf" data-v="0">❌ خطأ</button></div><div id="tfb" class="talafb" hidden></div></div>`);
   }
-  function memory() {
-    const L = shuffle("ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split("")).slice(0, 6), cards = shuffle([...L, ...L]);
+  function memory(k) {
+    const L = shuffle("ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split("")).slice(0, k === "t1" ? 4 : k === "t3" ? 8 : 6), cards = shuffle([...L, ...L]);
     G = { cards, open: [], done: 0, moves: 0 };
     view_(head("ذاكرة الحروف", true) + `<p>اقلب بطاقتين في كل مرة، وطابق الحرفين المتشابهين.</p><div class="talamem">${cards.map((c, i) => `<button class="mcard" data-act="tala-mem" data-i="${i}" aria-label="بطاقة ${toAr(i + 1)}"><span>${c}</span></button>`).join("")}</div><p class="mut" id="tmv">المحاولات: ٠</p></div>`);
   }
@@ -121,6 +188,15 @@ const TALA = (() => {
         if (G.pick === G.bare) { G.s++; star(1); fb(true, `أحسنت! ⭐ <button class="btn p" data-act="tala-wdn">التالي</button>`); } }
       else { el.classList.add("wrong"); setTimeout(() => el.classList.remove("wrong"), 500); } }
     else if (a === "tala-wdn") { G.i++; wordRound(); }
+    else if (a === "tala-ad" || a === "tala-qz") { const ok = el.dataset.ok === "1"; if (ok) { G.s++; } document.querySelectorAll(".talaopt").forEach(b => { b.disabled = true; if (b.dataset.ok === "1") b.classList.add("right"); }); if (!ok) el.classList.add("wrong");
+      const q = G.list[G.i]; fb(ok, `${ok ? "أحسنت! ⭐" : "الإجابة الصحيحة مظللة."}${a === "tala-ad" ? `<p><b>${esc(q[0])}:</b> «${esc(q[1])}» <small class="mut">(${esc(q[2])})</small></p>` : ""}<button class="btn p" data-act="${a}n">التالي</button>`); }
+    else if (a === "tala-adn") { G.i++; adhkar(new URLSearchParams(location.hash.split("?")[1] || "").get("k")); }
+    else if (a === "tala-qzn") { G.i++; quiz(new URLSearchParams(location.hash.split("?")[1] || "").get("k") || "t2"); }
+    else if (a === "tala-ws") { const r = +el.dataset.r, c = +el.dataset.c;
+      if (!G.sel) { G.sel = [r, c]; return wsDraw(); }
+      const [r0, c0] = G.sel; G.sel = null;
+      const hit = G.placed.find(p => !G.found.includes(p.w) && ((p.r === r0 && p.c === c0 && (p.v ? (r === p.r + p.n - 1 && c === p.c) : (r === p.r && c === p.c + p.n - 1)))));
+      if (hit) { G.found.push(hit.w); star(1); } wsDraw(); }
     else if (a === "tala-mem") {
       const i = +el.dataset.i; if (el.classList.contains("on") || G.open.length === 2) return;
       el.classList.add("on"); G.open.push(i);
@@ -198,6 +274,7 @@ const TALA = (() => {
     else if (a === "talakid") { st().cur = el.dataset.id; saveS(); show({}, ""); }
     else if (a === "talakiddel") { if (confirm("حذف ملف الطفل وتقدمه من هذا الجهاز؟")) { st().kids = kids().filter(x => x.id !== el.dataset.id); if (st().p) delete st().p[el.dataset.id]; saveS(); parents(); } }
     else if (a === "talaunlock") { st().unlock = el.checked; saveS(); }
+    else if (a === "talaact") { const A = st().act = st().act || {}, key = actKey(el.dataset.k, el.dataset.i); if (el.checked) { A[key] = 1; star(2); } else delete A[key]; saveS(); el.closest(".talaa").classList.toggle("on", el.checked); }
     else if (a === "taladone") { const k = el.dataset.k; if (prog().done[k]) return;
       const note = (prompt("أحسنت! ما أهم شيء تعلمته مما قرأت؟ (اختياري)") || "").trim().slice(0, 200);
       prog().done[k] = Date.now(); prog().mins = (prog().mins || 0) + (+el.dataset.m || 5); if (note) prog().notes[k] = note; star(note ? 3 : 2); saveS();

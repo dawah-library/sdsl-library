@@ -798,3 +798,7 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .tjview{flex:none}
 .sumkey{background:color-mix(in srgb,var(--gold) 18%,transparent);border-radius:6px}
 .spsci{scroll-margin-top:90px}.spsci h3{color:var(--ac);border-bottom:2px solid var(--gold);padding-bottom:4px}.spsub{border:2px solid var(--gold)}
+/* الطلائع: ملف المرحلة والألعاب الجديدة */
+.talask{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.talask div{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:8px 12px}.talask b{display:block;color:var(--ac)}.talask span{font-size:.9rem}
+.talaact{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.talaa{display:grid;grid-template-columns:auto auto 1fr;gap:2px 8px;align-items:center;background:var(--sf);border:2px dashed var(--line);border-radius:14px;padding:10px;cursor:pointer}.talaa i{font-style:normal;font-size:1.5rem}.talaa span{grid-column:1/-1;font-size:.88rem;color:var(--mut)}.talaa.on{border-style:solid;border-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,var(--sf))}
+.talaws{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:4px;max-width:440px;margin:10px auto}.wsc{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--sf);font:700 1.15rem "IBM Plex Sans Arabic",sans-serif;cursor:pointer;padding:0}.wsc.sel{background:var(--gold);color:#fff}.wsc.ok{background:color-mix(in srgb,var(--ac) 25%,var(--sf));color:var(--ac)}
