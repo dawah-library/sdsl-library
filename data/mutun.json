@@ -1,0 +1,272 @@
+{
+"v": 1,
+"sci": [
+[
+"aqeeda",
+"العقيدة والتوحيد",
+"🕋"
+],
+[
+"hadith",
+"متون الحديث",
+"📜"
+],
+[
+"mustalah",
+"مصطلح الحديث",
+"🔎"
+],
+[
+"fiqh",
+"الفقه",
+"⚖️"
+],
+[
+"usul",
+"أصول الفقه وقواعده",
+"📐"
+],
+[
+"nahw",
+"النحو والصرف",
+"✍️"
+],
+[
+"tajwid",
+"التجويد والقراءات",
+"📖"
+],
+[
+"faraid",
+"الفرائض",
+"🧮"
+],
+[
+"adab",
+"الآداب والسلوك",
+"🌿"
+],
+[
+"sira",
+"السيرة والتاريخ",
+"🕌"
+]
+],
+"lv": [
+[
+1,
+"المرحلة الأولى: التأسيس",
+"متون قصيرة يبدأ بها الطالب"
+],
+[
+2,
+"المرحلة الثانية: البناء",
+"متون متوسطة تبني على ما قبلها"
+],
+[
+3,
+"المرحلة الثالثة: التمكّن",
+"المتون الجامعة والمطوّلة"
+]
+],
+"items": [
+{
+"id": "usulthalatha",
+"b": "usulthalatha",
+"t": "ثلاثة الأصول وأدلتها",
+"sci": "aqeeda",
+"lv": 1,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "qawaidarba",
+"t": "القواعد الأربع",
+"sci": "aqeeda",
+"lv": 1,
+"ord": 2,
+"kind": "nathr",
+"au": "محمد بن عبد الوهاب"
+},
+{
+"id": "kashfshubuhat",
+"b": "kashfshubuhat",
+"t": "كشف الشبهات",
+"sci": "aqeeda",
+"lv": 2,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "lumca",
+"b": "lumca",
+"t": "لمعة الاعتقاد",
+"sci": "aqeeda",
+"lv": 2,
+"ord": 2,
+"kind": "nathr"
+},
+{
+"id": "tawhid",
+"b": "tawhid",
+"t": "كتاب التوحيد",
+"sci": "aqeeda",
+"lv": 2,
+"ord": 3,
+"kind": "nathr"
+},
+{
+"id": "wasitiyya",
+"b": "wasitiyya",
+"t": "العقيدة الواسطية",
+"sci": "aqeeda",
+"lv": 3,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "tahawiyya",
+"b": "tahawiyya",
+"t": "العقيدة الطحاوية",
+"sci": "aqeeda",
+"lv": 3,
+"ord": 2,
+"kind": "nathr"
+},
+{
+"id": "arbainnawawi",
+"t": "الأربعون النووية",
+"sci": "hadith",
+"lv": 1,
+"ord": 1,
+"kind": "nathr",
+"au": "النووي"
+},
+{
+"id": "umdaahkam",
+"b": "umdaahkam",
+"t": "عمدة الأحكام",
+"sci": "hadith",
+"lv": 2,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "bulugh",
+"b": "bulugh",
+"t": "بلوغ المرام",
+"sci": "hadith",
+"lv": 3,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "bayquniyya",
+"b": "bayquniyya",
+"t": "المنظومة البيقونية",
+"sci": "mustalah",
+"lv": 1,
+"ord": 1,
+"kind": "nazm"
+},
+{
+"id": "nukhba",
+"t": "نخبة الفكر",
+"sci": "mustalah",
+"lv": 2,
+"ord": 1,
+"kind": "nathr",
+"au": "ابن حجر"
+},
+{
+"id": "umdafiqh",
+"b": "umdafiqh",
+"t": "عمدة الفقه",
+"sci": "fiqh",
+"lv": 2,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "zad",
+"t": "زاد المستقنع",
+"sci": "fiqh",
+"lv": 3,
+"ord": 1,
+"kind": "nathr",
+"au": "الحجاوي"
+},
+{
+"id": "waraqat",
+"b": "waraqat",
+"t": "الورقات في أصول الفقه",
+"sci": "usul",
+"lv": 1,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "qawaidsadi",
+"t": "منظومة القواعد الفقهية",
+"sci": "usul",
+"lv": 2,
+"ord": 1,
+"kind": "nazm",
+"au": "السعدي"
+},
+{
+"id": "ajurrumiyya",
+"b": "ajurrumiyya",
+"t": "متن الآجرومية",
+"sci": "nahw",
+"lv": 1,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "qatr",
+"b": "qatr",
+"t": "قطر الندى وبل الصدى",
+"sci": "nahw",
+"lv": 2,
+"ord": 1,
+"kind": "nathr"
+},
+{
+"id": "alfiyya",
+"b": "alfiyya",
+"t": "ألفية ابن مالك",
+"sci": "nahw",
+"lv": 3,
+"ord": 1,
+"kind": "nazm"
+},
+{
+"id": "tuhfatatfal",
+"b": "tuhfatatfal",
+"t": "تحفة الأطفال والغلمان",
+"sci": "tajwid",
+"lv": 1,
+"ord": 1,
+"kind": "nazm"
+},
+{
+"id": "jazariyya",
+"t": "المقدمة الجزرية",
+"sci": "tajwid",
+"lv": 2,
+"ord": 1,
+"kind": "nazm",
+"au": "ابن الجزري"
+},
+{
+"id": "rahbiyya",
+"t": "متن الرحبية",
+"sci": "faraid",
+"lv": 2,
+"ord": 1,
+"kind": "nazm",
+"au": "الرحبي"
+}
+]
+}

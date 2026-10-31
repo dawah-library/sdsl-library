@@ -311,3 +311,4 @@
 - tools/kurrasa.py + kurrasa.js (#/kurrasat): كتل points/def/table/compare/map/steps/quote/note/qs، تُرسم على canvas (KUR.layout/draw)؛ الطابور data/kurrasa/_queue.json، والقائمة _list.json (ok).
 - tools/tafrigh-fmt.py → data/tfedit/<id>.json {pages:{n:{f,r}}}؛ مبدّل في القارئ للتفريغات (KUR.tfReader). api/edit.js (#/tahrir) للأعضاء: proof/fmt/rw/short (المفتاح edit، الحد SDSL_EDIT_HOURLY).
 - edu-ai.yml يشغّل الكراسات ثم التفريغات يوميًا وعند تعديل الطابورين (المفتاح edu_ai).
+- حفظ المتون (mutun.js، #/hifz): السلّم في data/mutun.json (sci/lv/items: id,b,t,sci,lv,ord,kind,per,au)؛ التقدم S.mtn {id:{pd,d,n,log,st}} يُزامَن عبر Prefs؛ الورد المحفوظ يصير بطاقة HZ (id m<متن>:<ورد>). المتون الناقصة (بلا b) تضيفها الإدارة من تبويب «إضافة متن» (من كتاب أو بلصق النص فيُنشأ كتاب tags:["matn"]).
