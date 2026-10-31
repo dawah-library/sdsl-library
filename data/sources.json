@@ -76,7 +76,7 @@
      "119635",
      "119634"
     ],
-    "lastRun": "2026-10-31T17:36:32.737Z",
+    "lastRun": "2026-10-31T18:56:24.700Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -99,7 +99,7 @@
    "note": "يرفض الطلبات الآلية (403) حتى من خوادم GitHub (استكشاف ٣١ أكتوبر)؛ الحل: إذن من الجريدة بإدراج خوادمنا، أو خلاصة RSS، أو إرسال المقالات يدويًّا",
    "state": {
     "seen": [],
-    "lastRun": "2026-10-31T17:36:35.356Z",
+    "lastRun": "2026-10-31T18:56:27.430Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -170,7 +170,7 @@
      "1272",
      "974"
     ],
-    "lastRun": "2026-10-31T17:36:38.382Z",
+    "lastRun": "2026-10-31T18:56:30.658Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -233,7 +233,7 @@
      "wp9996",
      "wp10932"
     ],
-    "lastRun": "2026-10-31T17:36:40.137Z",
+    "lastRun": "2026-10-31T18:56:32.679Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -321,7 +321,7 @@
      "45d228074e",
      "231cf6d7f9"
     ],
-    "lastRun": "2026-10-31T17:36:48.656Z",
+    "lastRun": "2026-10-31T18:56:41.558Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -479,7 +479,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "a9"
+   "aid": "a9",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.558Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-yasserborhamy",
@@ -496,7 +506,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "a2"
+   "aid": "a2",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.558Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-100010404454280",
@@ -512,7 +532,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.558Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-samhmhmdbsywny",
@@ -528,7 +558,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ywnsmkhywn152345",
@@ -545,7 +585,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w96"
+   "aid": "w96",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-dashrfalshryf",
@@ -562,7 +612,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w32"
+   "aid": "w32",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-dlarmdan",
@@ -579,7 +639,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w140"
+   "aid": "w140",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-zeinkamel101000",
@@ -596,7 +666,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w26"
+   "aid": "w26",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-memara60",
@@ -613,7 +693,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w107"
+   "aid": "w107",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-abdelghaffartaha3",
@@ -629,7 +719,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-naderalssaqqa",
@@ -645,7 +745,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-alshykhmstfydyab",
@@ -662,7 +772,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w5"
+   "aid": "w5",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-alnourpartyofficialpage",
@@ -679,7 +799,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "a10"
+   "aid": "a10",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-drwaelsameir",
@@ -696,7 +826,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w89"
+   "aid": "w89",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-shryfth600832",
@@ -713,7 +853,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w109"
+   "aid": "w109",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-abobakrelkady",
@@ -730,7 +880,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w63"
+   "aid": "w63",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ehabalsharef",
@@ -747,7 +907,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w56"
+   "aid": "w56",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ragababomo3awya",
@@ -763,7 +933,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-engahmedtaherme",
@@ -779,7 +959,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-mdarjup",
@@ -795,7 +985,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-mohamadalazhary1",
@@ -811,7 +1011,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-aye7ia",
@@ -828,7 +1038,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w16"
+   "aid": "w16",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ghrybabwalhsn2025",
@@ -845,7 +1065,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w59"
+   "aid": "w59",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-abwhatmlabdaltwab",
@@ -861,7 +1091,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-amarhelal",
@@ -877,7 +1117,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-yasserabdrabelrasol",
@@ -894,7 +1144,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w29"
+   "aid": "w29",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ahmdbdalslammady",
@@ -911,7 +1171,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w48"
+   "aid": "w48",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-drelsayedabdelhady7",
@@ -928,7 +1198,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w105"
+   "aid": "w105",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-tltmrzwq",
@@ -945,7 +1225,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w18"
+   "aid": "w18",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-waellramadan",
@@ -962,7 +1252,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w52"
+   "aid": "w52",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ahmdalshryf927085",
@@ -979,7 +1279,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w23"
+   "aid": "w23",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-sdmnswr373216",
@@ -995,7 +1305,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ahmedgameel754",
@@ -1012,7 +1332,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w103"
+   "aid": "w103",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-bsmserver",
@@ -1028,7 +1358,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ayhabshahyn79828",
@@ -1045,7 +1385,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w68"
+   "aid": "w68",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-drmdanalnjdy",
@@ -1061,7 +1411,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-mhmwdbdalhmydalsqlany",
@@ -1078,7 +1438,17 @@
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w9"
+   "aid": "w9",
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-ahmedalhamdon",
@@ -1094,7 +1464,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   },
   {
    "id": "fb-musabamingaber",
@@ -1110,7 +1490,17 @@
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
-   "delayMs": 1000
+   "delayMs": 1000,
+   "state": {
+    "mode": "fb-notoken",
+    "seen": [],
+    "lastRun": "2026-10-31T18:56:41.559Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
   }
  ]
 }
