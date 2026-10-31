@@ -342,6 +342,31 @@
    "on": false,
    "lists": [],
    "note": "مواده على فيسبوك: انظر الحلول في tools/facebook-sources.md"
+  },
+  {
+   "col": "dawah",
+   "on": true,
+   "linkRx": "https://anasalafy\\.com/ar/\\d{3,}-[^\"'\\s<>]+",
+   "siteSuffix": "موقع أنا السلفي",
+   "skipRx": "\\((?:مقطع|مرئي|صوتي)\\)|^(حزب النور|بيان)|يدين|يثمن|يشيد",
+   "perRun": 80,
+   "delayMs": 2000,
+   "base": "https://anasalafy.com",
+   "id": "anasalafy-tala",
+   "name": "أنا السلفي — مقالات الطلائع (مصطفى دياب ومحمود عمارة)",
+   "lists": [
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8&page=2",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8&page=3",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8&page=4",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%B5%D8%B7%D9%81%D9%89+%D8%AF%D9%8A%D8%A7%D8%A8&page=5",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9&page=2",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9&page=3",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9&page=4",
+    "https://anasalafy.com/ar/search?q=%D9%85%D8%AD%D9%85%D9%88%D8%AF+%D8%B9%D9%85%D8%A7%D8%B1%D8%A9&page=5"
+   ],
+   "authorRx": "دياب|عمارة"
   }
  ]
 }

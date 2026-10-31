@@ -102,6 +102,7 @@ async function runSource(s, ctx) {
       const text = en.html ? htmlText(en.html) : mainText(html, s.contentRx), date = (en.date || meta(html, "article:published_time") || (html.match(/\b(20\d\d-\d\d-\d\d)/) || [])[1] || "").slice(0, 10);
       seen.add(key);
       const reason = /^(تهنئة|تعزية)|بخالص العزاء/.test(title) ? "تهنئة/تعزية" : (s.skipRx && new RegExp(s.skipRx).test(title)) ? "خارج النطاق (خبر/مقطع)" : text.length < (s.minChars || 600) ? "بلا نص كافٍ (مقطع مرئي أو صوتي)" : "";
+      if (!reason && s.authorRx && !new RegExp(s.authorRx).test(author + " " + text.slice(0, 300))) { skipped++; continue; } // مصدر مخصوص بكتّاب بأعينهم (مثل مقالات الطلائع)
       if (reason) { skipped++; continue; }
       // التكرار: في الفهرس القائم (مصادر أخرى) أو في قائمة المراجعة
       const tw = ctx.idx.items.find(x => T(x.t) === T(title)), qd = ctx.q.items.find(x => T(x.t) === T(title));
