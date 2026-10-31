@@ -32,7 +32,7 @@ const ITHRA = (() => {
      <div class="row" style="justify-content:center;gap:8px">${pg > 1 ? `<a class="btn" href="${url({ pg: pg - 1 })}">السابق</a>` : ""}${pg < np ? `<a class="btn" href="${url({ pg: pg + 1 })}">التالي</a>` : ""}</div>`);
   }
   // في صفحة القراءة: هوية المصدر والرابط الأصلي، وعند عدم الإذن الملخص والرابط فقط
-  const note = b => bc(b) !== "ithra" ? "" : `<div class="src-note ith">من ${esc(COL.ithra)}: ${esc(srcName(b.src))}${b.url ? ` — <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر الأصلي</a>` : ""}${b.lic === "link" ? "<br>لم يُؤذن بإعادة نشر النص كاملًا؛ المعروض ملخص وبيانات المادة، والنص في مصدره." : ""}</div>`;
+  const note = b => bc(b) !== "ithra" ? "" : `<div class="src-note ith">المصدر: ${esc(srcName(b.src))} (${esc(COL.ithra)})${b.url ? ` — <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر الأصلي</a>` : ""}${b.lic === "link" ? "<br>لم يُؤذن بإعادة نشر النص كاملًا؛ المعروض ملخص وبيانات المادة، والنص في مصدره." : ""}</div>`;
   document.addEventListener("submit", e => { const f = e.target; if (!f.dataset || f.dataset.form !== "ithq") return; e.preventDefault(); e.stopImmediatePropagation();
     const p = new URLSearchParams(); new FormData(f).forEach((v, k) => v && !(k === "o" && v === "new") && p.set(k, v)); go("#/ithra?" + p); }, true);
   return { view: view_, note, SOURCES, srcName, items };

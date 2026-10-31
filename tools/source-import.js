@@ -122,6 +122,19 @@ async function runSource(s, ctx) {
   const res = [];
   for (const s of conf.sources) { if (only && s.id !== only) continue; if (s.on === false || !((s.lists || []).length || s.base)) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
   ctx.q.items = ctx.q.items.slice(-3000); ctx.q.errors = ctx.errors.slice(-200); ctx.q.lastRun = new Date().toISOString(); ctx.q.results = res;
+  // ترقية المنشور ملخصًا إلى النص الكامل حين يصير مصدره «كاملًا» (lic فارغ): يُجلب نص كل مادة من رابطها مرة واحدة
+  const full = new Map(conf.sources.filter(s => s.col === "ithra" && s.lic !== "link" && s.on !== false).map(s => [s.id, s])); let up = 0;
+  for (const it of ctx.idx.items) { const s = full.get(it.src); if (!s || it.lic !== "link" || up >= 60) continue;
+    try { let text = "";
+      const wp = (it.id.match(/wp(\d+)$/) || [])[1];
+      if (wp && s.base) { const j = JSON.parse(await get(s.base.replace(/\/$/, "") + "/wp-json/wp/v2/posts/" + wp + "?_fields=content", 1)); text = htmlText((j.content || {}).rendered || ""); }
+      if (text.length < 300) { text = mainText(await get(it.u), s.contentRx); }
+      if (text.length < 300) continue;
+      const pages = text.length > 7000 ? text.split("\n").reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [text];
+      const gp = path.join(DATA, "articles", it.f + ".json"), g = readJSON(gp, {}); g[it.id] = { pages }; fs.writeFileSync(gp, JSON.stringify(g));
+      delete it.lic; it.n = text.length; up++; console.log("[ithra] نص كامل:", it.t); await sleep(s.delayMs || 1500);
+    } catch (e) { ctx.errors.push({ src: it.src, url: it.u, err: "نص كامل: " + e.message }); } }
+  if (up) fs.writeFileSync(IDX, JSON.stringify(ctx.idx));
   fs.writeFileSync(Q, JSON.stringify(ctx.q)); fs.writeFileSync(SRC, JSON.stringify(conf, null, 1));
   console.log(JSON.stringify(res));
 })();

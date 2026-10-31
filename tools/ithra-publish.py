@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """النشر الآلي لمواد المصادر الإثرائية (col=ithra) من قائمة المراجعة data/import-review.json.
-لا يُنشر النص كاملًا: lic=link فيُعرض ملخص (٩٠٠ حرف) ورابط المصدر الأصلي، كما في الاعتماد اليدوي (manage.js impDecide).
+يُنشر النص كاملًا مع بيان المصدر ورابطه (قرار المدير ٣١ أكتوبر)، إلا مصدرًا فيه lic=link فملخص ورابط.
 يعمل للمصادر التي فيها auto=true في data/sources.json (تفعيل المدير ٣١ أكتوبر ٢٠٢٦)، بعد كل استجلاب (sources.yml).
 المؤلف: اسم الكاتب إن وُجد (سجل مستقل col=ithra)، وإلا المصدر نفسه. التصنيف والنوع بالكلمات المفتاحية."""
 import json, re, os, datetime
@@ -34,6 +34,13 @@ def author(name):
     if name in names: return names[name]
     aid = 'ix' + format(int(datetime.datetime.now().timestamp() * 1000) + len(names), 'x')
     cat['authors'].append({'id': aid, 'name': name, 'col': 'ithra', 'bio': '', 'auto': True}); names[name] = aid; return aid
+def split_pages(t):  # كما في الاعتماد اليدوي: صفحات نحو ٥٠٠٠ حرف للمقال الطويل
+    if len(t) <= 7000: return [t]
+    ps = ['']
+    for l in t.split('\n'):
+        if len(ps[-1]) + len(l) > 5000: ps.append(l)
+        else: ps[-1] = (ps[-1] + '\n' + l) if ps[-1] else l
+    return ps
 have = {x['id'] for x in idx['items']}; groups = {}; n = 0
 for x in Q['items']:
     s = auto.get(x.get('src'))
@@ -43,10 +50,13 @@ for x in Q['items']:
     aid = author(clean_author(x.get('author')) or s['name'])
     g = x['d'][:7] if re.match(r'\d{4}-\d{2}', x.get('d') or '') else 'undated'
     if g not in groups: groups[g] = load(D('articles', g + '.json'), {})
-    body = text[:900] + '…\n\n[النص كاملًا في مصدره الأصلي]'
-    groups[g][x['id']] = {'pages': [body]}
+    full = s.get('lic') != 'link'  # النشر كاملًا مع بيان المصدر ورابطه (قرار المدير ٣١ أكتوبر)، أو ملخصًا ورابطًا
+    pages = split_pages(text) if full else [text[:900] + '…\n\n[النص كاملًا في مصدره الأصلي]']
+    body = '\n'.join(pages)
+    groups[g][x['id']] = {'pages': pages}
     item = {'id': x['id'], 't': x['t'], 'a': aid, 'tp': topic(x['t'] + ' ' + text[:400]), 'c': x.get('srcName', ''), 'd': x.get('d', ''), 'u': x['u'], 'f': g,
-            'n': len(body), 'ad': datetime.date.today().isoformat(), 'src': x['src'], 'col': 'ithra', 'lic': 'link', 'sum': text[:400], 'ik': kind(x)}
+            'n': len(body), 'ad': datetime.date.today().isoformat(), 'src': x['src'], 'col': 'ithra', 'sum': text[:400], 'ik': kind(x)}
+    if not full: item['lic'] = 'link'
     idx['items'].append(item); x['st'] = 'approved'; x['aid'] = aid; x.pop('text', None); n += 1
 for g, o in groups.items(): json.dump(o, open(D('articles', g + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 if n:
