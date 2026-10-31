@@ -467,10 +467,10 @@ const MG = (() => {
      <nav class="chips">${[["pending", "بانتظار المراجعة"], ["approved", "المعتمد"], ["rejected", "المرفوض"]].map(([k, l]) => `<a class="chip${st === k ? " x" : ""}" href="#/admin?t=imports&st=${k}">${l} (${toAr((QD.items || []).filter(x => x.st === k).length)})</a>`).join("")}</nav>
      <div class="mglist">${items.map(x => `<form class="mgrow imprev" data-form="mgimp" data-id="${esc(x.id)}"><span class="mgt"><b>${esc(x.t)}</b><br><span class="mut">${esc(x.srcName || x.src)} • ${esc(x.d || "بلا تاريخ")} • ${toAr((x.text || "").length)} حرفًا • <a href="${esc(x.u)}" target="_blank" rel="noopener">الأصل</a>${x.author ? " • في المصدر: " + esc(x.author) : ""}</span>
         <details><summary>النص</summary><div class="mgreport">${esc((x.text || "").slice(0, 3000))}</div></details>
-        ${st === "pending" ? `<div class="row"><select name="a"><option value="">— المؤلف —</option>${authorsFor(x.col).map(a => `<option value="${a.id}"${a.id === guess(x) ? " selected" : ""}>${esc(a.name)}</option>`).join("")}<option value="__new">+ مؤلف جديد: ${esc(x.author || "")}</option></select>
+        ${st === "pending" ? `<div class="row"><select name="a"><option value="">— المؤلف —</option>${authorsFor(x.col).map(a => `<option value="${a.id}"${a.id === (x.aid0 || guess(x)) ? " selected" : ""}>${esc(a.name)}</option>`).join("")}<option value="__new"${x.to === "posts" && !(x.aid0 || guess(x)) && x.author ? " selected" : ""}>+ مؤلف جديد: ${esc(x.author || "")}</option></select>
          <select name="tp">${lib.topics.filter(t => t.for === "articles").map(t => `<option value="${t.id}">${esc(topicLabel(t))}</option>`).join("")}</select>
          <select name="col">${["dawah", "ithra"].map(c => `<option value="${c}"${c === x.col ? " selected" : ""}>${esc(COL[c])}</option>`).join("")}</select></div>
-         <input name="t" value="${esc(x.t)}"><input name="an" value="${esc(x.author || "")}" placeholder="اسم المؤلف الجديد">` : `<em class="tag">${x.st === "approved" ? "اعتُمد: " + esc(x.aid || "") : "رُفض" + (x.why ? ": " + esc(x.why) : "")}</em>`}</span>
+         <input name="t" value="${esc(x.t)}"><input name="an" value="${esc(x.author || "")}" placeholder="اسم المؤلف الجديد">${x.to === "posts" ? `<label class="mut">📘 منشور فيسبوك — تاريخ نشره على صفحة الكاتب: <input name="d" type="datetime-local" value="${esc(String(x.d || "").length > 10 ? new Date(x.d).toISOString().slice(0, 16) : (x.d || "") + (x.d ? "T12:00" : ""))}"></label>${x.img ? `<img src="${esc(x.img)}" alt="" style="max-height:120px">` : ""}` : ""}` : `<em class="tag">${x.st === "approved" ? "اعتُمد: " + esc(x.aid || "") : "رُفض" + (x.why ? ": " + esc(x.why) : "")}</em>`}</span>
         ${st === "pending" ? `<span><button class="btn p s" name="go" value="ok">اعتماد ونشر</button><button class="btn s" name="go" value="no">رفض</button></span>` : ""}</form>`).join("") || '<p class="note">لا شيء هنا.</p>'}</div>
      <h3>المصادر (بترتيب الأولوية)</h3><p class="mut">حدّد رابط قائمة المقالات لكل مصدر ثم فعّله؛ يُراجَع يوميًا، ويُسجَّل وقت آخر مراجعة ونتيجتها. تعديل المصادر يشغّل الاستجلاب فورًا.</p>
      <div class="mglist">${(SD.sources || []).map((x, i) => `<form class="mgrow" data-form="mgsrc" data-i="${i}"><span class="mgt"><b>${esc(x.name)}</b> <em class="tag">${esc(COL[x.col] || x.col)}</em> ${x.lic === "link" ? '<em class="tag">ملخص ورابط</em>' : ""}<br>
@@ -483,8 +483,13 @@ const MG = (() => {
      <form class="card" data-form="mgfbadd"><b>إضافة حساب فيسبوك</b><div class="row"><div><label>الاسم</label><input name="name" required maxlength="80" placeholder="مثال: صفحة الشيخ فلان"></div><div><label>رابط الصفحة أو اسم المستخدم أو المعرّف</label><input name="fb" required maxlength="200" dir="ltr" placeholder="https://www.facebook.com/…"></div></div>
       <div class="row"><div><label>النوع</label><select name="kind"><option value="page">صفحة</option><option value="person">حساب شخصي</option><option value="group">مجموعة</option></select></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="ithra">${esc(COL.ithra)}</option></select></div><div><label>النشر</label><select name="lic"><option value="">النص كاملًا (بإذن صاحب الحساب)</option><option value="link">ملخص ورابط</option></select></div><div><label>تُعرض في</label><select name="to"><option value="posts">المنشورات</option><option value="articles">المقالات</option></select></div><div><label>النشر</label><select name="auto"><option value="">بعد مراجعة الإدارة</option><option value="1">تلقائيًا (للمنشورات فقط)</option></select></div><div><label>المؤلف في المكتبة (اختياري)</label><input name="author" maxlength="80" list="mgauthors"></div></div>
       <datalist id="mgauthors">${lib.authors.slice(0, 600).map(a => `<option value="${esc(a.name)}">`).join("")}</datalist><button class="btn p">إضافة الحساب</button></form>
-     <form class="card" data-form="mgfbpost"><b>إضافة منشور من فيسبوك يدويًّا</b><div class="row"><div><label>الحساب</label><select name="src">${(SD.sources || []).filter(x => x.type === "facebook").map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("") || '<option value="">— أضف حسابًا أولًا —</option>'}</select></div><div><label>رابط المنشور</label><input name="u" required dir="ltr" placeholder="https://www.facebook.com/…"></div><div><label>التاريخ</label><input name="d" type="date" value="${today()}"></div></div>
-      <label>العنوان (اختياري؛ الافتراضي أول سطر)</label><input name="t" maxlength="160"><label>نص المنشور</label><textarea name="text" required rows="6"></textarea><button class="btn p">إضافة إلى المراجعة</button></form>
+     <form class="card" data-form="mgfbpost"><b>إضافة منشور من فيسبوك يدويًّا</b><p class="mut">للحسابات الشخصية وكل حساب بلا رمز: يدخل المراجعة ثم يُنشر في «منشورات المشايخ» بعلامة فيسبوك وتاريخ نشره على صفحة الكاتب. وإن لم يكن الكاتب من المؤلفين أُضيف مؤلفًا جديدًا عند الاعتماد.</p>
+      <div class="row"><div><label>الكاتب</label><select name="src"><option value="">— كاتب آخر (اكتب اسمه) —</option>${(SD.sources || []).filter(x => x.type === "facebook").sort((x, y) => x.name.localeCompare(y.name, "ar")).map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("")}</select><input name="an" list="mgauthors" placeholder="اسم الكاتب إن لم يكن في القائمة" style="margin-top:4px"></div>
+       <div><label>تاريخ النشر ووقته على صفحة الكاتب</label><input name="d" type="datetime-local" required></div></div>
+      <label>رابط المنشور</label><input name="u" required dir="ltr" placeholder="https://www.facebook.com/…">
+      <label>نص المنشور</label><textarea name="text" required rows="6"></textarea>
+      <label>رابط صورة المنشور (اختياري)</label><input name="img" dir="ltr" placeholder="https://…">
+      <button class="btn p">إضافة إلى المراجعة</button></form>
      ${(QD.errors || []).length ? `<details><summary>أخطاء الاستجلاب (${toAr(QD.errors.length)})</summary><pre class="mgreport">${QD.errors.slice(-60).map(e => esc(e.src + " — " + e.url + " — " + e.err)).join("\n")}</pre></details>` : ""}`;
   }
   async function impDecide(f, go) {
@@ -496,7 +501,8 @@ const MG = (() => {
     try {
       if (aid === "__new") { const n = String(fd.get("an") || "").trim(); if (!n) return toast("اكتب اسم المؤلف."); aid = (col === "ithra" ? "ix" : "w") + Date.now().toString(36); const au = { id: aid, name: n, col, bio: "", auto: true }; await GH.editJSON("data/catalog.json", c => { c.authors.push(au); return c; }, "مؤلف جديد من الاستجلاب: " + n, true); CAT.authors.push(au); }
       if (x.to === "posts") { // منشور فيسبوك ← قسم «المنشورات»
-        const pid = "fb" + id.replace(/[^a-z0-9]/gi, "").slice(-20), post = Object.assign({ id: pid, date: x.d || today(), text: x.text || "", url: x.u, src: "فيس بوك" }, aid && aid !== "__lib" ? { authorId: aid } : {});
+        const dd = fd.get("d") ? new Date(fd.get("d")).toISOString() : (x.d || today());
+        const pid = "fb" + id.replace(/[^a-z0-9]/gi, "").slice(-20), post = Object.assign({ id: pid, date: dd, text: x.text || "", url: x.u, src: "فيس بوك" }, aid && aid !== "__lib" ? { authorId: aid } : {}, x.img ? { image: x.img } : {});
         await GH.editJSON("data/posts.json", o => { o = o || { items: [] }; if (!o.items.some(y => y.id === pid)) o.items.unshift(post); return o; }, "منشور من فيسبوك: " + title.slice(0, 50), true);
         if (typeof POSTS !== "undefined" && Array.isArray(POSTS)) POSTS.unshift(post);
         await GH.editJSON(QP, o => { const y = o.items.find(z => z.id === id); if (y) { y.st = "approved"; y.aid = aid; delete y.text; } return o; }, "مراجعة المستجلب: اعتماد " + id, true);
@@ -532,11 +538,16 @@ const MG = (() => {
     try { await GH.editJSON(SP, o => { const k = o.sources.findIndex(y => y.id === x.id); if (k >= 0) { if (go === "del") o.sources.splice(k, 1); else o.sources[k].on = f.on.checked; } return o; }, (go === "del" ? "إزالة حساب فيسبوك: " : "حساب فيسبوك: ") + x.name, false); toast("حُفظ."); route(); } catch (e) { alert(e.message); }
   }
   async function fbPost(f) {
-    const s = (SD.sources || []).find(x => x.id === f.src.value); if (!s) return toast("أضف الحساب أولًا.");
-    const text = f.text.value.trim(), u = f.u.value.trim(); if (!/^https:\/\//.test(u) || text.length < 40) return toast("اكتب رابط المنشور ونصه.");
-    const t = f.t.value.trim() || text.split("\n")[0].slice(0, 90);
-    try { await GH.editJSON(QP, o => { o = o || { items: [] }; o.items = o.items || []; o.items.push({ id: s.id + "m" + Date.now().toString(36), src: s.id, srcName: s.name, col: s.col || "dawah", u, t, author: s.author || "", d: f.d.value || today(), text, st: "pending", at: new Date().toISOString(), lic: s.lic || "", to: s.to || "posts" }); return o; }, "منشور فيسبوك للمراجعة: " + t, true); toast("أُضيف إلى قائمة المراجعة."); route(); } catch (e) { alert(e.message); }
+    const s = (SD.sources || []).find(x => x.id === f.src.value), an = String(f.an.value || "").trim();
+    if (!s && !an) return toast("اختر الكاتب أو اكتب اسمه.");
+    const text = f.text.value.trim(), u = f.u.value.trim(); if (!/^https:\/\//.test(u) || text.length < 20) return toast("اكتب رابط المنشور ونصه.");
+    const d = f.d.value ? new Date(f.d.value).toISOString() : new Date().toISOString(), name = s ? s.author || s.name : an;
+    const a = lib.authors.find(x => !x.mergedInto && norm(x.name.replace(/^(الشيخ|د\.?)\s*/, "")) === norm(name.replace(/^(الشيخ|د\.?)\s*/, "")));
+    const it = { id: (s ? s.id : "fbm") + "m" + Date.now().toString(36), src: s ? s.id : "fb-manual", srcName: s ? s.name : an, col: "dawah", u, t: text.split("\n")[0].slice(0, 90), author: name, d, text, st: "pending", at: new Date().toISOString(), lic: "", to: "posts" };
+    if (s && s.aid) it.aid0 = s.aid; else if (a) it.aid0 = a.id; if (/^https:\/\//.test(f.img.value.trim())) it.img = f.img.value.trim();
+    try { await GH.editJSON(QP, o => { o = o || { items: [] }; o.items = o.items || []; o.items.push(it); return o; }, "منشور فيسبوك للمراجعة: " + it.t, true); toast("أُضيف إلى المراجعة."); f.reset(); route(); } catch (e) { alert(e.message); }
   }
+
 
   // ===== الضغط المطول/الزر الأيمن على بطاقة =====
   let lpT = 0, lpFired = false;

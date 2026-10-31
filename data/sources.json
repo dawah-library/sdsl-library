@@ -542,7 +542,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "aid": "a6"
   },
   {
    "id": "fb-samhmhmdbsywny",
@@ -922,13 +923,13 @@
   {
    "id": "fb-ragababomo3awya",
    "type": "facebook",
-   "name": "رجب أبو معاوية",
+   "name": "رجب أبو بسيسة",
    "fb": "ragab.abomo3awya",
    "url": "https://www.facebook.com/ragab.abomo3awya/",
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "رجب أبو معاوية",
+   "author": "رجب أبو بسيسة",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -943,7 +944,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "aid": "w53"
   },
   {
    "id": "fb-engahmedtaherme",
@@ -1026,19 +1028,18 @@
   {
    "id": "fb-aye7ia",
    "type": "facebook",
-   "name": "أحمد يحيى",
+   "name": "أحمد يحيى شريف",
    "fb": "a.ye7ia",
    "url": "https://www.facebook.com/a.ye7ia/",
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "أحمد يحيى وزير",
+   "author": "أحمد يحيى شريف",
    "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
    "delayMs": 1000,
-   "aid": "w16",
    "state": {
     "mode": "fb-notoken",
     "seen": [],
@@ -1106,13 +1107,13 @@
   {
    "id": "fb-amarhelal",
    "type": "facebook",
-   "name": "عمار هلال",
+   "name": "أحمد هلال",
    "fb": "amar.helal",
    "url": "https://www.facebook.com/amar.helal/",
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "عمار هلال",
+   "author": "أحمد هلال",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -1453,13 +1454,13 @@
   {
    "id": "fb-ahmedalhamdon",
    "type": "facebook",
-   "name": "أحمد الحمدون",
+   "name": "أحمد السيد",
    "fb": "ahmed.alhamdon",
    "url": "https://www.facebook.com/ahmed.alhamdon/",
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "أحمد الحمدون",
+   "author": "أحمد السيد",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -1474,7 +1475,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "aid": "w6"
   },
   {
    "id": "fb-musabamingaber",

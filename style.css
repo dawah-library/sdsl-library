@@ -872,3 +872,4 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .post.pfb{border-inline-start:4px solid #1877f2;background:linear-gradient(90deg,transparent,color-mix(in srgb,#1877f2 5%,transparent))}
 .post .fbi{width:1em;height:1em;color:#1877f2;vertical-align:-.12em;margin-inline-start:4px}
 .post.pfb header .mut a{color:#1877f2}
+.ftools{gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}.ftools .mut{flex:1;font-size:.85rem}

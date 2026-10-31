@@ -1699,15 +1699,26 @@ async function vPosts(q){if(q.k==="picks")return go("#/community",true);const k=
   const fs=await Members.myFollows(),aids=new Set([...fs].filter(x=>x[0]==="a").map(x=>x.slice(2))),uids=[...fs].filter(x=>x[0]==="u").map(x=>x.slice(2));
   if(!aids.size){$("#feedEnd").innerHTML='لا تتابع أحدًا من المشايخ بعد. افتح صفحة شيخ واضغط «متابعة»؛ تظهر منشوراته هنا. ومتابعة الأعضاء في <a href="#/community?k=follow">مجتمع المكتبة</a>.';return}
   list=POSTS.concat(actPosts()).filter(x=>aids.has(x.authorId));list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
- else{const shp=(k===""||k==="posts")&&typeof Members!=="undefined"?await Members.posts({sheikh:true,limit:120,visible:true}).catch(()=>[]):[];list=k==="lib"?actPosts():k==="posts"?POSTS.concat(shp):POSTS.concat(actPosts(),shp);list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")))}
+ else{const shp=(k===""||k==="posts")&&typeof Members!=="undefined"?await Members.posts({sheikh:true,limit:120,visible:true}).catch(()=>[]):[];list=k==="lib"?actPosts():k==="posts"?POSTS.concat(shp):POSTS.concat(actPosts(),shp);list.sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+  if(!q.a&&q.o!=="new"){let fl=new Set();try{if(Auth.user&&typeof Members!=="undefined")fl=new Set([...(await Members.myFollows())].filter(x=>x[0]==="a").map(x=>x.slice(2)))}catch(e){}list=feedRank(list,fl)}}
  if(q.a)list=list.filter(x=>x.authorId===q.a);
+ {const last=+(S.plast||0),nw=list.filter(x=>Date.parse(x.date||0)>last).length;S.plast=Date.now();saveS();const fe=$("#feed");if(fe&&k!=="saved")fe.insertAdjacentHTML("beforebegin",`<div class="row ftools"><span class="mut">${nw&&last?`🆕 ${toAr(nw)} منشورًا جديدًا منذ زيارتك السابقة • `:""}${q.o==="new"?"الأحدث أولًا":"مرتبة لك: الجديد ومن تتابعهم وما لم تره، مع تنويع الكتّاب"}</span><a class="btn s" href="${url({})}${url({}).includes("?")?"&":"?"}r=${Date.now()}">🔄 تحديث</a><a class="btn s" href="${url({})}${url({}).includes("?")?"&":"?"}o=${q.o==="new"?"":"new"}">${q.o==="new"?"مرتبة لك":"الأحدث أولًا"}</a></div>`)}
  Object.assign(FEED,{list,pos:0,busy:false});if(FEED.obs)FEED.obs.disconnect();
  if("IntersectionObserver"in window){FEED.obs=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))feedMore()},{rootMargin:"700px"});FEED.obs.observe($("#feedEnd"))}feedMore()}
+/* ترتيب «المنشورات» على طريقة فيسبوك: المثبّت أولًا، ثم درجة لكل منشور من حداثته وكونه لم يُرَ ومن شيخ تتابعه، مع تغيّر يسير
+   في كل زيارة أو «تحديث» فيتجدد ما يظهر، وتنويع الكتّاب (لا يتتابع منشوران لكاتب واحد)، وإعادة إظهار منشور أقدم لم تره كل بضعة منشورات. */
+function feedRank(list,follows){const seen=new Set(S.pseen||[]),now=Date.now(),seed=Math.floor(now/6e4),rnd=id=>{let h=seed;for(const c of String(id))h=Math.imul(h^c.codePointAt(0),2654435761)>>>0;return(h%1000)/1000};
+ const sc=x=>{const age=Math.max(0,(now-Date.parse(x.date||0))/36e5);return(x.pinned?1e4:0)+12*Math.exp(-age/72)+(seen.has(x.id)?0:5)+(follows.has(x.authorId)?4:0)+(x.src==="فيس بوك"||x.sheikh?1.5:0)+(x.act?-1:0)+rnd(x.id)*3};
+ const ranked=list.map(x=>[sc(x),x]).sort((a,b)=>b[0]-a[0]).map(r=>r[1]),old=ranked.filter(x=>!seen.has(x.id)&&(now-Date.parse(x.date||0))>30*864e5),out=[],pend=[];let n=0;
+ for(const x of ranked){if(old.includes(x)&&n%6!==5){pend.push(x);continue}const last=out[out.length-1];if(last&&last.authorId&&last.authorId===x.authorId){pend.push(x);continue}out.push(x);n++;
+  while(pend.length&&(n%6===5||!(out[out.length-1].authorId&&out[out.length-1].authorId===pend[0].authorId))){const y=pend.shift();out.push(y);n++;if(n%6!==0)break}}
+ return out.concat(pend)}
 async function feedMore(){if(FEED.busy||!$("#feed"))return;const batch=FEED.list.slice(FEED.pos,FEED.pos+8),end=$("#feedEnd");
  if(!batch.length){end.textContent=FEED.list.length?"وصلت إلى آخر المنشورات":"لا توجد منشورات بعد.";return}
  FEED.busy=true;FEED.pos+=batch.length;
  try{await Promise.all(batch.filter(x=>x.act).map(x=>loadBook(x.b.id).then(b=>{x.b=b}).catch(()=>{})));
-  const st=await Social.state(batch.map(x=>x.id));if(!$("#feed"))return;$("#feed").insertAdjacentHTML("beforeend",batch.map(x=>postHtml(x,st)).join(""))}finally{FEED.busy=false}
+  const st=await Social.state(batch.map(x=>x.id));if(!$("#feed"))return;$("#feed").insertAdjacentHTML("beforeend",batch.map(x=>postHtml(x,st)).join(""));
+  S.pseen=[...new Set((S.pseen||[]).concat(batch.map(x=>x.id)))].slice(-800);saveS()}finally{FEED.busy=false}
  if(FEED.pos>=FEED.list.length)end.textContent="وصلت إلى آخر المنشورات";else{end.innerHTML='<button class="btn s" data-act="feedMore">المزيد</button>';const r=end.getBoundingClientRect();if(r.top<innerHeight+700)feedMore()}}
 async function vPost(id){await loadPosts();const x=findPost(id)||(/^m\d+$/.test(id)&&typeof Members!=="undefined"?await Members.post(id):null);if(!x)return view('<p class="note">المنشور غير موجود.</p><p><a href="#/posts">← كل المنشورات</a></p>');
  if(x.act)x.b=await loadBook(x.b.id).catch(()=>x.b);const st=await Social.state([x.id]);
