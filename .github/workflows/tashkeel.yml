@@ -19,6 +19,7 @@ on:
         default: "400"
 permissions:
   contents: write
+  models: read
   id-token: write
 concurrency:
   group: tashkeel
@@ -67,6 +68,7 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
           TK_ONLY: ${{ github.event.inputs.books }}
           TK_MAX_PAGES: ${{ github.event.inputs.pages || '1200' }}
           TK_MAX_MIN: "300"

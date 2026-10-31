@@ -61,6 +61,42 @@ def gemini(prompt, schema_hint=""):
                     time.sleep(5 * (attempt + 1))
         if all((k, m) in MEXH for m in MODELS):
             EXH.add(k)
+    return ghm(prompt)
+
+
+# محرك ثانٍ مجاني: GitHub Models برمز المهمة نفسها (permissions: models: read)، حين تنفد حصص Gemini كلها.
+# حدّه في الطلب الواحد نحو ٨ آلاف وحدة، فيُختصر النص المرسل إليه (العبارات المقتبسة تُتحقق منها بعدُ في الصفحات).
+GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
+GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
+GHM_EXH = set()
+
+
+def ghm(prompt):
+    if not GHM_TOKEN:
+        return None
+    p = prompt if len(prompt) <= 14000 else prompt[:13000] + "\n…"
+    for m in GHM_MODELS:
+        if m in GHM_EXH:
+            continue
+        for attempt in range(3):
+            if time.time() > DEADLINE[0] + 20 * 60:
+                return None
+            try:
+                body = json.dumps({"model": m, "messages": [{"role": "user", "content": p + "\n\nأخرج JSON صالحًا فقط."}], "temperature": 0.2, "max_tokens": 4000, "response_format": {"type": "json_object"}}).encode()
+                req = urllib.request.Request("https://models.github.ai/inference/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + GHM_TOKEN, "accept": "application/vnd.github+json", "x-github-api-version": "2022-11-28"})
+                with urllib.request.urlopen(req, timeout=200) as r:
+                    j = json.loads(r.read())
+                t = ((j.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                return json.loads(re.sub(r"^```json|```$", "", t.strip()))
+            except urllib.error.HTTPError as e:
+                msg = e.read()[:2000].decode("utf-8", "ignore")
+                print("  GitHub Models", m, e.code, msg[:100], flush=True)
+                if e.code in (401, 403, 404) or (e.code == 429 and re.search(r"day|UserByDay|daily", msg, re.I)) or e.code == 413:
+                    GHM_EXH.add(m); break
+                time.sleep(30 * (attempt + 1))
+            except Exception as e:
+                print("  GitHub Models خطأ", str(e)[:100], flush=True)
+                time.sleep(5)
     return None
 
 

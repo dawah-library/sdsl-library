@@ -184,6 +184,8 @@ def quiz_book(bid, cat):
         work[key] = got; qs += got
         jsave(wp, work)
         print("  اختبار %s ص%d-%d: %d سؤالًا" % (title, a, z, len(got)), flush=True)
+        if len(work) % 4 == 0:
+            commit("اختبارات محرَّرة: تقدّم «%s»" % title)  # حفظ المنجز في المستودع فلا يضيع إن انتهت المهمة
     # المراجعة الثانية
     out = []
     for k in range(0, len(qs), 18):

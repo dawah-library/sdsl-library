@@ -20,6 +20,7 @@ on:
         default: ""
 permissions:
   contents: write
+  models: read
   id-token: write
 env:
   OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
@@ -173,6 +174,7 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           MISTRAL_MAX_PAGES: ${{ vars.MISTRAL_MAX_PAGES || '3000' }}
           REOCR: ${{ github.event.inputs.reocr }}

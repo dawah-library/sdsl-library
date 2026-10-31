@@ -92,9 +92,18 @@ for bid, b in cat.items():  # كتب بلا «سؤال وجواب»: أسئلة 
         if q.get("ok"): lv[q["lvl"]] = lv.get(q["lvl"], 0) + 1
     items[bid] = {"b": bid, "n": sum(lv.values()), "lv": lv}
 
+QAQ = os.environ.get("QUIZ_QA", "0") == "1"  # أسئلة الاختيار من «سؤال وجواب» أُوقفت: بدائلها مقتطعة من نصوص الفتاوى؛ تبقى في قسم «سؤال وجواب» بصيغتها
 for f in sorted(glob.glob(str(R / "data/qa/*.json"))):
     bid = pathlib.Path(f).stem
     if bid.startswith("_") or bid not in cat or cat[bid].get("hidden") or bid in AI: continue
+    if not QAQ:
+        out_f = Q / (bid + ".json")
+        if out_f.exists():
+            old = json.loads(out_f.read_text(encoding="utf-8")); man = [q for q in old.get("qs", []) if q.get("src") not in ("qa", "text")]
+            out_f.write_text(json.dumps({"v": 1, "b": bid, "at": str(datetime.date.today()), "qs": man}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            if man: items[bid] = {"b": bid, "n": sum(1 for q in man if q.get("ok")), "lv": {}}
+            else: items.pop(bid, None)
+        continue
     qa = [x for x in json.loads(open(f, encoding="utf-8").read())["items"] if len(x.get("q", "")) >= 30 and len(x.get("a", "")) >= 30 and not re.match(r"^\(?\d*\)?\s*هل\s", x["q"].strip())]
     if len(qa) < 8: continue
     out_f = Q / (bid + ".json")

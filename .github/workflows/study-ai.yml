@@ -16,6 +16,7 @@ on:
         default: "quiz,summ"
 permissions:
   contents: write
+  models: read
   id-token: write
 concurrency:
   group: study-ai
@@ -67,6 +68,7 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
           ST_ONLY: ${{ github.event.inputs.books }}
           ST_DO: ${{ github.event.inputs.do || 'quiz,summ' }}
           ST_COMMIT: "1"   # إيداع بعد كل كتاب

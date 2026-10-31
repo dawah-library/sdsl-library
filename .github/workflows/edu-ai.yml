@@ -16,6 +16,7 @@ on:
         default: "kurrasa,tafrigh"
 permissions:
   contents: write
+  models: read
   id-token: write
 concurrency:
   group: edu-ai
@@ -69,6 +70,7 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
           KR_ONLY: ${{ github.event.inputs.books }}
           KR_COMMIT: "1"
           KR_MINUTES: "150"
@@ -97,6 +99,7 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
           TF_ONLY: ${{ github.event.inputs.books }}
           TF_COMMIT: "1"
           TF_MINUTES: "120"
