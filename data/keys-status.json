@@ -1,81 +1,129 @@
 {
- "at": "2026-10-31T02:36Z",
+ "models": [
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-2.5-flash-preview-tts",
+  "gemini-2.5-pro-preview-tts",
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
+  "gemini-pro-latest",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash-image",
+  "gemini-3-flash-preview",
+  "gemini-3.1-pro-preview",
+  "gemini-3.1-pro-preview-customtools",
+  "gemini-3.1-flash-lite-preview",
+  "gemini-3.1-flash-lite",
+  "gemini-3-pro-image-preview",
+  "gemini-3-pro-image",
+  "gemini-3.1-flash-image-preview",
+  "gemini-3.1-flash-image",
+  "gemini-3.1-flash-lite-image",
+  "gemini-nano-banana-2.1",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-omni-flash-preview",
+  "gemini-omni-1.1-flash",
+  "gemini-3.5-transcribe",
+  "gemini-3.6-flash",
+  "gemini-3.7-flash",
+  "gemini-3.8-flash",
+  "gemini-4-argon",
+  "gemini-3.1-flash-tts-preview",
+  "gemini-3.8-flash-tts",
+  "gemini-3.8-flash-lite-tts",
+  "gemini-robotics-er-2-preview",
+  "gemini-2.5-computer-use-preview-10-2025",
+  "gemini-embedding-001",
+  "gemini-embedding-2-preview",
+  "gemini-embedding-2",
+  "gemini-3.5-transcribe-live",
+  "gemini-2.5-flash-native-audio-latest",
+  "gemini-2.5-flash-native-audio-preview-09-2025",
+  "gemini-2.5-flash-native-audio-preview-12-2025",
+  "gemini-3.1-flash-live-preview",
+  "gemini-3.8-live",
+  "gemini-3.8-live-extended-thinking",
+  "gemini-robotics-er-2-streaming-preview",
+  "gemini-3.5-live-translate-preview"
+ ],
+ "at": "2026-10-31T02:38Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_2",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_3",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_4",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_5",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_6",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_7",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_8",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_9",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_10",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_11",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_12",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_13",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_14",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_15",
-   "status": "http404",
+   "status": "ok",
    "type": "AQ"
   }
  ],
- "working": 0
+ "working": 15
 }
