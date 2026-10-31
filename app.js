@@ -1310,9 +1310,25 @@ document.addEventListener("pointermove",e=>{if(Math.abs(e.movementX)+Math.abs(e.
 document.addEventListener("click",e=>{if(lpFired&&e.target.closest("[data-author]")){e.preventDefault();e.stopPropagation();lpFired=false}},true);
 document.addEventListener("contextmenu",e=>{const el=e.target.closest("[data-author]");if(el){e.preventDefault();clearTimeout(lpTimer);authorBrief(el.dataset.author)}});
 const sheikhs=()=>Object.keys(TJ.items).filter(id=>A(id).name!=="—");
-function vTarajim(){view(`<h2>تراجم مشايخ الدعوة السلفية</h2><p class="mut">تعريف بمشايخ الدعوة السلفية بمصر وجهودهم العلمية والدعوية. اضغط مطولًا على اسم أي مؤلف في الموقع لترى تعريفه الموجز.</p>
- <div class="tgrid">${sheikhs().map(id=>{const a=A(id),t=tj(id);return`<a class="tcard" href="#/tarjama/${id}"><span class="av">${esc(a.name.replace(/^الشيخ\s*/,"").trim()[0]||"")}</span><b>${esc(a.name)}</b><p>${esc(t.brief)}</p><em>${countLine(id)}</em></a>`}).join("")}</div>
- <p class="note">${esc(TJ.note||"")}</p>`)}
+// قسم التراجم قسمان: «مشايخ الدعوة السلفية بمصر» (التراجم المفصلة في data/tarajim.json ثم بقية مؤلفي مكتبة الدعوة من المشايخ)،
+// و«تراجم عامة» (أئمة المكتبة العامة بوفياتهم، مع الربط بتراجمهم في كتب التراجم المحفوظة في المكتبة — #/alam).
+const NONPERSON=/^(صوت السلف|الدعوة السلفية|حزب النور|مجلة|موقع|مركز|لجنة|مجلس|إدارة|فريق|أنا السلفي|بوابة)/;
+function vTarajim(q){q=q||{};const tab=q.t==="aam"?"aam":"dawah",s=(q.q||"").trim(),ws=s?norm(s).split(/\s+/).filter(Boolean):[];
+ const hit=a=>!ws.length||ws.every(w=>norm(a.name+" "+((tj(a.id)||{}).brief||a.bio||"")).includes(w));
+ const tabs=`<div class="tabs" role="tablist">${[["dawah","مشايخ الدعوة السلفية بمصر"],["aam","تراجم عامة"]].map(([k,l])=>`<a role="tab" aria-selected="${tab===k}" href="#/tarajim${k==="aam"?"?t=aam":""}">${l}</a>`).join("")}</div>
+ <form class="stepper" data-form="tjq"><input type="hidden" name="t" value="${tab}"><input name="q" type="search" value="${esc(s)}" placeholder="ابحث بالاسم"><button class="btn p">بحث</button></form>`;
+ const av=a=>`<span class="av">${esc(a.name.replace(/^(الشيخ|الإمام|الحافظ|العلامة|شيخ الإسلام|الدكتور|د\.)\s*/,"").trim()[0]||"")}</span>`;
+ if(tab==="dawah"){
+  const det=sheikhs().map(A).filter(hit);
+  const rest=lib.authors.filter(a=>(a.col||"dawah")==="dawah"&&!a.mergedInto&&!tj(a.id)&&!NONPERSON.test(a.name)&&hit(a)).map(a=>[a,counts(a.id)]).filter(([,c])=>c.books+c.arts+c.fatwas>0).sort((x,y)=>(y[1].books*20+y[1].arts+y[1].fatwas)-(x[1].books*20+x[1].arts+x[1].fatwas));
+  return view(`<h2>التراجم</h2><p class="mut">تعريف بمشايخ الدعوة السلفية بمصر وجهودهم العلمية والدعوية، وتراجم أئمة المكتبة العامة من كتب التراجم. اضغط مطولًا على اسم أي مؤلف في الموقع لترى تعريفه الموجز.</p>${tabs}
+  ${det.length?`<h3>تراجم مفصلة</h3><div class="tgrid">${det.map(a=>{const t=tj(a.id);return`<a class="tcard" href="#/tarjama/${a.id}">${av(a)}<b>${esc(a.name)}</b><p>${esc(t.brief)}</p><em>${countLine(a.id)}</em></a>`}).join("")}</div>`:""}
+  ${rest.length?`<h3>مشايخ وكتّاب مكتبة الدعوة</h3><p class="mut">تُستكمل تراجمهم المفصلة تباعًا من مصادر موثقة تراجعها الإدارة.</p><div class="tgrid">${rest.map(([a])=>`<a class="tcard" href="#/author/${a.id}" data-author="${a.id}">${av(a)}<b>${esc(a.name)}</b>${a.bio?`<p>${esc(a.bio.slice(0,160))}</p>`:""}<em>${countLine(a.id)}</em></a>`).join("")}</div>`:""}
+  ${!det.length&&!rest.length?'<p class="mut">لا نتائج.</p>':""}<p class="note">${esc(TJ.note||"")}</p>`)}
+ const im=lib.authors.filter(a=>a.col==="turath"&&!a.mergedInto&&hit(a)).sort((x,y)=>(parseInt(x.died)||9999)-(parseInt(y.died)||9999));
+ view(`<h2>التراجم</h2><p class="mut">أئمة المكتبة العامة مرتبون بسنة الوفاة، ولكل إمام كتبه في المكتبة وترجمته منقولة بنصها من كتب التراجم المحفوظة فيها (سير أعلام النبلاء، وتهذيب التهذيب، والإصابة…). وللبحث في نحو ستين ألف علم وراوٍ: <a href="#/alam">التعريف بالأعلام والرواة</a>.</p>${tabs}
+ <div class="tgrid">${im.map(a=>`<div class="tcard">${av(a)}<b><a href="#/author/${a.id}" data-author="${a.id}">${esc(a.name)}</a></b>${a.died?`<p class="mut">ت ${esc(String(a.died))}${/هـ/.test(a.died)?"":"هـ"}</p>`:""}${a.bio?`<p>${esc(a.bio.slice(0,160))}</p>`:""}<em>${countLine(a.id)}</em><a class="btn s nf" href="#/alam?q=${encodeURIComponent(a.name.replace(/^(الإمام|الحافظ|العلامة|شيخ الإسلام|الشيخ)\s*/,""))}">ترجمته في كتب التراجم</a></div>`).join("")||'<p class="mut">لا نتائج.</p>'}</div>`)}
+document.addEventListener("submit",e=>{const f=e.target;if(!f.dataset||f.dataset.form!=="tjq")return;e.preventDefault();e.stopImmediatePropagation();const p=new URLSearchParams();if(f.t.value==="aam")p.set("t","aam");if(f.q.value.trim())p.set("q",f.q.value.trim());go("#/tarajim"+(p+""?"?"+p:""))},true);
 function vTarjama(id){const a=A(id),t=tj(id);if(!t)return vAuthor(id,{});
  const c=counts(id),art=t.article&&B(t.article);
  view(`<div class="tj"><div class="tj-h"><span class="av big">${esc(a.name.replace(/^الشيخ\s*/,"").trim()[0]||"")}</span><div><h1>${esc(a.name)}</h1>${t.born?`<p class="mut">المولد: ${esc(t.born)}</p>`:""}</div></div>
@@ -1677,7 +1693,7 @@ function route(){const{p,q}=parse(),v=p[0];if(typeof NAV!=="undefined")NAV.ui();
  if(!v)return vHome();if(v==="library")return vLibrary(q);if(v==="articles")return vList("article",q);if(v==="fatawa")return vList("fatwa",q);if(v==="bayanat")return vList("statement",q);
  if(v==="posts")return vPosts(q);if(v==="community")return vCommunity(q);if(v==="qa")return vQA(q,p[1]);if(v==="hifz")return vHifz(q);if(v==="paths")return vPaths(q,p[1]);if(v==="dm")return vDM(p[1]);if(v==="tashjir")return vTashjir(q,p[1]);if(v==="audio")return vAudio(q,p[1]);if(v==="radio")return vRadio(q,p[1]);if(v==="post")return vPost(p[1]);if(v==="member")return vMember(p[1]);if(v==="messages")return vMessages();if(v==="furqan")return vFurqan(p[1],q);if(v==="releases")return REL.view(q,p[1]);if(v==="editions")return ED.view(p[1],q);if(v==="team")return TEAM.view(p[1],q);if(v==="alam")return ALAM.view(q);if(v==="ithra")return ITHRA.view(q);if(v==="summary")return LRN.vSummary(q);if(v==="quizzes")return LRN.vQuizzes(q,p[1]);if(v==="talaea")return TALA.view(q,p[1]);if(v==="tafrighat")return vTafrighat();if(v==="about")return vAbout();if(v==="dawah")return vDawah();if(v==="history")return vHistory(q,p[1]);if(v==="contact")return vContact();if(v==="authors")return vAuthors();if(v==="author")return vAuthor(p[1],q);
  if(v==="topics")return vLibrary({});if(v==="topic")return vLibrary({t:p[1]});if(v==="book"){const r=vBook(p[1],+p[2],q.h);if(q.tts)Promise.resolve(r).then(()=>setTimeout(()=>{if(typeof AP!=="undefined"&&AP.el&&!AP.el.paused)AP.toggle(false);TTS.start()},700));return r}if(v==="search")return vSearch(q);
- if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim();if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);if(v==="mine")return vMine(q);vHome()}
+ if(v==="qabasat")return vQabasat(q);if(v==="favs")return vFavs();if(v==="admin")return vAdmin(q);if(v==="ask"||v==="ai")return vAsk(q);if(v==="tarajim")return vTarajim(q);if(v==="tarjama")return vTarjama(p[1]);if(v==="account")return vAccount(q);if(v==="mine")return vMine(q);vHome()}
 /* الروابط: يكتبها الموقع بصيغة #/… ويحوّلها إلى روابط عادية (/book/…) تفهمها محركات البحث وتُشارك كما هي */
 const toPath=h=>{const p=String(h).replace(/^#/,"");return p.startsWith("/")?p:"/"+p};
 /* التنقل والرجوع (الباب ٢٢): لكل خطوة رقم i في history.state، فيُعرف هل في التطبيق خطوة سابقة،
