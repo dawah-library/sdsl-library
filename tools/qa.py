@@ -98,22 +98,39 @@ def main():
         if not os.path.basename(f).startswith("_"):
             os.remove(f)
     groups = {}
-    for b in cat["books"]:
+    def art_pages(f, aid):
+        g = groups.get(f)
+        if g is None:
+            try:
+                g = groups[f] = json.load(open(os.path.join(ROOT, "data", "articles", f + ".json"), encoding="utf-8"))
+            except Exception:
+                g = groups[f] = {}
+        return (g.get(aid) or {}).get("pages")
+    # المصادر: كتب الفهرس، ثم مقالات مكتبة الدعوة وفتاواها (data/articles) وكانت خارج القسم
+    srcs = [(b, b.get("type", "book")) for b in cat["books"]]
+    ip = os.path.join(ROOT, "data", "articles", "index.json")
+    if os.path.exists(ip):
+        for x in json.load(open(ip, encoding="utf-8"))["items"]:
+            if x.get("h") or x.get("col") == "ithra":
+                continue
+            srcs.append(({"id": x["id"], "title": x["t"], "f": x["f"], "col": "dawah"}, "fatwa" if x.get("fa") else "article"))
+    # أسئلة مستخرجة بالمساعدة الآلية من كتب الدعوة ومقالاتها (data/qa/_ai.json يكتبه tools/curate.py): الجواب بنص المصدر
+    aip = os.path.join(OUT, "_ai.json")
+    AI = {}
+    if os.path.exists(aip):
+        for it in json.load(open(aip, encoding="utf-8")).get("items", []):
+            AI.setdefault(it["b"], []).append({k: v for k, v in it.items() if k != "b"})
+    seen_ids = set()
+    for b, typ in srcs:
         base = re.sub(r"-v\d+$", "", b["id"])
-        if b.get("demo"):
+        if b.get("demo") or b["id"] in seen_ids:
             continue
-        typ = b.get("type", "book")
+        seen_ids.add(b["id"])
         if typ == "book" and not (b.get("col") == "dawah" or base in TURATH):
             continue
         pages = None
         if typ in ("article", "fatwa", "statement") and b.get("f"):
-            g = groups.get(b["f"])
-            if g is None:
-                try:
-                    g = groups[b["f"]] = json.load(open(os.path.join(ROOT, "data", "articles", b["f"] + ".json"), encoding="utf-8"))
-                except Exception:
-                    g = groups[b["f"]] = {}
-            pages = (g.get(b["id"]) or {}).get("pages")
+            pages = art_pages(b["f"], b["id"])
         else:
             for pth in (os.path.join(ROOT, "data", "books", b["id"] + ".json"), os.path.join(ROOT, "vols", b["id"] + ".json")):
                 if os.path.exists(pth):
@@ -130,6 +147,8 @@ def main():
             m = re.search(r"(?:الجواب|الجواب:)\s*[:\-]?\s*(.+)", txt, re.S)
             a, more = cut_answer(clean(m.group(1) if m else txt))
             items = [{"id": qid(b["id"], 1, b["title"]), "q": b["title"], "a": a, "p": 1, "k": "fatwa", "more": more}]
+        have = {DIAC.sub("", it["q"])[:80] for it in items}
+        items += [it for it in AI.get(b["id"], []) if DIAC.sub("", it["q"])[:80] not in have]
         # تطبيق المراجعة: إخفاء، أو تصحيح السؤال أو الجواب (من النص نفسه)
         keep = []
         for it in items:
