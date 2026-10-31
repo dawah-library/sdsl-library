@@ -12,12 +12,12 @@ const QA = {
   },
   sel: new Set(ls.get("qa_sel", []))
 };
-const QAK = { sj: "سؤال وجواب", qil: "فإن قيل… قيل", suil: "سُئل فأجاب", head: "عنوان الباب", fatwa: "فتوى", gen: "سؤال مصوغ من النص" };
-const qcol = bid => { const b = B(bid); return !b ? "" : b.type === "fatwa" ? "fatwa" : bc(b) === "dawah" ? "dawah" : "turath"; };
+const QAK = { sj: "سؤال وجواب", qil: "فإن قيل… قيل", suil: "سُئل فأجاب", head: "عنوان الباب", fatwa: "فتوى", gen: "سؤال مصوغ من النص", ai: "سؤال مصوغ آليًا، وجوابه بنص المصدر" };
+const qcol = bid => { const b = B(bid); return !b ? "" : b.type === "fatwa" || b.fa ? "fatwa" : bc(b) === "dawah" ? "dawah" : "turath"; };
 
 async function vQA(q, bid) {
   const f = q.c || "", s = q.q || "";
-  view(`<div class="cmhero qa"><div><h2>سؤال وجواب من الكتب</h2><p>أسئلة وأجوبتها بنصها كما وردت في كتب المكتبة وفتاواها: «س… ج…»، و«فإن قيل… قيل»، و«سُئل… فأجاب»، والأبواب المعنونة بسؤال. كل جواب منقول بلفظه مع موضعه في الكتاب، وليس من صياغة الذكاء الاصطناعي.</p></div>
+  view(`<div class="cmhero qa"><div><h2>سؤال وجواب من الكتب</h2><p>أسئلة وأجوبتها بنصها كما وردت في كتب المكتبة وفتاواها: «س… ج…»، و«فإن قيل… قيل»، و«سُئل… فأجاب»، والأبواب المعنونة بسؤال. كل جواب منقول بلفظه مع موضعه في الكتاب، والجواب دائمًا بنص المصدر لا بصياغة الذكاء الاصطناعي؛ وما صيغ سؤاله آليًا من كتب الدعوة ومقالاتها يُعلَّم بذلك.</p></div>
   <div class="row"><button class="btn" data-act="qaexp">⇩ تصدير المختار (<span id="qasel">${toAr(QA.sel.size)}</span>)</button></div></div>
   <form class="stepper" data-form="qasearch"><input name="q" type="search" value="${esc(s)}" placeholder="ابحث في الأسئلة: الصلاة، التوبة، البدعة…" aria-label="ابحث في الأسئلة"><button class="btn p">بحث</button></form>
   <div class="tabs" role="tablist">${[["", "الكل"], ["dawah", "كتب الدعوة"], ["fatwa", "الفتاوى"], ["turath", "المكتبة العامة"]].concat(isAdmin() ? [["flag", "🚩 علّمها التدقيق"]] : []).map(([v, l]) => `<a role="tab" aria-selected="${f === v}" href="#/qa${v || s ? "?" + new URLSearchParams(Object.assign(v ? { c: v } : {}, s ? { q: s } : {})) : ""}">${l}</a>`).join("")}</div>
@@ -26,7 +26,10 @@ async function vQA(q, bid) {
   if (bid) L = L.filter(r => r[2] === bid || r[2].startsWith(bid + "-v"));
   if (f === "flag") L = L.filter(r => (QA.rev[r[0]] || {}).s === "flag"); else if (f) L = L.filter(r => qcol(r[2]) === f);
   if (s) { const ws = norm(s).split(/\s+/).filter(Boolean); L = L.filter(r => { const n = norm(r[1]); return ws.every(w => n.includes(w)); }); }
-  L.sort((a, b) => (b[5] || 0) - (a[5] || 0) || (qcol(a[2]) === "dawah" ? -1 : 0) - (qcol(b[2]) === "dawah" ? -1 : 0));
+  // كتب الدعوة ومقالاتها أولًا، ثم المُراجَع؛ وبلا بحث يتجدد الترتيب يوميًا فتظهر أسئلة جديدة كل يوم
+  const day = (typeof today === "function" ? today() : new Date().toISOString().slice(0, 10)), rot = id => { let h = 2166136261; for (const c of day + id) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+  const rank = r => (qcol(r[2]) === "dawah" ? 0 : qcol(r[2]) === "fatwa" ? 1 : 2);
+  L.sort((a, b) => rank(a) - rank(b) || (s ? (b[5] || 0) - (a[5] || 0) : rot(a[0]) - rot(b[0])));
   window.__qaL = L; qaPage(0);
 }
 function qaRow(r) {

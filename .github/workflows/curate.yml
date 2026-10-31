@@ -2,6 +2,7 @@ name: انتقاء منشورات المشايخ وتدقيق سؤال وجوا�
 on:
   schedule:
     - cron: "40 19 * * *"   # يوميًا بالحصة المجانية المتبقية
+    - cron: "40 9 * * *"    # جولة ثانية (تعدد المفاتيح)
   workflow_dispatch:
     inputs:
       mode:
@@ -37,7 +38,7 @@ jobs:
     needs: gate
     if: ${{ needs.gate.outputs.on == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - name: استخراج سؤال وجواب من النصوص
@@ -65,8 +66,11 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           CUR_MODE: ${{ github.event.inputs.mode || 'all' }}
-          CUR_MAX: ${{ github.event.inputs.max || '80' }}
+          CUR_MAX: ${{ github.event.inputs.max || '450' }}
+          CUR_MINUTES: "200"
         run: python3 tools/curate.py
+      - name: دمج الأسئلة الجديدة في القسم
+        run: python3 tools/qa.py
       - name: الحفظ
         if: always()
         run: |

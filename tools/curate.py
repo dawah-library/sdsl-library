@@ -104,16 +104,49 @@ CHECK = """قيّم كل مقطع منقول من كتاب: هل هو تام ا�
 {items}"""
 
 
+ARTIDX, GROUPS = None, {}
+
+
+def art_index():
+    global ARTIDX
+    if ARTIDX is None:
+        ip = os.path.join(ROOT, "data", "articles", "index.json")
+        ARTIDX = json.load(open(ip, encoding="utf-8"))["items"] if os.path.exists(ip) else []
+    return ARTIDX
+
+
+def art_pages(x):
+    g = GROUPS.get(x["f"])
+    if g is None:
+        try:
+            g = GROUPS[x["f"]] = json.load(open(os.path.join(ROOT, "data", "articles", x["f"] + ".json"), encoding="utf-8"))
+        except Exception:
+            g = GROUPS[x["f"]] = {}
+    return (g.get(x["id"]) or {}).get("pages") or []
+
+
+def dawah_articles():
+    """مقالات مكتبة الدعوة الصالحة للانتقاء: غير مخفية ولا إثرائية ولا فتاوى ولا بيانات، ولها نص كافٍ؛ الأحدث أولًا."""
+    out = [x for x in art_index() if not x.get("h") and x.get("col") != "ithra" and not x.get("fa") and x.get("tp") not in ("at16", "at17")]
+    return sorted(out, key=lambda x: x.get("d") or "", reverse=True)
+
+
 def fawaid(cat):
     p = os.path.join(ROOT, "data", "fawaid.json")
     F = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {"items": [], "done": {}}
     books = [b for b in cat["books"] if b.get("col") == "dawah" and b.get("type", "book") == "book" and not b.get("demo") and not (b.get("ocr") and (b.get("unrev") or b.get("lite")))]
     au = {a["id"]: a["name"] for a in cat["authors"]}
     shards = {}
+    AX = {x["id"]: x for x in art_index()}
     def shard(bid):
         if bid not in shards:
             pth = os.path.join(ROOT, "data", "books", bid + ".json")
-            shards[bid] = json.load(open(pth, encoding="utf-8")) if os.path.exists(pth) else None
+            if os.path.exists(pth):
+                shards[bid] = json.load(open(pth, encoding="utf-8"))
+            elif bid in AX:
+                shards[bid] = {"pages": art_pages(AX[bid])}
+            else:
+                shards[bid] = None
         return shards[bid]
     # إسقاط ما تغيّر نصه
     keep = []
@@ -124,13 +157,14 @@ def fawaid(cat):
     dropped = len(F["items"]) - len(keep)
     F["items"] = keep
     new = []
+    half = BUDGET[0] // 2  # نصف الحصة للكتب ونصفها للمقالات
     for b in books:
         sh = shard(b["id"])
         if not sh:
             continue
         pages = sh["pages"]
         done = F["done"].get(b["id"], 0)
-        while done < len(pages) and BUDGET[0] > 2:
+        while done < len(pages) and BUDGET[0] > half:
             a, z = done, min(len(pages), done + 8)
             text = "\n".join("[ص %d]\n%s" % (i + 1, re.split(r"^\s*_{4,}\s*$", pages[i] or "", flags=re.M)[0]) for i in range(a, z))
             done = z
@@ -148,8 +182,28 @@ def fawaid(cat):
                 if t and 150 <= len(t) <= 1600:
                     new.append({"id": fp(b["id"] + t), "b": b["id"], "p": pg, "t": x.get("type", "فائدة"), "text": t})
         F["done"][b["id"]] = done
-        if BUDGET[0] <= 2:
+        if BUDGET[0] <= half:
             break
+    # المقالات: كل مقال طلب واحد، الأحدث أولًا، ولا يُعاد مقال قُرئ
+    nart = 0
+    for x in dawah_articles():
+        if BUDGET[0] <= 2 or F["done"].get(x["id"]):
+            continue
+        pages = art_pages(x)
+        text = "\n".join("[ص %d]\n%s" % (i + 1, re.split(r"^\s*_{4,}\s*$", pg or "", flags=re.M)[0][:9000]) for i, pg in enumerate(pages[:6]))
+        F["done"][x["id"]] = 1
+        if len(re.sub(r"\s", "", text)) < 900:
+            continue
+        r = gemini(PICK.format(title=x["t"], author=au.get(x.get("a"), ""), n=2, text=text[:40000]))
+        if r is None:
+            F["done"].pop(x["id"], None); break
+        nart += 1
+        for it in r.get("items", [])[:2]:
+            pg = int(it.get("page") or 1)
+            src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
+            t = locate(src, it.get("start", ""), it.get("end", ""))
+            if t and 150 <= len(t) <= 1600:
+                new.append({"id": fp(x["id"] + t), "b": x["id"], "p": pg, "t": it.get("type", "فائدة"), "text": t})
     # جولة التدقيق الثانية
     ok = []
     for k in range(0, len(new), 12):
@@ -160,17 +214,87 @@ def fawaid(cat):
     have = {x["id"] for x in F["items"]}
     ok = [x for x in ok if x["id"] not in have]
     # جدولة النشر: عدد ثابت يوميًا بعد آخر تاريخ مجدول
-    per = int(os.environ.get("CUR_PER_DAY", "4"))
-    last = max([x.get("date", "") for x in F["items"]] + [datetime.date.today().isoformat()])
-    d = datetime.date.fromisoformat(last)
-    n_on = sum(1 for x in F["items"] if x.get("date") == last)
+    per = int(os.environ.get("CUR_PER_DAY", "8"))
+    # تُملأ الأيام من اليوم فصاعدًا حتى لا تخلو أيام من منشورات جديدة
+    cnt = {}
+    for x in F["items"]:
+        cnt[x.get("date", "")] = cnt.get(x.get("date", ""), 0) + 1
+    d = datetime.date.today()
     for x in ok:
-        if n_on >= per:
-            d += datetime.timedelta(days=1); n_on = 0
-        x["date"] = d.isoformat(); n_on += 1
+        while cnt.get(d.isoformat(), 0) >= per:
+            d += datetime.timedelta(days=1)
+        x["date"] = d.isoformat(); cnt[x["date"]] = cnt.get(x["date"], 0) + 1
         F["items"].append(x)
     json.dump(F, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     REPORT.append("منشورات المشايخ: أضيفت %d فائدة مدققة (سُحبت %d تغيّر نصها)، والمجدول حتى %s" % (len(ok), dropped, d.isoformat()))
+
+
+QA_PICK = """أنت محرر علمي في مكتبة الدعوة السلفية. من النص الآتي (من «{title}» لـ{author}، والصفحات معلّمة بـ[ص N])
+استخرج أسئلة يجيب عنها النص نفسه جوابًا تامًا واضحًا: سؤال قصير طبيعي يسأله القارئ (ما حكم…؟ ما معنى…؟ لماذا…؟ ما الفرق بين…؟ كيف…؟)،
+وجوابه مقطع من النص بلفظه. لا تؤلف جوابًا من عندك، ولا تختر سؤالًا لا يجيبه المقطع كاملًا، ولا أسئلة عن المؤلف أو الكتاب نفسه.
+أعد JSON: {{"items": [ {{"q": "السؤال", "page": رقم_الصفحة, "start": "أول ٨ كلمات من الجواب بلفظها حرفيًا", "end": "آخر ٨ كلمات من الجواب بلفظها حرفيًا"}} ]}}
+من ٠ إلى {n} أسئلة، والأنفع أولًا؛ والجواب بين ٢٥ و٢٥٠ كلمة. إن لم يوجد فأعد قائمة فارغة.
+
+{text}"""
+
+
+def qa_ai(cat):
+    """أسئلة وأجوبة من كتب الدعوة المدققة ومقالاتها: السؤال مصوغ آليًا، والجواب مقطع بنص المصدر (k="ai")،
+    يُحفظ في data/qa/_ai.json ويدمجه tools/qa.py في القسم. نصف الحصة المتبقية للكتب ونصفها للمقالات."""
+    p = os.path.join(ROOT, "data", "qa", "_ai.json")
+    Q = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {"items": [], "done": {}}
+    au = {a["id"]: a["name"] for a in cat["authors"]}
+    have = {DIAC.sub("", x["q"])[:80] for x in Q["items"]}
+    added = 0
+    def take(r, src_id, pages, a0):
+        nonlocal added
+        for x in (r or {}).get("items", [])[:4]:
+            q = (x.get("q") or "").strip()
+            if not (8 <= len(q) <= 200) or DIAC.sub("", q)[:80] in have:
+                continue
+            pg = int(x.get("page") or a0)
+            src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
+            t = locate(src, x.get("start", ""), x.get("end", ""))
+            if t and 120 <= len(t) <= 1800:
+                have.add(DIAC.sub("", q)[:80]); added += 1
+                Q["items"].append({"id": "ai" + fp(src_id + q), "b": src_id, "q": q, "a": t, "p": pg, "k": "ai", "more": False})
+    start = BUDGET[0]
+    books = [b for b in cat["books"] if b.get("col") == "dawah" and b.get("type", "book") == "book" and not b.get("demo") and not b.get("hidden") and not (b.get("ocr") and (b.get("unrev") or b.get("lite")))]
+    for b in books:
+        if BUDGET[0] <= start // 2:
+            break
+        pth = os.path.join(ROOT, "data", "books", b["id"] + ".json")
+        if not os.path.exists(pth):
+            continue
+        pages = json.load(open(pth, encoding="utf-8")).get("pages") or []
+        done = Q["done"].get(b["id"], 0)
+        while done < len(pages) and BUDGET[0] > start // 2:
+            a, z = done, min(len(pages), done + 10)
+            text = "\n".join("[ص %d]\n%s" % (i + 1, re.split(r"^\s*_{4,}\s*$", pages[i] or "", flags=re.M)[0]) for i in range(a, z))
+            done = z
+            if len(re.sub(r"\s", "", text)) < 800:
+                continue
+            r = gemini(QA_PICK.format(title=b.get("setTitle") or b["title"], author=au.get(b.get("authorId"), ""), n=4, text=text[:40000]))
+            if r is None:
+                done = a; break
+            take(r, b["id"], pages, a + 1)
+        Q["done"][b["id"]] = done
+    for x in dawah_articles():
+        if BUDGET[0] <= 2:
+            break
+        if Q["done"].get(x["id"]):
+            continue
+        pages = art_pages(x)
+        text = "\n".join("[ص %d]\n%s" % (i + 1, (pg or "")[:9000]) for i, pg in enumerate(pages[:6]))
+        Q["done"][x["id"]] = 1
+        if len(re.sub(r"\s", "", text)) < 900:
+            continue
+        r = gemini(QA_PICK.format(title=x["t"], author=au.get(x.get("a"), ""), n=3, text=text[:40000]))
+        if r is None:
+            Q["done"].pop(x["id"], None); break
+        take(r, x["id"], pages, 1)
+    json.dump(Q, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    REPORT.append("سؤال وجواب من كتب الدعوة ومقالاتها: أضيف %d سؤالًا (المجموع %d)" % (added, len(Q["items"])))
 
 
 QA_CHECK = """أنت مدقق علمي. لكل سؤال وجواب منقولين من كتاب: هل الجواب يجيب السؤال جوابًا تامًا مفهومًا؟ وهل السؤال واضح؟
@@ -215,9 +339,14 @@ def qa_review():
 def main():
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
     mode = os.environ.get("CUR_MODE", "all")
+    total = BUDGET[0]
     if mode in ("fawaid", "all"):
+        BUDGET[0] = total // 3 if mode == "all" else total
         fawaid(cat)
     if mode in ("qa", "all"):
+        BUDGET[0] = total // 3 if mode == "all" else total // 2
+        qa_ai(cat)
+        BUDGET[0] = max(BUDGET[0], total // 3 if mode == "all" else total // 2)
         qa_review()
     if REPORT:
         open(os.path.join(ROOT, ".cur-report.txt"), "w", encoding="utf-8").write("🔎 <b>الانتقاء والتدقيق العلمي</b>\n" + "\n".join(REPORT))
