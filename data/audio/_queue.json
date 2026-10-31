@@ -101,6 +101,12 @@
    "voice": "gemini:Enceladus",
    "rate": "-5%",
    "force": 1
+  },
+  {
+   "id": "p4289f23d",
+   "voice": "gemini:Enceladus",
+   "rate": "-5%",
+   "force": 1
   }
  ]
 }
