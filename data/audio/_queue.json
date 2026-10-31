@@ -65,6 +65,12 @@
    "voice": "gemini:Enceladus",
    "rate": "-5%",
    "force": 1
+  },
+  {
+   "id": "iqtidailm",
+   "voice": "gemini:Enceladus",
+   "rate": "-5%",
+   "force": 1
   }
  ]
 }
