@@ -796,3 +796,4 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 @media print{.tjwrap.mmw{overflow:visible;border:0;background:none}}
 .tjsci{margin-top:18px}.tjsci summary{cursor:pointer;font-weight:700;color:var(--ac)}
 .tjview{flex:none}
+.sumkey{background:color-mix(in srgb,var(--gold) 18%,transparent);border-radius:6px}

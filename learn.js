@@ -27,24 +27,36 @@ const LRN = (() => {
     const W = new Map(); tf.forEach((n, w) => W.set(w, Math.log(1 + n) * Math.log(1 + N / (df.get(w) || 1))));
     return W;
   }
-  const scoreOf = (t, W) => { const ws = words(t); if (!ws.length) return 0; let s = 0; new Set(ws).forEach(w => s += W.get(w) || 0); return s / Math.sqrt(ws.length + 4); };
+  // وزن الجملة: كلماتها المميزة، مع ترجيح الخلاصات والتعريفات والقواعد والأدلة، وتخفيف الجمل المعلّقة على ما قبلها وسلاسل الإسناد
+  const CUE = /^(و?(الخلاصة|خلاصة|فالحاصل|والحاصل|المقصود|فالمقصود|المراد|فالمراد|الصحيح|والصحيح|الراجح|فالراجح|القاعدة|الضابط|اعلم|فاعلم|اعلموا|يجب|فيجب|الواجب|ينبغي|فينبغي|لا بد|ومن أهم|أهم|أول|الأول|الثاني|الثالث))/;
+  const DEF = /(هو|هي|هما)\s*[:：]|يُعرَّف|تعريف|معناه|المقصود ب|حقيقة/, EVID = /قال رسول الله|قال النبي|ﷺ|صلى الله عليه وسلم|﴿|قال تعالى|قوله تعالى/;
+  const DEP = /^(و?(هذا|هذه|ذلك|تلك|لهذا|ولهذا|فهذا|فلهذا|لذلك|ولذلك|وعليه|فعلى هذا|كما سبق|كما تقدم|وأيضًا|أيضًا|ثم|بل|لكن|ولكن)\b)/, ISNAD = /(حدثنا|أخبرنا|أنبأنا|ثنا|نا)\s/g;
+  const scoreOf = (t, W) => { const ws = words(t); if (!ws.length) return 0; let s = 0; new Set(ws).forEach(w => s += W.get(w) || 0); s /= Math.sqrt(ws.length + 4);
+    if (CUE.test(t)) s *= 1.35; if (DEF.test(t)) s *= 1.25; if (EVID.test(t)) s *= 1.15; if (DEP.test(t)) s *= 0.7;
+    const isn = (t.match(ISNAD) || []).length; if (isn >= 2) s *= 0.25; if (t.length > 600) s *= 0.8; return s; };
+  const jac = (a, b) => { let c = 0; a.forEach(x => b.has(x) && c++); return c / Math.max(1, a.size + b.size - c); };
 
   /* ================= اختصار الكتب ================= */
   const RATIOS = [[50, "نصف الكتاب"], [30, "ثلث تقريبًا"], [20, "الخُمس"], [10, "العُشر"], [5, "خلاصة مركزة"], [0, "موجز دقيق (أهم جملة في كل باب)"]];
-  function abridge(b, r) {
-    const secs = sections(b), W = weights(secs), nw = t => t.split(/\s+/).length;
+  function abridge(b, r, only) {
+    const S0 = sections(b), W = weights(S0), nw = t => t.split(/\s+/).length, secs = only >= 0 && S0[only] ? S0.map((x, i) => i === only ? x : { h: x.h, p: x.p, s: [] }) : S0;
     const ow = secs.reduce((n, sc) => n + sc.s.reduce((m, x) => m + nw(x.t), 0), 0), budget = Math.max(40, Math.round(ow * (r || 3) / 100));
     // ترتيب عام للجمل بوزنها، مع تقديم أول جملة في كل باب، ثم الانتقاء حتى تبلغ نسبة الاختصار المطلوبة من عدد الكلمات
     const all = []; secs.forEach((sc, si) => sc.s.forEach((x, i) => all.push({ ...x, si, i, v: scoreOf(x.t, W) * (i === 0 ? 1.3 : 1), w: nw(x.t) })));
     let used = 0; const pick = new Set();
     // أولًا: أهم جملة من كل باب (ليشمل المختصر أبواب الكتاب)، حتى نصف المقدار؛ ثم الأعلى وزنًا من الكتاب كله
     const best = secs.map((_, si) => all.filter(x => x.si === si).sort((a, c) => c.v - a.v)[0]).filter(Boolean).sort((a, c) => c.v - a.v);
-    for (const x of best) { if (used + x.w > budget * .55) continue; pick.add(x); used += x.w; }
-    for (const x of all.slice().sort((a, c) => c.v - a.v)) { if (used >= budget) break; if (pick.has(x)) continue; if (used + x.w > budget * 1.08 && used > budget * .6) continue; pick.add(x); used += x.w; }
-    const res = secs.map((sc, si) => ({ h: sc.h, p: sc.p, s: all.filter(x => x.si === si && pick.has(x)) })).filter(x => x.s.length || (r === 0 && x.h));
-    return { res, all: all.length, total: pick.size, ow, sw: used };
+    // منع التكرار: لا تُنتقى جملة تتقارب ألفاظها مع جملة منتقاة (تشابه > ٥٥٪)
+    const sets = new Map(all.map(x => [x, new Set(words(x.t))])), dup = x => { for (const y of pick) if (jac(sets.get(x), sets.get(y)) > .55) return true; return false; };
+    const add = x => { pick.add(x); used += x.w; x.key = x.key || false; // الجملة المعلّقة على ما قبلها: تُدخل سابقتها إن اتسع المقدار
+      if (DEP.test(x.t) && x.i > 0) { const prev = all.find(y => y.si === x.si && y.i === x.i - 1); if (prev && !pick.has(prev) && used + prev.w <= budget * 1.1) { pick.add(prev); used += prev.w; } } };
+    for (const x of best) { if (used + x.w > budget * .55) continue; x.key = true; add(x); }
+    for (const x of all.slice().sort((a, c) => c.v - a.v)) { if (used >= budget) break; if (pick.has(x) || dup(x)) continue; if (used + x.w > budget * 1.08 && used > budget * .6) continue; add(x); }
+    const res = secs.map((sc, si) => ({ h: sc.h, p: sc.p, si, s: all.filter(x => x.si === si && pick.has(x)) })).filter(x => x.s.length || (r === 0 && x.h));
+    return { res, all: all.length, total: pick.size, ow, sw: used, secs: S0 };
   }
-  const absHtml = (A, pg) => A.res.map(sc => `${sc.h ? `<h3>${esc(sc.h)}${pg ? ` <small>(ص ${toAr(sc.p)})</small>` : ""}</h3>` : ""}${sc.s.map(x => `<p>${esc(x.t)}${pg ? ` <small class="pref">(ص ${toAr(x.p)})</small>` : ""}</p>`).join("")}`).join("");
+  const absHtml = (A, pg) => A.res.map(sc => `${sc.h ? `<h3>${esc(sc.h)}${pg ? ` <small>(ص ${toAr(sc.p)})</small>` : ""}</h3>` : ""}${sc.s.map(x => `<p${x.key ? ' class="sumkey"' : ""}>${esc(x.t)}${pg ? ` <small class="pref">(ص ${toAr(x.p)})</small>` : ""}</p>`).join("")}`).join("");
+  const absText = A => A.res.map(sc => (sc.h ? "■ " + sc.h + "\n" : "") + sc.s.map(x => x.t + " (ص " + x.p + ")").join("\n")).join("\n\n");
   async function vSummary(q) {
     const b = q.b && B(q.b), r = RATIOS.some(x => String(x[0]) === q.r) ? +q.r : 20;
     const pick = `<form class="sbox" data-form="sumpick" style="max-width:none"><input name="t" list="sumbooks" placeholder="اكتب اسم الكتاب ثم اختره" aria-label="اختر الكتاب" value="${b ? esc(b.setTitle && b.vol ? b.title : b.title) : ""}"><datalist id="sumbooks">${BOOKS().filter(x => !x.hidden && !isArt(x)).slice(0, 4000).map(x => `<option value="${esc(x.title)}">`).join("")}</datalist><button class="btn p">اختيار</button></form>`;
@@ -54,11 +66,14 @@ const LRN = (() => {
        <h3>كتب مقترحة للاختصار</h3><div class="newg">${sug.map(x => `<a class="newc" style="text-decoration:none;color:inherit" href="#/summary?b=${encodeURIComponent(x.id)}&r=20"><b>${esc(x.title)}</b><br><span class="mut">${esc(A_(x))}</span></a>`).join("")}</div>`); }
     view(intro + `<p class="mut">جارٍ تحميل الكتاب…</p>`);
     try { await loadBook(b.id); } catch (e) { return view(intro + `<div class="note">تعذر تحميل نص الكتاب: ${esc(e.message)}</div>`); }
-    const A = abridge(b, r), u = v => `#/summary?b=${encodeURIComponent(b.id)}&r=${v}`;
+    const sec = q.s != null && q.s !== "" ? +q.s : -1, full = sec >= 0 ? abridge(b, r, -1) : null, A = abridge(b, r, sec), _f = full || A;
+    const u = v => `#/summary?b=${encodeURIComponent(b.id)}&r=${v}${sec >= 0 ? "&s=" + sec : ""}`, heads = (_f.secs || []).map((x, i) => [i, x.h]).filter(x => x[1]);
+    window.__sum = { b, A };
     view(intro + `<h3 style="margin-top:14px">${esc(b.setTitle && b.vol ? b.setTitle + " — " + b.title : b.title)} <span class="mut">— ${esc(A_(b))}</span></h3>
      <div class="chips" role="radiogroup" aria-label="نسبة الاختصار">${RATIOS.map(([v, l]) => `<a class="chip${v === r ? " x" : ""}" role="radio" aria-checked="${v === r}" href="${u(v)}">${v ? toAr(v) + "٪ — " : ""}${l}</a>`).join("")}</div>
-     <p class="mut">المختصر: ${toAr(A.sw)} كلمة من ${toAr(A.ow)} (${toAr(Math.round(A.sw * 100 / Math.max(1, A.ow)))}٪)، في ${toAr(A.res.length)} بابًا.</p>
-     <div class="row" style="margin:6px 0 12px"><button class="btn p" data-act="sumpdf" data-b="${esc(b.id)}" data-r="${r}">تحميل المختصر PDF</button> <a class="btn" href="#/book/${esc(b.id)}/1">قراءة الأصل</a></div>
+     ${heads.length > 1 ? `<form class="row" style="gap:6px;margin:6px 0" onsubmit="return false"><label for="sumsec">النطاق</label><select id="sumsec" onchange="location.hash='#/summary?b=${encodeURIComponent(b.id)}&r=${r}'+(this.value?'&s='+this.value:'')"><option value="">الكتاب كاملًا</option>${heads.map(([i, h]) => `<option value="${i}"${i === sec ? " selected" : ""}>${esc(h.slice(0, 80))}</option>`).join("")}</select></form>` : ""}
+     <p class="mut">المختصر: ${toAr(A.sw)} كلمة من ${toAr(A.ow)} (${toAr(Math.round(A.sw * 100 / Math.max(1, A.ow)))}٪)، في ${toAr(A.res.length)} بابًا • مدة القراءة نحو ${toAr(Math.max(1, Math.round(A.sw / 180)))} دقيقة. <span class="sumkey" style="padding:0 6px">المظلَّل</span> أهم جملة في الباب.</p>
+     <div class="row" style="margin:6px 0 12px;gap:6px;flex-wrap:wrap"><button class="btn p" data-act="sumpdf" data-b="${esc(b.id)}" data-r="${r}">تحميل المختصر PDF</button><button class="btn" data-act="sumword">Word</button><button class="btn" data-act="sumcopy">نسخ المختصر</button> <a class="btn" href="#/book/${esc(b.id)}/1">قراءة الأصل</a></div>
      <div id="sumorg"></div>
      <article class="sumtx">${absHtml(A, true) || '<div class="note">لا يتسع نص هذا الكتاب للاختصار.</div>'}</article>`);
     sumOrg(b);
@@ -77,6 +92,13 @@ const LRN = (() => {
       ${m.c.map(g => `<section><h4>${esc(g.t)} <small class="mut">${pg(g.p)}</small></h4>${g.s ? `<p>${esc(g.s)}</p>` : ""}<ul>${(g.c || []).map(ch => `<li><b>${esc(ch.t)}</b> <small class="mut">${pg(ch.p)}</small>${ch.s ? `<br>${esc(ch.s)}` : ""}</li>`).join("")}</ul></section>`).join("")}
       <p><a class="btn s" href="#/tashjir/${esc(b.id)}">عرض التشجير التفصيلي</a></p></details>`;
   }
+  document.addEventListener("click", async e => {
+    const el = e.target.closest('[data-act="sumword"],[data-act="sumcopy"]'); if (!el || !window.__sum) return; e.preventDefault();
+    const { b, A } = window.__sum, title = "مختصر " + (b.setTitle && b.vol ? b.setTitle + " — " + b.title : b.title), src = "\n\n— " + SITENAME + "، " + siteLink("#/book/" + b.id + "/1");
+    if (el.dataset.act === "sumcopy") { try { await navigator.clipboard.writeText(title + " — " + A_(b) + "\n\n" + absText(A) + src); toast("نُسخ المختصر"); } catch (x) { toast("تعذر النسخ"); } return; }
+    const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{direction:rtl;font-family:'Traditional Arabic',Amiri,serif;font-size:15pt}h1,h3{color:#0f5c4d}.sumkey{background:#fff3cd}small{color:#7a6a4a}</style></head><body dir="rtl"><h1>${esc(title)}</h1><p>${esc(A_(b))}</p>${absHtml(A, true)}<p><small>${esc(src.trim())}</small></p></body></html>`;
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff", doc], { type: "application/msword" })); a.download = "summary-" + b.id + ".doc"; document.body.appendChild(a); a.click(); a.remove();
+  }, true);
   document.addEventListener("click", async e => {
     const el = e.target.closest('[data-act="sumreq"]'); if (!el) return; e.preventDefault(); el.disabled = true;
     try { await GH.editJSON("data/tashjir/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(x => (x.id || x) !== el.dataset.b); o.items.unshift({ id: el.dataset.b }); return o; }, "طلب خلاصة وتشجير: " + el.dataset.b); const s = $("#sumreqs"); if (s) s.textContent = "أُضيف في أول الطابور؛ يُعدّ خلال ساعات."; }
