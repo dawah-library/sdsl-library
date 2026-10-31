@@ -80,7 +80,7 @@ jobs:
         run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"
-          git add data/quizzes data/summ data/study-queue.json
+          git add $(ls -d data/quizzes data/summ data/study-queue.json 2>/dev/null)
           git diff --cached --quiet && exit 0
           git commit -qm "اختبارات واختصارات محرَّرة: تحديث"
           for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
