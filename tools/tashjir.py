@@ -25,7 +25,7 @@ def norm(s):
 
 
 # لكل نموذج حصة يومية مستقلة لكل مفتاح: تُوزَّع الخدمات على نماذج مختلفة (TJ_MODEL لكل مهمة) ويُنتقل إلى البديل عند نفاد الحصة
-MODELS = list(dict.fromkeys([MODEL] + [x.strip() for x in os.environ.get("TJ_FALLBACK", "gemini-flash-latest,gemini-2.5-flash,gemini-3.5-flash").split(",") if x.strip()]))
+MODELS = list(dict.fromkeys([MODEL] + [x.strip() for x in os.environ.get("TJ_FALLBACK", "gemini-flash-latest,gemini-3.8-flash,gemini-3.5-flash,gemini-flash-lite-latest").split(",") if x.strip()]))
 MEXH = set()  # (مفتاح، نموذج) نفدت حصته اليومية أو النموذج غير متاح
 
 
