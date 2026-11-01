@@ -1496,7 +1496,7 @@
    "col": "dawah",
    "lic": "",
    "author": "أحمد السيد",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -1511,7 +1511,9 @@
      "errs": 0
     }
    },
-   "aid": "w6"
+   "aid": "w6",
+   "lists": [],
+   "base": ""
   },
   {
    "id": "fb-musabamingaber",
