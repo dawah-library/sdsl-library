@@ -541,7 +541,7 @@
    "col": "dawah",
    "lic": "",
    "author": "عبد المنعم الشحات",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -556,7 +556,9 @@
      "errs": 0
     }
    },
-   "aid": "a6"
+   "aid": "a6",
+   "lists": [],
+   "base": ""
   },
   {
    "id": "fb-samhmhmdbsywny",
