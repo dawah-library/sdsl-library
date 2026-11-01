@@ -6,7 +6,9 @@
    "name": "صوت السلف",
    "col": "dawah",
    "on": false,
-   "note": "يُستورد بمهمته الخاصة (daily-import.js)"
+   "note": "يُستورد بمهمته الخاصة (daily-import.js)",
+   "lists": [],
+   "base": ""
   },
   {
    "id": "anasalafy",
