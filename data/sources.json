@@ -1104,7 +1104,7 @@
    "col": "dawah",
    "lic": "",
    "author": "أبو حاتم علاء عبد التواب",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -1118,7 +1118,9 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "lists": [],
+   "base": ""
   },
   {
    "id": "fb-amarhelal",
