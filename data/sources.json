@@ -1124,7 +1124,7 @@
    "col": "dawah",
    "lic": "",
    "author": "أبو حاتم علاء عبد التواب",
-   "on": false,
+   "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
