@@ -1342,7 +1342,7 @@
    "col": "dawah",
    "lic": "",
    "author": "سعد منصور",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -1356,7 +1356,9 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "lists": [],
+   "base": ""
   },
   {
    "id": "fb-ahmedgameel754",
