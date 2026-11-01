@@ -1065,7 +1065,7 @@
    "col": "dawah",
    "lic": "",
    "author": "أحمد يحيى شريف",
-   "on": false,
+   "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
