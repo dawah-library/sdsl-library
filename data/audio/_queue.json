@@ -1,3 +1,9 @@
 {
- "items": []
+ "items": [
+  {
+   "id": "lumca",
+   "del": 1,
+   "redo": 0
+  }
+ ]
 }
