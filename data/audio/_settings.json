@@ -1,4 +1,1 @@
-{
- "voice": "gemini:Enceladus",
- "at": "2026-10-31T04:38:30.701Z"
-}
+{"voice":"gemini:Enceladus","at":"2026-10-31T04:38:30.701Z","skip":["lumca"]}
