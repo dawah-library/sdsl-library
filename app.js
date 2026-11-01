@@ -64,7 +64,7 @@ const SH=new Map(),GROUPS=new Map();let ARTS_IDX=[];
 const artFromIdx=x=>Object.assign({id:x.id,title:x.t,authorId:x.a,topicId:x.tp,tps:x.tps,src:x.src,lic:x.lic,sum:x.sum,ik:x.ik,date:x.d,url:x.u,f:x.f,n:x.n,added:x.ad,c:x.c,fa:x.fa,type:"article",col:x.col||"dawah"},x.h?{hidden:true}:{});
 const isFatwa=b=>!!(b.fa||/^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c||""));
 const byId=(a,b)=>{const m=new Map();a.forEach(x=>m.set(x.id,x));b.forEach(x=>m.set(x.id,Object.assign({},m.get(x.id)||{},x)));return[...m.values()]};
-function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];b.unc=sh.unc||null;b.unrev=sh.unrev||null;if(sh.pl)b.pl=sh.pl;else delete b.pl;b.n=sh.pages.length}
+function attach(b,sh){b.pages=sh.pages;b.toc=sh.toc||[];b.unc=sh.unc||null;b.unrev=sh.unrev||null;if(sh.pl)b.pl=sh.pl;else delete b.pl;if(sh.pmap)b.pmap=sh.pmap;else delete b.pmap;b.n=sh.pages.length}
 // المواد المخفية من «إدارة المواد» تُحجب عن الزوار وتبقى للمشرفين
 const seeHidden=()=>{try{return(typeof Cloud!=="undefined"&&Cloud.staff())||!!(typeof GH!=="undefined"&&GH.token)}catch(e){return false}};
 function merge(){const del=new Set(LOCAL.deleted||[]);
@@ -407,7 +407,11 @@ if(!window.pdfjsLib){await loadScript(PDFJS);window.pdfjsLib.GlobalWorkerOptions
  let d=PDFDOCS.get(url);if(!d){const raw=/\/pdf\/[^/]+\.pdf$/.test(new URL(url).pathname)&&new URL(url).origin===location.origin?"https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main"+new URL(url).pathname:null;
   // الملف الأكبر من حد النشر (٢٥ م.ب) لا يُرفع مع الموقع: يُقرأ من المستودع مباشرة
   d=window.pdfjsLib.getDocument(url).promise.catch(e=>{if(!raw)throw e;return window.pdfjsLib.getDocument(raw).promise});PDFDOCS.set(url,d)}return d}
-function pdfPageFor(b,p){const off=+b.pdfOffset||0,m=b.pdfByLabel&&b.pl&&/(\d+)\s*$/.exec(b.pl[p-1]||"");return(m?+m[1]:p)+off}
+function pdfPageFor(b,p){const off=+b.pdfOffset||0;if(b.pmap&&b.pmap[p-1])return b.pmap[p-1]+off;const m=b.pdfByLabel&&b.pl&&/(\d+)\s*$/.exec(b.pl[p-1]||"");return(m?+m[1]:p)+off}
+/* صفحة النص المقابلة لصفحة مصورة (عكس pdfPageFor) */
+function textPageFor(b,n){const N=b.pages?b.pages.length:(b.n||1);let best=1,bd=1e9;for(let p=1;p<=N;p++){const d=Math.abs(pdfPageFor(b,p)-n);if(d<bd){bd=d;best=p;if(!d)break}}return best}
+/* كاشف تقريبي للصفحة المشوهة (بقايا قراءة آلية رديئة): رموز دخيلة داخل الكلمات أو سطور مبعثرة كلمة كلمة */
+function pgBad(t){t=String(t||"").split(/\n_{4,}\n/)[0];const ws=t.match(/[\u0621-\u064A]+/g)||[];if(ws.length<15)return false;const j=(t.match(/[\u0621-\u064A][!|<>_~^\\]|[!|<>_~^\\][\u0621-\u064A]/g)||[]).length,ln=t.split("\n").filter(x=>x.trim()).length;return j/ws.length>.03||(ln>35&&ws.length/ln<2.5)}
 function pdfCap(b,n,N){return`<p class="mut pdfcap">صفحة ${toAr(n)} من ${toAr(N)} في النسخة المصورة • ${b.img?`<button class="lnk" data-act="pdfdl">تنزيل الكتاب المصور</button>`:`<a href="${esc(b.pdf)}#page=${n}" target="_blank" rel="noopener">فتح الملف كاملًا</a>`}</p>${isAdmin()?`<div class="pdfcal"><span>هل الصورة تطابق النص؟ اضبطها:</span><button class="btn s" data-act="pdfoff" data-d="-1">الصورة السابقة</button><button class="btn s" data-act="pdfoff" data-d="1">الصورة التالية</button><button class="btn s p" data-act="pdfoffsave">حفظ المطابقة (${(+b.pdfOffset||0)>=0?"+":""}${toAr(+b.pdfOffset||0)})</button></div>`:""}`}
 // صور الصفحات في المخزن الخاص: روابط مؤقتة موقَّعة يطلبها العضو المسجل من /api/pages (عشر صفحات في الطلب)
 const PSIGN=new Map();
@@ -418,7 +422,7 @@ async function pimgUrl(b,n){const k=b.id+"|"+n,c=PSIGN.get(k);if(c&&c.exp>Date.n
 async function pdfDl(b){const r=await fetch(`/api/pages?b=${encodeURIComponent(b.id)}&n=1&pdf=1`,{headers:{Authorization:"Bearer "+(Auth.token||"")}});const j=await r.json();if(!r.ok)throw new Error(j.message);window.open(j.pdf,"_blank","noopener")}
 /* تكبير الصفحة المصورة وتصغيرها: أزرار، وقرص بإصبعين، وضغطتان متتاليتان، وسحب للتنقل داخل الصفحة المكبرة */
 function zoomify(box){const el=box.querySelector("img.pimg,canvas");if(!el)return;const wrap=document.createElement("div");wrap.className="zwrap";el.replaceWith(wrap);wrap.appendChild(el);
- let z=Math.min(4,Math.max(1,+S.pz||1));const bar=document.createElement("div");bar.className="zbar";bar.innerHTML='<button data-z="-" aria-label="تصغير الصفحة">−</button><span class="zv"></span><button data-z="+" aria-label="تكبير الصفحة">+</button><button data-z="0" aria-label="الحجم الأصلي">⟲</button>'+(el.tagName==="IMG"?'<a href="'+el.src+'" target="_blank" rel="noopener" aria-label="فتح الصورة كاملة">⤢</a>':"");wrap.before(bar);
+ let z=Math.min(4,Math.max(1,+S.pz||1));const bar=document.createElement("div");bar.className="zbar";bar.innerHTML='<button data-z="-" aria-label="تصغير الصفحة">−</button><span class="zv"></span><button data-z="+" aria-label="تكبير الصفحة">+</button><button data-z="0" aria-label="الحجم الأصلي">⟲</button>'+(el.tagName==="IMG"?'<button data-act="pfull" aria-label="عرض المصورة بملء الشاشة" title="ملء الشاشة: تصفح كل الصفحات">⤢</button>':"");wrap.before(bar);
  const set=(nz,cx,cy)=>{nz=Math.min(4,Math.max(1,Math.round(nz*100)/100));const r=wrap.getBoundingClientRect(),fx=cx==null?.5:(cx-r.left+wrap.scrollLeft)/(wrap.scrollWidth||1),fy=cy==null?.5:(cy-r.top+wrap.scrollTop)/(wrap.scrollHeight||1);z=nz;el.style.width=(z*100)+"%";el.style.maxWidth="none";wrap.classList.toggle("zoomed",z>1);bar.querySelector(".zv").textContent=toAr(Math.round(z*100))+"٪";S.pz=z;saveS();
   requestAnimationFrame(()=>{wrap.scrollLeft=fx*wrap.scrollWidth-wrap.clientWidth/2;wrap.scrollTop=fy*wrap.scrollHeight-wrap.clientHeight/2})};
  bar.addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(!b)return;const k=b.dataset.z;set(k==="+"?z+.5:k==="-"?z-.5:1)});
@@ -428,6 +432,28 @@ function zoomify(box){const el=box.querySelector("img.pimg,canvas");if(!el)retur
  wrap.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,e);if(pts.size===2&&d0){const[a,b]=[...pts.values()],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);set(z0*d/d0,(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);e.preventDefault()}else if(drag){wrap.scrollLeft=drag.l-(e.clientX-drag.x);wrap.scrollTop=drag.t-(e.clientY-drag.y)}});
  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)d0=0;drag=null};["pointerup","pointercancel","pointerleave"].forEach(ev=>wrap.addEventListener(ev,up));
  set(z)}
+/* عارض المصورة بملء الشاشة داخل الموقع: كل صفحات الكتاب متتابعة (تمرير رأسي)، والسحب الأفقي ينقل صفحة،
+   وتكبير بالأزرار أو بالقرص، والإغلاق يعيد القارئ إلى صفحة النص المقابلة لآخر صورة. */
+function pFull(b,n0){const N=+b.imgN||0;if(!N)return;let z=1,curN=n0;const ov=document.createElement("div");ov.id="pfull";ov.setAttribute("role","dialog");ov.setAttribute("aria-label","النسخة المصورة بملء الشاشة");ov.dataset.noswipe="1";
+ ov.innerHTML=`<div class="pfbar"><button data-f="x" aria-label="إغلاق">✕</button><span class="pfn"></span><span class="sp"></span><button data-f="-" aria-label="تصغير">−</button><button data-f="+" aria-label="تكبير">+</button><button data-f="p" aria-label="الصفحة السابقة">→</button><button data-f="n" aria-label="الصفحة التالية">←</button></div><div class="pfs"><div class="pfin">${Array.from({length:N},(_,i)=>`<div class="pfp" data-n="${i+1}"><span class="pfl">${toAr(i+1)}</span></div>`).join("")}</div></div>`;
+ document.body.appendChild(ov);document.body.classList.add("pfopen");const sc=ov.querySelector(".pfs"),inn=ov.querySelector(".pfin"),lab=ov.querySelector(".pfn");
+ const show=k=>{curN=k;lab.textContent=`صفحة ${toAr(k)} من ${toAr(N)}`};show(n0);
+ const load=el=>{if(el.dataset.l)return;el.dataset.l=1;const k=+el.dataset.n;pimgUrl(b,k).then(u=>{const im=new Image();im.alt="الصفحة "+k;im.decoding="async";im.onload=()=>{el.classList.add("ok");el.style.aspectRatio=im.naturalWidth+"/"+im.naturalHeight};im.src=u;el.appendChild(im)}).catch(()=>{el.dataset.l="";el.classList.add("err")})};
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)load(e.target)}),{root:sc,rootMargin:"1200px 0px"});
+ const vis=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.intersectionRatio>=.5)show(+e.target.dataset.n)})},{root:sc,threshold:[.5]});
+ inn.querySelectorAll(".pfp").forEach(el=>{io.observe(el);vis.observe(el)});
+ const go=k=>{k=Math.max(1,Math.min(N,k));const el=inn.children[k-1];if(el){sc.scrollTo({top:el.offsetTop-6,behavior:"smooth"});show(k)}};
+ requestAnimationFrame(()=>{const el=inn.children[n0-1];if(el)sc.scrollTop=el.offsetTop-6});
+ const zoom=nz=>{const k=curN;z=Math.min(4,Math.max(1,nz));inn.style.width=(z*100)+"%";ov.classList.toggle("zoomed",z>1);requestAnimationFrame(()=>{const el=inn.children[k-1];if(el)sc.scrollTop=el.offsetTop-6;sc.scrollLeft=(sc.scrollWidth-sc.clientWidth)/-2})};
+ const close=()=>{io.disconnect();vis.disconnect();ov.remove();document.body.classList.remove("pfopen");document.removeEventListener("keydown",key,true);try{if(document.fullscreenElement===ov)document.exitFullscreen()}catch(e){}
+  const c=cur();if(c&&c.b.id===b.id){const p=textPageFor(b,curN);if(p!==c.p)window.go("#/book/"+b.id+"/"+p,true)}};
+ const key=e=>{if(e.key==="Escape"){e.preventDefault();close()}else if(e.key==="ArrowLeft"||e.key==="PageDown"){e.preventDefault();go(curN+1)}else if(e.key==="ArrowRight"||e.key==="PageUp"){e.preventDefault();go(curN-1)}};document.addEventListener("keydown",key,true);
+ ov.querySelector(".pfbar").addEventListener("click",e=>{const f=(e.target.closest("[data-f]")||{}).dataset;if(!f||!f.f)return;({x:close,"+":()=>zoom(z+.5),"-":()=>zoom(z-.5),n:()=>go(curN+1),p:()=>go(curN-1)})[f.f]()});
+ let t0=null;sc.addEventListener("touchstart",e=>{t0=e.touches.length===1&&z===1?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}:null},{passive:true});
+ sc.addEventListener("touchend",e=>{if(!t0)return;const t=e.changedTouches[0],dx=t.clientX-t0.x,dy=t.clientY-t0.y;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&Date.now()-t0.t<800)go(curN+(dx>0?1:-1));t0=null},{passive:true});
+ let last=0;sc.addEventListener("click",e=>{const t=Date.now();if(t-last<320){zoom(z>1?1:2);last=0}else last=t});
+ try{if(ov.requestFullscreen&&matchMedia("(pointer:coarse)").matches)ov.requestFullscreen().catch(()=>{})}catch(e){}
+ ov.addEventListener("fullscreenchange",()=>{})}
 async function renderPdf(b,p){const box=$("#pdfv");if(!box)return;box.innerHTML='<p class="mut" style="text-align:center;padding:30px 0">جارٍ تحميل الصفحة المصورة…</p>';
  if(b.img){// صور الصفحات من مخزن المكتبة: صفحة واحدة خفيفة بدل الملف كله
   const n=pdfPageFor(b,p),N=+b.imgN||0;if(n<1||(N&&n>N)){box.innerHTML='<p class="note">لا توجد صفحة مصورة مقابلة لهذه الصفحة.</p>';return}
@@ -631,6 +657,7 @@ async function vBook(id,p,h){
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
   ${art?ahead:`<div class="run"><span>${esc(b.title)}</span><span>${esc(chap)}</span></div>`}<a class="markgo" id="markgo" hidden></a>
   ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="trv" id="trv" hidden></div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div><div class="trv" id="trv" hidden></div>`}
+  ${b.ocr&&pv!=="pdf"&&!scroll&&pgBad(b.pages[p-1])?`<p class="note pgbad">⚠️ نص هذه الصفحة لم يكتمل تدقيقه على صورتها بعد، وفيه تشويه من القراءة الآلية، وهو في طابور إعادة القراءة. ${Auth.user?'<button class="lnk" data-act="pv" data-pv="pdf">اقرأها من المصورة</button>':'سجّل الدخول لقراءتها من المصورة.'}</p>`:""}
   ${b.ocr?'<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل.</p>':""}
   ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
  </article></div>
@@ -1948,6 +1975,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="nbexp"){nbExport(el.dataset.f)}
  else if(a==="pdfdl"){const c=cur();if(c)pdfDl(c.b).catch(e=>toast(e.message))}
  else if(a==="pv"){S.pv=el.dataset.pv;saveS();LASTREAD=null;route()}
+ else if(a==="pfull"){const c=cur();if(c&&c.b.img)pFull(c.b,pdfPageFor(c.b,c.p))}
  else if(a==="pdfoff"){const c=cur();if(c){c.b.pdfOffset=(+c.b.pdfOffset||0)+(+el.dataset.d);renderPdf(c.b,c.p)}}
  else if(a==="pdfoffsave"){const c=cur();if(c)savePdfOffset(c.b,el)}
  else if(a==="card")cardSheet();

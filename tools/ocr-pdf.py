@@ -94,7 +94,17 @@ if GKEYS:  # في التحويل المتوازي يبدأ كل جهاز بمف�
     _k = int(os.environ.get("GEMINI_KEY_START", "0") or 0) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
 GKEY = GKEYS[0] if GKEYS else ""
 KI = [0]
-GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"] if m]  # الأولوية لتجهيز الكتب المصورة: تأخذ حصص نماذج التشجير والاختبارات قبل النموذج الخفيف
+def _load_quality():
+    """كاشف الصفحات المشوهة من tools/ocr-quality.py (رموز دخيلة وكلمات مجهولة وسطور مبعثرة)."""
+    import importlib.util
+    try:
+        sp = importlib.util.spec_from_file_location("ocr_quality", os.path.join(os.path.dirname(os.path.abspath(__file__)), "ocr-quality.py"))
+        m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m.page_bad
+    except Exception as e:
+        print("تعذر تحميل كاشف الجودة:", e); return lambda t: False
+page_bad = _load_quality()
+GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3-flash-preview",
+                        "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"] if m]  # لكل نموذج حصة يومية مستقلة: تجهيز الكتب المصورة أولًا ثم بقية الخدمات  # الأولوية لتجهيز الكتب المصورة: تأخذ حصص نماذج التشجير والاختبارات قبل النموذج الخفيف
 GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
 PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
 - حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.
@@ -190,7 +200,9 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
     models = list(models or GMODELS); models_all = list(models)
-    for attempt in range(9):
+    attempt, spins = 0, 0
+    while attempt < 9 and spins < 4 * len(GKEYS) * len(models_all) + 20:  # نفاد حصة نموذج لا يُحسب محاولة: ننتقل إلى غيره
+        spins += 1
         ki = getattr(TL, "k", None)
         ki = (KI[0] if ki is None else ki) % len(GKEYS)
         if ki in KEXH:
@@ -224,8 +236,12 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             daily = e.code == 429 and re.search(r"PerDay|per day|daily", msg, re.I) and not re.search(r"PerMinute", msg)
             ERRS["%s %s%s" % (models[0], e.code, " (الحصة اليومية)" if daily else "")] += 1
             print("    Gemini %s %s: %s" % (models[0], e.code, msg[:160]), flush=True)
-            if e.code == 404 and len(models) > 1: models.pop(0); continue
-            if daily:  # نفدت حصة هذا النموذج على هذا المفتاح اليوم: جرّب النموذج البديل ثم المفاتيح الأخرى
+            attempt += 1
+            if e.code == 404:  # النموذج غير متاح: يُستبعد من كل المفاتيح
+                for kk in range(len(GKEYS)): MEXH.add((kk, models[0]))
+                attempt -= 1; continue
+            if daily:
+                attempt -= 1  # نفدت حصة هذا النموذج على هذا المفتاح اليوم: جرّب النموذج البديل ثم المفاتيح الأخرى
                 MEXH.add((ki, models[0])); print("    نفدت الحصة اليومية لـ %s على المفتاح %d" % (models[0], ki + 1), flush=True)
                 continue
             if e.code == 429:  # حد الدقيقة: انتظر ثم أعد، وجرّب مفتاحًا آخر إن وُجد
@@ -237,7 +253,8 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             time.sleep(min(90, 8 * 2 ** min(attempt, 3)))  # صبر متزايد على الازدحام المؤقت
         except Exception as e:
             ERRS["خطأ اتصال"] += 1
-            print("    Gemini خطأ: %r" % e, flush=True); time.sleep(6 * (attempt + 1))
+            attempt += 1
+            print("    Gemini خطأ: %r" % e, flush=True); time.sleep(6 * attempt)
     fail[0] += 1
     return None
 
@@ -929,8 +946,13 @@ def plan():
             cat = json.load(open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
             req = set((json.load(open(os.path.join(DATA, "review-requests.json"), encoding="utf-8")) if os.path.exists(os.path.join(DATA, "review-requests.json")) else {}).get("items", []))
             # المراجعة الدورية تلقائية لكتب مكتبة الدعوة، وغيرها حسب الطلب المباشر (data/review-requests.json)
-            need = [b for b in cat["books"] if (b.get("col") == "dawah" or b.get("upl") or b["id"] in req) and (b.get("unrev") or b.get("lite") or b.get("unc")) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
-            need.sort(key=lambda b: (-(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))  # الأحوج أولًا
+            nbad = {}
+            for b in cat["books"]:  # كاشف الجودة: عدد الصفحات المشوهة في كل كتاب محوَّل
+                if not b.get("ocr"): continue
+                try: nbad[b["id"]] = sum(1 for t in json.load(open(os.path.join(DATA, "books", b["id"] + ".json"), encoding="utf-8"))["pages"] if page_bad(t))
+                except Exception: nbad[b["id"]] = 0
+            need = [b for b in cat["books"] if (b.get("col") == "dawah" or b.get("upl") or b["id"] in req or nbad.get(b["id"])) and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"])) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            need.sort(key=lambda b: (-nbad.get(b["id"], 0), -(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))
             books += ["rereview:" + b["id"] for b in need][:int(os.environ.get("OCR_REREVIEW_BOOKS", "10"))]  # التدقيق أولًا: عشرة كتب في الجولة
         if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
@@ -983,8 +1005,11 @@ def rereview(bid):
     unrev, lite, unc0 = sorted(set(sh.get("unrev") or [])), sorted(set(sh.get("lite") or [])), dict(sh.get("unc") or {})
     # الأولوية: ما فاتته المراجعة، ثم مواضع الشك (وهي قليلة وأثرها كبير)، ثم بقية الصفحات الخفيفة بما بقي من الحصة
     uncp = [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev]
-    order = unrev + uncp + [i for i in lite if i not in unrev and i not in uncp]
+    bad = [i for i in range(len(sh["pages"])) if page_bad(sh["pages"][i])]  # الصفحات المشوهة أولًا (كاشف الجودة) ولو لم تكن معلَّمة
+    unrev = sorted(set(unrev) | set(bad))
+    order = bad + [i for i in unrev if i not in bad] + uncp + [i for i in lite if i not in unrev and i not in uncp]
     idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
+    pmap = sh.get("pmap") or []  # صفحة النص ← صفحة المصورة (من أداة المطابقة) إن اختلف الترتيب
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
     pdf = local_pdf(bid) if idx else None
@@ -992,13 +1017,16 @@ def rereview(bid):
     print("== تدقيق %s: %d صفحة (فاتتها المراجعة %d، خفيفة %d، فيها شك %d)" % (bid, len(idx), len(unrev), len(lite), len(unc0)), flush=True)
     # النص الحالي مسودةً يستعين بها Gemini مع الصورة
     os.environ["OCR_DRAFTS"] = ""
-    new = ocr(pdf, only=[i + 1 for i in idx], prior={i + 1: sh["pages"][i] for i in idx})
+    pn = lambda i: (pmap[i] if i < len(pmap) and pmap[i] else i + 1)
+    new = ocr(pdf, only=[pn(i) for i in idx], prior={pn(i): sh["pages"][i] for i in idx})
     left, lite2, unc = set(unrev), set(lite), dict(unc0)
     fixed = 0
     for k, i in enumerate(idx):
         if k in UNREVIEWED: continue
         if k in MUSED and i not in unrev: continue  # قراءة Gemini السابقة أولى من قراءة Mistral وحدها
+        if not new[k].strip() and sh["pages"][i].strip(): continue
         sh["pages"][i] = new[k]; fixed += 1
+        if page_bad(new[k]): continue  # ما زالت مشوهة: تبقى في طابور التدقيق
         left.discard(i)
         if k in LITE: lite2.add(i)
         else: lite2.discard(i)

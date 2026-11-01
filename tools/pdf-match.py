@@ -41,16 +41,91 @@ def page_text(pdf, n, tmp):
         t = subprocess.run(['tesseract', os.path.join(tmp, imgs[0]), '-', '-l', 'ara', '--psm', '6'], capture_output=True, text=True).stdout if imgs else ''
         for f in imgs: os.remove(os.path.join(tmp, f))
     CACHE[(pdf, n)] = norm(t); return CACHE[(pdf, n)]
+def align(T, P, off):
+    """مطابقة رتيبة لكل صفحة نص بصفحة مصورة (برمجة ديناميكية): التشابه بالكلمات، مع غرامة على القفز."""
+    n, N = len(T), len(P)
+    if not n or not N: return [], []
+    BAND = 10; NEG = -1e9
+    sim = {}
+    def S(i, j):
+        k = (i, j)
+        if k not in sim: sim[k] = jac(T[i], P[j]) if len(T[i]) >= 15 and len(P[j]) >= 15 else 0.0
+        return sim[k]
+    cand = [[j for j in range(max(0, i + off - BAND), min(N, i + off + BAND + 1))] for i in range(n)]
+    dp = [{} for _ in range(n)]; bk = [{} for _ in range(n)]
+    for j in cand[0]: dp[0][j] = S(0, j) - 0.02 * abs(j - off)
+    for i in range(1, n):
+        for j in cand[i]:
+            best, arg = NEG, None
+            for jp, v in dp[i - 1].items():
+                if jp > j: continue
+                jump = j - jp
+                pen = 0 if jump == 1 else (0.04 if jump == 0 else 0.03 * (jump - 1))
+                if v - pen > best: best, arg = v - pen, jp
+            if arg is not None: dp[i][j] = best + S(i, j); bk[i][j] = arg
+    j = max(dp[-1], key=dp[-1].get); path = [j]
+    for i in range(n - 1, 0, -1): j = bk[i][j]; path.append(j)
+    path.reverse()
+    return [j + 1 for j in path], [S(i, path[i]) for i in range(n)]
+
+
+def full_match(b, sh, pdf, N, tmp, apply):
+    """مطابقة كل الصفحات (لا عينة): ينتج pmap عند اختلاف الترتيب، ويعلّم الصفحات التي لا تشبه صورتها."""
+    from concurrent.futures import ThreadPoolExecutor
+    pages = sh['pages']; off = int(b.get('pdfOffset') or 0)
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
+        P = list(ex.map(lambda k: page_text(pdf, k, tempfile.mkdtemp(dir=tmp)), range(1, N + 1)))
+    T = [norm(re.split(r'^\s*_{4,}\s*$', t or '', flags=re.M)[0]) for t in pages]
+    pm, sc = align(T, P, off)
+    linear = all(pm[i] == i + 1 + off for i in range(len(pm)))
+    shifts = {}
+    for i in range(len(pm)): shifts[pm[i] - i - 1] = shifts.get(pm[i] - i - 1, 0) + 1
+    common = max(shifts, key=shifts.get) if shifts else 0
+    weak = [i for i in range(len(pm)) if len(T[i]) >= 30 and len(P[pm[i] - 1]) >= 30 and sc[i] < 0.08]
+    fixed = []
+    if apply:
+        if linear: sh.pop('pmap', None)
+        elif all(pm[i] == i + 1 + common for i in range(len(pm))):
+            sh.pop('pmap', None); b['pdfOffset'] = common; fixed.append('pdfOffset %d→%d' % (off, common))
+        else:
+            sh['pmap'] = pm; b['pdfOffset'] = 0; b['pmap'] = 1
+            fixed.append('خريطة صفحات (%d صفحة خارج الترتيب البسيط)' % sum(1 for i in range(len(pm)) if pm[i] != i + 1 + common))
+        if linear: b.pop('pmap', None)
+        if weak:
+            sh['unrev'] = sorted(set(sh.get('unrev') or []) | set(weak)); b['unrev'] = len(sh['unrev'])
+            fixed.append('%d صفحة لا تشبه صورتها ← إعادة القراءة' % len(weak))
+    return {'full': 1, 'avg': round(sum(sc) / max(1, len(sc)), 3), 'shift': common, 'linear': linear, 'weak': weak[:60], 'nweak': len(weak), 'fixed': fixed}
+
+
 def main():
     cat = json.load(open(os.path.join(D, 'catalog.json'), encoding='utf-8')); only = [x for x in os.environ.get('MATCH_ONLY', '').split(',') if x]
     S = int(os.environ.get('MATCH_SAMPLE', '24')); apply = os.environ.get('MATCH_APPLY') == '1'
-    rep = {'at': time.strftime('%Y-%m-%d %H:%M'), 'books': {}}; md = ['# مطابقة النسخ المصورة بالنصية — ' + rep['at'], '']
+    FULL = os.environ.get('MATCH_FULL', '1') == '1'; deadline = time.time() + 60 * float(os.environ.get('MATCH_MINUTES', '100'))
+    rp = os.path.join(D, 'match', 'report.json')
+    try: old = json.load(open(rp, encoding='utf-8')).get('books', {})
+    except Exception: old = {}
+    rep = {'at': time.strftime('%Y-%m-%d %H:%M'), 'books': dict(old)}; md = ['# مطابقة النسخ المصورة بالنصية — ' + rep['at'], '']
     books = [b for b in cat['books'] if b.get('pdf') and not b.get('hidden') and (not only or b['id'] in only)]
+    # المطابقة الكاملة لكل الصفحات: الكتب التي لم تُطابَق كاملة بعد أو تغيّر عدد صفحاتها، الأحدث أولًا
+    if FULL and not only:
+        books = [b for b in books if not (old.get(b['id']) or {}).get('full') or (old.get(b['id']) or {}).get('textPages') != b.get('n')]
+        books.sort(key=lambda b: b.get('added') or '', reverse=True)
     for b in books:
+        if time.time() > deadline: print('انتهى الوقت المخصص؛ البقية في الجولة القادمة'); break
         bid = b['id']; tmp = tempfile.mkdtemp()
         try:
             shp = os.path.join(D, 'books', bid + '.json'); sh = json.load(open(shp, encoding='utf-8')); pages = sh['pages']
             pdf = get_pdf(bid, tmp); N = npages(pdf); off = int(b.get('pdfOffset') or 0)
+            if FULL:
+                info = {'t': b['title'], 'textPages': len(pages), 'pdfPages': N, 'offset': off}
+                info.update(full_match(b, sh, pdf, N, tmp, apply))
+                if apply: json.dump(sh, open(shp, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+                rep['books'][bid] = info; fixed = info['fixed']
+                md.append('## %s (%s)\n- صفحات النص %d، المصورة %d، متوسط التطابق %d٪، %s\n- صفحات لا تشبه صورتها: %d%s\n' % (
+                    b['title'], bid, len(pages), N, round(info['avg'] * 100), 'الترتيب مطابق' if info['linear'] else 'إزاحة غالبة %+d' % info['shift'],
+                    info['nweak'], ('\n- التصحيح: ' + '؛ '.join(fixed)) if fixed else ''))
+                print(bid, {k: v for k, v in info.items() if k != 'weak'}, flush=True)
+                continue
             idx = sorted(set([0, len(pages) - 1] + list(range(2, len(pages), max(1, len(pages) // S)))))[:S + 2]
             res = []
             for i in idx:
@@ -69,15 +144,15 @@ def main():
                 u = sorted(set(sh.get('unrev') or []) | set(weak)); sh['unrev'] = u; json.dump(sh, open(shp, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
                 b['unrev'] = len(u); fixed.append('%d صفحة إلى إعادة القراءة على الصورة' % len(weak))
             info['fixed'] = fixed; rep['books'][bid] = info
-            md.append('## %s (%s)\n- صفحات النص %d، صفحات المصورة %d (الإزاحة %d)%s\n- العينة %d صفحة، متوسط التطابق %d٪، إزاحة مكتشفة %+d في %d٪ من العينة\n- صفحات ضعيفة التطابق: %s%s\n' % (
-                b['title'], bid, len(pages), N, off, ' ⚠️ فرق في العدد' if N and abs(N - off - len(pages)) > 3 else '', len(res), round(avg * 100), mode, round(share * 100),
-                ', '.join(str(i + 1) for i in weak) or 'لا يوجد', ('\n- التصحيح: ' + '؛ '.join(fixed)) if fixed else ''))
+            md.append('## %s (%s)\n- العينة %d صفحة، متوسط التطابق %d٪، إزاحة %+d\n' % (b['title'], bid, len(res), round(avg * 100), mode))
             print(bid, info, flush=True)
         except Exception as e:
             rep['books'][bid] = {'t': b['title'], 'err': str(e)[:200]}; md.append('## %s\n- تعذر: %s\n' % (b['title'], str(e)[:200])); print('خطأ', bid, e, flush=True)
         finally: shutil.rmtree(tmp, ignore_errors=True)
+        if apply:  # حفظ تدريجي: لا يضيع ما أُنجز إن انقطعت المهمة
+            json.dump(cat, open(os.path.join(D, 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     os.makedirs(os.path.join(D, 'match'), exist_ok=True)
-    json.dump(rep, open(os.path.join(D, 'match', 'report.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    json.dump(rep, open(rp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     open(os.path.join(ROOT, 'tools', 'match-report.md'), 'w', encoding='utf-8').write('\n'.join(md))
     if apply: json.dump(cat, open(os.path.join(D, 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 if __name__ == '__main__':

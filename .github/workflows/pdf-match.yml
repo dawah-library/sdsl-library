@@ -5,7 +5,7 @@ on:
       books: { description: "معرّفات كتب (اختياري)", required: false, default: "" }
       apply: { description: "تطبيق التصحيحات (1/0)", required: false, default: "1" }
   schedule:
-    - cron: "41 3 * * 1"   # أسبوعيًّا
+    - cron: "41 3 * * *"   # يوميًّا: المطابقة الكاملة للكتب الجديدة أو المتغيرة (المطابَقة تُتخطى)
   push:
     paths: ["tools/pdf-match.py"]
 permissions:

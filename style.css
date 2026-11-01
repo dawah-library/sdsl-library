@@ -873,3 +873,17 @@ ul.tj.mm{display:inline-block;min-width:max-content}
 .post .fbi{width:1em;height:1em;color:#1877f2;vertical-align:-.12em;margin-inline-start:4px}
 .post.pfb header .mut a{color:#1877f2}
 .ftools{gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}.ftools .mut{flex:1;font-size:.85rem}
+/* عارض المصورة بملء الشاشة */
+body.pfopen{overflow:hidden}
+#pfull{position:fixed;inset:0;z-index:9999;background:#141414;display:flex;flex-direction:column;color:#eee}
+#pfull .pfbar{display:flex;align-items:center;gap:6px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:#1e1e1e;border-bottom:1px solid #333}
+#pfull .pfbar button{background:#2b2b2b;color:#eee;border:1px solid #444;border-radius:10px;min-width:40px;height:38px;font-size:1.1rem;cursor:pointer}
+#pfull .pfbar .pfn{font-size:.9rem;color:#ccc;white-space:nowrap}#pfull .pfbar .sp{flex:1}
+#pfull .pfs{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;overscroll-behavior:contain}
+#pfull .pfin{width:100%;max-width:none;margin:0 auto;padding:6px 0 40px}
+#pfull:not(.zoomed) .pfin{max-width:900px}
+#pfull .pfp{position:relative;margin:0 auto 10px;aspect-ratio:7/10;background:#222;border-radius:4px;overflow:hidden}
+#pfull .pfp.ok{background:#fff}#pfull .pfp img{display:block;width:100%;height:auto}
+#pfull .pfl{position:absolute;inset:auto 0 8px;text-align:center;color:#777;font-size:.85rem;pointer-events:none}
+#pfull .pfp.ok .pfl{display:none}#pfull .pfp.err::after{content:"تعذر التحميل";position:absolute;inset:45% 0 auto;text-align:center;color:#aaa}
+.note.pgbad{margin:8px 0;font-size:.9rem}
