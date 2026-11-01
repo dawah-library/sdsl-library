@@ -1152,7 +1152,7 @@
    "col": "dawah",
    "lic": "",
    "author": "أحمد هلال",
-   "on": false,
+   "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
