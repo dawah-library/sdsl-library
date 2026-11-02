@@ -1,6 +1,11 @@
 {
  "items": [
   {
+   "id": "ajurrihamala",
+   "del": 1,
+   "redo": 0
+  },
+  {
    "id": "muqusul",
    "del": 1,
    "redo": 0
