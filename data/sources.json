@@ -514,7 +514,7 @@
    "col": "dawah",
    "lic": "",
    "author": "الشيخ ياسر برهامي",
-   "on": false,
+   "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
