@@ -1,8 +1,8 @@
 {
  "tts": {
-  "gemini-3.8-flash-tts": "ok:348636",
-  "gemini-3.1-flash-tts-preview": "ok:222720",
-  "gemini-2.5-flash-preview-tts": "ok:233664"
+  "gemini-3.8-flash-tts": "ok:340956",
+  "gemini-3.1-flash-tts-preview": "ok:194560",
+  "gemini-2.5-flash-preview-tts": "ok:295104"
  },
  "models": [
   "gemini-2.5-flash",
@@ -52,7 +52,7 @@
   "gemini-robotics-er-2-streaming-preview",
   "gemini-3.5-live-translate-preview"
  ],
- "at": "2026-11-01T13:11Z",
+ "at": "2026-11-02T15:35Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
@@ -81,7 +81,7 @@
   },
   {
    "name": "GEMINI_API_KEY_6",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   },
   {
@@ -101,12 +101,12 @@
   },
   {
    "name": "GEMINI_API_KEY_10",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_11",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   },
   {
@@ -116,17 +116,17 @@
   },
   {
    "name": "GEMINI_API_KEY_13",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_14",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_15",
-   "status": "ok",
+   "status": "quota",
    "type": "AQ"
   }
  ],
