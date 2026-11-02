@@ -1549,7 +1549,7 @@
    "col": "dawah",
    "lic": "",
    "author": "مصعب أمين جابر",
-   "on": false,
+   "on": true,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
