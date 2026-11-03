@@ -386,7 +386,7 @@
   },
   {
    "col": "dawah",
-   "on": false,
+   "on": true,
    "linkRx": "https://anasalafy\\.com/ar/\\d{3,}-[^\"'\\s<>]+",
    "siteSuffix": "موقع أنا السلفي",
    "skipRx": "\\((?:مقطع|مرئي|صوتي)\\)|^(حزب النور|بيان)|يدين|يثمن|يشيد",
