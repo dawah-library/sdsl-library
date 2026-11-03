@@ -1591,6 +1591,22 @@
    },
    "lists": [],
    "base": ""
+  },
+  {
+   "id": "fb-share",
+   "type": "facebook",
+   "name": "شريف طه",
+   "fb": "share",
+   "kind": "person",
+   "col": "dawah",
+   "lic": "",
+   "author": "شريف طه",
+   "on": true,
+   "to": "posts",
+   "minChars": 60,
+   "perRun": 25,
+   "delayMs": 1000,
+   "aid": "w109"
   }
  ]
 }
