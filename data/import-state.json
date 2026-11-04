@@ -1,12 +1,12 @@
 {
- "next": 8801,
+ "next": 9600,
  "perRun": 400,
  "fatwaAuthor": "a2",
  "maxMisses": 60,
  "delayMs": 900,
  "latestHint": 25763,
- "imported": 13406,
- "lastRun": "2026-11-04T16:58:36.886Z",
+ "imported": 13806,
+ "lastRun": "2026-11-04T20:53:42.434Z",
  "newAuthors": [
   "سعيد السواح",
   "محمد الباز",
@@ -214,7 +214,7 @@
   "طارق فهيم"
  ],
  "lastSeen": 241,
- "backNext": 11096,
+ "backNext": 10880,
  "headNext": 25764,
  "skipped": [
   "sv24172",
@@ -317,7 +317,12 @@
   "sv6876",
   "sv6928",
   "sv7138",
-  "sv7162"
+  "sv7162",
+  "sv11083",
+  "sv10973",
+  "sv10939",
+  "sv10911",
+  "sv9501"
  ],
  "nearAuthors": [
   "محمد إبراهيم السعيدي → w137",
