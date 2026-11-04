@@ -1,5 +1,5 @@
-# تقرير آخر تحويل — 2026-11-04 15:57 UTC
+# تقرير آخر تحويل — 2026-11-04 15:59 UTC
 
-## تدقيق البنيان في تربية الفتيان — ج 1 (p1acef349)
-- أُعيدت قراءته: 320 صفحة؛ بقي دون مراجعة: 10، بالنموذج الخفيف: 389، مواضع شك: 17
-- أخطاء Gemini: gemini-flash-lite-latest 503 ×18، GitHub اتصال ×16، mistral 429 ×7، gemini-flash-latest 503 ×3، gemini-flash-latest 429 (الحصة اليومية) ×3، gemini-3.7-flash 429 (الحصة اليومية) ×3
+## تدقيق الأساس — ج 6 (peb296fa1)
+- أُعيدت قراءته: 309 صفحة؛ بقي دون مراجعة: 9، بالنموذج الخفيف: 304، مواضع شك: 20
+- أخطاء Gemini: GitHub اتصال ×16، gemini-flash-latest 503 ×9، mistral 429 ×7، gemini-3.6-flash 503 ×5، gemini-flash-lite-latest 503 ×5، gemini-flash-latest 429 (الحصة اليومية) ×3
