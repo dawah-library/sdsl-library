@@ -31,4 +31,5 @@ jobs:
           GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
           GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
         run: python3 tools/tala-ex.py --answer ${{ github.event.inputs.n || '400' }}
-      - run: bash tools/git-save.sh "تمارين الطلائع: إجابات مقترحة من الدروس (تنتظر الاعتماد)" data/tala-ex.json
+      - run: |
+          bash tools/git-save.sh "تمارين الطلائع: إجابات مقترحة من الدروس (تنتظر الاعتماد)" data/tala-ex.json
