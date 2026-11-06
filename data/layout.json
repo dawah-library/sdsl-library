@@ -1,0 +1,60 @@
+{
+ "note": "ترتيب الرئيسية: يحرره المدير من زر «ترتيب الواجهة» في الرئيسية",
+ "home": [
+  {
+   "k": "quote",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "resume",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "study",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "cols",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "stats",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "ask",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "news",
+   "show": true,
+   "fold": false
+  },
+  {
+   "k": "services",
+   "show": true,
+   "fold": true
+  },
+  {
+   "k": "newsec",
+   "show": true,
+   "fold": true
+  },
+  {
+   "k": "sugg",
+   "show": true,
+   "fold": true
+  },
+  {
+   "k": "topics",
+   "show": true,
+   "fold": true
+  }
+ ]
+}

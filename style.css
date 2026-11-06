@@ -972,3 +972,9 @@ body:not(.reading) #ibsbar{display:none}
 #gdbtn[hidden]{display:none}body.reading #gdbtn{display:none}
 @keyframes gdfloat{50%{transform:translateY(-4px)}}@media (prefers-reduced-motion:reduce){#gdbtn{animation:none}}
 .gdi p{margin:2px 0}.lnk{border:0;background:none;color:var(--ac);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
+
+/* الرئيسية المختصرة: الأقسام المطوية، ومحرر الترتيب */
+details.hfold{margin:12px 0;border:1px solid var(--line);border-radius:14px;background:var(--sf);padding:0 14px}
+details.hfold>summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--ac);list-style:none}details.hfold>summary::before{content:"▸ ";}details.hfold[open]>summary::before{content:"▾ "}
+details.hfold>div{padding-bottom:12px}#hlayb{margin:18px auto 0;display:block}
+.hlo{padding-inline-start:20px}.hlo li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-bottom:1px solid var(--line)}.hlo li span{flex:1 1 140px;font-weight:600}
