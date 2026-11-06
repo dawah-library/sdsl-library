@@ -9,7 +9,7 @@ const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/au
 // المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
 const ROLE_AR = w => (w.role === "admin" ? "مشرف" : w.role === "delegate" ? "مفوَّض" : "محرر") + " #" + String(w.id || "").slice(0, 6);
 // صلاحيات التفويض (profiles.perms): العضو المفوَّض يكتب في مسارات خدمته فقط
-const PERM_PATHS = { kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$)/ };
+const PERM_PATHS = { upload: /^(data\/books\/|data\/articles\/|ocr-inbox\/|pdf\/|data\/catalog\.json$)/, edit: /^(data\/books\/|data\/articles\/|vols\/|data\/catalog\.json$|data\/tashkeel\/)/, kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$)/ };
 const delegateOk = (who, p) => who.role !== "delegate" || who.perms.some(k => PERM_PATHS[k] && PERM_PATHS[k].test(String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "")));
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;

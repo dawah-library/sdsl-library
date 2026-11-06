@@ -141,9 +141,9 @@ const GRP = (() => {
   }
 
   // ———— صلاحيات التفويض (للمدير) ————
-  const PERMS = [["export_text", "تنزيل الكتب نصًا قابلًا للتحرير (Word/نص/Markdown كاملة)"], ["kurrasa", "إعداد الكراسات"], ["convert", "تحويل الكتب والمقالات ومراجعتها"], ["tashjir", "التشجير والخرائط الذهنية"], ["stats", "الاطلاع على سجل قراءة الأعضاء"]];
+  const PERMS = [["upload", "رفع الكتب والتفريغات والمقالات والكتب المصورة"], ["edit", "تعديل نصوص الكتب وتصحيحها (المراجعة والتدقيق)"], ["export_text", "تنزيل الكتب نصًا قابلًا للتحرير (Word/نص/Markdown كاملة)"], ["kurrasa", "إعداد الكراسات"], ["convert", "تحويل الكتب والمقالات ومراجعتها"], ["tashjir", "التشجير والخرائط الذهنية"], ["stats", "الاطلاع على سجل قراءة الأعضاء"]];
   async function perms() {
-    if (!Cloud.staff() || !/admin/.test(Cloud.role || "")) { view('<div class="note">هذه الصفحة للمدير.</div>'); return; }
+    if (!(Cloud.role === "admin" || GH.token)) { view('<div class="note">هذه الصفحة للمدير. سجّل الدخول بحساب المدير.</div>'); return; }
     view(`<h2>صلاحيات التفويض</h2><p class="mut">امنح عضوًا بعينه صلاحية خدمة محددة دون أن يصير مشرفًا. المدير يملكها كلها.</p><input id="pmq" placeholder="ابحث عن عضو بالاسم" autocomplete="off"><div id="pml" style="margin-top:10px"></div>`);
     const show = async ids => { const { data } = await sb().from("profiles").select("id,name,role,perms").in("id", ids); $("#pml").innerHTML = (data || []).map(p => `<div class="stsec" style="margin:8px 0"><b>${esc(p.name || "—")}</b> <em class="tag">${esc(p.role)}</em><div>${PERMS.map(([k, n]) => `<label class="inl"><input type="checkbox" data-pm="${p.id}" value="${k}"${(p.perms || []).includes(k) ? " checked" : ""}> ${esc(n)}</label>`).join("<br>")}</div></div>`).join("") || '<p class="mut">لا نتائج</p>'; };
     const { data: hasP } = await sb().from("profiles").select("id").neq("perms", "{}").limit(50); if (hasP && hasP.length) show(hasP.map(x => x.id));
