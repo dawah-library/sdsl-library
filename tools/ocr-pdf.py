@@ -951,8 +951,11 @@ def plan():
                 if not b.get("ocr"): continue
                 try: nbad[b["id"]] = sum(1 for t in json.load(open(os.path.join(DATA, "books", b["id"] + ".json"), encoding="utf-8"))["pages"] if page_bad(t))
                 except Exception: nbad[b["id"]] = 0
-            need = [b for b in cat["books"] if (b.get("col") == "dawah" or b.get("upl") or b["id"] in req or nbad.get(b["id"])) and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"])) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
-            need.sort(key=lambda b: (-nbad.get(b["id"], 0), -(b.get("unrev") or 0), -(b.get("lite") or 0), -(b.get("unc") or 0)))
+            # كل كتاب محوَّل يُدقَّق تلقائيًا دون انتظار طلب الإدارة (طلب المدير ٦ نوفمبر)؛ والطلب المباشر يقدّمه في الترتيب
+            need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"])) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            # الإنجاز أولًا: الأقرب إلى الاكتمال يُتم قبل غيره ليتأهل للنشر المدقق والتسجيل الصوتي، بدل توزيع الحصة على كل الكتب فلا يكتمل منها شيء
+            rem = lambda b: (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) + nbad.get(b["id"], 0)
+            need.sort(key=lambda b: (0 if b["id"] in req else 1, 0 if (b.get("col") or "dawah") == "dawah" or b.get("upl") else 1, rem(b)))
             books += ["rereview:" + b["id"] for b in need][:int(os.environ.get("OCR_REREVIEW_BOOKS", "10"))]  # التدقيق أولًا: عشرة كتب في الجولة
         if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
