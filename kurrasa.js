@@ -145,11 +145,11 @@ const KUR = (() => {
     if (!id) return list();
     window.scrollTo(0, 0); $("#app").innerHTML = '<p class="mut" style="padding:30px;text-align:center">جارٍ إعداد الكراسة…</p>';
     const [L, K] = await Promise.all([getJ("kurrasa/_list.json"), getJ("kurrasa/" + id + ".json")]), inf = (L || {})[id] || {};
-    if (!K || (!inf.ok && !isAdmin())) return view(`<p class="note">هذه الكراسة غير متاحة بعد.</p><p><a href="#/kurrasat">← كراسات المكتبة</a></p>`);
+    if (!K || (!inf.ok && !can("kurrasa"))) return view(`<p class="note">هذه الكراسة غير متاحة بعد.</p><p><a href="#/kurrasat">← كراسات المكتبة</a></p>`);
     await fonts(); const pages = layout(K), b = B(id);
     view(`<p><a href="#/kurrasat">← كراسات المكتبة</a></p><div class="kurhead"><h2>كراسة: ${esc(K.t)}</h2><p class="mut">${esc(K.a || "")} • ${toAr(pages.length)} صفحات من أصل ${toAr(K.n || 0)} • ${toAr(K.secs.length)} قسمًا${inf.ok ? "" : " • معاينة للإدارة — غير منشورة"}</p></div>
-      <div class="row kurtools"><button class="btn p s" data-kur="pdf">⇩ PDF</button><button class="btn s" data-kur="zip">⇩ صور الصفحات (ZIP)</button><button class="btn s" data-kur="txt">عرض نصي</button>${b ? `<a class="btn s" href="#/book/${esc(id)}/1">قراءة الأصل</a>` : ""}${isAdmin() ? `<button class="btn s" data-kur="ok" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد ونشر"}</button><button class="btn s" data-kur="redo">إعادة الإعداد بخيارات…</button>` : ""}</div>
-      ${isAdmin() ? `<div class="card kurform" id="kurredo" hidden>${optsForm(K.r, K.st)}<button class="btn p s" data-kur="redogo">أعِد الإعداد</button></div>` : ""}
+      <div class="row kurtools"><button class="btn p s" data-kur="pdf">⇩ PDF</button><button class="btn s" data-kur="zip">⇩ صور الصفحات (ZIP)</button><button class="btn s" data-kur="txt">عرض نصي</button>${b ? `<a class="btn s" href="#/book/${esc(id)}/1">قراءة الأصل</a>` : ""}${can("kurrasa") ? `<button class="btn s" data-kur="ok" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد ونشر"}</button><button class="btn s" data-kur="redo">إعادة الإعداد بخيارات…</button>` : ""}</div>
+      ${can("kurrasa") ? `<div class="card kurform" id="kurredo" hidden>${optsForm(K.r, K.st)}<button class="btn p s" data-kur="redogo">أعِد الإعداد</button></div>` : ""}
       <p class="mut kurnote">أُعدّت الكراسة من نص الكتاب نفسه بإيجاز وتنظيم، دون إضافة رأي أو معلومة من خارجه؛ والنصوص المنقولة بلفظها مع رقم صفحتها. فارجع إلى الأصل عند النقل والاستشهاد.</p>
       <div class="kurpages" id="kurpages">${pages.map((_, i) => `<figure class="kurpg" data-n="${i}"><div class="kurph">صفحة ${toAr(i + 1)}</div><figcaption><button class="btn s" data-kur="png" data-n="${i}">⇩ صورة</button></figcaption></figure>`).join("")}</div><div id="kurtxt" hidden></div>`);
     window.__kur = { K, pages, id };
@@ -175,7 +175,7 @@ const KUR = (() => {
   }
   async function list() {
     const q = (typeof parse === "function" ? parse().q : {}) || {};
-    const L = (await getJ("kurrasa/_list.json")) || {}, staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff), Q = staff ? (await getJ("kurrasa/_queue.json")) || { items: [] } : null;
+    const L = (await getJ("kurrasa/_list.json")) || {}, staff = can("kurrasa"), ids = Object.keys(L).filter(k => L[k].ok || staff), Q = staff ? (await getJ("kurrasa/_queue.json")) || { items: [] } : null;
     view(`<div class="cmhero kur"><div><h2>كراسات المكتبة</h2><p>الكتاب في كراسة مذاكرة ومراجعة: مفصّلة أو متوسطة أو موجزة، بأقسام الكتاب وتمهيد لكل قسم، وتلخيص وأسئلة وأجوبة في آخره، وأهم المسائل، وتعريفات، وجداول ومقارنات، وخرائط ذهنية، ونصوص بلفظها، وتنبيهات، وأسئلة مراجعة؛ بألوان جذابة، تُقرأ في الموقع وتُحمَّل PDF أو صورًا. والمادة من الكتاب نفسه بلا إضافة ولا تغيير لآراء المؤلف.</p></div></div>
       ${ids.length ? `<div class="agrid">${ids.map(k => `<a class="acard2" href="#/kurrasat/${esc(k)}"><span class="acov" style="${typeof avHue === "function" ? avHue(k) : ""}"><i>📘</i><em>${esc((L[k].t || "").split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(L[k].t || k)}</b><small class="mut">${esc(L[k].a || "")} • ${toAr(L[k].secs || 0)} قسمًا${L[k].r ? " • " + RL[L[k].r] : ""}${L[k].ok ? "" : " • غير منشورة"}</small></a>`).join("")}</div>` : '<p class="note">لم تُصدر كراسات بعد. تختار الإدارة الكتب فتُعدّ كراساتها آليًا وتظهر هنا.</p>'}
       ${staff ? `<div class="card" style="margin-top:14px"><h3>اختيار كتاب لتحويله إلى كراسة (للإدارة)</h3><p class="mut">يُفضَّل كتاب اكتمل تدقيق نصه. يُعدّ القسم بقسمه من نص الكتاب، ويُتحقق من النصوص المنقولة بلفظها، وتُنشر الكراسة مباشرة ولك إيقاف عرضها.</p>
@@ -266,7 +266,7 @@ const KUR = (() => {
     let b; try { b = await loadBook(id); } catch (e) { return view(`<p class="note">${esc(e.message)}</p>`); }
     if (!TFE.has(id)) TFE.set(id, getJ("tfedit/" + id + ".json")); const d = await TFE.get(id);
     const v = q.v === "r" ? "r" : "f", refs = q.ref === "1", a = A(b.authorId), title = b.setTitle || b.title;
-    if (!d || !d.pages || !Object.keys(d.pages).length) return view(`<p><a href="#/tafrighat">← التفريغات</a></p><h2>${esc(title)}</h2><div class="note">النسخة المحررة لهذا التفريغ قيد الإعداد؛ تُجهَّز آليًا بعد اكتمال تحويله ومراجعته، ثم تظهر هنا.${isAdmin() ? ` <button class="btn s" data-tfq="${esc(id)}">قدّمه في طابور التجهيز</button>` : ""}</div><p><a class="btn" href="#/book/${esc(id)}/1">اقرأ التفريغ كما رُفع</a></p>`);
+    if (!d || !d.pages || !Object.keys(d.pages).length) return view(`<p><a href="#/tafrighat">← التفريغات</a></p><h2>${esc(title)}</h2><div class="note">النسخة المحررة لهذا التفريغ قيد الإعداد؛ تُجهَّز آليًا بعد اكتمال تحويله ومراجعته، ثم تظهر هنا.${can("kurrasa") ? ` <button class="btn s" data-tfq="${esc(id)}">قدّمه في طابور التجهيز</button>` : ""}</div><p><a class="btn" href="#/book/${esc(id)}/1">اقرأ التفريغ كما رُفع</a></p>`);
     const n = b.pages.length, edited = Object.keys(d.pages).length, chs = []; let cur = { t: "", ps: [] }, last = "";
     for (let i = 1; i <= n; i++) {
       const e = d.pages[String(i)], raw = e ? (e[v] || e.f || "") : String(b.pages[i - 1] || "").split(/^\s*_{4,}\s*$/m)[0];

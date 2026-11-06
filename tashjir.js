@@ -22,7 +22,7 @@ function tjNode(n, d, ci, bid) {
   if (n.b) bid = n.b; // خرائط العلوم: كل غصن يشير إلى كتابه
   const go = n.u ? `<a class="tjp" href="${esc(n.u)}">${esc(n.ul || "افتح")}</a>` : "";
   const kk = n.k && TJK[n.k] ? `<i class="tjk" title="${esc(n.k)}">${TJK[n.k]}</i>` : "";
-  return `<li class="tjn d${d}" style="--c:${col}"${n.k ? ` data-k="${esc(n.k)}"` : ""}><div class="tjcard">${go}${kk}${n.i && isAdmin() ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
+  return `<li class="tjn d${d}" style="--c:${col}"${n.k ? ` data-k="${esc(n.k)}"` : ""}><div class="tjcard">${go}${kk}${n.i && can("tashjir") ? `<button class="tjed" data-act="tjedit" data-i="${n.i}" aria-label="تعديل الغصن">✎</button>` : ""}<b>${esc(n.t || "")}${flag}</b>${n.s ? `<p>${esc(n.s)}</p>` : ""}${n.q ? `<q>${esc(n.q)}</q>` : ""}${pp ? `<a class="tjp" href="#/book/${esc(bid)}/${pp}">${pg}</a>` : ""}</div>${n.c && n.c.length ? `<ul>${n.c.map((c, i) => tjNode(c, d + 1, d === 0 ? i : ci, bid)).join("")}</ul>` : ""}</li>`;
 }
 /* خرائط العلوم التفاعلية (ب7-27 … ب7-44): تُبنى من محتوى المكتبة الفعلي — موضوعات الكتب والمقالات والمتون وفهارس الكتب —
    فكل غصن رابط إلى كتاب أو باب بصفحته أو مقال، ولا تُنشأ علاقة علمية لم ترد في تصنيف المكتبة أو فهارس كتبها (ب7-42). */
@@ -80,14 +80,14 @@ async function vTashjir(q, id) {
     view(`<div class="cmhero tj"><div><h2>تشجير الكتب</h2><p>خرائط ذهنية لكتب مشايخ الدعوة توضّح بناء الكتاب وأفكاره: تشجير عام للكتاب، ومتوسط للفصول والأبواب، وتفصيلي للموضوعات ونقاطها، وكل غصن مربوط بصفحته.</p></div></div>
      <h3>تشجير الكتب</h3><div id="tjbox" class="mut">جارٍ التحميل…</div>
      <details class="tjsci"><summary>خرائط العلوم من محتوى المكتبة (فهارس الكتب وتصنيف المقالات)</summary><div class="agrid">${TJ_SCI.map(([k, n]) => `<a class="acard2" href="#/tashjir/m:${k}"><span class="acov" style="${avHue(k)}"><i>🗺️</i><em>${esc(n)}</em></span><b>${esc(n)}</b><small class="mut">الكتب والمتون والمقالات</small></a>`).join("")}</div></details>`);
-    const L = await TSJ.index(), staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff);
+    const L = await TSJ.index(), staff = can("tashjir"), ids = Object.keys(L).filter(k => L[k].ok || staff);
     const box = $("#tjbox"); if (!box) return; box.className = "";
     box.innerHTML = (ids.length ? `<div class="agrid">${ids.map(k => { const b = B(k); return `<a class="acard2" href="#/tashjir/${k}"><span class="acov" style="${avHue(k)}"><i>🌳</i><em>${esc((b ? b.setTitle || b.title : L[k].t).split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(b ? b.setTitle || b.title : L[k].t)}</b><small class="mut">${toAr(L[k].n || 0)} نقطة${L[k].ok ? "" : " • معاينة للإدارة"}</small></a>`; }).join("")}</div>` : `<div class="card soon"><h3>قريبًا بإذن الله</h3><p>تُشجَّر كتب الدعوة تباعًا بعد تدقيق نصوصها ومطابقتها بالنسخ المصورة، وتختار الإدارة الكتب المعروضة.</p></div>`)
       + (staff ? tjAdminForm(L) : "");
     return;
   }
   const L = await TSJ.index(), inf = L[id] || {};
-  if (!inf.ok && !isAdmin()) return view('<p class="note">هذا التشجير غير منشور بعد.</p><p><a href="#/tashjir">← تشجير الكتب</a></p>');
+  if (!inf.ok && !can("tashjir")) return view('<p class="note">هذا التشجير غير منشور بعد.</p><p><a href="#/tashjir">← تشجير الكتب</a></p>');
   view('<p class="mut">جارٍ تحميل التشجير…</p>');
   const m = await TSJ.map(id); if (!m) return view('<p class="note">التشجير غير متاح.</p>');
   const lvl = Math.min(3, Math.max(1, +q.lvl || 2)), a = +q.from || 0, z = +q.to || 0, b = B(id);
@@ -96,7 +96,7 @@ async function vTashjir(q, id) {
   view(`<p><a href="#/tashjir">← تشجير الكتب</a></p><div class="tjhead"><h2>${esc(m.t)}</h2><p class="mut">${esc(m.a || "")}${inf.ok ? "" : " • معاينة للإدارة — غير منشور"}</p></div>
   <div class="seg tjlvl">${[[1, "عام"], [2, "متوسط"], [3, "تفصيلي"]].map(([v, l]) => `<a href="${url({ lvl: v })}" class="${v === lvl ? "on" : ""}">${l}</a>`).join("")}</div>
   <form class="row tjrange" data-form="tjrange" data-id="${id}" data-lvl="${lvl}"><label>من صفحة <input name="a" type="number" min="1" value="${a || ""}"></label><label>إلى صفحة <input name="z" type="number" min="1" value="${z || ""}"></label><button class="btn s">عرض النطاق</button>${a || z ? `<a class="btn s" href="${url({ from: "", to: "" }).replace(/&?(from|to)=(&|$)/g, "")}">الكتاب كله</a>` : ""}</form>
-  <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button><button data-act="tjrd" aria-pressed="false">شعاعية</button></span><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${isAdmin() ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
+  <div class="row tjtools"><span class="tjview" role="group" aria-label="طريقة العرض"><button data-act="tjmm" aria-pressed="false">خريطة ذهنية</button><button data-act="tjls" aria-pressed="false">قائمة</button><button data-act="tjrd" aria-pressed="false">شعاعية</button></span><button class="btn s" data-act="tjpng">⇩ صورة PNG</button><button class="btn s" data-act="tjpdf">PDF (طباعة)</button><button class="btn s" data-act="tjshare">مشاركة</button><button class="btn s" data-act="tjall">طيّ/فتح الكل</button>${can("tashjir") ? `<button class="btn s" data-act="tjok" data-id="${id}" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد العرض للأعضاء"}</button><button class="btn s" data-act="tjre" data-id="${id}">إعادة التشجير</button>` : ""}</div>
   <p class="mut tjnote">التشجير مساعد على الفهم والمراجعة، وهو من إعداد آلي راجعته جولة تدقيق ثانية؛ والمرجع نص الكتاب بالضغط على رقم الصفحة. علامة «؟» تعني عبارة لم تطابق نص الصفحة بعد.</p>
   ${tjBar(m)}
   <div class="tjwrap" id="tjwrap"><ul class="tj">${tjNode(tree, 0, 0, id)}</ul></div>${tjTerms(m, id)}`);

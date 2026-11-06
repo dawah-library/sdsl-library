@@ -7,7 +7,10 @@ const REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
 const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/authors|assets\/covers|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
 
 // المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
-const ROLE_AR = w => (w.role === "admin" ? "مشرف" : "محرر") + " #" + String(w.id || "").slice(0, 6);
+const ROLE_AR = w => (w.role === "admin" ? "مشرف" : w.role === "delegate" ? "مفوَّض" : "محرر") + " #" + String(w.id || "").slice(0, 6);
+// صلاحيات التفويض (profiles.perms): العضو المفوَّض يكتب في مسارات خدمته فقط
+const PERM_PATHS = { kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$)/ };
+const delegateOk = (who, p) => who.role !== "delegate" || who.perms.some(k => PERM_PATHS[k] && PERM_PATHS[k].test(String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "")));
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
   const tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -15,10 +18,12 @@ async function staffOf(req) {
   const u = await fetch(url + "/auth/v1/user", { headers: { apikey: key, Authorization: "Bearer " + tok } });
   if (!u.ok) return null;
   const user = await u.json(); if (!user || !user.id) return null;
-  const p = await fetch(url + "/rest/v1/profiles?select=role&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } });
+  const p = await fetch(url + "/rest/v1/profiles?select=role,perms&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } });
   const rows = p.ok ? await p.json() : [];
   const role = rows[0] && rows[0].role;
-  return /^(admin|editor)$/.test(role || "") ? { id: user.id, email: user.email, role } : null;
+  if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role };
+  const perms = ((rows[0] && rows[0].perms) || []).filter(k => PERM_PATHS[k]);
+  return perms.length ? { id: user.id, email: user.email, role: "delegate", perms } : null;
 }
 
 const GHH = () => ({ Authorization: "Bearer " + process.env.GITHUB_WRITE_TOKEN, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "sdsl-library" });
@@ -35,7 +40,7 @@ async function batch(req, res, who) {
   if (!files.length || files.length > 60) return res.status(400).json({ message: "عدد الملفات بين ١ و٦٠ في الدفعة." });
   for (const f of files) {
     const p = String(f.path || "");
-    if (!ALLOWED.test("/contents/" + p) || /(^|\/)\.\.(\/|$)/.test(p) || (typeof f.text !== "string" && typeof f.b64 !== "string"))
+    if (!ALLOWED.test("/contents/" + p) || !delegateOk(who, p) || /(^|\/)\.\.(\/|$)/.test(p) || (typeof f.text !== "string" && typeof f.b64 !== "string"))
       return res.status(400).json({ message: "مسار غير مسموح: " + p });
   }
   const branch = String(b.branch || "main").replace(/[^\w.-]/g, "");
@@ -71,6 +76,7 @@ module.exports = async (req, res) => {
     if (new URL(req.url, "http://x").searchParams.get("batch") === "1") return batch(req, res, who);
     const path = String((req.query && req.query.p) || new URL(req.url, "http://x").searchParams.get("p") || "");
     if (!ALLOWED.test(path)) return res.status(400).json({ message: "مسار غير مسموح." });
+    if (req.method === "PUT" && !delegateOk(who, path)) return res.status(403).json({ message: "صلاحيتك المفوَّضة لا تشمل هذا الملف." });
     if (!["GET", "PUT"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
     let body;
     if (req.method === "PUT") {

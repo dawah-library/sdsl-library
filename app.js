@@ -585,7 +585,7 @@ function nextPv(cur){const wide=matchMedia("(min-width:1000px)").matches;return 
 /* ---------- الإدارة المباشرة عبر GitHub ---------- */
 const GH={repo:CFG.repo||"dawah-library/sdsl-library",branch:CFG.branch||"main",
  get token(){return ls.get("ghtoken","")},set token(v){ls.set("ghtoken",v||"")},
- get proxied(){return!this.token&&typeof Cloud!=="undefined"&&Cloud.staff()&&CFG.ghProxy!==""},
+ get proxied(){return!this.token&&typeof Cloud!=="undefined"&&(Cloud.staff()||(Cloud.perms||[]).length>0)&&CFG.ghProxy!==""},
  get on(){return!!this.token||this.proxied},
  async api(path,opt={}){const r=this.proxied?await fetch((CFG.ghProxy||"api/gh")+"?p="+encodeURIComponent(path),{method:opt.method||"GET",body:opt.body,headers:{"Content-Type":"application/json",Authorization:"Bearer "+(Auth.token||""),Accept:(opt.headers&&opt.headers.Accept)||"application/json"}}):await fetch("https://api.github.com/repos/"+this.repo+path,Object.assign({},opt,{headers:Object.assign({Authorization:"Bearer "+this.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},opt.headers||{})}));
   if(!r.ok){let m="";try{m=(await r.json()).message}catch(e){}throw new Error(r.status===401?"المفتاح غير صالح أو منتهي.":r.status===403||r.status===404?"لا يملك المفتاح صلاحية الكتابة على المستودع.":r.status===409?"تعارض مع تعديل آخر، أعد المحاولة.":("خطأ "+r.status+" "+m))}return r},
@@ -1196,7 +1196,9 @@ const NAVDEF=[...document.querySelectorAll("header nav a")].map(a=>[a.getAttribu
 function applyLabels(){const L=CAT.labels||{};if(L.col_dawah)COL.dawah=L.col_dawah;if(L.col_turath)COL.turath=L.col_turath;
  $$("header nav a").forEach(a=>{const k="nav:"+a.getAttribute("href");if(L[k])a.textContent=L[k]});
  const adm=$('header nav a[href="#/admin"]');if(adm)adm.style.display=(GH.on||Cloud.staff()||S.admin)?"":"none"}
-const isAdmin=()=>GH.on||Cloud.staff();
+const isAdmin=()=>!!GH.token||Cloud.staff();
+// صلاحية مفوَّضة لخدمة بعينها (profiles.perms): الكراسات، والتشجير، والتحويل؛ والخادم (api/gh) يقصر كتابة المفوَّض على ملفات خدمته
+const can=p=>isAdmin()||(Cloud.perms||[]).includes(p);
 const needGH=()=>GH.on?"":`<p class="note">الحفظ للجميع يحتاج تفعيل «الإدارة المباشرة» على هذا الجهاز (مفتاح المشرف أعلى الصفحة).</p>`;
 const tCount=id=>lib.books.filter(b=>inTopic(b,id)&&!VOL2(b)).length;
 function topicRows(list,kind){return list.map(t=>{const n=tCount(t.id);return`<div class="trow" data-id="${esc(t.id)}" data-kind="${kind}"><input class="tn" value="${esc(t.name)}" aria-label="اسم القسم">${kind==="articles"?`<input class="tp" value="${esc(t.parent||"")}" placeholder="القسم الأعلى (اختياري)" aria-label="القسم الأعلى">`:""}<span class="mut tc">${toAr(n)}</span><button type="button" class="btn s" data-act="tup" aria-label="أعلى">▲</button><button type="button" class="btn s" data-act="tdown" aria-label="أسفل">▼</button><button type="button" class="btn s" data-act="tdel"${n?' disabled title="انقل ما فيه أولًا"':""}>حذف</button></div>`}).join("")}
@@ -1629,7 +1631,7 @@ const actPosts=()=>lib.books.filter(b=>!b.demo&&bc(b)==="dawah").map(b=>({id:"ac
 const findPost=id=>(typeof MP!=="undefined"&&MP.get(id))||(POSTS||[]).find(x=>x.id===id)||(/^act-/.test(id)?actPosts().find(x=>x.id===id):null);
 const pName=x=>x.authorId?A(x.authorId).name:x.member?(x.name||"عضو"):(x.name||"مكتبة الدعوة السلفية الرقمية");
 const Cloud={role:"member",author:null,isSheikh(){return this.on()&&!!Auth.user&&this.role==="sheikh"},on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
- async loadRole(){this.role="member";if(!this.on()||!Auth.user)return;Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null}}catch(e){}
+ async loadRole(){this.role="member";this.perms=[];if(!this.on()||!Auth.user)return;Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id,perms").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null;this.perms=data.perms||[]}}catch(e){}
   if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}}};
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
