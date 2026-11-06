@@ -1,0 +1,20 @@
+name: فهرس الآيات في كتب الدعوة (المصحف)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 5 * * 4"   # أسبوعيًا: الكتب والمقالات الجديدة
+  push:
+    paths: ["tools/quran-cite.py"]
+permissions:
+  contents: write
+concurrency:
+  group: qcite
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/quran-cite.py
+      - run: bash tools/git-save.sh "المصحف: فهرس الآيات في كتب الدعوة ومقالاتها" data/qcite

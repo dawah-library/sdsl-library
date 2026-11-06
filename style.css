@@ -1002,3 +1002,15 @@ article.post.pnew{box-shadow:0 0 0 2px var(--gold)}article.post.pnew::before{con
 :root[data-skin=night] .top{background:#241e14;color:#efe6d2;border-bottom:1px solid #3a3224}:root[data-skin=night] .top a,:root[data-skin=night] .top .ic{color:#efe6d2}:root[data-skin=night] .top .brand img{background:#efe6d2}
 
 .btn.danger{border-color:#b3261e;color:#b3261e}.btn.danger:hover{background:#b3261e;color:#fff}
+
+/* المصحف */
+.msuras{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:12px 0}
+.msuras a{display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1px solid var(--line);border-radius:12px;background:var(--sf);text-decoration:none;color:var(--ink)}
+.msuras b{color:var(--gold);font-size:.85rem}.msuras span{font-family:"Amiri Quran",Amiri,serif;font-size:1.15rem}.msuras small{color:var(--mut);font-size:.75rem}
+.mnav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.mpage{background:var(--pg,#fbf7ee);color:var(--pgink,#2a241a);border:1px solid var(--line);border-radius:14px;padding:18px 16px;box-shadow:inset 0 0 0 6px rgba(184,138,46,.12)}
+.msh{text-align:center;font-family:"Amiri Quran",Amiri,serif;color:var(--ac);border-bottom:1px solid rgba(184,138,46,.4);padding-bottom:8px}.mbasm{text-align:center;font-family:"Amiri Quran",Amiri,serif;font-size:1.5rem}
+.mtext{font-family:"Amiri Quran",Amiri,serif;font-size:1.55rem;line-height:2.5;text-align:justify}
+.may.sel{background:rgba(184,138,46,.18);border-radius:6px}.may.hl{background:rgba(15,92,77,.12);border-radius:6px}
+.mno{border:0;background:none;color:var(--gold);font:inherit;font-size:.85em;cursor:pointer;padding:0 2px}.mno.hasn{color:var(--ac);text-decoration:underline dotted}
+.mqt{font-family:"Amiri Quran",Amiri,serif;font-size:1.2rem;line-height:2}.mqt.big{font-size:1.45rem;text-align:center}
+#musbar{position:fixed;z-index:45;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;background:var(--ink);color:var(--bg);border-radius:22px;padding:6px 12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}#musbar[hidden]{display:none}

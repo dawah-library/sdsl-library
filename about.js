@@ -2,7 +2,7 @@
    قاعدة ثابتة: كل خدمة جديدة تُضاف إلى الموقع تُدرج هنا في ABOUT_SECS (في القسم المناسب) في الإيداع نفسه.
    العنصر: [الاسم، الوصف، "مسارات الصفحات التي يغطيها"]. وtools/check-about.py (مهمة about-check.yml) يفحص عند كل إيداع
    أن كل صفحة في موجّه app.js وكل ملف خدمة في index.html مذكوران هنا، وإلا نبّه الإدارة. ABOUT_MODULES: ملفات الخدمات المغطاة. */
-const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide about";
+const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf about";
 const ABOUT_SECS = [
   ["المحتوى", [
     ["مكتبة الدعوة", "كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور، محوّلة إلى نص قابل للبحث مع نسختها المصورة.", "library"],
@@ -57,6 +57,7 @@ const ABOUT_SECS = [
     ["القراءة دون إنترنت", "حفظ أي كتاب على الجهاز لقراءته بلا اتصال، والموقع يعمل تطبيقًا يُثبَّت على الجوال."]
   ]],
   ["البحث والدراسة", [
+    ["المصحف", "قراءة السور والبحث في الآيات؛ وبالضغط على رقم الآية: مواضع تفسيرها في التفاسير، و«ما قيل فيها في كتب الدعوة ومقالاتها وفتاواها» بموجزات من كلام المشايخ بعد الآية مع الانتقال إلى الموضع، وتعليق العضو؛ وتصدير الآيات وحدها أو مع الموجزات أو التعليق نصًا أو Word أو صورة بالخط والحجم المختارين.", "mushaf"],
     ["البحث المتقدم", "في العناوين والنصوص وأسماء المؤلفين، بأنواع متعددة، مع التصفية بالقسم والمؤلف والموضوع؛ ويظهر المؤلف المطابق لاسمه في أول النتائج، ومنه نطاق «اسم المؤلف» وحده.", "search topics topic"],
     ["البحث عن مؤلف", "خانة بحث في قائمة المؤلفين تصفّي الأسماء أثناء الكتابة (بجزء من الاسم وبأسمائه الأخرى) مع عدد المطابقين.", "authors"],
     ["اسأل المكتبة", "مساعد بحثي يجيب من نصوص المكتبة مع الإحالة إلى مواضعها (للأعضاء).", "ask ai"],
