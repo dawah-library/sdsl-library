@@ -41,7 +41,7 @@ function loadFont(f){if(loadedFonts.has(f))return Promise.resolve();loadedFonts.
  return new Promise(ok=>{const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+":wght@400;700&display=swap";
   l.onload=ok;l.onerror=()=>{l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+"&display=swap";l.onerror=ok};document.head.appendChild(l)})}
 const PAGES=[["paper","ورقي","#fbf7ee","#2a241a"],["white","أبيض","#ffffff","#1a1a1a"],["ivory","عاجي","#f7f0dc","#2b2416"],["sand","رملي","#efe2c4","#3a2e18"],["sepia","سيبيا","#f1e4cc","#5b4636"],["mint","نعناعي","#e8f2ec","#1c2a22"],["sky","سماوي","#e8f0f6","#1b2633"],["gray","رمادي","#ececec","#222222"],["night","ليلي","#18231f","#d8e3dd"],["black","أسود","#000000","#cfcfcf"]];
-function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
+function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");const r=document.documentElement;if(S.skin&&S.skin!=="base")r.dataset.skin=S.skin;else r.removeAttribute("data-skin");if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
  const pg=PAGES.find(p=>p[0]===S.pg)||PAGES[0];loadFont(S.font);
  r.style.setProperty("--rf",`"${S.font}",serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
  const bg=S.bg||pg[2],ink=S.ink||pg[3],dark=lum(bg)<.4;
@@ -2148,6 +2148,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="tashtog2"){S.tash=!S.tash;saveS();el.textContent=S.tash?"التصدير بالتشكيل ✓":"التصدير بلا تشكيل ✓";toast(S.tash?"يُصدَّر النص بتشكيله ويظهر التشكيل في القراءة":"يُصدَّر النص بلا تشكيل ويُخفى في القراءة")}
  else if(a==="tashtog"){S.tash=!S.tash;saveS();refreshPage();closeSheet();const lt=$("#lt");if(lt)lt.checked=S.tash;toast(S.tash?"يظهر التشكيل"+(TK.info(cur()&&cur().b)?" (التشكيل المدقق لهذا الكتاب)":""):"أُخفي التشكيل، ويُنسخ النص ويُصدَّر بلا تشكيل")}
  else if(a==="tour")TOUR.start();
+ else if(a==="skin")skinSheet();
  else if(a==="hlay")HLAY.edit();
  else if(a==="ibs"){const c=cur();if(c)IBS.open(c.b)}
  else if(a==="ibsnav")IBS.step(+el.dataset.d);else if(a==="ibsx")IBS.clear();
@@ -2244,3 +2245,8 @@ const PREF={key:"posts_seen",t:null,
   await route();scrollTo({top:0,behavior:"smooth"});setTimeout(()=>{if(b)b.classList.remove("spin")},700)},
  on(){clearInterval(this.t);if(parse().p[0]!=="posts"){const b=$("#prefb");if(b)b.hidden=true;return}setTimeout(()=>this.mark(),1200);this.t=setInterval(()=>this.poll(),5*60e3)}};
 window.addEventListener("hashchange",()=>PREF.on());window.addEventListener("load",()=>setTimeout(()=>PREF.on(),1500));
+
+/* ---------- قوالب الواجهة (البند ٢٢): تغيير شكلي فقط (ألوان وخطوط وزوايا) والمحتوى والخدمات كما هي؛ يُحفظ في تفضيلات العضو ---------- */
+const SKINS=[["base","الأصلي","أخضر الدعوة مع الذهبي",["#0f5c4d","#b88a2e","#f2f5f1"]],["turath","التراثي","ورق عتيق وبُنّي وخط نسخي",["#6b3f1d","#a8741a","#f3ead8"]],["sky","الهادئ","أزرق هادئ مريح للعين",["#1f5f8b","#c08a2b","#eef3f7"]],["mono","البسيط","حياد رمادي، زوايا قليلة",["#2f3a40","#7a6a4f","#f4f4f2"]],["night","الليلي الذهبي","داكن بلمسة ذهبية",["#d9ae55","#3fb59a","#14110c"]]];
+function skinSheet(){openSheet("قالب الواجهة",`<p class="mut">غيّر شكل الموقع كما تحب؛ يبقى المحتوى والخدمات كما هي، ويُحفظ اختيارك في حسابك.</p><div class="skg">${SKINS.map(([k,n,d,c])=>`<button class="skc${(S.skin||"base")===k?" on":""}" data-sk="${k}" aria-pressed="${(S.skin||"base")===k}"><span class="sksw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><b>${n}</b><small>${d}</small></button>`).join("")}</div>`,()=>{
+ $("#sheetB").onclick=e=>{const b=e.target.closest("[data-sk]");if(!b)return;S.skin=b.dataset.sk;if(S.skin==="night")S.theme="dark";else if(S.theme==="dark"&&b.dataset.sk!=="night"&&S.skinDark)S.theme="auto";S.skinDark=S.skin==="night";saveS();applyLook();document.querySelectorAll(".skc").forEach(x=>{x.classList.toggle("on",x===b);x.setAttribute("aria-pressed",x===b)})}})}

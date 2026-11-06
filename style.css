@@ -987,3 +987,16 @@ details.hfold>div{padding-bottom:12px}#hlayb{margin:18px auto 0;display:block}
 #prefb.spin .pr{animation:aispin .7s linear infinite;display:inline-block}@keyframes pcloud{50%{transform:scale(1.15)}}
 article.post.pnew{box-shadow:0 0 0 2px var(--gold)}article.post.pnew::before{content:"جديد";position:absolute;inset-inline-start:12px;top:-9px;background:var(--gold);color:#1b1405;font-size:.7rem;padding:1px 8px;border-radius:8px}article.post{position:relative}
 @media (prefers-reduced-motion:reduce){#prefb,#prefb .pc{animation:none}}
+
+/* قوالب الواجهة */
+:root[data-skin=turath]:not([data-theme=dark]){--bg:#f3ead8;--sf:#fbf6ea;--ink:#2b1d10;--mut:#6d5a45;--line:#e0d0b0;--ac:#6b3f1d;--gold:#a8741a;--pg:#f8efdb}
+:root[data-skin=turath] body{font-family:"Amiri","IBM Plex Sans Arabic",serif}:root[data-skin=turath] .card,:root[data-skin=turath] .bk{border-radius:4px}
+:root[data-skin=sky]:not([data-theme=dark]){--bg:#eef3f7;--sf:#fff;--ink:#14212b;--mut:#596b78;--line:#d3dee7;--ac:#1f5f8b;--gold:#c08a2b}
+:root[data-skin=mono]:not([data-theme=dark]){--bg:#f4f4f2;--sf:#fff;--ink:#1d2326;--mut:#62696d;--line:#dcdedb;--ac:#2f3a40;--gold:#7a6a4f}
+:root[data-skin=mono] .card,:root[data-skin=mono] .bk,:root[data-skin=mono] .btn,:root[data-skin=mono] .hs,:root[data-skin=mono] .col{border-radius:3px;box-shadow:none}
+:root[data-skin=night]{--bg:#14110c;--sf:#1e1a13;--ink:#efe6d2;--mut:#b3a68c;--line:#3a3224;--ac:#d9ae55;--on:#1b1405;--gold:#3fb59a;--tr:#3a2a0e;--pg:#1e1a13;--pgink:#efe6d2}
+:root[data-skin=sky][data-theme=dark]{--ac:#5fa8d8}:root[data-skin=turath][data-theme=dark]{--ac:#d39a5c}
+.skg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.skc{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:start;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--sf);color:var(--ink);cursor:pointer;font:inherit}
+.skc.on{border-color:var(--ac)}.skc small{color:var(--mut);font-size:.78rem}.sksw{display:flex;gap:4px}.sksw i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.1)}
+:root[data-skin=night] .top{background:#241e14;color:#efe6d2;border-bottom:1px solid #3a3224}:root[data-skin=night] .top a,:root[data-skin=night] .top .ic{color:#efe6d2}:root[data-skin=night] .top .brand img{background:#efe6d2}
