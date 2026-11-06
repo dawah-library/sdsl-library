@@ -1222,3 +1222,8 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .arbw.right{border-color:#2a9d7c;background:#e3f3ec;color:#0f5c4d}.arbw.wrong{border-color:#c0392b;background:#fbe7e4;color:#9b2c1d}
 .arbans{min-height:2.2em;border-bottom:2px dashed var(--line)}.arbans.done{border-color:#2a9d7c;color:var(--ac)}
 .arbq2{font-family:"Amiri Quran",Amiri,serif;font-size:1.3rem}
+/* أحكام المحدثين المعاصرين */
+.hdgr{list-style:none;padding:0;margin:6px 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+.grb{padding:1px 8px;border-radius:8px;font-weight:600;background:var(--sf)}
+.grb.gr-s{background:#e3f3ec;color:#0f5c4d}.grb.gr-h{background:#e6f0fb;color:#1d4f8a}.grb.gr-d{background:#fdf0dc;color:#8a5a00}.grb.gr-x{background:#fbe7e4;color:#9b2c1d}
+@media (prefers-color-scheme:dark){.grb.gr-s{background:#123d33;color:#9fe0c8}.grb.gr-h{background:#1b2f48;color:#a8c8f0}.grb.gr-d{background:#4a3410;color:#f5cf8a}.grb.gr-x{background:#4a1d17;color:#f3b4aa}}

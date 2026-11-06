@@ -13,6 +13,12 @@ const HDS = (() => {
   // كتب السنة (tools/kutub.py ← data/hadith/k): فهرس كل كتاب يُحمَّل عند طلبه، والمتون في أجزاء
   const RAWK = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/k/" + p;
   const KC = {}, kidx = b => KC[b] || (KC[b] = fetch(RAWK(b + ".json")).then(r => r.json()).catch(() => ({ items: [] })));
+  // أحكام المحدثين المعاصرين على السنن الأربع (tools/hadith-grades.py ← data/hadith/grades)، بعد مطابقة المتن
+  const GRC = {}, kgrades = b => GRC[b] || (GRC[b] = fetch(RAWK("").replace("/k/", "/grades/") + b + ".json").then(r => r.ok ? r.json() : {}).catch(() => ({})));
+  const grCls = g => /موضوع|باطل|منكر|جدًا/.test(g) ? "gr-x" : /ضعيف|شاذ|معلول/.test(g) ? "gr-d" : /حسن/.test(g) && !/صحيح/.test(g) ? "gr-h" : /صحيح/.test(g) ? "gr-s" : "";
+  async function gradesBox(b, n) { const el = $("#hdgr"); if (!el) return; const G = await kgrades(b), l = (G.g || {})[String(n)];
+    if (!$("#hdgr")) return; if (!l) { el.remove(); return; }
+    el.innerHTML = `<h3>أحكام المحدثين المعاصرين</h3><ul class="hdgr">${l.map(([w, g]) => `<li><b>${esc(w)}</b>: <span class="grb ${grCls(g)}">${esc(g)}</span></li>`).join("")}</ul><p class="mut">حكم الألباني من «صحيح السنن» و«ضعيفها»، والأرناؤوط وأحمد شاكر وبشار عواد من تحقيقاتهم، بترقيم المصنف بعد مطابقة المتن؛ والمصدر مجموعة hadith-api المفتوحة. للتوسع: أحكام المحدثين من الموسوعة الحديثية أدناه.</p>`; }
   const MC = {}, kmatn = (b, i) => MC[b + i] || (MC[b + i] = fetch(RAWK(b + "/m" + i + ".json")).then(r => r.json()).catch(() => ({})));
   // روابط الحديث من نصوص المكتبة (tools/hadith-links.py): موضع شرحه، وتخريجه في كتب السنة، وفهرس البدايات لفتح نتائج البحث في موضعها
   const RAWL = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/links/" + p;
@@ -83,11 +89,12 @@ const HDS = (() => {
     view(`<p><a href="#/hadith?t=kutub&kb=${b}">← ${esc(D.t)}</a>${x[3] ? " › " + esc(x[3]) : ""}</p>
     <article class="hdone"><p class="hds">${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">«${esc(m)}»</p><p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
     <p class="mut"><a href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(x[6].split(" ").slice(0, 4).join(" "))}">اقرأ الحديث بإسناده في موضعه من الكتاب ←</a></p></article>
+    ${["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b) ? '<section class="stsec" id="hdgr"><p class="mut">…</p></section>' : ""}
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه</h3><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc(m.split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين من الموسوعة الحديثية</button></div></section>
     <div class="row">${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
     <div class="mnav mnb">${next ? `<a class="btn s" href="#/hadith/k/${b}/${next[0]}">‹ التالي</a>` : "<span></span>"}${prev ? `<a class="btn s" href="#/hadith/k/${b}/${prev[0]}">السابق ›</a>` : ""}</div>`);
-    linksBox(b, x[0]);
+    linksBox(b, x[0]); gradesBox(b, x[0]);
   }
   async function page(q, id) {
     if (id && String(id).startsWith("k:")) { const [, b, n] = id.split(":"); return kone(b, n); }

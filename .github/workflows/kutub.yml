@@ -2,7 +2,7 @@ name: كتب السنة في قسم الحديث
 on:
   workflow_dispatch:
   push:
-    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py"]
+    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-grades.py"]
 permissions:
   contents: write
 jobs:
@@ -11,6 +11,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py
+      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py && python3 tools/hadith-grades.py
       - run: |
-          bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k data/hadith/topics data/hadith/links
+          bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k data/hadith/topics data/hadith/links data/hadith/grades
