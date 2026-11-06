@@ -24,7 +24,7 @@ def main():
     only = [x for x in os.environ.get("PROOF_ONLY", "").split(",") if x]
     auto = [b["id"] for b in cat["books"] if (b.get("col") or "dawah") == "dawah" and not b.get("ocr") and not b.get("demo") and (b.get("type") or "book") == "book" and os.path.exists(os.path.join(D, "books", b["id"] + ".json"))]
     todo = only or (req + [x for x in auto if x not in req])
-    budget = int(os.environ.get("PROOF_PAGES", "400")); deadline = time.time() + 60 * float(os.environ.get("PROOF_MINUTES", "100")); lst = jl(os.path.join(OUT, "_list.json"), {})
+    budget = int(os.environ.get("PROOF_PAGES", "120")); deadline = time.time() + 60 * float(os.environ.get("PROOF_MINUTES", "100")); lst = jl(os.path.join(OUT, "_list.json"), {})
     for bid in todo:
         if budget <= 0 or time.time() > deadline or (tj.KEYS and len(tj.EXH) >= len(tj.KEYS)): break
         b = next((x for x in cat["books"] if x["id"] == bid), None); pth = os.path.join(D, "books", bid + ".json")
