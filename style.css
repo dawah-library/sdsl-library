@@ -1134,3 +1134,38 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
  .askcta span{display:none}.recg{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory}.recg .recc{min-width:70%;scroll-snap-align:start}
  .sthome{display:flex;overflow-x:auto;gap:8px}.sthome .sth{min-width:62%}
 }
+
+/* الطلائع لما قبل ١٥ سنة: تصميم مرح وألوان مبهجة */
+.tala.kids{--k1:#ff6b6b;--k2:#ffb703;--k3:#06d6a0;--k4:#4cc9f0;--k5:#9b5de5;font-family:"Baloo Bhaijaan 2","Readex Pro",sans-serif;background:radial-gradient(circle at 12% 8%,#fff3c4 0 70px,transparent 71px),radial-gradient(circle at 92% 18%,#d7f9ff 0 90px,transparent 91px),radial-gradient(circle at 80% 92%,#ffe1ec 0 110px,transparent 111px),linear-gradient(160deg,#fffaf0,#f0fbff 55%,#fdf2ff);border-radius:26px;padding:14px 14px 22px;margin:-4px -4px 0;color:#2b2d42}
+.tala.kids h2,.tala.kids h3,.tala.kids .talat{font-family:"Baloo Bhaijaan 2","Reem Kufi",sans-serif;font-weight:800;color:#3a0ca3;letter-spacing:0}
+.tala.kids h3{display:inline-block;background:#fff;border-radius:999px;padding:4px 16px;box-shadow:0 3px 0 rgba(58,12,163,.15);margin-top:1.2em}
+.tala.kids .talah{background:linear-gradient(90deg,var(--k5),var(--k4));color:#fff;border-radius:18px;padding:8px 14px;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.tala.kids .talah a,.tala.kids .talah .mut{color:#fff}.tala.kids .tstar{background:#fff;color:#e85d04;border-radius:999px;padding:2px 12px;font-weight:800}
+.tala.kids .talac{border:0;border-radius:22px;box-shadow:0 5px 0 rgba(0,0,0,.1);transition:transform .15s;background:#fff}
+.tala.kids .talac:hover{transform:translateY(-3px) rotate(-.6deg)}.tala.kids .talac:active{transform:translateY(2px)}
+.tala.kids .tgames .talac:nth-child(6n+1){background:linear-gradient(145deg,#ffd6d6,#fff)}.tala.kids .tgames .talac:nth-child(6n+2){background:linear-gradient(145deg,#fff0b8,#fff)}
+.tala.kids .tgames .talac:nth-child(6n+3){background:linear-gradient(145deg,#c8f7e8,#fff)}.tala.kids .tgames .talac:nth-child(6n+4){background:linear-gradient(145deg,#d3f1ff,#fff)}
+.tala.kids .tgames .talac:nth-child(6n+5){background:linear-gradient(145deg,#ead9ff,#fff)}.tala.kids .tgames .talac:nth-child(6n+6){background:linear-gradient(145deg,#ffe0f0,#fff)}
+.tala.kids .talac i{font-size:2.1rem;font-style:normal;display:inline-block;animation:tpbob 2.6s ease-in-out infinite}
+.tala.kids .tgames .talac:nth-child(2n) i{animation-delay:.7s}
+@keyframes tpbob{50%{transform:translateY(-4px) rotate(4deg)}}
+.tala.kids .btn{border-radius:999px;font-weight:700}.tala.kids .btn.p{background:linear-gradient(90deg,#f72585,#ff9e00);border:0;color:#fff;box-shadow:0 4px 0 #b5179e}
+.tpload{text-align:center;font-size:1.3rem;padding:40px 0;animation:tpbob 1.2s infinite}
+.tplay{max-width:680px;margin:0 auto}
+.tpbar{height:14px;background:#fff;border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 3px rgba(0,0,0,.08)}.tpbar i{display:block;height:100%;background:linear-gradient(90deg,#06d6a0,#4cc9f0,#9b5de5);border-radius:999px;transition:width .4s}
+.tpn{text-align:center;margin:.4em 0;color:#5a189a;font-weight:700}.tpfire{background:#ffedd5;color:#c2410c;border-radius:999px;padding:1px 10px;margin-inline-start:6px;display:inline-block}
+.tptimer{text-align:center;font-size:1.2rem;font-weight:800;color:#fff;border-radius:999px;padding:8px;background:linear-gradient(90deg,#f72585 var(--p),#ffd6e7 var(--p));transition:background .25s}
+.tpq{position:relative;background:#fff;border-radius:24px;padding:22px 18px 16px;margin:14px 0;box-shadow:0 6px 0 rgba(58,12,163,.12);text-align:center}
+.tptag{position:absolute;top:-18px;right:50%;transform:translateX(50%);font-size:1.8rem;background:#fff;border-radius:50%;width:46px;height:46px;line-height:46px;box-shadow:0 3px 0 rgba(0,0,0,.1)}
+.tpsub{color:#7209b7;margin:.3em 0;font-weight:700}.tpqt{font-size:1.35rem;line-height:1.9;margin:.3em 0;color:#22223b}.tpqt.ayq{font-family:"Amiri Quran","Amiri",serif;font-size:1.55rem}
+.tpo{display:grid;gap:10px}.tpbtn{font:inherit;font-size:1.12rem;font-weight:700;border:0;border-radius:18px;padding:14px 12px;color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .1s;line-height:1.6}
+.tpbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}.tpbtn.c0{background:#ef476f}.tpbtn.c1{background:#118ab2}.tpbtn.c2{background:#f4a261}.tpbtn.c3{background:#7b2cbf}
+.tpbtn:disabled{opacity:.45;cursor:default}.tpbtn.right{opacity:1;background:#06d6a0!important;animation:tppop .4s}.tpbtn.wrong{opacity:1;background:#9a9a9a!important;animation:tpshake .4s}
+@keyframes tppop{50%{transform:scale(1.06)}}@keyframes tpshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tpfb{margin-top:12px;border-radius:18px;padding:12px 14px;text-align:center;animation:tppop .35s}.tpfb.ok{background:#d8f8ec}.tpfb.no{background:#ffe8d6}.tpfb b{font-size:1.2rem}.tpfb .row{justify-content:center;gap:8px;margin-top:8px}
+.tpwin{text-align:center;background:#fff;border-radius:28px;padding:26px 16px;max-width:520px;margin:18px auto;box-shadow:0 6px 0 rgba(58,12,163,.12)}.tpbig{font-size:4.2rem;animation:tpbob 1.6s infinite}.tpscore{font-size:1.6rem;font-weight:800;color:#3a0ca3}
+.tpburst{position:fixed;pointer-events:none;z-index:9999}.tpburst i{position:absolute;font-style:normal;font-size:1.4rem;animation:tpfly .85s ease-out forwards}
+@keyframes tpfly{from{transform:rotate(var(--a)) translateY(0);opacity:1}to{transform:rotate(var(--a)) translateY(-90px);opacity:0}}
+:root[data-theme=dark] .tala.kids{background:linear-gradient(160deg,#2a2140,#1b2b3a);color:#f1f1f1}:root[data-theme=dark] .tala.kids .talac,:root[data-theme=dark] .tpq,:root[data-theme=dark] .tpwin,:root[data-theme=dark] .tala.kids h3{background:#2f2a45;color:#f1f1f1}
+:root[data-theme=dark] .tpqt{color:#fff}:root[data-theme=dark] .tala.kids h2,:root[data-theme=dark] .tala.kids h3{color:#cdb4ff}
+@media(prefers-reduced-motion:reduce){.tala.kids .talac i,.tpbig,.tpload{animation:none}}

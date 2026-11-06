@@ -13,9 +13,9 @@ const TALA = (() => {
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
   const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["adhkar", "أذكار المسلم", "اختر الذكر المناسب لكل موقف من يومك", "🤲"], ["quiz", "مسابقة المعرفة", "أسئلة في العقيدة والسيرة والقرآن تناسب مرحلتك", "🏆"], ["ws", "البحث عن الكلمات", "ابحث عن كلمات مخبأة في شبكة الحروف", "🔍"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
-  const head = (t, back) => `<div class="tala"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
+  const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
   async function show(q, sub) {
-    await load(); SX_ = GEN[q.s] ? q.s : ((kid() || {}).g || "");
+    await load(); if (typeof TPLAY !== "undefined") TPLAY.font(); SX_ = GEN[q.s] ? q.s : ((kid() || {}).g || "");
     if (sub === "games" && q.g) return game(q.g, q);
     if (sub === "track") { PLc = await plan(); return track(q.k); }
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
@@ -23,6 +23,7 @@ const TALA = (() => {
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     const sg = GEN[q.s] ? q.s : "", sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "عالم المعرفة والمرح للأطفال") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في طلائع الدعوة السلفية"}</h2><p>${sg ? esc(GEN[sg].d) : "جيل سلفي رباني متميز: تعلّم القرآن والآداب والمعرفة، والعب ألعابًا مفيدة، واجمع النجوم!"}</p>
+      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames">${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
       <div class="talag talagen">${Object.entries(GEN).map(([k, x]) => `<a class="talac gen-${k}${sg === k ? " on" : ""}" href="#/talaea?s=${k}"><i aria-hidden="true">${x.ic}</i><b>${x.n}</b><span>${esc(x.d)}</span></a>`).join("")}</div>
@@ -31,7 +32,6 @@ const TALA = (() => {
       ${await todayCard()}
       <h3>سُلّم القراءة</h3><p class="mut">كتب ومقالات مختارة من المكتبة لكل مرحلة، مرتبة مستويات من الأسهل إلى الأصعب، ولكل قراءة سؤال تأمل ونجوم.</p><div class="talag">${D.tracks.map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/ladder?k=${k}"><i aria-hidden="true">📚</i><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
       <p><a class="btn" href="#/talaea/parents">👪 ركن الوالدين: المنهجية ومتابعة القراءة</a></p>
-      <h3>الألعاب التعليمية</h3><div class="talag">${GAMES.map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       <h3>مكتبة الطلائع</h3><p class="mut">${D.tracks.map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks("").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
       <p class="note">إلى الوالدين: هذا القسم بلا إعلانات ولا روابط خارجية ولا تعليقات أو مراسلة، ونجوم الطفل تُحفظ على هذا الجهاز وحده. نص القرآن الكريم في الألعاب من مصحف المكتبة دون تغيير.</p></div>`);
   }
@@ -50,6 +50,7 @@ const TALA = (() => {
   // ---------- الألعاب ----------
   let G = null;
   async function game(g, q) {
+    if (typeof TPLAY !== "undefined" && TPLAY.has(g)) { const k = q.k || (kid() || {}).track || "t2", sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); return TPLAY.run(g, q, { k, head, star, qz: (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : []) }); }
     if (g === "ayah" || g === "order") {
       const Qs = await quran(), am = Qs.filter(s => s.n >= 78), sn = +q.s || 0, s = am.find(x => x.n === sn);
       if (!s) return view_(head(g === "ayah" ? "أكمل الآية" : "رتّب الآيات", true) + `<h2 class="talat">${g === "ayah" ? "أكمل الآية" : "رتّب الآيات"}</h2><p>اختر سورة من جزء عمّ:</p><div class="chips">${am.slice().reverse().map(x => `<a class="chip" href="#/talaea/games?g=${g}&s=${x.n}">${esc(x.name.replace(/^سُورَةُ\s*/, ""))}</a>`).join("")}</div></div>`);
@@ -71,7 +72,7 @@ const TALA = (() => {
   // ---------- طلائع الدعوة السلفية: التعريف والأهداف (من مقال «طلائع الدعوة السلفية .. من نحن وماذا نريد؟» لمصطفى دياب، موقع أنا السلفي)
   // وقسمان: البنين والفتيات، لكل منهما قدواته ومهاراته وأنشطته الخاصة فوق المشترك بين القسمين.
   const INTRO_URL = "https://anasalafy.com/ar/44235";
-  const intro = () => `<details class="card talaintro"${sx() ? "" : " open"}><summary><b>🌟 طلائع الدعوة السلفية .. من نحن وماذا نريد؟</b></summary>
+  const intro = () => `<details class="card talaintro"><summary><b>🌟 طلائع الدعوة السلفية .. من نحن وماذا نريد؟</b></summary>
     <p>«الدعوة السلفية تحت العشرين وقبل سن الجامعة»: اقتداءً باهتمام النبي ﷺ بهذا السن، «وأن منهم مَن قاد الجيوش كأسامة بن زيد، ومنهم مَن صار عالمًا بل بحرًا في العلم مثل عبد الله بن عباس، أو معلِّمًا للقرآن مثل عبد الله بن مسعود، ومنهم مَن كان عابدًا كعبد الله بن عمر، ومنهم مَن كان خادمًا لدين الله وللرسول ﷺ كأنس بن مالك وزيد بن ثابت».</p>
     <p><b>الهدف:</b> «إعداد جيل سلفي رباني متميز يعمل على إصلاح عقيدة الشباب الناشئ وعبادتهم وأخلاقهم وسلوكهم ومعاملاتهم».</p>
     <div class="talask">${[["جيل", "لإصلاح كل الشباب الناشئ في كل مكان"], ["سلفي", "باتباع أثر النبي ﷺ وأصحابه الكرام، وذلك هو الهدى"], ["رباني", "«مَن أصلح ما بينه وبين ربه أصلح الله له ما بينه وبين خلقه»، يبتغي بعمله رضا الله"], ["متميز", "بالتفوق والإبداع والابتكار والتقدم في علوم الدين والدنيا، كما كان ابن عباس صغير السن كبير العقل"]].map(([a, b]) => `<div><b>${a}</b><span>${b}</span></div>`).join("")}</div>
