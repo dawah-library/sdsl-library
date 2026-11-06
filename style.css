@@ -929,3 +929,16 @@ body.pfopen{overflow:hidden}
 .pgnb{position:fixed;z-index:44;inset-inline-start:12px;bottom:calc(96px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--sf);color:var(--ac);font-size:1.25rem;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer}
 .pgnb:hover{background:var(--ac);color:var(--on)}body:not(.reading) .pgnb{display:none}
 .pgnq{border-inline-start:3px solid var(--gold);margin:6px 0;padding:4px 10px;font-family:Amiri,serif}
+/* البحث داخل الكتاب أثناء القراءة */
+.pgnb.ibsb{bottom:calc(148px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center}
+.ibso{gap:6px 14px;margin:6px 0 2px;font-size:.9rem}
+.ibsr{max-height:55vh;overflow:auto}
+.ibsi{display:block;padding:8px 10px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);border-radius:8px}
+.ibsi:hover,.ibsi.on{background:color-mix(in srgb,var(--ac) 8%,transparent)}
+.ibsi b{font-size:.85rem;color:var(--ac)}.ibsi p{margin:2px 0 0;font-family:Amiri,serif;line-height:1.8;font-size:1rem}
+.ibsi mark,#ibsbar mark{background:#f4d77c;color:#1b1405;border-radius:3px}
+#ibsbar{position:fixed;z-index:45;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:2px;background:var(--ink);color:var(--bg);border-radius:24px;padding:4px 6px;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100vw - 24px)}
+#ibsbar[hidden]{display:none}
+#ibsbar button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 10px;font-size:1.05rem;border-radius:16px}
+#ibsbar button:hover{background:rgba(255,255,255,.12)}#ibsbar .ibst{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
+body:not(.reading) #ibsbar{display:none}
