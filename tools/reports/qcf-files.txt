@@ -1,1 +1,7 @@
 48 ملف woff2؛ أمثلة: ['/fonts-woff2/QCF4_Hafs_01_W.woff2', '/fonts-woff2/QCF4_Hafs_02_W.woff2', '/fonts-woff2/QCF4_Hafs_03_W.woff2'] ['/fonts-woff2/QCF4_Hafs_46_W.woff2', '/fonts-woff2/QCF4_Hafs_47_W.woff2', '/fonts-woff2/QCF4_QBSML.woff2']
+https://cdn.jsdelivr.net/npm QCF4_Hafs_01_W: 200 946364 font/woff2 access-control-allow-origin: *
+https://unpkg.com QCF4_Hafs_01_W: 200 946364 font/woff2 access-control-allow-origin: *
+https://cdn.jsdelivr.net/npm QCF4_Hafs_23_W: 200 748988 font/woff2 access-control-allow-origin: *
+https://unpkg.com QCF4_Hafs_23_W: 200 748988 font/woff2 access-control-allow-origin: *
+https://cdn.jsdelivr.net/npm QCF4_QBSML: 200 616164 font/woff2 access-control-allow-origin: *
+https://unpkg.com QCF4_QBSML: 200 616164 font/woff2 access-control-allow-origin: *
