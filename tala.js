@@ -14,10 +14,15 @@ const TALA = (() => {
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
   const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["adhkar", "أذكار المسلم", "اختر الذكر المناسب لكل موقف من يومك", "🤲"], ["quiz", "مسابقة المعرفة", "أسئلة في العقيدة والسيرة والقرآن تناسب مرحلتك", "🏆"], ["ws", "البحث عن الكلمات", "ابحث عن كلمات مخبأة في شبكة الحروف", "🔍"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
   const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
+  // التوجيه بالعمر: إذا اختير ملف طفل لا يظهر له إلا مستواه في المسارات التعليمية والتربوية، إلا إن فتح الوالد كل المستويات من «ركن الوالدين»
+  const locked = () => !!(kid() && !st().allst);
+  const vis = () => locked() ? D.tracks.filter(t => t[0] === kid().track) : D.tracks;
+  const own = k => locked() ? kid().track : k;
   async function show(q, sub) {
+    if (q.k && locked() && q.k !== kid().track && /^(track|ladder|manhaj|games)$/.test(sub || "")) q.k = kid().track;
     await load(); if (typeof TPLAY !== "undefined") TPLAY.font(); SX_ = GEN[q.s] ? q.s : ((kid() || {}).g || "");
     if (sub === "games" && q.g) return game(q.g, q);
-    if (sub === "track") { PLc = await plan(); return track(q.k); }
+    if (sub === "track") { PLc = await plan(); return track(own(q.k || (kid() || {}).track || "t1")); }
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
     if (sub === "parents") return parents();
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
@@ -28,11 +33,11 @@ const TALA = (() => {
       ${await manhajHome()}
       <div class="talag talagen">${Object.entries(GEN).map(([k, x]) => `<a class="talac gen-${k}${sg === k ? " on" : ""}" href="#/talaea?s=${k}"><i aria-hidden="true">${x.ic}</i><b>${x.n}</b><span>${esc(x.d)}</span></a>`).join("")}</div>
       ${sg ? models(sg) : ""}
-      <h3>اختر مرحلتك${sg ? " — " + GEN[sg].n : ""}</h3><div class="talag">${D.tracks.map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/track?k=${k}${sq}"><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
+      <h3>${locked() ? "مرحلتك" : "اختر مرحلتك"}${sg ? " — " + GEN[sg].n : ""}</h3>${kid() ? "" : '<p class="note">👪 أنشئ ملف طفلك من <a href="#/talaea/parents">ركن الوالدين</a> بعمره، فلا يظهر له إلا المستوى المناسب له.</p>'}<div class="talag">${vis().map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/track?k=${k}${sq}"><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
       ${await todayCard()}
-      <h3>سُلّم القراءة</h3><p class="mut">كتب ومقالات مختارة من المكتبة لكل مرحلة، مرتبة مستويات من الأسهل إلى الأصعب، ولكل قراءة سؤال تأمل ونجوم.</p><div class="talag">${D.tracks.map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/ladder?k=${k}"><i aria-hidden="true">📚</i><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
+      <h3>سُلّم القراءة</h3><p class="mut">كتب ومقالات مختارة من المكتبة لكل مرحلة، مرتبة مستويات من الأسهل إلى الأصعب، ولكل قراءة سؤال تأمل ونجوم.</p><div class="talag">${vis().map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/ladder?k=${k}"><i aria-hidden="true">📚</i><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
       <p><a class="btn" href="#/talaea/parents">👪 ركن الوالدين: المنهجية ومتابعة القراءة</a></p>
-      <h3>مكتبة الطلائع</h3><p class="mut">${D.tracks.map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks("").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
+      <h3>مكتبة الطلائع</h3><p class="mut">${vis().map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks(locked() ? kid().track : "").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
       <p class="note">إلى الوالدين: هذا القسم بلا إعلانات ولا روابط خارجية ولا تعليقات أو مراسلة، ونجوم الطفل تُحفظ على هذا الجهاز وحده. نص القرآن الكريم في الألعاب من مصحف المكتبة دون تغيير.</p></div>`);
   }
   const view_ = h => view(h);
@@ -307,7 +312,7 @@ const TALA = (() => {
         ${isOpen ? l.map(it => { const d = prog().done[keyOf(it)]; return `<div class="talait${d ? " ok" : ""}"><a href="${itHref(it)}">${it.a ? "📰" : "📖"} ${esc(itTitle(it))}</a><span class="mut">${toAr(it.m || 5)} د</span>${d ? `<span>✓${prog().notes[keyOf(it)] ? " 💭" : ""}</span>` : `<button class="btn s" data-act="taladone" data-k="${esc(keyOf(it))}" data-m="${it.m || 5}">أنهيتها</button>`}</div>`; }).join("") : '<p class="mut">يُفتح بعد إتمام ثلاثة أرباع المستوى السابق.</p>'}</details>`; }).join("");
     view_(head(t[1] + " — سُلّم القراءة", true) + `<h2 class="talat">📚 سُلّم القراءة: ${esc(t[1])}</h2><p class="mut">${esc(t[2])}. ${t[0] === "t1" ? "في هذه المرحلة يقرأ الوالد للطفل ويحاوره فيما قرأ." : "اقرأ ثم اضغط «أنهيتها» واكتب ما تعلمته لتربح النجوم."}</p>
       ${kid() ? `<p>القارئ: <b>${esc(kid().av || "🙂")} ${esc(kid().name)}</b></p>` : `<p class="note">أنشئ ملفًا للطفل من صفحة الطلائع الرئيسية ليُحفظ تقدمه.</p>`}
-      <nav class="chips">${D.tracks.map(([x, n]) => `<a class="chip${x === t[0] ? " x" : ""}" href="#/talaea/ladder?k=${x}">${esc(n)}</a>`).join("")}</nav>
+      <nav class="chips">${vis().map(([x, n]) => `<a class="chip${x === t[0] ? " x" : ""}" href="#/talaea/ladder?k=${x}">${esc(n)}</a>`).join("")}</nav>
       ${lv || '<div class="note">يُبنى سُلّم هذه المرحلة قريبًا.</div>'}</div>`);
   }
   async function parents() {
@@ -319,6 +324,7 @@ const TALA = (() => {
     view_(head("ركن الوالدين", true) + `<h2 class="talat">👪 ركن الوالدين</h2>
       <h3>منهجية القراءة</h3><div class="card talameth">${esc(P_.method || "").split("\n").map(l => `<p>${l.trim()}</p>`).join("")}<p>يُفتح كل مستوى بعد إتمام ثلاثة أرباع ما قبله، والقراءة اليومية القصيرة المنتظمة خير من الطويلة المتقطعة؛ ويحسن أن يحاور الوالد الطفل فيما قرأ وأن يطّلع على تأملاته أدناه.</p></div>
       <label class="inl"><input type="checkbox" data-act="talaunlock"${st().unlock ? " checked" : ""}> فتح كل المستويات (يقرر الوالد)</label>
+      <label class="inl"><input type="checkbox" data-act="talaallst"${st().allst ? " checked" : ""}> إظهار المراحل الأخرى للطفل (الأصل: لا يرى إلا مرحلة عمره)</label>
       <h3>متابعة الأطفال</h3>${rows || '<p class="mut">لا ملفات أطفال بعد.</p>'}
       <h3>مقالات في تربية الأبناء</h3><div class="list">${(P_.parents || []).map(id => B(id)).filter(Boolean).reverse().slice(0, 20).map(bookCard).join("")}</div>
       <p class="note">كل بيانات الأطفال (الأسماء والتقدم والتأملات) محفوظة على هذا الجهاز وحده، ولا تُرسل إلى أي جهة.</p></div>`);
@@ -326,11 +332,12 @@ const TALA = (() => {
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=tala]"); if (!el) return; const a = el.dataset.act;
     if (a === "talakidnew") { const name = (prompt("اسم الطفل:") || "").trim().slice(0, 20); if (!name) return; const age = +prompt("عمره بالسنوات:", "8") || 8, g = confirm("هل هو من البنين؟ (موافق = بنين، إلغاء = فتيات)") ? "b" : "g";
-      const track = age <= 7 ? "t1" : age <= 10 ? "t2" : age <= 13 ? "t3" : "t4", AV = ["🦁", "🐢", "🦉", "🐬", "🌟", "🚀", "🌷", "🦋"];
+      const track = age <= 8 ? "t1" : age <= 11 ? "t2" : age <= 14 ? "t3" : "t4"  /* مطابق لتسميات المراحل: ٥–٨، ٩–١٢، ١٢–١٥، ١٥ فما فوق */, AV = ["🦁", "🐢", "🦉", "🐬", "🌟", "🚀", "🌷", "🦋"];
       const x = { id: Date.now().toString(36), name, track, g, av: AV[kids().length % AV.length] }; kids().push(x); st().cur = x.id; saveS(); show({}, ""); }
     else if (a === "talakid") { st().cur = el.dataset.id; saveS(); show({}, ""); }
     else if (a === "talakiddel") { if (confirm("حذف ملف الطفل وتقدمه من هذا الجهاز؟")) { st().kids = kids().filter(x => x.id !== el.dataset.id); if (st().p) delete st().p[el.dataset.id]; saveS(); parents(); } }
     else if (a === "talaunlock") { st().unlock = el.checked; saveS(); }
+    else if (a === "talaallst") { st().allst = el.checked; saveS(); }
     else if (a === "talaact") { const A = st().act = st().act || {}, key = actKey(el.dataset.k, el.dataset.i); if (el.checked) { A[key] = 1; star(2); } else delete A[key]; saveS(); el.closest(".talaa").classList.toggle("on", el.checked); }
     else if (a === "taladone") { const k = el.dataset.k; if (prog().done[k]) return;
       const note = (prompt("أحسنت! ما أهم شيء تعلمته مما قرأت؟ (اختياري)") || "").trim().slice(0, 200);
@@ -357,8 +364,8 @@ const TALA = (() => {
   async function manhajHome() {
     const M = await mj(); if (!M) return "";
     return `<section class="card mjhome"><h3>📘 المنهج العلمي والتربوي للطلائع</h3><p class="mut">${esc(M.intro)}</p>
-      <div class="mjser">${M.series.map(s => { const on = s.set && lib.books.some(b => b.set === s.set); return `<a class="mjs${on ? "" : " soon"}" href="#/talaea/manhaj?k=${s.stage || (s.levels[0] || {}).stage || "t1"}"><b>${esc(s.t)}</b><span>${esc(s.for)}</span><small>${on ? toAr(s.levels.length) + " مستويات" : "يُضاف قريبًا — وتعوّضه الآن التوجيهات التربوية"}</small></a>`; }).join("<i class='mjarr'>←</i>")}</div>
-      <div class="chips">${D.tracks.map(([k, n, a]) => `<a class="chip" href="#/talaea/manhaj?k=${k}">${esc(n)} <small>${esc(a.split("•")[0])}</small></a>`).join("")}</div></section>`;
+      <div class="mjser">${M.series.filter(s => !locked() || (s.stage || "") === kid().track || (s.levels || []).some(l => l.stage === kid().track)).map(s => { const on = s.set && lib.books.some(b => b.set === s.set); return `<a class="mjs${on ? "" : " soon"}" href="#/talaea/manhaj?k=${locked() ? kid().track : s.stage || (s.levels[0] || {}).stage || "t1"}"><b>${esc(s.t)}</b><span>${esc(s.for)}</span><small>${on ? toAr(s.levels.length) + " مستويات" : "يُضاف قريبًا — وتعوّضه الآن التوجيهات التربوية"}</small></a>`; }).join("<i class='mjarr'>←</i>")}</div>
+      <div class="chips">${vis().map(([k, n, a]) => `<a class="chip" href="#/talaea/manhaj?k=${k}">${esc(n)} <small>${esc(a.split("•")[0])}</small></a>`).join("")}</div></section>`;
   }
   async function manhaj(k) {
     const M = await mj(); if (!M) return view_(head("", true) + '<p class="note">المنهج غير متاح الآن.</p></div>');
@@ -392,7 +399,7 @@ const TALA = (() => {
     const par = [...new Set((M.parents || []).concat(lib.books.filter(b => isArt(b) && !b.hidden && b.authorId === "w107" && inTopic(b, "at10")).map(b => b.id)))].map(id => B(id)).filter(Boolean);
     body += par.length ? `<details class="card"><summary><b>👪 للوالدين والمربين</b></summary><ul>${par.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="mut">— ${esc(A(x.authorId).name)}</span></li>`).join("")}</ul></details>` : "";
     body += (M.soon || []).length ? `<p class="mut">قريبًا في القسم: ${M.soon.map(esc).join("؛ ")}.</p>` : "";
-    view_(head(t[1] + " — " + t[2], true) + `<nav class="chips">${D.tracks.map(([kk, n]) => `<a class="chip${kk === k ? " x" : ""}" href="#/talaea/manhaj?k=${kk}">${esc(n)}</a>`).join("")}</nav><h2 class="talat">📘 منهج ${esc(t[1])}</h2>${body}
+    view_(head(t[1] + " — " + t[2], true) + `<nav class="chips">${vis().map(([kk, n]) => `<a class="chip${kk === k ? " x" : ""}" href="#/talaea/manhaj?k=${kk}">${esc(n)}</a>`).join("")}</nav><h2 class="talat">📘 منهج ${esc(t[1])}</h2>${body}
       <p><a class="btn" href="#/talaea/ladder?k=${k}">📚 ثم سُلّم القراءة من بقية المكتبة</a> <a class="btn" href="#/talaea/track?k=${k}">🎮 الألعاب والأنشطة</a></p></div>`);
   }
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjd]"); if (!b) return; e.preventDefault(); const d = (st().ml = st().ml || {}), id = b.dataset.mjd; if (d[id]) delete d[id]; else { d[id] = 1; star(1); } saveS(); b.classList.toggle("on", !!d[id]); b.setAttribute("aria-pressed", !!d[id]); b.textContent = d[id] ? "✓ أتممته" : "أتممت الدرس ⭐"; });
