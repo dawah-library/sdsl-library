@@ -1,0 +1,16 @@
+name: كتب السنة في قسم الحديث
+on:
+  workflow_dispatch:
+  push:
+    paths: ["tools/kutub.py"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/kutub.py
+      - run: |
+          bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k
