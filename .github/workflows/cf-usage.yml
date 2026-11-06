@@ -1,0 +1,24 @@
+name: فحص استهلاك Cloudflare
+# يعرض استهلاك الدوال (الحد المجاني ١٠٠ ألف طلب يوميًا) وعدد عمليات النشر وحجم المشروع وحالة الموقع، في سجل المهمة وفي data/cf-usage.json
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+permissions:
+  contents: write
+env:
+  T: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  A: e54869c38d968d8f54d1a011d6cacca4
+  CF: https://api.cloudflare.com/client/v4
+jobs:
+  usage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: الاستهلاك
+        run: python3 tools/cf-usage.py
+      - run: |
+          git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/cf-usage.json; git diff --cached --quiet && exit 0
+          git commit -qm "استهلاك Cloudflare"; for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
