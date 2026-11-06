@@ -36,7 +36,26 @@ async function gemini(prompt) {
   throw new Error(last || "no model");
 }
 
+// أحكام المحدثين من «الموسوعة الحديثية» في الدرر السنية (dorar.net/dorar_api.json): ?dorar=<طرف الحديث>
+// يعيد الأحاديث المطابقة بأحكام المحدثين القدماء والمعاصرين ومصادرها، مع العزو والرابط؛ ويُخزَّن أسبوعًا.
+async function dorar(req, res, q) {
+  q = String(q || "").trim().slice(0, 160); if (q.length < 6) return res.status(400).json({ message: "اكتب طرف الحديث" });
+  try {
+    const r = await fetch("https://dorar.net/dorar_api.json?skey=" + encodeURIComponent(q), { headers: { "User-Agent": "dawahlibrary.org" } });
+    const j = await r.json(), html = String((j && j.ahadith && j.ahadith.result) || "");
+    const plain = x => x.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+    const items = html.split(/<div class="hadith"[^>]*>/).slice(1).map(h => {
+      const [m, info = ""] = h.split(/<div class="hadith-info"[^>]*>/), I = plain(info);
+      const g = I.match(/الراوي:\s*(.*?)\s*المحدث:\s*(.*?)\s*المصدر:\s*(.*?)\s*الصفحة أو الرقم:\s*(.*?)\s*خلاصة حكم المحدث:\s*(.*)$/) || [];
+      return { matn: plain(m).replace(/^\d+\s*-\s*/, ""), rawi: g[1] || "", muhaddith: g[2] || "", src: g[3] || "", page: g[4] || "", hukm: (g[5] || "").replace(/^\[|\]$/g, "") };
+    }).filter(x => x.matn && x.hukm).slice(0, 15);
+    res.setHeader("Cache-Control", "public, s-maxage=604800, stale-while-revalidate=86400");
+    return res.status(200).json({ src: "الموسوعة الحديثية — الدرر السنية (dorar.net)", items });
+  } catch (e) { return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
+}
+
 module.exports = async (req, res) => {
+  if (req.query && req.query.dorar) return dorar(req, res, req.query.dorar);
   const u = new URL(req.url, "https://" + (req.headers.host || "dawahlibrary.org"));
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");

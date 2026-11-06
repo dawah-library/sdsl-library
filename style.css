@@ -1074,3 +1074,4 @@ body{background:radial-gradient(1200px 600px at 100% -10%,var(--g1),transparent 
 .top .ic,.hsearch{background:rgba(255,255,255,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22)}
 @supports not (backdrop-filter:blur(1px)){.card,.bk,.btn{background:var(--sf)}}
 @media (min-width:1100px){body.has-side .sdx{display:none}}
+.hdh{color:var(--ac)}
