@@ -19,7 +19,7 @@ for f in root:
 out += ["/sw.js", "  Cache-Control: no-cache", "", "/api/*", "  X-Robots-Tag: noindex", ""]
 (R / "_headers").write_text("\n".join(out), encoding="utf-8")
 dirs = sorted(p.name for p in R.iterdir() if p.is_dir() and not p.name.startswith((".", "_")) and p.name not in ("api", "functions", "lib", "node_modules", "tools", "supabase"))
-ex = ["/", "/index.html"] + [f"/{d}/*" for d in dirs] + [f"/{f}" for f in root if f not in ("robots.txt",)]
+ex = ["/", "/index.html"] + [f"/{d}/*" for d in dirs] + [f"/{f}" for f in root]  # robots.txt ملف ثابت
 assert len(ex) + 1 <= 100, "Cloudflare: 100 rules max"
 (R / "_routes.json").write_text(json.dumps({"version": 1, "include": ["/*"], "exclude": ex}, indent=1) + "\n", encoding="utf-8")
 print("headers:", len(out), "lines | routes exclude:", len(ex))

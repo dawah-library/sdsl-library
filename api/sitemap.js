@@ -7,7 +7,7 @@ module.exports = (req, res) => {
   res.setHeader("cache-control", "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400");
   if (/robots=1/.test(req.url || "")) {
     res.setHeader("content-type", "text/plain; charset=utf-8");
-    return res.status(200).end(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /account\nDisallow: /favs\n\nSitemap: ${base}sitemap.xml\n`);
+    return res.status(200).end(`User-agent: *\nAllow: /$\nAllow: /book/*/1$\nDisallow: /book/*/\nDisallow: /api/\nDisallow: /au/\nDisallow: /admin\nDisallow: /account\nDisallow: /favs\n\nSitemap: ${base}sitemap.xml\n`);
   }
   const cat = read("data/catalog.json"); let arts = [], posts = [];
   try { arts = read("data/articles/index.json").items || []; } catch (e) { }

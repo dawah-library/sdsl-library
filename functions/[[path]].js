@@ -15,7 +15,6 @@ export async function onRequest(ctx) {
   for (const [rx, to, c] of REDIR) if (rx.test(p)) return Response.redirect(new URL(to, u).href, c);
   if (SCAN.test(p)) { const r = await ctx.env.ASSETS.fetch(new URL("/404.html", u)); return new Response(r.body, { status: 404, headers: r.headers }); }
   if (p === "/sitemap.xml") return run(sitemap, ctx, { url: "/api/sitemap", preload: ["data/catalog.json"], retry: true });
-  if (p === "/robots.txt") return run(sitemap, ctx, { url: "/api/sitemap?robots=1", preload: ["data/catalog.json"], retry: true });
   if (/\.[a-z0-9]{2,5}$/i.test(p)) return ctx.next(); // ملف ثابت غير مستثنى صراحة
   const sub = p.replace(/^\/+/, "/");
   const r = await run(page, ctx, { url: "/api/page?__p=" + encodeURIComponent(sub) + (u.search ? "&" + u.search.slice(1) : ""), preload: ["index.html", "data/catalog.json"], retry: true });

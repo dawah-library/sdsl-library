@@ -71,7 +71,7 @@ async function build(p, q, base) {
     r.type = art ? "article" : "book";
     r.ld = art ? { "@context": "https://schema.org", "@type": "Article", headline: b.title, author: { "@type": "Person", name: a.name }, datePublished: b.date || undefined, inLanguage: "ar", isPartOf: { "@type": "WebSite", name: SITE } }
       : { "@context": "https://schema.org", "@type": "Book", name: b.setTitle || b.title, author: { "@type": "Person", name: a.name }, inLanguage: "ar", genre: topic(b.topicId).name, publisher: b.source || undefined };
-    const nav = `<p>${pg > 1 ? `<a href="/book/${b.id}/${pg - 1}">الصفحة السابقة</a> ` : ""}${pg < n ? `<a href="/book/${b.id}/${pg + 1}">الصفحة التالية</a>` : ""}</p>`;
+    const nav = `<p>${pg > 1 ? `<a rel="nofollow" href="/book/${b.id}/${pg - 1}">الصفحة السابقة</a> ` : ""}${pg < n ? `<a rel="nofollow" href="/book/${b.id}/${pg + 1}">الصفحة التالية</a>` : ""}</p>`;
     const toc = (it.toc || []).slice(0, 80).map(t => `<li><a href="/book/${b.id}/${t.p}">${esc(t.t)}</a></li>`).join("");
     r.body = `<article><h1>${esc(b.setTitle ? b.title : b.title)}</h1><p><a href="/author/${esc(b.authorId)}">${esc(a.name || "")}</a>${topic(b.topicId).name ? " • " + esc(topic(b.topicId).name) : ""}${lbl ? " • " + esc(lbl) : ""}</p>
 ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Boolean).map(l => `<p>${esc(l)}</p>`).join("\n")}${nav}${toc && pg === 1 ? `<h2>الفهرس</h2><ul>${toc}</ul>` : ""}</article>`;

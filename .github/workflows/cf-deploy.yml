@@ -6,7 +6,7 @@ name: النشر على Cloudflare Pages
 on:
   push:
     branches: [main]
-    paths-ignore: ["data/audio/**", "data/tashkeel/**", "data/switches.json", "data/admin-log.json", "tools/**", "*.md", ".github/**"]
+    paths-ignore: ["data/audio/**", "data/tashkeel/**", "data/switches.json", "data/admin-log.json", "data/cf-usage.json", "tools/**", "*.md", ".github/**"]
   workflow_dispatch:
     inputs:
       setup: { description: "تهيئة المشروع والمفاتيح", type: boolean, default: false }
