@@ -26,7 +26,7 @@ self.addEventListener("fetch",e=>{const r=e.request;if(r.method!=="GET")return;c
    try{const x=await fetch(r,r.cache==="no-cache"&&!m?{cache:"default"}:undefined);if(x.ok){const s=await stamp(x);c.put(r,s.clone());return s}return m||x}
    catch(err){if(m)return m;throw err}}));return}
  if(u.hostname==="raw.githubusercontent.com"&&u.pathname.includes("/vols/")){e.respondWith(caches.open(DATA).then(c=>c.match(r).then(m=>m||fetch(r).then(x=>{if(x.ok)c.put(r,x.clone());return x}))));return}
- if(/fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net/.test(u.hostname))e.respondWith(caches.match(r).then(m=>m||fetch(r).then(x=>{const y=x.clone();caches.open(V).then(c=>c.put(r,y));return x})))});
+ if(/fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net|unpkg\.com/.test(u.hostname))e.respondWith(caches.match(r).then(m=>m||fetch(r).then(x=>{const y=x.clone();caches.open(V).then(c=>c.put(r,y));return x})))});
 // إشعارات الجهاز: تذكير الورد وإشعارات المكتبة
 self.addEventListener("push",e=>{let d={};try{d=e.data?e.data.json():{}}catch(x){d={title:"مكتبة الدعوة السلفية الرقمية",body:e.data&&e.data.text()}}
  e.waitUntil(self.registration.showNotification(d.title||"مكتبة الدعوة السلفية الرقمية",{body:d.body||"",icon:"assets/logo-sdsl-128.png",badge:"assets/logo-sdsl-128.png",dir:"rtl",lang:"ar",tag:d.tag||undefined,data:{url:d.url||"/"}}))});
