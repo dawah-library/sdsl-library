@@ -10,7 +10,9 @@ const MUS = (() => {
     if (META) { PG = {}; Object.entries(META).forEach(([s, L]) => L.forEach((m, i) => (PG[m[0]] = PG[m[0]] || []).push([+s, i + 1]))); } };
   const pageOf = (s, a) => META && META[s] ? META[s][a - 1][0] : 0;
   const TAF = {}, tf = async (k, s) => TAF[k + s] || (TAF[k + s] = fetch("data/quran/tafsir/" + k + "/" + s + ".json").then(r => r.ok ? r.json() : {}).catch(() => ({}))), mukh = s => tf("mokhtasar", s);
-  const TFS = [["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"]];  // «السراج في بيان غريب القرآن»: يُضاف متى وُجد مصدر موثوق (نسخة spa5k الموسومة به هي تفسير السعدي في الحقيقة)
+  const TFS = [["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["siraj", "السراج في غريب القرآن"]];
+  const sjTxt = v => Array.isArray(v) ? v.map(([w, m]) => "﴿" + w + "﴾: " + m).join("\n") : (v || "");
+  const sk = t => strip(String(t || "")).replace(/[^\u0621-\u064A]/g, "").replace(/[أإآٱ]/g, "ا").replace(/[اوىي]/g, "");  // «السراج في بيان غريب القرآن»: يُضاف متى وُجد مصدر موثوق (نسخة spa5k الموسومة به هي تفسير السعدي في الحقيقة)
   const tfk = () => { try { return localStorage.getItem("mus_tf") || "mokhtasar"; } catch (e) { return "mokhtasar"; } };
   const nm = s => Q.suras[s - 1].name.replace(/^سُورَةُ\s*/, ""), nmP = s => strip(nm(s)).replace(/ٱ/g, "ا");
   // البسملة تُفصل عن الآية الأولى في كل سورة (عدا الفاتحة، فهي آيتها الأولى)، وتُعرض سطرًا مستقلًا
@@ -81,10 +83,11 @@ const MUS = (() => {
      <h4>غريب الكلمة</h4><div id="mwg" class="mut">…</div><div class="row" style="margin-top:8px"><button class="btn s p" data-act="muswlex" data-w="${esc(clean)}" data-s="${s}" data-a="${a}">المعاجم وكتب الشريعة</button><button class="btn s" data-act="musay" data-s="${s}" data-a="${a}">الآية: التفاسير وما قيل فيها</button></div>`);
     mukh(s).then(t => { const el = $("#mwm"); if (el) el.innerHTML = t[a] ? esc(t[a]) : "غير متاح."; });
     const g = await tf("siraj", s), el = $("#mwg"); if (!el) return;
-    let v = g && g[a]; if (v) { const nw = norm(clean).replace(/^(و|ف|ب|ل|ك)(?=...)/, "").replace(/^ال(?=..)/, ""), segs = v.split(/\n+|(?<=[.。])\s+(?=[\u0621-\u064A﴿(«])/).filter(x => x.trim());
-      const hit = segs.filter(x => nw.length >= 2 && norm(strip(x)).includes(nw)); if (hit.length) v = hit.join("\n"); } el.innerHTML = v ? esc(v) + '<p class="mut" style="font-size:.8rem">من «السراج في بيان غريب القرآن»</p>' : 'يُعرض هنا غريب الكلمة من «السراج في بيان غريب القرآن» متى أُضيف إلى المكتبة؛ وإلى ذلك اضغط «المعاجم وكتب الشريعة».';
+    const L = (g && g[a]) || [], me = sk(clean).replace(/^(ف|ب|ل|ك)(?=...)/, ""), hit = Array.isArray(L) ? L.filter(([w2]) => { const x = sk(w2); return me.length >= 2 && (x.includes(me) || me.includes(x)); }) : [];
+    el.innerHTML = L.length ? `${(hit.length ? hit : L).map(([w2, m]) => `<p><b>﴿${esc(w2)}﴾</b>: ${esc(m)}</p>`).join("")}${hit.length ? "" : '<p class="mut">غريب هذه الآية في «السراج» (لم تُفرد الكلمة المختارة).</p>'}<p class="mut" style="font-size:.8rem">«السراج في بيان غريب القرآن» للدكتور محمد بن عبد العزيز الخضيري</p>`
+      : 'لا غريب لهذه الكلمة في «السراج»؛ اضغط «المعاجم وكتب الشريعة».';
   }
-  async function showTf(k, s, a) { const t = await tf(k, s), el = $("#musmk"); if (!el) return; el.textContent = t[a] || "غير متاح لهذه الآية بعد.";
+  async function showTf(k, s, a) { const t = await tf(k, s), el = $("#musmk"); if (!el) return; el.textContent = sjTxt(t[a]) || (k === "siraj" ? "لا غريب في هذه الآية في «السراج»، أو لم يُستخرج بعد." : "غير متاح لهذه الآية بعد.");
     document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k)); }
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);

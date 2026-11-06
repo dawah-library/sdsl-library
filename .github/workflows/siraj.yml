@@ -1,0 +1,45 @@
+name: السراج في بيان غريب القرآن (استخراج الجدول)
+on:
+  workflow_dispatch:
+    inputs:
+      id: { description: "معرّف كتاب السراج في الفهرس (اختياري: يُعرف بعنوانه)", required: false, default: "" }
+      from: { description: "من صفحة", required: false, default: "1" }
+      to: { description: "إلى صفحة (فارغ = الكل)", required: false, default: "" }
+  schedule:
+    - cron: "43 4 * * *"   # يوميًا حتى يكتمل (ينتهي فورًا إن لم يُرفع الكتاب أو اكتمل)
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: siraj
+  cancel-in-progress: false
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null
+      - name: الاستخراج
+        env:
+          SIRAJ_ID: ${{ github.event.inputs.id }}
+          SIRAJ_FROM: ${{ github.event.inputs.from }}
+          SIRAJ_TO: ${{ github.event.inputs.to }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+        run: |
+          [ -z "$SIRAJ_TO" ] && unset SIRAJ_TO
+          python3 tools/siraj.py
+      - if: always()
+        run: |
+          bash tools/git-save.sh "المصحف: السراج في بيان غريب القرآن" data/quran/tafsir/siraj
