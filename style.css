@@ -965,3 +965,10 @@ body:not(.reading) #ibsbar{display:none}
 #chbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .stdl{line-height:1.9;padding-inline-start:22px}.stdl li{margin:4px 0}
+
+/* زر دليل الموقع */
+#gdbtn{position:fixed;z-index:43;inset-inline-start:14px;bottom:calc(86px + env(safe-area-inset-bottom));width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;color:#fff;
+ background:radial-gradient(circle at 30% 30%,color-mix(in srgb,var(--ac) 70%,#fff),var(--ac));box-shadow:0 6px 18px rgba(15,92,77,.35);display:flex;align-items:center;justify-content:center;animation:gdfloat 4s ease-in-out infinite}
+#gdbtn[hidden]{display:none}body.reading #gdbtn{display:none}
+@keyframes gdfloat{50%{transform:translateY(-4px)}}@media (prefers-reduced-motion:reduce){#gdbtn{animation:none}}
+.gdi p{margin:2px 0}.lnk{border:0;background:none;color:var(--ac);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
