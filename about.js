@@ -2,7 +2,7 @@
    قاعدة ثابتة: كل خدمة جديدة تُضاف إلى الموقع تُدرج هنا في ABOUT_SECS (في القسم المناسب) في الإيداع نفسه.
    العنصر: [الاسم، الوصف، "مسارات الصفحات التي يغطيها"]. وtools/check-about.py (مهمة about-check.yml) يفحص عند كل إيداع
    أن كل صفحة في موجّه app.js وكل ملف خدمة في index.html مذكوران هنا، وإلا نبّه الإدارة. ABOUT_MODULES: ملفات الخدمات المغطاة. */
-const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about";
+const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about talaplay";
 const ABOUT_SECS = [
   ["المحتوى", [
     ["مكتبة الدعوة", "كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور، محوّلة إلى نص قابل للبحث مع نسختها المصورة.", "library"],
