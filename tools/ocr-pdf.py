@@ -1021,7 +1021,10 @@ def rereview(bid):
     new = ocr(pdf, only=[pn(i) for i in idx], prior={pn(i): sh["pages"][i] for i in idx})
     left, lite2, unc = set(unrev), set(lite), dict(unc0)
     fixed = 0
+    if len(new) < len(idx):  # صفحات تشير إلى صفحة مصورة واحدة أو خارج المصورة: لا يتوقف التدقيق كله بسببها
+        print("  تنبيه: عاد %d صفحة من %d مطلوبة؛ يُكمَل بالمتاح" % (len(new), len(idx)), flush=True)
     for k, i in enumerate(idx):
+        if k >= len(new): break
         if k in UNREVIEWED: continue
         if k in MUSED and i not in unrev: continue  # قراءة Gemini السابقة أولى من قراءة Mistral وحدها
         if not new[k].strip() and sh["pages"][i].strip(): continue
