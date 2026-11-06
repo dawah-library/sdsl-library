@@ -37,6 +37,9 @@
 /app.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/arabic.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /askx.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -52,6 +55,9 @@
 /dawah.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/dev.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /dm.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -61,10 +67,25 @@
 /export.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/fbin.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/groups.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/guide.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/hadith.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /hifz.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /i18n.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/icons.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /ithra.js
@@ -82,10 +103,16 @@
 /manage.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/mushaf.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /mutun.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /paths.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/proof.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /qa.js
@@ -97,7 +124,16 @@
 /search.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/side.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /social.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/standards.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/stats.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /study.js
@@ -107,6 +143,12 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /tala.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/talaplay.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/tamarin.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /tashjir.js
