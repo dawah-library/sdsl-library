@@ -1,6 +1,6 @@
 # دليل استئناف العمل على مكتبة الدعوة السلفية الرقمية
 
-> اقرأ هذا الملف أولًا في أي جلسة جديدة. آخر تحديث: 24 أكتوبر 2026.
+> اقرأ هذا الملف أولًا في أي جلسة جديدة، ثم قسم «نقطة الاستئناف» في آخره. آخر تحديث: ٦ نوفمبر ٢٠٢٦.
 
 ## قواعد العمل مع صاحب المشروع
 - الردود **بالعربية دائمًا**، ومنها رسائل المتابعة أثناء العمل، **مختصرة**.
@@ -331,3 +331,18 @@
 - **٦ نوفمبر (تتمة) — ملفات وأقسام جديدة:** groups.js (#/groups #/challenges #/perms)، standards.js (#/standards)، guide.js (زر الدليل)، mushaf.js (#/mushaf + tools/quran-cite.py ← data/qcite، مستثنى من Vercel ويُقرأ من raw)، hadith.js (#/hadith + tools/hadith.py ← data/hadith)، tamarin.js (#/tamarin + tools/tala-ex.py ← data/tala-ex.json، والاعتماد data/tala-ex-ok.json، ومهمة tala-ex.yml)، arabic.js (#/arabic)، stats.js. وتسريع B() بفهرس (BIX). ومهام: covers.yml، furqan.yml، qcite.yml، tala-ex.yml. قوالب الواجهة S.skin، وترتيب الرئيسية data/layout.json، والحذف النهائي (api/gh DELETE للمدير).
 - **تنبيه للجلسات القادمة:** لا تسمِّ دالة داخلية في وحدة باسم view (تحجب view العامة فتتكرر بلا نهاية). وsw.js يتعارض عند الرفع لأن المهمة ترفع رقمه: خذ نسخة origin وأضف الملفات الجديدة إلى CORE. وفي ملفات المهام: سطر run فيه «: » يُكتب كتلة (run: |).
 - **٦ نوفمبر (٣):** side.js+icons.js (شريط جانبي بأيقونات Lucide)، وزجاج وتدرج في style.css؛ dev.js (#/dev) + مهمة مجدولة «المساعد التقني لمكتبة الدعوة السلفية» (trig_017UnH1kPtZkqVPZKnoNaVMj، 10:47 و22:47 بتوقيت الكويت) تنفّذ data/dev-requests.json؛ proof.js (#/proof) + tools/proof.py + proof.yml (تدقيق الكتب النصية باعتماد)؛ fbin.js (#/fbin)؛ tools/transcribe.py + transcribe.yml (#/tafrighat للإدارة)؛ tools/quran-fetch.py + quran-fetch.yml (data/quran/meta.json صفحات المدينة، uthmani.json، tafsir/{mokhtasar,muyassar,saddi,siraj})؛ أحكام الدرر السنية عبر api/translate?dorar=؛ صلاحيات upload وedit في api/gh وgroups.js.
+
+
+## نقطة الاستئناف (٦ نوفمبر ٢٠٢٦ مساءً) — وللعمل من حساب Claude آخر
+- **الحالة لكل بند:** آخر tools/plan-status.md («قائمة أفكار التطوير»، البنود ١–٦١). ⛔ = يحتاج المالك، 🟡 = جارٍ، ⬜ = لم يبدأ.
+- **أُنجز اليوم (أبرزه):** خط المصحف QCF4 (mushaf.js: مصدران jsDelivr ثم unpkg، وطريقة @font-face ثانية، ورسالة وإعادة محاولة، وصفحة كورق المصحف) + فحص حي tools/mushaf-live.js بمحركي Chrome وSafari (mushaf-check.yml على ubuntu-24.04)؛ فهرس المصحف القابل للتحكم؛ مفردات القرآن (tools/gharib.py: المفردات للراغب + عمدة الحفاظ بعد استيرادها + جذور المدونة القرآنية)؛ قسم الحديث (tools/kutub.py، hadith-topics.py، hadith-links.py: موضع الشرح والتخريج وفهرس البدايات، وapi/translate?sharh= للشرح الموجز من نص الشرح وحده)؛ ألعاب الطلائع talaplay.js وتوجيه الطفل لمرحلة عمره؛ أولوية المفاتيح (المهام الثانوية تتأجل ما دام pending_pages>400)؛ التدقيق لكل الكتب والأقرب إلى الاكتمال أولًا (ocr-pdf.py)؛ الصوتيات: نسخة التسجيل pv=2 تعيد ما سُجّل بعبارة التعليمات، وقص الصمت وتوحيد الجهارة؛ إصلاح قوالب الواجهة (html يحمل data-hf فكان يلتقط الضغط).
+- **مفاتيح Gemini:** ٢٠ مفتاحًا في أسرار GitHub (GEMINI_API_KEY…_20)، وكل المهام تقرؤها. الحد لكل مشروع Google لا لكل مفتاح.
+- **ينتظر المالك:** اعتماد إجابات تمارين الطلائع؛ إضافة وكيل المساعد الفوري (dev-agent.yml) وسر CLAUDE_CODE_OAUTH_TOKEN إن أراده (أداة الأمان منعت الجلسة من نشره)؛ العضويات والدفع، وتأمين النطاق، وSearch Console؛ الفيديوهات بعد اعتماد الصوت.
+- **يتابَع آليًّا:** ocr.yml (التدقيق)، turathio-batch.yml (أولها عمدة الحفاظ ثم ٢١ مرجعًا)، siraj.yml (استخراج السراج من p1145b3d4)، tts.yml (إعادة تسجيل «تمام المنة» بعد مراجعة نصه)، kutub.yml.
+- **المساعد التقني المجدول:** تعليماته الكاملة في tools/assistant-prompt.md (مرتين يوميًا 10:47 و22:47 بتوقيت الكويت)؛ يعمل باستهلاك الحساب الذي أنشأه، فإذا نفدت باقته توقف معه.
+
+### الانتقال إلى حساب Claude آخر
+1. في الحساب الآخر: claude.ai ← Settings ← Connectors: اربط GitHub بحساب GitHub الذي يملك dawah-library (أو حساب له صلاحية الكتابة عليه)، وتأكد أن تطبيق Claude على GitHub مثبت على المستودع. واختياريًا اربط Supabase وVercel.
+2. افتح claude.ai/code، واختر المستودع dawah-library/sdsl-library، وابدأ جلسة بهذه الرسالة: «اقرأ HANDOFF.md وآخر tools/plan-status.md وتابع البنود غير المكتملة التي لا تحتاجني، بالعربية ومختصرًا».
+3. لاستمرار المساعد المجدول من الحساب الآخر: أنشئ فيه مهمة مجدولة (Routine) مرتين يوميًا والصق نص tools/assistant-prompt.md. ولا تُشغّل المهمتين معًا في الوقت نفسه (عطّل إحداهما أو باعد بين موعديهما) حتى لا تتعارض التعديلات.
+4. الأسرار والمفاتيح محفوظة في GitHub وCloudflare وSupabase، فلا تُنقل؛ والمهام الآلية (التحويل والتدقيق والصوت والاستيراد) تعمل في GitHub Actions دون أي جلسة Claude.
