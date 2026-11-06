@@ -10,17 +10,23 @@ const TMR = (() => {
   const ans = x => { const k = key(x); return k in OK ? OK[k] : undefined; };
   const SER = { asas: "الأساس (الابتدائية)", bunyan: "البنيان (الإعدادية)" };
   const stars = () => { try { return JSON.parse(localStorage.getItem("tmr_st") || "{}"); } catch (e) { return {}; } };
+  // داخل قسم الطلائع، ويُوجَّه الطفل إلى مستواه بعمره (ملف الطفل في «ركن الوالدين»، ما لم يُظهر الوالد المراحل الأخرى)
+  const KIDV = { t1: ["asas", [1, 2]], t2: ["asas", [3, 4, 5, 6]], t3: ["bunyan", null], t4: ["bunyan", null] };
+  const lockOf = () => { const T = S.tala || {}, k = (T.kids || []).find(x => x.id === T.cur) || (T.kids || [])[0]; return k && !T.allst ? KIDV[k.track] || null : null; };
   async function page(q) {
-    await load(); const s = q.s || "asas", v = +q.v || 1, adm = isAdmin();
+    await load(); const lk = lockOf(); let s = lk ? lk[0] : (q.s || "asas"), v = +q.v || (lk && lk[1] ? lk[1][0] : 1); const adm = isAdmin();
+    if (lk && lk[1] && !lk[1].includes(v)) v = lk[1][0];
     const L = EX.filter(x => x.s === s && x.v === v), lessons = [...new Map(L.map(x => [x.l + "|" + x.lp, [x.l, x.lp]])).values()], ls_ = q.l ? decodeURIComponent(q.l) : null;
-    const vols = [...new Set(EX.filter(x => x.s === s).map(x => x.v))].sort((a, b) => a - b), st = stars();
+    const vols = [...new Set(EX.filter(x => x.s === s).map(x => x.v))].filter(x => !lk || !lk[1] || lk[1].includes(x)).sort((a, b) => a - b), st = stars();
     let body;
     if (!ls_) body = `<div class="grid">${lessons.map(([l, lp]) => { const n = L.filter(x => x.l === l && x.lp === lp).length, k = s + v + l; return `<a class="card" href="#/tamarin?s=${s}&v=${v}&l=${encodeURIComponent(l + "|" + lp)}"><b>${esc(l || "تمارين")}</b><span>${toAr(n)} سؤالًا${st[k] ? " • " + "⭐".repeat(Math.min(3, st[k])) : ""}</span></a>`; }).join("")}</div>`;
     else { const [l, lp] = ls_.split("|"), Q = L.filter(x => x.l === l && String(x.lp) === lp);
       body = `<p><a href="#/tamarin?s=${s}&v=${v}">← دروس المستوى</a> • <a href="#/book/${Q[0] ? Q[0].b : ""}/${lp}">📖 اقرأ الدرس</a></p><h3>${esc(l)}</h3>` + Q.map((x, i) => item(x, i, adm)).join("") + `<p class="mut">الإجابة المعتمدة تظهر بعد الاختيار؛ وما لم تُعتمد إجابته بعد فراجع الدرس مع والدك.</p>`; }
-    view(`<div class="cmhero"><div><h2>تمارين الأساس والبنيان</h2><p>أسئلة كتابي الشيخ مصطفى دياب بحسب المستوى والدرس: اختر، وصحّح العبارة، وأكمل، وأجب؛ مع الرجوع إلى الدرس.</p></div></div>
-    <div class="tabs" role="tablist">${Object.entries(SER).map(([k, n]) => `<a role="tab" aria-selected="${k === s}" href="#/tamarin?s=${k}">${n}</a>`).join("")}</div>
-    <nav class="chips">${vols.map(x => `<a class="chip${x === v ? " on" : ""}" href="#/tamarin?s=${s}&v=${x}">المستوى ${toAr(x)}</a>`).join("")}</nav>${body}`);
+    if (typeof TPLAY !== "undefined") TPLAY.font();
+    view(`<div class="tala kids"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">تمارين الأساس والبنيان</span></div><p><a href="#/talaea">← العودة إلى الطلائع</a></p>
+    <h2 class="talat">✏️ تمارين الأساس والبنيان</h2><p>أسئلة كتابي الشيخ مصطفى دياب بحسب المستوى والدرس: اختر، وصحّح العبارة، وأكمل، وأجب؛ مع الرجوع إلى الدرس.</p>
+    ${lk ? "" : `<div class="tabs" role="tablist">${Object.entries(SER).map(([k, n]) => `<a role="tab" aria-selected="${k === s}" href="#/tamarin?s=${k}">${n}</a>`).join("")}</div>`}
+    <nav class="chips">${vols.map(x => `<a class="chip${x === v ? " on" : ""}" href="#/tamarin?s=${s}&v=${x}">المستوى ${toAr(x)}</a>`).join("")}</nav>${body}</div>`);
   }
   function item(x, i, adm) {
     const a = ans(x), id = "tq" + i, A_ = a === undefined ? "" : String(a);

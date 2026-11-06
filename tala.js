@@ -28,7 +28,7 @@ const TALA = (() => {
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     const sg = GEN[q.s] ? q.s : "", sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
-      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames">${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
+      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
       <div class="talag talagen">${Object.entries(GEN).map(([k, x]) => `<a class="talac gen-${k}${sg === k ? " on" : ""}" href="#/talaea?s=${k}"><i aria-hidden="true">${x.ic}</i><b>${x.n}</b><span>${esc(x.d)}</span></a>`).join("")}</div>

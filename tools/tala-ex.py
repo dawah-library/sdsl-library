@@ -18,13 +18,25 @@ def series():
         if st.startswith("الأساس") or st.startswith("البنيان"):
             out.append((b["id"], "asas" if st.startswith("الأساس") else "bunyan", int(b.get("vol") or 1)))
     return sorted(out, key=lambda x: (x[1] != "asas", x[2]))
+# ما لا يصلح اسمًا للدرس: تعليمات التمارين والعناوين الفرعية وأسطر التحويل المشوهة
+NOTL = re.compile(r"[:：…]\s*$|\.\.|^[\(\-–•⊙▪◦*»«]|^(?:الأساس|البنيان|المستوى|الأهداف|المناقشة|التفسير|المفردات|معاني|صل |لون|مرر|ارسم|اكتب|اقرأ|قال |أخي|أختي|تابع|نشاط|تدريب|التقويم|الواجب|تمرين|فوائد|الفوائد|من فوائد|ما يستفاد)|\.\s*\S")
+def clt(t):  # تنظيف عنوان الدرس من رموز التحويل ولصق الكلمات
+    t = re.sub(r"^[\s@#©®Ⓢ●○◉•▪)(،,.\-–/]+|[\s/»«\-–]+$", "", t or "")
+    t = re.sub(r"(سورة|آداب|دعاء|عند|إذا)(?=[ء-ي])", r"\1 ", t); t = re.sub(r"(?<=[ء-ي])(والباطن|والآخر|القوي|المطر|الديكة|الوالدين)", r" \1", t)
+    t = re.sub(r"الد عاء", "الدعاء", t).replace("د عاء", "دعاء").replace("خامشًا", "خامسًا").replace("أديني نبي", "أدبني نبيي")
+    return re.sub(r"\s+", " ", t).strip()
+NOTL2 = re.compile(r"^[^(]*\)$|^(?:[أ-ي]\s*-\s|أن يت|مكية|مدنية|س\s*[\d٠-٩]|بيّن|بين |المريض|ولماذا|فسبحان)|^(?!الدرس|أولا|ثاني|ثالث|رابع|خامس|سادس|سابع|ثامن|تاسع|عاشر|المرتبة|الأدب)[^:]{2,30}:\s*\S")
+def okt(t): t = clt(t); return 3 <= len(t) <= 60 and not NOTL.search(t) and not NOTL2.search(t) and len(re.findall(r"[ء-ي]", t)) >= 3
 def extract(bid, ser, vol):
     bk = json.load(open(os.path.join(D, "books", bid + ".json"), encoding="utf-8")); pages = bk.get("pages") or []
     # اسم الدرس من فهرس الكتاب (أعلى مستويين) لا من العناوين الداخلية للتمارين
     toc = sorted([t for t in (bk.get("toc") or []) if t.get("p") and (t.get("l") or 1) <= 2 and not re.match(r"^(المستوى|البنيان|الأساس|المقدمة|مقدمة|الفهرس)", t.get("t", "")) and not BAD.search(t.get("t", "")) and not re.search(r"[_\u200f]|\.\.|[0-9]", t.get("t", "")) and len(t.get("t", "").split()) >= 2], key=lambda t: t["p"])
+    # عنوان الفهرس لا يُعتمد إلا إن وُجد نصه في صفحته المدققة (فهارس بعض المجلدات مشوهة بالتحويل الأول)
+    sk = lambda x: re.sub(r"[^ء-ي]", "", re.sub(r"[\u064B-\u0652\u0670]", "", x or "")).replace("أ", "ا").replace("إ", "ا").replace("آ", "ا").replace("ة", "ه").replace("ى", "ي")
+    toc = [t for t in toc if okt(t["t"]) and len(sk(t["t"])) >= 3 and sk(t["t"]) in sk(pages[t["p"] - 1] if 0 < t["p"] <= len(pages) and isinstance(pages[t["p"] - 1], str) else "")]
     def les(pg):
         c = [t for t in toc if t["p"] <= pg]
-        return (c[-1]["t"].strip(), c[-1]["p"]) if c else None
+        return (clt(c[-1]["t"]), c[-1]["p"]) if c else None
     out = []; lesson = ""; lp = 1
     for i, pg in enumerate(pages):
         if not isinstance(pg, str): continue
@@ -34,10 +46,10 @@ def extract(bid, ser, vol):
             l = lines[k]; h = HEAD.match(l.lstrip("#@< "))
             if l.startswith("#") and not h and len(l) < 90 and not re.match(r"^#+\s*[\d٠-٩]+\s*$", l):
                 t = l.lstrip("#@< ").strip()
-                if t and not re.search(r"تمارين|أنشطة|نشاط|التقويم|الأهداف", t) and not re.match(r"^([\d٠-٩]|ما |ماذا|اذكر|المناقشة|التطبيق|سؤال|أسئلة|اسئلة|تدريب|قيّم|قيم|فكر|تأمل|لماذا|كيف|هل |علل|ناقش|المفردات|معاني|الفوائد|من هذا|يتربى|نتعلم)", t): lesson, lp = t, i + 1
+                if t and not re.search(r"تمارين|أنشطة|نشاط|التقويم|الأهداف", t) and not re.match(r"^([\d٠-٩]|ما |ماذا|اذكر|المناقشة|التطبيق|سؤال|أسئلة|اسئلة|تدريب|قيّم|قيم|فكر|تأمل|لماذا|كيف|هل |علل|ناقش|المفردات|معاني|الفوائد|من هذا|يتربى|نتعلم)", t) and okt(t): lesson, lp = clt(t), i + 1
             if h:
                 lt = les(i + 1)
-                if lt: lesson, lp = lt
+                if lt and (lt[1] >= lp or not lesson): lesson, lp = lt  # عنوان الصفحة المدقق أولى ما لم يأتِ بعده عنوان فهرس أحدث
                 kind = {"اختر": "mcq", "ضع علامة": "tf", "أكمل": "fill"}.get(h.group(1), "open"); k += 1; continue
             if kind:
                 m = ITEM.match(l)
