@@ -963,3 +963,5 @@ body:not(.reading) #ibsbar{display:none}
 .sttab tr.me{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 #chbar{position:fixed;z-index:46;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--sf);border:1px solid var(--gold);border-radius:20px;padding:4px 6px 4px 12px;box-shadow:0 4px 14px rgba(0,0,0,.15);font-size:.85rem;max-width:calc(100vw - 20px)}
 #chbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.stdl{line-height:1.9;padding-inline-start:22px}.stdl li{margin:4px 0}
