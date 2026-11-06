@@ -42,7 +42,9 @@ def main():
             p = os.path.join(Q, "tafsir", short, "%d.json" % su)
             if os.path.exists(p) and os.environ.get("QF_FORCE") != "1": n += 1; continue
             try:
-                r = get("https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/%s/%d.json" % (ed, su))
+                try: r = get("https://raw.githubusercontent.com/spa5k/tafsir_api/main/tafsir/%s/%d.json" % (ed, su), 2)
+                except Exception: r = get("https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/%s/%d.json" % (ed, su))
+                time.sleep(.5)
                 L_ = r if isinstance(r, list) else r.get("ayahs", [])
                 save(p, {str(x.get("ayah") or x.get("verse")): (x.get("text") or "").strip() for x in L_}); n += 1
             except Exception as e: rep.append("✗ %s سورة %d: %s" % (ed, su, e)); break
