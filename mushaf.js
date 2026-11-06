@@ -90,11 +90,13 @@ const MUS = (() => {
   const QCFV = "https://cdn.jsdelivr.net/npm/quran-qcf4@1.1.0/fonts-woff2/", FONTS = {};
   // تحميل خط الصفحة مع إعادة المحاولة؛ لا يُحفظ الفشل حتى لا تتعطل الصفحات بعد انقطاع عابر
   const QERR = [];
-  const qurl = f => `${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2`;
+  // مصدران لحزمة الخطوط نفسها (quran-qcf4@1.1.0): jsDelivr ثم unpkg إن رفض الأول
+  const QCFS = [QCFV, "https://unpkg.com/quran-qcf4@1.1.0/fonts-woff2/"];
+  const qurl = (f, i) => `${QCFS[i || 0]}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2`;
   // طريقة ثانية (لبعض متصفحات iPhone): قاعدة @font-face ثم طلب تحميلها
-  const qcss = f => { if (!document.getElementById("qf_" + f)) { const st = document.createElement("style"); st.id = "qf_" + f; st.textContent = `@font-face{font-family:"${f}";src:url("${qurl(f)}") format("woff2");font-display:block}`; document.head.appendChild(st); }
+  const qcss = f => { if (!document.getElementById("qf_" + f)) { const st = document.createElement("style"); st.id = "qf_" + f; st.textContent = `@font-face{font-family:"${f}";src:url("${qurl(f, 0)}") format("woff2"),url("${qurl(f, 1)}") format("woff2");font-display:block}`; document.head.appendChild(st); }
     return document.fonts.load(`20px "${f}"`, "ﭑ").then(L => L.length > 0 || document.fonts.check(`20px "${f}"`)).catch(e => { QERR.push(f + ": " + (e && e.message || e)); return false; }); };
-  const qload = (f, n) => new FontFace(f, `url(${qurl(f)}) format("woff2")`).load().then(x => { document.fonts.add(x); return true; })
+  const qload = (f, n) => new FontFace(f, `url(${qurl(f, 0)}) format("woff2"), url(${qurl(f, 1)}) format("woff2")`).load().then(x => { document.fonts.add(x); return true; })
     .catch(e => { QERR.push(f + ": " + (e && (e.message || e.name) || e)); return n > 0 ? new Promise(r => setTimeout(r, 700)).then(() => qload(f, n - 1)) : qcss(f); });
   const qfont = f => FONTS[f] || (FONTS[f] = qload(f, 2).then(ok => { if (!ok) delete FONTS[f]; return ok; }));
   const qmode = () => { try { return localStorage.getItem("mus_mode2") || "qcf"; } catch (e) { return "qcf"; } };  // mus_mode2: يبدأ الجميع بخط المصحف

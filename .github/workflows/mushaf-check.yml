@@ -15,6 +15,11 @@ jobs:
       - run: |
           mkdir -p tools/reports
           curl -s "https://data.jsdelivr.com/v1/package/npm/quran-qcf4@1.1.0/flat" | python3 -c 'import json,sys;f=[x["name"] for x in json.load(sys.stdin)["files"]];w=[x for x in f if "woff2" in x];print(len(w),"ملف woff2؛ أمثلة:",w[:3],w[-3:])' | tee tools/reports/qcf-files.txt
+      - name: استجابة مصادر الخطوط
+        run: |
+          for f in QCF4_Hafs_01_W QCF4_Hafs_23_W QCF4_QBSML; do for u in https://cdn.jsdelivr.net/npm https://unpkg.com; do
+            echo "$u $f: $(curl -s -o /dev/null -w '%{http_code} %{size_download} %{content_type}' -H 'Origin: https://dawahlibrary.org' -L "$u/quran-qcf4@1.1.0/fonts-woff2/$f.woff2") $(curl -sI -H 'Origin: https://dawahlibrary.org' -L "$u/quran-qcf4@1.1.0/fonts-woff2/$f.woff2" | grep -i 'access-control-allow-origin' | tr -d '\r')"
+          done; done | tee -a tools/reports/qcf-files.txt
       - run: node tools/mushaf-live.js
       - run: ENGINE=webkit node tools/mushaf-live.js || true
       - run: |
