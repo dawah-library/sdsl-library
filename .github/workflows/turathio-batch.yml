@@ -63,6 +63,8 @@ jobs:
       - name: فهرس معاني الكلمات
         if: ${{ hashFiles('.tio-incomplete') == '' }}
         run: python3 tools/gloss.py >/dev/null && bash tools/git-save.sh "فهرس معاني الكلمات بعد استيراد التراث المشكول" data/gloss || true
+      - name: مفردات القرآن من كتب الغريب
+        run: python3 tools/gharib.py --no-roots && bash tools/git-save.sh "المصحف: معاني المفردات من كتب الغريب" data/quran/lex || true
       - name: إشعار
         if: always()
         run: '[ -s .tio-batch-report.txt ] && python3 tools/notify.py "$(cat .tio-batch-report.txt)" || true'

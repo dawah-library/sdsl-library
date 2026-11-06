@@ -92,7 +92,7 @@ def main():
             print("== البحث عن نسخة مشكولة: %s" % it["q"], flush=True)
             c = find(it)
             it["cands"] = c[:5]
-            if c and c[0]["r"] >= MIN_TASH:
+            if c and c[0]["r"] >= it.get("mintash", MIN_TASH):  # كتب لا تُطبع مشكولة (كعمدة الحفاظ) تُقبل بلا شرط التشكيل
                 it["b"] = c[0]["b"]
             else:
                 it["skip"] = "لا نسخة مشكولة كافية"

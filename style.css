@@ -1124,3 +1124,4 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 @media (max-width:760px){.top .megab,.top a[href="#/favs"],.top [data-act=uilang],.top .shareb,.top [data-act=theme],.top .hq{display:none!important}
  .top{gap:6px 8px;padding:6px 10px}.top .brand img{width:40px;height:40px}}
 .sdf .sdfa{flex:1;display:flex;gap:6px;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--sf);color:var(--ink);border-radius:10px;padding:6px;font-size:.8rem;text-decoration:none}
+.lexr{line-height:1.9;font-size:.95em;color:var(--ink,inherit);margin:.3em 0}

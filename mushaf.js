@@ -98,10 +98,25 @@ const MUS = (() => {
     bar();
   }
   // الكلمة: غريبها (السراج إن توفر، ثم المعاجم) وتفسير آيتها من «المختصر»
+  // كتب الغريب المرتبة على الجذور (tools/gharib.py): جذر الكلمة من المدونة القرآنية ثم مدخله في «المفردات» و«عمدة الحفاظ»
+  const JC = {}, jget = u => JC[u] || (JC[u] = fetch(u).then(r => r.ok ? r.json() : {}).catch(() => ({})));
+  const nkJ = x => { x = String(x || "").replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "").replace(/[أإآٱءؤئ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[^\u0627-\u064A]/g, ""); return x.length > 3 ? x.replace(/^ال(?=..)/, "") : x; };
+  const skJ = x => nkJ(x).replace(/[اوي]/g, "");
+  async function rootOf(w, s, a) { const L = (await jget(`data/quran/roots/${s}.json`))[a] || [], me = nkJ(w), ms = skJ(w);
+    const x = L.find(y => y[0] === me) || L.find(y => skJ(y[0]) === ms) || L.find(y => y[1] && ms.length > 1 && (skJ(y[0]).includes(ms) || ms.includes(skJ(y[0])))); return x && x[1] || ""; }
+  const rVar = r => { const k = nkJ(r), c = [k]; if (k.length === 3 && k[1] === k[2]) c.push(k.slice(0, 2)); if (/[اوي]$/.test(k)) for (const v of "اوي") c.push(k.slice(0, -1) + v);
+    if (k.length === 3 && /[اوي]/.test(k[1])) for (const v of "اوي") c.push(k[0] + v + k[2]); return [...new Set(c)]; };
+  async function lexOf(b, r) { for (const v of rVar(r)) { const d = await jget(`data/quran/lex/${b}/${v.charCodeAt(0).toString(16).padStart(4, "0")}.json`); if (d[v]) return [v].concat(d[v]); } return null; }
+  async function lexBox(id, b, r) { const el = $("#" + id); if (!el) return; const e = r && await lexOf(b, r);
+    el.innerHTML = e ? `<p class="lexr">${esc(e[3].length > 900 ? e[3].slice(0, 900) + "…" : e[3]).replace(/\n/g, "<br>")}</p><a class="chip" href="#/book/${esc(e[1])}/${e[2]}" data-act="closeSheet">مادة «${esc(e[0])}» في الكتاب كاملة</a>` : (r ? `لا مادة «${esc(r)}» فيه.` : "لا جذر لهذه الكلمة (حرف أو اسم علم)."); }
   async function wsheet(w, s, a) {
     const clean = strip(w).replace(/[^\u0621-\u064A]/g, "");
     openSheet("«" + w + "»", `<p class="mqt">${esc(ayah(s, a))} ﴿${AR(a)}﴾</p><h4>المختصر في التفسير <small class="mut">(مركز تفسير)</small></h4><div id="mwm" class="mut">…</div>
-     <h4>غريب الكلمة</h4><div id="mwg" class="mut">…</div><div class="row" style="margin-top:8px"><button class="btn s p" data-act="muswlex" data-w="${esc(clean)}" data-s="${s}" data-a="${a}">المعاجم وكتب الشريعة</button><button class="btn s" data-act="musay" data-s="${s}" data-a="${a}">الآية: التفاسير وما قيل فيها</button></div>`);
+     <h4>غريب الكلمة <small class="mut">(السراج في بيان غريب القرآن)</small></h4><div id="mwg" class="mut">…</div>
+     <h4>المفردات في غريب القرآن <small class="mut">(الراغب الأصفهاني)</small> <span id="mwrt" class="mut"></span></h4><div id="mwr" class="mut">…</div>
+     <div id="mwuh"></div><div class="row" style="margin-top:8px"><button class="btn s p" data-act="muswlex" data-w="${esc(clean)}" data-s="${s}" data-a="${a}">المعاجم وكتب الشريعة</button><button class="btn s" data-act="musay" data-s="${s}" data-a="${a}">الآية: التفاسير وما قيل فيها</button></div>`);
+    Promise.all([rootOf(w, s, a), jget("data/quran/lex/_meta.json")]).then(([r, M]) => { const t = $("#mwrt"); if (t && r) t.textContent = "• الجذر: " + r; lexBox("mwr", "mufradat", r);
+      if ((M.umdathuffaz || {}).n) { const h = $("#mwuh"); if (h) { h.innerHTML = '<h4>عمدة الحفاظ في تفسير أشرف الألفاظ <small class="mut">(السمين الحلبي)</small></h4><div id="mwu" class="mut">…</div>'; lexBox("mwu", "umdathuffaz", r); } } });
     mukh(s).then(t => { const el = $("#mwm"); if (el) el.innerHTML = t[a] ? esc(t[a]) : "غير متاح."; });
     const g = await tf("siraj", s), el = $("#mwg"); if (!el) return;
     const L = (g && g[a]) || [], me = sk(clean).replace(/^(ف|ب|ل|ك)(?=...)/, ""), hit = Array.isArray(L) ? L.filter(([w2]) => { const x = sk(w2); return me.length >= 2 && (x.includes(me) || me.includes(x)); }) : [];
