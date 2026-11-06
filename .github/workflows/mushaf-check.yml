@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium webkit >/dev/null
+      - run: npm install --no-save playwright@1.55.0 >/dev/null && npx playwright install --with-deps chromium webkit >/dev/null
       - run: |
           mkdir -p tools/reports
           curl -s "https://data.jsdelivr.com/v1/package/npm/quran-qcf4@1.1.0/flat" | python3 -c 'import json,sys;f=[x["name"] for x in json.load(sys.stdin)["files"]];w=[x for x in f if "woff2" in x];print(len(w),"ملف woff2؛ أمثلة:",w[:3],w[-3:])' | tee tools/reports/qcf-files.txt
