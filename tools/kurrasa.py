@@ -17,7 +17,13 @@ from frontmatter import content_range  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "kurrasa")
 REPORT = []
-KINDS = {"points", "def", "table", "map", "steps", "quote", "note", "qs", "compare"}
+KINDS = {"points", "def", "table", "map", "steps", "quote", "note", "qs", "compare", "sum"}
+# نسبة الاختصار: صفحة كراسة لكل R صفحة من الأصل (٥ مفصّلة، ١٠ متوسطة، ٢٠ موجزة) ⇒ عدد الأقسام وكثافة الكتل
+RATIO = {5: (6, 9, "مفصّلة: اشرح كل مسألة ببند، واستوعب التقسيمات والأدلة والأمثلة التي ذكرها المؤلف"),
+         10: (5, 7, "متوسطة: أهم المسائل والتقسيمات والأدلة"),
+         20: (4, 5, "موجزة: أصول المسائل فقط")}
+STYLES = {"sum": "تلخيص", "table": "جداول", "map": "تشجيرات وخرائط ذهنية", "compare": "مقارنات", "qs": "أسئلة وأجوبة", "points": "أهم المسائل",
+          "def": "تعريفات", "steps": "خطوات ومراحل", "quote": "نصوص بلفظها", "note": "تنبيهات"}
 
 
 def jload(p, d):
@@ -81,7 +87,9 @@ def sections(sh, pages, target):
 
 SEC_PROMPT = """أنت معلّم ومصمم مذكرات تعليمية متقن. حوّل هذا القسم من كتاب «{title}» لـ{author} (ص {a}–{b}){chap} إلى صفحة من «كراسة مذاكرة ومراجعة» عصرية.
 أخرج JSON حرفيًا: {{"t": "عنوان القسم", "lead": "تمهيد في جملة أو جملتين", "blocks": [ ... ]}}
-أنواع الكتل (اختر منها ٤ إلى ٧ متنوعة بحسب ما يناسب المادة، ولا تكرر نوعًا أكثر من مرتين):
+درجة التفصيل: {depth}. عدد الكتل {bmin} إلى {bmax}، متنوعة بحسب ما يناسب المادة، ولا تكرر نوعًا أكثر من مرتين.
+الأنواع المسموح بها في هذه الكراسة فقط: {allowed}.{must}
+أنواع الكتل:
  {{"k": "points", "t": "عنوان", "items": ["مسألة أو فكرة موجزة", ...]}}            أهم المسائل (٣–٧)
  {{"k": "def", "items": [{{"t": "مصطلح", "d": "تعريفه كما في الكتاب", "p": صفحة}}]}}   تعريفات ذكرها المؤلف
  {{"k": "table", "t": "عنوان الجدول", "head": ["عمود", "عمود"], "rows": [["خلية", "خلية"]]}}   جدول تصنيف أو مقارنة (٢–٤ أعمدة، ٢–٧ صفوف، خلايا قصيرة)
@@ -90,13 +98,15 @@ SEC_PROMPT = """أنت معلّم ومصمم مذكرات تعليمية متق�
  {{"k": "compare", "t": "عنوان", "a": "الطرف الأول", "b": "الطرف الثاني", "rows": [["وجه", "عند الأول", "عند الثاني"]]}}
  {{"k": "quote", "t": "نص منقول بلفظه حرفيًا من الكتاب (دليل أو قاعدة أو قول مهم للمؤلف) ٨–٤٠ كلمة", "by": "قائله إن لم يكن المؤلف", "p": صفحة}}
  {{"k": "note", "t": "تنبيه أو فائدة مهمة نبّه عليها المؤلف"}}
- {{"k": "qs", "items": [{{"q": "سؤال مراجعة تام السياق", "a": "جوابه الموجز من الكتاب"}}]}}   (٢–٤ أسئلة، كتلة واحدة في آخر القسم)
+ {{"k": "sum", "t": "تلخيص القسم في فقرة متصلة (٣–٦ جمل) قريبة من ألفاظ المؤلف"}}   (قبل الأسئلة في آخر القسم)
+ {{"k": "qs", "items": [{{"q": "سؤال مراجعة تام السياق يفهمه الدارس دون الرجوع إلى النص", "a": "جوابه الموجز من الكتاب"}}]}}   (٣–٥ أسئلة، كتلة واحدة في آخر القسم)
 شروط الأمانة الصارمة:
 - لا تضف معلومة ولا رأيًا ولا مثالًا من خارج النص، ولا تغيّر آراء المؤلف ولا ترجيحاته، ولا تنسب إليه ما لم يقله.
 - اشمل موضوعات القسم كلها بترتيبها دون إخلال، وأوجز العبارة إيجازًا لا يغيّر المعنى، وقرّبها من ألفاظ المؤلف.
 - النص المنقول (quote) بلفظه حرفًا بحرف، والآيات والأحاديث بلفظها.
 - تجاهل صفحة العنوان وبيانات النشر والفهارس.
-- اجعل العبارات قصيرة مناسبة للعرض المرئي (البند غالبًا أقل من ٢٠ كلمة).
+- اجعل العبارات قصيرة مناسبة للعرض المرئي (البند غالبًا أقل من ٢٠ كلمة)، لكن لا تُسقط مسألة من مسائل القسم.
+- الجدول والمقارنة والخريطة لا تُستعمل إلا حين تكون في المادة تقسيمات أو أطراف أو فروع حقيقية.
 
 النص (مقسّم بعلامات [ص N]):
 {text}"""
@@ -143,24 +153,37 @@ def clean_block(b, pages, a, z):
             if T.found(b.get("t", ""), pages, pp):
                 b["p"] = pp; return b
         return None  # نص لم يُعثر عليه بلفظه: يُحذف
-    if k == "note":
+    if k in ("note", "sum"):
         return b if str(b.get("t") or "").strip() else None
     if k == "qs":
-        b["items"] = [x for x in b.get("items") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:4]
+        b["items"] = [x for x in b.get("items") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:5]
         return b if b["items"] else None
     return None
 
 
-def build(bid, cat):
+def opts_of(item):
+    o = item if isinstance(item, dict) else {}
+    r = int(o.get("r") or 10); r = r if r in RATIO else 10
+    st = [x for x in (o.get("st") or list(STYLES)) if x in STYLES] or list(STYLES)
+    return r, st
+
+
+def build(bid, cat, item=None):
     src = T.source(bid, cat)
     if not src:
         return "missing"
     title, au, pages, sh = src
     n = len(pages)
-    target = max(3, min(30, round(n / 10)))
+    R, ST = opts_of(item)
+    bmin, bmax, depth = RATIO[R]
+    target = max(3, min(60, round(n / R)))
     secs = sections(sh, pages, target - 1 if target > 3 else target)
     wp = os.path.join(OUT, "_work", bid + ".json")
     work = jload(wp, {})
+    if work.get("_o") != [R, ST]:  # تغيّرت الخيارات: يبدأ من جديد
+        work = {"_o": [R, ST]}
+    allowed = "، ".join("%s (%s)" % (k, STYLES[k]) for k in ST)
+    must = ("\nفي آخر القسم دائمًا: " + " ثم ".join(x for x, k in (("كتلة sum", "sum"), ("كتلة qs", "qs")) if k in ST) + ".") if ("sum" in ST or "qs" in ST) else ""
     out = []
     toc = sh.get("toc") or []
     for a, z in secs:
@@ -175,22 +198,23 @@ def build(bid, cat):
         text = "\n".join("[ص %d]\n%s" % (i + 1, body(pages[i])[:5000]) for i in range(a - 1, z))
         if len(re.sub(r"\s", "", text)) < 300:
             work[key] = None; continue
-        r = T.gemini(SEC_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + "، ".join(chap)) if chap else "", text=text[:80000]))
+        r = T.gemini(SEC_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + "، ".join(chap)) if chap else "", text=text[:80000],
+                                       depth=depth, bmin=bmin, bmax=bmax, allowed=allowed, must=must))
         if not r:
             return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
-        bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x]
-        qs = [b for b in bl if b["k"] == "qs"]
-        bl = [b for b in bl if b["k"] != "qs"] + qs[:1]  # أسئلة القسم في آخره
+        bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x and x["k"] in ST]
+        sm, qs = [b for b in bl if b["k"] == "sum"], [b for b in bl if b["k"] == "qs"]
+        bl = [b for b in bl if b["k"] not in ("qs", "sum")] + sm[:1] + qs[:1]  # تلخيص القسم ثم أسئلته في آخره
         sec = {"t": str(r.get("t") or (chap[0] if chap else "")).strip(), "lead": str(r.get("lead") or "").strip(), "p": [a, z], "blocks": bl}
         work[key] = sec; out.append(sec)
         jsave(wp, work)
         print("  قسم ص%d-%d: %d كتلة" % (a, z, len(bl)), flush=True)
-    if not out:
+    if not out or len(out) < sum(1 for k, v in work.items() if k != "_o" and v):
         return None
     top = T.gemini(BOOK_PROMPT.format(title=title, author=au, secs="\n".join("%d. %s — %s" % (i + 1, s["t"], s["lead"]) for i, s in enumerate(out)))) or {}
     k = {"id": bid, "t": title, "a": au, "n": n, "s": str(top.get("s") or "").strip(), "goals": [str(x) for x in top.get("goals") or []][:6],
          "qs": [x for x in top.get("qs") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:8],
-         "secs": out, "built": str(datetime.date.today()), "model": T.MODEL}
+         "secs": out, "r": R, "st": ST, "built": str(datetime.date.today()), "model": T.MODEL}
     if os.path.exists(wp):
         os.remove(wp)
     return k
@@ -204,15 +228,16 @@ def main():
     T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("KR_MINUTES", "120"))
     only = [x for x in os.environ.get("KR_ONLY", "").split(",") if x]
     todo = only or [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
+    items = {(x["id"] if isinstance(x, dict) else x): x for x in q.get("items", [])}
     for bid in todo[: int(os.environ.get("KR_MAX", "4"))]:
         if time.time() > T.DEADLINE[0] or (T.KEYS and len(T.EXH) >= len(T.KEYS)):
             break
         bb = next((x for x in cat["books"] if x["id"] == bid), {})
-        if bb.get("ocr") and (bb.get("unrev") or bb.get("lite")):  # الأولوية للتدقيق: تُعدّ الكراسة بعد اكتمال مراجعة النص على الصور
+        if bb.get("ocr") and (bb.get("unrev") or 0) + (bb.get("lite") or 0) > max(3, (bb.get("n") or 0) * 0.05):  # الأولوية للتدقيق: تُعدّ الكراسة بعد اكتمال مراجعة أغلب النص على الصور
             print("  ينتظر اكتمال التدقيق:", bid, flush=True); continue
         print("كراسة:", bid, flush=True)
         try:
-            k = build(bid, cat)
+            k = build(bid, cat, items.get(bid))
         except Exception as e:
             print("  خطأ:", str(e)[:200], flush=True); k = None
         if k == "missing":
@@ -222,7 +247,7 @@ def main():
             continue
         jsave(os.path.join(OUT, bid + ".json"), k)
         nb = sum(len(s["blocks"]) for s in k["secs"])
-        lst[bid] = {"t": k["t"], "a": k["a"], "secs": len(k["secs"]), "blocks": nb, "upd": k["built"], "ok": (lst.get(bid) or {}).get("ok", 1)}
+        lst[bid] = {"t": k["t"], "a": k["a"], "secs": len(k["secs"]), "blocks": nb, "r": k["r"], "upd": k["built"], "ok": (lst.get(bid) or {}).get("ok", 1)}
         jsave(lp, lst)
         q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) != bid]
         jsave(qp, q)

@@ -887,3 +887,7 @@ body.pfopen{overflow:hidden}
 #pfull .pfl{position:absolute;inset:auto 0 8px;text-align:center;color:#777;font-size:.85rem;pointer-events:none}
 #pfull .pfp.ok .pfl{display:none}#pfull .pfp.err::after{content:"تعذر التحميل";position:absolute;inset:45% 0 auto;text-align:center;color:#aaa}
 .note.pgbad{margin:8px 0;font-size:.9rem}
+/* كراسات: نموذج الخيارات والطلب */
+.kurform{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}.kurform input[name=t],.kurform input[name=n]{flex:1 1 260px}
+.kurform select{margin-inline-start:6px}.kurst{border:1px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%}.kurst legend{font-size:.9rem;color:var(--mut);padding:0 4px}
+.kursum{background:#eef6f3;border-radius:12px;padding:8px 14px;margin:8px 0}

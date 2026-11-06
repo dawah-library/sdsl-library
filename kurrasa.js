@@ -8,8 +8,13 @@ const KUR = (() => {
   const PW = 1240, PH = 1754, M = 84, CW = PW - M * 2;
   const COLS = ["#0f5c4d", "#1f6f8b", "#6b4fa3", "#a3462f", "#3c7a3b", "#b07a1e", "#2f5e9e", "#8a3b62"];
   const F = { s: '"IBM Plex Sans Arabic",Tahoma,sans-serif', r: 'Amiri,"Traditional Arabic",serif' };
-  const ICON = { points: "📌", def: "📖", table: "📊", compare: "⚖️", map: "🧠", steps: "🪜", quote: "❝", note: "⚠️", qs: "✍️" };
-  const TTL = { points: "أهم المسائل", def: "تعريفات", table: "جدول", compare: "مقارنة", map: "خريطة ذهنية", steps: "خطوات ومراحل", quote: "من نص الكتاب", note: "تنبيه", qs: "اختبر نفسك" };
+  const ICON = { sum: "📝", points: "📌", def: "📖", table: "📊", compare: "⚖️", map: "🧠", steps: "🪜", quote: "❝", note: "⚠️", qs: "✍️" };
+  const TTL = { sum: "خلاصة القسم", points: "أهم المسائل", def: "تعريفات", table: "جدول", compare: "مقارنة", map: "خريطة ذهنية", steps: "خطوات ومراحل", quote: "من نص الكتاب", note: "تنبيه", qs: "اختبر نفسك" };
+  const RL = { 5: "مفصّلة", 10: "متوسطة", 20: "موجزة" };
+  const RATIOS = [[5, "مفصّلة — صفحة لكل ٥ صفحات"], [10, "متوسطة — صفحة لكل ١٠ صفحات"], [20, "موجزة — صفحة لكل ٢٠ صفحة"]];
+  const STY = [["sum", "تلخيص بعد كل قسم"], ["qs", "أسئلة وأجوبة بعد كل قسم"], ["table", "جداول"], ["map", "تشجيرات وخرائط ذهنية"], ["compare", "مقارنات"], ["points", "أهم المسائل"], ["def", "تعريفات"], ["steps", "خطوات ومراحل"], ["quote", "نصوص بلفظها"], ["note", "تنبيهات"]];
+  const optsForm = (r, st) => `<label>نسبة الاختصار <select name="r">${RATIOS.map(([k, t]) => `<option value="${k}"${k === (r || 10) ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+    <fieldset class="kurst"><legend>طرق العرض في الصفحات</legend>${STY.map(([k, t]) => `<label class="chip"><input type="checkbox" name="st" value="${k}"${!st || st.includes(k) ? " checked" : ""}> ${t}</label>`).join("")}</fieldset>`;
   const tint = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   let C = null; const ctx = () => C || (C = document.createElement("canvas").getContext("2d"));
   function wrap(t, w, font) { const c = ctx(); c.font = font; const L = []; String(t || "").split(/\n/).forEach(par => { let l = ""; par.split(/\s+/).filter(Boolean).forEach(s => { const tt = l ? l + " " + s : s; if (c.measureText(tt).width > w && l) { L.push(l); l = s; } else l = tt; }); if (l) L.push(l); }); return L; }
@@ -68,6 +73,11 @@ const KUR = (() => {
       frame(h, "#f7f3ea", null); if (draw) { c.fillStyle = col; c.fillRect(xr - 8, y, 8, h); text(c, l, xr - pad - 20, y + 20, 50, `30px ${F.r}`, "#2a2015"); c.font = `20px ${F.s}`; c.fillStyle = "#7a6a4a"; c.textAlign = "left"; c.fillText((b.by ? b.by + " — " : "") + "ص " + toAr(b.p || 1), x0 + pad, y + h - 18); }
       return h;
     }
+    if (k === "sum") {
+      const l = wrap(b.t, bw - pad * 2 - 10, `26px ${F.r}`); h = 58 + l.length * 44 + 24;
+      frame(h, "#eef6f3", tint(col, .45)); head(TTL.sum); if (draw) text(c, l, xr - pad, y + 58, 44, `26px ${F.r}`, "#1d2b27");
+      return h;
+    }
     if (k === "note") {
       const l = wrap(b.t, bw - pad * 2 - 60, f1); h = 30 + l.length * lh + 26;
       frame(h, "#fff4d6", "#e6b400"); if (draw) { c.font = "34px sans-serif"; c.textAlign = "right"; c.fillText("⚠️", xr - pad, y + 52); text(c, l, xr - pad - 55, y + 18, lh, f1, "#5c4300"); }
@@ -107,7 +117,7 @@ const KUR = (() => {
       c.fillStyle = "#fff"; c.font = `600 34px ${F.s}`; c.fillText("كراسة مذاكرة ومراجعة", PW / 2, 230);
       let yy = 270; yy += text(c, wrap(K.t, CW - 60, `700 64px ${F.r}`), PW / 2, yy, 92, `700 64px ${F.r}`, "#fff", "center");
       c.font = `500 34px ${F.s}`; c.fillStyle = "#e9d9a8"; c.fillText(K.a || "", PW / 2, yy + 60);
-      c.font = `24px ${F.s}`; c.fillStyle = "#cfe5dd"; c.fillText(`الأصل ${toAr(K.n || 0)} صفحة • الكراسة ${toAr(pages.length)} صفحات • ${toAr(K.secs.length)} قسمًا`, PW / 2, 700);
+      c.font = `24px ${F.s}`; c.fillStyle = "#cfe5dd"; c.fillText(`الأصل ${toAr(K.n || 0)} صفحة • الكراسة ${toAr(pages.length)} صفحات • ${toAr(K.secs.length)} قسمًا${K.r ? " • " + (RL[K.r] || "") : ""}`, PW / 2, 700);
       yy = 810; if (K.s) { c.fillStyle = "#0f5c4d"; c.font = `700 30px ${F.s}`; c.textAlign = "right"; c.fillText("💡 الكتاب في سطور", PW - M, yy + 30); yy += 50; yy += text(c, wrap(K.s, CW, `27px ${F.r}`), PW - M, yy, 46, `27px ${F.r}`, "#1d2b27") + 20; }
       if ((K.goals || []).length) { c.fillStyle = "#0f5c4d"; c.font = `700 30px ${F.s}`; c.textAlign = "right"; c.fillText("🎯 ما تستفيده من هذه الكراسة", PW - M, yy + 30); yy += 50; K.goals.forEach(gl => { yy += text(c, wrap("✓ " + gl, CW - 20, `25px ${F.s}`), PW - M - 10, yy, 40, `25px ${F.s}`, "#25332f") + 4; }); yy += 16; }
       c.fillStyle = "#0f5c4d"; c.font = `700 30px ${F.s}`; c.textAlign = "right"; c.fillText("🗺️ خريطة الكراسة", PW - M, yy + 30); yy += 54;
@@ -138,7 +148,8 @@ const KUR = (() => {
     if (!K || (!inf.ok && !isAdmin())) return view(`<p class="note">هذه الكراسة غير متاحة بعد.</p><p><a href="#/kurrasat">← كراسات المكتبة</a></p>`);
     await fonts(); const pages = layout(K), b = B(id);
     view(`<p><a href="#/kurrasat">← كراسات المكتبة</a></p><div class="kurhead"><h2>كراسة: ${esc(K.t)}</h2><p class="mut">${esc(K.a || "")} • ${toAr(pages.length)} صفحات من أصل ${toAr(K.n || 0)} • ${toAr(K.secs.length)} قسمًا${inf.ok ? "" : " • معاينة للإدارة — غير منشورة"}</p></div>
-      <div class="row kurtools"><button class="btn p s" data-kur="pdf">⇩ PDF</button><button class="btn s" data-kur="zip">⇩ صور الصفحات (ZIP)</button><button class="btn s" data-kur="txt">عرض نصي</button>${b ? `<a class="btn s" href="#/book/${esc(id)}/1">قراءة الأصل</a>` : ""}${isAdmin() ? `<button class="btn s" data-kur="ok" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد ونشر"}</button><button class="btn s" data-kur="redo">إعادة الإعداد</button>` : ""}</div>
+      <div class="row kurtools"><button class="btn p s" data-kur="pdf">⇩ PDF</button><button class="btn s" data-kur="zip">⇩ صور الصفحات (ZIP)</button><button class="btn s" data-kur="txt">عرض نصي</button>${b ? `<a class="btn s" href="#/book/${esc(id)}/1">قراءة الأصل</a>` : ""}${isAdmin() ? `<button class="btn s" data-kur="ok" data-on="${inf.ok ? 0 : 1}">${inf.ok ? "إيقاف العرض" : "اعتماد ونشر"}</button><button class="btn s" data-kur="redo">إعادة الإعداد بخيارات…</button>` : ""}</div>
+      ${isAdmin() ? `<div class="card kurform" id="kurredo" hidden>${optsForm(K.r, K.st)}<button class="btn p s" data-kur="redogo">أعِد الإعداد</button></div>` : ""}
       <p class="mut kurnote">أُعدّت الكراسة من نص الكتاب نفسه بإيجاز وتنظيم، دون إضافة رأي أو معلومة من خارجه؛ والنصوص المنقولة بلفظها مع رقم صفحتها. فارجع إلى الأصل عند النقل والاستشهاد.</p>
       <div class="kurpages" id="kurpages">${pages.map((_, i) => `<figure class="kurpg" data-n="${i}"><div class="kurph">صفحة ${toAr(i + 1)}</div><figcaption><button class="btn s" data-kur="png" data-n="${i}">⇩ صورة</button></figcaption></figure>`).join("")}</div><div id="kurtxt" hidden></div>`);
     window.__kur = { K, pages, id };
@@ -151,23 +162,55 @@ const KUR = (() => {
       : b.k === "table" || b.k === "compare" ? `<h4>${ICON[b.k]} ${esc(b.t || TTL[b.k])}</h4><table class="kurtb"><tr>${(b.k === "compare" ? ["", b.a, b.b] : b.head).map(h => `<th>${esc(h)}</th>`).join("")}</tr>${b.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`
       : b.k === "map" ? `<h4>🧠 ${esc(b.t || TTL.map)}</h4><ul><li><b>${esc(b.root)}</b><ul>${b.c.map(x => `<li>${esc(x.t)}${x.c.length ? `<ul>${x.c.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></li></ul>`
       : b.k === "quote" ? `<blockquote>«${esc(b.t)}» <small>${b.by ? esc(b.by) + " — " : ""}ص ${toAr(b.p || 1)}</small></blockquote>`
-      : b.k === "note" ? `<p class="note">⚠️ ${esc(b.t)}</p>` : b.k === "qs" ? `<h4>✍️ اختبر نفسك</h4>${b.items.map(x => `<details><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join("")}` : "";
+      : b.k === "sum" ? `<div class="kursum"><h4>📝 خلاصة القسم</h4><p>${esc(b.t)}</p></div>` : b.k === "note" ? `<p class="note">⚠️ ${esc(b.t)}</p>` : b.k === "qs" ? `<h4>✍️ اختبر نفسك</h4>${b.items.map(x => `<details><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join("")}` : "";
     return `<article class="kurtext">${K.s ? `<p class="brief">${esc(K.s)}</p>` : ""}${K.secs.map((s, i) => `<section><h3>${toAr(i + 1)}. ${esc(s.t)} <small class="mut">ص ${toAr(s.p[0])}–${toAr(s.p[1])}</small></h3>${s.lead ? `<p><i>${esc(s.lead)}</i></p>` : ""}${s.blocks.map(bl).join("")}</section>`).join("")}${(K.qs || []).length ? `<section><h3>أسئلة شاملة</h3>${bl({ k: "qs", items: K.qs })}</section>` : ""}</article>`;
   }
-  async function list() {
-    const L = (await getJ("kurrasa/_list.json")) || {}, staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff), Q = staff ? (await getJ("kurrasa/_queue.json")) || { items: [] } : null;
-    view(`<div class="cmhero kur"><div><h2>كراسات المكتبة</h2><p>الكتاب في كراسة مذاكرة ومراجعة: نحو صفحة لكل عشر صفحات، بأقسام وتمهيد، وأهم المسائل، وتعريفات، وجداول ومقارنات، وخرائط ذهنية، ونصوص بلفظها، وتنبيهات، وأسئلة مراجعة؛ بألوان جذابة، تُقرأ في الموقع وتُحمَّل PDF أو صورًا. والمادة من الكتاب نفسه بلا إضافة ولا تغيير لآراء المؤلف.</p></div></div>
-      ${ids.length ? `<div class="agrid">${ids.map(k => `<a class="acard2" href="#/kurrasat/${esc(k)}"><span class="acov" style="${typeof avHue === "function" ? avHue(k) : ""}"><i>📘</i><em>${esc((L[k].t || "").split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(L[k].t || k)}</b><small class="mut">${esc(L[k].a || "")} • ${toAr(L[k].secs || 0)} قسمًا${L[k].ok ? "" : " • غير منشورة"}</small></a>`).join("")}</div>` : '<p class="note">لم تُصدر كراسات بعد. تختار الإدارة الكتب فتُعدّ كراساتها آليًا وتظهر هنا.</p>'}
-      ${staff ? `<div class="card" style="margin-top:14px"><h3>اختيار كتاب لتحويله إلى كراسة (للإدارة)</h3><p class="mut">يُفضَّل كتاب اكتمل تدقيق نصه. يُعدّ القسم بقسمه من نص الكتاب، ويُتحقق من النصوص المنقولة بلفظها، وتُنشر الكراسة مباشرة ولك إيقاف عرضها.</p>
-        <form data-form="kurq" class="sbox" style="max-width:none"><input name="t" list="kurbooks" placeholder="اكتب اسم الكتاب ثم اختره" required><datalist id="kurbooks">${BOOKS().filter(x => !x.hidden && !isArt(x) && !VOL2(x)).slice(0, 5000).map(x => `<option value="${esc(x.setTitle && x.vol ? x.title : x.title)}">`).join("")}</datalist><button class="btn p">أعِدّ الكراسة</button></form><p id="kurqs" class="mut"></p>
-        ${(Q.items || []).length ? `<p class="mut">في الطابور: ${(Q.items || []).map(x => esc((B(x.id || x) || {}).title || x.id || x)).join("، ")}</p>` : ""}</div>` : ""}`);
+  const DL = () => document.getElementById("kurbooks") ? "" : `<datalist id="kurbooks">${BOOKS().filter(x => !x.hidden && !isArt(x) && !VOL2(x)).slice(0, 5000).map(x => `<option value="${esc(x.title)}">`).join("")}</datalist>`;
+  const REQ = "طلب كراسة: ";
+  async function loadReqs() {
+    const box = $("#kurreqs"); if (!box || !Auth.sb) return;
+    const { data } = await Auth.sb.from("admin_messages").select("id,user_name,subject,body,status,created_at").like("subject", REQ + "%").eq("status", "open").order("created_at", { ascending: false }).limit(50);
+    if (!data || !data.length) { box.innerHTML = '<p class="mut">لا طلبات كراسات من الأعضاء الآن.</p>'; return; }
+    box.innerHTML = `<h4>طلبات الأعضاء (${toAr(data.length)})</h4>${data.map(m => { const id = (m.body.match(/\[(p?[\w-]+)\]/) || [])[1] || "", b = B(id); return `<div class="bk"><b>${esc(m.subject.slice(REQ.length))}</b><span class="mut">${esc(m.user_name || "عضو")} • ${esc(typeof ago === "function" ? ago(m.created_at) : m.created_at)}</span><p>${esc(m.body.replace(/\s*\[[^\]]+\]\s*$/, ""))}</p><div class="row">${b ? `<button class="btn s p" data-kurreq="go" data-mid="${m.id}" data-id="${esc(id)}">أعِدّها (متوسطة)</button><button class="btn s" data-kurreq="pick" data-id="${esc(id)}">اختر الخيارات</button>` : ""}<button class="btn s" data-kurreq="no" data-mid="${m.id}">اعتذار</button></div></div>`; }).join("")}`;
   }
-  async function queue(id) { await GH.editJSON("data/kurrasa/_queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = [{ id }].concat(o.items.filter(x => (x.id || x) !== id)); return o; }, "كراسة: «" + ((B(id) || {}).title || id) + "»"); }
+  async function list() {
+    const q = (typeof parse === "function" ? parse().q : {}) || {};
+    const L = (await getJ("kurrasa/_list.json")) || {}, staff = isAdmin(), ids = Object.keys(L).filter(k => L[k].ok || staff), Q = staff ? (await getJ("kurrasa/_queue.json")) || { items: [] } : null;
+    view(`<div class="cmhero kur"><div><h2>كراسات المكتبة</h2><p>الكتاب في كراسة مذاكرة ومراجعة: مفصّلة أو متوسطة أو موجزة، بأقسام الكتاب وتمهيد لكل قسم، وتلخيص وأسئلة وأجوبة في آخره، وأهم المسائل، وتعريفات، وجداول ومقارنات، وخرائط ذهنية، ونصوص بلفظها، وتنبيهات، وأسئلة مراجعة؛ بألوان جذابة، تُقرأ في الموقع وتُحمَّل PDF أو صورًا. والمادة من الكتاب نفسه بلا إضافة ولا تغيير لآراء المؤلف.</p></div></div>
+      ${ids.length ? `<div class="agrid">${ids.map(k => `<a class="acard2" href="#/kurrasat/${esc(k)}"><span class="acov" style="${typeof avHue === "function" ? avHue(k) : ""}"><i>📘</i><em>${esc((L[k].t || "").split(/\s+/).slice(0, 3).join(" "))}</em></span><b>${esc(L[k].t || k)}</b><small class="mut">${esc(L[k].a || "")} • ${toAr(L[k].secs || 0)} قسمًا${L[k].r ? " • " + RL[L[k].r] : ""}${L[k].ok ? "" : " • غير منشورة"}</small></a>`).join("")}</div>` : '<p class="note">لم تُصدر كراسات بعد. تختار الإدارة الكتب فتُعدّ كراساتها آليًا وتظهر هنا.</p>'}
+      ${staff ? `<div class="card" style="margin-top:14px"><h3>اختيار كتاب لتحويله إلى كراسة (للإدارة)</h3><p class="mut">يُفضَّل كتاب اكتمل تدقيق نصه. يُعدّ القسم بقسمه من نص الكتاب، ويُتحقق من النصوص المنقولة بلفظها، وتُنشر الكراسة مباشرة ولك إيقاف عرضها.</p>
+        <form data-form="kurq" class="kurform"><input name="t" list="kurbooks" placeholder="اكتب اسم الكتاب ثم اختره" required value="${esc(q && q.req ? ((B(q.req) || {}).title || "") : "")}">${DL()}${optsForm()}<button class="btn p">أعِدّ الكراسة</button></form><p id="kurqs" class="mut"></p>
+        ${(Q.items || []).length ? `<p class="mut">في الطابور: ${(Q.items || []).map(x => esc((B(x.id || x) || {}).title || x.id || x) + (x.r ? " (" + RL[x.r] + ")" : "")).join("، ")}</p>` : ""}
+        <div id="kurreqs"></div></div>` : `<div class="card" style="margin-top:14px"><h3>اطلب كراسة لكتاب</h3><p class="mut">اختر كتابًا من المكتبة تريد له كراسة مذاكرة موجزة متنوعة العرض، فتصل رسالتك وإشعار إلى الإدارة، ويصلك إشعار حين تُنشر.</p>
+        ${Auth.user ? `<form data-form="kurreq" class="kurform"><input name="t" list="kurbooks" placeholder="اكتب اسم الكتاب ثم اختره" required>${DL()}<input name="n" maxlength="300" placeholder="ملاحظة اختيارية (مثل: أريدها مفصّلة، أو بأسئلة أكثر)"><button class="btn p">أرسل الطلب</button></form><p id="kurrs" class="mut"></p>` : `<p><a class="btn" href="#/account">سجّل الدخول لطلب كراسة</a></p>`}</div>`}`);
+    if (staff) loadReqs();
+  }
+  async function queue(id, r, st) { await GH.editJSON("data/kurrasa/_queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = [Object.assign({ id, r: +r || 10 }, st && st.length ? { st } : {})].concat(o.items.filter(x => (x.id || x) !== id)); return o; }, "كراسة: «" + ((B(id) || {}).title || id) + "»"); }
   document.addEventListener("submit", async e => {
     const f = e.target.closest("[data-form=kurq]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
     const t = String(f.t.value || "").trim(), b = BOOKS().find(x => x.title === t); if (!b) return toast("اختر اسم الكتاب من القائمة");
-    try { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); await queue(b.id); $("#kurqs").textContent = "أُضيف «" + b.title + "» إلى الطابور؛ يبدأ الإعداد خلال دقائق ويصلك إشعار عند انتهائه."; f.reset(); } catch (x) { toast(x.message); }
+    const st = [...f.querySelectorAll("[name=st]:checked")].map(x => x.value); if (!st.length) return toast("اختر طريقة عرض واحدة على الأقل");
+    try { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); await queue(b.id, f.r.value, st.length === STY.length ? null : st); $("#kurqs").textContent = "أُضيف «" + b.title + "» إلى الطابور؛ يبدأ الإعداد خلال دقائق ويصلك إشعار عند انتهائه."; f.reset(); } catch (x) { toast(x.message); }
   }, true);
+  document.addEventListener("submit", async e => {
+    const f = e.target.closest("[data-form=kurreq]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
+    const t = String(f.t.value || "").trim(), b = BOOKS().find(x => x.title === t); if (!b) return toast("اختر اسم الكتاب من القائمة");
+    try { const pg = typeof Members !== "undefined" ? await Members.page(Auth.user.id).catch(() => null) : null, nm = (pg && pg.name) || Auth.user.name || "عضو", note = String(f.n.value || "").trim();
+      const { error } = await Auth.sb.from("admin_messages").insert({ user_id: Auth.user.id, user_name: nm, subject: (REQ + (b.setTitle || b.title)).slice(0, 120), body: "مطلوب لهذا الكتاب كراسة مذاكرة موجزة وعصرية ومتنوعة العرض ومساعدة على الفهم." + (note ? "\nملاحظة العضو: " + note : "") + " [" + b.id + "]" });
+      if (error) throw new Error(error.message.replace(/^.*rate_limited:\s*/, ""));
+      if (typeof tgNote === "function") tgNote("msg", { name: nm, subject: REQ + (b.setTitle || b.title), detail: note || "طلب كراسة مذاكرة" });
+      $("#kurrs").textContent = "أُرسل طلبك إلى الإدارة، وسيصلك ردّها في رسائلك، جزاك الله خيرًا."; f.reset(); } catch (x) { toast(x.message || "تعذر الإرسال"); }
+  }, true);
+  document.addEventListener("click", async e => {
+    const r = e.target.closest("[data-kurreq]"); if (!r) return; e.preventDefault(); const k = r.dataset.kurreq;
+    try {
+      if (k === "pick") { const f = $("[data-form=kurq]"); if (f) { f.t.value = (B(r.dataset.id) || {}).title || ""; f.scrollIntoView({ behavior: "smooth", block: "center" }); } return; }
+      const reply = k === "go" ? "جزاك الله خيرًا، بدأ إعداد الكراسة المطلوبة، وتظهر في قسم الكراسات بعد انتهائها إن شاء الله." : "جزاك الله خيرًا على طلبك، نعتذر عن إعداد هذه الكراسة الآن.";
+      if (k === "go") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); await queue(r.dataset.id, 10); }
+      const { error } = await Auth.sb.from("admin_messages").update({ reply, replied_at: new Date().toISOString(), status: "replied" }).eq("id", +r.dataset.mid); if (error) throw new Error(error.message);
+      toast(k === "go" ? "أُضيفت إلى الطابور وأُشعر العضو" : "أُرسل الاعتذار إلى العضو"); loadReqs();
+    } catch (x) { toast(x.message || "تعذر"); }
+  });
   document.addEventListener("click", async e => {
     const el = e.target.closest("[data-kur]"); if (!el) return; e.preventDefault(); const a = el.dataset.kur, X = window.__kur; if (!X) return;
     try {
@@ -177,7 +220,8 @@ const KUR = (() => {
         w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كراسة ${esc(X.K.t)} — ${esc(SITENAME)}</title><style>@page{size:A4;margin:0}body{margin:0}img{width:210mm;height:297mm;display:block;page-break-after:always}</style></head><body>${im.map(u => `<img src="${u}">`).join("")}<script>onload=()=>setTimeout(()=>print(),500)<\/script></body></html>`); w.document.close(); }
       else if (a === "txt") { const t = $("#kurtxt"), p = $("#kurpages"); if (t.hidden) { t.innerHTML = textView(X.K); } t.hidden = !t.hidden; p.hidden = !t.hidden; el.textContent = t.hidden ? "عرض نصي" : "عرض الصفحات"; }
       else if (a === "ok") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); await GH.editJSON("data/kurrasa/_list.json", o => { if (o && o[X.id]) o[X.id].ok = +el.dataset.on; return o; }, (el.dataset.on === "1" ? "اعتماد" : "إيقاف") + " كراسة: " + X.K.t); toast("حُفظ؛ يسري خلال دقائق"); }
-      else if (a === "redo") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); if (!confirm("إعادة إعداد الكراسة من جديد؟")) return; await queue(X.id); toast("أُضيفت إلى الطابور"); }
+      else if (a === "redo") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const box = $("#kurredo"); box.hidden = !box.hidden; }
+      else if (a === "redogo") { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const f = $("#kurredo"), st = [...f.querySelectorAll("[name=st]:checked")].map(x => x.value); if (!st.length) return toast("اختر طريقة عرض واحدة على الأقل"); await queue(X.id, f.r.value, st.length === STY.length ? null : st); f.hidden = true; toast("أُضيفت إلى الطابور؛ تُعاد بالخيارات الجديدة ويصلك إشعار عند انتهائها"); }
     } catch (x) { toast(x.message || "تعذر"); }
   });
 

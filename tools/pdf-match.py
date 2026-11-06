@@ -75,6 +75,7 @@ def full_match(b, sh, pdf, N, tmp, apply):
     pages = sh['pages']; off = int(b.get('pdfOffset') or 0)
     with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
         P = list(ex.map(lambda k: page_text(pdf, k, tempfile.mkdtemp(dir=tmp)), range(1, N + 1)))
+    print('  قُرئت %d صفحة مصورة' % N, flush=True)
     T = [norm(re.split(r'^\s*_{4,}\s*$', t or '', flags=re.M)[0]) for t in pages]
     pm, sc = align(T, P, off)
     linear = all(pm[i] == i + 1 + off for i in range(len(pm)))
@@ -151,6 +152,16 @@ def main():
         finally: shutil.rmtree(tmp, ignore_errors=True)
         if apply:  # حفظ تدريجي: لا يضيع ما أُنجز إن انقطعت المهمة
             json.dump(cat, open(os.path.join(D, 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+            os.makedirs(os.path.join(D, 'match'), exist_ok=True); json.dump(rep, open(rp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+            if os.environ.get('MATCH_COMMIT') == '1':
+                run = lambda *a: subprocess.run(list(a), cwd=ROOT)
+                run('git', 'add', 'data/match', 'data/catalog.json', 'data/books')
+                if subprocess.run(['git', 'diff', '--cached', '--quiet'], cwd=ROOT).returncode:
+                    run('git', 'commit', '-qm', 'مطابقة المصورة بالنص: ' + b['title'])
+                    for _ in range(4):
+                        run('git', 'pull', '-q', '--rebase', '-X', 'theirs', 'origin', 'main')
+                        if subprocess.run(['git', 'push', '-q', 'origin', 'HEAD:main'], cwd=ROOT).returncode == 0: break
+                        time.sleep(5)
     os.makedirs(os.path.join(D, 'match'), exist_ok=True)
     json.dump(rep, open(rp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     open(os.path.join(ROOT, 'tools', 'match-report.md'), 'w', encoding='utf-8').write('\n'.join(md))

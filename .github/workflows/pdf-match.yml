@@ -11,6 +11,8 @@ on:
 permissions:
   contents: write
   id-token: write
+env:
+  OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
 concurrency:
   group: pdf-match
   cancel-in-progress: false
@@ -25,7 +27,12 @@ jobs:
         env:
           MATCH_ONLY: ${{ github.event.inputs.books }}
           MATCH_APPLY: ${{ github.event.inputs.apply || '1' }}
-        run: python3 tools/pdf-match.py
+          MATCH_MINUTES: "75"
+          MATCH_COMMIT: "1"
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          python3 tools/pdf-match.py
       - run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"
