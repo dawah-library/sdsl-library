@@ -1,0 +1,21 @@
+name: بيانات المصحف والتفسير
+on:
+  workflow_dispatch:
+    inputs:
+      extra: { description: "مفاتيح QuranEnc إضافية مفصولة بفاصلة", required: false, default: "" }
+  push:
+    paths: ["tools/quran-fetch.py"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: الجلب
+        env:
+          QF_EXTRA: ${{ github.event.inputs.extra }}
+        run: python3 tools/quran-fetch.py
+      - run: |
+          bash tools/git-save.sh "المصحف: الصفحات والأجزاء والتفسير المختصر" data/quran tools/quranenc-list.md
