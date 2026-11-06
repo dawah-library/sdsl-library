@@ -447,3 +447,27 @@ alter table public.study_paths add column if not exists last_sent date;
 alter table public.study_paths enable row level security;
 drop policy if exists "study_paths own" on public.study_paths;
 create policy "study_paths own" on public.study_paths for all using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+-- ٦ نوفمبر: إحصاءات الواجهة العامة (أرقام مجمّعة فقط، بلا بيانات أعضاء)
+-- عدّاد زيارات يومي: كل جهاز يُحسب مرة في اليوم (الواجهة تستدعي hit_visit مرة يوميًا)
+create table if not exists public.site_visits (day date primary key, n bigint not null default 0);
+alter table public.site_visits enable row level security;
+create or replace function public.hit_visit() returns void
+language sql security definer set search_path = public as $$
+  insert into public.site_visits(day, n) values (current_date, 1)
+  on conflict (day) do update set n = public.site_visits.n + 1;
+$$;
+create or replace function public.public_stats() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'members', (select count(*) from public.profiles),
+    'visits', (select coalesce(sum(n), 0) from public.site_visits),
+    'visits_today', (select coalesce(sum(n), 0) from public.site_visits where day = current_date),
+    'path_members', (select count(distinct user_id) from public.study_paths),
+    'readers', (select count(distinct user_id) from public.reading_plans where active)
+  );
+$$;
+revoke execute on function public.hit_visit() from public;
+revoke execute on function public.public_stats() from public;
+grant execute on function public.hit_visit() to anon, authenticated;
+grant execute on function public.public_stats() to anon, authenticated;
