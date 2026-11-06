@@ -168,16 +168,39 @@ def opts_of(item):
     return r, st
 
 
+def multi(item, cat):
+    """كراسة من عدة مصادر: src = [{b: معرّف كتاب أو مقال, a: من صفحة, z: إلى صفحة}] تُجمع كتابًا واحدًا،
+    لكل مصدر عنوان في فهرسه، مع خريطة الصفحات (الصفحة في الكراسة ← المصدر وصفحته) للرجوع إلى الأصل."""
+    pages, toc, vmap, aus = [], [], [], []
+    for s in item.get("src") or []:
+        r = T.source(s.get("b"), cat)
+        if not r: continue
+        t, au, pg, sh = r; a = max(1, int(s.get("a") or 1)); z = min(len(pg), int(s.get("z") or len(pg)))
+        if a > z: continue
+        toc.append({"t": t if (a, z) == (1, len(pg)) else "%s (ص %d–%d)" % (t, a, z), "p": len(pages) + 1, "l": 1})
+        for i in range(a - 1, z): pages.append(pg[i]); vmap.append([s["b"], i + 1])
+        if au and au not in aus: aus.append(au)
+    if not pages: return None
+    return item.get("t") or toc[0]["t"], "، ".join(aus[:3]), pages, {"toc": toc, "pages": pages}, vmap
+
+
 def build(bid, cat, item=None):
-    src = T.source(bid, cat)
-    if not src:
-        return "missing"
-    title, au, pages, sh = src
+    vmap = None
+    if isinstance(item, dict) and item.get("src"):
+        r = multi(item, cat)
+        if not r: return "missing"
+        title, au, pages, sh, vmap = r
+    else:
+        src = T.source(bid, cat)
+        if not src:
+            return "missing"
+        title, au, pages, sh = src
     n = len(pages)
     R, ST = opts_of(item)
     bmin, bmax, depth = RATIO[R]
     target = max(3, min(60, round(n / R)))
     secs = sections(sh, pages, target - 1 if target > 3 else target)
+    if isinstance(item, dict) and item.get("sample"): secs = secs[:1]  # صفحة تجريبية: القسم الأول وحده للمعاينة قبل الاعتماد
     wp = os.path.join(OUT, "_work", bid + ".json")
     work = jload(wp, {})
     if work.get("_o") != [R, ST]:  # تغيّرت الخيارات: يبدأ من جديد
@@ -215,6 +238,8 @@ def build(bid, cat, item=None):
     k = {"id": bid, "t": title, "a": au, "n": n, "s": str(top.get("s") or "").strip(), "goals": [str(x) for x in top.get("goals") or []][:6],
          "qs": [x for x in top.get("qs") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:8],
          "secs": out, "r": R, "st": ST, "built": str(datetime.date.today()), "model": T.MODEL}
+    if vmap: k["map"] = vmap; k["src"] = item.get("src")
+    if isinstance(item, dict) and item.get("sample"): k["sample"] = 1
     if os.path.exists(wp):
         os.remove(wp)
     return k
@@ -247,7 +272,8 @@ def main():
             continue
         jsave(os.path.join(OUT, bid + ".json"), k)
         nb = sum(len(s["blocks"]) for s in k["secs"])
-        lst[bid] = {"t": k["t"], "a": k["a"], "secs": len(k["secs"]), "blocks": nb, "r": k["r"], "upd": k["built"], "ok": (lst.get(bid) or {}).get("ok", 1)}
+        lst[bid] = {"t": k["t"], "a": k["a"], "secs": len(k["secs"]), "blocks": nb, "r": k["r"], "upd": k["built"], "ok": 0 if k.get("sample") else (lst.get(bid) or {}).get("ok", 1)}
+        if k.get("sample"): lst[bid]["sample"] = 1; lst[bid]["item"] = {x: v for x, v in items.get(bid, {}).items() if x != "sample"}
         jsave(lp, lst)
         q["items"] = [x for x in q.get("items", []) if (x["id"] if isinstance(x, dict) else x) != bid]
         jsave(qp, q)
