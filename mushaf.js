@@ -9,7 +9,9 @@ const MUS = (() => {
   const load = async () => { if (Q) return; [Q, QT, META] = await Promise.all([fetch("data/quran/quran.json").then(r => r.json()), fetch("data/quran/uthmani.json").then(r => r.json()).catch(() => fetch("data/quran/quran-tash.json").then(r => r.json()).catch(() => null)), fetch("data/quran/meta.json").then(r => r.json()).then(j => j.s).catch(() => null)]);
     if (META) { PG = {}; Object.entries(META).forEach(([s, L]) => L.forEach((m, i) => (PG[m[0]] = PG[m[0]] || []).push([+s, i + 1]))); } };
   const pageOf = (s, a) => META && META[s] ? META[s][a - 1][0] : 0;
-  const TAF = {}, mukh = async s => TAF[s] || (TAF[s] = fetch("data/quran/tafsir/mokhtasar/" + s + ".json").then(r => r.json()).catch(() => ({})));
+  const TAF = {}, tf = async (k, s) => TAF[k + s] || (TAF[k + s] = fetch("data/quran/tafsir/" + k + "/" + s + ".json").then(r => r.ok ? r.json() : {}).catch(() => ({}))), mukh = s => tf("mokhtasar", s);
+  const TFS = [["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["siraj", "السراج في غريب القرآن"]];
+  const tfk = () => { try { return localStorage.getItem("mus_tf") || "mokhtasar"; } catch (e) { return "mokhtasar"; } };
   const nm = s => Q.suras[s - 1].name.replace(/^سُورَةُ\s*/, ""), nmP = s => strip(nm(s)).replace(/ٱ/g, "ا");
   // البسملة تُفصل عن الآية الأولى في كل سورة (عدا الفاتحة، فهي آيتها الأولى)، وتُعرض سطرًا مستقلًا
   const BASM = /^بِسْمِ\s+[ٱا]للَّهِ\s+[ٱا]لرَّحْمَ[ٰـ]?نِ\s+[ٱا]لرَّحِيمِ\s*/;
@@ -67,20 +69,23 @@ const MUS = (() => {
     openSheet("«" + w + "»", `<p class="mqt">${esc(ayah(s, a))} ﴿${AR(a)}﴾</p><h4>المختصر في التفسير <small class="mut">(مركز تفسير)</small></h4><div id="mwm" class="mut">…</div>
      <h4>غريب الكلمة</h4><div id="mwg" class="mut">…</div><div class="row" style="margin-top:8px"><button class="btn s p" data-act="muswlex" data-w="${esc(clean)}" data-s="${s}" data-a="${a}">المعاجم وكتب الشريعة</button><button class="btn s" data-act="musay" data-s="${s}" data-a="${a}">الآية: التفاسير وما قيل فيها</button></div>`);
     mukh(s).then(t => { const el = $("#mwm"); if (el) el.innerHTML = t[a] ? esc(t[a]) : "غير متاح."; });
-    const g = await fetch("data/quran/tafsir/siraj/" + s + ".json").then(r => r.ok ? r.json() : null).catch(() => null), el = $("#mwg"); if (!el) return;
-    const v = g && g[a]; el.innerHTML = v ? esc(v) + '<p class="mut" style="font-size:.8rem">من «السراج في بيان غريب القرآن»</p>' : 'يُعرض هنا غريب الكلمة من «السراج في بيان غريب القرآن» متى أُضيف إلى المكتبة؛ وإلى ذلك اضغط «المعاجم وكتب الشريعة».';
+    const g = await tf("siraj", s), el = $("#mwg"); if (!el) return;
+    let v = g && g[a]; if (v) { const nw = norm(clean).replace(/^(و|ف|ب|ل|ك)(?=...)/, "").replace(/^ال(?=..)/, ""), segs = v.split(/\n+|(?<=[.。])\s+(?=[\u0621-\u064A﴿(«])/).filter(x => x.trim());
+      const hit = segs.filter(x => nw.length >= 2 && norm(strip(x)).includes(nw)); if (hit.length) v = hit.join("\n"); } el.innerHTML = v ? esc(v) + '<p class="mut" style="font-size:.8rem">من «السراج في بيان غريب القرآن»</p>' : 'يُعرض هنا غريب الكلمة من «السراج في بيان غريب القرآن» متى أُضيف إلى المكتبة؛ وإلى ذلك اضغط «المعاجم وكتب الشريعة».';
   }
+  async function showTf(k, s, a) { const t = await tf(k, s), el = $("#musmk"); if (!el) return; el.textContent = t[a] || "غير متاح لهذه الآية بعد.";
+    document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k)); }
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);
     openSheet(`${nmP(s)}: ${AR(a)}`, `<p class="mqt big">${esc(t)} ﴿${AR(a)}﴾</p>
     <div class="row"><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
-    <h4>المختصر في التفسير</h4><div id="musmk" class="mut">…</div>
+    <div class="chips" id="mustk">${TFS.map(([k, n]) => `<button class="chip${k === tfk() ? " on" : ""}" data-act="mustk" data-k="${k}" data-s="${s}" data-a="${a}">${n}</button>`).join("")}</div><div id="musmk" class="mut tfbox">…</div>
     <h4>مواضع تفسيرها في التفاسير</h4><div id="mustf" class="mut">…</div>
     <h4>ما قيل فيها في كتب الدعوة ومقالاتها</h4><div id="musct" class="mut">جارٍ التحميل…</div>
     <h4>تعليقي على الآية <small class="mut">(خاص بك على هذا الجهاز)</small></h4><textarea id="musn" rows="3" maxlength="2000" style="width:100%" placeholder="فائدة أو تدبر…">${esc(NOTE()[k] || "")}</textarea>`, () => {
       $("#musn").addEventListener("input", e => { setNote(k, e.target.value.trim()); const b = document.querySelector(`#ay${a} .mno`); if (b) b.classList.toggle("hasn", !!e.target.value.trim()); });
     });
-    mukh(s).then(t => { const el = $("#musmk"); if (el) el.textContent = t[a] || "غير متاح."; });
+    showTf(tfk(), s, a);
     taf(s).then(ix => { const el = $("#mustf"); if (!el) return; const L = (ix && ix[a]) || [];
       el.innerHTML = L.length ? L.map(e => `<a class="chip" href="#/book/${esc(e[0])}/${e[1]}" data-act="closeSheet">${esc(e[0].startsWith("ibnkathir") ? "تفسير ابن كثير" : e[0].startsWith("baghawi") ? "تفسير البغوي" : (B(e[0]) || {}).title || e[0])}${e[2] ? "" : " (تقريبي)"}</a>`).join(" ") : "لم تُفهرس بعد."; });
     const [C, M] = await Promise.all([cites(s), meta()]), L = (C[a] || []).filter(x => M[x[0]]), el = $("#musct"); if (!el) return;
@@ -125,6 +130,7 @@ const MUS = (() => {
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
     else if (a === "musw") wsheet(el.textContent, +el.dataset.s, +el.dataset.a);
+    else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }
     else if (a === "muswlex") { closeSheet(); setTimeout(() => typeof wordSheet === "function" && wordSheet(el.dataset.w, ayah(+el.dataset.s, +el.dataset.a), "lug"), 150); }
     else if (a === "musadd") { const l = SEL(), k = el.dataset.k, i = l.indexOf(k); if (i >= 0) l.splice(i, 1); else l.push(k); setSel(l); const sp = $("#ay" + k.split(":")[1]); if (sp) sp.classList.toggle("sel", i < 0); el.textContent = i >= 0 ? "＋ أضفها إلى التصدير" : "✓ في التصدير (إزالة)"; }
     else if (a === "muscopy") { const [s, n] = el.dataset.k.split(":").map(Number); navigator.clipboard && navigator.clipboard.writeText(`﴿${ayah(s, n)}﴾ [${nmP(s)}: ${n}]`).then(() => toast("نُسخت")); }
