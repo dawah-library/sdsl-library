@@ -35,6 +35,17 @@ def main():
             except Exception as e: rep.append("✗ %s سورة %d: %s" % (key, s, e)); break
             time.sleep(.3)
         rep.append("%s: %d سورة" % (key, n))
+    # تفاسير وغريب من مجموعة spa5k/tafsir_api المفتوحة: السراج في بيان غريب القرآن، والميسر، والسعدي
+    for ed, short in [x.split(":") for x in os.environ.get("QF_SPA", "asseraj-fi-bayan-gharib-alquran:siraj,ar-tafsir-muyassar:muyassar,ar-tafseer-al-saddi:saddi").split(",") if ":" in x]:
+        n = 0
+        for su in range(1, 115):
+            p = os.path.join(Q, "tafsir", short, "%d.json" % su)
+            if os.path.exists(p) and os.environ.get("QF_FORCE") != "1": n += 1; continue
+            try:
+                r = get("https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/%s/%d.json" % (ed, su))
+                save(p, {str(x["ayah"]): (x.get("text") or "").strip() for x in r.get("ayahs", [])}); n += 1
+            except Exception as e: rep.append("✗ %s سورة %d: %s" % (ed, su, e)); break
+        rep.append("%s: %d سورة" % (short, n))
     try:
         L = get("https://quranenc.com/api/v1/translations/list/ar")["translations"]
         open(os.path.join(ROOT, "tools", "quranenc-list.md"), "w", encoding="utf-8").write("# QuranEnc: الترجمات والتفاسير المتاحة\n\n" + "\n".join("- `%s` — %s (%s)" % (x["key"], x.get("title", ""), x.get("language_iso_code", "")) for x in L))
