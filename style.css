@@ -1009,7 +1009,7 @@ article.post.pnew{box-shadow:0 0 0 2px var(--gold)}article.post.pnew::before{con
 .msuras b{color:var(--gold);font-size:.85rem}.msuras span{font-family:"Amiri Quran",Amiri,serif;font-size:1.15rem}.msuras small{color:var(--mut);font-size:.75rem}
 .mnav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.mpage{background:var(--pg,#fbf7ee);color:var(--pgink,#2a241a);border:1px solid var(--line);border-radius:14px;padding:18px 16px;box-shadow:inset 0 0 0 6px rgba(184,138,46,.12)}
 .msh{text-align:center;font-family:"Amiri Quran",Amiri,serif;color:var(--ac);border-bottom:1px solid rgba(184,138,46,.4);padding-bottom:8px}.mbasm{text-align:center;font-family:"Amiri Quran",Amiri,serif;font-size:1.5rem}
-.mtext{font-family:"Amiri Quran",Amiri,serif;font-size:1.55rem;line-height:2.5;text-align:justify}
+.qtext{font-family:"Amiri Quran",Amiri,serif;font-size:1.55rem;line-height:2.5;text-align:justify}
 .may.sel{background:rgba(184,138,46,.18);border-radius:6px}.may.hl{background:rgba(15,92,77,.12);border-radius:6px}
 .mno{border:0;background:none;color:var(--gold);font:inherit;font-size:.85em;cursor:pointer;padding:0 2px}.mno.hasn{color:var(--ac);text-decoration:underline dotted}
 .mqt{font-family:"Amiri Quran",Amiri,serif;font-size:1.2rem;line-height:2}.mqt.big{font-size:1.45rem;text-align:center}
@@ -1075,3 +1075,14 @@ body{background:radial-gradient(1200px 600px at 100% -10%,var(--g1),transparent 
 @supports not (backdrop-filter:blur(1px)){.card,.bk,.btn{background:var(--sf)}}
 @media (min-width:1100px){body.has-side .sdx{display:none}}
 .hdh{color:var(--ac)}
+
+/* صفحات المصحف */
+.mpage.mp{max-width:720px;margin:0 auto;padding:14px 22px 10px;border:2px solid rgba(184,138,46,.55);box-shadow:inset 0 0 0 5px var(--pg,#fbf7ee),inset 0 0 0 7px rgba(184,138,46,.35);border-radius:6px;background:var(--pg,#fbf7ee)}
+.mph{display:flex;justify-content:space-between;font-size:.82rem;color:#8a7a5a;border-bottom:1px solid rgba(184,138,46,.35);padding-bottom:4px;margin-bottom:6px}
+.mpf{text-align:center;font-size:.9rem;color:#8a7a5a;border-top:1px solid rgba(184,138,46,.35);padding-top:4px;margin-top:6px}
+.mp .qtext{font-size:1.65rem;line-height:2.35;text-align:justify;text-align-last:center}
+.msban{text-align:center;margin:10px 0 2px}.msban span{display:inline-block;padding:2px 34px;border:1.5px solid rgba(184,138,46,.7);border-radius:30px;background:linear-gradient(90deg,transparent,rgba(184,138,46,.14),transparent);font-family:"Amiri Quran",Amiri,serif;font-size:1.25rem;color:var(--ac)}
+.mno{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;height:1.6em;border-radius:50%;border:1.5px solid rgba(184,138,46,.75)!important;font-size:.62em!important;vertical-align:.25em;color:var(--ac)!important}
+.qw{cursor:pointer;border-radius:4px}.qw:hover{background:rgba(184,138,46,.18)}.msj{color:var(--gold);margin-inline-start:2px}
+.mpb{display:block;text-align:center;font-size:.8rem;color:#8a7a5a;margin:6px 0;border-top:1px dashed rgba(184,138,46,.4);font-family:"IBM Plex Sans Arabic",sans-serif}
+.mnb{justify-content:space-between;margin-top:10px}
