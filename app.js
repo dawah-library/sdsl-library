@@ -109,8 +109,8 @@ const RAWGH="https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-
 document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&!t.dataset.fb&&/(^|\/)assets\/authors\//.test(t.getAttribute("src")||"")){t.dataset.fb=1;t.src=RAWGH+t.getAttribute("src").replace(/^\.?\//,"")}},true);
 const avatar=(a,cls="")=>{a=a||{};const sh=(a.name||"").replace(/^(الإمام|الشيخ|شيخ الإسلام|الحافظ|الدكتور|د\.)\s*/,"");return a.photo?`<img class="aav ${cls}" src="${esc(a.photo)}" alt="${esc(a.name||"")}" loading="lazy">`:`<span class="aav ${cls}" style="${avHue(a.id||a.name||"")}" aria-hidden="true">${esc(sh[0]||"؟")}</span>`};
 // غلاف مصغر بجوار اسم الكتاب: صورة الصفحة الأولى من المصورة (tools/covers.py) أو غلاف مولَّد بالهوية
-let COVERS=new Set();const hueOf=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%360;return h};
-const coverOf=(b,cls)=>{const id=b.id;if(COVERS.has(id))return`<img class="bcov${cls?" "+cls:""}" src="assets/covers/${id}.jpg" alt="" loading="lazy" decoding="async">`;
+let COVERS=new Map();const hueOf=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%360;return h};
+const coverOf=(b,cls)=>{const id=b.id;if(COVERS.has(id))return`<img class="bcov${cls?" "+cls:""}" src="assets/covers/${id}.jpg${COVERS.get(id)?"?v="+COVERS.get(id):""}" alt="" loading="lazy" decoding="async">`;
  const t=(b.set?b.setTitle||b.title:b.title).replace(/[«»"()\[\]]/g,"").split(/\s+/).slice(0,4).join(" ");return`<i class="bcov gen${cls?" "+cls:""}${bc(b)==="turath"?" tr":""}" style="--ch:${hueOf(id)%40}" aria-hidden="true"><em>${esc(t)}</em></i>`};
 const bookCard=b=>`<a class="bk hasc${bc(b)==="turath"?" tr":""}${b.hidden?" hid":""}" href="#/book/${b.id}${S.lastBy&&S.lastBy[b.id]>1?"":"/1"}">${coverOf(b)}<b>${esc(b.set?b.setTitle||b.title:b.title)}${b.hidden?' <em class="tag">مخفي</em>':""}</b><span>${b.set?`<em class="tag">${b.vols===2?"مجلدان":toAr(b.vols)+" "+(b.vols>2&&b.vols<11?"مجلدات":"مجلدًا")}</em> • `:""}<span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n&&!b.set?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
 const artCard=b=>`<a class="bk ar${b.hidden?" hid":""}" href="#/book/${b.id}/1"><b>${esc(b.title)}${b.hidden?' <em class="tag">مخفي</em>':""}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':isStatement(b)?' • <em class="tag">بيان</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
@@ -543,7 +543,13 @@ function cardSheet(){const c=cur();if(!c)return;closeSheet();const b=c.b,k=b.car
  <table class="btab">${R("تقديم",k.intro_by)}${R("تحقيق ومراجعة",k.editor)}${R("الناشر",k.publisher)}${R("الطبعة",k.edition)}${R("سنة الطبع",k.year)}${R("الموضوع",T(b.topicId).name)}${R("عدد الصفحات",toAr(b.pages.length)+(k.printed_pages?" (المطبوع: "+k.printed_pages+")":""))}${R("لمن يُنصح به",k.audience)}${R("المصدر",b.source)}</table>
  ${k.parts&&k.parts.length?`<h4>أهم المحاور</h4><ul>${k.parts.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:mains.length?`<h4>أبواب الكتاب</h4><ul>${mains.slice(0,12).map(x=>`<li><a href="#/book/${b.id}/${x.p}" data-act="closeSheet">${esc(x.t)}</a></li>`).join("")}</ul>`:""}
  ${k.keywords&&k.keywords.length?`<div class="chips">${k.keywords.map(x=>`<a class="chip" href="#/search?q=${encodeURIComponent(x)}" data-act="closeSheet">${esc(x)}</a>`).join("")}</div>`:""}
- <div class="row" style="margin-top:12px">${b.toc&&b.toc.length?'<button class="btn nf" data-act="toc">الفهرس</button>':""}${b.pdf?'<button class="btn nf" data-act="pv" data-pv="both">النص والمصورة معًا</button>':""}<button class="btn nf" data-act="plan">مشروع قراءة</button></div></div>`)}
+ <div class="row" style="margin-top:12px">${b.toc&&b.toc.length?'<button class="btn nf" data-act="toc">الفهرس</button>':""}${b.pdf?'<button class="btn nf" data-act="pv" data-pv="both">النص والمصورة معًا</button>':""}<button class="btn nf" data-act="plan">مشروع قراءة</button></div>
+ <div class="bcov-row">${coverOf(b,"lg")}${isAdmin()?`<div><b>غلاف الكتاب</b><p class="mut">يُؤخذ آليًا من صفحة الغلاف في المصورة. لتغييره ارفع صورة الغلاف نفسه.</p><label class="btn s">رفع صورة الغلاف<input type="file" id="covup" accept="image/*" hidden></label> <span class="mut" id="covst"></span></div>`:""}</div></div>`,()=>{const f=$("#covup");if(!f)return;f.onchange=async()=>{const fl=f.files[0],st=$("#covst");if(!fl)return;st.textContent="جارٍ الرفع…";
+  try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(fl)});const W=200,H=Math.round(img.height*W/img.width),c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,0,0,W,H);
+   const blob=await new Promise(ok=>c.toBlob(ok,"image/jpeg",.8)),bytes=new Uint8Array(await blob.arrayBuffer()),id=b.id,ver=Date.now().toString(36);
+   await GH.put("assets/covers/"+id+".jpg",bytes,"غلاف الكتاب: "+(b.setTitle||b.title));
+   await GH.editJSON("data/covers.json",o=>{o=o||{};o.ids=[...new Set([...(o.ids||[]),id])].sort();o.manual=[...new Set([...(o.manual||[]),id])];o.bw=(o.bw||[]).filter(x=>x!==id);o.v=Object.assign(o.v||{},{[id]:ver});return o},"غلاف مرفوع: "+(b.setTitle||b.title));
+   COVERS.set(id,ver);st.textContent="✓ رُفع، ويظهر خلال دقائق بعد النشر"}catch(e){st.textContent="تعذّر: "+(e.message||e)}}})}
 const PV_NAMES={text:"النص",pdf:"المصورة",both:"الاثنان"};
 function nextPv(cur){const wide=matchMedia("(min-width:1000px)").matches;return cur==="text"?"pdf":cur==="pdf"&&wide?"both":"text"}
 
@@ -2163,7 +2169,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#s
 /* ---------- الإقلاع ---------- */
 async function boot(){if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
  const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
- const covP=fetch("data/covers.json").then(r=>r.ok?r.json():{}).then(j=>{COVERS=new Set(j.ids||[])}).catch(()=>{});
+ const covP=fetch("data/covers.json").then(r=>r.ok?r.json():{}).then(j=>{COVERS=new Map((j.ids||[]).map(i=>[i,(j.v||{})[i]||""]))}).catch(()=>{});
  try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}await Promise.race([covP,new Promise(r=>setTimeout(r,800))]);
  ARTS_IDX=((await ai).items||[]).map(artFromIdx);
  try{const r=await fetch("data/tarajim.json",{cache:"no-cache"});if(r.ok)TJ=await r.json()}catch(e){}

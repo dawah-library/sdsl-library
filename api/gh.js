@@ -4,7 +4,7 @@
 //   SUPABASE_URL و SUPABASE_ANON_KEY  للتحقق من أن صاحب الطلب مدير أو محرر
 //   GITHUB_REPO (اختياري، الافتراضي dawah-library/sdsl-library)
 const REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
-const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/authors|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
+const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/authors|assets\/covers|updates)\/[^?]+(\?ref=[\w.-]+)?)?$/;
 
 // المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
 const ROLE_AR = w => (w.role === "admin" ? "مشرف" : "محرر") + " #" + String(w.id || "").slice(0, 6);

@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 100
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null
+      - run: sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null && pip install -q pillow
       - name: رسم الأغلفة
         env:
           COVERS_ONLY: ${{ github.event.inputs.books }}
