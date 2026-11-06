@@ -40,6 +40,15 @@ def main():
         open(os.path.join(ROOT, "tools", "quranenc-list.md"), "w", encoding="utf-8").write("# QuranEnc: الترجمات والتفاسير المتاحة\n\n" + "\n".join("- `%s` — %s (%s)" % (x["key"], x.get("title", ""), x.get("language_iso_code", "")) for x in L))
         rep.append("قائمة QuranEnc: %d" % len(L))
     except Exception as e: rep.append("✗ list: %s" % e)
+    # استكشاف مصادر «السراج في بيان غريب القرآن» وكتب الغريب ومعاني القرآن
+    for u in ["https://quranenc.com/api/v1/translations/list", "https://quranenc.com/api/v1/translations/list/ar", "https://tafsir.app/api/siraj/1/1", "https://tafsir.app/siraj/1/1",
+              "https://api.quran.com/api/v4/resources/tafsirs?language=ar", "https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/editions.json"]:
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40); b = r.read()[:200000].decode("utf-8", "ignore")
+            hits = [x for x in __import__("re").findall(r'"(?:key|slug|name|title|author_name)"\s*:\s*"([^"]{2,80})"', b) if __import__("re").search(r"غريب|سراج|siraj|gharib|معاني|mokhtasar|muyassar|مختصر|ميسر|saddi|سعدي", x, 2)]
+            rep.append("PROBE %s → %d، %s" % (u, len(b), "، ".join(dict.fromkeys(hits))[:600]))
+        except Exception as e: rep.append("PROBE %s ✗ %s" % (u, e))
+    open(os.path.join(ROOT, "tools", "quranenc-list.md"), "a", encoding="utf-8").write("\n\n## استكشاف\n" + "\n".join("- " + x for x in rep if x.startswith("PROBE")))
     print("\n".join(rep))
 if __name__ == "__main__":
     main()
