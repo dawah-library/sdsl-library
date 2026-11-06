@@ -39,7 +39,7 @@ const TALA = (() => {
   function track(k) {
     const t = D.tracks.find(x => x[0] === k) || D.tracks[0], bs = kidBooks(t[0]), sg = sx(), sq = sg ? "&s=" + sg : "";
     view_(head(t[1] + " — " + t[2] + (sg ? " — " + GEN[sg].n : ""), true) + `<nav class="chips">${[["", "المشترك"], ...Object.entries(GEN).map(([k, x]) => [k, x.ic + " " + x.n])].map(([k, l]) => `<a class="chip${sg === k ? " x" : ""}" href="#/talaea/track?k=${t[0]}${k ? "&s=" + k : ""}">${l}</a>`).join("")}</nav><h2 class="talat">${esc(t[1])}${sg ? " — " + GEN[sg].n : ""}</h2><p class="mut">${esc(t[2])}. ويمكن اختيار المستوى الأنسب لمهارة الطفل لا لعمره وحده.</p>
-     <p><a class="btn p" href="#/talaea/manhaj?k=${t[0]}">📘 منهج المرحلة (الأساس ثم البنيان ثم البداية)</a> <a class="btn" href="#/talaea/ladder?k=${t[0]}">📚 سُلّم القراءة لهذه المرحلة</a></p>
+     <p><a class="btn" href="#/tamarin?s=${t[0] === "t1" || t[0] === "t2" ? "asas" : "bunyan"}">✏️ تمارين الأساس والبنيان</a> <a class="btn p" href="#/talaea/manhaj?k=${t[0]}">📘 منهج المرحلة (الأساس ثم البنيان ثم البداية)</a> <a class="btn" href="#/talaea/ladder?k=${t[0]}">📚 سُلّم القراءة لهذه المرحلة</a></p>
      ${stageCard(t[0], sg)}${sg ? models(sg) : ""}
      <h3>🎮 ألعاب تناسب هذه المرحلة</h3><div class="talag">${gamesFor(t[0]).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}${sq}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
      ${sg && t[0] !== "t1" ? (() => { const L = lib.books.filter(b => isArt(b) && !b.hidden && GEN[sg].tp.some(tp => inTopic(b, tp)) && (b.n || 9e9) < (t[0] === "t2" ? 2500 : 6000)).slice(-24).reverse(); return L.length ? `<h3>📰 مقالات ${esc(GEN[sg].n)}</h3><div class="list">${L.map(bookCard).join("")}</div>` : ""; })() : ""}
