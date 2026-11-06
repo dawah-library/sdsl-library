@@ -387,6 +387,18 @@ const TALA = (() => {
           <p><a class="btn s" href="#/book/${esc(b.id)}/1">📖 قراءة المستوى كاملًا</a> <a class="btn s" href="#/quizzes/${esc(b.id)}?l=easy">✅ اختبار المستوى</a></p></div>`;
       }
     }
+    // وحدات من «المنة شرح اعتقاد أهل السنة» (الاتباع والتزكية) للمرحلتين الأكبر: نص الكتاب بموضعه، وأسئلة، ونشاط (tools/tala-minna.py)
+    for (const u of ((M.units || {})[k] || [])) {
+      const nD = u.ls.filter(l => done[u.b + ":" + l.p]).length;
+      body += `<div class="card mjlv mjunit"><h3>📙 ${esc(u.t)} <small class="mut">— ${esc(u.from)}</small></h3>
+        <p class="mut">${toAr(u.ls.length)} دروس • أتممت ${toAr(nD)} <span class="mbar"><i style="width:${Math.round(100 * nD / u.ls.length)}%"></i></span></p>
+        ${u.ls.map((l, li) => { const id = u.b + ":" + l.p; return `<details class="mjsub"><summary><b>${toAr(li + 1)}. ${esc(l.t)}</b> <span class="mut">(ص ${toAr(l.p)}–${toAr(l.to)})</span>${done[id] ? " ✓" : ""}</summary>
+          <div class="mjpts"><p class="mut">من نص الكتاب:</p>${l.pts.map(([pg, t]) => `<blockquote>${esc(t)} <a href="#/book/${esc(u.b)}/${pg}" class="mut">[ص ${toAr(pg)}]</a></blockquote>`).join("")}</div>
+          <p><a class="btn s p" href="#/book/${esc(u.b)}/${l.p}">📖 اقرأ الدرس في الكتاب</a></p>
+          <div class="mjq">${l.q.map((q, qi) => `<div class="tmq"><p><b>${esc(q[0])}</b></p><div class="row">${[1, 2, 3].map(i => [Math.random(), i]).sort((a, b) => a[0] - b[0]).map(([, i]) => `<button class="btn tmo" data-mjq="${i === 1 ? 1 : 0}">${esc(q[i])}</button>`).join("")}</div></div>`).join("")}</div>
+          ${l.act ? `<div class="mjacts"><span>🎯 ${esc(l.act)}</span></div>` : ""}
+          <p><button class="lnk mjdone${done[id] ? " on" : ""}" data-mjd="${esc(id)}" aria-pressed="${!!done[id]}">${done[id] ? "✓ أتممته" : "أتممت الدرس ⭐"}</button></p></details>`; }).join("")}</div>`;
+    }
     const sup = ((M.support || {})[k] || []).slice();
     { // ما يُستورد لاحقًا من مقالات الشيخ مصطفى دياب والأستاذ محمود عمارة يُضم تلقائيًا بحسب قسمه في «صوت السلف»
       const listed = new Set(Object.values(M.support || {}).flat().flatMap(g => g[1]).concat(M.parents || []));
@@ -402,6 +414,8 @@ const TALA = (() => {
     view_(head(t[1] + " — " + t[2], true) + `<nav class="chips">${vis().map(([kk, n]) => `<a class="chip${kk === k ? " x" : ""}" href="#/talaea/manhaj?k=${kk}">${esc(n)}</a>`).join("")}</nav><h2 class="talat">📘 منهج ${esc(t[1])}</h2>${body}
       <p><a class="btn" href="#/talaea/ladder?k=${k}">📚 ثم سُلّم القراءة من بقية المكتبة</a> <a class="btn" href="#/talaea/track?k=${k}">🎮 الألعاب والأنشطة</a></p></div>`);
   }
+  document.addEventListener("click", e => { const b = e.target.closest("[data-mjq]"); if (!b || b.disabled) return; const box = b.closest(".tmq"), ok = b.dataset.mjq === "1";
+    b.classList.add(ok ? "right" : "wrong"); box.querySelectorAll("[data-mjq]").forEach(x => { if (x.dataset.mjq === "1") x.classList.add("right"); x.disabled = true; }); if (ok) star(1); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjd]"); if (!b) return; e.preventDefault(); const d = (st().ml = st().ml || {}), id = b.dataset.mjd; if (d[id]) delete d[id]; else { d[id] = 1; star(1); } saveS(); b.classList.toggle("on", !!d[id]); b.setAttribute("aria-pressed", !!d[id]); b.textContent = d[id] ? "✓ أتممته" : "أتممت الدرس ⭐"; });
   return { view: show, admin, autoTala };
 })();
