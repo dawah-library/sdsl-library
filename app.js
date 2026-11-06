@@ -736,7 +736,7 @@ async function vBook(id,p,h){
   ${b.pdf?B_("pview","pdf",pv==="text"?"المصورة":"النص"):""}
   ${B_("more","more","المزيد")}
   ${B_("full",S.full?"exit":"full",S.full?"خروج":"ملء الشاشة")}
- </nav>`,same);
+ </nav><button class="pgnb" data-act="pgnote" aria-label="مفكرة الصفحة" title="مفكرة الصفحة: اكتب ملاحظاتك وفوائدك"><span aria-hidden="true">✎</span></button>`,same);
  document.body.classList.toggle("reading-full",!!S.full);setProg(b,p);
  if(scroll){scrWire(b);if(p>1&&!same){const s0=$(`.spg[data-p="${p}"]`);if(s0){const y=s0.getBoundingClientRect().top+scrollY-(S.full?8:96);scrollTo(0,y)}}}
  if(pv!=="text")renderPdf(b,p);if(S.tr)renderTr(b,p);
@@ -1215,7 +1215,7 @@ function photoDlg(id){const a=A(id);if(!GH.on)return alert("سجّل الدخو�
  $("#phsave").onclick=async()=>{const b=$("#phsave");b.disabled=true;try{const blob=await new Promise(ok=>c.toBlob(ok,"image/jpeg",.86));const bytes=new Uint8Array(await blob.arrayBuffer()),path="assets/authors/"+id+".jpg";$("#phst").textContent="جارٍ رفع الصورة…";await GH.put(path,bytes,"صورة المؤلف: "+a.name);$("#phst").textContent="جارٍ تحديث بيانات المؤلف…";await save(path+"?v="+Date.now().toString(36));try{const u=URL.createObjectURL(blob);[CAT.authors,lib.authors].forEach(L=>{const y=(L||[]).find(q=>q.id===id);if(y)y.photo=u});route()}catch(e){}}catch(e){$("#phst").textContent=e.message;b.disabled=false}};
  if($("#phdel"))$("#phdel").onclick=async()=>{if(confirm("إزالة صورة "+a.name+" من الموقع؟"))try{await save("")}catch(e){$("#phst").textContent=e.message}}}
 /* دفتر البحث: تصدير المختارات والتعليقات الخاصة بحثًا موثقًا (حواشٍ بالمصادر وثبت مراجع) */
-async function nbExport(f){const l=await Mine.allNotes();if(!l.length)return toast("لا توجد تعليقات بعد.");const g={};l.forEach(n=>(g[n.book_id]=g[n.book_id]||[]).push(n));
+async function nbExport(f){const l=(await Mine.allNotes()).map(n=>n.kind==="pg"?Object.assign({},n,{quote:"(مفكرة الصفحة)"}):n);if(!l.length)return toast("لا توجد تعليقات بعد.");const g={};l.forEach(n=>(g[n.book_id]=g[n.book_id]||[]).push(n));
  const books=Object.keys(g).map(id=>{const b=B(id)||{},au=A(b.authorId).name||"";return{id,b,au,title:g[id][0].title||b.setTitle||b.title||id,ns:g[id].sort((x,y)=>x.page-y.page)}});
  const ref=(k,n)=>{const lb=k.b.pages?PL(k.b,n.page-1):"";return`${k.au?k.au+"، ":""}${k.title}، ${lb||"ص "+n.page}`};
  const today=new Date().toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"}),who=(Auth.user&&Auth.user.name)||"";let fn=0;
@@ -1699,7 +1699,33 @@ function hlWords(rd,notes){const ws=[...rd.querySelectorAll(".w")],tk=ws.map(w=>
   for(let i=0;i<=tk.length-q.length;i++){let ok=true;for(let j=0;j<q.length&&ok;j++){const a=tk[i+j],x=q[j];ok=q.length===1?a.includes(x):j===0?a.endsWith(x):j===q.length-1?a.startsWith(x):a===x}
    if(ok){for(let j=0;j<q.length;j++){const w=ws[i+j];w.classList.add("hl");w.dataset.note=n.id;w.style.setProperty("--hl",(NCOL[n.color]||NCOL.y)[1])}
     if(n.note)ws[i+q.length-1].insertAdjacentHTML("afterend",`<button class="nmk" data-act="noteopen" data-id="${n.id}" aria-label="تعليقك">✎</button>`);break}}})}
-async function paintNotes(rd){rd=rd||$("#rb");if(rd)paintMarks(rd);if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p);if(l.length)hlWords(rd,l)}catch(e){}}
+/* ---------- مفكرة الصفحة: ملاحظات العضو الحرة على كل صفحة (notes بنوع pg)، خاصة به، وتُنزَّل مفكرة الكتاب كاملة مع بياناته ---------- */
+const PGN={PQ:"✎",
+ async open(b,p){if(!Auth.user){toast("سجّل الدخول لتحفظ مفكرتك في حسابك.");location.hash="#/account";return}
+  let l=[];try{l=await Mine.notesOf(b.id)}catch(e){return toast(e.message||"تعذّر التحميل")}
+  const mine=l.find(n=>n.kind==="pg"&&n.page===p),hl=l.filter(n=>n.kind!=="pg"&&n.page===p),all=l.filter(n=>n.kind==="pg"&&n.page!==p&&n.note).sort((x,y)=>x.page-y.page),lb=PL(b,p-1)||"صفحة "+toAr(p);
+  openSheet("مفكرة الصفحة",`<p class="mut">${esc(b.setTitle||b.title)} — ${esc(lb)}. ملاحظاتك هنا خاصة بك وحدك، وتُحفظ تلقائيًا.</p>
+  <textarea id="pgnt" rows="7" maxlength="4900" placeholder="اكتب ملاحظاتك وما تريد تقييده من فوائد هذه الصفحة…" style="width:100%">${esc(mine?mine.note||"":"")}</textarea><p class="mut" id="pgns" aria-live="polite"></p>
+  ${hl.length?`<h4>تظليلاتك في هذه الصفحة</h4>${hl.map(n=>`<blockquote class="pgnq">«${esc(n.quote)}»${n.note?`<br><span class="mut">${esc(n.note)}</span>`:""}</blockquote>`).join("")}`:""}
+  ${all.length?`<details><summary>ملاحظاتك على صفحات أخرى من الكتاب (${toAr(all.length)})</summary>${all.map(n=>`<a class="bk" href="#/book/${b.id}/${n.page}" data-act="closeSheet"><b>${esc(PL(b,n.page-1)||"صفحة "+toAr(n.page))}</b><p>${esc(n.note.slice(0,160))}${n.note.length>160?"…":""}</p></a>`).join("")}</details>`:""}
+  <h4>تنزيل مفكرة الكتاب</h4><div class="row"><button class="btn s" data-pgx="doc">Word</button><button class="btn s" data-pgx="md">Markdown</button><button class="btn s" data-pgx="txt">نص</button><a class="btn s" href="#/mine" data-act="closeSheet">دفتر البحث الكامل</a></div>`,()=>{
+   const ta=$("#pgnt"),st=$("#pgns");let cur_=mine,T=null,busy=Promise.resolve();
+   const save=()=>{clearTimeout(T);const v=ta.value.trim();if((cur_?cur_.note||"":"")===v)return busy;st.textContent="جارٍ الحفظ…";
+    busy=busy.then(async()=>{try{if(!v&&cur_&&cur_.id){await Mine.delNote(cur_);cur_=null}else if(v){cur_=await Mine.saveNote(Object.assign(cur_||{book_id:b.id,page:p,title:b.setTitle||b.title,quote:PGN.PQ,color:"y",kind:"pg",tags:[]},{note:v}))}st.textContent="حُفظت ✓"}catch(e){st.textContent="تعذّر الحفظ: "+(e.message||e)}});return busy};
+   ta.addEventListener("input",()=>{clearTimeout(T);T=setTimeout(save,1200)});ta.addEventListener("blur",save);
+   $("#sheetB").addEventListener("click",async e=>{const x=e.target.closest("[data-pgx]");if(!x)return;await save();PGN.exp(b,x.dataset.pgx)})})},
+ async exp(b,f){let l;try{delete Mine.notes[b.id];l=(await Mine.notesOf(b.id)).slice().sort((x,y)=>x.page-y.page||String(x.created_at).localeCompare(String(y.created_at)))}catch(e){return toast("تعذّر التحميل")}
+  if(!l.length)return toast("لا ملاحظات في هذا الكتاب بعد.");
+  const k=b.card||{},au=A(b.authorId).name||k.author||"",t=b.setTitle||b.title,who=(Auth.user&&Auth.user.name)||"",dt=new Date().toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"});
+  const info=[["الكتاب",t],["المؤلف",au],["الناشر",k.publisher||""],["المصدر",b.source||""],["عدد الصفحات",b.n?String(b.n):""],["الرابط",location.origin+"/#/book/"+b.id+"/1"]].filter(x=>x[1]);
+  const ref=n=>PL(b,n.page-1)||"ص "+n.page,body=n=>n.kind==="pg"?{q:"",c:n.note||""}:{q:expTash(n.quote),c:n.note||""};
+  if(f==="txt"){const tx=`مفكرة: ${t}${who?" — "+who:""}\n${dt}\n\n`+info.map(x=>x[0]+": "+x[1]).join("\n")+"\n\n————\n\n"+l.map(n=>{const o=body(n);return`[${ref(n)}]\n${o.q?"«"+o.q+"»\n":""}${o.c}`}).join("\n\n")+`\n\n${SITENAME}`;return dl("مفكرة-"+t.slice(0,40)+".txt",tx,"text/plain")}
+  if(f==="md"){const tx=`# مفكرة: ${t}\n\n${who?"**"+who+"** — ":""}${dt}\n\n`+info.map(x=>`- **${x[0]}:** ${x[1]}`).join("\n")+"\n\n---\n\n"+l.map(n=>{const o=body(n);return`### ${ref(n)}\n\n${o.q?"> "+o.q+"\n\n":""}${o.c}`}).join("\n\n")+`\n\n---\n${SITENAME}\n`;return dl("مفكرة-"+t.slice(0,40)+".md",tx,"text/markdown")}
+  const h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:'Traditional Arabic',Amiri,serif;direction:rtl;font-size:16pt}h1{color:#0f5c4d}table{border-collapse:collapse;margin:10pt 0}th,td{border:1px solid #bbb;padding:4pt 8pt;text-align:right}h3{color:#b88a2e;margin:14pt 0 4pt}blockquote{border-right:3pt solid #b88a2e;margin:4pt 0;padding-right:8pt;color:#333}</style></head><body dir="rtl">
+  <h1>مفكرة: ${esc(t)}</h1><p>${who?esc(who)+" — ":""}${esc(dt)}</p><table>${info.map(x=>`<tr><th>${esc(x[0])}</th><td>${esc(x[1])}</td></tr>`).join("")}</table>
+  ${l.map(n=>{const o=body(n);return`<h3>${esc(ref(n))}</h3>${o.q?`<blockquote>«${esc(o.q)}»</blockquote>`:""}${o.c?`<p>${esc(o.c).replace(/\n/g,"<br>")}</p>`:""}`}).join("")}<p style="color:#777">${esc(SITENAME)}</p></body></html>`;
+  return dl("مفكرة-"+t.slice(0,40)+".doc",h,"application/msword")}};
+async function paintNotes(rd){rd=rd||$("#rb");if(rd)paintMarks(rd);if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p&&n.kind!=="pg");if(l.length)hlWords(rd,l)}catch(e){}}
 function noteDlg(n){const isNew=!n.id;openDlg(`<h3>${isNew?"تعليق خاص على النص":"تعليقك"}</h3><blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote)}</blockquote>
  <form data-form="note"><label>نوعها في دفتري</label><div class="seg nkinds">${STUDY.KINDS.map(([k,l,ic])=>`<label><input type="radio" name="kind" value="${k}"${(n.kind||"n")===k?" checked":""}> ${ic} ${l}</label>`).join("")}</div><label>تعليقك (لا يراه غيرك)</label><textarea name="note" style="min-height:110px" placeholder="فائدة، أو سؤال، أو ربط بموضع آخر…">${esc(n.note||"")}</textarea>
  <label>وسوم (اختياري، مفصولة بفاصلة)</label><input name="tags" value="${esc((n.tags||[]).join("، "))}" placeholder="مثل: الإخلاص، طلب العلم" maxlength="200">
@@ -1737,7 +1763,7 @@ async function vMine(q){if(!Auth.user&&!["stats","shelves"].includes(q.t))return
   if(t==="marks"){const m=Object.values(await Mine.loadMarks()).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
    box.innerHTML=m.length?m.map(x=>`<a class="bk" href="${bk(x.book_id,x.page)}"><b><i class="rib-mini"></i> ${esc(x.title||(B(x.book_id)||{}).title||x.book_id)}</b><span>صفحة ${toAr(x.page)} • ${esc(ago(x.updated_at))}</span></a>`).join(""):"لا علامات بعد. اضغط الشريط أعلى الصفحة في القارئ لتضع علامتك."}
   else if(t==="notes"){const l=await Mine.allNotes();const g={};l.forEach(n=>(g[n.book_id]=g[n.book_id]||[]).push(n));
-   box.innerHTML=(l.length?`<div class="row" style="margin-bottom:10px"><button class="btn s p" data-act="nbexp" data-f="doc">تصدير دفتري بحثًا (Word)</button><button class="btn s" data-act="nbexp" data-f="txt">نصًا</button><button class="btn s" data-act="tashtog2">${S.tash?"التصدير بالتشكيل ✓":"التصدير بلا تشكيل ✓"}</button></div>`:"")+(l.length?Object.entries(g).map(([id,ns])=>`<h3>${esc(ns[0].title||(B(id)||{}).title||id)}</h3>${ns.sort((a,b)=>a.page-b.page).map(n=>`<a class="nrow" href="${bk(id,n.page)}"><blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote.length>260?n.quote.slice(0,260)+"…":n.quote)}</blockquote>${n.note?`<p>${esc(n.note)}</p>`:""}<small class="mut">صفحة ${toAr(n.page)} • ${esc(ago(n.updated_at||n.created_at))}</small></a>`).join("")}`).join(""):"لا تعليقات بعد. حدّد عبارة في أي كتاب ثم اضغط «تعليق» لتظللها وتكتب فائدتك.")}
+   box.innerHTML=(l.length?`<div class="row" style="margin-bottom:10px"><button class="btn s p" data-act="nbexp" data-f="doc">تصدير دفتري بحثًا (Word)</button><button class="btn s" data-act="nbexp" data-f="txt">نصًا</button><button class="btn s" data-act="tashtog2">${S.tash?"التصدير بالتشكيل ✓":"التصدير بلا تشكيل ✓"}</button></div>`:"")+(l.length?Object.entries(g).map(([id,ns])=>`<h3>${esc(ns[0].title||(B(id)||{}).title||id)}</h3>${ns.sort((a,b)=>a.page-b.page).map(n=>`<a class="nrow" href="${bk(id,n.page)}">${n.kind==="pg"?'<em class="tag">مفكرة الصفحة</em>':`<blockquote class="nq" style="--hl:${(NCOL[n.color]||NCOL.y)[1]}">${esc(n.quote.length>260?n.quote.slice(0,260)+"…":n.quote)}</blockquote>`}${n.note?`<p>${esc(n.note)}</p>`:""}<small class="mut">صفحة ${toAr(n.page)} • ${esc(ago(n.updated_at||n.created_at))}</small></a>`).join("")}`).join(""):"لا تعليقات بعد. حدّد عبارة في أي كتاب ثم اضغط «تعليق» لتظللها وتكتب فائدتك.")}
   else if(t==="off"){const l=ls.get("offbooks",[]);box.innerHTML=l.length?l.map(k=>{const b=B(k)||lib.books.find(x=>x.set===k);return b?`<a class="bk" href="#/book/${b.id}/1"><b>${esc(b.setTitle||b.title)}</b><span>${esc(A(b.authorId).name)} • محفوظ على هذا الجهاز</span></a>`:""}).join(""):"لم تحفظ كتابًا للقراءة دون إنترنت بعد. افتح كتابًا ثم «أدوات القراءة ← حفظ للقراءة دون إنترنت»."}
   else{const l=await Mine.loadPlans();box.innerHTML=(l.length?l.map(p=>{const b=B(p.book_id),s=planStat(p,b);return`<div class="plan"><a href="${bk(p.book_id,s.at)}"><b>${esc(p.title||(b||{}).title||"")}</b></a><div class="prog"><i style="width:${s.pct}%"></i></div><span class="mut">${s.done?"✓ أتممت الكتاب":`صفحة ${toAr(s.at)} من ${toAr(s.n)} • الورد ${pgs(p.daily)} يوميًا • التذكير ${esc(p.remind_at||"")}`}${s.behind?` • <b class="warn">متأخر ${pgs(s.behind)}</b>`:s.readToday?" • ✓ قرأت اليوم":""}</span></div>`}).join(""):"<p>لا مشاريع قراءة بعد. افتح كتابًا ثم «المزيد ← مشروع قراءة».</p>")+`<p style="margin-top:10px">${pushBtn()}</p>`}}
  catch(e){box.innerHTML=`<p class="note">${esc(e.message)}</p>`}}
@@ -2055,6 +2081,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="tashtog2"){S.tash=!S.tash;saveS();el.textContent=S.tash?"التصدير بالتشكيل ✓":"التصدير بلا تشكيل ✓";toast(S.tash?"يُصدَّر النص بتشكيله ويظهر التشكيل في القراءة":"يُصدَّر النص بلا تشكيل ويُخفى في القراءة")}
  else if(a==="tashtog"){S.tash=!S.tash;saveS();refreshPage();closeSheet();const lt=$("#lt");if(lt)lt.checked=S.tash;toast(S.tash?"يظهر التشكيل"+(TK.info(cur()&&cur().b)?" (التشكيل المدقق لهذا الكتاب)":""):"أُخفي التشكيل، ويُنسخ النص ويُصدَّر بلا تشكيل")}
  else if(a==="tour")TOUR.start();
+ else if(a==="pgnote"){const c=cur();if(c)PGN.open(c.b,c.p)}
  else if(a==="theme"){S.theme=S.theme==="dark"?"light":S.theme==="light"?"dark":(matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");saveS();applyLook()}
  else if(a==="look")openSheet("مظهر الصفحة",lookHtml(),wireLook);
  else if(a==="moreSug")fillSug();

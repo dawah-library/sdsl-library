@@ -925,3 +925,7 @@ body.pfopen{overflow:hidden}
 .bcov.gen.tr{background:linear-gradient(160deg,hsl(calc(25 + var(--ch,0)) 45% 30%),hsl(calc(20 + var(--ch,0)) 50% 17%))}
 .bcov.gen::before{content:"";position:absolute;inset:3px;border:1px solid rgba(217,174,85,.45);border-radius:2px}
 .bcov.gen em{font-family:Amiri,serif;font-style:normal;font-size:.56rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+/* مفكرة الصفحة */
+.pgnb{position:fixed;z-index:44;inset-inline-start:12px;bottom:calc(96px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--sf);color:var(--ac);font-size:1.25rem;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer}
+.pgnb:hover{background:var(--ac);color:var(--on)}body:not(.reading) .pgnb{display:none}
+.pgnq{border-inline-start:3px solid var(--gold);margin:6px 0;padding:4px 10px;font-family:Amiri,serif}
