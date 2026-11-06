@@ -1,0 +1,44 @@
+name: تقسيم كتاب مصور «وجهين في الصورة» وإعادة تحويله
+on:
+  workflow_dispatch:
+    inputs:
+      id: { description: "معرّف الكتاب", required: true }
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+          pip install -q --break-system-packages pillow; if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q --break-system-packages boto3; fi
+      - name: التقسيم والرفع إلى المخزن الخاص
+        run: |
+          python3 tools/split-spread.py "${{ github.event.inputs.id }}"
+          python3 tools/r2-store.py "${{ github.event.inputs.id }}"
+          rm -f "pdf/${{ github.event.inputs.id }}.pdf"
+      - name: طلب إعادة التحويل
+        run: |
+          python3 - <<'PY'
+          import json
+          p = "data/catalog.json"; c = json.load(open(p, encoding="utf-8"))
+          for b in c["books"]:
+              if b["id"] == "${{ github.event.inputs.id }}":
+                  b.pop("pmap", None); b.pop("pdfLocal", None); b["spread"] = "split"
+          json.dump(c, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+          PY
+          : > "ocr-inbox/${{ github.event.inputs.id }}.redo"
+          bash tools/git-save.sh "تقسيم صفحات «وجهين» وطلب إعادة التحويل" data/catalog.json "ocr-inbox/${{ github.event.inputs.id }}.redo"
+      - name: تشغيل التحويل
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ocr.yml --ref main
