@@ -1,0 +1,34 @@
+name: تمارين الطلائع (إجابات مقترحة من الدروس)
+on:
+  workflow_dispatch:
+    inputs:
+      n: { description: "عدد الأسئلة في الجولة", required: false, default: "400" }
+  schedule:
+    - cron: "37 22 * * 2,5"   # مرتين أسبوعيًا حتى تكتمل
+permissions:
+  contents: write
+concurrency:
+  group: tala-ex
+  cancel-in-progress: false
+jobs:
+  answer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: اقتراح الإجابات
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+        run: python3 tools/tala-ex.py --answer ${{ github.event.inputs.n || '400' }}
+      - run: bash tools/git-save.sh "تمارين الطلائع: إجابات مقترحة من الدروس (تنتظر الاعتماد)" data/tala-ex.json
