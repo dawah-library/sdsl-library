@@ -17,7 +17,7 @@ const GRP = (() => {
     <div class="row" style="margin:10px 0"><button class="btn p" data-act="grnew">＋ ابدأ قراءة جماعية</button><button class="btn" data-act="grnew" data-req="1">اطلب من الإدارة إعلان قراءة</button></div><div id="grl" class="mut">جارٍ التحميل…</div>`);
     if (!sb()) { $("#grl").textContent = "يتطلب الاتصال بحسابات المكتبة."; return; }
     const { data, error } = await sb().from("group_reads").select("*").in("status", isAdmin() ? ["active", "requested", "done"] : ["active", "done"]).order("official", { ascending: false }).order("start_date", { ascending: false }).limit(100);
-    if (error) { $("#grl").textContent = error.message; return; }
+    if (error) { $("#grl").textContent = "تعذّر الاتصال بالخادم الآن؛ أعد المحاولة بعد قليل."; return; }
     const card = g => { const b = B(g.book_id), d = dayOf(g); return `<a class="bk hasc" href="#/group/${g.id}">${b ? coverOf(b) : ""}<b>${esc(g.title)} ${g.official ? '<em class="tag">من الإدارة</em>' : ""}${g.status === "requested" ? '<em class="tag">طلب ينتظر الاعتماد</em>' : ""}${g.status === "done" ? '<em class="tag">انتهت</em>' : ""}</b><span>${esc(T(b))} • ${d < 1 ? "تبدأ " + D(g.start_date) : d > g.days ? "انتهت مدتها" : "اليوم " + toAr(d) + " من " + toAr(g.days)} • الموعد ${esc(g.read_time || "")}${g.visibility === "invite" ? " • بالدعوة" : ""}</span></a>`; };
     const l = data || [];
     $("#grl").innerHTML = l.length ? l.map(card).join("") : "<p>لا قراءات جماعية بعد. ابدأ أول قراءة وادعُ إخوانك.</p>";
@@ -107,7 +107,7 @@ const GRP = (() => {
     view(`<div class="cmhero"><div><h2>تحدي القراءة</h2><p>تنافس على إتمام كتاب في مدة محددة: افتح كل صفحة واقرأها ثم علّمها ✓، والأسبق إلى الإتمام أولًا.</p></div></div>${isAdmin() ? '<button class="btn p" data-act="chnew">＋ تحدٍّ جديد</button>' : ""}<div id="chl" class="mut">جارٍ التحميل…</div>`);
     if (!sb()) return;
     const { data, error } = await sb().from("challenges").select("*").order("starts_at", { ascending: false }).limit(50);
-    if (error) { $("#chl").textContent = error.message; return; }
+    if (error) { $("#chl").textContent = "تعذّر الاتصال بالخادم الآن؛ أعد المحاولة بعد قليل."; return; }
     const now = new Date();
     $("#chl").innerHTML = (data || []).map(c => { const s = new Date(c.starts_at), e = new Date(c.ends_at), n = Object.values(c.req || {}).reduce((x, y) => x + y.length, 0);
       return `<a class="bk" href="#/challenge/${c.id}"><b>🏁 ${esc(c.title)} ${c.status === "draft" ? '<em class="tag">مسودة</em>' : now < s ? '<em class="tag">قريبًا</em>' : now > e || c.status === "closed" ? '<em class="tag">انتهى</em>' : '<em class="tag on">جارٍ الآن</em>'}</b><span>${c.books.map(id => esc(T(B(id)))).join("، ")} • ${toAr(n)} صفحة • ${D(c.starts_at)} – ${D(c.ends_at)}</span></a>`; }).join("") || "<p>لا تحديات معلنة بعد.</p>";

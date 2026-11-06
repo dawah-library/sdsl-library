@@ -1098,3 +1098,24 @@ del{color:#b3261e}ins{color:#2e7d32;text-decoration:none;font-weight:600}
 .qe{color:#6b5320}
 :root[data-theme=dark] .qpage,:root[data-skin=night] .qpage{color:#efe6d2}
 .ql.qh{border:1.5px solid rgba(184,138,46,.65);border-radius:10px;background:linear-gradient(90deg,transparent,rgba(184,138,46,.12),transparent);margin:.3em 4%;color:var(--ac)}
+
+/* ===== خطوط العناوين الحديثة وتحسين المظهر ===== */
+:root{--hf:"Readex Pro","IBM Plex Sans Arabic",sans-serif}
+:root[data-hf=kufi]{--hf:"Reem Kufi","Readex Pro",sans-serif}:root[data-hf=classic]{--hf:Amiri,serif}
+h2,h3,h4,.cmhero h2,.aihero h2,.sdh b,.stsec h3,.card>b,.col>b,.newc h3,.hs span,.sdgt,.tabs a,.btn{font-family:var(--hf)}
+h2{font-weight:700;letter-spacing:-.01em;font-size:1.45rem;position:relative;padding-inline-start:14px}
+h2::before{content:"";position:absolute;inset-inline-start:0;top:.32em;bottom:.32em;width:5px;border-radius:4px;background:linear-gradient(180deg,var(--gold),var(--ac))}
+.cmhero h2::before,.hero h2::before,.page h2::before,.rhead h2::before,.mpage h2::before,.msh::before,.ahero h2::before{display:none}
+h3{font-weight:600;font-size:1.15rem}.card>b,.col>b{font-weight:600;letter-spacing:-.01em}.hs b{font-family:var(--hf);font-weight:700}
+.cmhero{background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 55%,#000) 60%,color-mix(in srgb,var(--ac) 50%,var(--gold)));color:#fff;border-radius:22px;padding:22px 22px 18px;box-shadow:0 12px 30px color-mix(in srgb,var(--ac) 30%,transparent);position:relative;overflow:hidden}
+.cmhero::after{content:"";position:absolute;inset:auto -60px -80px auto;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+.cmhero h2{color:#fff;font-size:1.6rem;margin:0 0 6px}.cmhero p{opacity:.92;margin:0}
+.hero{padding:30px 0 10px;background:radial-gradient(600px 220px at 50% 0,color-mix(in srgb,var(--gold) 16%,transparent),transparent 70%)}
+.hero .sbox input{border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.card,.col,.hs,.stsec{transition:transform .2s ease,box-shadow .2s ease}
+a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.45)}
+.card .cic{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;margin:0 0 6px;background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 16%,transparent),color-mix(in srgb,var(--gold) 16%,transparent))}
+.col .cic{display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.16);margin-bottom:6px}
+.tabs a{font-weight:500}.tabs a[aria-selected=true]{font-weight:700}
+.chip{border-radius:999px}
+@media (prefers-reduced-motion:reduce){.card,.col,.hs,.stsec{transition:none}a.card:hover,a.col:hover{transform:none}}
