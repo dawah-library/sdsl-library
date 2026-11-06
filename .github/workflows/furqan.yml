@@ -1,0 +1,20 @@
+name: قضايا الفرقان بالمضمون
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 3"   # أسبوعيًا: المقالات والكتب الجديدة
+  push:
+    paths: ["data/furqan.json", "tools/furqan.py"]
+permissions:
+  contents: write
+concurrency:
+  group: furqan
+  cancel-in-progress: true
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/furqan.py
+      - run: bash tools/git-save.sh "قضايا الفرقان: مطابقة المضمون" data/furqan-match.json
