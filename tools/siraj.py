@@ -43,30 +43,58 @@ def main():
     ayat = {s["n"]: s["ayat"] for s in json.load(open(os.path.join(Q, "quran.json"), encoding="utf-8"))["suras"]}
     sid = lambda x: names.get(" ".join(nz(x)).replace("سوره ", "")) or names.get(re.sub(r"^ال", "", " ".join(nz(x)).replace("سوره ", ""))) if x else None
     W = jl(os.path.join(OUT, "_work.json"), {"pages": {}})
+    # الطريق الأول بلا حصة: نص الكتاب المحوَّل المدقق (جداول «الآية | الكلمة | معناها» وعناوين «# سورة …»)
+    cat0 = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": []})
+    bk = next((x for x in cat0["books"] if "غريب" in (x.get("title") or "") and "السراج" in (x.get("title") or "") and x.get("ocr")), None)
+    txt = jl(os.path.join(ROOT, "data", "books", (bk or {}).get("id", "_") + ".json"), {}).get("pages") if bk else None
+    if txt and not os.environ.get("SIRAJ_PDF") and not (bk.get("unrev") or 0):
+        W = {"pages": {}, "src": "text"}
+        for i, pg in enumerate(txt):
+            if not isinstance(pg, str): continue
+            heads = [re.sub(r"^[@#\s]+", "", l).strip() for l in pg.split("\n") if re.match(r"^\s*(?:@@\s*)?#+\s*سُ?ورَ?ةُ?", l)]
+            rows = []
+            for l in pg.split("\n"):
+                c = [x.strip() for x in l.strip().strip("|").split("|")]
+                if len(c) < 3 or not re.search(r"[\d٠-٩]", c[0]) or re.match(r"^:?-+", c[0]): continue
+                a = re.sub(r"[^\d٠-٩]", "", c[0]).translate(AR)
+                if a: rows.append({"a": int(a), "w": c[1].strip(" ﴿﴾"), "m": " | ".join(c[2:]).strip(), "s": ""})
+            if rows or heads: W["pages"][str(i + 1)] = {"sura": heads[0] if heads else "", "start": heads[-1] if heads else "", "rows": rows, "heads_all": heads}
+        # السورة لكل سطر: إذا رجع رقم الآية إلى ما دونه بدأت السورة التالية من عناوين الصفحة
+        prev = None
+        for k in sorted(W["pages"], key=int):
+            pg = W["pages"][k]; H = list(pg.get("heads_all") or [])
+            for r in pg["rows"]:
+                if (prev is None or r["a"] < prev) and H: r["s"] = H.pop(0)
+                prev = r["a"]
+            pg["sura"] = pg["start"] = ""  # العناوين نُقلت إلى الأسطر
+        print("من نص الكتاب:", len(W["pages"]), "صفحة،", sum(len(v["rows"]) for v in W["pages"].values()), "سطرًا")
+        txt_mode = True
+    else: txt_mode = False
     with tempfile.TemporaryDirectory() as tmp:
-        bid = os.environ.get("SIRAJ_ID", "")
-        if not bid and not os.environ.get("SIRAJ_PDF"):  # يُعرف الكتاب بعنوانه بعد رفعه من «الإدارة ← كتاب مصور»
-            cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": []})
-            b = next((x for x in cat["books"] if "غريب القرآن" in (x.get("title") or "") and "السراج" in (x.get("title") or "") and x.get("pdf")), None)
-            if not b: print("لم يُرفع كتاب السراج بعد"); return
-            bid = b["id"]
-            if jl(os.path.join(OUT, "_meta.json"), {}).get("done"): print("اكتمل استخراج السراج"); return
-        if os.environ.get("SIRAJ_PDF"): pdf = os.environ["SIRAJ_PDF"]
-        else:
-            spm = importlib.util.spec_from_file_location("pm", os.path.join(ROOT, "tools", "pdf-match.py")); pm = importlib.util.module_from_spec(spm); spm.loader.exec_module(pm)
-            pdf = pm.get_pdf(bid, tmp)
-        n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(["pdfinfo", pdf], capture_output=True, text=True).stdout).group(1))
-        a0, z0 = int(os.environ.get("SIRAJ_FROM", "1")), int(os.environ.get("SIRAJ_TO", str(n)))
-        todo = [p for p in range(a0, z0 + 1) if str(p) not in W["pages"]]
-        for k in range(0, len(todo), 3):
-            if time.time() > DEADLINE or (KEYS and len(DEAD) >= len(KEYS) * len(MODELS)): break
-            grp = todo[k:k + 3]; imgs = []
-            for p in grp:
-                base = os.path.join(tmp, "p%d" % p); subprocess.run(["pdftoppm", "-f", str(p), "-l", str(p), "-r", "130", "-jpeg", "-singlefile", pdf, base], check=True); imgs.append(base + ".jpg")
-            r = gem(imgs)
-            if not r: print("  تعذّر", grp, flush=True); continue
-            for p, pg in zip(grp, (r.get("pages") or []) + [{}] * 3): W["pages"][str(p)] = pg
-            js(os.path.join(OUT, "_work.json"), W); print("  ص", grp, sum(len((W["pages"][str(p)] or {}).get("rows") or []) for p in grp), "سطرًا", flush=True)
+      if not txt_mode:
+          bid = os.environ.get("SIRAJ_ID", "")
+          if not bid and not os.environ.get("SIRAJ_PDF"):  # يُعرف الكتاب بعنوانه بعد رفعه من «الإدارة ← كتاب مصور»
+              cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": []})
+              b = next((x for x in cat["books"] if "غريب" in (x.get("title") or "") and "السراج" in (x.get("title") or "") and x.get("pdf")), None)
+              if not b: print("لم يُرفع كتاب السراج بعد"); return
+              bid = b["id"]
+              if jl(os.path.join(OUT, "_meta.json"), {}).get("done"): print("اكتمل استخراج السراج"); return
+          if os.environ.get("SIRAJ_PDF"): pdf = os.environ["SIRAJ_PDF"]
+          else:
+              spm = importlib.util.spec_from_file_location("pm", os.path.join(ROOT, "tools", "pdf-match.py")); pm = importlib.util.module_from_spec(spm); spm.loader.exec_module(pm)
+              pdf = pm.get_pdf(bid, tmp)
+          n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(["pdfinfo", pdf], capture_output=True, text=True).stdout).group(1))
+          a0, z0 = int(os.environ.get("SIRAJ_FROM", "1")), int(os.environ.get("SIRAJ_TO", str(n)))
+          todo = [p for p in range(a0, z0 + 1) if str(p) not in W["pages"]]
+          for k in range(0, len(todo), 3):
+              if time.time() > DEADLINE or (KEYS and len(DEAD) >= len(KEYS) * len(MODELS)): break
+              grp = todo[k:k + 3]; imgs = []
+              for p in grp:
+                  base = os.path.join(tmp, "p%d" % p); subprocess.run(["pdftoppm", "-f", str(p), "-l", str(p), "-r", "130", "-jpeg", "-singlefile", pdf, base], check=True); imgs.append(base + ".jpg")
+              r = gem(imgs)
+              if not r: print("  تعذّر", grp, flush=True); continue
+              for p, pg in zip(grp, (r.get("pages") or []) + [{}] * 3): W["pages"][str(p)] = pg
+              js(os.path.join(OUT, "_work.json"), W); print("  ص", grp, sum(len((W["pages"][str(p)] or {}).get("rows") or []) for p in grp), "سطرًا", flush=True)
     # التجميع بالترتيب: تتبع السورة من الترويسات وعناوين البدء، والتحقق من الكلمة في نص الآية
     out, cur, miss, okn = {}, None, [], 0
     for p in sorted(W["pages"], key=int):
@@ -89,7 +117,7 @@ def main():
             if not has(s, a): miss.append([p, s, a, w]); continue
             out.setdefault(s, {}).setdefault(str(a), []).append([w, m]); okn += 1
     for s, d in out.items(): js(os.path.join(OUT, "%d.json" % s), d)
-    js(os.path.join(OUT, "_meta.json"), {"src": "السراج في بيان غريب القرآن، د. محمد بن عبد العزيز الخضيري، دار المنهاج، الرياض، ط١ ١٤٣٥هـ", "rows": okn, "suras": len(out), "miss": miss[:500], "pages": len(W["pages"]), "done": 1 if len(W["pages"]) >= n - 2 else 0})
+    js(os.path.join(OUT, "_meta.json"), {"src": "السراج في بيان غريب القرآن، د. محمد بن عبد العزيز الخضيري، دار المنهاج، الرياض، ط١ ١٤٣٥هـ", "rows": okn, "suras": len(out), "miss": miss[:500], "pages": len(W["pages"]), "done": 1 if W.get("src") == "text" or len(W["pages"]) >= int(n) - 2 else 0, "via": W.get("src", "images")})
     print("السور:", len(out), "الأسطر المطابقة:", okn, "غير المطابقة:", len(miss))
 if __name__ == "__main__":
     main()
