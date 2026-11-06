@@ -975,6 +975,8 @@ def plan():
 def drafts_job(path, first, last):
     if os.path.isdir(INBOX): assemble()
     pdf = os.path.join(ROOT, path)
+    if not os.path.exists(pdf) and path.startswith("pdf/"):  # الكتب المعاد تحويلها محفوظة في R2 لا في المستودع: تُنزَّل في كل جهاز
+        pdf = local_pdf(os.path.basename(path)[:-4]) or pdf
     res = make_drafts(pdf, list(range(int(first), int(last) + 1)))
     os.makedirs(os.path.join(ROOT, "drafts"), exist_ok=True)
     json.dump({"pages": res, "report": REPORT}, open(os.path.join(ROOT, "drafts", "%s-%04d.json" % (md5f(pdf), int(first))), "w", encoding="utf-8"), ensure_ascii=False)
