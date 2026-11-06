@@ -141,6 +141,7 @@ async function vPaths(q, pid, sub, bid) {
   const card = (id, t, books, plan, tag) => { const st = spState(books, plan, Auth.user ? id : null); return `<a class="card" href="#/paths/${encodeURIComponent(id)}"><b>${esc(t)}</b><span>${toAr(books.length)} كتب • ${toAr(st.pct)}٪${plan && plan.mode === "timed" && st.left ? " • " + pgs2(st.daily) + " يوميًا • الختم " + st.end.toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) : ""}${tag || ""}</span><i class="prog" style="--w:${st.pct}%"></i></a>`; };
   view(`<div class="cmhero ph"><div><h2>المسارات العلمية</h2><p>اختر مسارًا رشحته المكتبة، أو اصنع مسارك بنفسك من كتبها. ولكل مسار خطة اختيارية: بلا مدة، أو بمدة وورد يومي بالصفحات أو بالدقائق، مع أيام إجازة وتذكير.</p></div></div>
   <h3>مساراتي</h3>${Auth.user ? `<div class="grid">${mine.map(r => card(r.id, r.title, (r.books || []).filter(id => B(id)), r.plan)).join("")}<a class="card spnew" href="#/paths/new"><b>＋ اصنع مسارك</b><span>اختر الكتب وترتيبها بنفسك</span></a></div>` : `<p class="note"><a href="#/account">سجّل الدخول</a> لتصنع مسارك الخاص وتضع خطة لقراءته.</p>`}
+  ${(typeof isAdmin === "function" && isAdmin()) ? `<details class="hfold"><summary>＋ مسار بحسب المؤلف (للإدارة)</summary><div style="padding-bottom:12px"><p class="mut">يرشّح الموقع ترتيب كتب المؤلف (المداخل والمختصرات أولًا، ثم المتوسط، ثم الشروح والموسوعات)، فتصححه وتعتمده.</p><select id="apau"><option value="">اختر المؤلف</option>${lib.authors.filter(a => (a.col || "dawah") === "dawah").map(a => [a, BOOKS().filter(b => b.authorId === a.id && !b.demo && !VOL2(b)).length]).filter(x => x[1] >= 2).sort((x, y) => y[1] - x[1]).map(([a, n]) => `<option value="${a.id}">${esc(a.name)} (${toAr(n)})</option>`).join("")}</select><div id="apbox"></div></div></details>` : ""}
   <h3>مسارات مرشحة من المكتبة</h3><p class="mut">لكل علم ثلاثة مستويات متدرجة: مبتدئ فمتوسط فمتقدم، ولكل كتاب اختباره داخل المسار.</p>
   <nav class="chips">${[...new Set(P.filter(p => !p.hide).map(p => p.sci))].map(k => `<a class="chip" href="#/paths" data-spgo="sp-${k}">${esc((P.find(p => p.sci === k) || {}).st || k)}</a>`).join("")}</nav>
   ${[...new Set(P.filter(p => !p.hide).map(p => p.sci))].map(k => { const L = P.filter(p => p.sci === k && !p.hide).sort((a, b) => a.lvl - b.lvl); return `<section class="spsci" id="sp-${k}"><h3>${esc(L[0].st)}</h3><div class="grid">${L.map(p => { const o = SP.get(p.id); return card(p.id, ["", "١. مبتدئ", "٢. متوسط", "٣. متقدم"][p.lvl] || p.t, p.books, o && o.plan, (o && o.plan && o.plan.mode === "timed" ? " • ✓ لك خطة" : "") + `<br><small>${esc(p.d)}</small>`); }).join("")}</div></section>`; }).join("")}`);
@@ -298,3 +299,20 @@ if (typeof Mine !== "undefined" && Mine.touch) {
   const _mt = Mine.touch; let t = null;
   Mine.touch = (bid, p) => { _mt(bid, p); clearTimeout(t); t = setTimeout(() => { spCheck(bid).catch(() => { }); spSync().catch(() => { }); }, 3000); };
 }
+
+// مسار بحسب المؤلف: ترشيح آلي لترتيب كتبه يصححه المدير ثم يعتمده (يُحفظ في data/paths.json بعلم «author»)
+function apSuggest(aid) {
+  const L = BOOKS().filter(b => b.authorId === aid && !b.demo && !b.hidden && !VOL2(b)), t = b => norm(b.setTitle || b.title);
+  const lvl = b => /مقدمه|مدخل|مختصر|المبتدئ|رساله|اصول|مبادئ|تبسيط|للناشئه|الاساس/.test(t(b)) ? 0 : /شرح|موسوعه|مجموع|الجامع|المطول|تحقيق|ذكريات|مذكرات|حوار|الكواشف/.test(t(b)) ? 2 : 1;
+  return L.sort((x, y) => lvl(x) - lvl(y) || (x.n || 0) * (x.vols || 1) - (y.n || 0) * (y.vols || 1)).map(b => b.id);
+}
+document.addEventListener("change", e => { if (e.target.id !== "apau") return; const aid = e.target.value, box = $("#apbox"); if (!aid) { box.innerHTML = ""; return; }
+  const ids = apSuggest(aid), a = A(aid), pid = "au-" + aid;
+  box.innerHTML = `<label>عنوان المسار</label><input id="apt" value="${esc("مسار كتب " + a.name)}"><label>وصف</label><input id="apd" value="${esc("قراءة مؤلفات " + a.name + " مرتبة من المداخل إلى المطولات.")}">
+  <ol id="apl" class="hlo">${ids.map(id => { const b = B(id); return `<li data-id="${id}"><span>${esc(b.setTitle || b.title)} <small class="mut">${b.n ? toAr(b.n) + " ص" : ""}</small></span><label class="inl"><input type="checkbox" checked> ضمن المسار</label><button class="btn s" data-m="-1">▲</button><button class="btn s" data-m="1">▼</button></li>`; }).join("")}</ol>
+  <button class="btn p" id="apsave">اعتماد ونشر المسار</button> <span id="apst" class="mut"></span>`;
+  $("#apl").onclick = ev => { const b = ev.target.closest("[data-m]"); if (!b) return; const li = b.closest("li"); if (b.dataset.m === "-1" && li.previousElementSibling) li.previousElementSibling.before(li); else if (b.dataset.m === "1" && li.nextElementSibling) li.nextElementSibling.after(li); };
+  $("#apsave").onclick = async () => { const books = [...$("#apl").children].filter(li => li.querySelector("input").checked).map(li => li.dataset.id), st = $("#apst"); if (books.length < 2) return st.textContent = "اختر كتابين على الأقل";
+    const rec = { id: pid, sci: "author", st: "بحسب المؤلف", lvl: 0, kind: "author", au: aid, t: $("#apt").value.trim(), d: $("#apd").value.trim(), books, by: "admin", at: today() };
+    st.textContent = "جارٍ الحفظ…"; try { await GH.editJSON("data/paths.json", o => { o = o || { paths: [] }; o.paths = (o.paths || []).filter(x => x.id !== pid); o.paths.push(rec); return o; }, "مسار بحسب المؤلف: " + a.name); PATHS = null; st.textContent = "✓ اعتُمد ونُشر"; setTimeout(() => location.hash = "#/paths/" + pid, 600); } catch (er) { st.textContent = "تعذّر: " + (er.message || er); } };
+});
