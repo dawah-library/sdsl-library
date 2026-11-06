@@ -10,14 +10,14 @@ const SIDE = (() => {
     ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"]]],
     ["عن المكتبة", [["#/about", "من نحن", "info"], ["#/dawah", "التعريف بالدعوة", "flag"], ["#/history", "تاريخ الدعوة", "scroll-text"], ["#/standards", "معايير التحرير", "ruler"], ["#/contact", "تواصل معنا", "mail"]]],
   ];
-  const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"]];
+  const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/proof", "تدقيق الكتب النصية", "pen-line"]];
   const MAP = {}; G.forEach(([, l]) => l.forEach(([h, , i]) => MAP[h.split("?")[0]] = MAP[h.split("?")[0]] || i));
   const fold = () => { try { return JSON.parse(localStorage.getItem("side_fold") || "{}"); } catch (e) { return {}; } };
   function render() {
     let el = $("#side"); const adm = isAdmin() || (Cloud.perms || []).length, F = fold();
     if (!el) { el = document.createElement("aside"); el.id = "side"; el.setAttribute("aria-label", "أقسام المكتبة"); document.body.appendChild(el);
       const bg = document.createElement("div"); bg.id = "sidebg"; bg.hidden = true; bg.onclick = close; document.body.appendChild(bg); }
-    const groups = G.concat(adm ? [["الإدارة", ADM.filter(x => isAdmin() || x[0] === "#/admin")]] : []);
+    const groups = G.concat(adm ? [["الإدارة", ADM.filter(x => isAdmin() || x[0] === "#/admin" || (x[0] === "#/proof" && can("edit")))]] : []);
     el.innerHTML = `<div class="sdh"><b>الأقسام</b><button class="sdx" data-act="sdclose" aria-label="إغلاق">${ic("x", 18)}</button></div><input id="sdq" type="search" placeholder="ابحث عن قسم" aria-label="ابحث عن قسم" autocomplete="off">
       ${groups.map(([g, l], k) => `<section class="sdg${F[k] ? " fold" : ""}" data-k="${k}"><button class="sdgt" data-act="sdfold">${esc(g)}</button>${l.map(([h, t, i]) => `<a href="${h}" data-t="${esc(norm(t))}">${ic(i, 18)}<span>${esc(t)}</span></a>`).join("")}</section>`).join("")}
       <div class="sdf"><button data-act="skin">${ic("palette", 16)} قالب الواجهة</button><button data-act="gdshow">${ic("compass", 16)} دليل الموقع</button></div>`;
