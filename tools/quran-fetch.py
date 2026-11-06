@@ -36,7 +36,7 @@ def main():
             time.sleep(.3)
         rep.append("%s: %d سورة" % (key, n))
     # تفاسير وغريب من مجموعة spa5k/tafsir_api المفتوحة: السراج في بيان غريب القرآن، والميسر، والسعدي
-    for ed, short in [x.split(":") for x in os.environ.get("QF_SPA", "asseraj-fi-bayan-gharib-alquran:siraj,ar-tafsir-muyassar:muyassar,ar-tafseer-al-saddi:saddi").split(",") if ":" in x]:
+    for ed, short in [x.split(":") for x in os.environ.get("QF_SPA", "ar-tafsir-muyassar:muyassar,ar-tafseer-al-saddi:saddi").split(",") if ":" in x]:
         n = 0
         for su in range(1, 115):
             p = os.path.join(Q, "tafsir", short, "%d.json" % su)
