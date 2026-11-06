@@ -1,0 +1,41 @@
+{
+ "at": "2026-11-06 07:31",
+ "graphql_errors": [
+  "not authorized for that account"
+ ],
+ "functions_per_day": {},
+ "workers_per_day": {},
+ "r2_storage": [],
+ "r2_ops_7d": {},
+ "deployments_total": 110,
+ "deploy_err": null,
+ "last_deploys": [
+  {
+   "at": "2026-11-05T03:35:52.969388Z",
+   "status": "success"
+  },
+  {
+   "at": "2026-11-04T19:05:38.537652Z",
+   "status": "success"
+  },
+  {
+   "at": "2026-11-04T16:48:44.096081Z",
+   "status": "success"
+  },
+  {
+   "at": "2026-11-03T18:43:16.002839Z",
+   "status": "success"
+  },
+  {
+   "at": "2026-11-03T18:19:54.970707Z",
+   "status": "success"
+  }
+ ],
+ "live": {
+  "/": 200,
+  "/book/umdafiqh/3": 200,
+  "/api/pages?check=1": 200,
+  "/data/catalog.json": 200,
+  "/sitemap.xml": 200
+ }
+}
