@@ -153,6 +153,195 @@
    "id": "musnadahmad",
    "q": "مسند الإمام أحمد",
    "death": 241
+  },
+  {
+   "id": "tahdhibkamal",
+   "q": "تهذيب الكمال في أسماء الرجال",
+   "death": 742,
+   "a": "ta_mizzi",
+   "an": "المزي",
+   "tp": "t13",
+   "new": 1
+  },
+  {
+   "id": "hilyatawliya",
+   "q": "حلية الأولياء وطبقات الأصفياء",
+   "death": 430,
+   "a": "ta_abunuaym",
+   "an": "أبو نعيم الأصبهاني",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "talbisiblis",
+   "q": "تلبيس إبليس",
+   "death": 597,
+   "a": "ta_ibnjawzi",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "burhanzarkashi",
+   "q": "البرهان في علوم القرآن",
+   "death": 794,
+   "a": "ta_zarkashi",
+   "an": "بدر الدين الزركشي",
+   "tp": "t12",
+   "new": 1
+  },
+  {
+   "id": "tarikhtabari",
+   "q": "تاريخ الرسل والملوك",
+   "death": 310,
+   "a": "ta_tabari",
+   "an": "",
+   "tp": "t18",
+   "new": 1
+  },
+  {
+   "id": "uddatsabirin",
+   "q": "عدة الصابرين وذخيرة الشاكرين",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "rawdatmuhibbin",
+   "q": "روضة المحبين ونزهة المشتاقين",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "jalaafham",
+   "q": "جلاء الأفهام في فضل الصلاة على محمد خير الأنام",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t11",
+   "new": 1
+  },
+  {
+   "id": "turuqhukmiyya",
+   "q": "الطرق الحكمية في السياسة الشرعية",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t7",
+   "new": 1
+  },
+  {
+   "id": "ahkamdhimma",
+   "q": "أحكام أهل الذمة",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t4",
+   "new": 1
+  },
+  {
+   "id": "sawaiqmursala",
+   "q": "الصواعق المرسلة على الجهمية والمعطلة",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t1",
+   "new": 1
+  },
+  {
+   "id": "hidayathayara",
+   "q": "هداية الحيارى في أجوبة اليهود والنصارى",
+   "death": 751,
+   "a": "ta_ibnqayyim",
+   "an": "",
+   "tp": "t1",
+   "new": 1
+  },
+  {
+   "id": "hisbataymiyya",
+   "q": "الحسبة في الإسلام",
+   "death": 728,
+   "a": "ta2",
+   "an": "",
+   "tp": "t7",
+   "new": 1
+  },
+  {
+   "id": "amradqulub",
+   "q": "أمراض القلوب وشفاؤها",
+   "death": 728,
+   "a": "ta2",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "tuhfairaqiyya",
+   "q": "التحفة العراقية في الأعمال القلبية",
+   "death": 728,
+   "a": "ta2",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "qaidajalila",
+   "q": "قاعدة جليلة في التوسل والوسيلة",
+   "death": 728,
+   "a": "ta2",
+   "an": "",
+   "tp": "t1",
+   "new": 1
+  },
+  {
+   "id": "zuhdahmad",
+   "q": "الزهد",
+   "death": 241,
+   "a": "ta_ibnhanbal",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "wara",
+   "q": "الورع",
+   "death": 241,
+   "a": "ta_ibnhanbal",
+   "an": "",
+   "tp": "t6",
+   "new": 1
+  },
+  {
+   "id": "jamiakhlaqrawi",
+   "q": "الجامع لأخلاق الراوي وآداب السامع",
+   "death": 463,
+   "a": "ta_khatibbaghdadi",
+   "an": "",
+   "tp": "t13",
+   "new": 1
+  },
+  {
+   "id": "adabimla",
+   "q": "أدب الإملاء والاستملاء",
+   "death": 562,
+   "a": "ta_samani",
+   "an": "أبو سعد السمعاني",
+   "tp": "t13",
+   "new": 1
+  },
+  {
+   "id": "kitabilmabikhaythama",
+   "q": "كتاب العلم",
+   "death": 234,
+   "a": "ta_abukhaythama",
+   "an": "أبو خيثمة زهير بن حرب",
+   "tp": "t11",
+   "new": 1
   }
  ],
  "done": []

@@ -52,7 +52,7 @@ jobs:
         env:
           TIO_MINUTES: "170"
           TIO_CONC: "3"
-          TIO_MAX_BOOKS: "1"
+          TIO_MAX_BOOKS: "2"
         run: python3 tools/turathio-batch.py
       - name: حفظ ما جُلب للاستئناف
         if: always()
