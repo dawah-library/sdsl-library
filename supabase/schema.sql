@@ -549,3 +549,4 @@ grant execute on function public.track_read(text,int,int,boolean) to anon, authe
 grant execute on function public.top_content(text,int,int) to anon, authenticated;
 grant execute on function public.content_totals(int) to anon, authenticated;
 grant execute on function public.admin_reads(int) to authenticated;
+revoke execute on function public.admin_reads(int) from anon;
