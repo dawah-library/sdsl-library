@@ -550,3 +550,241 @@ grant execute on function public.top_content(text,int,int) to anon, authenticate
 grant execute on function public.content_totals(int) to anon, authenticated;
 grant execute on function public.admin_reads(int) to authenticated;
 revoke execute on function public.admin_reads(int) from anon;
+
+-- ٦ نوفمبر (٢): صلاحيات التفويض، والقراءة الجماعية، وتحدي القراءة
+
+-- ١) صلاحيات يفوّضها المدير لأعضاء بعينهم (export_text: تنزيل النص القابل للتحرير، kurrasa: الكراسات، convert: تحويل الكتب، tashjir: التشجير، stats: سجل الأعضاء)
+alter table public.profiles add column if not exists perms text[] not null default '{}';
+create or replace function public.has_perm(p text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or p = any(perms)));
+$$;
+create or replace function public.my_perms() returns text[]
+language sql stable security definer set search_path = public as $$
+  select coalesce((select case when role = 'admin' then array['*'] else perms end from public.profiles where id = auth.uid()), '{}');
+$$;
+-- بحث الأعضاء بالاسم (لدعوتهم إلى قراءة جماعية أو منحهم صلاحية)؛ للمسجلين فقط
+create or replace function public.member_search(q text) returns table(id uuid, name text)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.name from public.profiles p
+  where auth.uid() is not null and length(trim(coalesce(q,''))) >= 2 and p.name ilike '%' || trim(q) || '%'
+  order by p.name limit 12;
+$$;
+create or replace function public.notify_staff(t text, b text, u text) returns void
+language sql security definer set search_path = public as $$
+  insert into public.notifications(user_id, title, body, url) select id, t, b, u from public.profiles where role in ('admin','editor');
+$$;
+revoke execute on function public.notify_staff(text,text,text) from public, anon, authenticated;
+
+-- ٢) القراءة الجماعية
+create table if not exists public.group_reads (
+  id bigserial primary key,
+  book_id text not null, title text not null check (length(title) between 2 and 200), note text check (length(note) < 2000),
+  owner uuid not null default auth.uid() references auth.users on delete cascade,
+  start_date date not null default current_date, days int not null default 14 check (days between 1 and 365),
+  start_page int not null default 1, end_page int not null default 1, read_time text default '21:00',
+  visibility text not null default 'public' check (visibility in ('public','invite')),
+  status text not null default 'active' check (status in ('requested','active','done','cancelled')),
+  official boolean not null default false, created_at timestamptz not null default now()
+);
+create table if not exists public.group_members (
+  group_id bigint not null references public.group_reads on delete cascade,
+  user_id uuid not null references auth.users on delete cascade,
+  status text not null default 'joined' check (status in ('invited','joined','left')),
+  joined_at timestamptz not null default now(), primary key (group_id, user_id)
+);
+create table if not exists public.group_log (
+  group_id bigint not null references public.group_reads on delete cascade,
+  user_id uuid not null references auth.users on delete cascade,
+  day_no int not null check (day_no between 1 and 365), pages int not null default 0 check (pages between 0 and 5000),
+  note text check (length(note) < 1000), done_at timestamptz not null default now(),
+  primary key (group_id, user_id, day_no)
+);
+create index if not exists group_members_user_idx on public.group_members(user_id);
+create index if not exists group_log_user_idx on public.group_log(user_id);
+create index if not exists group_reads_owner_idx on public.group_reads(owner);
+alter table public.group_reads enable row level security;
+alter table public.group_members enable row level security;
+alter table public.group_log enable row level security;
+create or replace function public.gr_member(g bigint) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.group_members where group_id = g and user_id = auth.uid() and status <> 'left')
+      or exists (select 1 from public.group_reads where id = g and owner = auth.uid());
+$$;
+drop policy if exists "group_reads read" on public.group_reads;
+create policy "group_reads read" on public.group_reads for select using (visibility = 'public' and status <> 'requested' or owner = (select auth.uid()) or public.gr_member(id) or public.is_staff());
+drop policy if exists "group_members read" on public.group_members;
+create policy "group_members read" on public.group_members for select using (public.gr_member(group_id) or public.is_staff() or exists (select 1 from public.group_reads r where r.id = group_id and r.visibility = 'public'));
+drop policy if exists "group_log read" on public.group_log;
+create policy "group_log read" on public.group_log for select using (public.gr_member(group_id) or public.is_staff() or exists (select 1 from public.group_reads r where r.id = group_id and r.visibility = 'public'));
+-- الكتابة كلها عبر الدوال التالية (تتحقق من الصلاحية وترسل الإشعارات)
+create or replace function public.gr_create(p_book text, p_title text, p_note text, p_start date, p_days int, p_from int, p_to int, p_time text, p_vis text, p_invite uuid[] default '{}', p_official boolean default false) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare g bigint; u uuid := auth.uid(); st text := 'active';
+begin
+  if u is null then raise exception 'سجّل الدخول أولًا'; end if;
+  if p_official and not public.is_staff() then st := 'requested'; p_official := false; end if;
+  insert into public.group_reads(book_id, title, note, owner, start_date, days, start_page, end_page, read_time, visibility, official, status)
+  values (p_book, p_title, p_note, u, coalesce(p_start, current_date), coalesce(p_days, 14), greatest(coalesce(p_from,1),1), greatest(coalesce(p_to,1),1), coalesce(p_time,'21:00'), coalesce(p_vis,'public'), coalesce(p_official,false), st)
+  returning id into g;
+  insert into public.group_members(group_id, user_id, status) values (g, u, 'joined');
+  if st = 'requested' then
+    perform public.notify_staff('طلب قراءة جماعية: ' || p_title, 'عضو يطلب أن تعلن الإدارة قراءة جماعية لهذا الكتاب.', '#/group/' || g);
+  end if;
+  if coalesce(array_length(p_invite,1),0) > 0 then perform public.gr_invite(g, p_invite); end if;
+  return g;
+end $$;
+create or replace function public.gr_invite(g bigint, uids uuid[]) returns int
+language plpgsql security definer set search_path = public as $$
+declare r public.group_reads; n int := 0; x uuid;
+begin
+  select * into r from public.group_reads where id = g;
+  if r.id is null or not (r.owner = auth.uid() or public.is_staff() or public.gr_member(g) and r.visibility = 'public') then raise exception 'غير مسموح'; end if;
+  foreach x in array coalesce(uids, '{}') loop
+    if x is null or x = auth.uid() then continue; end if;
+    insert into public.group_members(group_id, user_id, status) values (g, x, 'invited') on conflict do nothing;
+    if found then
+      insert into public.notifications(user_id, title, body, url) values (x, 'دعوة إلى قراءة جماعية: ' || r.title, 'تبدأ ' || r.start_date || ' لمدة ' || r.days || ' يومًا', '#/group/' || g);
+      n := n + 1;
+    end if;
+    exit when n >= 50;
+  end loop;
+  return n;
+end $$;
+create or replace function public.gr_join(g bigint, p_leave boolean default false) returns void
+language plpgsql security definer set search_path = public as $$
+declare r public.group_reads; u uuid := auth.uid();
+begin
+  select * into r from public.group_reads where id = g;
+  if u is null or r.id is null then raise exception 'غير متاح'; end if;
+  if p_leave then update public.group_members set status = 'left' where group_id = g and user_id = u; return; end if;
+  if r.status <> 'active' then raise exception 'القراءة غير مفتوحة'; end if;
+  if r.visibility = 'invite' and not exists (select 1 from public.group_members where group_id = g and user_id = u) then raise exception 'بالدعوة فقط'; end if;
+  insert into public.group_members(group_id, user_id, status) values (g, u, 'joined')
+  on conflict (group_id, user_id) do update set status = 'joined', joined_at = now();
+end $$;
+-- تسجيل الورد: يُقبل بعد بدء يومه ولو متأخرًا (مرونة)، ويُعدَّل بتكراره، ويُلغى بصفحات سالبة
+create or replace function public.gr_log(g bigint, p_day int, p_pages int, p_note text default null) returns void
+language plpgsql security definer set search_path = public as $$
+declare r public.group_reads; u uuid := auth.uid();
+begin
+  select * into r from public.group_reads where id = g;
+  if u is null or r.id is null or not exists (select 1 from public.group_members where group_id = g and user_id = u and status = 'joined') then raise exception 'انضم إلى القراءة أولًا'; end if;
+  if p_day < 1 or p_day > r.days or r.start_date + (p_day - 1) > current_date + 1 then raise exception 'لم يبدأ هذا اليوم بعد'; end if;
+  if p_pages < 0 then delete from public.group_log where group_id = g and user_id = u and day_no = p_day; return; end if;
+  insert into public.group_log(group_id, user_id, day_no, pages, note) values (g, u, p_day, p_pages, p_note)
+  on conflict (group_id, user_id, day_no) do update set pages = excluded.pages, note = excluded.note, done_at = now();
+end $$;
+create or replace function public.gr_status(g bigint, p_status text, p_official boolean default null) returns void
+language plpgsql security definer set search_path = public as $$
+declare r public.group_reads;
+begin
+  select * into r from public.group_reads where id = g;
+  if r.id is null or not (r.owner = auth.uid() or public.is_staff()) then raise exception 'غير مسموح'; end if;
+  if p_official is not null and not public.is_staff() then raise exception 'للإدارة فقط'; end if;
+  update public.group_reads set status = coalesce(p_status, status), official = coalesce(p_official, official) where id = g;
+  if r.status = 'requested' and p_status = 'active' then
+    insert into public.notifications(user_id, title, body, url) values (r.owner, 'اعتمدت الإدارة القراءة الجماعية: ' || r.title, null, '#/group/' || g);
+  end if;
+end $$;
+-- لوحة القراءة: الأعضاء بأسمائهم وما سجلوه
+create or replace function public.gr_board(g bigint) returns table(user_id uuid, name text, status text, days_done bigint, pages bigint, last_day int, last_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select m.user_id, p.name, m.status, count(l.day_no), coalesce(sum(l.pages),0), max(l.day_no), max(l.done_at)
+  from public.group_members m left join public.profiles p on p.id = m.user_id
+  left join public.group_log l on l.group_id = m.group_id and l.user_id = m.user_id
+  where m.group_id = g and exists (select 1 from public.group_reads r where r.id = g and (r.visibility = 'public' or public.gr_member(g) or public.is_staff()))
+  group by m.user_id, p.name, m.status order by count(l.day_no) desc, max(l.done_at);
+$$;
+
+-- ٣) تحدي القراءة: كتاب أو أكثر، بمدة، والتحقق بفتح كل صفحة (عدا المستثنى كالفهرس) والبقاء عليها حدًّا أدنى ثم تعليمها ✓
+create table if not exists public.challenges (
+  id bigserial primary key, title text not null, descr text, books text[] not null default '{}',
+  req jsonb not null default '{}'::jsonb,   -- {book_id: [أرقام الصفحات المطلوبة]} يحسبها الموقع عند الإنشاء (يستثني الفهرس والمقدمات الفنية)
+  starts_at timestamptz not null, ends_at timestamptz not null, min_dwell int not null default 15 check (min_dwell between 3 and 600),
+  status text not null default 'open' check (status in ('draft','open','closed')),
+  created_by uuid default auth.uid() references auth.users on delete set null, created_at timestamptz not null default now()
+);
+create table if not exists public.challenge_entries (
+  challenge_id bigint not null references public.challenges on delete cascade,
+  user_id uuid not null references auth.users on delete cascade,
+  joined_at timestamptz not null default now(), finished_at timestamptz, primary key (challenge_id, user_id)
+);
+create table if not exists public.challenge_pages (
+  challenge_id bigint not null references public.challenges on delete cascade,
+  user_id uuid not null references auth.users on delete cascade,
+  book_id text not null, page int not null, opened_at timestamptz not null default now(), checked_at timestamptz,
+  primary key (challenge_id, user_id, book_id, page)
+);
+create index if not exists challenge_entries_user_idx on public.challenge_entries(user_id);
+create index if not exists challenge_pages_user_idx on public.challenge_pages(user_id);
+alter table public.challenges enable row level security;
+alter table public.challenge_entries enable row level security;
+alter table public.challenge_pages enable row level security;
+drop policy if exists "challenges read" on public.challenges;
+create policy "challenges read" on public.challenges for select using (status <> 'draft' or public.is_staff());
+drop policy if exists "challenges staff insert" on public.challenges;
+create policy "challenges staff insert" on public.challenges for insert with check (public.is_staff());
+drop policy if exists "challenges staff update" on public.challenges;
+create policy "challenges staff update" on public.challenges for update using (public.is_staff()) with check (public.is_staff());
+drop policy if exists "challenge_entries read" on public.challenge_entries;
+create policy "challenge_entries read" on public.challenge_entries for select using ((select auth.uid()) = user_id or public.is_staff());
+drop policy if exists "challenge_pages own" on public.challenge_pages;
+create policy "challenge_pages own" on public.challenge_pages for select using ((select auth.uid()) = user_id or public.is_staff());
+create or replace function public.ch_join(c bigint) returns void
+language plpgsql security definer set search_path = public as $$
+declare r public.challenges;
+begin
+  select * into r from public.challenges where id = c;
+  if auth.uid() is null or r.id is null or r.status <> 'open' or now() > r.ends_at then raise exception 'التحدي غير مفتوح'; end if;
+  insert into public.challenge_entries(challenge_id, user_id) values (c, auth.uid()) on conflict do nothing;
+end $$;
+-- فتح الصفحة: يُسجَّل وقت الفتح على الخادم (فلا يعتمد على ساعة الجهاز)
+create or replace function public.ch_seen(c bigint, bid text, pg int) returns void
+language plpgsql security definer set search_path = public as $$
+declare r public.challenges;
+begin
+  select * into r from public.challenges where id = c;
+  if auth.uid() is null or r.id is null or now() < r.starts_at or now() > r.ends_at or not (bid = any(r.books))
+     or not exists (select 1 from public.challenge_entries where challenge_id = c and user_id = auth.uid()) then return; end if;
+  insert into public.challenge_pages(challenge_id, user_id, book_id, page) values (c, auth.uid(), bid, pg)
+  on conflict (challenge_id, user_id, book_id, page) do update set opened_at = case when public.challenge_pages.checked_at is null then now() else public.challenge_pages.opened_at end;
+end $$;
+-- تعليم الصفحة ✓: يُقبل إذا مضى على فتحها min_dwell ثانية على الأقل، وتُعلَن نهاية المتسابق عند اكتمال الصفحات المطلوبة
+create or replace function public.ch_mark(c bigint, bid text, pg int) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare r public.challenges; o timestamptz; need int; got int; u uuid := auth.uid();
+begin
+  select * into r from public.challenges where id = c;
+  if u is null or r.id is null or now() < r.starts_at or now() > r.ends_at then return jsonb_build_object('ok', false, 'why', 'التحدي غير قائم الآن'); end if;
+  if not (coalesce(r.req -> bid, '[]'::jsonb) @> to_jsonb(pg)) then return jsonb_build_object('ok', false, 'why', 'هذه الصفحة ليست من صفحات التحدي'); end if;
+  select opened_at into o from public.challenge_pages where challenge_id = c and user_id = u and book_id = bid and page = pg;
+  if o is null then return jsonb_build_object('ok', false, 'why', 'افتح الصفحة واقرأها أولًا'); end if;
+  if now() - o < make_interval(secs => r.min_dwell) then return jsonb_build_object('ok', false, 'why', 'اقرأ الصفحة أولًا', 'wait', ceil(r.min_dwell - extract(epoch from now() - o))); end if;
+  update public.challenge_pages set checked_at = coalesce(checked_at, now()) where challenge_id = c and user_id = u and book_id = bid and page = pg;
+  select sum(jsonb_array_length(v)) into need from jsonb_each(r.req) as e(k, v);
+  select count(*) into got from public.challenge_pages p where p.challenge_id = c and p.user_id = u and p.checked_at is not null
+    and coalesce(r.req -> p.book_id, '[]'::jsonb) @> to_jsonb(p.page);
+  if got >= need then update public.challenge_entries set finished_at = coalesce(finished_at, now()) where challenge_id = c and user_id = u; end if;
+  return jsonb_build_object('ok', true, 'got', got, 'need', need, 'done', got >= need);
+end $$;
+create or replace function public.ch_board(c bigint) returns table(user_id uuid, name text, checked bigint, finished_at timestamptz, joined_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select e.user_id, p.name, (select count(*) from public.challenge_pages x where x.challenge_id = c and x.user_id = e.user_id and x.checked_at is not null), e.finished_at, e.joined_at
+  from public.challenge_entries e left join public.profiles p on p.id = e.user_id where e.challenge_id = c
+  order by e.finished_at nulls last, 3 desc, e.joined_at limit 200;
+$$;
+
+revoke execute on function public.gr_create(text,text,text,date,int,int,int,text,text,uuid[],boolean) from public, anon;
+revoke execute on function public.gr_invite(bigint,uuid[]) from public, anon;
+revoke execute on function public.gr_join(bigint,boolean) from public, anon;
+revoke execute on function public.gr_log(bigint,int,int,text) from public, anon;
+revoke execute on function public.gr_status(bigint,text,boolean) from public, anon;
+revoke execute on function public.member_search(text) from public, anon;
+revoke execute on function public.ch_join(bigint) from public, anon;
+revoke execute on function public.ch_seen(bigint,text,int) from public, anon;
+revoke execute on function public.ch_mark(bigint,text,int) from public, anon;
+grant execute on function public.gr_create(text,text,text,date,int,int,int,text,text,uuid[],boolean), public.gr_invite(bigint,uuid[]), public.gr_join(bigint,boolean), public.gr_log(bigint,int,int,text), public.gr_status(bigint,text,boolean), public.member_search(text), public.ch_join(bigint), public.ch_seen(bigint,text,int), public.ch_mark(bigint,text,int), public.has_perm(text), public.my_perms() to authenticated;
+revoke execute on function public.gr_board(bigint) from public, anon;
+revoke execute on function public.ch_board(bigint) from public, anon;
+grant execute on function public.gr_board(bigint), public.ch_board(bigint) to authenticated;
