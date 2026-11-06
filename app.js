@@ -108,7 +108,11 @@ function tjLinks(){const els=document.querySelectorAll(".tjlink[data-tj]");if(!e
 const RAWGH="https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/";
 document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&!t.dataset.fb&&/(^|\/)assets\/authors\//.test(t.getAttribute("src")||"")){t.dataset.fb=1;t.src=RAWGH+t.getAttribute("src").replace(/^\.?\//,"")}},true);
 const avatar=(a,cls="")=>{a=a||{};const sh=(a.name||"").replace(/^(الإمام|الشيخ|شيخ الإسلام|الحافظ|الدكتور|د\.)\s*/,"");return a.photo?`<img class="aav ${cls}" src="${esc(a.photo)}" alt="${esc(a.name||"")}" loading="lazy">`:`<span class="aav ${cls}" style="${avHue(a.id||a.name||"")}" aria-hidden="true">${esc(sh[0]||"؟")}</span>`};
-const bookCard=b=>`<a class="bk${bc(b)==="turath"?" tr":""}${b.hidden?" hid":""}" href="#/book/${b.id}${S.lastBy&&S.lastBy[b.id]>1?"":"/1"}"><b>${esc(b.set?b.setTitle||b.title:b.title)}${b.hidden?' <em class="tag">مخفي</em>':""}</b><span>${b.set?`<em class="tag">${b.vols===2?"مجلدان":toAr(b.vols)+" "+(b.vols>2&&b.vols<11?"مجلدات":"مجلدًا")}</em> • `:""}<span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n&&!b.set?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
+// غلاف مصغر بجوار اسم الكتاب: صورة الصفحة الأولى من المصورة (tools/covers.py) أو غلاف مولَّد بالهوية
+let COVERS=new Set();const hueOf=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%360;return h};
+const coverOf=(b,cls)=>{const id=b.id;if(COVERS.has(id))return`<img class="bcov${cls?" "+cls:""}" src="assets/covers/${id}.jpg" alt="" loading="lazy" decoding="async">`;
+ const t=(b.set?b.setTitle||b.title:b.title).replace(/[«»"()\[\]]/g,"").split(/\s+/).slice(0,4).join(" ");return`<i class="bcov gen${cls?" "+cls:""}${bc(b)==="turath"?" tr":""}" style="--ch:${hueOf(id)%40}" aria-hidden="true"><em>${esc(t)}</em></i>`};
+const bookCard=b=>`<a class="bk hasc${bc(b)==="turath"?" tr":""}${b.hidden?" hid":""}" href="#/book/${b.id}${S.lastBy&&S.lastBy[b.id]>1?"":"/1"}">${coverOf(b)}<b>${esc(b.set?b.setTitle||b.title:b.title)}${b.hidden?' <em class="tag">مخفي</em>':""}</b><span>${b.set?`<em class="tag">${b.vols===2?"مجلدان":toAr(b.vols)+" "+(b.vols>2&&b.vols<11?"مجلدات":"مجلدًا")}</em> • `:""}<span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${died(A(b.authorId))} • ${esc(T(b.topicId).name)}${b.n&&!b.set?` • ${b.n} صفحة`:""}${bc(b)==="turath"?' • <em class="tag">تراث</em>':""}${b.demo?' • <em class="tag">نص تجريبي</em>':""}${b.pdf?' • <em class="tag">مصور</em>':""}${b.ocr?' • <em class="tag">نص آلي</em>':""}</span></a>`;
 const artCard=b=>`<a class="bk ar${b.hidden?" hid":""}" href="#/book/${b.id}/1"><b>${esc(b.title)}${b.hidden?' <em class="tag">مخفي</em>':""}</b><span><span data-author="${b.authorId}">${esc(A(b.authorId).name)}</span>${isFatwa(b)?' • <em class="tag">من فتاوى صوت السلف</em>':isStatement(b)?' • <em class="tag">بيان</em>':""} • ${fmtDate(b.date)} • ${esc(T(b.topicId).name)}${b.demo?' • <em class="tag">نص تجريبي</em>':""}</span></a>`;
 const anyCard=b=>isArt(b)?artCard(b):bookCard(b);
 const progress=(el,i,n,label)=>{el.innerHTML=`<p class="mut">${label} (${toAr(i)} من ${toAr(n)})</p><div class="prog"><i style="width:${Math.round(i/n*100)}%"></i></div>`};
@@ -2100,7 +2104,8 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#s
 /* ---------- الإقلاع ---------- */
 async function boot(){if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
  const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
- try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}
+ const covP=fetch("data/covers.json").then(r=>r.ok?r.json():{}).then(j=>{COVERS=new Set(j.ids||[])}).catch(()=>{});
+ try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}await Promise.race([covP,new Promise(r=>setTimeout(r,800))]);
  ARTS_IDX=((await ai).items||[]).map(artFromIdx);
  try{const r=await fetch("data/tarajim.json",{cache:"no-cache"});if(r.ok)TJ=await r.json()}catch(e){}
  merge();

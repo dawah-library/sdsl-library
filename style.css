@@ -916,3 +916,12 @@ body.pfopen{overflow:hidden}
 #tour .tbr{display:flex;gap:8px;align-items:center;justify-content:space-between}
 #tour .tdots{display:flex;gap:4px}#tour .tdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}#tour .tdots i.on{background:var(--ac)}
 @media (prefers-reduced-motion:reduce){#tour .tsh{transition:none}}
+/* أغلفة الكتب المصغرة */
+.bk.hasc{display:grid;grid-template-columns:46px 1fr;column-gap:12px;align-items:start}
+.bk.hasc>.bcov{grid-row:1/span 3}.bk.hasc>b,.bk.hasc>span{grid-column:2}
+.bcov{display:block;width:46px;height:64px;object-fit:cover;border-radius:3px 6px 6px 3px;box-shadow:0 1px 3px rgba(0,0,0,.18),inset 3px 0 0 rgba(0,0,0,.12);background:var(--line)}
+.bcov.gen{display:flex;align-items:center;justify-content:center;padding:5px 4px;text-align:center;overflow:hidden;color:#f7e9c6;font-style:normal;
+ background:linear-gradient(160deg,hsl(calc(160 + var(--ch,0)) 55% 24%),hsl(calc(170 + var(--ch,0)) 60% 15%));border:1px solid rgba(184,138,46,.55);position:relative}
+.bcov.gen.tr{background:linear-gradient(160deg,hsl(calc(25 + var(--ch,0)) 45% 30%),hsl(calc(20 + var(--ch,0)) 50% 17%))}
+.bcov.gen::before{content:"";position:absolute;inset:3px;border:1px solid rgba(217,174,85,.45);border-radius:2px}
+.bcov.gen em{font-family:Amiri,serif;font-style:normal;font-size:.56rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
