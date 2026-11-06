@@ -20,7 +20,7 @@ const SIDE = (() => {
     const groups = G.concat(adm ? [["الإدارة", ADM.filter(x => isAdmin() || x[0] === "#/admin" || (x[0] === "#/proof" && can("edit")))]] : []);
     el.innerHTML = `<div class="sdh"><b>الأقسام</b><button class="sdx" data-act="sdclose" aria-label="إغلاق">${ic("x", 18)}</button></div><input id="sdq" type="search" placeholder="ابحث عن قسم" aria-label="ابحث عن قسم" autocomplete="off">
       ${groups.map(([g, l], k) => `<section class="sdg${F[k] ? " fold" : ""}" data-k="${k}"><button class="sdgt" data-act="sdfold">${esc(g)}</button>${l.map(([h, t, i]) => `<a href="${h}" data-t="${esc(norm(t))}">${ic(i, 18)}<span>${esc(t)}</span></a>`).join("")}</section>`).join("")}
-      <div class="sdf"><button data-act="skin">${ic("palette", 16)} قالب الواجهة</button><button data-act="gdshow">${ic("compass", 16)} دليل الموقع</button></div>`;
+      <div class="sdf"><button data-act="skin">${ic("palette", 16)} قالب الواجهة</button><button data-act="gdshow">${ic("compass", 16)} دليل الموقع</button><button data-act="theme">◐ ليلي / نهاري</button><button data-act="uilang" data-noi18n>EN / ع</button><button data-act="shareSite">${ic("rss", 16)} مشاركة المكتبة</button><a class="sdfa" href="#/favs">${ic("heart", 16)} المفضلة</a></div>`;
     $("#sdq").oninput = e => { const w = norm(e.target.value).trim(); el.querySelectorAll("a[data-t]").forEach(a => a.hidden = !!w && !a.dataset.t.includes(w)); el.querySelectorAll(".sdg").forEach(s => { s.classList.toggle("q", !!w); }); };
     mark();
   }
