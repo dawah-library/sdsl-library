@@ -61,7 +61,10 @@ const MUS = (() => {
     AU = new Audio(aurl(s, a)); PLAY = { L, i, onEnd }; AU.onended = () => PLAY && playList(L, i + 1, onEnd); AU.onerror = () => { toast("تعذّر تشغيل التلاوة"); stopAu(); }; AU.play().catch(() => stopAu()); }
   // عرض «خط المصحف»: صفحات مصحف المدينة ١٤٤١هـ بخطوط QCF4 (مجمع الملك فهد، تُحمَّل من jsDelivr) وبيانات أسطرها (data/quran/qcf)
   const QCFV = "https://cdn.jsdelivr.net/npm/quran-qcf4@1.1.0/fonts-woff2/", FONTS = {};
-  const qfont = f => FONTS[f] || (FONTS[f] = new FontFace(f, `url(${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2)`).load().then(x => { document.fonts.add(x); return true; }).catch(() => false));
+  // تحميل خط الصفحة مع إعادة المحاولة؛ لا يُحفظ الفشل حتى لا تتعطل الصفحات بعد انقطاع عابر
+  const qload = (f, n) => new FontFace(f, `url(${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2)`).load().then(x => { document.fonts.add(x); return true; })
+    .catch(() => n > 0 ? new Promise(r => setTimeout(r, 700)).then(() => qload(f, n - 1)) : false);
+  const qfont = f => FONTS[f] || (FONTS[f] = qload(f, 2).then(ok => { if (!ok) delete FONTS[f]; return ok; }));
   const qmode = () => { try { return localStorage.getItem("mus_mode") || "qcf"; } catch (e) { return "qcf"; } };
   function fit() { const box = $(".qpage"); if (!box) return; const W = box.clientWidth - 4, lines = [...box.querySelectorAll(".ql:not(.qc)")]; if (!lines.length) return;
     box.style.fontSize = "20px"; let mx = 0; lines.forEach(l => { let w = 0; for (const c of l.children) w += c.getBoundingClientRect().width; mx = Math.max(mx, w); });
