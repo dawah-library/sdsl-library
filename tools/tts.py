@@ -232,6 +232,8 @@ def phrases(text, words):
 # الأحدث أولًا، ثم الأقدم عند عدم توفره أو نفاد حصته
 GEM_TTS_MODELS = [m for m in os.environ.get("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts,gemini-3.1-flash-tts-preview,gemini-2.5-flash-preview-tts").split(",") if m.strip()]
 GEM_DEAD = set()  # (مفتاح، نموذج) نفدت حصته في هذا التشغيل
+PV = 2  # نسخة طريقة التسجيل: ما سُجّل قبل ٦ نوفمبر ٢٠٢٦ (pv<2) كانت التعليمات تُقرأ في أوله، فيعاد تسجيله تلقائيًا
+SECS_PER_CHAR = 1 / 14.0  # متوسط القراءة المسجلة: نحو ١٤ حرفًا في الثانية
 
 
 def speak_gemini(text, voice, path, style=""):
@@ -252,8 +254,12 @@ def speak_gemini(text, voice, path, style=""):
             j = _j.load(urllib.request.urlopen(req, timeout=300))
             pcm = base64.b64decode(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
             with tempfile.NamedTemporaryFile(suffix=".pcm", delete=False) as f: f.write(pcm)
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", f.name, "-b:a", "48k", path], check=True)
+            af = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.4,areverse,loudnorm=I=-18:TP=-1.5:LRA=9"
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", f.name, "-af", af, "-ar", "24000", "-b:a", "48k", path], check=True)
             os.unlink(f.name)
+            secs, want = mp3_secs(path) or 0, len(text) * SECS_PER_CHAR
+            if want > 20 and (secs > want * 1.9 + 8 or secs < want * 0.35):  # زيادة كلام أو تكرار أو قطع: يُعاد بالنموذج التالي
+                err = RuntimeError("طول المقطع %.0f ث غير متناسب مع نصه (المتوقع نحو %.0f ث)" % (secs, want)); continue
             break
         except urllib.error.HTTPError as e:
             err = e
@@ -357,7 +363,7 @@ async def tts_book(item, lst):
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
             continue
         force = bool(item.get("force")) or p in only_p or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
-        if cur and cur.get("d") and not force and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
+        if cur and cur.get("d") and not force and (cur.get("pv", 0) >= PV or not str(voice).startswith("gemini:")) and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
             continue
         todo.append((p, tx))
     if not todo:
@@ -397,7 +403,7 @@ async def tts_book(item, lst):
             continue
         upload(tag, [d[2] for d in done])
         for p, tx, path, sents in done:
-            man["pages"][str(p)] = {"d": mp3_secs(path), "h": h(tx), "s": sents}
+            man["pages"][str(p)] = {"d": mp3_secs(path), "h": h(tx), "s": sents, "pv": PV}
             os.remove(path)
         save_book(man, b, lst, len(pages))
         if (i // BATCH) % 3 == 2 or i + BATCH >= len(todo) or left() < 600:  # حفظ دوري كل ١٢٠ صفحة تقريبًا
@@ -413,10 +419,13 @@ def save_book(man, b, lst, total):
     ps = man["pages"]
     secs = sum(v.get("d", 0) for v in ps.values()) + sum(r.get("d", 0) for r in man.get("rec", []))
     prev = lst.get(man["id"]) or {}
-    lst[man["id"]] = {"ok": prev.get("ok", 1), "n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
+    old = sum(1 for v in ps.values() if v.get("d") and v.get("pv", 0) < PV)  # صفحات سُجلت بالطريقة القديمة (فيها عبارة التعليمات)
+    ok = prev.get("ok", 1) if not prev.get("hold") else (1 if not old else 0)  # المحجوب لإعادة التسجيل يعود منشورًا عند اكتماله
+    lst[man["id"]] = {"ok": ok, "n": sum(1 for v in ps.values() if v.get("d")), "of": total, "d": round(secs), "v": man["v"], "vn": VOICES.get(man["v"], man["v"]),
                       "t": man["title"], "a": b.get("authorId", ""), "c": b.get("col", ""), "rec": len(man.get("rec", [])), "upd": time.strftime("%Y-%m-%d"),
                       "ds": [round((ps.get(str(i)) or {}).get("d", 0)) for i in range(1, total + 1)],
                       "rd": [[r.get("f"), round(r.get("d", 0)), r.get("t", "")] for r in man.get("rec", [])]}
+    if prev.get("hold") and old: lst[man["id"]]["hold"] = 1
     jsave(os.path.join(AUD, "_list.json"), lst)
 
 
@@ -537,7 +546,9 @@ async def main():
         cands.sort(key=lambda b: (0 if (b.get("col") or "dawah") == "dawah" else 1, b.get("n") or 9999))
         items += [{"id": b["id"]} for b in cands[:int(os.environ.get("TTS_AUTO_BOOKS", "6"))]]
     if os.environ.get("TTS_REFRESH") == "1":  # الكتب المسموعة التي تغيّر نصها بعد التدقيق
-        items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not any(i["id"] == k for i in items)]
+        cb = {b["id"]: b for b in catalog()["books"]}
+        unrev = lambda k: bool(cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))  # يُنتظر اكتمال مراجعة النص قبل إعادة التسجيل
+        items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not unrev(k) and not any(i["id"] == k for i in items)]
     left_items = []
     for it in items:
         if left() < 300:
