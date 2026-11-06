@@ -57,7 +57,26 @@ const MUS = (() => {
   function stopAu() { if (AU) { AU.pause(); AU = null; } PLAY = null; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play")); const b = $("#mplay"); if (b) b.textContent = "▶ تلاوة"; }
   function playList(L, i, onEnd) { if (!L[i]) { stopAu(); if (onEnd) onEnd(); return; } const [s, a] = L[i]; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play"));
     const el = document.getElementById("ay" + s + "_" + a) || document.getElementById("ay" + a); if (el) { el.classList.add("play"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    document.querySelectorAll(".qg.play").forEach(x => x.classList.remove("play")); document.querySelectorAll(`.qg[data-k="${s}:${a}"]`).forEach(x => x.classList.add("play"));
     AU = new Audio(aurl(s, a)); PLAY = { L, i, onEnd }; AU.onended = () => PLAY && playList(L, i + 1, onEnd); AU.onerror = () => { toast("تعذّر تشغيل التلاوة"); stopAu(); }; AU.play().catch(() => stopAu()); }
+  // عرض «خط المصحف»: صفحات مصحف المدينة ١٤٤١هـ بخطوط QCF4 (مجمع الملك فهد، تُحمَّل من jsDelivr) وبيانات أسطرها (data/quran/qcf)
+  const QCFV = "https://cdn.jsdelivr.net/npm/quran-qcf4@1.1.0/fonts-woff2/", FONTS = {};
+  const qfont = f => FONTS[f] || (FONTS[f] = new FontFace(f, `url(${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2)`).load().then(x => { document.fonts.add(x); return true; }).catch(() => false));
+  const qmode = () => { try { return localStorage.getItem("mus_mode") || "qcf"; } catch (e) { return "qcf"; } };
+  function fit() { const box = $(".qpage"); if (!box) return; const W = box.clientWidth - 4, lines = [...box.querySelectorAll(".ql:not(.qc)")]; if (!lines.length) return;
+    box.style.fontSize = "20px"; let mx = 0; lines.forEach(l => { let w = 0; for (const c of l.children) w += c.getBoundingClientRect().width; mx = Math.max(mx, w); });
+    const fs = Math.min(46, Math.max(11, 20 * W * 0.97 / Math.max(1, mx))); box.style.fontSize = fs.toFixed(2) + "px"; }
+  async function qcfPage(n) {
+    const D = await fetch("data/quran/qcf/" + n + ".json").then(r => r.ok ? r.json() : null).catch(() => null); if (!D) return null;
+    const fonts = new Set([D.f]); D.l.forEach(l => l.forEach(w => { const x = w.find(v => typeof v === "string" && v.startsWith("@")); if (x) fonts.add(x.slice(1)); }));
+    const ok = await Promise.all([...fonts].map(qfont)); if (ok.some(x => !x)) return null;
+    const centered = n <= 2, html = D.l.map(l => { const t0 = l[0] && l[0][0], cls = t0 === "h" ? " qh" : t0 === "b" ? " qb" : ""; const c = centered || cls ? " qc" : "";
+      return `<div class="ql${cls}${c}">${l.map(w => { const f = (w.find(v => typeof v === "string" && v.startsWith("@")) || "@" + D.f).slice(1), k = w[2] || "", [s_, a_] = k.split(":");
+        if (w[0] === "w") return `<span class="qg" style="font-family:'${f}'" data-act="musw" data-s="${s_}" data-a="${a_}" data-k="${k}" data-t="${esc(w[3] || "")}">${w[1]}</span>`;
+        if (w[0] === "e") return `<span class="qg qe" style="font-family:'${f}'" data-act="musay" data-s="${s_}" data-a="${a_}" data-k="${k}" title="الآية ${a_}">${w[1]}</span>`;
+        return `<span class="qg" style="font-family:'${f}'">${w[1]}</span>`; }).join("")}</div>`; }).join("");
+    return `<div class="qpage" dir="rtl">${html}</div>`;
+  }
   async function mpage(n) {
     await load(); if (!PG) return sura(1, {});
     n = Math.max(1, Math.min(604, +n || 1)); const L = PG[n] || [], m0 = META[L[0][0]][L[0][1] - 1], suras = [...new Set(L.map(x => x[0]))];
@@ -65,11 +84,13 @@ const MUS = (() => {
     let body = "";
     L.forEach(([s, a]) => { if (a === 1) body += `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${s !== 1 && s !== 9 ? `<p class="mbasm">${BASMT}</p>` : ""}`;
       const sj = META[s][a - 1][3]; body += `<span class="may" id="ay${s}_${a}">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}" aria-label="الآية ${a}">${AR(a)}</button>${sj ? '<span class="msj" title="موضع سجدة">۩</span>' : ""}</span> `; });
-    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
+    const Q4 = qmode() === "qcf" ? await qcfPage(n) : null;
+    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
     <div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
-    <div class="qtext">${body}</div><div class="mpf">${AR(n)}</div></div>
+    ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf">${AR(n)}</div></div>
     <div class="mnav mnb">${n < 604 ? `<a class="btn" href="#/mushaf/p/${n + 1}" rel="next">‹ الصفحة ${AR(n + 1)}</a>` : "<span></span>"}${n > 1 ? `<a class="btn" href="#/mushaf/p/${n - 1}" rel="prev">الصفحة ${AR(n - 1)} ›</a>` : ""}</div>`);
     $("#mpj").addEventListener("submit", e => { e.preventDefault(); location.hash = "#/mushaf/p/" + e.target.p.value; });
+    if (Q4) { fit(); window.onresize = fit; }
     $("#mrec").onchange = e => { try { localStorage.setItem("mus_rec", e.target.value); } catch (x) { } };
     if (window.__musAuto === n) { window.__musAuto = 0; setTimeout(() => $("#mplay") && $("#mplay").click(), 400); }
     let x0 = null; const pg = $(".mpage"); pg.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
@@ -145,7 +166,8 @@ const MUS = (() => {
     if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n; el.textContent = "⏸ إيقاف"; playList(PG[n] || [], 0, () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } }); }
     else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
     else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
-    else if (a === "musw") wsheet(el.textContent, +el.dataset.s, +el.dataset.a);
+    else if (a === "musw") wsheet(el.dataset.t || el.textContent, +el.dataset.s, +el.dataset.a);
+    else if (a === "musmode") { try { localStorage.setItem("mus_mode", qmode() === "qcf" ? "text" : "qcf"); } catch (x) { } const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }
     else if (a === "muswlex") { closeSheet(); setTimeout(() => typeof wordSheet === "function" && wordSheet(el.dataset.w, ayah(+el.dataset.s, +el.dataset.a), "lug"), 150); }
     else if (a === "musadd") { const l = SEL(), k = el.dataset.k, i = l.indexOf(k); if (i >= 0) l.splice(i, 1); else l.push(k); setSel(l); const sp = $("#ay" + k.split(":")[1]); if (sp) sp.classList.toggle("sel", i < 0); el.textContent = i >= 0 ? "＋ أضفها إلى التصدير" : "✓ في التصدير (إزالة)"; }

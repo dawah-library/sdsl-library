@@ -1089,3 +1089,12 @@ body{background:radial-gradient(1200px 600px at 100% -10%,var(--g1),transparent 
 .tfbox{white-space:pre-line;line-height:1.9;font-family:Amiri,serif;font-size:1.05rem;color:var(--ink);margin:6px 0 10px}#mustk .chip.on{background:var(--ac);color:var(--on)}
 del{color:#b3261e}ins{color:#2e7d32;text-decoration:none;font-weight:600}
 .may.play{background:rgba(15,92,77,.16);border-radius:6px}#mrec{max-width:11em}
+
+/* خط المصحف (QCF4) */
+.qpage{line-height:1.95;color:#1a1408;padding:4px 2px;font-size:20px;user-select:text}
+.ql{display:flex;justify-content:space-between;white-space:nowrap;direction:rtl}.ql.qc{justify-content:center;gap:.18em}
+.ql.qh{margin:.15em 0;font-size:1.05em}.ql.qb{font-size:.95em}
+.qg{cursor:pointer;border-radius:4px;transition:background .15s}.qg:hover{background:rgba(184,138,46,.16)}.qg.play{background:rgba(15,92,77,.18)}
+.qe{color:#6b5320}
+:root[data-theme=dark] .qpage,:root[data-skin=night] .qpage{color:#efe6d2}
+.ql.qh{border:1.5px solid rgba(184,138,46,.65);border-radius:10px;background:linear-gradient(90deg,transparent,rgba(184,138,46,.12),transparent);margin:.3em 4%;color:var(--ac)}
