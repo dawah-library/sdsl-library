@@ -3,7 +3,11 @@
 const QA = {
   idx: null, files: new Map(), rev: null,
   raw: p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/qa/" + p,
-  async index() { if (!this.idx) { try { this.idx = (await (await fetch("data/qa/_index.json")).json()).items || []; } catch (e) { this.idx = []; } } await this.review(); return this.idx.filter(r => !(this.rev[r[0]] && this.rev[r[0]].s === "hide")); },
+  // الفهرس (≈٢ م.ب) يُحفظ على الجهاز (IndexedDB) فيُعرض فورًا، ويُجدَّد في الخلفية كل ٦ ساعات
+  async index() { if (!this.idx) { const net = () => fetch("data/qa/_index.json").then(r => r.ok ? r.json() : null).then(j => { if (j && j.items) { DB.set("qa_idx", { at: Date.now(), items: j.items }); return j.items; } return null; }).catch(() => null);
+      const c = await DB.get("qa_idx").catch(() => null);
+      if (c && c.items && c.items.length) { this.idx = c.items; if (Date.now() - (c.at || 0) > 6 * 36e5) net().then(l => { if (l) this.idx = l; }); }
+      else this.idx = (await net()) || []; } await this.review(); return this.idx.filter(r => !(this.rev[r[0]] && this.rev[r[0]].s === "hide")); },
   async review() { if (this.rev) return this.rev; try { const r = await fetch(this.raw("_review.json") + "?t=" + Math.floor(Date.now() / 300e3)); this.rev = r.ok ? await r.json() : {}; } catch (e) { this.rev = {}; } return this.rev; },
   async item(bid, id) {
     if (!this.files.has(bid)) this.files.set(bid, fetch("data/qa/" + encodeURIComponent(bid) + ".json").then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })));
@@ -25,11 +29,12 @@ async function vQA(q, bid) {
   let L = await QA.index();
   if (bid) L = L.filter(r => r[2] === bid || r[2].startsWith(bid + "-v"));
   if (f === "flag") L = L.filter(r => (QA.rev[r[0]] || {}).s === "flag"); else if (f) L = L.filter(r => qcol(r[2]) === f);
-  if (s) { const ws = norm(s).split(/\s+/).filter(Boolean); L = L.filter(r => { const n = norm(r[1]); return ws.every(w => n.includes(w)); }); }
+  if (s) { const ws = norm(s).split(/\s+/).filter(Boolean); QA.nz = QA.nz || new Map(); L = L.filter(r => { let n = QA.nz.get(r[0]); if (n === undefined) { n = norm(r[1]); QA.nz.set(r[0], n); } return ws.every(w => n.includes(w)); }); }
   // كتب الدعوة ومقالاتها أولًا، ثم المُراجَع؛ وبلا بحث يتجدد الترتيب يوميًا فتظهر أسئلة جديدة كل يوم
   const day = (typeof today === "function" ? today() : new Date().toISOString().slice(0, 10)), rot = id => { let h = 2166136261; for (const c of day + id) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
   const rank = r => (qcol(r[2]) === "dawah" ? 0 : qcol(r[2]) === "fatwa" ? 1 : 2);
-  L.sort((a, b) => rank(a) - rank(b) || (s ? (b[5] || 0) - (a[5] || 0) : rot(a[0]) - rot(b[0])));
+  const K = new Map(L.map(r => [r[0], rank(r) * 4294967296 + (s ? -(r[5] || 0) : rot(r[0]))])); // مفاتيح الترتيب تُحسب مرة واحدة
+  L.sort((a, b) => K.get(a[0]) - K.get(b[0]));
   window.__qaL = L; qaPage(0);
 }
 function qaRow(r) {

@@ -70,7 +70,9 @@ const seeHidden=()=>{try{return(typeof Cloud!=="undefined"&&Cloud.staff())||!!(t
 function merge(){const del=new Set(LOCAL.deleted||[]);
  lib={authors:byId(CAT.authors,LOCAL.catalog.authors).filter(a=>!a.mergedInto),topics:byId(CAT.topics,LOCAL.catalog.topics),
   books:byId(CAT.books.concat(ARTS_IDX),LOCAL.catalog.books).filter(b=>!del.has(b.id)&&(!b.hidden||seeHidden())).map(m=>{const b=Object.assign({},m);const sh=LOCAL.shards[b.id]||SH.get(b.id);if(sh)attach(b,sh);return b})}}
-const A=id=>lib.authors.find(a=>a.id===id)||((m=>m&&lib.authors.find(a=>a.id===m))((CAT.authors.find(a=>a.id===id)||{}).mergedInto))||{name:"—"},T=id=>lib.topics.find(t=>t.id===id)||{name:"—"},B=id=>lib.books.find(b=>b.id===id);
+const A=id=>lib.authors.find(a=>a.id===id)||((m=>m&&lib.authors.find(a=>a.id===m))((CAT.authors.find(a=>a.id===id)||{}).mergedInto))||{name:"—"},T=id=>lib.topics.find(t=>t.id===id)||{name:"—"},B=id=>{const L=lib.books;if(BIX.a!==L||BIX.n!==L.length){BIX.m=new Map(L.map(b=>[b.id,b]));BIX.a=L;BIX.n=L.length}const r=BIX.m.get(id);if(r)return r;const f=L.find(b=>b.id===id);if(f)BIX.a=null;return f};
+// فهرس البحث عن الكتاب بمعرّفه: كان بحثًا خطيًا في آلاف السجلات عند كل استدعاء (يثقل سؤال وجواب وغيره)
+var BIX={a:null,n:0,m:null};
 const bc=b=>b.col||"dawah",isArt=b=>b.type==="article";
 // المادة في موضوعها الأصلي وفي موضوعاتها الإضافية (tps) دون نسخ مكررة (ب3-17، ب3-18)
 const inTopic=(b,t)=>b.topicId===t||!!(b.tps&&b.tps.includes(t));
