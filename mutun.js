@@ -15,25 +15,45 @@ const MTN = (() => {
 
   /* ---------- تقسيم المتن إلى وحدات (بيت أو جملة) ثم أوراد ---------- */
   const SEGC = new Map();
+  // ما ليس من المتن: بيانات الطبعة والنشر، والمقدمات والتقديم ومقدمة المحقق، وصفحات الفهرس، والفهارس في آخر الكتاب
+  const PUBR = /حقوق الطبع|جميع الحقوق|الطبعة (الأولى|الثانية|الثالثة|الرابعة|[\d٠-٩])|رقم الإيداع|الترقيم الدولي|ISBN|دار [^\s]+ للنشر|للنشر والتوزيع|هاتف|فاكس|البريد الإلكتروني|www\.|@/;
+  const INTRO = /^(مقدمة|المقدمة|تقديم|تقدمة|مقدمة (المحقق|التحقيق|المعتني|الناشر|الطبعة|الشارح)|كلمة (الناشر|المحقق)|ترجمة (المؤلف|الناظم|المصنف)|منهج(ي)? (التحقيق|العمل)|وصف النسخ|بين يدي|توطئة|تمهيد)\b/;
+  const ENDX = /^(فهرس|الفهرس|فهرس الموضوعات|المحتويات|فهرس المحتويات|المراجع|المصادر|ثبت المراجع|الخاتمة)\b/;
+  const TOCL_ = /[.…·_\-ـ]{3,}\s*\(?[\d٠-٩]{1,4}\)?\s*$/;
+  function fmPage(pg) {
+    const ls = String(pg || "").split("\n").map(x => x.trim()).filter(Boolean); if (!ls.length) return true;
+    const pub = ls.filter(l => PUBR.test(l)).length, toc = ls.filter(l => TOCL_.test(l)).length;
+    return pub >= 2 || (ls.length > 3 && toc / ls.length > 0.4) || strip(ls.join(" ")).replace(/[^ء-ي]/g, "").length < 15;
+  }
   async function segs(it) {
     if (SEGC.has(it.id)) return SEGC.get(it.id);
     const b = await loadBook(it.b), toc = (b.toc || []).filter(t => (t.l || 1) === 1), heads = new Set(toc.map(t => t.p));
-    const units = []; let head = "";
-    b.pages.forEach((pg, i) => String(pg || "").split(/^\s*_{4,}\s*$/m)[0].split("\n").forEach(l => {
-      l = l.trim(); if (!l || /^\[(رسم|صورة|جدول)/.test(l)) return;
-      if (/^#{1,3}\s/.test(l)) { head = l.replace(/^#+\s*/, ""); units.push({ h: head, p: i + 1 }); return; }
-      if (it.kind === "nazm" && /\.\.\.|…|\t|\s{3,}/.test(l)) units.push({ t: l.replace(/\s*(\.\.\.|…|\t|\s{3,})\s*/, " ... "), p: i + 1, bayt: 1 });
-      else if (it.kind === "nazm") units.push({ t: l, p: i + 1 });
-      else l.split(/(?<=[.؟!:])\s+/).forEach(s => { s = s.trim(); if (s.length > 2) units.push({ t: s, p: i + 1 }); });
-    }));
+    const from = +it.from || 1, to = +it.to || b.pages.length; // نطاق المتن إن حدده المشرف
+    const units = []; let head = "", skip = false;
+    b.pages.forEach((pg, i) => { if (i + 1 < from || i + 1 > to || (!it.from && fmPage(pg))) return;
+      String(pg || "").split(/^\s*_{4,}\s*$/m)[0].split("\n").forEach(l => {
+      l = l.trim(); if (!l || /^\[(رسم|صورة|جدول)/.test(l) || TOCL_.test(l)) return;
+      if (/^#{1,3}\s/.test(l)) { head = l.replace(/^#+\s*/, ""); const hn = strip(head).trim();
+        const isT = norm(hn).replace(/[^ء-ي]/g, "") && norm(b.title || "").replace(/[^ء-ي]/g, "").includes(norm(hn).replace(/[^ء-ي]/g, "").slice(0, 12));
+        if (!it.from && (INTRO.test(hn) || ENDX.test(hn))) { skip = i + 1; return; }
+        if (skip && (skip === i + 1 || isT)) return; // عنوان الكتاب أو عنوان في صفحة المقدمة نفسها لا يُنهي المقدمة
+        skip = false; units.push({ h: head, p: i + 1 }); return; }
+      if (skip) return;
+      if (it.kind === "nazm" && /\.\.\.|…|\t|\s{3,}/.test(l)) units.push({ t: l.replace(/\s*(\.\.\.|…|\t|\s{3,})\s*/, " ... "), p: i + 1, bayt: 1, pe: 1 });
+      else if (it.kind === "nazm") units.push({ t: l, p: i + 1, pe: 1 });
+      else { const ss = l.split(/(?<=[.؟!:])\s+/).map(x => x.trim()).filter(x => x.length > 2); ss.forEach((t, k) => units.push({ t, p: i + 1, pe: k === ss.length - 1 && /[.؟!]$/.test(t) ? 1 : 0 })); }
+    }); });
+    // التقطيع عند نهاية فقرة (أو بيت) متى بلغ الورد قدره، ولا يُقطع وسط الفقرة إلا إذا طالت كثيرًا؛ والذيل القصير يُضم إلى ما قبله
     const per = it.kind === "nazm" ? (+it.per || 5) : (+it.per || 60), out = []; let cur = null, w = 0, h = "";
+    const size = u => it.kind === "nazm" ? 1 : u.t.split(/\s+/).length;
     units.forEach(u => {
       if (u.h) { h = u.h; if (cur && cur.u.length) { out.push(cur); cur = null; w = 0; } return; }
       if (!cur) cur = { h, u: [], p: u.p };
-      cur.u.push(u); w += it.kind === "nazm" ? 1 : u.t.split(/\s+/).length;
-      if (w >= per) { out.push(cur); cur = null; w = 0; }
+      cur.u.push(u); w += size(u);
+      if ((w >= per && (u.pe || it.kind === "nazm")) || (it.kind !== "nazm" && w >= per * 1.8 && /[.؟!]$/.test(u.t))) { out.push(cur); cur = null; w = 0; }
     });
-    if (cur && cur.u.length) out.push(cur);
+    if (cur && cur.u.length) { const pv = out[out.length - 1], tw = cur.u.reduce((x, u) => x + size(u), 0);
+      if (pv && pv.h === cur.h && tw < per * 0.35) pv.u.push(...cur.u); else out.push(cur); }
     void heads; SEGC.set(it.id, out); return out;
   }
   const segText = s => s.u.map(u => u.t).join(it_kind(s) ? "\n" : " ");
@@ -174,6 +194,7 @@ const MTN = (() => {
       <label>المتن من كتاب في المكتبة</label><input name="b" list="mbooks" placeholder="اكتب اسم الكتاب واختره" value="${pre.b && B(pre.b) ? esc(B(pre.b).title) : ""}"><datalist id="mbooks">${BOOKS().filter(x => !x.hidden && !isArt(x)).slice(0, 5000).map(x => `<option value="${esc(x.title)}">`).join("")}</datalist>
       <details${pre.b ? "" : " open"}><summary>أو الصق نص المتن (يُنشأ كتابًا في المكتبة العامة)</summary><label>المؤلف</label><input name="au" value="${esc(pre.au || "")}"><label>النص (للمنظوم: كل بيت في سطر، والشطران بينهما « ... »؛ والسطر الذي يبدأ بـ «# » عنوان باب)</label><textarea name="text" style="min-height:200px" dir="rtl"></textarea><label>المصدر أو الطبعة</label><input name="src"></details>
       <label>حجم الورد (أبيات للمنظوم، أو كلمات للمنثور؛ اختياري)</label><input name="per" type="number" min="1" value="${pre.per || ""}">
+      <label>نطاق المتن في الكتاب (اختياري): من صفحة — إلى صفحة. يُستبعد آليًا ما سواه: المقدمات وبيانات الطبعة والفهارس</label><div class="row"><input name="from" type="number" min="1" value="${pre.from || ""}" placeholder="من"><input name="to" type="number" min="1" value="${pre.to || ""}" placeholder="إلى"></div>
       <div class="savebar"><button class="btn p">حفظ</button> <span id="maddst" class="mut"></span></div></form>
       <h3>المتون في السلّم</h3>${d.items.map(x => `<div class="bk"><b>${esc(x.t)}</b><span>${esc((d.sci.find(s => s[0] === x.sci) || [])[1] || "")} • المرحلة ${toAr(x.lv)} • ${toAr(x.ord || 1)}${x.b && B(x.b) ? "" : " • غير متاح"}</span> <a class="btn s" href="#/hifz?t=admin&add=${esc(x.id)}">تعديل</a></div>`).join("")}`;
   }
@@ -187,7 +208,7 @@ const MTN = (() => {
         const pages = splitPages(text, "auto", 1800), toc = []; pages.forEach((pg, i) => pg.split("\n").forEach(l => { if (/^#\s/.test(l)) toc.push({ t: l.replace(/^#\s*/, ""), p: i + 1 }); }));
         bid = "mt" + Date.now().toString(36); await ghSaveBook({ id: bid, title: t, authorId: aid || "a8", topicId: (lib.topics.find(z => z.for !== "articles") || {}).id, col: "turath", type: "book", tags: ["matn"], source: String(fd.get("src") || "").trim() }, pages, toc); }
       const id = String(fd.get("id") || "").trim() || bid || "m" + Date.now().toString(36);
-      const it = { id, t, sci: fd.get("sci"), lv: +fd.get("lv"), ord: +fd.get("ord") || 1, kind: fd.get("kind") }; if (bid) it.b = bid; if (+fd.get("per")) it.per = +fd.get("per"); if (fd.get("au")) it.au = String(fd.get("au")).trim();
+      const it = { id, t, sci: fd.get("sci"), lv: +fd.get("lv"), ord: +fd.get("ord") || 1, kind: fd.get("kind") }; if (bid) it.b = bid; if (+fd.get("per")) it.per = +fd.get("per"); if (+fd.get("from")) it.from = +fd.get("from"); if (+fd.get("to")) it.to = +fd.get("to"); if (fd.get("au")) it.au = String(fd.get("au")).trim();
       await GH.editJSON("data/mutun.json", o => { o = o || D; const ex = o.items.find(x => x.id === id); if (ex) Object.assign(ex, it); else o.items.push(it); return o; }, "حفظ المتون: " + t);
       D = null; SEGC.delete(id); st.textContent = "✓ حُفظ، ويظهر في السلّم خلال دقيقة."; setTimeout(() => location.hash = "#/hifz?t=ladder&s=" + it.sci, 900);
     } catch (e) { st.textContent = e.message; }

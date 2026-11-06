@@ -77,7 +77,8 @@
    "sci": "aqeeda",
    "lv": 1,
    "ord": 1,
-   "kind": "nathr"
+   "kind": "nathr",
+   "from": 7
   },
   {
    "id": "qawaidarba",
