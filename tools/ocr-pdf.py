@@ -674,9 +674,35 @@ def make_toc(pages):
     for i, t in enumerate(pages):
         for l in t.split("\n"):
             lv = 2 if l.startswith("## ") else 1 if l.startswith("# ") else 0
-            name = l[lv + 1:].strip()
-            if lv and 1 < len(name) < 120:
-                toc.append({"t": name, "p": i + 1, **({"l": 2} if lv == 2 else {})})
+            name = re.sub(r"\s+", " ", l[lv + 1:].replace("ـ", "")).strip(" :")
+            if not (lv and 1 < len(name) < 120): continue
+            # ترويسة الصفحة المتكررة (اسم الفصل أعلى كل صفحة) ليست عنوانًا جديدًا
+            if any(x["t"] == name and i + 1 - x["p"] <= 40 for x in toc[-12:]): continue
+            toc.append({"t": name, "p": i + 1, **({"l": 2} if lv == 2 else {})})
+    # صفحة خطة الكتاب (عناوين كثيرة في صفحة واحدة) تكرار للفهرس لا مواضع
+    cnt = {}
+    for x in toc: cnt[x["p"]] = cnt.get(x["p"], 0) + 1
+    toc = [x for x in toc if cnt[x["p"]] < 8]
+    # «الباب الأول» ثم «التوحيد وأصول الإيمان» في الصفحة نفسها ← عنوان واحد
+    BARE = re.compile(r"^(?:ال)?(?:باب|فصل|جزء|كتاب|مبحث|قسم)\s*\S*\s*\S*$")
+    out = []
+    for x in toc:
+        if out and out[-1]["p"] == x["p"] and BARE.match(TASH_RX.sub("", out[-1]["t"])) and ":" not in out[-1]["t"] and not BARE.match(TASH_RX.sub("", x["t"])):
+            out[-1]["t"] += ": " + x["t"]; continue
+        out.append(dict(x))
+    return out
+
+
+TASH_RX = re.compile(r"[\u064B-\u0652\u0670]")
+
+
+def fresh_toc(pages, pl):
+    """الفهرس من عناوين النص الحالي (بعد التدقيق)، مقدَّمًا عليه فهرس الطبعة المطبوع إن وُجد."""
+    toc = make_toc(pages)
+    ptoc = toc_from_printed(pages, pl or ["ص %d" % (i + 1) for i in range(len(pages))])
+    if ptoc and len(ptoc) * 3 >= len(toc):  # فهرس الطبعة إذا كان بغنى العناوين؛ وإلا فالعناوين المدققة أوفى
+        first = min(x["p"] for x in ptoc)
+        toc = [x for x in toc if x["p"] < first and x.get("l") != 2] + ptoc
     return toc
 
 
@@ -1043,6 +1069,9 @@ def rereview(bid):
     for key, val in (("unrev", sorted(left)), ("lite", sorted(lite2)), ("unc", unc)):
         if val: sh[key] = val
         else: sh.pop(key, None)
+    if not sh.get("tocManual") and not left:  # بعد اكتمال التدقيق تكون العناوين مصححة فيُعاد بناء الفهرس منها (ما لم يضبطه المشرف يدويًا)
+        nt = fresh_toc(sh.get("pages") or [], sh.get("pl"))
+        if len(nt) >= 3: sh["toc"] = nt
     s_ = json.dumps(sh, ensure_ascii=False, separators=(",", ":")); open(sp, "w", encoding="utf-8").write(s_)
     if b:
         b.update({"unrev": len(left), "lite": len(lite2), "unc": sum(len(v) for v in unc.values()), "size": len(s_.encode())})
