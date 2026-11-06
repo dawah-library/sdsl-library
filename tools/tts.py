@@ -73,7 +73,7 @@ def clean(t):
     t = re.sub(r"-*\s*NO PAGE\s*NO\s*-*", " ", t, flags=re.I)
     t = re.sub(r"\[\[[^\]]*\]\]", " ", t)
     t = re.sub(r"\[(?:مخطوط|رسم[^\]]*|جدول[^\]]*|صورة[^\]]*)\]", " ", t)
-    t = re.sub(r"^(#+|@@|<<)\s*", "", t, flags=re.M)
+    t = re.sub(r"^(?:#+|@@|<<)\s*(.+?)\s*$", lambda m: m.group(1) + ("" if re.search(r"[.؟!:؛]$", m.group(1)) else "."), t, flags=re.M)  # العنوان جملة مستقلة بوقفة
     t = t.replace("**", "").replace("ﷺ", " صلى الله عليه وسلم ").replace("ﷻ", " جل جلاله ")
     for w, r in LEX:  # قاموس النطق من الإدارة (data/audio/_lexicon.json): كلمة كاملة ← نطقها
         t = re.sub(r"(?<![\u0621-\u064A])" + re.escape(w) + r"(?![\u0621-\u064A])", r, t)
@@ -84,7 +84,7 @@ def clean(t):
     lines = [l.strip() for l in t.split("\n")]
     out = []
     for l in lines:  # دمج الأسطر المكسورة في جمل
-        if out and l and out[-1] and not re.search(r"[.؟!:؛»)\]]$", out[-1]):
+        if out and l and out[-1] and not re.search(r"[.؟!:؛»)\]]$", out[-1]) and not re.search(r"\.\.\.|…", out[-1]):  # بيت الشعر لا يُدمج
             out[-1] += " " + l
         else:
             out.append(l)
@@ -115,12 +115,44 @@ def speakable(t):
         s = re.sub(r"\(\s*[\d٠-٩]{1,4}\s*/\s*[\d٠-٩]{1,4}\s*\)", " ", s)  # (٢/ ٣٤)
         s = re.sub(r"\b(رقم|برقم|ح)\s*[:\(]?\s*[\d٠-٩]{1,6}\s*\)?", " ", s)  # البخاري برقم ١٢٣٤
         s = re.sub(r"\[\s*[\d٠-٩]{1,4}\s*\]", " ", s)  # [١٢]
+        s = re.sub(r"\(\s*[\d٠-٩]{1,4}\s*\)", " ", s)  # (١٢)
+        s = re.sub(r"\b(?:ص|صـ|صفحة)\s*[\d٠-٩]{1,4}\b", " ", s)  # ص ١٢
         s = re.sub(r"[*•·■□◆◇●○★☆~|_=※◊❖✽❁]+", " ", s)
         s = re.sub(r"[-–—ـ]{2,}", " ", s)
         s = re.sub(r"\s+", " ", s).strip()
         if len(re.sub(r"[^\u0621-\u064Aa-zA-Z]", "", s)) >= 2:
             out.append(s)
     return "\n".join(out)
+
+
+def _nz(s):
+    s = re.sub(r"[\u064B-\u0652\u0670\u0640]", "", s or "")
+    return re.sub(r"\s+", " ", re.sub(r"[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه")).strip(" .-–—:|")
+
+
+def running_heads(pages, b, cat):
+    """الترويسات والتذييلات المتكررة أعلى الصفحات وأسفلها (اسم الكتاب أو المؤلف أو الباب): سطر قصير يتكرر في ٥٪ من الصفحات فأكثر."""
+    from collections import Counter
+    c = Counter()
+    for pg in pages:
+        ls = [l for l in str(pg or "").split("\n") if l.strip()]
+        for l in set(ls[:2] + ls[-2:]):
+            k = _nz(re.sub(r"[\d٠-٩]+", "", l))
+            if 2 <= len(k) <= 60: c[k] += 1
+    lim = max(4, len(pages) * 0.05)
+    hs = {k for k, n in c.items() if n >= lim}
+    au = next((a.get("name") for a in cat.get("authors", []) if a["id"] == b.get("authorId")), "")
+    for x in (b.get("title"), b.get("setTitle"), au):
+        if x: hs.add(_nz(x))
+    return hs
+
+
+def noheads(t, hs):
+    """يحذف الترويسة المتكررة إن جاءت سطرًا مستقلًا في أول الصفحة أو آخرها."""
+    ls = t.split("\n")
+    while ls and _nz(re.sub(r"[\d٠-٩]+", "", ls[0])) in hs: ls.pop(0)
+    while ls and _nz(re.sub(r"[\d٠-٩]+", "", ls[-1])) in hs: ls.pop()
+    return "\n".join(ls)
 
 
 def h(t):
@@ -208,7 +240,8 @@ def speak_gemini(text, voice, path, style=""):
     import base64, json as _j, urllib.request, tempfile
     keys = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
     if not keys: raise RuntimeError("لا مفتاح Gemini")
-    prompt = (style or "اقرأ النص التالي بالعربية الفصحى قراءة علمية هادئة واضحة، مع مراعاة التشكيل كما هو، دون زيادة أو حذف:") + "\n\n" + text
+    # النص وحده بلا تعليمات: التعليمات المرسلة مع النص كان الصوت يقرؤها في أول كل مقطع
+    prompt = (style + "\n\n" + text) if style else text
     body = _j.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}).encode()
     err = None
     import urllib.error
@@ -237,12 +270,15 @@ def speak_gemini(text, voice, path, style=""):
     return out
 
 
+class QuotaOut(Exception):
+    pass
+
+
 async def speak(text, voice, rate, path):
     if str(voice).startswith("gemini:"):  # محرك Gemini بدل Edge
+        # لا يُكمَل الكتاب بصوت آخر عند نفاد الحصة: يتوقف ويكمل في الجولة التالية بالصوت نفسه
         try: return speak_gemini(text, voice.split(":", 1)[1], path)
-        except Exception as e:  # نفدت حصة كل المفاتيح: يكمل بصوت Edge المجاني فلا يتوقف التحويل
-            log("Gemini TTS غير متاح الآن (%s)، يكمل بصوت %s" % (str(e)[:120], EDGE_FALLBACK))
-            voice, rate = EDGE_FALLBACK, "-5%"
+        except Exception as e: raise QuotaOut(str(e)[:160])
     import edge_tts
     buf, words, sents = bytearray(), [], []
     try:
@@ -310,11 +346,12 @@ async def tts_book(item, lst):
     first, last = int(item.get("from") or 1), int(item.get("to") or len(pages))
     only_p = {int(x) for x in (item.get("pages") or [])}  # صفحات بعينها يعيد تسجيلها المشرف بعد مراجعة السماع
     todo = []
+    heads = running_heads(pages, b, cat)
     for p in range(first, min(last, len(pages)) + 1):
         if only_p and p not in only_p:
             continue
         raw = tashkeel_text(bid, p, pages[p - 1])
-        tx = "" if skip_page(bid, p, len(pages), pages[p - 1]) else speakable(clean(raw))
+        tx = "" if skip_page(bid, p, len(pages), pages[p - 1]) else speakable(noheads(clean(raw), heads))
         cur = man["pages"].get(str(p))
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
@@ -331,6 +368,7 @@ async def tts_book(item, lst):
     log("%s «%s»: %d صفحة للتحويل بصوت %s" % (bid, man["title"], len(todo), voice))
     sem = asyncio.Semaphore(CONC)
     done = []
+    STOP = []
 
     async def one(p, tx):
         async with sem:
@@ -338,17 +376,20 @@ async def tts_book(item, lst):
                 return
             path = os.path.join(WORK, "p%04d.mp3" % p)
             for attempt in range(5):
+                if STOP: return
                 try:
                     sents = await speak(tx, voice, rate, path)
                     done.append((p, tx, path, sents))
                     return
+                except QuotaOut as e:
+                    STOP.append(str(e)); log("  توقف «%s»: حصة الصوت نفدت، ويكمل في الجولة التالية بالصوت نفسه" % man["title"]); return
                 except Exception as e:
                     log("  ص %d محاولة %d: %s" % (p, attempt + 1, str(e)[:120]))
                     await asyncio.sleep(3 * (attempt + 1))
 
     BATCH = 40
     for i in range(0, len(todo), BATCH):
-        if left() < 300:
+        if left() < 300 or STOP:
             break
         done.clear()
         await asyncio.gather(*[one(p, tx) for p, tx in todo[i:i + BATCH]])
