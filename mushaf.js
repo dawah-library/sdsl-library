@@ -47,6 +47,15 @@ const MUS = (() => {
     if (q && q.a) { const el = $("#ay" + q.a); if (el) { el.classList.add("hl"); setTimeout(() => el.scrollIntoView({ block: "center" }), 100); } }
     bar();
   }
+  // التلاوة: مقاطع الآيات من everyayah.com بصوت القارئ المختار، وتظليل الآية المتلوّة، والانتقال إلى الصفحة التالية
+  const RECS = [["Alafasy_128kbps", "مشاري العفاسي"], ["Husary_128kbps", "محمود خليل الحصري"], ["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد"]];
+  const rec = () => { try { return localStorage.getItem("mus_rec") || RECS[0][0]; } catch (e) { return RECS[0][0]; } };
+  const aurl = (s, a) => `https://everyayah.com/data/${rec()}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
+  let AU = null, PLAY = null;
+  function stopAu() { if (AU) { AU.pause(); AU = null; } PLAY = null; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play")); const b = $("#mplay"); if (b) b.textContent = "▶ تلاوة"; }
+  function playList(L, i, onEnd) { if (!L[i]) { stopAu(); if (onEnd) onEnd(); return; } const [s, a] = L[i]; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play"));
+    const el = document.getElementById("ay" + s + "_" + a) || document.getElementById("ay" + a); if (el) { el.classList.add("play"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    AU = new Audio(aurl(s, a)); PLAY = { L, i, onEnd }; AU.onended = () => PLAY && playList(L, i + 1, onEnd); AU.onerror = () => { toast("تعذّر تشغيل التلاوة"); stopAu(); }; AU.play().catch(() => stopAu()); }
   async function mpage(n) {
     await load(); if (!PG) return sura(1, {});
     n = Math.max(1, Math.min(604, +n || 1)); const L = PG[n] || [], m0 = META[L[0][0]][L[0][1] - 1], suras = [...new Set(L.map(x => x[0]))];
@@ -54,11 +63,13 @@ const MUS = (() => {
     let body = "";
     L.forEach(([s, a]) => { if (a === 1) body += `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${s !== 1 && s !== 9 ? `<p class="mbasm">${BASMT}</p>` : ""}`;
       const sj = META[s][a - 1][3]; body += `<span class="may" id="ay${s}_${a}">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}" aria-label="الآية ${a}">${AR(a)}</button>${sj ? '<span class="msj" title="موضع سجدة">۩</span>' : ""}</span> `; });
-    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
+    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
     <div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
     <div class="qtext">${body}</div><div class="mpf">${AR(n)}</div></div>
     <div class="mnav mnb">${n < 604 ? `<a class="btn" href="#/mushaf/p/${n + 1}" rel="next">‹ الصفحة ${AR(n + 1)}</a>` : "<span></span>"}${n > 1 ? `<a class="btn" href="#/mushaf/p/${n - 1}" rel="prev">الصفحة ${AR(n - 1)} ›</a>` : ""}</div>`);
     $("#mpj").addEventListener("submit", e => { e.preventDefault(); location.hash = "#/mushaf/p/" + e.target.p.value; });
+    $("#mrec").onchange = e => { try { localStorage.setItem("mus_rec", e.target.value); } catch (x) { } };
+    if (window.__musAuto === n) { window.__musAuto = 0; setTimeout(() => $("#mplay") && $("#mplay").click(), 400); }
     let x0 = null; const pg = $(".mpage"); pg.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
     pg.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 70) location.hash = "#/mushaf/p/" + Math.max(1, Math.min(604, n + (dx > 0 ? 1 : -1))); x0 = null; }, { passive: true });
     bar();
@@ -78,7 +89,7 @@ const MUS = (() => {
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);
     openSheet(`${nmP(s)}: ${AR(a)}`, `<p class="mqt big">${esc(t)} ﴿${AR(a)}﴾</p>
-    <div class="row"><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
+    <div class="row"><button class="btn s" data-act="musone" data-s="${s}" data-a="${a}">▶ استمع</button><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
     <div class="chips" id="mustk">${TFS.map(([k, n]) => `<button class="chip${k === tfk() ? " on" : ""}" data-act="mustk" data-k="${k}" data-s="${s}" data-a="${a}">${n}</button>`).join("")}</div><div id="musmk" class="mut tfbox">…</div>
     <h4>مواضع تفسيرها في التفاسير</h4><div id="mustf" class="mut">…</div>
     <h4>ما قيل فيها في كتب الدعوة ومقالاتها</h4><div id="musct" class="mut">جارٍ التحميل…</div>
@@ -128,7 +139,9 @@ const MUS = (() => {
     cv.toBlob(bl => dl("آيات.png", bl, "image/png"), "image/png");
   }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
-    if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
+    if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n; el.textContent = "⏸ إيقاف"; playList(PG[n] || [], 0, () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } }); }
+    else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
+    else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
     else if (a === "musw") wsheet(el.textContent, +el.dataset.s, +el.dataset.a);
     else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }
     else if (a === "muswlex") { closeSheet(); setTimeout(() => typeof wordSheet === "function" && wordSheet(el.dataset.w, ayah(+el.dataset.s, +el.dataset.a), "lug"), 150); }
@@ -136,6 +149,6 @@ const MUS = (() => {
     else if (a === "muscopy") { const [s, n] = el.dataset.k.split(":").map(Number); navigator.clipboard && navigator.clipboard.writeText(`﴿${ayah(s, n)}﴾ [${nmP(s)}: ${n}]`).then(() => toast("نُسخت")); }
     else if (a === "mustaf") { const [s, n] = el.dataset.k.split(":").map(Number); closeSheet(); setTimeout(() => tafsirSheet(Q.suras[s - 1].ayat[n - 1]), 150); }
     else if (a === "musexp") exportDlg(); else if (a === "musclr") { if (confirm("مسح الآيات المختارة؟")) { setSel([]); document.querySelectorAll(".may.sel").forEach(x => x.classList.remove("sel")); } } });
-  window.addEventListener("hashchange", () => setTimeout(bar, 50));
+  window.addEventListener("hashchange", () => { setTimeout(bar, 50); if (PLAY && !window.__musAuto) stopAu(); else if (AU && window.__musAuto) { AU.pause(); AU = null; PLAY = null; } });
   return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q) };
 })();
