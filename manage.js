@@ -79,7 +79,7 @@ const MG = (() => {
       <button type="button" class="btn s" data-act="mgedit" data-id="${esc(b.id)}">تعديل</button></label>`).join("") || '<p class="note">لا توجد مواد مطابقة.</p>'}</div>
     <div class="mgbar" id="mgbar"><b id="mgn">٠ محدد</b>
      <button class="btn s" data-act="mgselpage">تحديد الصفحة</button><button class="btn s" data-act="mgselall" data-n="${r.length}">تحديد كل النتائج (${toAr(r.length)})</button><button class="btn s" data-act="mgselnone">إلغاء التحديد</button>
-     <span class="mgops"><button class="btn p s" data-act="mgmove">نقل / تعديل جماعي</button><button class="btn s" data-act="mghide" data-v="1">إخفاء</button><button class="btn s" data-act="mghide" data-v="0">استعادة</button></span></div>
+     <span class="mgops"><button class="btn p s" data-act="mgmove">نقل / تعديل جماعي</button><button class="btn s" data-act="mghide" data-v="1">إخفاء</button><button class="btn s" data-act="mghide" data-v="0">استعادة</button>${(typeof Cloud !== "undefined" && Cloud.role === "admin") || GH.token ? '<button class="btn s danger" data-act="mgpurge">حذف نهائي</button>' : ""}</span></div>
     <div class="row" style="justify-content:center;gap:8px">${F.pg > 1 ? `<a class="btn" href="${u({ pg: F.pg - 1 })}">السابق</a>` : ""}${F.pg < np ? `<a class="btn" href="${u({ pg: F.pg + 1 })}">التالي</a>` : ""}</div>`;
   }
   const count = () => { const n = $("#mgn"); if (n) n.textContent = toAr(sel.size) + " محدد"; };
@@ -124,6 +124,26 @@ const MG = (() => {
     if (!list.length) return toast(v ? "المحدد مخفي أصلًا." : "المحدد ظاهر أصلًا.");
     if (!confirm((v ? "إخفاء " : "استعادة ") + toAr(list.length) + " مادة؟" + (v ? "\nتُحجب عن الزوار وتبقى للمشرفين، ويمكن استعادتها." : ""))) return;
     try { await apply(list, v ? "hide" : "restore", (v ? "إخفاء " : "استعادة ") + list.length + " مادة"); sel.clear(); toast("تم."); route(); } catch (e) { alert(e.message); }
+  }
+
+  // ===== الحذف النهائي (للمدير): كتاب أو مجلد بعينه من عمل متعدد المجلدات =====
+  // يُحذف من الفهرس ويُحذف ملف نصه؛ ويبقى النص قابلًا للاسترجاع من تاريخ المستودع، وتُحفظ بطاقته في data/removed/_log.json
+  async function purge(ids) {
+    const cat = CAT.books, L = ids.map(id => cat.find(b => b.id === id)).filter(Boolean);
+    if (!L.length) return toast("الحذف النهائي للكتب والمجلدات؛ وللمقالات والفتاوى استعمل «إخفاء».");
+    const names = L.map(b => "• " + (b.setTitle || b.title) + (b.set ? " — المجلد " + (b.vol || "?") : "")).join("\n");
+    if (prompt("سيُحذف نهائيًا من المكتبة:\n" + names + "\n\nيبقى قابلًا للاسترجاع من سجل المستودع. للتأكيد اكتب: حذف") !== "حذف") return;
+    const st = []; toast("جارٍ الحذف…");
+    try {
+      for (const b of L) { try { await GH.del("data/books/" + b.id + ".json", "حذف نهائي: " + (b.setTitle || b.title) + (b.set ? " (المجلد " + (b.vol || "?") + ")" : "")); } catch (e) { st.push(b.id + ": " + e.message); } }
+      const gone = new Set(L.map(b => b.id)), sets = new Set(L.filter(b => b.set).map(b => b.set));
+      await GH.editJSON("data/catalog.json", c => { c.books = c.books.filter(b => !gone.has(b.id));
+        sets.forEach(s => { const rest = c.books.filter(b => b.set === s).sort((x, y) => (x.vol || 0) - (y.vol || 0)); rest.forEach(b => b.vols = rest.length); });
+        c.version = Date.now(); return c; }, "حذف نهائي من الفهرس: " + L.length + " مادة", true);
+      await GH.editJSON("data/removed/_log.json", o => { o = o || { items: [] }; L.forEach(b => o.items.push({ at: new Date().toISOString(), meta: b })); return o; }, "سجل المحذوفات");
+      CAT.books = CAT.books.filter(b => !gone.has(b.id)); lib.books = lib.books.filter(b => !gone.has(b.id)); sel.clear();
+      toast(st.length ? "حُذف من الفهرس، وتعذّر حذف بعض الملفات: " + st.join("، ") : "حُذف نهائيًا (" + toAr(L.length) + ")"); route();
+    } catch (e) { alert("تعذّر الحذف: " + (e.message || e)); }
   }
 
   // ===== سجل التعديلات =====
@@ -574,6 +594,7 @@ const MG = (() => {
     else if (a === "mgselnone") { sel.clear(); $$("[data-mgid]").forEach(c => c.checked = false); count(); }
     else if (a === "mgmove") { if (!sel.size) return toast("حدّد مادة أولًا."); editDlg([...sel]); }
     else if (a === "mghide") { if (!sel.size) return toast("حدّد مادة أولًا."); hide([...sel], el.dataset.v === "1"); }
+    else if (a === "mgpurge") { if (!sel.size) return toast("حدّد كتابًا أو مجلدًا أولًا."); purge([...sel]); }
     else if (a === "mghide1") { closeSheet(); hide([el.dataset.id], el.dataset.v === "1"); }
     else if (a === "mgundo") undo(el.dataset.id);
     else if (a === "mgamerge") mergeAuthor(el.dataset.keep, el.dataset.drop, el.dataset.same === "1");

@@ -77,9 +77,10 @@ module.exports = async (req, res) => {
     const path = String((req.query && req.query.p) || new URL(req.url, "http://x").searchParams.get("p") || "");
     if (!ALLOWED.test(path)) return res.status(400).json({ message: "مسار غير مسموح." });
     if (req.method === "PUT" && !delegateOk(who, path)) return res.status(403).json({ message: "صلاحيتك المفوَّضة لا تشمل هذا الملف." });
-    if (!["GET", "PUT"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
+    if (!["GET", "PUT", "DELETE"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
+    if (req.method === "DELETE" && who.role !== "admin") return res.status(403).json({ message: "الحذف النهائي للمدير وحده." });
     let body;
-    if (req.method === "PUT") {
+    if (req.method === "PUT" || req.method === "DELETE") {
       const b = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
       b.message = String(b.message || "تعديل من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
       body = JSON.stringify(b);
@@ -90,7 +91,7 @@ module.exports = async (req, res) => {
       headers: { Authorization: "Bearer " + process.env.GITHUB_WRITE_TOKEN, Accept: accept, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "sdsl-library" }
     });
     const text = await r.text();
-    if (req.method === "PUT" && r.ok) {  // إشعار تليجرام بحفظ الإدارة (عدا أجزاء الملفات)
+    if ((req.method === "PUT" || req.method === "DELETE") && r.ok) {  // إشعار تليجرام بحفظ الإدارة (عدا أجزاء الملفات)
       const msg = String((JSON.parse(body).message || "")).split("\n")[0];
       if (!/\(جزء \d+\)|^رابط كتاب|^إعدادات كتاب/.test(msg)) {
         try { await require("../lib/tg").notify("🛠️ <b>حفظ من الإدارة</b>: " + require("../lib/tg").escH(msg) + "\n" + require("../lib/tg").escH(who.email || ""), { quiet: true }); } catch (e) { }

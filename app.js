@@ -594,6 +594,7 @@ const GH={repo:CFG.repo||"dawah-library/sdsl-library",branch:CFG.branch||"main",
   if(j.encoding==="base64"&&j.content)text=new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g,"")),c=>c.charCodeAt(0)));
   else{const raw=await this.api("/contents/"+encodeURI(path)+"?ref="+this.branch,{headers:{Accept:"application/vnd.github.raw+json"}});text=await raw.text()}
   return{sha:j.sha,text}},
+ async del(path,msg){const sha=await this.sha(path);if(!sha)return false;const r=await this.api("/contents/"+encodeURI(path),{method:"DELETE",body:JSON.stringify({message:msg,sha,branch:this.branch})});if(!r.ok){let m="";try{m=(await r.json()).message}catch(e){}throw new Error(m||"تعذّر الحذف ("+r.status+")")}return true},
  async sha(path){try{const r=await this.api("/contents/"+encodeURI(path)+"?ref="+this.branch);return(await r.json()).sha}catch(e){return undefined}},
  b64(bytes){let s="";const CH=0x8000;for(let i=0;i<bytes.length;i+=CH)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));return btoa(s)},
  async put(path,data,msg,sha){const bytes=data instanceof Uint8Array?data:new TextEncoder().encode(data);if(sha===undefined)sha=await this.sha(path);
