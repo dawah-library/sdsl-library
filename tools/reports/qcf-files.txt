@@ -1,0 +1,1 @@
+48 ملف woff2؛ أمثلة: ['/fonts-woff2/QCF4_Hafs_01_W.woff2', '/fonts-woff2/QCF4_Hafs_02_W.woff2', '/fonts-woff2/QCF4_Hafs_03_W.woff2'] ['/fonts-woff2/QCF4_Hafs_46_W.woff2', '/fonts-woff2/QCF4_Hafs_47_W.woff2', '/fonts-woff2/QCF4_QBSML.woff2']
