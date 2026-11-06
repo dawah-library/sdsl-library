@@ -978,3 +978,12 @@ details.hfold{margin:12px 0;border:1px solid var(--line);border-radius:14px;back
 details.hfold>summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--ac);list-style:none}details.hfold>summary::before{content:"▸ ";}details.hfold[open]>summary::before{content:"▾ "}
 details.hfold>div{padding-bottom:12px}#hlayb{margin:18px auto 0;display:block}
 .hlo{padding-inline-start:20px}.hlo li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-bottom:1px solid var(--line)}.hlo li span{flex:1 1 140px;font-weight:600}
+
+/* زر التحديث السحابي في المنشورات */
+#prefb{position:fixed;z-index:44;inset-inline-end:14px;bottom:calc(150px + env(safe-area-inset-bottom));min-width:52px;height:52px;border-radius:26px;border:0;cursor:pointer;color:#fff;padding:0 12px;display:flex;align-items:center;gap:6px;
+ background:linear-gradient(160deg,#5aa9c9,#1f6f8b);box-shadow:0 8px 20px rgba(31,111,139,.35);animation:gdfloat 5s ease-in-out infinite;font:inherit}
+#prefb[hidden]{display:none}#prefb .pc{font-size:1.5rem;line-height:1}#prefb .pr{font-size:1rem;margin-inline-start:-14px;margin-top:6px;font-weight:700}
+#prefb b{font-size:.8rem;white-space:nowrap}#prefb.has{background:linear-gradient(160deg,#e0b453,#b88a2e)}#prefb.has .pc{animation:pcloud 1.6s ease-in-out infinite}
+#prefb.spin .pr{animation:aispin .7s linear infinite;display:inline-block}@keyframes pcloud{50%{transform:scale(1.15)}}
+article.post.pnew{box-shadow:0 0 0 2px var(--gold)}article.post.pnew::before{content:"جديد";position:absolute;inset-inline-start:12px;top:-9px;background:var(--gold);color:#1b1405;font-size:.7rem;padding:1px 8px;border-radius:8px}article.post{position:relative}
+@media (prefers-reduced-motion:reduce){#prefb,#prefb .pc{animation:none}}

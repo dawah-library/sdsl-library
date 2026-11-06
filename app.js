@@ -1623,7 +1623,7 @@ function toast(t){let el=$("#toast");if(!el){document.body.insertAdjacentHTML("b
 /* المنشورات المختارة في data/posts.json (يضيفها المشرف)، ومعها «جديد المكتبة» من كتب الدعوة ومقالاتها وفتاواها وبياناتها.
    التفاعل (إعجاب، تعليق، حفظ، مشاركة) للأعضاء فقط، ويُحفظ في قاعدة الحسابات (Supabase) إن فُعّلت، وإلا على الجهاز. */
 let POSTS=null;
-async function loadPosts(){if(POSTS)return POSTS;let items=[];try{const r=await fetch("data/posts.json",{cache:"no-cache"});items=r.ok?(await r.json()).items||[]:[]}catch(e){items=window.__POSTS__||[]}
+async function loadPosts(){if(POSTS)return POSTS;let items=[];if(window.__POSTS_FRESH__){items=window.__POSTS_FRESH__;window.__POSTS_FRESH__=null}else try{const r=await fetch("data/posts.json",{cache:"no-cache"});items=r.ok?(await r.json()).items||[]:[]}catch(e){items=window.__POSTS__||[]}
  // فوائد منتقاة من كتب المشايخ بنصها (data/fawaid.json): تامة المعنى، مدققة، مجدولة يومًا بيوم
  try{const r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/data/fawaid.json?t="+Math.floor(Date.now()/600e3));if(r.ok){const F=await r.json(),td=today();(F.items||[]).filter(x=>!x.hide&&(x.date||"")<=td&&B(x.b)).forEach(x=>{const b=B(x.b);items.push({id:"fw-"+x.id,authorId:b.authorId,date:x.date,text:x.text,fw:{b:x.b,p:x.p,t:x.t||"فائدة",id:x.id},src:"من كتاب «"+(b.setTitle||b.title)+"»، "+(PL(b,x.p-1)||"ص "+x.p)})})}}catch(e){}
  const del=new Set(ls.get("posts_hidden",[]));POSTS=items.concat(ls.get("posts_local",[]).map(x=>Object.assign({mine:1},x))).filter(x=>!del.has(x.id));POSTS.sort((x,y)=>(y.date||"").localeCompare(x.date||""));return POSTS}
@@ -2229,3 +2229,18 @@ document.addEventListener("click",e=>{if(e.target.closest("#mega a")||(!e.target
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});})();
 // رابط داخل بطاقة (مثل «أكثر صفحاته صلة» في قضايا الفرقان): ينقل إلى وجهته بدل رابط البطاقة
 document.addEventListener("click",e=>{const x=e.target.closest("[data-href]");if(!x)return;e.preventDefault();e.stopPropagation();location.hash=x.dataset.href},true);
+/* ---------- زر التحديث السحابي في «منشورات» (البند ١٨): يعلّم ما لم يطّلع عليه العضو «جديد»، ويعدّ الجديد المنشور بعد فتح الصفحة،
+   وبالضغط تُجلب المنشورات من جديد وتُعرض من أولها ---------- */
+const PREF={key:"posts_seen",t:null,
+ seen(){try{return new Set(JSON.parse(localStorage.getItem(this.key)||"[]"))}catch(e){return new Set()}},
+ save(s){try{localStorage.setItem(this.key,JSON.stringify([...s].slice(-3000)))}catch(e){}},
+ mark(){const s=this.seen(),first=!s.size,ids=[...document.querySelectorAll("#app article.post[data-id]")].map(a=>a.dataset.id);
+  if(!first)document.querySelectorAll("#app article.post[data-id]").forEach(a=>{if(!s.has(a.dataset.id))a.classList.add("pnew")});
+  ids.forEach(i=>s.add(i));this.save(s);this.btn(0)},
+ btn(n){let b=$("#prefb");if(!b){b=document.createElement("button");b.id="prefb";b.type="button";b.setAttribute("aria-label","تحديث المنشورات");b.innerHTML='<span class="pc" aria-hidden="true">☁</span><span class="pr" aria-hidden="true">↻</span><b></b>';b.onclick=()=>this.refresh();document.body.appendChild(b)}
+  b.querySelector("b").textContent=n?toAr(n)+" جديد":"";b.classList.toggle("has",!!n);b.hidden=parse().p[0]!=="posts"},
+ async poll(){if(parse().p[0]!=="posts")return;try{const r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/data/posts.json?t="+Date.now());if(!r.ok)return;const l=(await r.json()).items||[],s=this.seen();this.btn(l.filter(x=>x.id&&!s.has(x.id)&&!x.demo).length)}catch(e){}},
+ async refresh(){const b=$("#prefb");if(b)b.classList.add("spin");POSTS=null;try{const r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/data/posts.json?t="+Date.now());if(r.ok){const j=await r.json();POSTS=null;window.__POSTS_FRESH__=j.items}}catch(e){}
+  await route();scrollTo({top:0,behavior:"smooth"});setTimeout(()=>{if(b)b.classList.remove("spin")},700)},
+ on(){clearInterval(this.t);if(parse().p[0]!=="posts"){const b=$("#prefb");if(b)b.hidden=true;return}setTimeout(()=>this.mark(),1200);this.t=setInterval(()=>this.poll(),5*60e3)}};
+window.addEventListener("hashchange",()=>PREF.on());window.addEventListener("load",()=>setTimeout(()=>PREF.on(),1500));
