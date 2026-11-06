@@ -27,6 +27,33 @@ const MUS = (() => {
   const NOTE = () => { try { return JSON.parse(localStorage.getItem("mus_notes") || "{}"); } catch (e) { return {}; } }, setNote = (k, v) => { const o = NOTE(); if (v) o[k] = v; else delete o[k]; try { localStorage.setItem("mus_notes", JSON.stringify(o)); } catch (e) { } };
   const AR = n => toAr(n);
 
+  // الفهرس: يتحكم القارئ في نوعه (السور، الأجزاء، الأحزاب، الأرباع) وشكله (بطاقات أو قائمة) وما يظهر فيه، ويُحفظ على جهازه
+  const MADANI = new Set([2, 3, 4, 5, 8, 9, 13, 22, 24, 33, 47, 48, 49, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 76, 98, 99, 110]);  // بحسب مصحف المدينة
+  const IXD = { v: "suras", lay: "grid", ay: 1, pg: 1, ty: 1 };
+  const ixo = () => { try { return Object.assign({}, IXD, JSON.parse(localStorage.getItem("mus_ix") || "{}")); } catch (e) { return Object.assign({}, IXD); } };
+  const ixs = o => { try { localStorage.setItem("mus_ix", JSON.stringify(o)); } catch (e) { } };
+  const words3 = (s, a, n) => String(ayah(s, a)).split(/\s+/).slice(0, n || 4).join(" ");
+  function marks(i) {  // أول آية في كل جزء أو حزب أو ربع: [الرقم، السورة، الآية، الصفحة]
+    const out = [], seen = new Set();
+    if (!META) return out;
+    Object.keys(META).map(Number).sort((a, b) => a - b).forEach(s => META[s].forEach((m, k) => { const x = i === "juz" ? m[1] : i === "hizb" ? Math.ceil(m[2] / 4) : m[2]; if (!seen.has(x)) { seen.add(x); out.push([x, s, k + 1, m[0]]); } }));
+    return out;
+  }
+  function ixHtml() {
+    const o = ixo(), tabs = [["suras", "السور"], ["juz", "الأجزاء"], ["hizb", "الأحزاب"], ["rub", "أرباع الأحزاب"]];
+    const ctl = `<div class="mixc"><div class="chips">${tabs.map(([k, n]) => `<button class="chip${o.v === k ? " on" : ""}" data-act="musix" data-k="v" data-v="${k}">${n}</button>`).join("")}</div>
+      <div class="chips"><button class="chip${o.lay === "grid" ? " on" : ""}" data-act="musix" data-k="lay" data-v="grid">▦ بطاقات</button><button class="chip${o.lay === "list" ? " on" : ""}" data-act="musix" data-k="lay" data-v="list">☰ قائمة</button>
+      ${o.v === "suras" ? `<label class="inl"><input type="checkbox" data-act="musixc" data-k="ay"${o.ay ? " checked" : ""}> عدد الآيات</label><label class="inl"><input type="checkbox" data-act="musixc" data-k="pg"${o.pg ? " checked" : ""}> الصفحة</label><label class="inl"><input type="checkbox" data-act="musixc" data-k="ty"${o.ty ? " checked" : ""}> مكية/مدنية</label>` : ""}</div></div>`;
+    const cls = "msuras" + (o.lay === "list" ? " mlist" : "");
+    if (o.v === "suras") return ctl + `<div class="${cls}">${Q.suras.map(s => { const pg = PG ? pageOf(s.n, 1) : 0, inf = [o.ay ? AR(s.ayat.length) + " آية" : "", o.pg && pg ? "ص " + AR(pg) : "", o.ty ? (MADANI.has(s.n) ? "مدنية" : "مكية") : ""].filter(Boolean).join(" • ");
+      return `<a href="#/mushaf/${s.n}"><b>${AR(s.n)}</b><span>${esc(nm(s.n))}</span>${inf ? `<small>${inf}</small>` : ""}</a>`; }).join("")}</div>`;
+    const L = marks(o.v), nmK = { juz: "الجزء", hizb: "الحزب", rub: "الربع" };
+    if (!L.length) return ctl + '<p class="mut">بيانات الصفحات غير متاحة.</p>';
+    if (o.v === "rub") return ctl + `<div class="${cls} mrub">${L.map(([x, s, a, pg]) => { const q4 = (x - 1) % 4, hz = Math.ceil(x / 4);
+      return `<a href="#/mushaf/p/${pg}"><b>${q4 ? ["", "¼", "½", "¾"][q4] : "حزب " + AR(hz)}</b><span class="mqt">${esc(words3(s, a, 5))}…</span><small>${esc(nm(s))} ${AR(a)} • ص ${AR(pg)}</small></a>`; }).join("")}</div>`;
+    return ctl + `<div class="${cls}">${L.map(([x, s, a, pg]) => `<a href="#/mushaf/p/${pg}"><b>${AR(x)}</b><span>${nmK[o.v]} ${o.v === "juz" ? (JUZN[x - 1] || "") : ""}</span><small>${esc(nm(s))} ${AR(a)} • ص ${AR(pg)}</small><em class="mqt">${esc(words3(s, a))}…</em></a>`).join("")}</div>`;
+  }
+  const JUZN = ["الم", "سيقول", "تلك الرسل", "لن تنالوا", "والمحصنات", "لا يحب الله", "وإذا سمعوا", "ولو أننا", "قال الملأ", "واعلموا", "يعتذرون", "وما من دابة", "وما أبرئ", "ربما", "سبحان", "قال ألم", "اقترب", "قد أفلح", "وقال الذين", "أمن خلق", "اتل ما أوحي", "ومن يقنت", "وما لي", "فمن أظلم", "إليه يرد", "حم", "قال فما خطبكم", "قد سمع", "تبارك", "عم"];
   async function index(q) {
     await load(); const qq = (q.q || "").trim();
     let res = "";
@@ -35,7 +62,7 @@ const MUS = (() => {
     view(`<div class="cmhero"><div><h2>المصحف</h2><p>اقرأ السورة، واضغط رقم أي آية لترى مواضع تفسيرها، وما قاله مشايخ الدعوة فيها في كتبهم ومقالاتهم وفتاواهم، وانقل الآيات بتفسيرها أو تعليقك.</p></div></div>
     <form class="sbox" data-form="noop" id="musq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث عن آية بكلماتها" aria-label="ابحث في الآيات"><button class="btn p">بحث</button></form>
     ${(() => { let l = 0; try { l = +localStorage.getItem("mus_last") || 0; } catch (e) { } return `<div class="row"><a class="btn p" href="#/mushaf/p/${l || 1}">📖 ${l ? "تابع القراءة من الصفحة " + AR(l) : "اقرأ بصفحات المصحف"}</a>${[1, 2, 5, 10, 20, 30].map(j => "").join("")}</div>`; })()}
-    <div id="musres">${res}</div>${qq ? "" : `<div class="msuras">${Q.suras.map(s => `<a href="#/mushaf/${s.n}"><b>${AR(s.n)}</b><span>${esc(nm(s.n))}</span><small>${AR(s.ayat.length)} آية</small></a>`).join("")}</div>`}`);
+    <div id="musres">${res}</div>${qq ? "" : ixHtml()}`);
     $("#musq").addEventListener("submit", e => { e.preventDefault(); const v = e.target.q.value.trim(); location.hash = "#/mushaf" + (v ? "?q=" + encodeURIComponent(v) : ""); });
     bar();
   }
@@ -184,6 +211,7 @@ const MUS = (() => {
     if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n; el.textContent = "⏸ إيقاف"; playList(PG[n] || [], 0, () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } }); }
     else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
     else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
+    else if (a === "musix" || a === "musixc") { const o = ixo(); o[el.dataset.k] = a === "musixc" ? (el.checked ? 1 : 0) : el.dataset.v; ixs(o); const r = $("#musres"); if (r) { const box = document.createElement("div"); box.innerHTML = ixHtml(); [...document.querySelectorAll(".mixc, .msuras")].forEach(x => x.remove()); r.after(...box.children); } }
     else if (a === "musw") wsheet(el.dataset.t || el.textContent, +el.dataset.s, +el.dataset.a);
     else if (a === "musmode") { try { localStorage.setItem("mus_mode", qmode() === "qcf" ? "text" : "qcf"); } catch (x) { } const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }

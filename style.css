@@ -1184,3 +1184,10 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .hquote .btn.s{background:#fff7e3;border:1px solid #c9a96a;color:#6b4318;border-radius:999px}
 :root[data-theme=dark] .hquote{filter:brightness(.82) sepia(.15)}
 @media(max-width:600px){.hquote{padding:22px 16px 12px!important}.hquote .hqt{font-size:1.25rem}}
+
+/* فهرس المصحف القابل للتحكم */
+.mixc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;margin:10px 0}.mixc .chips{margin:0;align-items:center}
+.msuras.mlist{display:flex;flex-direction:column;gap:6px}.msuras.mlist a{display:grid;grid-template-columns:3.2em 1fr auto;align-items:center;text-align:start;padding:8px 12px}
+.msuras.mlist a b{grid-row:span 2}.msuras.mlist a small{justify-self:end}.msuras.mlist a .mqt,.msuras.mlist a em{grid-column:2/-1}
+.msuras a .mqt,.msuras a em{font-family:"Amiri Quran","Amiri",serif;font-style:normal;font-size:.95em;color:var(--mut);display:block;line-height:1.8}
+.msuras.mrub a b{font-size:1.1rem;color:var(--gold,#b88a2e)}
