@@ -1,5 +1,5 @@
 /* تصدير الكتب: الصفحة أو الفصل أو نطاق صفحات أو الكتاب كاملًا، بصيغ PDF (بقوالب ومقاسات) وWord وEPUB وHTML وMarkdown ونص،
-   مع الحواشي والفهرس، والتشكيل بحسب اختيار القارئ. الكتاب كاملًا للأعضاء المسجلين؛ وللزوار حتى ٥٠ صفحة. */
+   مع الحواشي والفهرس، والتشكيل بحسب اختيار القارئ. الكتاب كاملًا للأعضاء المسجلين؛ وللزوار حتى ٥٠ صفحة. والنص القابل للتحرير لأكثر من ٥٠ صفحة للمدير ومن فوّضه (export_text). */
 const EXT = {
   // ملف ZIP بلا ضغط (لصيغة EPUB)
   crcT: null,
@@ -58,6 +58,8 @@ async function expRun(f) {
   else if (sc === "range") { a = Math.max(1, +f.a.value || 1); z = Math.min(n, Math.max(a, +f.z.value || a)); }
   else if (sc === "all") { if (!Auth.user) return needLogin("تصدير الكتاب كاملًا متاح للأعضاء المسجلين مجانًا."); a = 1; z = n; }
   if (!Auth.user && z - a + 1 > 50) z = a + 49;
+  // النص القابل للتحرير (غير PDF) لأكثر من ٥٠ صفحة: للمدير ومن فوّضه (صلاحية export_text)؛ ويبقى PDF للأعضاء
+  if (f.f.value !== "pdf" && z - a + 1 > 50 && !(typeof GRP !== "undefined" && await GRP.can("export_text"))) { const st = $("#expst"); if (st) st.textContent = "تنزيل أكثر من ٥٠ صفحة نصًا قابلًا للتحرير متاح للإدارة ومن تأذن له؛ اختر PDF أو نطاقًا أقصر، أو اطلب الصلاحية من الإدارة."; return; }
   if (f.tash && f.tash.checked !== !!S.tash) { S.tash = f.tash.checked; saveS(); if (typeof refreshPage === "function") refreshPage(); }
   const fm = f.f.value, tpl = EXT_TPL[f.tpl.value] || EXT_TPL.classic, opt = { fn: f.fn.checked, toc: f.toc.checked, pl: f.pl.checked };
   const au = A(b.authorId).name, title = b.setTitle ? b.title : b.title, safe = title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) + (a === 1 && z === n ? "" : ` (${a}-${z})`);
