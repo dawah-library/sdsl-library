@@ -51,10 +51,23 @@ const STD_SECS = [
     "عند تغيّر نص صفحة يُعاد آليًا ما بُني عليها (التشكيل، والصوت، والفوائد، والأسئلة) أو يُعلَّم للمراجعة، ببصمة نص كل صفحة.",
     "يُذكر في بطاقة الكتاب تاريخ آخر مراجعة ومستوى اعتماده."]]
 ];
+// حالة كتب المكتبة الآن بحسب مستويات الاعتماد (من الفهرس نفسه)، فيرتبط الدليل بالتدقيق الدوري
+function stdLevels() {
+  if (typeof lvlOf === "undefined" || typeof CAT === "undefined") return "";
+  const by = { auto: [], chk: [], rev: [], ok: [] };
+  CAT.books.forEach(b => { const k = lvlOf(b); if (by[k] && !b.hidden) by[k].push(b); });
+  const tot = Object.values(by).reduce((a, l) => a + l.length, 0); if (!tot) return "";
+  const pages = l => l.reduce((a, b) => a + (b.unrev || 0) + (b.lite || 0) + (b.unc || 0), 0);
+  return `<h3 class="dwera" id="std-now">حالة الاعتماد الآن</h3><p class="mut">الكتب المحوَّلة من نسخ مصورة أو المراجَعة بشريًا (${toAr(tot)} كتابًا)، تُحدَّث تلقائيًا مع كل جولة تدقيق. الكتب المنقولة من مصادر إلكترونية موثقة لا تحتاج تحويلًا فلا تُعدّ هنا.</p>
+  <div class="lvlgrid">${Object.keys(by).map(k => `<details class="lvlbox lvl-${k}"><summary><b>${toAr(by[k].length)}</b> ${esc(LVL[k][0])}<small>${esc(LVL[k][1])}${k === "auto" && by[k].length ? " — بقي " + toAr(pages(by[k])) + " صفحة في طابور التدقيق" : ""}</small></summary>
+   <ul>${by[k].slice(0, 60).map(b => `<li><a href="#/book/${esc(b.id)}/1">${esc(b.title)}</a>${k === "auto" ? ` <span class="mut">(${toAr((b.unrev || 0) + (b.lite || 0) + (b.unc || 0))} صفحة)</span>` : ""}</li>`).join("") || '<li class="mut">لا شيء</li>'}${by[k].length > 60 ? `<li class="mut">و${toAr(by[k].length - 60)} أخرى</li>` : ""}</ul></details>`).join("")}</div>
+  <p class="mut">ينتقل الكتاب من «نص آلي» إلى «مراجَع آليًا» تلقائيًا حين يُنهي المدقق الآلي كل صفحاته؛ و«مراجَع» و«معتمد» تضبطهما الإدارة من «إدارة المواد ← تعديل ← مستوى الاعتماد»، ويُسجَّل تاريخ الاعتماد في بطاقة الكتاب.</p>`;
+}
 function vStandards() {
   view(`<div class="page dw"><div class="cmhero"><div><h2>دليل معايير التحرير والتوثيق</h2><p>المنهج المعتمد في مكتبة الدعوة السلفية الرقمية لتحويل الكتب ونصوصها وضبطها ومراجعتها وتوثيقها.</p></div></div>
   <nav class="chips dwnav">${STD_SECS.map(([t], i) => `<a class="chip" href="javascript:void 0" data-dw="std-${i}">${esc(t)}</a>`).join("")}</nav>
   ${STD_SECS.map(([t, l], i) => `<h3 class="dwera" id="std-${i}">${toAr(i + 1)}. ${esc(t)}</h3><ol class="stdl">${l.map(x => `<li>${esc(x)}</li>`).join("")}</ol>`).join("")}
+  ${stdLevels()}
   <p class="mut">هذا الدليل يُراجَع ويُحدَّث باعتماد الإدارة. لاقتراح تعديل: <a href="#/contact">تواصل معنا</a>.</p>
   <div class="row"><button class="btn" data-act="stdprint">طباعة الدليل أو حفظه PDF</button></div></div>`);
 }

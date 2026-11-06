@@ -1204,3 +1204,14 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 :root[data-theme=dark] .mpage.mp,:root[data-skin=night] .mpage.mp{background:radial-gradient(ellipse at 50% 40%,#2a2418,#1e1a13)!important;color:#efe6d2;box-shadow:0 0 0 2px #a8853f,0 0 0 6px #1e1a13,0 0 0 8px #2f8a70,0 0 0 11px #1e1a13,0 0 0 12px #a8853f!important}
 :root[data-theme=dark] .mpage.mp .mpf span,:root[data-skin=night] .mpage.mp .mpf span{background:#1e1a13;box-shadow:inset 0 0 0 3px #1e1a13,inset 0 0 0 4px #2f8a70}
 @media(max-width:600px){.mpage.mp{padding:22px 12px 16px!important;margin:14px 10px!important}}
+/* مستويات اعتماد النص (#/standards) */
+.tag.lvl{font-size:.82em;padding:0 6px;border-radius:8px;font-weight:600}
+.lvl-auto.tag{background:#fdf0dc;color:#8a5a00}.lvl-chk.tag{background:#e6f0fb;color:#1d4f8a}.lvl-rev.tag{background:#e3f3ec;color:#0f5c4d}.lvl-ok.tag{background:#0f5c4d;color:#fff}
+.lvlrow{margin:.4em 0}
+.lvlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:8px 0}
+.lvlbox{border:1px solid var(--line,#ddd);border-radius:12px;padding:10px;background:var(--card,#fff)}
+.lvlbox summary{cursor:pointer;list-style:none}.lvlbox summary b{font-size:1.6em;margin-inline-end:6px}
+.lvlbox summary small{display:block;color:var(--mut,#777);font-size:.82em}
+.lvlbox ul{margin:8px 0 0;padding-inline-start:18px;max-height:260px;overflow:auto;font-size:.92em}
+.lvlbox.lvl-auto{border-top:4px solid #d9a23a}.lvlbox.lvl-chk{border-top:4px solid #3a78c2}.lvlbox.lvl-rev{border-top:4px solid #2a9d7c}.lvlbox.lvl-ok{border-top:4px solid #0f5c4d}
+@media (prefers-color-scheme:dark){.lvl-auto.tag{background:#4a3410;color:#f5cf8a}.lvl-chk.tag{background:#1b2f48;color:#a8c8f0}.lvl-rev.tag{background:#123d33;color:#9fe0c8}}
