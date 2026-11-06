@@ -56,7 +56,8 @@ def parse(bid):
             mn = NUMLINE.match(l)
             if mn: pend = int(mn.group(1).translate(AR)); continue
             h = l.lstrip("#").strip()
-            if l.startswith("#") and re.match(r"^(?:[\d٠-٩]+\s*[-–]\s*)?كتاب\b", h): close(); kitab = re.sub(r"^[\d٠-٩]+\s*[-–]\s*", "", h)[:90]; continue
+            h2 = re.sub(r"^[\(\s\d٠-٩\-–.]+|[\)\s]+$", "", h)
+            if l.startswith("#") and re.match(r"^(?:كتاب|أبواب|ابواب)\b", h2) and len(h2) < 100: close(); kitab = re.sub(r"^كتاب\s+(?=أبواب)", "", h2)[:90]; continue
             if re.match(r"^\(?\s*(?:[\d٠-٩]+\s*[-–]?\s*)?باب\b", h) and len(h) < 220: close(); bab = re.sub(r"^\(?\s*[\d٠-٩]+\s*[-–]?\s*|\)\s*$", "", h)[:160]; continue
             m = START.match(l)
             if m:

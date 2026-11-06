@@ -15,6 +15,26 @@ const HDS = (() => {
   const KC = {}, kidx = b => KC[b] || (KC[b] = fetch(RAWK(b + ".json")).then(r => r.json()).catch(() => ({ items: [] })));
   const MC = {}, kmatn = (b, i) => MC[b + i] || (MC[b + i] = fetch(RAWK(b + "/m" + i + ".json")).then(r => r.json()).catch(() => ({})));
   let KL = null; const klist = async () => KL || (KL = await fetch(RAWK("_list.json")).then(r => r.json()).catch(() => ({})));
+  // التقسيم الموضوعي على أبواب كتب الحديث (tools/hadith-topics.py ← data/hadith/topics)
+  const RAWT = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/topics/" + p;
+  const TC = {}, tget = p => TC[p] || (TC[p] = fetch(RAWT(p)).then(r => r.json()).catch(() => null));
+  const TI = ["shield-check", "book-open", "droplet", "landmark", "flower", "hand-coins", "moon", "map", "scale", "heart", "split", "utensils", "shirt", "smile", "leaf", "message-circle", "pill", "eye", "flame", "sun", "flag", "gavel", "ban", "hand", "book-marked", "star", "folder"];
+  async function topics(q) {
+    const idx = await tget("_index.json"); if (!idx) return '<p class="mut">تعذّر تحميل التقسيم الموضوعي.</p>';
+    if (q.g == null || q.g === "") return `<p class="mut">أحاديث كتب السنة ورياض الصالحين وبلوغ المرام مجموعة على الكتب العلمية الكبرى كما رتّبها المصنفون، وتحت كل كتاب أبوابه من كل مصدر.</p><div class="grid hdtop">${idx.map(([t, n, a], i) => n ? `<a class="card" href="#/hadith?t=topic&g=${i}"><b>${esc(t)}</b><span>${toAr(n)} حديثًا • ${toAr(a)} بابًا</span></a>` : "").join("")}</div>`;
+    const D = await tget(q.g + ".json"); if (!D) return "";
+    const srcs = [...new Set(D.a.map(x => x[1]))], src = q.src || "", A_ = D.a.map((x, i) => [x, i]).filter(([x]) => !src || x[1] === src);
+    if (q.ab != null && q.ab !== "") { const x = D.a[+q.ab]; if (!x) return ""; const [b, sb, kt, ids] = x;
+      let rows = "";
+      if (BK[sb]) { await load(); rows = ids.map(id => IX.find(r => r[0] === id)).filter(Boolean).map(r => card(F(r))).join(""); }
+      else { const K = await kidx(sb), set = new Set(ids.map(String)); rows = (K.items || []).filter(y => set.has(String(y[0]))).map(y => `<a class="hdc" href="#/hadith/k/${sb}/${y[0]}"><span class="hds">${y[5] ? "عن " + esc(y[5]) : ""}</span><b>${esc(y[6])}…</b><span class="mut">${esc(K.t || sb)} • ${toAr(y[0])}</span></a>`).join(""); }
+      return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a> › <a href="#/hadith?t=topic&g=${q.g}">${esc(D.t)}</a></p><h3>${esc(b || kt)}</h3><p class="mut">${esc(D.books[sb] || sb)}${kt ? " • " + esc(kt) : ""} • ${toAr(ids.length)} حديثًا</p>${rows}`; }
+    // أبواب الكتاب مجمّعة بكتاب المصنف في كل مصدر
+    const by = {}; A_.forEach(([x, i]) => { const k = (D.books[x[1]] || x[1]) + (x[2] ? " — " + x[2] : ""); (by[k] = by[k] || []).push([x, i]); });
+    return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a></p><h3>${esc(D.t)}</h3>
+      <nav class="chips"><a class="chip${!src ? " on" : ""}" href="#/hadith?t=topic&g=${q.g}">كل المصادر</a>${srcs.map(b => `<a class="chip${b === src ? " on" : ""}" href="#/hadith?t=topic&g=${q.g}&src=${b}">${esc(D.books[b] || b)}</a>`).join("")}</nav>
+      ${Object.entries(by).map(([k, l]) => `<details class="hfold"${Object.keys(by).length <= 3 ? " open" : ""}><summary>${esc(k)} <span class="mut">(${toAr(l.reduce((n, [x]) => n + x[3].length, 0))})</span></summary><div class="hdgl">${l.map(([x, i]) => `<a href="#/hadith?t=topic&g=${q.g}&ab=${i}">${esc(x[0] || x[2] || "أحاديث")} <span class="mut">${toAr(x[3].length)}</span></a>`).join("")}</div></details>`).join("")}`;
+  }
   async function kutub(q) {
     const L = await klist(), b = q.kb, qq = (q.q || "").trim(), pg = Math.max(1, +q.pg || 1), u = o => "#/hadith?" + new URLSearchParams(Object.assign({ t: "kutub" }, b ? { kb: b } : {}, o)).toString();
     let body = "";
@@ -43,19 +63,18 @@ const HDS = (() => {
     const t = q.t || "topic", qq = (q.q || "").trim(), u = o => "#/hadith?" + new URLSearchParams(Object.assign({ t }, o)).toString();
     let L = IX.map(F), body = "", side = "";
     if (qq) { const w = norm(qq).split(/\s+/).filter(Boolean); L = L.filter(x => { const s = norm(x.tarf + " " + x.sah + " " + x.bab); return w.every(k => s.includes(k)); }); }
-    if (t === "topic") { const groups = {}; L.forEach(x => { const g = (BK[x.b] || x.b) + " › " + (x.k && x.k !== x.bab ? x.k + " › " : "") + x.bab; (groups[g] = groups[g] || []).push(x); });
-      const keys = Object.keys(groups); if (q.g) L = groups[q.g] || []; else side = `<div class="hdgl">${keys.slice(0, 400).map(g => `<a href="${u({ g, q: qq })}">${esc(g.split(" › ").slice(-1)[0])} <span class="mut">${toAr(groups[g].length)} • ${esc(g.split(" › ")[0])}</span></a>`).join("")}</div>`; }
+    if (t === "topic" && !qq) { side = await topics(q); L = []; }
     else if (t === "book") { if (q.b) L = L.filter(x => x.b === q.b); else side = `<div class="grid">${Object.entries(BK).map(([b, n]) => `<a class="card" href="${u({ b })}"><b>${esc(n)}</b><span>${toAr(IX.filter(r => r[1] === b).length)} حديثًا</span></a>`).join("")}</div>`; }
     else if (t === "atraf") { const l = q.l || "ا"; side = `<nav class="chips hdlet">${LET.map(c => `<a class="chip${c === l ? " on" : ""}" href="${u({ l })}">${c}</a>`.replace(`l=${encodeURIComponent(l)}`, "l=" + encodeURIComponent(c))).join("")}</nav>`; L = L.filter(x => first(x.tarf) === l).sort((a, b) => a.tarf.localeCompare(b.tarf, "ar")); }
     else if (t === "sahabi") { const c = {}; L.forEach(x => { const k = x.sah.replace(/^(أمير المؤمنين|أبي|أبى)\s+/, m => m).trim(); if (k) (c[k] = c[k] || []).push(x); });
       if (q.s) L = c[q.s] || []; else side = `<div class="hdgl">${Object.entries(c).sort((a, b) => b[1].length - a[1].length).slice(0, 300).map(([k, l]) => `<a href="${u({ s: k })}">${esc(k)} <span class="mut">${toAr(l.length)}</span></a>`).join("")}</div>`; }
     if (t === "kutub") { side = await kutub(q); L = []; }
-    const showList = qq || (t === "topic" && q.g) || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
+    const showList = qq || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
     view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>أحاديث رياض الصالحين والأربعين النووية وبلوغ المرام بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
     <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>
-    ${(q.g || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
+    ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
     ${side}${showList ? `<p class="mut">${toAr(L.length)} حديثًا</p>${L.slice((pg - 1) * PER, pg * PER).map(card).join("")}${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg - 1 }))}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg + 1 }))}">التالية</a>` : ""}</div>` : ""}` : ""}`);
     $("#hdq").addEventListener("submit", e => { e.preventDefault(); location.hash = u({ q: e.target.q.value.trim() }); });
     $("#hddq").addEventListener("submit", e => { e.preventDefault(); dorar(e.target.q.value.trim()); });
