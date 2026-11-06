@@ -1215,3 +1215,10 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .lvlbox ul{margin:8px 0 0;padding-inline-start:18px;max-height:260px;overflow:auto;font-size:.92em}
 .lvlbox.lvl-auto{border-top:4px solid #d9a23a}.lvlbox.lvl-chk{border-top:4px solid #3a78c2}.lvlbox.lvl-rev{border-top:4px solid #2a9d7c}.lvlbox.lvl-ok{border-top:4px solid #0f5c4d}
 @media (prefers-color-scheme:dark){.lvl-auto.tag{background:#4a3410;color:#f5cf8a}.lvl-chk.tag{background:#1b2f48;color:#a8c8f0}.lvl-rev.tag{background:#123d33;color:#9fe0c8}}
+/* العربية — المستوى المتوسط */
+.arbsent{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--sf)}
+.arbst{font-size:1.45rem;line-height:2.1;font-family:Amiri,serif}
+.arbw{font:inherit;font-size:1.25rem;padding:2px 10px;margin:3px;border:1px solid var(--line);border-radius:10px;background:var(--sf);color:var(--ink);cursor:pointer}
+.arbw.right{border-color:#2a9d7c;background:#e3f3ec;color:#0f5c4d}.arbw.wrong{border-color:#c0392b;background:#fbe7e4;color:#9b2c1d}
+.arbans{min-height:2.2em;border-bottom:2px dashed var(--line)}.arbans.done{border-color:#2a9d7c;color:var(--ac)}
+.arbq2{font-family:"Amiri Quran",Amiri,serif;font-size:1.3rem}
