@@ -1,0 +1,19 @@
+name: فحص خط المصحف على الموقع الحي
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - run: |
+          curl -s "https://data.jsdelivr.com/v1/package/npm/quran-qcf4@1.1.0/flat" | python3 -c 'import json,sys;f=[x["name"] for x in json.load(sys.stdin)["files"]];w=[x for x in f if "woff2" in x];print(len(w),"ملف woff2؛ أمثلة:",w[:3],w[-3:])' | tee tools/reports/qcf-files.txt
+      - run: node tools/mushaf-live.js
+      - run: |
+          bash tools/git-save.sh "تقرير فحص خط المصحف على الموقع الحي" tools/reports
