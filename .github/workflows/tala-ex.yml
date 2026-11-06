@@ -16,7 +16,13 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - name: أولوية المفاتيح لتصحيح الكتب المرفوعة
+        id: pri
+        run: |
+          pp=$(python3 -c 'import json;print(int(json.load(open("data/progress.json")).get("pending_pages") or 0))' 2>/dev/null || echo 0)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${pp:-0}" -gt 400 ]; then echo "skip=1" >> $GITHUB_OUTPUT; echo "تأجيل: ${pp} صفحة تنتظر التصحيح"; fi
       - name: اقتراح الإجابات
+        if: ${{ steps.pri.outputs.skip != '1' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}

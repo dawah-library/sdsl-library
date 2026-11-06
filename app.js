@@ -218,7 +218,8 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  <div data-hs="sugg"> <h2>مختارات اليوم</h2><div id="sugg"><p class="mut">جارٍ اختيار مقتطفات…</p></div></div>
  <div data-hs="news"> ${(()=>{const by=k=>(x,y)=>(y[k]||"").localeCompare(x[k]||""),it=b=>`<a href="#/book/${b.id}"><b>${esc(b.setTitle||b.title)}</b><span>${esc(A(b.authorId).name||"")}</span></a>`,
   G=[["أحدث الكتب","#/library?s=new",BOOKS().filter(b=>!b.hidden&&!b.vol).sort(by("added"))],["أحدث المقالات","#/articles",arts],["أحدث الفتاوى","#/fatawa",[...FATWAS()].sort(by("date"))],["أحدث التفريغات","#/tafrighat",lib.books.filter(b=>!b.demo&&!b.hidden&&isTranscript(b)).sort(by("added"))]].filter(g=>g[2].length);
-  return G.length?`<h2>جديد المكتبة</h2><div class="newg">${G.map(([t,h,l])=>`<section class="newc"><h3>${t}</h3>${l.slice(0,4).map(it).join("")}<a class="all" href="${h}">عرض الكل (${toAr(l.length)}) ←</a></section>`).join("")}</div>`:""})()}</div>
+  // لوحة واحدة بتبويبات بدل أربع قوائم: واجهة أخف
+  return G.length?`<h2>جديد المكتبة</h2><div class="newt" role="tablist">${G.map(([t],i)=>`<button class="chip${i?"":" on"}" role="tab" data-act="newtab" data-i="${i}">${t.replace("أحدث ","")}</button>`).join("")}</div>${G.map(([t,h,l],i)=>`<section class="newc newp"${i?" hidden":""} data-i="${i}">${l.slice(0,5).map(it).join("")}<a class="all" href="${h}">عرض الكل (${toAr(l.length)}) ←</a></section>`).join("")}`:""})()}</div>
  <div data-hs="topics"> <h2>أقسام المكتبة</h2><div class="chips">${lib.topics.filter(t=>t.for!=="articles"&&BOOKS().some(b=>inTopic(b,t.id))).map(t=>`<a class="chip" href="#/library?t=${t.id}">${esc(t.name)}</a>`).join("")}</div></div>
 `);
  HLAY.apply();homeExtras();setTimeout(()=>{try{if(!localStorage.getItem("sdsl_tour"))TOUR.start()}catch(e){}},1500);
@@ -2162,6 +2163,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="tour")TOUR.start();
  else if(a==="skin")skinSheet();
  else if(a==="hlay")HLAY.edit();
+ else if(a==="newtab"){const i=el.dataset.i;document.querySelectorAll(".newt .chip").forEach(c=>c.classList.toggle("on",c===el));document.querySelectorAll(".newp").forEach(x=>x.hidden=x.dataset.i!==i)}
  else if(a==="ibs"){const c=cur();if(c)IBS.open(c.b)}
  else if(a==="ibsnav")IBS.step(+el.dataset.d);else if(a==="ibsx")IBS.clear();
  else if(a==="pgnote"){const c=cur();if(c)PGN.open(c.b,c.p)}

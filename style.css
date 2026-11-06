@@ -1125,3 +1125,12 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
  .top{gap:6px 8px;padding:6px 10px}.top .brand img{width:40px;height:40px}}
 .sdf .sdfa{flex:1;display:flex;gap:6px;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--sf);color:var(--ink);border-radius:10px;padding:6px;font-size:.8rem;text-decoration:none}
 .lexr{line-height:1.9;font-size:.95em;color:var(--ink,inherit);margin:.3em 0}
+
+/* واجهة غير مزدحمة */
+.newt{display:flex;gap:6px;flex-wrap:wrap;margin:.2em 0 .6em}.newp{max-width:760px}
+@media(max-width:700px){
+ .cols{display:grid;grid-template-columns:1fr 1fr!important;gap:8px}.cols .col{min-height:0;padding:12px 12px 10px}.cols .col span{display:none}.cols .col b{font-size:1.05rem}.cols .col:first-child{grid-column:1/-1}
+ .hsg{grid-template-columns:repeat(3,1fr)!important;gap:6px}.hsg .hs{padding:8px 4px}.hsg .hs:nth-child(n+7){display:none}
+ .askcta span{display:none}.recg{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory}.recg .recc{min-width:70%;scroll-snap-align:start}
+ .sthome{display:flex;overflow-x:auto;gap:8px}.sthome .sth{min-width:62%}
+}

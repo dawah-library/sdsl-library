@@ -135,12 +135,12 @@ const STUDY = (() => {
     if (!el) return; const st = stats(), g = goal(), pct = Math.min(100, Math.round(st.today * 100 / g));
     let due = 0; try { if (typeof HZ !== "undefined") due = HZ.due().length; } catch (e) { }
     const sp = (typeof SP !== "undefined" && SP.rows || []).find(r => r.plan && r.plan.mode === "timed");
-    const sug = recommend(4);
+    const sug = Object.keys(S.lastBy || {}).length ? recommend(3) : [];  // الاقتراح لمن له قراءة سابقة فقط، لتبقى الواجهة خفيفة للزائر الجديد
     el.innerHTML = `<div class="sthome"><a class="sth" href="#/mine?t=stats"><b>🌱 هدف اليوم</b><div class="bar"><i style="width:${pct}%"></i></div><span>${toAr(st.today)} من ${toAr(g)} دقيقة${st.streak > 1 ? ` • 🔥 ${toAr(st.streak)} أيام` : ""}</span></a>
       ${due ? `<a class="sth" href="#/hifz"><b>🔁 مراجعة اليوم</b><span>${toAr(due)} بطاقة مستحقة</span></a>` : ""}
       ${sp ? `<a class="sth" href="#/paths/${encodeURIComponent(sp.id)}"><b>🎯 مسارك</b><span>${esc(sp.title || "")}</span></a>` : `<a class="sth" href="#/paths"><b>🎯 اختر مسارًا علميًا</b><span>١١ علمًا بثلاثة مستويات</span></a>`}
       <a class="sth" href="#/mine?t=book"><b>📒 دفتري</b><span>فوائدك من الكتب في مكان واحد</span></a></div>
-      ${sug.length ? `<h2>مقترح لك</h2><p class="mut">بحسب ما قرأته وما في رفوفك ودفترك.</p>${recHtml(sug)}` : ""}`;
+      ${sug.length ? `<h2>مقترح لك</h2>${recHtml(sug)}` : ""}`;
   }
 
 
