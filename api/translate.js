@@ -54,8 +54,47 @@ async function dorar(req, res, q) {
   } catch (e) { return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
 }
 
+// الشرح الموجز للحديث على طريقة «الموسوعة الحديثية»: يُلخَّص من نص شرحه المشهور في المكتبة وحده (فتح الباري، المنهاج للنووي، عون المعبود…)
+// الطلب: ?sharh=<كتاب>&n=<رقم الحديث>؛ المتن وموضع الشرح يُقرآن من المستودع (tools/hadith-links.py) لا من الطلب، والنتيجة تُخزَّن للجميع.
+const SNAME = { fathbari: "فتح الباري لابن حجر", fathbarirajab: "فتح الباري لابن رجب", nawawimuslim: "المنهاج شرح صحيح مسلم للنووي", awnmabud: "عون المعبود", tuhfaahwadhi: "تحفة الأحوذي", istidhkar: "الاستذكار لابن عبد البر", subulsalam: "سبل السلام للصنعاني", jamiulum: "جامع العلوم والحكم لابن رجب" };
+async function sharh(req, res, b, n) {
+  res.setHeader("content-type", "application/json; charset=utf-8");
+  b = String(b || ""); n = String(n || "");
+  if (!/^[a-z]{3,12}$/.test(b) || !/^[\w.-]{1,20}$/.test(n)) return res.status(400).json({ message: "طلب غير صحيح" });
+  const { limited } = require("../lib/rate");
+  if (limited(req, "sh", 30, 10 * 60e3)) return res.status(429).json({ message: "طلبات كثيرة، حاول بعد قليل" });
+  const RAWG = "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/data/hadith/";
+  try {
+    const L = await (await fetch(RAWG + "links/" + b + ".json")).json(), e = L[n];
+    if (!e || !e.sh || !e.sh.length) return res.status(404).json({ message: "لم يُحدَّد موضع شرح هذا الحديث بعد" });
+    let matn = "";
+    if (/^(arbain|riyad|bulugh)$/.test(b)) { const D = await (await fetch(RAWG + b + ".json")).json(); matn = (D[n] || {}).m || ""; }
+    else { const K = await (await fetch(RAWG + "k/" + b + ".json")).json(), k = (K.items || []).findIndex(x => String(x[0]) === n); if (k >= 0) { const M = await (await fetch(RAWG + "k/" + b + "/m" + Math.floor(k / 500) + ".json")).json(); matn = M[n] || ""; } }
+    if (!matn) return res.status(404).json({ message: "الحديث غير موجود" });
+    const [vid, p] = e.sh[0], sb = vid.replace(/-v\d+$/, ""), origin = "https://" + (req.headers.host || "dawahlibrary.org");
+    const a = await pageText(vid, p, origin), z = await pageText(vid, p + 1, origin);
+    const src = ((a && a.text) || "") + "\n" + ((z && z.text) || "");
+    if (src.trim().length < 200) return res.status(404).json({ message: "نص الشرح غير متاح" });
+    if (await require("../lib/switch").stopped("translate", res, "الشرح الموجز")) return;
+    if (!process.env.GEMINI_API_KEY) return res.status(503).json({ message: "الخدمة غير متاحة الآن" });
+    const prompt = `أنت باحث في شروح الحديث. هذا حديث نبوي، ثم نص من كتاب «${SNAME[sb] || sb}» في موضع شرحه.
+اكتب «شرحًا موجزًا» للحديث على طريقة «الموسوعة الحديثية» في الدرر السنية: فقرة أو فقرتان تبيّن المعنى الإجمالي، ثم «وفي الحديث:» مع ٣–٥ فوائد قصيرة.
+الشروط: اعتمد على النص المقتبس من الشرح وحده، ولا تضف حكمًا أو قولًا أو حديثًا من خارجه، ولا تذكر خلافًا لم يذكره؛ وبلغة عربية فصيحة سهلة؛ ودون عناوين أخرى أو مقدمات.
+وإن لم يكن النص المقتبس شرحًا لهذا الحديث فاكتب فقط: لا يتناول هذا الموضعُ الحديثَ.
+
+الحديث: «${String(matn).slice(0, 1200)}»
+
+نص الشرح:
+${src.replace(/<[^>]+>/g, "").slice(0, 12000)}`;
+    const text = await gemini(prompt);
+    res.setHeader("cache-control", "public, max-age=86400, s-maxage=31536000, stale-while-revalidate=31536000");
+    return res.status(200).json({ text, src: SNAME[sb] || sb, at: [vid, p] });
+  } catch (err) { res.setHeader("cache-control", "no-store"); return res.status(502).json({ message: "تعذّر إعداد الشرح الآن" }); }
+}
+
 module.exports = async (req, res) => {
   if (req.query && req.query.dorar) return dorar(req, res, req.query.dorar);
+  if (req.query && req.query.sharh) return sharh(req, res, req.query.sharh, req.query.n);
   const u = new URL(req.url, "https://" + (req.headers.host || "dawahlibrary.org"));
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");
