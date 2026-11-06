@@ -89,10 +89,15 @@ const MUS = (() => {
   // عرض «خط المصحف»: صفحات مصحف المدينة ١٤٤١هـ بخطوط QCF4 (مجمع الملك فهد، تُحمَّل من jsDelivr) وبيانات أسطرها (data/quran/qcf)
   const QCFV = "https://cdn.jsdelivr.net/npm/quran-qcf4@1.1.0/fonts-woff2/", FONTS = {};
   // تحميل خط الصفحة مع إعادة المحاولة؛ لا يُحفظ الفشل حتى لا تتعطل الصفحات بعد انقطاع عابر
-  const qload = (f, n) => new FontFace(f, `url(${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2)`).load().then(x => { document.fonts.add(x); return true; })
-    .catch(() => n > 0 ? new Promise(r => setTimeout(r, 700)).then(() => qload(f, n - 1)) : false);
+  const QERR = [];
+  const qurl = f => `${QCFV}${f}${/QBSML/.test(f) ? "" : "_W"}.woff2`;
+  // طريقة ثانية (لبعض متصفحات iPhone): قاعدة @font-face ثم طلب تحميلها
+  const qcss = f => { if (!document.getElementById("qf_" + f)) { const st = document.createElement("style"); st.id = "qf_" + f; st.textContent = `@font-face{font-family:"${f}";src:url("${qurl(f)}") format("woff2");font-display:block}`; document.head.appendChild(st); }
+    return document.fonts.load(`20px "${f}"`, "ﭑ").then(L => L.length > 0 || document.fonts.check(`20px "${f}"`)).catch(e => { QERR.push(f + ": " + (e && e.message || e)); return false; }); };
+  const qload = (f, n) => new FontFace(f, `url(${qurl(f)}) format("woff2")`).load().then(x => { document.fonts.add(x); return true; })
+    .catch(e => { QERR.push(f + ": " + (e && (e.message || e.name) || e)); return n > 0 ? new Promise(r => setTimeout(r, 700)).then(() => qload(f, n - 1)) : qcss(f); });
   const qfont = f => FONTS[f] || (FONTS[f] = qload(f, 2).then(ok => { if (!ok) delete FONTS[f]; return ok; }));
-  const qmode = () => { try { return localStorage.getItem("mus_mode") || "qcf"; } catch (e) { return "qcf"; } };
+  const qmode = () => { try { return localStorage.getItem("mus_mode2") || "qcf"; } catch (e) { return "qcf"; } };  // mus_mode2: يبدأ الجميع بخط المصحف
   function fit() { const box = $(".qpage"); if (!box) return; const W = box.clientWidth - 4, lines = [...box.querySelectorAll(".ql:not(.qc)")]; if (!lines.length) return;
     box.style.fontSize = "20px"; let mx = 0; lines.forEach(l => { let w = 0; for (const c of l.children) w += c.getBoundingClientRect().width; mx = Math.max(mx, w); });
     const fs = Math.min(46, Math.max(11, 20 * W * 0.97 / Math.max(1, mx))); box.style.fontSize = fs.toFixed(2) + "px"; }
@@ -117,7 +122,8 @@ const MUS = (() => {
     const Q4 = qmode() === "qcf" ? await qcfPage(n) : null;
     view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
     <div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
-    ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf">${AR(n)}</div></div>
+    ${!Q4 && qmode() === "qcf" ? `<p class="note mqerr">تعذّر تحميل خط المصحف على هذا الجهاز الآن، فعُرض النص العثماني. <button class="btn s p" data-act="musretry">إعادة المحاولة</button>${QERR.length ? `<small class="mut" dir="ltr">${esc(QERR.slice(-2).join(" | ").slice(0, 160))}</small>` : ""}</p>` : ""}
+    ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf"><span>${AR(n)}</span></div></div>
     <div class="mnav mnb">${n < 604 ? `<a class="btn" href="#/mushaf/p/${n + 1}" rel="next">‹ الصفحة ${AR(n + 1)}</a>` : "<span></span>"}${n > 1 ? `<a class="btn" href="#/mushaf/p/${n - 1}" rel="prev">الصفحة ${AR(n - 1)} ›</a>` : ""}</div>`);
     $("#mpj").addEventListener("submit", e => { e.preventDefault(); location.hash = "#/mushaf/p/" + e.target.p.value; });
     if (Q4) { fit(); window.onresize = fit; }
@@ -212,8 +218,9 @@ const MUS = (() => {
     else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
     else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
     else if (a === "musix" || a === "musixc") { const o = ixo(); o[el.dataset.k] = a === "musixc" ? (el.checked ? 1 : 0) : el.dataset.v; ixs(o); const r = $("#musres"); if (r) { const box = document.createElement("div"); box.innerHTML = ixHtml(); [...document.querySelectorAll(".mixc, .msuras")].forEach(x => x.remove()); r.after(...box.children); } }
+    else if (a === "musretry") { Object.keys(FONTS).forEach(k => delete FONTS[k]); QERR.length = 0; const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "musw") wsheet(el.dataset.t || el.textContent, +el.dataset.s, +el.dataset.a);
-    else if (a === "musmode") { try { localStorage.setItem("mus_mode", qmode() === "qcf" ? "text" : "qcf"); } catch (x) { } const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
+    else if (a === "musmode") { try { localStorage.setItem("mus_mode2", qmode() === "qcf" ? "text" : "qcf"); } catch (x) { } const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }
     else if (a === "muswlex") { closeSheet(); setTimeout(() => typeof wordSheet === "function" && wordSheet(el.dataset.w, ayah(+el.dataset.s, +el.dataset.a), "lug"), 150); }
     else if (a === "musadd") { const l = SEL(), k = el.dataset.k, i = l.indexOf(k); if (i >= 0) l.splice(i, 1); else l.push(k); setSel(l); const sp = $("#ay" + k.split(":")[1]); if (sp) sp.classList.toggle("sel", i < 0); el.textContent = i >= 0 ? "＋ أضفها إلى التصدير" : "✓ في التصدير (إزالة)"; }
