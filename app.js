@@ -1018,7 +1018,7 @@ const Auth={mode:"local",sb:null,user:null,token:null,ready:false,
  async emailLink(email,next){ls.set("authNext",next||"#/ask");const {error}=await this.sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error)throw error},
  async resetPw(email){const {error}=await this.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+"#/account?m=newpw"});if(error)throw error},
  async signOut(){if(this.mode==="cloud")await this.sb.auth.signOut();this.user=null;this.token=null;ls.set("acct",null);paintAuth()}};
-function paintAuth(){Mine.reset();setTimeout(()=>Bell.paint(),0);const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
+function paintAuth(){Mine.reset();sideRe();setTimeout(()=>Bell.paint(),0);const b=$("#acctbtn");if(b)b.textContent=Auth.user?(Auth.user.name||"حسابي").split(" ")[0]:"دخول";
  if(Auth.mode==="local"&&Auth.user){const k=ls.get("acct_known",{});k[Auth.user.email.toLowerCase()]=Auth.user;ls.set("acct_known",k)}}
 const Chats={key:()=>"chats:"+(Auth.user?Auth.user.id:"-"),
  async list(){if(Auth.mode==="cloud"){const {data,error}=await Auth.sb.from("conversations").select("id,title,updated_at").order("updated_at",{ascending:false}).limit(50);if(error)throw error;return data}return ls.get(this.key(),[]).map(c=>({id:c.id,title:c.title,updated_at:c.updated_at}))},
@@ -1649,8 +1649,10 @@ const actPosts=()=>lib.books.filter(b=>!b.demo&&bc(b)==="dawah").map(b=>({id:"ac
 const findPost=id=>(typeof MP!=="undefined"&&MP.get(id))||(POSTS||[]).find(x=>x.id===id)||(/^act-/.test(id)?actPosts().find(x=>x.id===id):null);
 const pName=x=>x.authorId?A(x.authorId).name:x.member?(x.name||"عضو"):(x.name||"مكتبة الدعوة السلفية الرقمية");
 const Cloud={role:"member",author:null,isSheikh(){return this.on()&&!!Auth.user&&this.role==="sheikh"},on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
- async loadRole(){this.role="member";this.perms=[];if(!this.on()||!Auth.user)return;Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id,perms").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null;this.perms=data.perms||[]}}catch(e){}
-  if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}}};
+ async loadRole(){this.role="member";this.perms=[];if(!this.on()||!Auth.user){sideRe();return}Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id,perms").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null;this.perms=data.perms||[]}}catch(e){}
+  if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}sideRe()}};
+// الشريط الجانبي الثابت على الحاسوب يُرسم قبل معرفة صلاحية الحساب؛ يعاد رسمه بعد تحميلها فتظهر مجموعة «الإدارة»
+function sideRe(){try{if(typeof SIDE!=="undefined"&&document.getElementById("side"))SIDE.render()}catch(e){}}
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
  async state(ids){const out={stats:{},likes:new Set(),saves:new Set()};if(!ids.length)return out;
