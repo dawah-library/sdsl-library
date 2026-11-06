@@ -471,3 +471,81 @@ revoke execute on function public.hit_visit() from public;
 revoke execute on function public.public_stats() from public;
 grant execute on function public.hit_visit() to anon, authenticated;
 grant execute on function public.public_stats() to anon, authenticated;
+
+-- ٦ نوفمبر: سجل القراءة (بند ٧) وإحصاءات المحتوى (بند ٦)
+-- سجل العضو: الصفحات التي قرأها فعلًا (بقي عليها ثوانيَ) لكل كتاب، ونسبة الإتمام وتاريخه. يراه العضو والإدارة.
+create table if not exists public.book_reads (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  book_id text not null, total int not null default 0, pages int[] not null default '{}',
+  first_at timestamptz not null default now(), last_at timestamptz not null default now(), last_page int, done_at timestamptz,
+  primary key (user_id, book_id)
+);
+alter table public.book_reads enable row level security;
+drop policy if exists "book_reads own or staff" on public.book_reads;
+create policy "book_reads own or staff" on public.book_reads for select using ((select auth.uid()) = user_id or public.is_staff());
+create index if not exists book_reads_book_idx on public.book_reads(book_id);
+create index if not exists book_reads_last_idx on public.book_reads(last_at desc);
+-- تجميع يومي عام لكل مادة: فتح، وصفحات مقروءة (أرقام فقط، بلا هوية)
+create table if not exists public.content_daily (
+  day date not null default current_date, book_id text not null,
+  opens int not null default 0, pages int not null default 0,
+  primary key (day, book_id)
+);
+alter table public.content_daily enable row level security;
+create or replace function public.track_read(bid text, pg int, total int, is_open boolean default false) returns void
+language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid();
+begin
+  if bid is null or length(bid) > 80 or pg is null or pg < 1 or pg > 100000 then return; end if;
+  insert into public.content_daily(day, book_id, opens, pages) values (current_date, bid, case when is_open then 1 else 0 end, 1)
+  on conflict (day, book_id) do update set opens = public.content_daily.opens + excluded.opens, pages = public.content_daily.pages + 1;
+  if uid is not null then
+    insert into public.book_reads(user_id, book_id, total, pages, last_page) values (uid, bid, greatest(coalesce(total,0),0), array[pg], pg)
+    on conflict (user_id, book_id) do update set
+      total = greatest(excluded.total, public.book_reads.total),
+      pages = case when pg = any(public.book_reads.pages) or cardinality(public.book_reads.pages) >= 20000 then public.book_reads.pages else public.book_reads.pages || pg end,
+      last_at = now(), last_page = pg;
+    update public.book_reads set done_at = now()
+      where user_id = uid and book_id = bid and done_at is null and total > 0 and cardinality(pages) >= ceil(total * 0.9);
+  end if;
+end $$;
+-- أعلى المواد: ترتيب بالمشاهدة أو التصفح أو القراء أو الإتمام، في مدة (أيام؛ ٠ = الكل)
+create or replace function public.top_content(metric text default 'opens', days int default 30, lim int default 20) returns table(book_id text, opens bigint, pages bigint, readers bigint, completes bigint, avg_pct numeric)
+language sql stable security definer set search_path = public as $$
+  with d as (select c.book_id, sum(c.opens) opens, sum(c.pages) pages from public.content_daily c
+             where days <= 0 or c.day > current_date - days group by c.book_id),
+  r as (select b.book_id, count(*) readers, count(b.done_at) filter (where days <= 0 or b.done_at > now() - make_interval(days => days)) completes,
+             round(avg(least(1, cardinality(b.pages)::numeric / nullif(b.total,0))) * 100, 1) avg_pct
+        from public.book_reads b where days <= 0 or b.last_at > now() - make_interval(days => days) group by b.book_id)
+  select coalesce(d.book_id, r.book_id), coalesce(d.opens,0), coalesce(d.pages,0), coalesce(r.readers,0), coalesce(r.completes,0), r.avg_pct
+  from d full join r on r.book_id = d.book_id
+  order by case metric when 'pages' then coalesce(d.pages,0) when 'readers' then coalesce(r.readers,0) when 'completes' then coalesce(r.completes,0) when 'pct' then coalesce(r.avg_pct,0) * 1000 + coalesce(r.readers,0) else coalesce(d.opens,0) end desc
+  limit least(greatest(lim,1),100);
+$$;
+-- مجاميع عامة للمدة
+create or replace function public.content_totals(days int default 30) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'opens', (select coalesce(sum(opens),0) from public.content_daily where days <= 0 or day > current_date - days),
+    'pages', (select coalesce(sum(pages),0) from public.content_daily where days <= 0 or day > current_date - days),
+    'readers', (select count(distinct user_id) from public.book_reads where days <= 0 or last_at > now() - make_interval(days => days)),
+    'completes', (select count(*) from public.book_reads where done_at is not null and (days <= 0 or done_at > now() - make_interval(days => days))),
+    'visits', (select coalesce(sum(n),0) from public.site_visits where days <= 0 or day > current_date - days),
+    'series', (select coalesce(jsonb_agg(jsonb_build_array(day, o, p) order by day),'[]'::jsonb) from (select day, sum(opens) o, sum(pages) p from public.content_daily where day > current_date - least(greatest(days,7),90) group by day) s)
+  );
+$$;
+-- سجل القراءة عند الإدارة: آخر نشاط الأعضاء
+create or replace function public.admin_reads(lim int default 100) returns table(user_id uuid, name text, book_id text, pages int, total int, last_at timestamptz, done_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select b.user_id, p.name, b.book_id, cardinality(b.pages), b.total, b.last_at, b.done_at
+  from public.book_reads b left join public.profiles p on p.id = b.user_id
+  where public.is_staff() order by b.last_at desc limit least(greatest(lim,1),500);
+$$;
+revoke execute on function public.track_read(text,int,int,boolean) from public;
+revoke execute on function public.top_content(text,int,int) from public;
+revoke execute on function public.content_totals(int) from public;
+revoke execute on function public.admin_reads(int) from public;
+grant execute on function public.track_read(text,int,int,boolean) to anon, authenticated;
+grant execute on function public.top_content(text,int,int) to anon, authenticated;
+grant execute on function public.content_totals(int) to anon, authenticated;
+grant execute on function public.admin_reads(int) to authenticated;
