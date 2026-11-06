@@ -1,84 +1,94 @@
 {
- "at": "2026-10-31 07:12",
+ "at": "2026-11-06 07:30",
  "books": {
   "p6c9b38fc": {
    "t": "لماذا انتميت إلى الدعوة السلفية",
    "textPages": 99,
    "pdfPages": 99,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.578,
+   "full": 1,
+   "avg": 0.534,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [],
-   "fixed": []
+   "linear": true,
+   "weak": [
+    33
+   ],
+   "nweak": 1,
+   "fixed": [
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
   },
   "p25133794": {
    "t": "المنة شرح اعتقاد أهل السنة",
    "textPages": 472,
    "pdfPages": 472,
    "offset": 0,
-   "sample": 26,
-   "avg": 0.538,
+   "full": 1,
+   "avg": 0.455,
    "shift": 0,
-   "shiftShare": 0.96,
+   "linear": false,
    "weak": [],
-   "fixed": []
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)"
+   ]
   },
   "pf2a3a079": {
    "t": "فقه الأمر بالمعروف والنهي عن المنكر",
    "textPages": 168,
    "pdfPages": 168,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.568,
+   "full": 1,
+   "avg": 0.474,
    "shift": 0,
-   "shiftShare": 1.0,
+   "linear": false,
    "weak": [],
-   "fixed": []
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)"
+   ]
   },
   "p3b398246": {
    "t": "مواقف حزب النور  وقائع وكواليس",
    "textPages": 136,
    "pdfPages": 136,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.871,
+   "full": 1,
+   "avg": 0.86,
    "shift": 0,
-   "shiftShare": 1.0,
+   "linear": false,
    "weak": [],
-   "fixed": []
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
+   ]
   },
   "p2d64fddf": {
    "t": "الدعوة السلفية والعمل السياسي",
    "textPages": 66,
    "pdfPages": 66,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.717,
+   "full": 1,
+   "avg": 0.662,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [
-    0
-   ],
-   "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
-   ]
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
   },
   "p60fd2fc2": {
    "t": "تزكية النفوس",
    "textPages": 160,
    "pdfPages": 160,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.788,
+   "full": 1,
+   "avg": 0.637,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [
-    0
-   ],
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
    "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (4 صفحة خارج الترتيب البسيط)"
    ]
   },
   "pc64ccc07": {
@@ -86,35 +96,68 @@
    "textPages": 344,
    "pdfPages": 344,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.146,
+   "full": 1,
+   "avg": 0.791,
    "shift": 0,
-   "shiftShare": 0.08,
+   "linear": true,
    "weak": [
-    16,
+    4,
+    7,
+    15,
+    19,
+    27,
     30,
-    44,
-    58,
-    72,
+    48,
+    68,
+    82,
     86,
-    114,
-    128,
-    142,
-    184,
-    198,
-    212,
-    226,
-    240,
-    254,
-    268,
+    92,
+    95,
+    96,
+    97,
+    106,
+    108,
+    109,
+    110,
+    117,
+    120,
+    140,
+    158,
+    169,
+    171,
+    188,
+    193,
+    194,
+    209,
+    231,
+    248,
+    255,
+    261,
+    266,
+    267,
+    277,
     282,
-    296,
-    310,
-    324,
-    338
+    295,
+    298,
+    314,
+    321,
+    322,
+    327,
+    330,
+    331,
+    332,
+    333,
+    334,
+    336,
+    338,
+    339,
+    340,
+    341,
+    343
    ],
+   "nweak": 53,
    "fixed": [
-    "21 صفحة إلى إعادة القراءة على الصورة"
+    "53 صفحة لا تشبه صورتها ← إعادة القراءة"
    ]
   },
   "pd0e9a575": {
@@ -122,11 +165,12 @@
    "textPages": 221,
    "pdfPages": 221,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.626,
+   "full": 1,
+   "avg": 0.592,
    "shift": 0,
-   "shiftShare": 1.0,
+   "linear": true,
    "weak": [],
+   "nweak": 0,
    "fixed": []
   },
   "pa481e050": {
@@ -134,15 +178,14 @@
    "textPages": 311,
    "pdfPages": 311,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.795,
+   "full": 1,
+   "avg": 0.649,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [
-    0
-   ],
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
    "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)"
    ]
   },
   "p26b6ca3f": {
@@ -150,17 +193,17 @@
    "textPages": 112,
    "pdfPages": 112,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.554,
+   "full": 1,
+   "avg": 0.412,
    "shift": 0,
-   "shiftShare": 0.83,
+   "linear": false,
    "weak": [
-    0,
-    38,
-    90
+    94
    ],
+   "nweak": 1,
    "fixed": [
-    "3 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)",
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
    ]
   },
   "p3f8e091b": {
@@ -168,31 +211,29 @@
    "textPages": 160,
    "pdfPages": 160,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.659,
+   "full": 1,
+   "avg": 0.594,
    "shift": 0,
-   "shiftShare": 0.92,
-   "weak": [
-    0
-   ],
-   "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
-   ]
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
   },
   "p92d51e73": {
    "t": "رحلة السيرة",
    "textPages": 746,
    "pdfPages": 746,
    "offset": 0,
-   "sample": 26,
-   "avg": 0.682,
+   "full": 1,
+   "avg": 0.657,
    "shift": 0,
-   "shiftShare": 0.88,
+   "linear": true,
    "weak": [
     745
    ],
+   "nweak": 1,
    "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
    ]
   },
   "p1f54e4fb": {
@@ -200,19 +241,31 @@
    "textPages": 143,
    "pdfPages": 143,
    "offset": 0,
-   "sample": 25,
-   "avg": 0.613,
+   "full": 1,
+   "avg": 0.22,
    "shift": 0,
-   "shiftShare": 0.68,
+   "linear": false,
    "weak": [
-    0,
-    27,
-    52,
+    20,
+    28,
+    43,
+    51,
+    53,
     82,
-    107
+    84,
+    85,
+    87,
+    90,
+    91,
+    107,
+    109,
+    126,
+    131
    ],
+   "nweak": 15,
    "fixed": [
-    "5 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)",
+    "15 صفحة لا تشبه صورتها ← إعادة القراءة"
    ]
   },
   "p4289f23d": {
@@ -220,11 +273,12 @@
    "textPages": 405,
    "pdfPages": 405,
    "offset": 0,
-   "sample": 22,
-   "avg": 0.765,
+   "full": 1,
+   "avg": 0.659,
    "shift": 0,
-   "shiftShare": 1.0,
+   "linear": true,
    "weak": [],
+   "nweak": 0,
    "fixed": []
   },
   "p51d75bb3": {
@@ -232,16 +286,14 @@
    "textPages": 236,
    "pdfPages": 236,
    "offset": 0,
-   "sample": 26,
-   "avg": 0.704,
+   "full": 1,
+   "avg": 0.769,
    "shift": 0,
-   "shiftShare": 0.92,
-   "weak": [
-    0,
-    2
-   ],
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
    "fixed": [
-    "2 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
    ]
   },
   "p472490cc": {
@@ -249,32 +301,27 @@
    "textPages": 192,
    "pdfPages": 192,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.678,
+   "full": 1,
+   "avg": 0.664,
    "shift": 0,
-   "shiftShare": 0.92,
-   "weak": [
-    0,
-    186
-   ],
-   "fixed": [
-    "2 صفحة إلى إعادة القراءة على الصورة"
-   ]
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
   },
   "paee5db9e": {
    "t": "وعاشروهن بالمعروف",
    "textPages": 243,
    "pdfPages": 243,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.73,
+   "full": 1,
+   "avg": 0.709,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [
-    0
-   ],
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
    "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
    ]
   },
   "p87e82f12": {
@@ -282,32 +329,573 @@
    "textPages": 240,
    "pdfPages": 240,
    "offset": 0,
-   "sample": 24,
-   "avg": 0.776,
+   "full": 1,
+   "avg": 0.773,
    "shift": 0,
-   "shiftShare": 0.96,
-   "weak": [
-    2
-   ],
-   "fixed": [
-    "1 صفحة إلى إعادة القراءة على الصورة"
-   ]
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
   },
   "pdbfbb888": {
    "t": "الكواشف المضية عن لآلي رسالة العبودية",
    "textPages": 176,
    "pdfPages": 176,
    "offset": 0,
-   "sample": 26,
-   "avg": 0.669,
+   "full": 1,
+   "avg": 0.415,
    "shift": 0,
-   "shiftShare": 0.92,
+   "linear": true,
    "weak": [
-    0,
-    2
+    68,
+    138
    ],
+   "nweak": 2,
    "fixed": [
-    "2 صفحة إلى إعادة القراءة على الصورة"
+    "2 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p1f08a935": {
+   "t": "شرح صحيح مسلم",
+   "textPages": 920,
+   "pdfPages": 920,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.198,
+   "shift": 0,
+   "linear": true,
+   "weak": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    13,
+    14,
+    16,
+    18,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    29,
+    30,
+    32,
+    34,
+    36,
+    38,
+    39,
+    40,
+    41,
+    43,
+    45,
+    46,
+    47,
+    48,
+    50,
+    51,
+    52,
+    53,
+    56,
+    57,
+    59,
+    60,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    81,
+    82
+   ],
+   "nweak": 688,
+   "fixed": [
+    "688 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p6649ddf2": {
+   "t": "البنيان في تربية الفتيان — ج 2",
+   "textPages": 353,
+   "pdfPages": 353,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.549,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "p82fcc95d": {
+   "t": "البنيان في تربية الفتيان — ج 3",
+   "textPages": 343,
+   "pdfPages": 343,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.566,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "p1acef349": {
+   "t": "البنيان في تربية الفتيان — ج 1",
+   "textPages": 389,
+   "pdfPages": 389,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.547,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    164
+   ],
+   "nweak": 1,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)",
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p103dc12a": {
+   "t": "الأساس — ج 4",
+   "textPages": 271,
+   "pdfPages": 271,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.522,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    241,
+    244
+   ],
+   "nweak": 2,
+   "fixed": [
+    "خريطة صفحات (6 صفحة خارج الترتيب البسيط)",
+    "2 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p274f1526": {
+   "t": "ذكريات د.ياسر برهامي",
+   "textPages": 62,
+   "pdfPages": 62,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.457,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p59c75278": {
+   "t": "بحث الإمامة",
+   "textPages": 40,
+   "pdfPages": 40,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.37,
+   "shift": 0,
+   "linear": true,
+   "weak": [
+    18,
+    37,
+    38,
+    39
+   ],
+   "nweak": 4,
+   "fixed": [
+    "4 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "pa0fe75d5": {
+   "t": "الأساس — ج 3",
+   "textPages": 242,
+   "pdfPages": 242,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.541,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p842b98c1": {
+   "t": "إشكالية علم الكلام",
+   "textPages": 74,
+   "pdfPages": 74,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.472,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p24c16cf5": {
+   "t": "تمام المنة بالرد على أعداء السنة",
+   "textPages": 56,
+   "pdfPages": 56,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.567,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (4 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "p32658dc3": {
+   "t": "لا إله إلا الله كلمة النجاة",
+   "textPages": 86,
+   "pdfPages": 86,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.587,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "pd1dfedcc": {
+   "t": "مشروعية العمل الجماعي",
+   "textPages": 112,
+   "pdfPages": 112,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.768,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p88e55c72": {
+   "t": "كربلاء العصر رابعة بين الحقيقة والبهتان 1",
+   "textPages": 138,
+   "pdfPages": 138,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.659,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p90b00ec5": {
+   "t": "الإرجاء تحت المجهر",
+   "textPages": 285,
+   "pdfPages": 285,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.73,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p7719f53a": {
+   "t": "نظم الدرر في مصطلح علم الأثر-أحمدفريد",
+   "textPages": 337,
+   "pdfPages": 337,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.55,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p0d9227b8": {
+   "t": "التربية على منهج أهل السنة",
+   "textPages": 256,
+   "pdfPages": 256,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.612,
+   "shift": 0,
+   "linear": true,
+   "weak": [
+    204,
+    252
+   ],
+   "nweak": 2,
+   "fixed": [
+    "2 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "pc7ca2eea": {
+   "t": "كيف نؤمن بالقدر",
+   "textPages": 136,
+   "pdfPages": 136,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.612,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "pa496de20": {
+   "t": "القول المبين في حرمة دماء المعصومين وأنواع العهود مع غير المسلمين",
+   "textPages": 327,
+   "pdfPages": 327,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.384,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    214
+   ],
+   "nweak": 1,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)",
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p032b9da4": {
+   "t": "خطر الكتابة بالعامیة",
+   "textPages": 65,
+   "pdfPages": 65,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.665,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p09a85a8d": {
+   "t": "تأملات إيمانية في سورة يوسف",
+   "textPages": 344,
+   "pdfPages": 344,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.683,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    228
+   ],
+   "nweak": 1,
+   "fixed": [
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)",
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p8f81a716": {
+   "t": "كنوز سورة الكوثر",
+   "textPages": 416,
+   "pdfPages": 416,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.481,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p0c7e3833": {
+   "t": "الأتقياء الأخفياء",
+   "textPages": 276,
+   "pdfPages": 276,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.744,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (3 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "pc52251c0": {
+   "t": "التقوى الغاية المنشودة والدرة المفقودة",
+   "textPages": 116,
+   "pdfPages": 116,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.66,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p58ad4ba3": {
+   "t": "التوسل وأحكامه",
+   "textPages": 83,
+   "pdfPages": 83,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.732,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "p3d940679": {
+   "t": "فقه أشراط الساعة",
+   "textPages": 418,
+   "pdfPages": 418,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.587,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "pb62f7363": {
+   "t": "الشهادتان أول واجب على كل إنسان",
+   "textPages": 596,
+   "pdfPages": 596,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.648,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    75,
+    129
+   ],
+   "nweak": 2,
+   "fixed": [
+    "خريطة صفحات (4 صفحة خارج الترتيب البسيط)",
+    "2 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "pb73bc08d": {
+   "t": "كشف الشبهات  تعليقات د.طلعت مرزوق",
+   "textPages": 80,
+   "pdfPages": 80,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.621,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    0
+   ],
+   "nweak": 1,
+   "fixed": [
+    "خريطة صفحات (1 صفحة خارج الترتيب البسيط)",
+    "1 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p2bbce0f0": {
+   "t": "الأساس — ج 2",
+   "textPages": 168,
+   "pdfPages": 168,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.469,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (2 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "p817362d4": {
+   "t": "الأساس — ج 1",
+   "textPages": 141,
+   "pdfPages": 141,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.265,
+   "shift": 0,
+   "linear": false,
+   "weak": [
+    2,
+    77
+   ],
+   "nweak": 2,
+   "fixed": [
+    "خريطة صفحات (8 صفحة خارج الترتيب البسيط)",
+    "2 صفحة لا تشبه صورتها ← إعادة القراءة"
+   ]
+  },
+  "p9fd336ef": {
+   "t": "مختصر ودخلت الخيل الأزهر",
+   "textPages": 241,
+   "pdfPages": 241,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.735,
+   "shift": 0,
+   "linear": true,
+   "weak": [],
+   "nweak": 0,
+   "fixed": []
+  },
+  "peb296fa1": {
+   "t": "الأساس — ج 6",
+   "textPages": 310,
+   "pdfPages": 310,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.577,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (2 صفحة خارج الترتيب البسيط)"
+   ]
+  },
+  "p981b8b1b": {
+   "t": "الأساس — ج 5",
+   "textPages": 281,
+   "pdfPages": 281,
+   "offset": 0,
+   "full": 1,
+   "avg": 0.516,
+   "shift": 0,
+   "linear": false,
+   "weak": [],
+   "nweak": 0,
+   "fixed": [
+    "خريطة صفحات (2 صفحة خارج الترتيب البسيط)"
    ]
   }
  }
