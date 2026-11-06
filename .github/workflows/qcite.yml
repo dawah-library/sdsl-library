@@ -17,4 +17,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/quran-cite.py
-      - run: bash tools/git-save.sh "المصحف: فهرس الآيات في كتب الدعوة ومقالاتها" data/qcite
+      - run: |
+          bash tools/git-save.sh "المصحف: فهرس الآيات في كتب الدعوة ومقالاتها" data/qcite
