@@ -363,3 +363,4 @@
 - loginNudge (app.js + .lgnudge في style.css)؛ HFS/HF_GROUPS (٤٦ خطًّا)؛ ED.panel وتبويب edition؛ رفع تسجيلات التفريغ من الجهاز (trUpload، transcribe.py: store:/parts:، وid-token في transcribe.yml، وr2put يقبل صيغًا أكثر)؛ enrich-new.py: ربط بالأقسام يعمل ولو أُوقف مفتاح enrich، والخدمات كلها للمصورات؛ dwLinked في dawah.js؛ قضايا الفرقان للناشئة في tala.js (data/tala-furqan.json).
 - مفتاح enrich موقوف (switches.json) — لم يُغيَّر؛ طوابير الخدمات تنتظر قرار المدير.
 - **ربط الآيات بالمصحف:** QREF في آخر mushaf.js (MutationObserver على .rd، يلف عناصر span.w المتجاورة برابط a.qref)، وMUS.ref(s,a,to) يفتح نافذة الآية من أي صفحة.
+- **تصحيح عزو الآيات:** tools/qref-fix.py (يستعمل فهرس quran-check.py) + qref-fix.yml؛ الحالة data/qref/_state.json (بصمة كل ملف). الحقول الجديدة في الكتب: qref (سجل التصحيحات) وqadd (آيات بلا عزو للقارئ). لا يُصحَّح «ص»/«ق» (قد تكون رقم صفحة)، ولا تغيير سورة لمقتبس أقل من ٥ كلمات.

@@ -1277,3 +1277,4 @@ blockquote.fqq footer{margin-top:6px;font-size:.85rem;color:var(--mut);font-fami
 /* عزو الآيات في الكتب رابطًا إلى المصحف (QREF في mushaf.js) */
 .rd a.qref{color:inherit;text-decoration:underline dotted color-mix(in srgb,var(--ac) 70%,transparent);text-underline-offset:4px;cursor:pointer;border-radius:4px}
 .rd a.qref:hover,.rd a.qref:focus-visible{color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.rd a.qref.qadd{font-size:.72em;opacity:.7;text-decoration:none;margin-inline-start:3px;white-space:nowrap;font-family:var(--hf,inherit)}

@@ -102,7 +102,7 @@ const PL=(b,i)=>SS.label(b,i);
 async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجود");if(b.pages)return b;
  let sh=LOCAL.shards[id]||SH.get(id)||(window.__SHARDS__&&window.__SHARDS__[id]);
  if(!sh&&b.f){let g=GROUPS.get(b.f);if(!g){g=(window.__GROUPS__&&window.__GROUPS__[b.f])||fetch("data/articles/"+encodeURIComponent(b.f)+".json").then(r=>{if(!r.ok)throw new Error("تعذر تحميل المقال");return r.json()});GROUPS.set(b.f,g)}
-  const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[]}}
+  const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[],qadd:gg[id].qadd}}
  if(!sh){const q=encodeURIComponent(id)+".json"+(b.size?"?v="+b.size:"");let r=null;
   // مجلدات التراث الكبيرة تُحفظ في المستودع وتُقرأ من GitHub مباشرة (مخزن النصوص)، والاحتياط نسخة الموقع
   if(b.vf){try{r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/vols/"+q)}catch(e){r=null}if(!r||!r.ok)r=await fetch("vols/"+q).catch(()=>null)}
