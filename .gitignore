@@ -8,3 +8,4 @@ __pycache__/
 data/sx/
 node_modules/
 .dev-*
+.qref-report.txt

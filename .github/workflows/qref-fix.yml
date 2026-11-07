@@ -1,0 +1,34 @@
+name: تصحيح عزو الآيات
+# كل عزو آية في الكتب والمقالات يُطابَق بنص الآية في المصحف ويُصحَّح اسم السورة ورقم الآية (tools/qref-fix.py)،
+# والآيات بلا عزو تُربط بالمصحف للقارئ (qadd). الأولوية: مقالات المدير، ثم مكتبة الدعوة، ثم المكتبة العامة.
+# الملفات التي لم تتغير منذ آخر فحص لا يعاد فحصها (data/qref/_state.json).
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "dawah | articles | turath (فارغ = الكل بالأولوية)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "47 2 * * *"
+  push:
+    branches: [main]
+    paths: ["tools/qref-fix.py"]
+permissions:
+  contents: write
+concurrency:
+  group: qref-fix
+  cancel-in-progress: false
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: التصحيح
+        env:
+          QREF_MAX_MIN: "45"
+        run: python3 tools/qref-fix.py ${{ github.event.inputs.only && format('--only {0}', github.event.inputs.only) || '' }}
+      - run: bash tools/git-save.sh "تصحيح عزو الآيات" data/books data/articles vols data/qref tools/qref-report.md
+      - if: always()
+        run: '[ -s .qref-report.txt ] && python3 tools/notify.py "$(cat .qref-report.txt)" || true'

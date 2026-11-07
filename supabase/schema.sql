@@ -818,3 +818,6 @@ begin
 end $$;
 drop trigger if exists profiles_guard_roles on public.profiles;
 create trigger profiles_guard_roles before update or delete on public.profiles for each row execute function public.guard_roles();
+
+-- ٧ نوفمبر ٢٠٢٦ (مطبَّق): صندوق inbox يقبل صيغ صوت أخرى لرفع تسجيلات التفريغ من الجهاز (الفيديو والأكبر من ٥٠ م.ب يُرفع أجزاءً إلى المستودع)
+update storage.buckets set allowed_mime_types = (select array_agg(distinct m) from unnest(allowed_mime_types || array['audio/flac','audio/x-flac','audio/opus','audio/amr','audio/3gpp','audio/x-aac','audio/m4a','audio/vnd.wave']) m) where id = 'inbox';

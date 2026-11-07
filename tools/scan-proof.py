@@ -56,8 +56,10 @@ def main():
             try: r = json.loads(m.group(0)) if m else {}
             except Exception: pass
             page = sh["pages"][i]; ok = []
+            qr = [x["to"] for x in (sh.get("qref") or []) if x.get("p") == i + 1]  # عزو آية صُحّح على المصحف (tools/qref-fix.py): لا يُعاد إلى خطأ المطبوع
             for f in (r.get("fx") or []):
                 a, z = str(f.get("from") or ""), str(f.get("to") or "")
+                if any(q in a or a in q for q in qr): continue
                 if a and a != z and page.count(a) == 1 and len(a) <= 300: ok.append({"k": str(f.get("k") or ""), "from": a, "to": z, "why": "على المصورة: " + str(f.get("why") or "")[:140]})
             prev = R["pages"].get(str(i + 1)) or {}
             R["pages"][str(i + 1)] = {"h": H(page), "fx": (prev.get("fx") or []) + ok, "scan": 1 if r.get("same", True) else 0, "at": time.strftime("%Y-%m-%d")}

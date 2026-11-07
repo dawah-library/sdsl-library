@@ -23,4 +23,4 @@ jobs:
           python3 tools/enrich-new.py
           python3 tools/tala-stories.py
       - run: |
-          bash tools/git-save.sh "إثراء الأقسام من الكتب الجديدة" data/catalog.json data/enrich-state.json data/tashjir/_queue.json data/study-queue.json data/proof/_queue.json data/tala-stories.json tools/enrich-new.md
+          bash tools/git-save.sh "إثراء الأقسام من الكتب الجديدة" data/catalog.json data/enrich-state.json data/tashjir/_queue.json data/study-queue.json data/proof/_queue.json data/kurrasa/_queue.json data/audio/_queue.json data/tala-stories.json tools/enrich-new.md
