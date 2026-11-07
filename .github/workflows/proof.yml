@@ -7,6 +7,7 @@ on:
     - cron: "29 3 * * *"
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: proof
   cancel-in-progress: false
@@ -38,6 +39,10 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
-        run: python3 tools/proof.py
+        run: |
+          python3 tools/proof.py
+          # الكتب النصية المربوطة بمصورات طبعاتها: الصفحات التي خالفت صورتها تُقرأ مع الصورة (tools/scan-proof.py)
+          sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null
+          python3 tools/scan-proof.py || echo "::warning::تعذّر التدقيق على المصورة"
       - run: |
-          bash tools/git-save.sh "تدقيق الكتب النصية: اقتراحات تصحيح تنتظر الاعتماد" data/proof
+          bash tools/git-save.sh "تدقيق الكتب النصية: اقتراحات تصحيح تنتظر الاعتماد" data/proof data/catalog.json data/books vols
