@@ -43,7 +43,9 @@ def meta(tio):
 
 
 def download(root, name, dest):
-    urls = [name] if name.startswith("http") else [base + "/" + (root or "").strip("/") + "/" + name for base in ("https://files.turath.io/pdf", "https://archive.org/download")]
+    from urllib.parse import quote
+    rel = quote(((root or "").strip("/") + "/" + name).strip("/"), safe="/")  # مسارات تراث عربية بمسافات
+    urls = [name] if name.startswith("http") else [base + "/" + rel for base in ("https://files.turath.io/pdf", "https://archive.org/download")]
     for u in urls:
         try:
             with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=900) as r, open(dest, "wb") as out:
