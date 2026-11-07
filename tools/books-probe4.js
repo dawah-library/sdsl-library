@@ -35,6 +35,10 @@ async function probe(label, u, name) {
   // صفحات مرشحة: أول روابط تبدو كتبًا أو أقسامًا
   const cand = links.filter(l => /book|kitab|كتاب|read|library|category|cat|author|search|about|terms|privacy/i.test(decodeURIComponent(l))).slice(0, 10);
   let i = 0; for (const l of cand) { const r = await probe("صفحة " + (++i), l, "page" + i + ".html"); const m = r.b.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/); if (m) { const j = J(m[1]); if (j) rep.push("  - __NEXT_DATA__: `" + JSON.stringify(keysOf(j.props || j)).slice(0, 2000) + "`"); } }
+  // سياقات الاتصال في السكربتات (عنوان الواجهة، والمسارات المبنية على api)
+  const ctx = new Set();
+  for (const s of js) { const r = await get(s); for (const m of r.b.matchAll(/.{0,120}(?:apiUrl|baseUrl|api\/|\/api|environment|endpoint|HttpClient|\.get\(|\.post\().{0,160}/g)) { const x = m[0].replace(/\s+/g, " "); if (/api|Url|http/.test(x)) ctx.add(x); } }
+  rep.push("- سياقات الاتصال:", ...[...ctx].slice(0, 120).map(x => "  - `" + x.replace(/`/g, "'") + "`"));
   // واجهات شائعة
   for (const p of ["/api", "/api/books", "/api/v1/books", "/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9", "/api/categories", "/books", "/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9"]) await probe(p, B + p);
   for (const sub of ["api", "app", "backend", "files", "cdn"]) await probe("نطاق " + sub, `https://${sub}.ithraa.io/`);
