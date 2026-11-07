@@ -56,7 +56,7 @@ const ED = (() => {
       <div class="savebar"><button class="btn p">حفظ بيانات الطبعة</button> <span id="edst" class="mut" role="status"></span></div></form></details>
      ${maybe.length ? `<p class="note">قد تكون هذه طبعات أخرى للكتاب نفسه (العنوان والمؤلف متطابقان): ${maybe.map(x => `<button class="lnk" data-act="edlink" data-w="${esc(w)}" data-id="${esc(x.id)}">${esc(x.setTitle || x.title)} (${esc(x.id)})</button>`).join("، ")}</p>` : ""}
      <details><summary><b>ربط كتاب موجود طبعةً لهذا العمل</b></summary><div class="row"><select id="edother"><option value="">— من كتب المؤلف نفسه —</option>${others.map(x => `<option value="${esc(x.id)}">${esc(x.setTitle || x.title)}${x.source ? " — " + esc(x.source.slice(0, 40)) : ""}</option>`).join("")}</select><button class="btn s" data-act="edlink" data-w="${esc(w)}" data-sel="1">ربط</button></div></details>
-     <details><summary><b>رفع طبعة جديدة</b> (نص أو نسخة مصورة)</summary><form data-form="ednew" data-id="${esc(b.id)}" data-w="${esc(w)}">
+     <details class="edup"><summary><b>رفع طبعة جديدة</b> (نص أو نسخة مصورة)</summary><form data-form="ednew" data-id="${esc(b.id)}" data-w="${esc(w)}">
       <p class="mut">${textEds.length ? `توجد نسخة نصية سابقة (${esc(label(textEds[0].ed, 1))})؛ إن رفعت مصورة تُستعمل مرجعًا لتعليم الكلمات المختلفة للمراجعة، ولا يُنقل منها نص إلى الطبعة الجديدة.` : "لا توجد نسخة نصية سابقة لهذا العمل؛ تُحوَّل المصورة دون مرجع."}</p>
       <div class="row"><div><label>الطبعة</label><input name="n" required placeholder="الطبعة الثالثة"></div><div><label>سنة النشر</label><input name="y" inputmode="numeric"></div></div>
       <div class="row"><div><label>الناشر</label><input name="pub"></div><div><label>المحقق</label><input name="tah"></div></div>
@@ -64,7 +64,19 @@ const ED = (() => {
       <label>الملف (.txt أو PDF)</label><input type="file" name="file" accept=".txt,text/plain,.pdf,application/pdf" required>
       <div class="savebar"><button class="btn p">رفع الطبعة</button> <span id="ednst" class="mut" role="status"></span></div></form></details>`;
   }
-  const open = id => { const b = B(id); if (!b) return; openDlg(dlgHtml(b)); };
+  const open = (id, up) => { const b = B(id); if (!b) return; openDlg(dlgHtml(b)); if (up) { const d = document.querySelector("dialog[open] details.edup"); if (d) { d.open = true; d.scrollIntoView({ block: "nearest" }); } } };
+  // لوحة «طبعة جديدة لكتاب» في الإدارة (#/admin?t=edition): اختيار الكتاب ثم نموذج الرفع نفسه في الصفحة
+  function panel(q) {
+    const books = all().filter(b => b.type !== "article" && b.type !== "fatwa" && !(b.set && b.vol > 1) && !secondary(b));
+    const cur = q && q.id && B(q.id);
+    return `<p class="mut">ارفع نسخة مصوّرة (PDF) أو نصية لطبعة أخرى من كتاب موجود في المكتبة. تبقى الطبعتان كلتاهما: لكلٍّ نصها ومصورتها، ويختار القارئ بينهما من شريط «الطبعات» في رأس الكتاب، ويقارن بينهما صفحة بصفحة. والمصوّرة الجديدة تُحوَّل إلى نص آليًا وتأخذ خدمات الكتاب كلها.</p>
+     <label>الكتاب</label><input id="edpick" list="edpickl" placeholder="اكتب جزءًا من عنوان الكتاب" value="${cur ? esc(cur.setTitle || cur.title) : ""}" autocomplete="off">
+     <datalist id="edpickl">${books.map(b => `<option value="${esc(b.setTitle || b.title)}" data-id="${esc(b.id)}">${esc(A(b.authorId).name || "")}</option>`).join("")}</datalist>
+     <div id="edpanel">${cur ? dlgHtml(cur).replace('<details class="edup">', '<details class="edup" open>') : '<p class="note">اختر الكتاب أولًا.</p>'}</div>`;
+  }
+  document.addEventListener("change", e => { if (e.target.id !== "edpick") return; const v = e.target.value.trim(), o = [...document.querySelectorAll("#edpickl option")].find(x => x.value === v);
+    const box = $("#edpanel"); if (!box) return; const b = o && B(o.dataset.id);
+    box.innerHTML = b ? dlgHtml(b).replace('<details class="edup">', '<details class="edup" open>') : '<p class="note">لم يُعثر على الكتاب؛ اختره من القائمة.</p>'; });
   const recsOf = u => all().filter(x => unit(x) === u);
   const edOf = (u, w, extra) => { const r = recsOf(u)[0] || {}; return Object.assign({}, r.ed || {}, { w }, extra || {}); };
   async function setEd(u, w, extra, note) { // يكتب ed على كل سجلات الوحدة (المجلدات معًا)
@@ -196,12 +208,12 @@ const ED = (() => {
 
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=ed]"); if (!el) return; const a = el.dataset.act;
-    if (a === "eds") { e.preventDefault(); if (typeof closeSheet === "function") closeSheet(); open(el.dataset.id || (parse().p[1])); }
+    if (a === "eds" || a === "edup") { e.preventDefault(); if (typeof closeSheet === "function") closeSheet(); open(el.dataset.id || (parse().p[1]), a === "edup"); }
     else if (a === "edmain") setMain(el.dataset.w, el.dataset.u);
     else if (a === "edlink") { const id = el.dataset.sel ? ($("#edother") || {}).value : el.dataset.id; if (id) link(el.dataset.w, id); }
   });
   document.addEventListener("submit", e => { const f = e.target; if (!f.dataset || !/^ed/.test(f.dataset.form || "")) return; e.preventDefault();
     if (f.dataset.form === "edmeta") saveMeta(f); else if (f.dataset.form === "ednew") upload(f); }, true);
 
-  return { strip, secondary, units, workOf, label, view: vEditions, open, diff, classify, bestPage, toks };
+  return { strip, secondary, units, workOf, label, view: vEditions, open, panel, diff, classify, bestPage, toks };
 })();

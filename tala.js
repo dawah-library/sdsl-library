@@ -26,12 +26,14 @@ const TALA = (() => {
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
     if (sub === "parents") return parents();
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
+    if (sub === "furqan") return furqan(q);
     const sg = GEN[q.s] ? q.s : "", sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
       ${sg ? "" : await daily()}
       <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
+      ${!locked() || /^t[34]$/.test(kid().track) ? FQ_CARD : ""}
       <div class="talag talagen">${Object.entries(GEN).map(([k, x]) => `<a class="talac gen-${k}${sg === k ? " on" : ""}" href="#/talaea?s=${k}"><i aria-hidden="true">${x.ic}</i><b>${x.n}</b><span>${esc(x.d)}</span></a>`).join("")}</div>
       ${sg ? models(sg) : ""}
       <h3>${locked() ? "مرحلتك" : "اختر مرحلتك"}${sg ? " — " + GEN[sg].n : ""}</h3>${kid() ? "" : '<p class="note">👪 أنشئ ملف طفلك من <a href="#/talaea/parents">ركن الوالدين</a> بعمره، فلا يظهر له إلا المستوى المناسب له.</p>'}<div class="talag">${vis().map(([k, n, a]) => `<a class="talac tk-${k}" href="#/talaea/track?k=${k}${sq}"><b>${esc(n)}</b><span>${esc(a)}</span></a>`).join("")}</div>
@@ -46,6 +48,7 @@ const TALA = (() => {
     const t = D.tracks.find(x => x[0] === k) || D.tracks[0], bs = kidBooks(t[0]), sg = sx(), sq = sg ? "&s=" + sg : "";
     view_(head(t[1] + " — " + t[2] + (sg ? " — " + GEN[sg].n : ""), true) + `<nav class="chips">${[["", "المشترك"], ...Object.entries(GEN).map(([k, x]) => [k, x.ic + " " + x.n])].map(([k, l]) => `<a class="chip${sg === k ? " x" : ""}" href="#/talaea/track?k=${t[0]}${k ? "&s=" + k : ""}">${l}</a>`).join("")}</nav><h2 class="talat">${esc(t[1])}${sg ? " — " + GEN[sg].n : ""}</h2><p class="mut">${esc(t[2])}. ويمكن اختيار المستوى الأنسب لمهارة الطفل لا لعمره وحده.</p>
      <p><a class="btn" href="#/tamarin?s=${t[0] === "t1" || t[0] === "t2" ? "asas" : "bunyan"}">✏️ تمارين الأساس والبنيان</a> <a class="btn p" href="#/talaea/manhaj?k=${t[0]}">📘 منهج المرحلة (الأساس ثم البنيان ثم البداية)</a> <a class="btn" href="#/talaea/ladder?k=${t[0]}">📚 سُلّم القراءة لهذه المرحلة</a></p>
+     ${t[0] === "t4" || t[0] === "t3" ? FQ_CARD : ""}
      ${stageCard(t[0], sg)}${sg ? models(sg) : ""}
      <h3>🎮 ألعاب تناسب هذه المرحلة</h3><div class="talag">${gamesFor(t[0]).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}&k=${t[0]}${sq}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
      ${sg && t[0] !== "t1" ? (() => { const L = lib.books.filter(b => isArt(b) && !b.hidden && GEN[sg].tp.some(tp => inTopic(b, tp)) && (b.n || 9e9) < (t[0] === "t2" ? 2500 : 6000)).slice(-24).reverse(); return L.length ? `<h3>📰 مقالات ${esc(GEN[sg].n)}</h3><div class="list">${L.map(bookCard).join("")}</div>` : ""; })() : ""}
@@ -392,6 +395,70 @@ const TALA = (() => {
   });
   document.addEventListener("change", e => { const el = e.target.closest("[data-act=talatrack]"); if (!el) return; const x = kids().find(y => y.id === el.dataset.id); if (x) { x.track = el.value; saveS(); toast("تغيّرت المرحلة."); } });
 
+
+  /* ---------- قضايا الفرقان للناشئة (طلب المدير، ٧ نوفمبر): data/tala-furqan.json
+     لكل قضية: مدخل تمهيدي ومعالم من أصول الدعوة المقررة، ثم «توجيهات مشايخ الدعوة» مقتبسة من كتبهم في المكتبة بنصها
+     (أكثر صفحات الكتاب صلة بالقضية من tools/furqan.py) مع العزو إلى الكتاب والصفحة، ثم مواد القضية، وأسئلة للنقاش. ---------- */
+  const FQ_CARD = `<a class="talac fqcard" href="#/talaea/furqan"><i aria-hidden="true">🧭</i><b>قضايا الفرقان للناشئة</b><span>الإيمان والكفر، والأمر بالمعروف، والعمل الجماعي، وفقه الخلاف، والجهاد، والسياسة الشرعية، والمنهج السلفي، والولاء والبراء، والسلوك — بتوجيهات مشايخ الدعوة من كتبهم</span></a>`;
+  let FQD = null;
+  const fqData = async () => FQD || (FQD = await fetch("data/tala-furqan.json").then(r => r.ok ? r.json() : { issues: [] }).catch(() => ({ issues: [] })));
+  const flat = t => String(t || "").replace(/<[^>]+>/g, " ").replace(/^#+\s*/gm, "").replace(/\[\^?\d+\]|\(\d+\)/g, "").replace(/[ \t]+/g, " ");
+  function fqPool(it, F) {  // مواد القضية من كتب الدعوة ومقالاتها وفتاواها: الموسوم، وما في عنوانه لفظها، وما يدور مضمونه عليها (بأكثر صفحاته صلة)
+    const seen = new Set(), out = [];
+    it.fq.forEach(name => {
+      const f = (typeof FURQAN !== "undefined" ? FURQAN : []).find(x => x[0] === name), rx = f ? f[1] : null;
+      lib.books.filter(b => !b.demo && !b.hidden && bc(b) === "dawah" && ((b.tags || []).includes("furqan:" + name) || (rx && rx.test(norm(b.title))))).forEach(b => { if (!seen.has(b.id)) { seen.add(b.id); out.push({ b, pg: 0 }); } });
+      ((F && F.m && F.m[name]) || []).forEach(([id, sc, pg]) => { const b = B(id); if (b && !b.hidden && bc(b) === "dawah" && !seen.has(id)) { seen.add(id); out.push({ b, pg: pg || 1, sc }); } });
+    });
+    return out;
+  }
+  async function fqQuote(x, kws) {  // مقتطف من كلام الشيخ بنصه حول لفظ القضية
+    try {
+      const b = await loadBook(x.b.id), ps = b.pages || [], nk = kws.map(k => norm(k));
+      const all = ps.map((_, i) => i).filter(i => i > 0 || ps.length === 1), order = (x.pg > 1 ? [x.pg - 1] : []).concat(all.slice(0, 80).filter(i => i !== x.pg - 1));
+      let best = null;
+      for (const i of order) {
+        const txt = flat(ps[i]).replace(/\[[^\]]{0,300}\]/g, " "); if (!txt.trim()) continue;  // بلا أوصاف الصور والملاحظات بين معقوفين
+        const paras = txt.split(/\n+/).map(p => p.trim()).filter(p => p.length > 140 && !/^(الفهرس|المحتويات|فهرس)/.test(p));
+        for (const p of paras) { const np = norm(p), sc = nk.filter(k => np.includes(k)).length; if (sc && (!best || sc > best.sc)) best = { sc, t: p, p: i + 1 }; }
+        if (best && (best.sc >= 2 || i === x.pg - 1)) break;
+      }
+      if (best) return { t: best.t.length > 520 ? best.t.slice(0, 500).replace(/\s+\S*$/, "") + "…" : best.t, p: best.p };
+    } catch (e) { }
+    return null;
+  }
+  async function furqan(q) {
+    const D2 = await fqData(), I = D2.issues || [], it = I.find(x => x.k === q.i);
+    if (!it) {
+      return view_(head("قضايا الفرقان للناشئة", true) + `<h2 class="talat">🧭 قضايا الفرقان للناشئة</h2>
+       <p>قضايا كبرى يحتاج الشاب المسلم إلى فهمها فهمًا صحيحًا يحفظه من الغلو والتفريط، كما قرّرها مشايخ الدعوة السلفية في كتبهم ودروسهم. لكل قضية مدخل مبسّط، ثم توجيهات المشايخ بنصوصها من كتبهم مع العزو، ثم كتب للقراءة وأسئلة للنقاش في الحلقة أو البيت.</p>
+       <p class="note">هذا الباب لمرحلة «الناشئة» (١٥ سنة فما فوق) ويصلح لرواد العلم الكبار مع المربي. ويُستحسن قراءته مع شيخ أو مربٍّ يجيب عن الأسئلة.</p>
+       <div class="talag">${I.map((x, k) => `<a class="talac" href="#/talaea/furqan?i=${x.k}"><i aria-hidden="true">${toAr(k + 1)}</i><b>${esc(x.n)}</b><span>${esc(x.intro.slice(0, 110))}…</span></a>`).join("")}</div>
+       <p><a class="btn" href="#/furqan">قسم قضايا الفرقان كاملًا (للكبار)</a> <a class="btn" href="#/talaea/track?k=t4">مرحلة الناشئة</a></p></div>`);
+    }
+    const k = I.indexOf(it), nb = I[k + 1], pv = I[k - 1], fqi = typeof FURQAN !== "undefined" ? FURQAN.findIndex(x => x[0] === it.fq[0]) : -1;
+    view_(head("قضايا الفرقان للناشئة — " + it.n, true) + `<p><a href="#/talaea/furqan">🧭 قضايا الفرقان للناشئة</a> ›</p><h2 class="talat">${esc(it.n)}</h2>
+     <div class="card fqintro"><b>مدخل</b><p>${esc(it.intro)}</p></div>
+     <h3>معالم في القضية</h3><ul class="fqpts">${it.pts.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+     <h3>توجيهات مشايخ الدعوة وآراؤهم من كتبهم</h3><p class="mut">نصوص منقولة بألفاظها من كتب مشايخ الدعوة ومقالاتهم في المكتبة، مع رابط الصفحة لقراءة السياق كاملًا.</p>
+     <div id="fqq"><p class="mut">جارٍ جمع التوجيهات…</p></div>
+     <h3>اقرأ للمشايخ في هذه القضية</h3><div id="fqb" class="mut">…</div>
+     <h3>أسئلة للنقاش</h3><ol class="fqqs">${it.qs.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+     <p><a class="btn p" href="#/ask?q=${encodeURIComponent("ما توجيهات مشايخ الدعوة السلفية للشباب في " + it.n + "؟")}">💬 اسأل المكتبة عن هذه القضية</a>${fqi >= 0 ? ` <a class="btn" href="#/furqan/${fqi + 1}">كل مواد القضية</a>` : ""}</p>
+     <nav class="row" style="justify-content:space-between">${pv ? `<a class="btn s" href="#/talaea/furqan?i=${pv.k}">→ ${esc(pv.n)}</a>` : "<span></span>"}${nb ? `<a class="btn s" href="#/talaea/furqan?i=${nb.k}">${esc(nb.n)} ←</a>` : ""}</nav></div>`);
+    const F = typeof fqLoad === "function" ? await fqLoad().catch(() => null) : null, pool = fqPool(it, F);
+    const box = $("#fqb"); if (box) { box.className = ""; box.innerHTML = pool.slice(0, 10).map(x => anyCard(x.b)).join("") + (pool.length > 10 ? `<p class="mut">و${toAr(pool.length - 10)} مادة أخرى في <a href="#/furqan/${fqi + 1}">قسم قضايا الفرقان</a>.</p>` : "") || '<p class="note">تُضاف المواد هنا تلقائيًّا كلما رُفع في المكتبة ما يتصل بهذه القضية.</p>'; }
+    // التوجيهات: مقتطف من كل كتاب (شيخ واحد لا يتكرر أكثر من مرتين)، والأولوية للكتب ثم المقالات والفتاوى
+    const cand = pool.slice().sort((x, y) => (kindOf(x.b) === "book" ? 0 : 1) - (kindOf(y.b) === "book" ? 0 : 1) || (y.sc || 999) - (x.sc || 999)).slice(0, 24), per = {}, got = [];
+    for (const x of cand) {
+      if (got.length >= 6 || parse().p[1] !== "furqan") break;
+      if ((per[x.b.authorId] || 0) >= 2) continue;
+      const r = await fqQuote(x, it.kw); if (!r) continue;
+      per[x.b.authorId] = (per[x.b.authorId] || 0) + 1; got.push({ x, r });
+      const el = $("#fqq"); if (el) el.innerHTML = got.map(({ x, r }) => `<blockquote class="fqq">${esc(r.t)}<footer>— ${esc(A(x.b.authorId).name || "")}، <a href="#/book/${encodeURIComponent(x.b.id)}/${r.p}">«${esc(x.b.setTitle || x.b.title)}»${kindOf(x.b) === "book" ? "، ص " + toAr(r.p) : ""}</a></footer></blockquote>`).join("");
+    }
+    const el = $("#fqq"); if (el && !got.length) el.innerHTML = '<p class="note">لم تُجمع نصوص بعد لهذه القضية؛ اقرأ المواد أدناه، وتُضاف التوجيهات تلقائيًّا كلما زادت كتب المشايخ فيها.</p>';
+  }
 
   /* ---------- المنهج العلمي والتربوي (data/tala-manhaj.json): «الأساس» ثم «البنيان» ثم «البداية» للشيخ مصطفى دياب،
      ودروس كل مستوى من فهرس الكتاب مصنفة بموادها، ثم التدعيم التربوي من مقالات الشيخ والأستاذ محمود عمارة بأنشطة ---------- */
