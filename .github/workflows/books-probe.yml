@@ -3,7 +3,7 @@ name: استكشاف مصادر الكتب النصية
 on:
   workflow_dispatch:
   push:
-    paths: ["tools/books-probe.js"]
+    paths: ["tools/books-probe.js", "tools/books-probe2.js"]
 permissions:
   contents: write
 jobs:
@@ -12,8 +12,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: node tools/books-probe.js
+      - run: |
+          if [ "${{ github.event_name }}" = "push" ] && git diff --name-only HEAD~1 | grep -q books-probe2; then node tools/books-probe2.js; else node tools/books-probe.js; node tools/books-probe2.js; fi
       - run: |
           bash tools/git-save.sh "استكشاف مصادر الكتب النصية - تقرير" tools/books-probe
