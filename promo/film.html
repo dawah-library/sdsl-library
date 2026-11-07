@@ -137,6 +137,33 @@ body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
 @keyframes lbIn{from{height:0}to{height:var(--lbh)}}
 @keyframes shine{from{background-position:200% 0}to{background-position:-100% 0}}
 .hl{background-size:300% 100%}
+
+.badge{font-family:"Aref Ruqaa";font-size:56px;padding:8px 46px;border-radius:60px;background:linear-gradient(90deg,#b8862c,#f0d08a,#b8862c);color:#2a1c05;margin-bottom:30px;opacity:0;box-shadow:0 10px 40px rgba(201,154,59,.45)}
+.fmts{display:flex;gap:36px;margin-top:50px}
+.v .fmts{flex-wrap:wrap;justify-content:center;gap:28px;max-width:900px}
+.fmt{width:300px;padding:34px 20px;border-radius:26px;border:1.5px solid rgba(232,196,119,.5);background:linear-gradient(160deg,rgba(232,196,119,.16),rgba(255,255,255,.03));opacity:0}
+.v .fmt{width:420px}
+.fmt svg{width:84px;height:84px;stroke:var(--gold2);fill:none;stroke-width:1.5}
+.fmt b{display:block;font-family:Amiri,serif;font-size:44px;margin-top:12px}
+.verbs{margin-top:56px;font-family:Amiri,serif;font-size:70px;font-weight:700;display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap}
+.verbs span{opacity:0}.verbs i{font-style:normal;color:var(--gold);opacity:0;font-size:40px}
+.maph{position:absolute;top:60px;left:0;right:0}
+.v .maph{top:230px}
+.map{position:relative;width:980px;height:980px;transform:scale(.72);margin:-60px 0 0}
+.v .map{transform:scale(.98);margin:0}
+.links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.links line{stroke:rgba(232,196,119,.18);stroke-width:2.5}
+.links line.on{stroke:rgba(240,208,138,.95);stroke-width:3.5;filter:drop-shadow(0 0 6px rgba(232,196,119,.9))}
+.hub{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:#fbf6e9;padding:26px;box-shadow:0 0 0 5px var(--gold),0 0 60px rgba(232,196,119,.5);opacity:0}
+.hub img{width:100%;height:100%;object-fit:contain}
+.node{position:absolute;left:50%;top:50%;width:250px;height:130px;margin:-65px 0 0 -125px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:rotate(calc(var(--i)*51.43deg - 90deg)) translate(390px) rotate(calc(-1*(var(--i)*51.43deg - 90deg)));background:rgba(10,40,34,.9);border:1.5px solid rgba(232,196,119,.25);opacity:.35}
+.node b{font-family:Amiri,serif;font-size:40px;line-height:1.2}
+.node span{font-size:22px;opacity:.8;margin-top:4px}
+@keyframes nodeOn{from{opacity:.35;border-color:rgba(232,196,119,.25);box-shadow:none}to{opacity:1;border-color:rgba(240,208,138,1);box-shadow:0 0 30px rgba(232,196,119,.55),inset 0 0 20px rgba(232,196,119,.15);background:rgba(18,70,58,.95)}}
+.maptag{position:absolute;bottom:46px;left:0;right:0;font-family:Amiri,serif;font-size:62px;font-weight:700;opacity:0}
+.v .maptag{bottom:260px}
+.side .h2 small{font-size:40px}
 </style>
 </head>
 <body>
@@ -191,20 +218,38 @@ body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
     </div>
   </section>
 
+  <!-- ٥ب لأول مرة بأكثر من صيغة -->
+  <section class="scene" id="s05b">
+    <div class="badge" data-a="pop" data-d=".1">لأول مرة</div>
+    <div class="h2" data-a="up" data-d=".4">كتب مشايخ الدعوة السلفية بمصر<small>بأكثر من صيغة</small></div>
+    <div class="fmts">
+      <div class="fmt" data-a="pop" data-kw="نصا يبحث"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10"/><circle cx="18" cy="17" r="3"/><path d="M20.2 19.2L22 21"/></svg><b>نص يُبحث فيه</b></div>
+      <div class="fmt" data-a="pop" data-kw="ونسخه مصوره"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg><b>نسخة مصوّرة</b></div>
+      <div class="fmt" data-a="pop" data-kw="ومختصرا"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg><b>مختصر</b></div>
+      <div class="fmt" data-a="pop" data-kw="وتشجيرا"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v11M12 11H5v6M12 11h7v6"/></svg><b>تشجير</b></div>
+    </div>
+    <div class="verbs">
+      <span data-a="up" data-kw="قراءه،">قراءة</span><i data-a="fade" data-kw="قراءه،">•</i>
+      <span data-a="up" data-kw="ودراسه">دراسة</span><i data-a="fade" data-kw="ودراسه">•</i>
+      <span data-a="up" data-kw="وبحثا">بحث</span><i data-a="fade" data-kw="وبحثا">•</i>
+      <span data-a="up" data-kw="واقتباسا">اقتباس</span>
+    </div>
+  </section>
+
   <!-- ٦ القارئ -->
   <section class="scene" id="s06">
     <div class="row">
       <div class="browser" data-a="slideR" data-d=".1" data-dur="1.2"><div class="bar"><i></i><i></i><i></i><em>dawahlibrary.org/#/book</em></div>
         <div class="vp"><img src="shots/d_book_uluwhimma_12.jpg" data-a="kb" data-d="0" data-dur="12" data-ease="linear" alt=""></div></div>
       <div class="side">
-        <div class="h2" data-a="up" data-d=".3">اقرأ كما تحب</div>
+        <div class="h2" data-a="up" data-d=".3">قراءة ميسّرة… تفاعلية<small>تُغريك بالمواصلة</small></div>
         <div class="chips">
-          <span class="chip" data-a="pop" data-at="0.18">نص قابل للبحث</span>
-          <span class="chip" data-a="pop" data-at="0.32">النسخة المصوّرة</span>
-          <span class="chip" data-a="pop" data-at="0.45">الحواشي</span>
-          <span class="chip" data-a="pop" data-at="0.55">التشكيل</span>
-          <span class="chip" data-a="pop" data-at="0.66">معاني الكلمات</span>
-          <span class="chip" data-a="pop" data-at="0.78">تخريج الأحاديث</span>
+          <span class="chip" data-a="pop" data-kw="تفسير الاية">تفسير الآية</span>
+          <span class="chip" data-a="pop" data-kw="شرح الحديث">شرح الحديث وتخريجه</span>
+          <span class="chip" data-a="pop" data-kw="ومعاني الكلمات">معاني الكلمات</span>
+          <span class="chip" data-a="pop" data-kw="والحواشي">الحواشي والتشكيل</span>
+          <span class="chip" data-a="pop" data-kw="وتظليلك">التظليل والمفكرة</span>
+          <span class="chip" data-a="pop" data-kw="وشريط تقدم">شريط التقدم</span>
         </div>
       </div>
     </div>
@@ -235,6 +280,23 @@ body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
       <span class="chip" data-a="pop" data-at="0.4">الفهارس الفنية</span>
       <span class="chip" data-a="pop" data-at="0.78">اختبارات تقيس فهمك</span>
     </div>
+  </section>
+
+  <!-- ٨م خريطة الموقع وترابط الخدمات -->
+  <section class="scene" id="s08m">
+    <div class="h2 maph" data-a="up" data-d=".1">منظومة واحدة مترابطة</div>
+    <div class="map">
+      <svg class="links" viewBox="-500 -500 1000 1000"><g id="ring"></g></svg>
+      <div class="hub" data-a="zoomIn" data-d=".3"><img src="../assets/logo-sdsl.png" alt=""></div>
+      <div class="node" style="--i:0" data-a="nodeOn" data-dur="0.8" data-kw="المكتبه تجمع"><b>المكتبة</b><span>الكتب والمقالات والفتاوى</span></div>
+      <div class="node" style="--i:1" data-a="nodeOn" data-dur="0.8" data-kw="والقارئ"><b>القارئ</b><span>يخدم النصوص</span></div>
+      <div class="node" style="--i:2" data-a="nodeOn" data-dur="0.8" data-kw="والبحث"><b>البحث</b><span>يصلك بالمواضع</span></div>
+      <div class="node" style="--i:3" data-a="nodeOn" data-dur="0.8" data-kw="والمساعد"><b>المساعد العلمي</b><span>يجيب موثِّقًا</span></div>
+      <div class="node" style="--i:4" data-a="nodeOn" data-dur="0.8" data-kw="والدراسه"><b>الدراسة</b><span>مسارات واختبارات</span></div>
+      <div class="node" style="--i:5" data-a="nodeOn" data-dur="0.8" data-kw="ومكتبتي"><b>مكتبتي</b><span>رحلتك وإنجازك</span></div>
+      <div class="node" style="--i:6" data-a="nodeOn" data-dur="0.8" data-kw="والمجتمع"><b>المجتمع</b><span>القراءة مع إخوانك</span></div>
+    </div>
+    <div class="maptag gold" data-a="reveal" data-kw="فكل خدمه" data-dur="1.2">فكلُّ خدمةٍ تُسلمك إلى أختها</div>
   </section>
 
   <!-- ٩ المجتمع والطلائع والإتاحة -->
@@ -286,16 +348,20 @@ body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
 const V = new URLSearchParams(location.search).get("v") === "1";
 if (V) document.documentElement.classList.add("v");
 const VOICE = new URLSearchParams(location.search).get("voice") || "Charon";
-const IDS = ["s01","s02","s03","s04","s05","s06","s07","s08","s09","s10","s11"];
+const IDS = ["s01","s02","s03","s04","s05","s05b","s06","s07","s08","s08m","s09","s10","s11"];
 // زمن ما قبل الصوت وما بعده لكل مشهد (ث)
-const PRE = {s01:1.4,s02:0.6,s03:0.9,s04:1.6,s05:0.6,s06:0.5,s07:0.5,s08:0.5,s09:0.5,s10:0.8,s11:1.2};
-const POST = {s01:1.4,s02:1.0,s03:1.0,s04:2.2,s05:1.2,s06:0.8,s07:1.0,s08:0.9,s09:0.4,s10:1.6,s11:4.5};
+const PRE = {s05b:0.6,s08m:0.6,s01:1.4,s02:0.6,s03:0.9,s04:1.6,s05:0.6,s06:0.5,s07:0.5,s08:0.5,s09:0.5,s10:0.8,s11:1.2};
+const POST = {s05b:1.4,s08m:1.8,s01:1.4,s02:1.0,s03:1.0,s04:2.2,s05:1.2,s06:0.8,s07:1.0,s08:0.9,s09:0.4,s10:1.6,s11:4.5};
 const FADE = 0.7;
 
+const TXT = {};
+const norm = t => t.replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+// موضع الكلمة في نص المقطع ← نسبة من مدة النطق (للمزامنة مع الكلام)
+const kwAt = (id, kw) => { const t = TXT[id] || "", i = t.indexOf(norm(kw)); return i < 0 ? 0.5 : Math.max(0, i / t.length - 0.03); };
 async function timeline(){
   let man = {}, est = {};
   try { man = await (await fetch("voice/manifest.json", {cache:"no-store"})).json(); } catch(e) {}
-  try { const s = await (await fetch("script.json")).json(); for (const g of s.segments) est[g.id] = g.text.length / 13; } catch(e) {}
+  try { const s = await (await fetch("script2.json")).json(); for (const g of s.segments) { est[g.id] = norm(g.text).length / 9; TXT[g.id] = norm(g.text); } } catch(e) {}
   const T = []; let t = 0;
   for (const id of IDS) {
     const vd = (man[VOICE + "/" + id] || {}).d || est[id] || 5;
@@ -347,6 +413,7 @@ async function build(){
     sc.el = el; sc.Lv = L;
     el.querySelectorAll("[data-a]").forEach(x => {
       // data-at: نسبة من مدة الصوت (لمزامنة الكلمة مع النطق)؛ data-d: ثوانٍ من بداية المشهد
+      if (x.dataset.kw) x.dataset.at = kwAt(sc.id, x.dataset.kw).toFixed(3);
       const st = x.dataset.at != null ? sc.voiceAt + parseFloat(x.dataset.at) * sc.vd : start + parseFloat(x.dataset.d || 0);
       anim(x, st);
     });
@@ -360,6 +427,18 @@ async function build(){
   // ومضة عند كشف الشعار
   const s4 = TL.T.find(x => x.id === "s04");
   document.getElementById("flash").style.animation = `flash 1.4s ease-out ${s4.start + 0.3}s both`;
+  // خطوط الخريطة: من المركز إلى كل قسم وبين المتجاورين، تضيء مع ظهور القسم
+  const ring = document.getElementById("ring"), R = 390, nd = [...document.querySelectorAll(".node")];
+  const pt = i => { const a = (i * 51.43 - 90) * Math.PI / 180; return [R * Math.cos(a), R * Math.sin(a)]; };
+  window.LINKS = [];
+  const sm = TL.T.find(x => x.id === "s08m");
+  nd.forEach((n, i) => {
+    const t = sm.voiceAt + parseFloat(n.dataset.at) * sm.vd, [x, y] = pt(i);
+    const mk = (x1, y1, x2, y2, tt) => { const l = document.createElementNS("http://www.w3.org/2000/svg", "line"); Object.entries({x1, y1, x2, y2}).forEach(([k, v]) => l.setAttribute(k, v)); ring.appendChild(l); LINKS.push([l, tt]); };
+    mk(0, 0, x, y, t);
+    if (i > 0) { const [px, py] = pt(i - 1); mk(px, py, x, y, t + 0.2); }
+    if (i === nd.length - 1) { const [fx, fy] = pt(0); mk(x, y, fx, fy, t + 0.4); }
+  });
   window.CUES = {total: TL.total, scenes: TL.T.map(({id, start, voiceAt, vd, L}) => ({id, start, voiceAt, vd, L})), flash: s4.start + 0.3, free: s9.split};
   await document.fonts.ready;
   await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
@@ -370,6 +449,7 @@ async function build(){
 const AR = n => n.toLocaleString("ar-EG", {useGrouping: false});
 const ease = p => 1 - Math.pow(1 - p, 3);
 window.seek = t => {
+  (window.LINKS || []).forEach(([l, tt]) => l.classList.toggle("on", t >= tt));
   document.getAnimations().forEach(a => { a.currentTime = t * 1000; });
   document.querySelectorAll("[data-count]").forEach(x => {
     const p = Math.max(0, Math.min(1, (t - x._st) / x._d)); const to = +x.dataset.count;
