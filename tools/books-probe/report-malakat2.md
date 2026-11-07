@@ -1,0 +1,26 @@
+# مَلَكات: الواجهة العامة — 2026-11-07T02:57
+
+- `api/categories` ← 200 80285
+- `api/books` ← 200 37
+  - `{"message":"string","status":"number"}`
+  - `{"message":"No book data","status":0}`
+- `api/books/categories` ← 200 320
+  - `[{"id":"number","name":"string","order_category":"number"},"×7"]`
+  - `[{"id":0,"name":"آخر","order_category":30},{"id":1,"name":"الفقه","order_category":1},{"id":3,"name":"أصول الفقه","order_category":2},{"id":4,"name":"علوم القرآن","order_category":3},{"id":5,"name":"الحديث","order_category":4},{"id":6,"name":"مصطلح الحديث","order_category":5},{"id":9,"name":"اللغة","order_category":9}]`
+- `api/activities` ← 200 80285
+- `api/ac/skills` ← 200 5255
+  - `[{"id":"number","title":"string","created_at":"string","updated_at":"string","category_id":"number","category_title":"string"},"×32"]`
+  - `[{"id":12,"title":"استخراج الضوابط الفقهي","created_at":"2023-03-09T12:21:44.304Z","updated_at":"2023-03-09T12:21:44.304Z","category_id":1,"category_title":"الفقه"},{"id":38,"title":"استخراج الضوابط الفقهية","created_at":"2023-03-17T06:46:26.558Z","updated_at":"2023-03-17T06:46:26.558Z","category_id":1,"category_title":"الفقه"},{"id":1,"title":"الاستدلال الأصولي","created_at":"2023-03-09T12:21:44.272Z","updated_at":"2023-03-09T12:21:44.272Z","category_id":3,"category_title":"أصول الفقه"},{"id":28,"title":"الاستدلال للقواعد الفقهية ","created_at":"2023-03-12T19:01:38.014Z","updated_at":"2023-03-12T19:01:38.014Z","category_id":3,"category_title":"أصول الفقه"},{"id":9,"title":"الاستدلال والاستنباط","created_at":"2023-03-09T12:21:44.296Z","updated_at":"2023-03-09T12:21:44.296Z","category_id":1,"category_title":"الفقه"},{"id":16,"title":"التعليل الفقهي","created_at":"2023-03-09T12:21:44.319Z","updated_at":"2023-03-09T12:21:44.319Z","category_id":1,"category_title":"الفقه"},{"id":3,"title":"التفريق","created_at":"2023-03-09T12:21:44.279Z","updated_at":"2023-03-09T12:21:44.279Z","category_id":3,"category_title":"أصول الفقه"},{"id":10,"title":"التفريق الفقهي","created_at":"2023-03-09T12:21:44.298Z","updated_at":"2023-03-09T12:21:44.298Z","category_id":1,"category_title":"الفقه"},{"id":2,"title":"التقسيم","created_at":"2023-03-09T12:21:44.275Z","updated_at":"2023-03-09T12:21:44.275Z","category_id":3,"category_title":"أصول الفقه"},{"id":11,"title":"التقسيم الفقهي","created_at":"2023-03`
+- `api/ac/chapters` ← 500 14
+  - `{"message":{}}`
+  - `{"message":{}}`
+- `api/search?searchWord=%D8%A7%D9%84%D9%86%D8%AD%D9%88` ← 200 80285
+- `api/home/contact` ← 200 80285
+- `api/epub/env_info` ← 200 319
+  - `{"socket_endpoint":"string","tracking_id":"string","tracking_ithraa_id":"string","tracking_malakat_id":"string","tracking_qbank_id":"string","apis_url":"string","base_url":"string","base_activities_url":"string","base_qbank_url":"string"}`
+  - `{"socket_endpoint":"ithraa.io:3001","tracking_id":"G-WXBZBV04MR","tracking_ithraa_id":"G-WXBZBV04MR","tracking_malakat_id":"G-3PE8CC5XFF","tracking_qbank_id":"G-PD2CQGNNWC","apis_url":"https://ithraa.io/","base_url":"https://ithraa.io/","base_activities_url":"https://malakat.io/","base_qbank_url":"https://miqyas.io/"}`
+- `api/activities?page=1&limit=5` ← 200 80285
+- `api/ac/skills?bookId=1` ← 200 5255
+  - `[{"id":"number","title":"string","created_at":"string","updated_at":"string","category_id":"number","category_title":"string"},"×32"]`
+  - `[{"id":12,"title":"استخراج الضوابط الفقهي","created_at":"2023-03-09T12:21:44.304Z","updated_at":"2023-03-09T12:21:44.304Z","category_id":1,"category_title":"الفقه"},{"id":38,"title":"استخراج الضوابط الفقهية","created_at":"2023-03-17T06:46:26.558Z","updated_at":"2023-03-17T06:46:26.558Z","category_id":1,"category_title":"الفقه"},{"id":1,"title":"الاستدلال الأصولي","created_at":"2023-03-09T12:21:44.272Z","updated_at":"2023-03-09T12:21:44.272Z","category_id":3,"category_title":"أصول الفقه"},{"id":28,"title":"الاستدلال للقواعد الفقهية ","created_at":"2023-03-12T19:01:38.014Z","updated_at":"2023-03-12T19:01:38.014Z","category_id":3,"category_title":"أصول الفقه"},{"id":9,"title":"الاستدلال والاستنباط","created_at":"2023-03-09T12:21:44.296Z","updated_at":"2023-03-09T12:21:44.296Z","category_id":1,"category_title":"الفقه"},{"id":16,"title":"التعليل الفقهي","created_at":"2023-03-09T12:21:44.319Z","updated_at":"2023-03-09T12:21:44.319Z","category_id":1,"category_title":"الفقه"},{"id":3,"title":"التفريق","created_at":"2023-03-09T12:21:44.279Z","updated_at":"2023-03-09T12:21:44.279Z","category_id":3,"category_title":"أصول الفقه"},{"id":10,"title":"التفريق الفقهي","created_at":"2023-03-09T12:21:44.298Z","updated_at":"2023-03-09T12:21:44.298Z","category_id":1,"category_title":"الفقه"},{"id":2,"title":"التقسيم","created_at":"2023-03-09T12:21:44.275Z","updated_at":"2023-03-09T12:21:44.275Z","category_id":3,"category_title":"أصول الفقه"},{"id":11,"title":"التقسيم الفقهي","created_at":"2023-03`
+- مسارات الواجهة ونصوصها: /storage/ ، saved ، add ، mine ، blocked ، explore ، main ، dashboard ، notifications ، contact-us ، general/:page
