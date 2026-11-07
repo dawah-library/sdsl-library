@@ -32,7 +32,7 @@ def log(s):
 
 # ---------- التصنيف ----------
 # الترتيب: الدعوة السلفية ← حزب النور ← المسلمون ← المنطقة ← العالم ← مصر (والمصادر مصرية فالأصل الشأن المصري)
-DAWAH = re.compile(r"الدعوة السلفية|السلفيين|السلفية بمصر|برهامي|جمعية الدعاة|الشحات|المقدم|أحمد فريد|محمد إسماعيل|نائب رئيس الدعوة|متحدث الدعوة")
+DAWAH = re.compile(r"الدعوة السلفية|السلفيين|السلفية بمصر|برهامي|جمعية الدعاة|عبد المنعم الشحات|محمد إسماعيل المقدم|الشيخ أحمد فريد|نائب رئيس الدعوة|متحدث الدعوة")
 NOUR = re.compile(r"حزب النور|نواب النور|النور بـ|أمانة النور|مخيون|نائب (?:حزب )?النور|\"النور\"|«النور»")
 MUSLIM = re.compile(r"المسلمين|المسلمون|الإسلامية|الإسلامي|العالم الإسلامي|الأقصى|القدس|غزة|فلسطين|الفلسطيني|الضفة|الروهينجا|الإيغور|كشمير|مسلمي|الحج|العمرة|منظمة التعاون الإسلامي")
 EGYPT = re.compile(r"مصر|المصري|المصرية|القاهرة|الجيزة|الإسكندرية|محافظ|محافظة|الجنيه|السيسي|مدبولي|مجلس النواب|مجلس الشيوخ|البرلمان المصري|وزير(?:ة)? (?:التموين|التعليم|الصحة|الأوقاف|الكهرباء|الإسكان|الزراعة|الري|النقل|المالية|العمل|التضامن)|وزارة (?:التموين|التعليم|الصحة|الكهرباء|الإسكان|الزراعة|الري|النقل|المالية|العمل|التضامن)|قناة السويس|الضبعة|البحيرة|الدقهلية|الشرقية|المنوفية|الغربية|القليوبية|كفر الشيخ|دمياط|بورسعيد|الإسماعيلية|السويس|الفيوم|بني سويف|المنيا|أسيوط|سوهاج|قنا|الأقصر|أسوان|مطروح|سيناء|الأرصاد|الثانوية العامة|جنيه|الحكومة|متحدث الحكومة|رئيس الوزراء")
@@ -49,6 +49,7 @@ def cat(s, t):
 # ---------- أدوات ----------
 def get(u, t=25, data=None, headers=None):
     h = dict(UA); h.update(headers or {})
+    u = urllib.parse.quote(u, safe=":/?&=%#+,;@!$'()*~")   # روابط بحروف عربية
     r = urllib.request.urlopen(urllib.request.Request(u, data=data, headers=h), timeout=t)
     raw = r.read(); cs = r.headers.get_content_charset() or "utf-8"
     return raw.decode(cs, "replace"), r.geturl()
@@ -168,7 +169,13 @@ def via_html(s):
 def bing_snips(s):
     """موجزات أخبار المصدر من خلاصة أخبار Bing العامة (وصف لكل خبر)، لإكمال الموجز حين لا تُتاح صفحة الخبر."""
     q = urllib.parse.quote(f"site:{s['host']}")
-    x, _ = get(f"https://www.bing.com/news/search?q={q}&format=rss&setlang=ar-EG&cc=EG&count=50")
+    x = ""
+    for fmt in ("RSS", "rss"):
+        try:
+            x, _ = get(f"https://www.bing.com/news/search?q={q}&format={fmt}&setlang=ar&cc=EG")
+            if "<rss" in x[:500]: break
+        except Exception: x = ""
+    if "<rss" not in x[:500]: raise RuntimeError("لا خلاصة Bing")
     out = []
     for z in rss_items(x):
         m = re.search(r"[?&]url=([^&]+)", z["url"])
@@ -226,7 +233,10 @@ def enrich(z, s):
             if len(p) > 80 and not similar(p, z["title"]): d = p; break
     if d and not similar(d, z["title"]) or (d and len(d) > len(z["title"]) + 40): z["sum"] = brief(d)
     if not z.get("date"):
-        z["date"] = iso(meta(page, "article:published_time", "og:updated_time"))
+        z["date"] = iso(meta(page, "article:published_time", "og:updated_time", "date", "pubdate"))
+    if not z.get("date"):
+        m = re.search(r'"datePublished"\s*:\s*"([^"]+)"', page) or re.search(r'<time[^>]+datetime="([^"]+)"', page)
+        if m: z["date"] = iso(m.group(1))
     return z
 
 # ---------- الجولة ----------
@@ -262,6 +272,8 @@ def main():
                 except Exception as e:
                     if DRY: log(f"  تعذر إكمال «{z['title'][:40]}»: {str(e)[:80]}")
             if any(x["url"] == z["url"] for x in items): continue
+            if how == "html" and not z.get("date"): continue   # بلا تاريخ نشر: لا يُعرض خبرًا قديمًا على أنه جديد
+            if age_days(z.get("date", "")) > MAX_AGE: continue
             n += 1; n_sum += 1 if z.get("sum") else 0
             items.append({"title": z["title"], "url": z["url"], "date": z.get("date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sum": z.get("sum", ""), "src": s["name"], "sid": s["id"], "cat": ""})
         rep.append(f"{s['name']}: {n} جديد ({how or 'تعذر'})، بموجز {n_sum}")
