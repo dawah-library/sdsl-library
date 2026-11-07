@@ -360,7 +360,7 @@ def main():
         sl = jload(os.path.join(SD, "_list.json"), {})
         have_q = {x["b"] for x in jload(os.path.join(QD, "index.json"), {"items": []}).get("items", []) if x.get("ai")}
         books = [b for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book"
-                 and not b.get("hidden") and not b.get("demo") and 20 <= (b.get("n") or 0) <= 500 and not (b.get("ocr") and (b.get("unrev") or b.get("lite")))]  # بعد اكتمال التدقيق
+                 and not b.get("hidden") and not b.get("demo") and 20 <= (b.get("n") or 0) <= 500 and not (b.get("ocr") and b.get("unrev"))]  # بعد مراجعة كل صفحاته (ولو بالنموذج الخفيف؛ إعادة قراءتها بالأساسي تصحيحات صغيرة لا تغيّر المضمون)
         books.sort(key=lambda b: b.get("n") or 999)
         for b in books:
             need = [d for d in do_all if (d == "quiz" and b["id"] not in have_q) or (d == "summ" and b["id"] not in sl)]
@@ -373,7 +373,7 @@ def main():
             break
         b = next((x for x in cat["books"] if x["id"] == bid), {})
         print("كتاب:", bid, b.get("title", ""), dos, flush=True)
-        ok = True
+        left = list(dos)  # ما بقي لهذا الكتاب: المنجز يُرفع من الطابور وحده، فلا يُعاد بناء اختبار تام لأن الاختصار تعذّر
         try:
             if "quiz" in dos:
                 qs = quiz_book(bid, cat)
@@ -381,8 +381,8 @@ def main():
                     save_quiz(bid, qs)
                     c = {k: sum(1 for x in qs if x["lvl"] == k) for k in LEVELS}
                     REPORT.append("✓ اختبار «%s»: سهل %d، متوسط %d، متقدم %d" % (b.get("title", bid), c["easy"], c["mid"], c["hard"]))
-                elif qs is None:
-                    ok = False
+                if qs is not None:
+                    left.remove("quiz")
             if "summ" in dos:
                 s = summ_book(bid, cat)
                 if s:
@@ -390,13 +390,19 @@ def main():
                     lst[bid] = {"t": s["t"], "n": len(s["chs"]), "upd": s["built"]}
                     jsave(os.path.join(SD, "_list.json"), lst)
                     REPORT.append("✓ اختصار «%s»: %d مقطعًا" % (b.get("title", bid), len(s["chs"])))
+                    left.remove("summ")
                 else:
-                    ok = False
+                    REPORT.append("… اختصار «%s»: لم يكتمل (نفدت الحصة أو المهلة)، ويُستأنف من حيث توقف" % b.get("title", bid))
         except Exception as e:
-            print("  خطأ:", str(e)[:200], flush=True); ok = False
-        if ok:
-            q["items"] = [x for x in q.get("items", []) if x["id"] != bid]
-            jsave(qp, q)
+            print("  خطأ:", str(e)[:200], flush=True)
+        items = q.get("items", [])
+        if not left:
+            q["items"] = [x for x in items if x["id"] != bid]
+        else:
+            for x in items:
+                if x["id"] == bid:
+                    x["do"] = left
+        jsave(qp, q)
         done += 1
         commit("اختبارات واختصارات محرَّرة: %s" % b.get("title", bid))
     open(os.path.join(ROOT, ".st-report.txt"), "w", encoding="utf-8").write(("📝 <b>الاختبارات والاختصارات</b>\n" + "\n".join(REPORT)) if REPORT else "")

@@ -12,7 +12,8 @@
 لا يُنشر للأعضاء إلا بعد مراجعة الإدارة (hidden حتى الاعتماد)."""
 import json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); Q = os.path.join(D, "transcribe", "_queue.json")
-KEYS = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
+from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+KEYS = _gkeys("bulk")
 MODELS = [m for m in os.environ.get("TR_MODELS", "gemini-flash-latest,gemini-3.5-flash").split(",") if m]
 SEG = int(os.environ.get("TR_SEG_MIN", "20")) * 60
 DEADLINE = time.time() + 60 * float(os.environ.get("TR_MINUTES", "300"))

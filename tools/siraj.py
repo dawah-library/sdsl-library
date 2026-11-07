@@ -6,7 +6,8 @@
 المتغيرات: SIRAJ_ID (معرّف الكتاب في الفهرس)، SIRAJ_FROM/SIRAJ_TO (نطاق الصفحات)، والعمل يُستأنف من data/quran/tafsir/siraj/_work.json."""
 import json, os, re, sys, time, base64, subprocess, tempfile, glob, urllib.request, urllib.error, importlib.util
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); Q = os.path.join(ROOT, "data", "quran"); OUT = os.path.join(Q, "tafsir", "siraj")
-KEYS = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
+from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+KEYS = _gkeys("bulk")
 MODELS = [m for m in os.environ.get("SIRAJ_MODELS", "gemini-flash-latest,gemini-3.5-flash,gemini-flash-lite-latest").split(",") if m]
 DEAD = set(); DEADLINE = time.time() + 60 * float(os.environ.get("SIRAJ_MINUTES", "200"))
 PROMPT = ("هذه صفحات من كتاب «السراج في بيان غريب القرآن». كل صفحة جدول من ثلاثة أعمدة (من اليمين): رقم الآية، والكلمة القرآنية بين ﴿ ﴾، ومعناها؛ "

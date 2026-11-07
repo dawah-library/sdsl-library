@@ -23,7 +23,7 @@ TJ_TOPICS = {"t1", "t6", "t8", "t4", "t5", "t11", "t19", "t20", "t14", "t2", "t1
 TALA_BIG = {"t5", "t18"}
 
 
-def ready(b): return not b.get("ocr") or (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) == 0
+def ready(b): return not b.get("ocr") or (b.get("unrev") or 0) + (b.get("unc") or 0) == 0  # المراجَع بالنموذج الخفيف جاهز لخدمات الدراسة
 
 
 def addq(path, item, key="id"):

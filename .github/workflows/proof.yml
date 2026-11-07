@@ -4,7 +4,8 @@ on:
   push:
     paths: ["data/proof/_queue.json"]
   schedule:
-    - cron: "29 3 * * *"
+    - cron: "41 8 * * *"    # بعد تجدد حصة Gemini اليومية (منتصف الليل بتوقيت المحيط الهادئ)، بالمفاتيح المحجوزة لخدمات الكتب
+    - cron: "29 3 * * *"    # جولة ثانية لما بقي
 permissions:
   contents: write
   id-token: write
@@ -14,7 +15,7 @@ concurrency:
 jobs:
   proof:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 160
     steps:
       - uses: actions/checkout@v4
       - name: التدقيق
@@ -40,7 +41,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
         run: |
-          python3 tools/proof.py
+          PROOF_PAGES=400 PROOF_MINUTES=80 python3 tools/proof.py
           # الكتب النصية المربوطة بمصورات طبعاتها: الصفحات التي خالفت صورتها تُقرأ مع الصورة (tools/scan-proof.py)
           sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null
           python3 tools/scan-proof.py || echo "::warning::تعذّر التدقيق على المصورة"

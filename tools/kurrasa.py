@@ -258,7 +258,7 @@ def main():
         if time.time() > T.DEADLINE[0] or (T.KEYS and len(T.EXH) >= len(T.KEYS)):
             break
         bb = next((x for x in cat["books"] if x["id"] == bid), {})
-        if bb.get("ocr") and (bb.get("unrev") or 0) + (bb.get("lite") or 0) > max(3, (bb.get("n") or 0) * 0.05):  # الأولوية للتدقيق: تُعدّ الكراسة بعد اكتمال مراجعة أغلب النص على الصور
+        if bb.get("ocr") and (bb.get("unrev") or 0) > max(3, (bb.get("n") or 0) * 0.05):  # الأولوية للتدقيق: تُعدّ الكراسة بعد مراجعة أغلب النص على الصور (ولو بالنموذج الخفيف)
             print("  ينتظر اكتمال التدقيق:", bid, flush=True); continue
         print("كراسة:", bid, flush=True)
         try:

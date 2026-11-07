@@ -12,7 +12,8 @@
 import datetime, hashlib, json, os, re, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
+from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+KEYS = _gkeys("bulk")
 MODEL = os.environ.get("CUR_MODEL", "gemini-flash-latest")
 BUDGET = [int(os.environ.get("CUR_MAX", "80"))]
 # حد زمني يترك وقتًا للحفظ قبل مهلة المهمة (حين تتزاحم المهام على حصة Gemini نفسها)

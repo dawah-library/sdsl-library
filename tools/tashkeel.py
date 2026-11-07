@@ -18,11 +18,13 @@ OUT = os.path.join(ROOT, "data", "tashkeel")
 CH = 50
 T0 = time.time()
 MAXMIN = float(os.environ.get("TK_MAX_MIN", "300"))
-GKEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
+from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+GKEYS = _gkeys("bulk")
 GMODEL = os.environ.get("TK_GEMINI_MODEL", "gemini-flash-latest")
 PRO = os.environ.get("TK_PRO_MODEL", "gemini-pro-latest")
 G2 = os.environ.get("TK_GEMINI_FALLBACK", "gemini-3.8-flash")  # بديل بحصة مستقلة إذا نفدت حصة النموذج الأساسي في كل المفاتيح
-GHM = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
+# أُوقفت خدمة GitHub Models نهائيًّا في ٣٠ يوليو ٢٠٢٦ (عنوانها يرد بنص «OK» فيفشل كل طلب ويضيّع وقت المهمة)؛ فلا تُستعمل إلا بـ GHM_ENABLE=1.
+GHM = os.environ.get("GITHUB_MODELS_TOKEN", "").strip() if os.environ.get("GHM_ENABLE") == "1" else ""
 GHM_MODEL = os.environ.get("TK_GHM_MODEL", "openai/gpt-4.1")
 MAX_PAGES = int(os.environ.get("TK_MAX_PAGES", "400"))
 DIAC = re.compile(r"[ً-ْٰ]")

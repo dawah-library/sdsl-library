@@ -12,7 +12,8 @@ from frontmatter import content_range  # noqa: E402  صفحات العنوان �
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "tashjir")
-KEYS = [k for k in [os.environ.get("GEMINI_API_KEY", "")] + [os.environ.get("GEMINI_API_KEY_%d" % i, "") for i in range(2, 21)] if k.strip()]
+from gkeys import keys as _gkeys  # noqa: E402  خدمات الكتب تبدأ بالمفاتيح المحجوزة لها (tools/gkeys.py)
+KEYS = _gkeys("study")
 MODEL = os.environ.get("TJ_MODEL", "gemini-flash-latest")
 DIAC = re.compile(r"[ً-ْٰـ]")
 EXH = set()
@@ -66,7 +67,8 @@ def gemini(prompt, schema_hint=""):
 
 # محرك ثانٍ مجاني: GitHub Models برمز المهمة نفسها (permissions: models: read)، حين تنفد حصص Gemini كلها.
 # حدّه في الطلب الواحد نحو ٨ آلاف وحدة، فيُختصر النص المرسل إليه (العبارات المقتبسة تُتحقق منها بعدُ في الصفحات).
-GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip()
+# أُوقفت خدمة GitHub Models نهائيًّا في ٣٠ يوليو ٢٠٢٦ (عنوانها يرد بنص «OK» فيفشل كل طلب ويضيّع وقت المهمة)؛ فلا تُستعمل إلا بـ GHM_ENABLE=1.
+GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip() if os.environ.get("GHM_ENABLE") == "1" else ""
 GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
 GHM_EXH = set()
 

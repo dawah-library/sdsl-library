@@ -13,6 +13,7 @@ import importlib.util, json, os, re, subprocess, sys, tempfile, time, hashlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); OUT = os.path.join(D, "proof")
 sys.argv = sys.argv[:1]
+os.environ.setdefault("OCR_KEY_ROLE", "study")  # التدقيق على المصورة من خدمات الكتب: يبدأ بالمفاتيح المحجوزة لها
 sp = importlib.util.spec_from_file_location("ocr", os.path.join(ROOT, "tools", "ocr-pdf.py")); O = importlib.util.module_from_spec(sp); sp.loader.exec_module(O)
 sp2 = importlib.util.spec_from_file_location("pm", os.path.join(ROOT, "tools", "pdf-match.py")); PM = importlib.util.module_from_spec(sp2); sp2.loader.exec_module(PM)
 PROMPT = """أمامك صورة صفحة من الطبعة المطبوعة لكتاب «{title}»، ونص الصفحة نفسها في مكتبتنا (منقول من مصدر إلكتروني).
