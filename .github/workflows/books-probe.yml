@@ -15,4 +15,5 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node tools/books-probe.js
-      - run: bash tools/git-save.sh "استكشاف مصادر الكتب النصية: تقرير" tools/books-probe
+      - run: |
+          bash tools/git-save.sh "استكشاف مصادر الكتب النصية - تقرير" tools/books-probe
