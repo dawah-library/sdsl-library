@@ -4,6 +4,7 @@
   "description": "مكتبة الدعوة السلفية الرقمية — دوال الخادم على Vercel",
   "dependencies": {
     "web-push": "3.6.7",
-    "nodemailer": "10.3.1"
+    "nodemailer": "10.3.1",
+    "@anthropic-ai/sdk": "1.6.0"
   }
 }

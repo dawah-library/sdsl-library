@@ -4,6 +4,9 @@
 // ويبث نص النموذج، أو يعيد طلبات الأدوات ليُنفذها المتصفح ثم يرسل جولة جديدة.
 // متغيرات البيئة: GEMINI_API_KEY (مجاني من Google AI Studio)، GEMINI_MODEL اختياري،
 // SUPABASE_URL وSUPABASE_ANON_KEY لقصر الخدمة على الأعضاء، SDSL_HOURLY_LIMIT (أسئلة العضو في الساعة، الافتراضي ٢٠).
+// محرك ثانٍ: Claude من Anthropic (ANTHROPIC_API_KEY في متغيرات الخادم، وASK_CLAUDE_MODEL اختياري)؛ يعمل أولًا متى وُجد مفتاحه
+// ومفتاح «ask_claude» غير موقوف، وGemini بديله عند تعذره. المحادثة تصل بصيغة Gemini وتُترجم هنا، ورد Claude الكامل
+// (ومنه كتل التفكير) يُعاد إلى المتصفح جزءًا معتمًا {cl} ليُرسل كما هو في الجولة التالية.
 require("../search.js");
 const S = globalThis.SDSLSearch;
 const hits = new Map();
@@ -32,17 +35,73 @@ function sanitize(contents) {
       if (typeof p.text === "string") parts.push(Object.assign({ text: p.text.slice(0, 14000) }, p.thoughtSignature ? { thoughtSignature: String(p.thoughtSignature).slice(0, 20000) } : {}));
       else if (p.functionCall && typeof p.functionCall.name === "string") parts.push(Object.assign({ functionCall: { name: p.functionCall.name, args: p.functionCall.args || {} } }, p.functionCall.id ? {} : {}, p.thoughtSignature ? { thoughtSignature: String(p.thoughtSignature).slice(0, 20000) } : {}));
       else if (p.functionResponse && typeof p.functionResponse.name === "string") parts.push({ functionResponse: { name: p.functionResponse.name, response: p.functionResponse.response || {} } });
+      else if (Array.isArray(p.cl) && c.role === "model" && JSON.stringify(p.cl).length < 300000) { const cl = p.cl.filter(b => b && ["text", "thinking", "redacted_thinking", "tool_use", "fallback"].includes(b.type)); if (cl.length) parts.push({ cl }); }
     }
     if (!parts.length) return null;
     size += JSON.stringify(parts).length; out.push({ role: c.role, parts });
   }
-  if (size > 400000 || out[0].role !== "user") return null;
+  if (size > 1200000 || out[0].role !== "user") return null;
   return out;
 }
+// ---------- Claude ----------
+const CL_TOOLS = () => S.TOOLS.map(t => ({ name: t.name, description: t.description, input_schema: clean(t.input_schema) || { type: "object", properties: {} } }));
+// صيغة Gemini ← رسائل Claude: نص المستخدم، وطلبات الأدوات tool_use بمعرّفات ثابتة، ونتائجها tool_result بالترتيب نفسه
+function toClaude(contents) {
+  const msgs = []; let lastIds = [];
+  contents.forEach((c, ci) => {
+    if (c.role === "model") {
+      const cl = c.parts.find(p => p.cl);
+      const content = cl ? cl.cl : c.parts.map((p, pi) => p.text ? { type: "text", text: p.text } : p.functionCall ? { type: "tool_use", id: "g" + ci + "_" + pi, name: p.functionCall.name, input: p.functionCall.args || {} } : null).filter(Boolean);
+      lastIds = content.filter(b => b.type === "tool_use").map(b => b.id);
+      if (content.length) msgs.push({ role: "assistant", content });
+    } else {
+      let k = 0; const content = c.parts.map(p => p.text ? { type: "text", text: p.text } : p.functionResponse && lastIds[k] ? { type: "tool_result", tool_use_id: lastIds[k++], content: JSON.stringify((p.functionResponse.response || {}).result ?? p.functionResponse.response ?? {}).slice(0, 30000) } : null).filter(Boolean);
+      if (content.length) msgs.push({ role: "user", content });
+      lastIds = [];
+    }
+  });
+  return msgs;
+}
+let AnthropicCtor = null;
+function claudeClient() { if (!AnthropicCtor) { const m = require("@anthropic-ai/sdk"); AnthropicCtor = m.default || m.Anthropic || m; } return new AnthropicCtor({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1 }); }
+// يعيد true إن أجاب (أو أنهى الجولة)، وfalse إن تعذر قبل أي نص فيُجرَّب Gemini
+async function viaClaude(system, contents, body, deep, send) {
+  let sent = false;
+  try {
+    const stream = claudeClient().beta.messages.stream({
+      model: process.env.ASK_CLAUDE_MODEL || "claude-opus-5-5",
+      max_tokens: deep ? 32000 : 12000,
+      system,
+      messages: toClaude(contents),
+      tools: body.last ? undefined : CL_TOOLS(),
+      output_config: { effort: deep ? "high" : "medium" },
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+    });
+    for await (const ev of stream) {
+      if (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta" && ev.delta.text) { sent = true; send({ t: "text", v: ev.delta.text }); }
+    }
+    const msg = await stream.finalMessage();
+    if (msg.stop_reason === "refusal") { if (!sent) return false; send({ t: "done" }); return true; }
+    const uses = msg.content.filter(b => b.type === "tool_use");
+    if (uses.length) {
+      const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
+      const parts = (text ? [{ text }] : []).concat(uses.map(b => ({ functionCall: { name: b.name, args: b.input || {} } })), [{ cl: msg.content }]);
+      send({ t: "calls", calls: uses.map(b => ({ name: b.name, args: b.input || {} })), parts });
+    }
+    send({ t: "done", engine: "claude" });
+    return true;
+  } catch (e) {
+    console.error("claude", e && (e.status || "") , e && e.message);
+    if (sent) { send({ t: "done" }); return true; }
+    return false;
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("ask", res, "المساعد العلمي")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
-  if (!process.env.GEMINI_API_KEY) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
+  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
   const body = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
   const contents = sanitize(body.contents);
   if (!contents) return res.status(400).json({ error: "محادثة غير صالحة أو طويلة جدًا؛ ابدأ محادثة جديدة." });
@@ -58,12 +117,19 @@ module.exports = async (req, res) => {
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" });
   const send = o => res.write(JSON.stringify(o) + "\n");
+  if (process.env.ANTHROPIC_API_KEY && await require("../lib/switch").on("ask_claude")) {
+    if (await viaClaude(system, contents, body, deep, send)) return res.end();
+    if (!process.env.GEMINI_API_KEY) { send({ t: "error", code: "server", v: "تعذر الاتصال بنموذج الذكاء الاصطناعي." }); return res.end(); }
+    send({ t: "status", v: "يجرّب نموذجًا بديلًا…" });
+  }
+  // Gemini لا يعرف أجزاء Claude المعتمة: تُحذف، ويبقى ما يقابلها من نص وطلبات أدوات
+  const gcontents = contents.map(c => ({ role: c.role, parts: c.parts.filter(p => !p.cl) })).filter(c => c.parts.length);
   for (let k = 0; k < models.length; k++) {
     let r;
     try {
       r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[k]) + ":streamGenerateContent?alt=sse", {
         method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, tools: body.last ? undefined : TOOLS(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gcontents, tools: body.last ? undefined : TOOLS(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
       });
     } catch (e) { r = null; }
     if (!r || !r.ok || !r.body) {

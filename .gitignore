@@ -9,3 +9,4 @@ data/sx/
 node_modules/
 .dev-*
 .qref-report.txt
+package-lock.json
