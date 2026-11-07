@@ -1746,6 +1746,71 @@
     "tala:t4"
    ],
    "batch": "tala"
+  },
+  {
+   "id": "mukhtasarquduri",
+   "died": 428,
+   "author": "Quduri",
+   "book": "Mukhtasar|Kitab",
+   "title": "مختصر القدوري",
+   "authorName": "أبو الحسين القدوري",
+   "topic": "t4",
+   "tags": [
+    "madh:hanafi"
+   ],
+   "batch": "hanafi"
+  },
+  {
+   "id": "badaisanai",
+   "died": 587,
+   "author": "Kasani",
+   "book": "BadaicSanaic|Badaic",
+   "title": "بدائع الصنائع في ترتيب الشرائع",
+   "authorName": "علاء الدين الكاساني",
+   "topic": "t4",
+   "tags": [
+    "madh:hanafi"
+   ],
+   "batch": "hanafi"
+  },
+  {
+   "id": "hidayamarghinani",
+   "died": 593,
+   "author": "Marghinani",
+   "book": "Hidaya",
+   "title": "الهداية في شرح بداية المبتدي",
+   "authorName": "برهان الدين المرغيناني",
+   "topic": "t4",
+   "tags": [
+    "madh:hanafi"
+   ],
+   "batch": "hanafi"
+  },
+  {
+   "id": "ikhtiyarmawsili",
+   "died": 683,
+   "author": "Mawsili|IbnMawdud",
+   "book": "Ikhtiyar",
+   "title": "الاختيار لتعليل المختار",
+   "authorName": "عبد الله بن محمود الموصلي",
+   "topic": "t4",
+   "tags": [
+    "madh:hanafi"
+   ],
+   "batch": "hanafi"
+  },
+  {
+   "id": "raddmuhtar",
+   "died": 1252,
+   "author": "IbnCabidin|Cabidin",
+   "book": "RaddMuhtar|Hashiya",
+   "title": "رد المحتار على الدر المختار (حاشية ابن عابدين)",
+   "authorName": "ابن عابدين",
+   "topic": "t4",
+   "tags": [
+    "madh:hanafi"
+   ],
+   "batch": "hanafi"
   }
  ]
 }
