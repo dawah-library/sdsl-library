@@ -2,7 +2,7 @@
    قاعدة ثابتة: كل خدمة جديدة تُضاف إلى الموقع تُدرج هنا في ABOUT_SECS (في القسم المناسب) في الإيداع نفسه.
    العنصر: [الاسم، الوصف، "مسارات الصفحات التي يغطيها"]. وtools/check-about.py (مهمة about-check.yml) يفحص عند كل إيداع
    أن كل صفحة في موجّه app.js وكل ملف خدمة في index.html مذكوران هنا، وإلا نبّه الإدارة. ABOUT_MODULES: ملفات الخدمات المغطاة. */
-const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about talaplay";
+const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export docx hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about talaplay";
 const ABOUT_SECS = [
   ["المحتوى", [
     ["مكتبة الدعوة", "كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور، محوّلة إلى نص قابل للبحث مع نسختها المصورة.", "library"],
@@ -86,7 +86,7 @@ const ABOUT_SECS = [
     ["سجل قراءتي", "تُسجَّل كل صفحة يبقى عليها العضو ثوانيَ في حسابه: ما قرأه من كل كتاب ونسبته وتاريخ إتمامه (عند ٩٠٪)، في «مكتبتي ← سجل قراءتي» مع تنزيله؛ وتطّلع عليه الإدارة.", "mine"],
     ["مفكرة الصفحة", "زر ✎ بجوار كل صفحة في القارئ يفتح مفكرة خاصة بالعضو يكتب فيها ملاحظاته وفوائده فتُحفظ تلقائيًا في حسابه، مع تظليلاته في الصفحة وملاحظاته على بقية الكتاب، وتنزيل مفكرة الكتاب كاملة (Word وMarkdown ونص) مع بيانات الكتاب.", ""],
     ["مشاريع القراءة والتذكير", "ورد يومي من كتاب تختاره، مع تذكير في الموقع وإشعارات على الجهاز.", "mine"],
-    ["التصدير", "تصدير صفحة أو فصل أو نطاق أو كتاب كامل بصيغ PDF (بقوالب ومقاسات متعددة) وWord وEPUB وHTML وMarkdown ونص."]
+    ["التصدير", "تصدير صفحة أو فصل أو نطاق أو كتاب كامل بصيغ PDF (بقوالب ومقاسات متعددة) وWord وEPUB وHTML وMarkdown ونص. ومنها Word منسّق (DOCX) للنص المدقق بحواشيه السفلية وفهرسه وغلافه وصفحة حقوقه (للإدارة ومن تمنحه الصلاحية)، مع خيارات تنسيق: خط النص والعناوين وأحجامها وألوانها، والتباعد والمحاذاة ومقاس الصفحة والهوامش، وستة قوالب جاهزة."]
   ]],
   ["المشاركة والمجتمع", [
     ["تصميم الاقتباس", "تصميم الاقتباسات من الكتب ومشاركتها صورةً بهوية المكتبة أو بهوية الجهة، مع التحكم في حجم الخط ونوعه وتباعد الأسطر والمحاذاة، وإظهار اسم الكاتب أو الكتاب أو رابط الموقع أو إخفائها، وبصمة هوية المكتبة (ختم في الزاوية، أو شريط سفلي، أو علامة مائية على كامل الصورة)؛ والنص المنسوخ يتبع الاختيارات نفسها.", "qabasat"],
