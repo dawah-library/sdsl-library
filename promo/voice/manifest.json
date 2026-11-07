@@ -163,5 +163,60 @@
   "h": "c23345d174c1",
   "d": 7.59,
   "model": "gemini-3.1-flash-tts-preview"
+ },
+ "best/s01": {
+  "d": 24.15,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s02": {
+  "d": 20.91,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s03": {
+  "d": 4.63,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s04": {
+  "d": 68.33,
+  "model": "gemini-3.8-flash-tts",
+  "score": 0
+ },
+ "best/s05": {
+  "d": 83.05,
+  "model": "gemini-3.8-flash-tts",
+  "score": 0
+ },
+ "best/s06": {
+  "d": 13.91,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s07": {
+  "d": 12.91,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s08": {
+  "d": 16.84,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s09": {
+  "d": 23.96,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s10": {
+  "d": 22.77,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
+ },
+ "best/s11": {
+  "d": 10.29,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 0
  }
 }
