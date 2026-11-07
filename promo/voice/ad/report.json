@@ -1,0 +1,78 @@
+{
+ "audition": {},
+ "segments": {
+  "a1": {
+   "transcript": "تُرَاثُ الدَّعْوَةِ السَّلَفِيَّةِ بِمِصْرْ، فِي مَكَانٍ وَاحِدْ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 10,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 34.0,
+   "model": "gemini-3.8-flash-tts",
+   "d": 6.29
+  },
+  "a2": {
+   "transcript": "مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةْ، مُسْتَوْدَعٌ جَامِعْ، وَكُنَّاشَةٌ لِتُرَاثِ الدَّعْوَةْ، فِيهَا كُتُبٌ لِمَشَايِخِهَا تُنْشَرُ رَقْمِيًّا لِأَوَّلِ مَرَّةْ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 9,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 33.0,
+   "model": "gemini-3.1-flash-tts-preview",
+   "d": 13.48
+  },
+  "a3": {
+   "transcript": "وَمَعَهَا أُمَّهَاتُ الْمَصَادِرِ وَالْمَرَاجِعِ الَّتِي لَا يَسْتَغْنِي عَنْهَا طَالِبُ الْعِلْمِ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 9,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 33.0,
+   "model": "gemini-3.1-flash-tts-preview",
+   "d": 7.32
+  },
+  "a4": {
+   "transcript": "تَصِلُ إِلَى الْكِتَابْ، وَإِلَى مَوْضِعِهْ، وَإِلَى النَّصِّ الَّذِي تُرِيدْ، فِي لَحْظَهْ، بِخِدْمَاتٍ عِلْمِيَّةٍ مُتَكَامِلَةٍ تُغْنِيكَ عَنْ مَوَاقِعَ كَثِيرَهْ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 9,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 33.0,
+   "model": "gemini-3.1-flash-tts-preview",
+   "d": 12.15
+  },
+  "a5": {
+   "transcript": "قِرَاءَةٌ مُيَسَّرَةٌ تَدُومُ مَعَكْ، وَتَطْوِيرٌ مُسْتَمِرّْ، وَتَصْحِيحٌ دَوْرِيّْ، وَإِضَافَاتٌ كُلَّ يَوْمْ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 9,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 33.0,
+   "model": "gemini-3.1-flash-tts-preview",
+   "d": 10.36
+  },
+  "a6": {
+   "transcript": "مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةْ، عِلْمٌ مَوْثُوقْ، بَيْنَ يَدَيْكْ.",
+   "issues": [],
+   "pron": 10,
+   "vo": 9,
+   "instructions_read": false,
+   "wer": 0.0,
+   "judge": "gemini-3.8-flash",
+   "score": 33.0,
+   "model": "gemini-3.1-flash-tts-preview",
+   "d": 7.35
+  }
+ },
+ "voice": "Algenib"
+}

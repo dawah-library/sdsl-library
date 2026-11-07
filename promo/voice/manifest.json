@@ -228,5 +228,35 @@
   "d": 35.26,
   "model": "gemini-3.1-flash-tts-preview",
   "score": 34.0
+ },
+ "ad/a1": {
+  "d": 6.29,
+  "model": "gemini-3.8-flash-tts",
+  "score": 34.0
+ },
+ "ad/a2": {
+  "d": 13.48,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a3": {
+  "d": 7.32,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a4": {
+  "d": 12.15,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a5": {
+  "d": 10.36,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a6": {
+  "d": 7.35,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
  }
 }
