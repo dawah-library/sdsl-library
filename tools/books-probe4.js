@@ -44,6 +44,7 @@ async function probe(label, u, name) {
   for (const s of js) { const r = await get(s);
     const m = r.b.match(/api_url\s*:\s*["'`]([^"'`]+)["'`]/); if (m && !api) api = m[1];
     for (const mm of r.b.matchAll(/\b([A-Z][A-Z_]{3,40})\s*:\s*["'`]([a-zA-Z0-9_\/\-]{3,80})["'`]/g)) routes[mm[1]] = mm[2]; }
+  if (!api) api = "/api/";  // ‏/api/books يجيب JSON، فالواجهة تحت /api/
   rep.push("- api_url: " + api, "- ثوابت المسارات: `" + JSON.stringify(routes).slice(0, 3000) + "`");
   if (api) { const A = new URL(api, B).href.replace(/\/?$/, "/");
     for (const k of ["GET_ALL_BOOKS", "GET_BOOKS_CATEGORIES", "GET_ANNOTATIONS_COUNT", "GET_DICTIONARIES_COUNT", "GET_FAVOURITE_ANNOTATIONS", "GET_CATEGORIES_COUNT", "GET_MEMBERS_COUNT"]) if (routes[k]) await probe(k, A + routes[k] + (k === "GET_ALL_BOOKS" ? "/0?page=1&limit=5" : ""));
