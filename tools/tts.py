@@ -102,12 +102,25 @@ def skip_page(bid, p, n, raw):
     return _skip(bid, p, n, raw, SKIP_AUD.get(bid))
 
 
-def speakable(t):
+# عناوين الأبواب والفصول المرقّمة («الفصل ٣»، «المسألة ١٢») تُقرأ ولا تُعدّ أسطر فهرس
+HEADW = re.compile(r"^(?:الباب|باب|الفصل|فصل|المبحث|المطلب|المسألة|مسألة|الدرس|الجزء|القسم|الكتاب|الحديث|المجلس|الفائدة|التنبيه|القاعدة)\b")
+LEADER = re.compile(r"(\.{3,}|…{2,}|[-ـ_]{4,})\s*[\d٠-٩]+\s*$")
+# أسطر التاريخ وحدها (١٤٣٠ هـ - ٢٠٠٩ م)، وأسطر بيانات الطبعة في أول الكتاب (تأليف فلان، دار كذا، تحقيق…)
+DATEL = re.compile(r"^[\s\d٠-٩/\-–—()]*(?:هـ|ه|م|ميلادية|هجرية)?[\s\d٠-٩/\-–—()]*(?:هـ|ه|م|ميلادية|هجرية)\s*\.?$")
+SIGDATE = re.compile(r"[\d٠-٩]{3,4}\s*هـ.{0,40}(?:الموافق|[\d٠-٩]{4}\s*م\b)")  # سطر التوقيع والتاريخ في آخر المقدمة
+FRONTL = re.compile(r"^(?:تأليف|بقلم|كتبه|جمع وترتيب|جمع وإعداد|إعداد|تحقيق|حققه|تحقيق وتعليق|قدم له|قدّم له|قدَّم له|راجعه|مراجعة|توزيع|دار\s|مكتبة\s|مؤسسة\s|الناشر|طبعة|الطبعة)")
+
+
+def speakable(t, front=False):
     """حذف الأسطر والعلامات والأرقام التي لا تُقرأ: بيانات النشر، أسطر الفهرس، أرقام التعداد والإحالات والآيات، والزخارف."""
     out = []
     for l in t.split("\n"):
         s = l.strip()
-        if not s or NUMSYM.match(s) or PUB.search(s) and len(s) < 160 or TOCL.search(s) and len(s) < 80 and not re.search(r"[.؟!]", s):
+        if not s or NUMSYM.match(s) or DATEL.match(s) or SIGDATE.search(s) and len(s) < 140 or PUB.search(s) and len(s) < 160:
+            continue
+        if LEADER.search(s) and len(s) < 120 or TOCL.search(s) and len(s) < 80 and not re.search(r"[.؟!]", s) and not HEADW.match(s):
+            continue
+        if front and len(s) < 90 and FRONTL.match(re.sub(r"[\u064B-\u0652\u0640]", "", s)):  # بيانات الطبعة والمؤلف في صفحات الكتاب الأولى
             continue
         s = re.sub(r"^\s*(\(?[\d٠-٩]{1,3}\)?|\(?[أ-ي]\))\s*[-–—.)]\s*", "", s)  # أرقام التعداد في أول السطر
         s = re.sub(r"\[\s*[\u0621-\u064A\s]+\s*:\s*[\d٠-٩\-–، ]+\]", " ", s)  # [البقرة: ٢٥٥]
@@ -330,6 +343,23 @@ def tashkeel_text(bid, p, raw):
     return e["t"] if e and e.get("h") == _fnv(raw) and e.get("t") else raw
 
 
+ORD = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر",
+       "السادس عشر", "السابع عشر", "الثامن عشر", "التاسع عشر", "العشرون"]
+
+
+def book_intro(b, cat):
+    """جملة الافتتاح: عنوان الكتاب (والجزء) واسم المؤلف فقط."""
+    t = re.sub(r"\s*[—–-]\s*(?:ج|الجزء|المجلد)\s*[\d٠-٩]+\s*$", "", b.get("setTitle") or b.get("title") or "").strip()
+    m = re.search(r"(?:ج|الجزء|المجلد)\s*([\d٠-٩]+)\s*$", b.get("title") or "")
+    vol = ""
+    if m:
+        n = int(m.group(1).translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")))
+        vol = "، الجزء " + (ORD[n] if 0 < n < len(ORD) else str(n)) if n else "، المقدمة"
+    au = next((a.get("name") for a in cat.get("authors", []) if a["id"] == b.get("authorId")), "")
+    if not t: return ""
+    return "كتاب: " + t + vol + "." + ((" تأليف: " + au + ".") if au and au not in t else "")
+
+
 async def tts_book(item, lst):
     bid = item["id"]
     sh = shard(bid)
@@ -353,16 +383,21 @@ async def tts_book(item, lst):
     only_p = {int(x) for x in (item.get("pages") or [])}  # صفحات بعينها يعيد تسجيلها المشرف بعد مراجعة السماع
     todo = []
     heads = running_heads(pages, b, cat)
+    front = max(6, len(pages) // 25)
+    txt_of = lambda p: "" if skip_page(bid, p, len(pages), pages[p - 1]) else speakable(noheads(clean(tashkeel_text(bid, p, pages[p - 1])), heads), p <= front)
+    # أول تسجيل: «كتاب كذا، تأليف فلان» ثم يبدأ مضمون الكتاب (لا تعليمات ولا بيانات طبعة أو نشر)
+    p0 = next((p for p in range(1, len(pages) + 1) if len(txt_of(p)) >= 3), 0)
+    intro = book_intro(b, cat)
     for p in range(first, min(last, len(pages)) + 1):
         if only_p and p not in only_p:
             continue
-        raw = tashkeel_text(bid, p, pages[p - 1])
-        tx = "" if skip_page(bid, p, len(pages), pages[p - 1]) else speakable(noheads(clean(raw), heads))
+        tx = txt_of(p)
+        if p == p0 and intro: tx = intro + "\n" + tx
         cur = man["pages"].get(str(p))
         if len(tx) < 3:
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
             continue
-        force = bool(item.get("force")) or p in only_p or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
+        force = bool(item.get("force")) or p in only_p or (p == p0 and cur and cur.get("h") != h(tx)) or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
         if cur and cur.get("d") and not force and (cur.get("pv", 0) >= PV or not str(voice).startswith("gemini:")) and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
             continue
         todo.append((p, tx))
