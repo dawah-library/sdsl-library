@@ -1335,3 +1335,5 @@ body.mfull .mpage.mp{max-width:none!important;width:calc((100vw - 8px) * var(--m
 body.mfull .mfbar{display:flex;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:400;gap:6px;align-items:center;background:rgba(20,40,34,.82);backdrop-filter:blur(6px);border-radius:30px;padding:5px 10px;opacity:.45;transition:opacity .2s}
 body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .mfbar button,.mfbar a{color:#fff;background:transparent;border:0;font-size:1.25rem;min-width:36px;height:36px;border-radius:50%;cursor:pointer;text-decoration:none;display:grid;place-items:center}.mfbar span{color:#f7e7b8;font-weight:700;padding:0 4px}
+/* نص الآية رابطٌ إلى المصحف (QREF.markRange) */
+.rd .qvl{cursor:pointer;border-radius:4px;transition:background .15s}.rd .qvl:hover{background:color-mix(in srgb,var(--ac) 10%,transparent)}

@@ -328,29 +328,57 @@ const QREF = (() => {
   // الآيات التي لا عزو لها في الكتاب: مواضعها من tools/qref-fix.py (الحقل qadd: [ترتيب الآية في الصفحة، آخر كلمة، سورة، آية، آخر آية])
   // يُعرض بعد الآية رابط صغير إلى المصحف دون تغيير نص الكتاب
   const VRX = /[﴿{]\s*([^{}﴿﴾]{4,1500}?)\s*[﴾}]/g, AD = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+  // تعليم نص الآية رابطًا (كلماتها span.w أو نص مجرد يُلف بعنصر): بالضغط تُفتح نافذة الآية
+  function markRange(tn, st, en, s_, a, b) {
+    tn.forEach(([node, o]) => {
+      const L = node.nodeValue.length; if (o + L <= st || o >= en || !node.parentNode) return;
+      const p = node.parentElement; if (!p || p.closest("a,.qvl")) return;
+      let el = p.classList.contains("w") || p.classList.contains("qv") ? p : null;
+      if (!el) { let n = node; const x = Math.max(0, st - o), y = Math.min(L, en - o); if (y <= x) return; if (y < L) n.splitText(y); if (x > 0) n = n.splitText(x); el = document.createElement("span"); n.parentNode.insertBefore(el, n); el.appendChild(n); }
+      el.classList.add("qvl"); el.dataset.s = s_; el.dataset.a = a; if (b) el.dataset.b = b; el.title = "اضغط للآية في المصحف: تفسيرها ومعاني كلماتها";
+    });
+  }
+  function textMap(rd, withRef) {
+    const tn = [], w = document.createTreeWalker(rd, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && n.parentElement.closest(withRef ? ".fnb,.fns" : ".fnb,.fns,.qref") ? 2 : 1 });
+    let str = ""; while (w.nextNode()) { tn.push([w.currentNode, str.length]); str += w.currentNode.nodeValue; } return [tn, str];
+  }
+  const DONE = new WeakMap();
   function addIn(rd) {
-    if (!rd || !rd.dataset || !rd.dataset.id || rd.querySelector(".qadd") || typeof SH === "undefined") return;
-    const sh = SH.get(rd.dataset.id), L = sh && sh.qadd && sh.qadd[String(+rd.dataset.p - 1)]; if (!L || !L.length) return;
-    const tn = [], w = document.createTreeWalker(rd, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && n.parentElement.closest(".fnb,.fns,.qref") ? 2 : 1 });
-    let str = ""; while (w.nextNode()) { tn.push([w.currentNode, str.length]); str += w.currentNode.nodeValue; }
-    const vs = []; let m; VRX.lastIndex = 0; while ((m = VRX.exec(str))) { const lw = nz(m[1]).split(" "); vs.push({ end: m.index + m[0].length, lw: lw[lw.length - 1] }); }
+    if (!rd || !rd.dataset || !rd.dataset.id || typeof SH === "undefined" || DONE.get(rd) === rd.firstChild) return;  // يُعاد إن تغيّر محتوى الصفحة
+    const sh = SH.get(rd.dataset.id), L = sh && sh.qadd && sh.qadd[String(+rd.dataset.p - 1)]; if (!sh) return; DONE.set(rd, rd.firstChild); if (!L || !L.length) return;
+    const [tn, str] = textMap(rd);
+    const vs = []; let m; VRX.lastIndex = 0; while ((m = VRX.exec(str))) { const lw = nz(m[1]).split(" "); vs.push({ st: m.index, end: m.index + m[0].length, lw: lw[lw.length - 1] }); }
     const used = new Set(), ins = [];
-    L.forEach(([k, lw, s_, a, b]) => {
+    L.forEach(([k, lw, s_, a, b, q]) => {
       let v = vs[k] && vs[k].lw === lw && !used.has(k) ? k : -1;
       if (v < 0) { let best = -1; vs.forEach((x, i) => { if (x.lw === lw && !used.has(i) && (best < 0 || Math.abs(i - k) < Math.abs(best - k))) best = i; }); v = best; }
-      if (v < 0) return; used.add(v); ins.push([vs[v].end, s_, a, b]);
+      if (v < 0) return; used.add(v); ins.push([vs[v].st, vs[v].end, s_, a, b, q]);
     });
-    ins.sort((x, y) => y[0] - x[0]).forEach(([pos, s_, a, b]) => {
-      let i = tn.length - 1; while (i > 0 && tn[i][1] >= pos) i--; const [node, o] = tn[i]; const at = pos - o;
-      const x = document.createElement("a"); x.className = "qref qadd"; x.href = "#/mushaf/" + s_ + "?a=" + a; x.dataset.s = s_; x.dataset.a = a; if (b) x.dataset.b = b;
-      x.title = "عزو الآية (أضافته المكتبة): تفسيرها ومعاني كلماتها وموضعها في المصحف"; x.textContent = "[" + N_[s_ - 1] + ": " + AD(a) + (b ? "-" + AD(b) : "") + "]";
-      const host = node.parentElement && node.parentElement.classList.contains("w") && at >= node.nodeValue.length ? node.parentElement : null;
-      if (host) host.after(x); else { const r = node.splitText(Math.min(at, node.nodeValue.length)); r.parentNode.insertBefore(x, r); }
+    const seen = new Set(); ins.sort((x, y) => x[0] - y[0]).forEach(x => { const k = x[2] + ":" + x[3]; if (seen.has(k)) x[5] = 1; seen.add(k); });  // عزو واحد للآية في الصفحة (التفاسير تكرر أجزاءها)
+    ins.sort((x, y) => y[0] - x[0]).forEach(([st, pos, s_, a, b, q]) => {
+      if (!q) {  // عزو صغير بعد الآية (أضافته المكتبة)
+        let i = tn.length - 1; while (i > 0 && tn[i][1] >= pos) i--; const [node, o] = tn[i]; const at = pos - o;
+        const x = document.createElement("a"); x.className = "qref qadd"; x.href = "#/mushaf/" + s_ + "?a=" + a; x.dataset.s = s_; x.dataset.a = a; if (b) x.dataset.b = b;
+        x.title = "عزو الآية (أضافته المكتبة): تفسيرها ومعاني كلماتها وموضعها في المصحف"; x.textContent = "[" + N_[s_ - 1] + ": " + AD(a) + (b ? "-" + AD(b) : "") + "]";
+        const host = node.parentElement && node.parentElement.classList.contains("w") && at >= node.nodeValue.length ? node.parentElement : null;
+        if (host) host.after(x); else { const r = node.splitText(Math.min(at, node.nodeValue.length)); r.parentNode.insertBefore(x, r); }
+      }
+      markRange(tn, st, pos, s_, a, b);
     });
+    DONE.set(rd, rd.firstChild);
+  }
+  // الآية المعزوّة في النص: يصير نصها رابطًا إلى الموضع نفسه الذي يشير إليه عزوها التالي لها
+  function markCited(rd) {
+    if (!rd || !rd.querySelector("a.qref:not(.qadd)")) return;
+    const [tn, str] = textMap(rd, true), refs = [];
+    tn.forEach(([n, o]) => { const r = n.parentElement && n.parentElement.closest("a.qref:not(.qadd)"); if (r && !refs.some(x => x[0] === r)) refs.push([r, o]); });
+    let m; VRX.lastIndex = 0;
+    while ((m = VRX.exec(str))) { const e = m.index + m[0].length, r = refs.find(([x, o]) => o >= e && o - e <= 45);
+      if (r && !/[﴿{]/.test(str.slice(e, r[1]))) markRange(tn, m.index, e, r[0].dataset.s, r[0].dataset.a, r[0].dataset.b || 0); }
   }
   function scan(root) {
     if (!root || (root.nodeType !== 1 && root.nodeType !== 3)) return;
-    if (root.nodeType === 1) { const rds = root.matches && root.matches(".rd[data-id]") ? [root] : [...(root.querySelectorAll ? root.querySelectorAll(".rd[data-id]") : [])]; const up = root.closest && root.closest(".rd[data-id]"); if (up) rds.push(up); rds.forEach(r => { try { addIn(r); } catch (e) { } }); }
+    if (root.nodeType === 1) { const rds = root.matches && root.matches(".rd[data-id]") ? [root] : [...(root.querySelectorAll ? root.querySelectorAll(".rd[data-id]") : [])]; const up = root.closest && root.closest(".rd[data-id]"); if (up) rds.push(up); rds.forEach(r => { try { addIn(r); } catch (e) { } }); setTimeout(() => rds.forEach(r => { try { markCited(r); } catch (e) { } }), 0); }
     if (root.nodeType === 3) return linkIn(root.parentElement);
     if (!(root.closest(".rd") || root.querySelector(".rd"))) return;
     const E = new Set(), w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -361,6 +389,8 @@ const QREF = (() => {
   const run = () => { tm = 0; const l = [...pend]; pend = new Set(); l.forEach(n => { if (n.isConnected) try { scan(n); } catch (e) { } }); };
   new MutationObserver(ms => { ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1 && n.classList.contains("qref")) return; pend.add(n); })); if (pend.size && !tm) tm = setTimeout(run, 60); })
     .observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("click", e => { const v = e.target.closest(".rd .qvl"); if (!v || e.target.closest("a") || String(getSelection()).trim()) return; e.preventDefault(); e.stopPropagation();
+    MUS.ref(+v.dataset.s, +v.dataset.a, +v.dataset.b || 0); }, true);
   document.addEventListener("click", e => { const el = e.target.closest("a.qref"); if (!el || e.ctrlKey || e.metaKey || e.button || String(getSelection()).trim()) return; e.preventDefault(); e.stopPropagation();
     MUS.ref(+el.dataset.s, +el.dataset.a, +el.dataset.b || 0); }, true);
   return { scan, sura };
