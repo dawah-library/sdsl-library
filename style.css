@@ -1346,3 +1346,5 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .majtabs a:hover{background:#0b3b2e;color:#fff}
 @media (max-width:600px){.majtext{font-size:1.16rem;line-height:2}.majitem h4{font-size:1.4rem}.majcover h2{font-size:1.6rem}.majname{font-size:1.6rem}.majart{margin-top:18px}.majart+.majsect span{font-size:1.25rem}.majnote{font-size:1rem}.mjkind,.mjby{font-size:.9rem}}
 .majissue{overflow:clip}
+/* نص الآية رابطٌ إلى المصحف (QREF.markRange) */
+.rd .qvl{cursor:pointer;border-radius:4px;transition:background .15s}.rd .qvl:hover{background:color-mix(in srgb,var(--ac) 10%,transparent)}
