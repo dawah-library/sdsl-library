@@ -9,7 +9,12 @@ const TPLAY = (() => {
     ["rawi", "راوي الحديث", "من الصحابي الذي روى هذا الحديث؟", "👤"],
     ["sura", "من أي سورة؟", "اقرأ الآية من جزء عمّ واعرف سورتها", "🕌"],
     ["nazm", "أكمل البيت", "من «تحفة الأطفال» في التجويد: اختر تكملة البيت", "🎵"],
-    ["exer", "تمارين الأساس والبنيان", "أسئلة دروس كتابي الأساس والبنيان مع إجاباتها المعتمدة", "📚"]];
+    ["exer", "تمارين الأساس والبنيان", "أسئلة دروس كتابي الأساس والبنيان مع إجاباتها المعتمدة", "📚"],
+    // ألعاب لغوية (ولمتعلمي العربية من غير الناطقين بها): إجاباتها من نصوص المكتبة نفسها
+    ["gharib", "معنى الكلمة", "كلمات من جزء عمّ ومعناها من «السراج في غريب القرآن»", "🔤"],
+    ["haraka", "الحركة الصحيحة", "اختر ضبط آخر الكلمة كما في المصحف", "ـَ"],
+    ["tartib", "رتّب الآية", "أيّ ترتيب للكلمات هو الآية كما في المصحف؟", "🧩"],
+    ["jarr", "حرف الجر", "اعرف حرف الجر في جمل من مقالات مشايخ الدعوة", "🔗"]];
   const has = g => GAMES.some(x => x[0] === g);
   const J = {}, getj = u => J[u] || (J[u] = fetch(u).then(r => r.ok ? r.json() : null).catch(() => null));
   const AR = n => (typeof toAr === "function" ? toAr(n) : String(n));
@@ -61,9 +66,41 @@ const TPLAY = (() => {
       const o = (x.o || []).slice(); return { q: x.q, o, a: +v, sub, why: x.why || "", link: lk, tag: "📚" }; }).filter(x => x.o.length >= 2 && x.a >= 0 && x.a < x.o.length);
   }
   const fromQZ = (qz, n) => mix(qz || []).slice(0, n).map(([q, a, ...w]) => mk(q, a, w, { sub: "سؤال معرفة:", tag: "🏆" }));
-  const GEN = { hadith: genHadith, rawi: genRawi, sura: genSura, nazm: genNazm, exer: genExer };
+  // ---------- الألعاب اللغوية ----------
+  const amma = async k => { const Q = (await getj("data/quran/quran-tash.json")) || { suras: [] }; return Q.suras.map((x, i) => ({ n: i + 1, ayat: x.ayat })).filter(x => x.n >= (k === "t1" ? 93 : 78)); };
+  const DIAC = /[\u064B-\u0652\u0670]/g, bare = w => String(w).replace(DIAC, "");
+  async function genGharib(k, n) {
+    const ss = mix(Array.from({ length: 114 - (k === "t1" ? 92 : 77) }, (_, i) => (k === "t1" ? 93 : 78) + i)).slice(0, 8), pool = [];
+    for (const sn of ss) { const d = (await getj("data/quran/tafsir/siraj/" + sn + ".json")) || {}; for (const [a, L] of Object.entries(d)) (L || []).forEach(([w, m]) => { if (w && m && bare(w).length >= 3 && m.length <= 90) pool.push({ w, m: m.replace(/\.$/, ""), sn, a }); }); }
+    const seen = new Set(), out = [];
+    for (const x of mix(pool)) { if (seen.has(bare(x.w))) continue; seen.add(bare(x.w)); const wr = pick(pool.filter(y => y.m !== x.m && bare(y.w) !== bare(x.w)), 2).map(y => y.m); if (wr.length < 2) continue;
+      out.push(mk("﴿" + x.w + "﴾", x.m, wr, { sub: "ما معنى هذه الكلمة؟", why: "من «السراج في غريب القرآن».", link: "#/mushaf/" + x.sn + "?a=" + x.a, tag: "🔤" })); if (out.length >= n) break; }
+    return out;
+  }
+  async function genHaraka(k, n) {
+    const out = [], H = ["\u064E", "\u0650", "\u064F"], NM = { "\u064E": "فتحة", "\u0650": "كسرة", "\u064F": "ضمة" };
+    for (const s of mix(await amma(k))) { const ay = s.ayat[Math.floor(rnd() * s.ayat.length)] || "", ws = String(ay).replace(/^﻿?بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").split(/\s+/);
+      const c = mix(ws.map((w, i) => [w, i]).filter(([w]) => bare(w).length >= 3 && /[\u064E\u0650\u064F]$/.test(w) && !/[\u0651\u064B-\u064D]$/.test(w.slice(0, -1))))[0]; if (!c) continue;
+      const [w, i] = c, last = w.slice(-1), base = w.slice(0, -1), ctx = ws.map((x, j) => j === i ? "⟨" + base + "؟⟩" : x).join(" ");
+      out.push(mk(ctx, base + last, H.filter(h => h !== last).map(h => base + h), { sub: "اختر ضبط آخر الكلمة بين القوسين كما في المصحف", why: "آخرها " + NM[last] + " في المصحف.", link: "#/mushaf/" + s.n, tag: "ـَ", qcls: "ayq" })); if (out.length >= n) break; }
+    return out;
+  }
+  async function genTartib(k, n) {
+    const out = [];
+    for (const s of mix(await amma(k))) { const L = s.ayat.map((a, i) => [String(a).replace(/^﻿?بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, ""), i + 1]).filter(([a]) => { const n_ = a.split(/\s+/).length; return n_ >= 3 && n_ <= 6; }); if (!L.length) continue;
+      const [a, i] = L[Math.floor(rnd() * L.length)], w = a.split(/\s+/), wr = new Set(); for (let t = 0; t < 20 && wr.size < 2; t++) { const x = mix(w).join(" "); if (x !== a) wr.add(x); } if (wr.size < 2) continue;
+      out.push(mk("", a, [...wr], { sub: "أيّ هذه هي الآية بترتيبها الصحيح؟", why: "سورة " + s.n + "، الآية " + AR(i) + ".", link: "#/mushaf/" + s.n + "?a=" + i, tag: "🧩", ocls: "ayq" })); if (out.length >= n) break; }
+    return out;
+  }
+  async function genJarr(k, n) {
+    const S = ((await getj("data/arabic-mid.json")) || {}).s || [], J_ = new Set(["في", "إلى", "على", "عن"]), P = new Set(["من", "ما", "لا", "إن", "أن", "ثم", "أو", "قد", "لم", "لن", "هل", "بل", "إذا", "حتى", "كما", "مع", "منذ"]), out = [];
+    for (const x of mix(S.filter(y => y.j && y.w <= 10))) { const t = x.t.replace(/،/g, " ").split(/\s+/).filter(Boolean), r = t[x.j[0]], wr = pick(t.filter(w => !J_.has(w) && !P.has(w) && !/^[وفبكل]?(في|إلى|على|عن)$/.test(w) && w.length >= 3), 2); if (wr.length < 2) continue;
+      out.push(mk(x.t, r, wr, { sub: "أيّ هذه الكلمات حرف جر؟", why: "حروف الجر: من، إلى، عن، على، في، الباء، الكاف، اللام…", link: "#/book/" + x.a + "/1", tag: "🔗" })); if (out.length >= n) break; }
+    return out;
+  }
+  const GEN = { hadith: genHadith, rawi: genRawi, sura: genSura, nazm: genNazm, exer: genExer, gharib: genGharib, haraka: genHaraka, tartib: genTartib, jarr: genJarr };
   async function mixed(k, n, ctx) {
-    const parts = await Promise.all([genHadith(k, 3), genSura(k, 3), genRawi(k, 2), genNazm(k, k === "t1" ? 0 : 2), genExer(k, 2)]);
+    const parts = await Promise.all([genHadith(k, 3), genSura(k, 3), genRawi(k, 2), genNazm(k, k === "t1" ? 0 : 2), genExer(k, 2), genGharib(k, 2), genHaraka(k, k === "t1" ? 0 : 1), genJarr(k, k === "t1" ? 0 : 1)]);
     return mix(parts.flat().concat(fromQZ(ctx.qz, 3))).slice(0, n);
   }
 
