@@ -200,9 +200,9 @@
   "score": 34.0
  },
  "best/s09": {
-  "d": 20.58,
+  "d": 22.15,
   "model": "gemini-3.1-flash-tts-preview",
-  "score": 31.17
+  "score": 34.0
  },
  "best/s10": {
   "d": 21.1,
