@@ -1,0 +1,41 @@
+{
+ "title": "إعلان المكتبة — أقل من دقيقة",
+ "out": "ad",
+ "fixed_voice": "Algenib",
+ "takes": 3,
+ "style": "You are a world-class Arabic voice-over artist recording a premium 60-second launch advertisement in a professional studio.\nVOICE: a deep, rich, resonant baritone; warm and velvety (رخيم); close-microphone intimacy.\nDELIVERY: confident, inspiring and engaging, with a lively trailer pace — not slow, never rushed; short natural pauses at each ellipsis (…) and comma.\nPRONUNCIATION: flawless Classical Arabic (Fusha). Follow every diacritic exactly, including case endings, shadda and long vowels; articulate emphatic and throat letters clearly; no dialect.\nRead ONLY the Arabic text after the line TEXT:, nothing else.\nTEXT:",
+ "notes": {
+  "a1": "A strong, intriguing opening hook; a brief pause after «بمصر».",
+  "a2": "Proud announcement; the library name clear and strong; emphasis on «لأول مرة».",
+  "a3": "Warm and assuring.",
+  "a4": "Energetic and fluent; a light lift on each «وإلى»; confident on «تغنيك عن مواقع كثيرة».",
+  "a5": "Uplifting and steady, each item crisp.",
+  "a6": "Grand closing signature with gravitas; a short pause before «علمٌ موثوق»."
+ },
+ "segments": [
+  {
+   "id": "a1",
+   "text": "تُرَاثُ الدَّعْوَةِ السَّلَفِيَّةِ بِمِصْرَ… فِي مَكَانٍ وَاحِدٍ."
+  },
+  {
+   "id": "a2",
+   "text": "مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةُ: مُسْتَوْدَعٌ جَامِعٌ، وَكُنَّاشَةٌ لِتُرَاثِ الدَّعْوَةِ، فِيهَا كُتُبٌ لِمَشَايِخِهَا تُنْشَرُ رَقْمِيًّا لِأَوَّلِ مَرَّةٍ."
+  },
+  {
+   "id": "a3",
+   "text": "وَمَعَهَا أُمَّهَاتُ الْمَصَادِرِ وَالْمَرَاجِعِ الَّتِي لَا يَسْتَغْنِي عَنْهَا طَالِبُ الْعِلْمِ."
+  },
+  {
+   "id": "a4",
+   "text": "تَصِلُ إِلَى الْكِتَابِ، وَإِلَى مَوْضِعِهِ، وَإِلَى النَّصِّ الَّذِي تُرِيدُ… فِي لَحْظَةٍ؛ بِخِدْمَاتٍ عِلْمِيَّةٍ مُتَكَامِلَةٍ تُغْنِيكَ عَنْ مَوَاقِعَ كَثِيرَةٍ."
+  },
+  {
+   "id": "a5",
+   "text": "قِرَاءَةٌ مُيَسَّرَةٌ تَدُومُ مَعَكَ، وَتَطْوِيرٌ مُسْتَمِرٌّ، وَتَصْحِيحٌ دَوْرِيٌّ، وَإِضَافَاتٌ كُلَّ يَوْمٍ."
+  },
+  {
+   "id": "a6",
+   "text": "مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةِ… عِلْمٌ مَوْثُوقٌ، بَيْنَ يَدَيْكَ."
+  }
+ ]
+}

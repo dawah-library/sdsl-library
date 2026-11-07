@@ -9,9 +9,12 @@ def dur(p):
 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-S = json.load(open(os.path.join(ROOT, "script2.json"), encoding="utf-8"))
-OUT = os.path.join(ROOT, "voice", "best"); WORK = os.path.join(ROOT, ".takes")
+SCRIPT = sys.argv[1] if len(sys.argv) > 1 else "script2.json"
+S = json.load(open(os.path.join(ROOT, os.path.basename(SCRIPT)), encoding="utf-8"))
+OUTN = S.get("out", "best")
+OUT = os.path.join(ROOT, "voice", OUTN); WORK = os.path.join(ROOT, ".takes", OUTN)
 os.makedirs(OUT, exist_ok=True); os.makedirs(WORK, exist_ok=True)
+PRESET = os.path.join(ROOT, "voice", OUTN, "report.json")
 TTS = [m for m in os.environ.get("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts,gemini-2.5-pro-preview-tts,gemini-3.1-flash-tts-preview").split(",") if m]
 JUDGE = [m for m in os.environ.get("GEMINI_JUDGE_MODEL", "gemini-3.8-flash,gemini-pro-latest,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-flash-latest,gemini-flash-lite-latest").split(",") if m]
 KEYS = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
@@ -160,7 +163,7 @@ for g in S["segments"]:
     REPORT["segments"][sid] = r
     print(f"✓ {sid} ← {r['score']}", flush=True)
     json.dump(REPORT, open(os.path.join(OUT, "report.json"), "w"), ensure_ascii=False, indent=1)
-man = {f"best/{sid}": {"d": r.get("d"), "model": r.get("model"), "score": r.get("score")} for sid, r in REPORT["segments"].items()}
+man = {f"{OUTN}/{sid}": {"d": r.get("d"), "model": r.get("model"), "score": r.get("score")} for sid, r in REPORT["segments"].items()}
 old = json.load(open(os.path.join(ROOT, "voice", "manifest.json"))) if os.path.exists(os.path.join(ROOT, "voice", "manifest.json")) else {}
-old = {k: v for k, v in old.items() if not k.startswith("best/")}; old.update(man)
+old = {k: v for k, v in old.items() if not k.startswith(OUTN + "/")}; old.update(man)
 json.dump(old, open(os.path.join(ROOT, "voice", "manifest.json"), "w"), ensure_ascii=False, indent=1)

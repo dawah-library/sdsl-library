@@ -1,7 +1,7 @@
 name: التعليق الصوتي الاحترافي للفيديو التعريفي (تجربة أداء وتحكيم)
 on:
   push:
-    paths: ["promo/script2.json", "promo/voice2.py"]
+    paths: ["promo/script2.json", "promo/script3.json", "promo/voice2.py"]
   workflow_dispatch:
     inputs:
       voice:
@@ -44,7 +44,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           PROMO_VOICE: ${{ github.event.inputs.voice }}
-        run: python3 promo/voice2.py
+        run: python3 promo/voice2.py script3.json
       - name: الحفظ
         run: |
           git config user.name "sdsl-bot"
