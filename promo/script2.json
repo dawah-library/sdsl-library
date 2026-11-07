@@ -1,0 +1,33 @@
+{
+  "title": "الفيديو التعريفي الأول — تعليق احترافي مشكول",
+  "voices": ["Charon", "Orus", "Iapetus", "Algenib", "Schedar", "Sadaltager", "Rasalgethi", "Alnilam"],
+  "audition": ["s04", "s05"],
+  "takes": 3,
+  "style": "You are a world-class Arabic documentary voice-over artist recording in a professional studio. Perform the Classical Arabic script below for the official launch film of an Islamic digital library.\nVOICE: a deep, rich, resonant baritone; warm, velvety and calm (رخيم); close-microphone studio intimacy.\nDELIVERY: slow, measured and dignified, like a premium documentary trailer; inspiring but never shouting or over-acted; natural breaths; deliberate pauses at every ellipsis (…) and comma.\nPRONUNCIATION: flawless Classical Arabic (Fusha). Follow every diacritic exactly, including case endings (i'rab), shadda and long vowels; articulate emphatic and throat letters (ص ض ط ظ ق ع ح) clearly; no dialect, no letters swallowed.\nRead ONLY the Arabic text after the line TEXT:, nothing else.\nTEXT:",
+  "notes": {
+    "s01": "Reverent and solemn, as when quoting the Prophet ﷺ; slow, with a pause after each clause.",
+    "s02": "Thoughtful and slightly concerned; the closing question softer and searching.",
+    "s03": "Almost a whisper of hope, very slow, a long pause after «من هنا».",
+    "s04": "Proud, confident announcement; the library name strong and clear, with emphasis.",
+    "s05": "Warm and grand; the numbers delivered with pride and weight.",
+    "s06": "Inviting and smooth, listing each feature with a light lift.",
+    "s07": "Energetic yet calm; a short pause before «واسأل المكتبة».",
+    "s08": "Steady rhythmic listing, confident.",
+    "s09": "Uplifting and warm; «مجانًا» emphasized after a pause.",
+    "s10": "Sincere, respectful and heartfelt appeal; the final hadith slow and weighty.",
+    "s11": "Grand closing signature, slow, with gravitas; long pause before «علمٌ موثوق»."
+  },
+  "segments": [
+    {"id": "s01", "text": "قَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ: «إِنَّ الْعُلَمَاءَ وَرَثَةُ الْأَنْبِيَاءِ، وَإِنَّ الْأَنْبِيَاءَ لَمْ يُوَرِّثُوا دِينَارًا وَلَا دِرْهَمًا، وَإِنَّمَا وَرَّثُوا الْعِلْمَ، فَمَنْ أَخَذَهُ أَخَذَ بِحَظٍّ وَافِرٍ»."},
+    {"id": "s02", "text": "وَالْيَوْمَ… فِي زَمَنٍ تَتَزَاحَمُ فِيهِ الْأَصْوَاتُ، وَتَتَفَرَّقُ فِيهِ الْمَصَادِرُ، يَقِفُ طَالِبُ الْعِلْمِ حَائِرًا: أَيْنَ أَجِدُ الْعِلْمَ الْمَوْثُوقَ؟ مَجْمُوعًا… مُيَسَّرًا… بَيْنَ يَدَيَّ؟"},
+    {"id": "s03", "text": "مِنْ هُنَا… كَانَتِ الْبِدَايَةُ."},
+    {"id": "s04", "text": "نُعْلِنُ لَكُمُ انْطِلَاقَ… مَكْتَبَةِ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةِ."},
+    {"id": "s05", "text": "كُتُبُ مَشَايِخِ الدَّعْوَةِ السَّلَفِيَّةِ بِمِصْرَ، وَأُمَّهَاتُ كُتُبِ أَهْلِ الْعِلْمِ… فِي مَكَانٍ وَاحِدٍ. أَكْثَرُ مِنْ تِسْعِمِئَةِ كِتَابٍ، لِأَكْثَرَ مِنْ ثَلَاثِمِئَةِ مُؤَلِّفٍ، وَأَكْثَرُ مِنْ خَمْسَةَ عَشَرَ أَلْفَ مَقَالٍ وَفَتْوَى… تَتَجَدَّدُ كُلَّ يَوْمٍ."},
+    {"id": "s06", "text": "اقْرَأْ كَمَا تُحِبُّ: نَصًّا تَبْحَثُ فِيهِ، وَمَعَهُ النُّسْخَةُ الْمُصَوَّرَةُ، بِحَوَاشِيهِ وَتَشْكِيلِهِ، وَمَعَانِي كَلِمَاتِهِ، وَتَخْرِيجِ أَحَادِيثِهِ."},
+    {"id": "s07", "text": "ابْحَثْ فِي آلَافِ الصَّفَحَاتِ فِي لَحْظَةٍ… وَاسْأَلِ الْمَكْتَبَةَ، فَتُجِيبَكَ مِنْ كُتُبِ أَهْلِ الْعِلْمِ، مُوَثَّقَةً بِالْكِتَابِ وَالصَّفْحَةِ."},
+    {"id": "s08", "text": "تَشْجِيرُ الْكُتُبِ وَخَرَائِطُ الْعُلُومِ، وَالْفَهَارِسُ الْفَنِّيَّةُ، وَالْمَسَارَاتُ الْعِلْمِيَّةُ، وَحِفْظُ الْمُتُونِ، وَاخْتِبَارَاتٌ تَقِيسُ فَهْمَكَ."},
+    {"id": "s09", "text": "وَمُجْتَمَعٌ يَقْرَأُ مَعًا، وَتَحَدِّيَاتٌ لِلْقِرَاءَةِ، وَرُكْنٌ لِلطَّلَائِعِ يَغْرِسُ حُبَّ الْعِلْمِ فِي قُلُوبِ الصِّغَارِ. عَلَى هَاتِفِكَ وَحَاسُوبِكَ… وَحَتَّى دُونَ إِنْتَرْنِتْ. مَجَّانًا… لِكُلِّ طَالِبِ عِلْمٍ."},
+    {"id": "s10", "text": "مَشَايِخَنَا الْكِرَامَ، وَكُتَّابَنَا الْأَفَاضِلَ، وَطُلَّابَ الْعِلْمِ: كُونُوا شُرَكَاءَ هَذَا الْبِنَاءِ… بِكِتَابٍ تَنْشُرُونَهُ، أَوْ تَصْحِيحٍ تُسْدُونَهُ، أَوْ رَابِطٍ تُشَارِكُونَهُ؛ فَالدَّالُّ عَلَى الْخَيْرِ كَفَاعِلِهِ."},
+    {"id": "s11", "text": "مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةِ… عِلْمٌ مَوْثُوقٌ، بَيْنَ يَدَيْكَ."}
+  ]
+}

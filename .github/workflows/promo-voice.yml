@@ -1,8 +1,13 @@
-name: التعليق الصوتي للفيديو التعريفي
+name: التعليق الصوتي الاحترافي للفيديو التعريفي (تجربة أداء وتحكيم)
 on:
   push:
-    paths: ["promo/script.json", "promo/voice.py"]
+    paths: ["promo/script2.json", "promo/voice2.py"]
   workflow_dispatch:
+    inputs:
+      voice:
+        description: "فرض صوت بعينه (اختياري)"
+        required: false
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -11,7 +16,7 @@ concurrency:
 jobs:
   voice:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - name: الأدوات
@@ -28,7 +33,18 @@ jobs:
           GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
           GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
           GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
-        run: python3 promo/voice.py
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          PROMO_VOICE: ${{ github.event.inputs.voice }}
+        run: python3 promo/voice2.py
       - name: الحفظ
         run: |
           git config user.name "sdsl-bot"
