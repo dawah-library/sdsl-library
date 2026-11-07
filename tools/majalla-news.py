@@ -8,14 +8,14 @@ import xml.etree.ElementTree as ET
 
 OUT = "data/majalla-news.json"
 SOURCES = [
-    {"id": "fath", "name": "بوابة الفتح", "url": "https://fath-news.com", "host": "fath-news.com", "cat": "dawah"},
+    {"id": "fath", "name": "بوابة الفتح", "url": "https://fath-news.com", "host": "fath-news.com", "cat": "auto"},
     {"id": "akher", "name": "آخر الأنباء", "url": "https://akheralanbaa.com", "host": "akheralanbaa.com", "cat": "auto"},
     {"id": "nour", "name": "حزب النور", "url": "https://alnourpartyeg.com", "host": "alnourpartyeg.com", "cat": "nour"},
 ]
 UA = {"User-Agent": "Mozilla/5.0 (compatible; dawahlibrary-news/1.0; +https://dawahlibrary.org)"}
 MUSLIM = re.compile(r"المسلم|الإسلام|غزة|فلسطين|الأقصى|القدس|مسجد|المساجد|الروهينجا|السودان|سوريا|اليمن|الأزهر|الحج|العمرة|رمضان|الأوقاف|الدعوة|إسلامي")
 NOUR = re.compile(r"حزب النور|النور|مخيون|نواب النور")
-DAWAH = re.compile(r"الدعوة السلفية|برهامي|الدعاة|السلفي")
+DAWAH = re.compile(r"الدعوة السلفية|برهامي|جمعية الدعاة|السلفي|الشحات|المقدم")
 
 def get(u, t=25):
     r = urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=t)
@@ -55,7 +55,7 @@ def fetch(s):
 def cat(s, t):
     if s["cat"] == "nour": return "nour"
     if NOUR.search(t) and "حزب" in t: return "nour"
-    if s["cat"] == "dawah" or DAWAH.search(t): return "dawah"
+    if DAWAH.search(t): return "dawah"
     return "muslims" if MUSLIM.search(t) else "world"
 
 def main():
@@ -77,6 +77,9 @@ def main():
             rep.append(f"{s['name']}: {n} جديد ({how})")
         except Exception as e:
             rep.append(f"{s['name']}: تعذر ({str(e)[:80]})")
+    S = {s["id"]: s for s in SOURCES}
+    for x in items.values():  # إعادة التصنيف بالقواعد الحالية
+        if x.get("sid") in S: x["cat"] = cat(S[x["sid"]], x["title"] + " " + (x.get("sum") or ""))
     L = sorted(items.values(), key=lambda x: x.get("date", ""), reverse=True)[:200]
     for x in L: x.pop("top", None)
     for c in ("dawah", "nour", "muslims", "world"):
