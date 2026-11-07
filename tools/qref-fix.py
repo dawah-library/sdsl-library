@@ -63,6 +63,68 @@ def locate(raw):
     return s0, a0, a1
 
 
+VER = 3  # يُرفع عند تغيير طريقة الربط فيُعاد فحص كل الملفات
+BI = {}
+for _i in range(len(IX.words) - 1): BI.setdefault((IX.words[_i], IX.words[_i + 1]), []).append(_i)
+
+
+def cands(raw):
+    """كل مواضع النص في المصحف بمطابقة تامة لهياكل الكلمات (للمقتبس القصير والمتكرر): [(سورة، أول آية، آخر آية)]."""
+    ws = [k for k in (qc.skel(w) for w in qc.norm(raw).split()) if k]
+    if len(ws) < 2: return []
+    pos = IX.tri.get(tuple(ws[:3]), []) if len(ws) >= 3 else BI.get(tuple(ws[:2]), [])
+    out = []
+    for p in pos[:4000]:
+        if IX.words[p:p + len(ws)] == ws:
+            s0, a0 = IX.pos[p]; s1, a1 = IX.pos[p + len(ws) - 1]
+            if s0 == s1 and (s0, a0, a1) not in out: out.append((s0, a0, a1))
+    return out
+
+
+# صيغ الثناء والدعاء التي يضعها التحويل أحيانًا بين قوسي الآية: ليست آيات وإن وافقت لفظًا قرآنيًّا
+HONOR = re.compile(r"^(رضي الله عن\w*|رحم\w* الله\w*|صلي الله عليه( واله)?( وسلم)?|عليه( الصلاه و)?السلام|عز وجل|جل (وعلا|جلاله|شانه)|سبحانه( وتعالي)?|تعالي|تبارك وتعالي|الله اكبر|بسم الله|ان شاء الله|الحمد لله)$")
+
+
+def resolve(raw, ctx):
+    """الموضع الوحيد الموثوق، وإلا الأقرب إلى سياق الصفحة (آيات معروفة حولها، أو سورة عنوان الكتاب)."""
+    if HONOR.match(nz(re.sub(r"[^\u0621-\u064A\u064B-\u0652\u0670\u0671 ]", " ", raw))): return None
+    parts = [x for x in re.split(r"\.{2,}|…|\bالآية\b|\bالايه\b", raw) if len(qc.norm(x).split()) >= 2]
+    if len(parts) > 1:  # آية مقطّعة بنقاط: يُعرف كل جزء ثم يُجمع المدى إن كانت من سورة واحدة متتابعة
+        L = [resolve(x, ctx) for x in parts]
+        if all(L) and len({x[0] for x in L}) == 1 and all(L[i][1] <= L[i + 1][1] for i in range(len(L) - 1)): return (L[0][0], L[0][1], max(x[2] for x in L))
+        return None
+    raw = parts[0] if parts else raw
+    loc = locate(raw)
+    if loc: return loc
+    n = len(qc.norm(raw).split())
+    if n < 2: return None
+    C = cands(raw)
+    if len(C) == 1 and n >= 3: return C[0]
+    if not C or not ctx: return None
+    best, bd = [], 10 ** 6
+    for c in C:
+        d = min((abs(c[1] - a) for s_, a in ctx if s_ == c[0]), default=None)
+        if d is None or d > 40: continue
+        if d < bd: best, bd = [c], d
+        elif d == bd: best.append(c)
+    return best[0] if len(best) == 1 else None
+
+
+def page_ctx(page):
+    """الآيات المعروفة في الصفحة (من عزوها أو نصها الوحيد) سياقًا للمقتبس القصير."""
+    out = []
+    for rx in (CITE, CITE2):
+        for m in rx.finditer(page or ""):
+            s_ = sura_of(m.group("n"))
+            if s_ and s_ not in AMBIG:
+                try: out.append((s_, num(m.group("a"))))
+                except Exception: pass
+    for v in VERSE.finditer((page or "").split("____")[0]):
+        l = locate(v.group(1))
+        if l: out.append((l[0], l[1]))
+    return out
+
+
 def contains(raw, s, a, b, thr=0.8):
     """هل الآية (أو الآيات) المعزوّة تحوي المقتبس؟ (للآيات المتكررة، وللمقتبس من آيتين)."""
     if not (1 <= s <= 114) or a < 1 or a > CNT[s - 1]: return False
@@ -96,7 +158,7 @@ def fix_cite(m, loc, log, ctx):
     return out
 
 
-def fix_page(page, log):
+def fix_page(page, log, ctx=None):
     body, sep, foot = (page or "").partition("____")
     verses = list(VERSE.finditer(body))
     # (١) العزو بعد الآية مباشرة (في المتن)
@@ -114,7 +176,7 @@ def fix_page(page, log):
         new = fix_cite(m, loc, log, vt)
         if new: out.append((m.start(), m.end(), new))
     # (٢) العزو في الحاشية: الآية يتبعها رقم الحاشية «﴾(١)» والحاشية «(١) [البقرة: ٢٥٥]» أو «(١) سورة البقرة، الآية ٢٥٥»
-    fout = []
+    fout, fnq = [], []  # fnq: آيات عزوها في الحاشية (تُربط بنصها ربطًا صامتًا)
     if sep:
         marks = {}
         for v in verses:
@@ -125,6 +187,14 @@ def fix_page(page, log):
             mk = FNM.match(line)
             if mk and num(mk.group(1)) in marks:
                 v = marks[num(mk.group(1))]; loc = locate(v.group(1))
+                if not loc:  # يُعرف موضع الآية من عزو الحاشية نفسه إن طابقه نصها
+                    for rx in (CITE, CITE2):
+                        m = rx.search(line)
+                        if m and sura_of(m.group("n")) and sura_of(m.group("n")) not in AMBIG:
+                            s_, a_ = sura_of(m.group("n")), num(m.group("a")); b_ = num(m.group("b")) if m.group("b") else 0
+                            if contains(v.group(1), s_, a_, b_): fnq.append((v, (s_, a_, max(a_, b_))))
+                            break
+                else: fnq.append((v, loc))
                 if loc:
                     for rx in (CITE, CITE2):
                         m = rx.search(line)
@@ -134,15 +204,20 @@ def fix_page(page, log):
                             break
             pos += len(line) + 1
     # (٣) الآيات بلا عزو: مواضعها للقارئ (لا يُغيَّر النص)
-    add = []
+    # [ترتيب الآية، آخر كلمة، سورة، آية، آخر آية، صامت؟] — الصامت: لا يُعرض بعدها عزو (في السياق ذكرٌ للسورة أو عزو في الحاشية)، بل يصير نصها رابطًا
+    add = []; fq = {v.start(): l for v, l in fnq}
     for k, v in enumerate(verses):
+        lw = nz(v.group(1)).split(); lw = lw[-1] if lw else ""
+        if v.start() in fq:
+            l = fq[v.start()]; add.append([k, lw, l[0], l[1], l[2] if l[2] != l[1] else 0, 1]); continue
         if v.start() in cited: continue
         after, before = body[v.end():v.end() + 40], body[max(0, v.start() - 60):v.start()]
-        if CITE.match(after.lstrip()) or re.match(r"\s*\(\s*[0-9٠-٩۰-۹]{1,3}\s*\)", after) or re.search(r"سورة|سوره", before): continue
-        loc = locate(v.group(1))
+        if CITE.match(after.lstrip()) or re.match(r"\s*\(\s*[0-9٠-٩۰-۹]{1,3}\s*\)", after): continue
+        loc = resolve(v.group(1), ctx or [])
         if loc:
-            lw = nz(v.group(1)).split()
-            add.append([k, lw[-1] if lw else "", loc[0], loc[1], loc[2] if loc[2] != loc[1] else 0])
+            e = [k, lw, loc[0], loc[1], loc[2] if loc[2] != loc[1] else 0]
+            if re.search(r"سورة|سوره", before): e.append(1)
+            add.append(e)
     for a, z, new in sorted(out, reverse=True): body = body[:a] + new + body[z:]
     for a, z, new in sorted(fout, reverse=True): foot = foot[:a] + new + foot[z:]
     return body + sep + foot, add
@@ -151,10 +226,14 @@ def fix_page(page, log):
 def do_doc(doc, label, rep, dry):
     """doc: {"pages": [...]}؛ يعيد هل تغيّر."""
     log, qadd, changed = [], {}, False
-    for i, p in enumerate(doc.get("pages") or []):
+    ps = doc.get("pages") or []
+    pc = [page_ctx(p) if isinstance(p, str) and ("﴿" in p or "{" in p or "سورة" in p or ":" in p) else [] for p in ps]
+    ts = [i + 1 for i, n in enumerate(PRETTY) if len(n) > 2 and re.search(r"سور[ةه]\s+" + re.escape(nz(n)) + r"(\s|$)", nz(label))]  # «تفسير سورة يوسف»
+    for i, p in enumerate(ps):
         if not isinstance(p, str) or not p: continue
         if not (CITE.search(p) or CITE2.search(p) or "﴿" in p or "{" in p): continue
-        before = len(log); np, add = fix_page(p, log)
+        ctx = pc[i] + (pc[i - 1] if i else []) + (pc[i + 1] if i + 1 < len(ps) else []) + [(t, a) for t in ts for a in range(1, CNT[t - 1] + 1, 20)]
+        before = len(log); np, add = fix_page(p, log, ctx)
         for x in log[before:]: x["p"] = i + 1
         if np != p and not dry: doc["pages"][i] = np; changed = True
         if add: qadd[str(i)] = add
@@ -197,14 +276,14 @@ def main():
         path = os.path.join(ROOT, rel)
         if not os.path.exists(path): return
         raw = open(path, "rb").read(); h = hashlib.md5(raw).hexdigest()
-        if st["h"].get(rel) == h and not ids: return
+        if st["h"].get(rel) == "%s:%d" % (h, VER) and not ids: return
         o = json.loads(raw); ch = False
         for key, doc in docs_of(o):
             c, n, na = do_doc(doc, label_of(key, doc), rep, dry); ch |= c; tot += n; tadd += na
             if n: st["n"][key] = st["n"].get(key, 0) + n
         if ch and not dry:
             s = json.dumps(o, ensure_ascii=False, separators=(",", ":")); open(path, "w", encoding="utf-8").write(s); raw = s.encode()
-        st["h"][rel] = hashlib.md5(raw).hexdigest(); done += 1
+        st["h"][rel] = "%s:%d" % (hashlib.md5(raw).hexdigest(), VER); done += 1
 
     for kind, x in plan:
         if time.time() > deadline: rep.append("- (توقف عند حد الوقت؛ يُستكمل في الجولة القادمة)"); break
