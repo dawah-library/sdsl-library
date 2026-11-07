@@ -32,4 +32,5 @@ jobs:
       - name: جمع الأخبار
         run: python3 tools/majalla-news.py
       - name: الحفظ
-        run: bash tools/git-save.sh "الركن الإخباري: تحديث الأخبار" data/majalla-news.json
+        run: |
+          bash tools/git-save.sh "الركن الإخباري - تحديث الأخبار" data/majalla-news.json
