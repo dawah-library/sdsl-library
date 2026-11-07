@@ -1183,6 +1183,8 @@ const AISVC=[
  ["discuss","مناقشة وحوار","يناقشك في مسألة أو إشكال بالحجة والدليل خطوة بخطوة.","أريد أن أناقش: ",'<path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2h-6v-2"/>'],
  ["plan","منهج تعلّم","خطة قراءة متدرجة من كتب المكتبة حسب مستواك ووقتك.","ضع لي منهجًا لدراسة ",'<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'],
  ["quiz","اختبر فهمك","أسئلة متنوعة من كتاب أو موضوع مع الإجابات وتعليلها.","اختبرني في ",'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8h3M14 14h3"/>'],
+ ["lugha","تحليل لغوي وإعراب","معاني المفردات من المعاجم، والإعراب، والصرف، والبلاغة.","أعرب وحلّل لغويًّا: ",'<path d="M4 7h16M4 12h10M4 17h7"/><path d="M17 14l3 6M17 14l-3 6M15 18h4"/>'],
+ ["alam","التعريف بعَلَم","ترجمة العالم أو الراوي وأقوال الأئمة فيه من كتب التراجم والجرح والتعديل.","عرّف بـ: ",'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
  ["solve","حلول عملية","يعرض مشكلتك على توجيهات العلماء ويقترح خطوات عملية (ليست فتوى).","عندي مشكلة: ",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>']];
 const AIEX=["ما شروط التوبة؟","اجمع ما ورد في المكتبة عن علو الهمة","قارن بين أقوال العلماء في حكم تارك الصلاة","ضع لي منهجًا لدراسة العقيدة وأنا مبتدئ","لخّص كتاب رياض الصالحين","كيف أنظّم وقتي لطلب العلم مع العمل؟"];
 const AISTEPS=["يفهم السؤال ويخطط للبحث…","يبحث في الكتب والمقالات…","يقرأ سياق النصوص…","يوازن بين النصوص ويحلّلها…","يرتّب الإجابة ويوثّقها…"];
@@ -1224,7 +1226,7 @@ function aiSplit(t){const m=/\n#{1,4}\s*للمتابعة\s*\n([\s\S]*)$/.exec(t|
 function addMsg(m){const d=document.createElement("div");d.className="msg "+(m.role==="user"?"u":"a");
  if(m.role==="user")d.textContent=m.display||m.content;else fillAnswer(d,m);
  const box=$("#msgs");box.appendChild(d);return d}
-function fillAnswer(d,m){const {body,follow}=aiSplit(m.content);d.innerHTML=md(body)+(m.searches&&m.searches.length?`<details class="srch"><summary>بحث في المكتبة ${toAr(m.searches.length)} مرة</summary>${m.searches.map(s=>`<span>${esc(s)}</span>`).join("")}</details>`:"")+(follow.length?`<div class="aifollow">${follow.map(f=>`<button data-act="aifollow">${esc(f)}</button>`).join("")}</div>`:"");
+function fillAnswer(d,m){const {body,follow}=aiSplit(m.content);d.classList.add("aimd");d.innerHTML=md(body)+(m.searches&&m.searches.length?`<details class="srch"><summary>بحث في المكتبة ${toAr(m.searches.length)} مرة</summary>${m.searches.map(s=>`<span>${esc(s)}</span>`).join("")}</details>`:"")+(follow.length?`<div class="aifollow">${follow.map(f=>`<button data-act="aifollow">${esc(f)}</button>`).join("")}</div>`:"");
  const bar=document.createElement("div");bar.className="mact";const c=document.createElement("button");c.className="btn s";c.textContent="نسخ";
  c.onclick=async()=>{try{await navigator.clipboard.writeText(body.replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(x,id,p)=>{const b=B(id);return b?`(${b.title}${PL(b,+p-1)?"، "+PL(b,+p-1):""})`:""})+"\n— "+SITENAME);c.textContent="تم النسخ"}catch(e){}};
  const q=document.createElement("button");q.className="btn s";q.textContent="صمّم الاقتباس";q.onclick=()=>{const t=plain(body.replace(/\[\[[^\]]+\]\]/g,"").replace(/^#+\s*/gm,"").replace(/\*\*/g,"")).trim();pendingQ={t:t.length>600?t.slice(0,600)+"…":t,src:"المساعد العلمي — "+SITENAME};location.hash="#/qabasat"};
@@ -1240,7 +1242,7 @@ async function askSubmit(f){const ta=f.querySelector("[name=m]"),text=ta.value.t
  const status=t=>{const tl=out.querySelector(".tl");if(tl)tl.textContent=t;else st.textContent=t};
  const turns=CONV.messages.slice(-10).map(m=>({role:m.role,content:m.content}));while(turns.length&&turns[0].role!=="user")turns.shift();
  const o={turns,mode:CONV.mode,col:CONV.col,bookId:CONV.bookId,signal:ASKCTL.signal,onStatus:status,
-  onText:t=>{if(!t.trim())return;live=true;clearInterval(tick);st.textContent="";out.innerHTML=md(aiSplit(t).body)+'<span class="caret"></span>'}};
+  onText:t=>{if(!t.trim())return;live=true;clearInterval(tick);st.textContent="";out.classList.add("aimd");out.innerHTML=md(aiSplit(t).body)+'<span class="caret"></span>'}};
  try{const ans=await AI.ask(o);const am={role:"assistant",content:ans||"لم تصل إجابة، أعد المحاولة.",searches:o.searches||[]};CONV.messages.push(am);out.classList.add("done");fillAnswer(out,am);await Chats.save(CONV)}
  catch(e){const part=e&&e.text;if(part){const am={role:"assistant",content:part+"\n\n(انقطعت الإجابة)"};CONV.messages.push(am);fillAnswer(out,am)}
   else if(e&&e.code==="cancelled")out.innerHTML='<span class="mut">أُوقفت الإجابة.</span>';

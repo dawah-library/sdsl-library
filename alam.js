@@ -86,5 +86,5 @@ const ALAM = (() => {
       sheet(i >= 0 ? ws.slice(a, b + 1).join(" ") : w); }
   });
   document.addEventListener("submit", e => { const f = e.target; if (f.dataset && f.dataset.form === "almq") { e.preventDefault(); e.stopImmediatePropagation(); go("#/alam?q=" + encodeURIComponent(f.q.value.trim())); } }, true);
-  return { lookup, sheet, candidates, view: page, norm };
+  return { lookup, sheet, candidates, view: page, norm, SRC };
 })();

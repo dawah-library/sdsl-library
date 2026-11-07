@@ -300,7 +300,7 @@ const QREF = (() => {
   const num = x => +String(x).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
   const sura = n => { const k = nz(n).replace(/^سوره\s+/, "").replace(/(\s+(الايه|الايات|ايه|رقم|من))+$/, "").trim(); return M[k] || M[k.replace(/^ال/, "")] || 0; };
   const SKIP = "A,BUTTON,TEXTAREA,INPUT,SELECT,SCRIPT,STYLE,CODE";
-  const ok = el => el && el.closest(".rd") && !el.closest(SKIP + ",[contenteditable=true],.qref");
+  const ok = el => el && el.closest(".rd,.aimd") && !el.closest(SKIP + ",[contenteditable=true],.qref");
   // الكلمات في القارئ يلف كلًّا منها عنصر span.w، فالعزو يمتد على عناصر متجاورة: تُجمع نصوص أبناء الحاوية ثم يُلف ما يغطيه العزو برابط
   // (تبقى عناصر الكلمات كما هي داخل الرابط فلا تتأثر التعليقات والتظليل)
   function linkIn(E) {
@@ -380,7 +380,7 @@ const QREF = (() => {
     if (!root || (root.nodeType !== 1 && root.nodeType !== 3)) return;
     if (root.nodeType === 1) { const rds = root.matches && root.matches(".rd[data-id]") ? [root] : [...(root.querySelectorAll ? root.querySelectorAll(".rd[data-id]") : [])]; const up = root.closest && root.closest(".rd[data-id]"); if (up) rds.push(up); rds.forEach(r => { try { addIn(r); } catch (e) { } }); setTimeout(() => rds.forEach(r => { try { markCited(r); } catch (e) { } }), 0); }
     if (root.nodeType === 3) return linkIn(root.parentElement);
-    if (!(root.closest(".rd") || root.querySelector(".rd"))) return;
+    if (!(root.closest(".rd,.aimd") || root.querySelector(".rd,.aimd"))) return;
     const E = new Set(), w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     while (w.nextNode()) { const p = w.currentNode.parentElement; if (!p) continue; E.add(p.classList.contains("w") || p.classList.contains("qv") ? p.parentElement : p); }
     E.forEach(e => { try { linkIn(e); } catch (x) { } });
@@ -393,5 +393,5 @@ const QREF = (() => {
     MUS.ref(+v.dataset.s, +v.dataset.a, +v.dataset.b || 0); }, true);
   document.addEventListener("click", e => { const el = e.target.closest("a.qref"); if (!el || e.ctrlKey || e.metaKey || e.button || String(getSelection()).trim()) return; e.preventDefault(); e.stopPropagation();
     MUS.ref(+el.dataset.s, +el.dataset.a, +el.dataset.b || 0); }, true);
-  return { scan, sura };
+  return { scan, sura, N: N_ };
 })();
