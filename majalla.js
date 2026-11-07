@@ -158,7 +158,7 @@ const MAJ = (() => {
       }
     }
     body += `<hr><p><small>${esc(D.name || NAME)} — العدد ${toAr(x.no || "")} — ${esc(fmtDate(x.date))} — ${esc(SITENAME)} ${esc(siteLink(""))}</small></p>`;
-    const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(D.name || NAME)} ${x.no || ""}</title><style>body{direction:rtl;font-family:'Traditional Arabic',Amiri,serif;font-size:16pt}h1,h2,h3{font-family:Amiri,serif;color:#0f5c4d}</style></head><body dir="rtl">${body}</body></html>`;
+    const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(D.name || NAME)} ${x.no || ""}</title><style>body{direction:rtl;font-family:'Traditional Arabic',Amiri,serif;font-size:16pt}p{text-align:justify;text-justify:kashida;text-indent:1.3em;line-height:1.9}h1,h2,h3{font-family:Amiri,serif;color:#0f5c4d}</style></head><body dir="rtl">${body}</body></html>`;
     save(new Blob(["﻿", doc], { type: "application/msword" }), `majalla-${x.no || x.id}.doc`);
   }
   function save(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
@@ -170,7 +170,10 @@ const MAJ = (() => {
   const F = (s, w, f) => `${w || 400} ${s}px "${f || "Amiri"}", serif`, FS = (s, w) => `${w || 500} ${s}px "IBM Plex Sans Arabic", sans-serif`;
   let MC = null; // لوحة القياس
   const meas = (font, t) => { MC = MC || document.createElement("canvas").getContext("2d"); MC.font = font; MC.direction = "rtl"; return MC.measureText(t).width; };
-  function wrapL(font, text, max) { const out = []; String(text).split(/\n/).forEach(par => { let l = ""; par.split(/\s+/).filter(Boolean).forEach(w => { const t = l ? l + " " + w : w; if (meas(font, t) > max && l) { out.push(l); l = w; } else l = t; }); if (l) out.push(l); }); return out; }
+  function wrapL(font, text, max, ind) { const out = []; String(text).split(/\n/).forEach(par => { let l = "", first = true; par.split(/\s+/).filter(Boolean).forEach(w => { const t = l ? l + " " + w : w; if (meas(font, t) > max - (first ? ind || 0 : 0) && l) { out.push(Object.assign(new String(l), { first })); first = false; l = w; } else l = t; }); if (l) out.push(Object.assign(new String(l), { first, last: true })); }); return out; }
+  // محاذاة الجانبين كالكتب المطبوعة: توزيع الفراغ الزائد بين الكلمات في كل سطر إلا آخر سطر الفقرة (ويُترك السطر المتباعد جدًّا على حاله)
+  function drawJ(c, o) { const ws = String(o.s).split(" "); if (ws.length < 2) return c.fillText(o.s, o.x, o.y); const wd = ws.map(w => c.measureText(w).width), sp = c.measureText(" ").width, gap = (o.jw - wd.reduce((a, b) => a + b, 0)) / (ws.length - 1);
+    if (gap > sp * 3.2 || gap < 0) return c.fillText(o.s, o.x, o.y); let x = o.x; c.textAlign = "right"; ws.forEach((w, i) => { c.fillText(w, x, o.y); x -= wd[i] + gap; }); }
 
   async function layout(x) {
     await Promise.all(["Amiri", "IBM Plex Sans Arabic", "Aref Ruqaa"].map(f => typeof loadFont === "function" ? loadFont(f) : 0));
@@ -179,15 +182,16 @@ const MAJ = (() => {
     const np = () => { pg = { ops: [], sec }; pages.push(pg); y = TOP; };
     const room = h => { if (!pg || y + h > BOT) np(); };
     const text = (s, font, color, opt) => { pg.ops.push(Object.assign({ t: "text", s, font, color, x: PW - MX, y, al: "right" }, opt || {})); };
-    const para = (s, o) => { o = o || {}; const fs = o.fs || 33, lh = Math.round(fs * (o.lh || 1.9)), font = o.font || F(fs, o.w), w = CW - (o.ind || 0) * 2, L = wrapL(font, s, w);
-      L.forEach(l => { room(lh); if (o.bg) pg.ops.push({ t: "rect", x: MX - 14, y: y - fs * 0.95, w: CW + 28, h: lh, c: o.bg }); if (o.bar) pg.ops.push({ t: "rect", x: PW - MX + 8, y: y - fs * 0.95, w: 6, h: lh, c: o.bar }); text(l, font, o.color || C.ink, o.al === "center" ? { x: PW / 2, al: "center", y: y } : { x: PW - MX - (o.ind || 0), y: y }); y += lh; }); y += o.after == null ? Math.round(lh * 0.35) : o.after; };
+    const para = (s, o) => { o = o || {}; const fs = o.fs || 33, lh = Math.round(fs * (o.lh || 1.9)), font = o.font || F(fs, o.w), w = CW - (o.ind || 0) * 2, fi = o.jus ? Math.round(fs * 1.3) : 0, L = wrapL(font, s, w, fi);
+      L.forEach(l => { room(lh); if (o.bg) pg.ops.push({ t: "rect", x: MX - 14, y: y - fs * 0.95, w: CW + 28, h: lh, c: o.bg }); if (o.bar) pg.ops.push({ t: "rect", x: PW - MX + 8, y: y - fs * 0.95, w: 6, h: lh, c: o.bar }); const ind = (o.ind || 0) + (l.first ? fi : 0);
+        text(String(l), font, o.color || C.ink, o.al === "center" ? { x: PW / 2, al: "center", y: y } : Object.assign({ x: PW - MX - ind, y: y }, o.jus && !l.last ? { jw: w - (l.first ? fi : 0) } : {})); y += lh; }); y += o.after == null ? Math.round(lh * 0.35) : o.after; };
     // ١- الغلاف (يُرسم بعناصره الخاصة) ٢- الفهرس (يُملأ بأرقام الصفحات بعد التخطيط)
     // صفحات الفهرس: صفوف الأبواب والمواد تُقسم على ما يلزم من صفحات (أرقام الصفحات تُقرأ من marks عند الرسم)
     const rows = (x.secs || []).flatMap((s, si) => [{ sec: s.t }].concat(s.items.map((it, ii) => ({ si, ii, title: itemTitle(it) }))));
     const tocP = []; let hy = 0, cur = []; rows.forEach(r => { const h = r.sec ? 74 : 54; if (hy + h + (r.sec ? 54 : 0) > BOT - (tocP.length ? 220 : 400)) { tocP.push(cur); cur = []; hy = 0; } cur.push(r); hy += h; }); if (cur.length) tocP.push(cur);
     pages.push({ cover: true, ops: [] }); tocP.forEach((r, k) => pages.push({ toc: true, rows: r, first: !k, ops: [] }));
     if (x.intro) { sec = "افتتاحية العدد"; np(); para("افتتاحية العدد", { font: F(54, 700), color: C.ac, fs: 54, lh: 1.6 }); pg.ops.push({ t: "rect", x: PW - MX - 220, y: y - 18, w: 220, h: 5, c: C.gold }); y += 24;
-      blocks(x.intro).forEach(b => para(b.h || b.p, { fs: 34 })); para("— هيئة التحرير", { font: FS(28, 600), color: C.gold, fs: 28 }); }
+      blocks(x.intro).forEach(b => para(b.h || b.p, b.h ? { fs: 34 } : { fs: 34, jus: 1 })); para("— هيئة التحرير", { font: FS(28, 600), color: C.gold, fs: 28 }); }
     for (const [si, s] of (x.secs || []).entries()) {
       sec = s.t; np();
       pg.ops.push({ t: "band", y: y - 40, h: 96, s: s.t }); y += 100;
@@ -199,14 +203,14 @@ const MAJ = (() => {
         room(220); para(kind, { font: FS(24, 600), color: C.gold, fs: 24, lh: 1.5, after: 34 });
         para(itemTitle(it), { font: F(sty === "quote" ? 46 : 50, 700), color: C.ac, fs: 50, lh: 1.45, after: 6 });
         para(itemAuthor(it) + (itemOrig(it) && itemOrig(it) !== itemTitle(it) ? " — من «" + itemOrig(it) + "»" : ""), { font: FS(26, 500), color: C.mut, fs: 26, lh: 1.6, after: 18 });
-        if (it.intro) para("مقدمة المجلة: " + it.intro, { font: FS(26, 400), fs: 26, lh: 1.8, bg: C.soft, color: "#4a3a14" });
-        const B_ = blocks(t);
+        if (it.intro) para("مقدمة المجلة: " + it.intro, { font: FS(26, 400), fs: 26, lh: 1.8, bg: C.soft, color: "#4a3a14", jus: 1 });
+        const B_ = blocks(String(t).replace(/\{([^{}\n]{2,600})\}/g, "﴿$1﴾"));  // أقواس الآيات المزخرفة كما في صفحة الموقع
         if (sty === "quote") { y += 10; B_.forEach(b => para(b.h || b.p, { font: F(40, 400), fs: 40, lh: 1.9, al: "center", color: C.ac, bg: C.green2 })); y += 10; }
         else B_.forEach(b => {
           if (b.h) return para(b.h, { font: F(36, 700), color: C.ac, fs: 36, lh: 1.6 });
           if (sty === "fatwa" && /^(السؤال|الجواب)\s*:?$/.test(b.p)) return para(b.p.replace(/\s*:$/, ""), { font: FS(28, 700), color: b.p.startsWith("السؤال") ? C.gold : C.ac, fs: 28, lh: 1.5, after: 2 });
           const qv = /^[«"]|﴿|\{/.test(b.p) && b.p.length < 240;
-          para(b.p, sty === "hadith" || sty === "tafsir" ? { fs: 33, bar: qv ? C.gold : null, color: qv ? C.ac : C.ink } : sty === "adab" && / \.\.\. /.test(b.p) ? { fs: 33, al: "center", color: "#4a3a14" } : { fs: 33 });
+          para(b.p, sty === "hadith" || sty === "tafsir" ? { fs: 33, bar: qv ? C.gold : null, color: qv ? C.ac : C.ink, jus: !qv } : sty === "adab" && / \.\.\. /.test(b.p) ? { fs: 33, al: "center", color: "#4a3a14" } : { fs: 33, jus: 1 });
         });
         para("المصدر: " + (it.ref ? (B(it.ref).setTitle || B(it.ref).title) + (kindOf(B(it.ref)) === "book" ? "، ص " + toAr(it.p || 1) + (it.p2 > it.p ? "–" + toAr(it.p2) : "") : "") : it.src || ""), { font: FS(22, 400), color: C.mut, fs: 22, lh: 1.6 });
       }
@@ -260,7 +264,7 @@ const MAJ = (() => {
       if (o.t === "rect") { c.fillStyle = o.c; c.fillRect(o.x, o.y, o.w, o.h); }
       else if (o.t === "band") { const g = c.createLinearGradient(0, 0, PW, 0); g.addColorStop(0, "#08332b"); g.addColorStop(1, "#0f5c4d"); c.fillStyle = g; c.fillRect(MX - 20, o.y, CW + 40, o.h); c.save(); c.beginPath(); c.rect(MX - 20, o.y, CW + 40, o.h); c.clip(); c.strokeStyle = "rgba(227,190,106,.25)"; c.lineWidth = 2; for (let k = 0; k < 14; k++) { star(c, MX + k * 90, o.y + o.h / 2, 22); c.stroke(); } c.restore(); c.font = F(46, 700); c.fillStyle = "#f7e7b8"; c.textAlign = "center"; c.fillText(o.s, PW / 2, o.y + o.h / 2 + 16); }
       else if (o.t === "orn") { c.fillStyle = C.gold; c.fillRect(PW / 2 - 200, o.y, 160, 2); c.fillRect(PW / 2 + 40, o.y, 160, 2); c.save(); c.translate(PW / 2, o.y + 1); star(c, 0, 0, 12); c.fill(); c.restore(); }
-      else if (o.t === "text") { c.font = o.font; c.fillStyle = o.color; c.textAlign = o.al; c.fillText(o.s, o.x, o.y); }
+      else if (o.t === "text") { c.font = o.font; c.fillStyle = o.color; c.textAlign = o.al; if (o.jw) drawJ(c, o); else c.fillText(o.s, o.x, o.y); }
     }
   }
 
