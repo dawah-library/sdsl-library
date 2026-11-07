@@ -1,4 +1,4 @@
-# استكشاف إثراء (ithraa.io) — 2026-11-07 02:35
+# استكشاف إثراء (ithraa.io) — 2026-11-07 02:37
 
 - /robots.txt: `https://ithraa.io/robots.txt` ← 200 text/html 60083 حرفًا
   - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
@@ -58,8 +58,40 @@
   - `{this.apiUrl}chapters/bulk',e)}getBookChapters(e){return this.http.get('${this.apiUrl}chapters/book/${e}')}static ɵfac=function(n){return new(n||t)(M$3(VD))};static ɵprov=A$1({token:t,factory:t.ɵfac,providedIn:'root'})}return t})();var S9=['dyna`
   - `-top-left',timeOut:3e3})})}getAnnotations(){let e=this.dataSubmitted.epubBookId,n=this.dataSubmitted.chapterId;this.http.post('${this.apiBaseUrl}annotations/search',{book_id:e,toc_id:n,ann_owner_category:1,limit:100,offset:0,texttype:!0,imgtype:!0,audiotype:!0,videotype:!0}).subscribe(`
   - `st-top-left',timeOut:3e3})})}getQuestions(){let e=this.dataSubmitted.epubBookId,n=this.dataSubmitted.chapterId;this.http.post('${this.apiBaseUrl}qb/questions/byCfi',{book_id:e,toc_id:n}).subscribe(o=>{this.selectedItems=o,this.loading=!1,this.toastr.success('تم تحميل المسائل بنجاح','',`
-- api_url: 
+- api_url: /api/
 - ثوابت المسارات: `{"GET_ALL_BOOKS":"books/allBooks","GET_BOOK_DETAILS":"books/bookDetails","GET_COPIES_OF_BOOK":"books/copies","TAKE_COPY_OF_ABOOK":"books/bookcopies/addcopy/a/b","GET_PUBLIC_COPIES_OF_BOOK":"books/publiccopies/copies","GET_BOOKS_CATEGORIES":"books/categories","GET_AUTHORIZED_USER_COPY":"books/getAuthUserCopy","GET_BOOK_CHAPTERS":"chapters/book","DATE":"YYYY-MM-DD","MONTH":"YYYY-MM","GET_AUTH_USERS":"home","GET_ANNOTATIONS_COUNT":"home/annotations","GET_COPIES_COUNT":"home/copies","GET_CATEGORIES_COUNT":"home/categories","GET_DICTIONARIES_COUNT":"home/dictionaries","GET_MEMBERS_COUNT":"home/accounts","GET_FAVOURITE_ANNOTATIONS":"home/annotations/mostliked","SUBSCRIBE_EMAIL":"home/subscribe","ENCODED_VALS_BASE":"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"}`
+- GET_ALL_BOOKS: `https://ithraa.io/api/books/allBooks/0?page=1&limit=5` ← 200 application/json 10926 حرفًا
+  - البنية: `{"message":[{"book_id":"number","book_title":"string","book_slug":"string","can_annotate":"number","book_image":"string","author_name":"string","book_category":"string","category_id":"number","copies_count":"string","annotations_count":"string","is_copied":"boolean"},"×39"],"status":"number"}`
+  - مقتطف: `{"message":[{"book_id":26,"book_title":"الروض المربع بشرح زاد المستقنع","book_slug":"الروض-المربع-بشرح-زاد-المستقنع-مختصر-المقنع","can_annotate":1,"book_image":"26.webp","author_name":"منصور بن يونس البهوتي","book_category":"الفقه","category_id":1,"copies_count":"1769","annotations_count":"37763","is_copied":false},{"book_id":10,"book_title":"أخصر المختصرات","book_slug":"أخصر-المختصرات","can_annotate":1,"book_image":"10.webp","author_name":"محمد بن بدر الدين البلباني","book_category":"الفقه","category_id":1,"copies_count":"855","annotations_count":"1468","is_copied":false},{"book_id":11,"book_title":"العمدة على مذهب الإمام أحمد","book_slug":"العمدة-على-مذهب-الإمام-أحمد","can_annotate":1,"book_image":"11.webp","author_name":"موفق الدين ابن قدامة المقدسي","book_category":"الفقه","category_id":1,"copies_count":"561","annotations_count":"2266","is_copied":false},{"book_id":14,"book_title":"التسهيل في الفقه","book_slug":"التسهيل-في-الفقه","can_annotate":1,"book_image":"14.webp","author_name":"محمد بن علي أسباسلار البعلي","book_category":"الفقه","category_id":1,"copies_count":"414","annotations_count":"10","is_copied":false},{"book_id":15,"book_title":"زاد المستقنع في اختصار المقنع","boo`
+- GET_BOOKS_CATEGORIES: `https://ithraa.io/api/books/categories` ← 200 application/json 320 حرفًا
+  - البنية: `[{"id":"number","name":"string","order_category":"number"},"×7"]`
+  - مقتطف: `[{"id":0,"name":"آخر","order_category":30},{"id":1,"name":"الفقه","order_category":1},{"id":3,"name":"أصول الفقه","order_category":2},{"id":4,"name":"علوم القرآن","order_category":3},{"id":5,"name":"الحديث","order_category":4},{"id":6,"name":"مصطلح الحديث","order_category":5},{"id":9,"name":"اللغة","order_category":9}]`
+- GET_ANNOTATIONS_COUNT: `https://ithraa.io/api/home/annotations` ← 200 application/json 30 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"70864","status":0}`
+- GET_DICTIONARIES_COUNT: `https://ithraa.io/api/home/dictionaries` ← 200 application/json 31 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"184022","status":0}`
+- GET_FAVOURITE_ANNOTATIONS: `https://ithraa.io/api/home/annotations/mostliked` ← 200 application/json 6933 حرفًا
+  - البنية: `{"message":[{"text":"string","quote":"string","created_at":"string","likes_count":"number","video_url":"object","image_upload":"object","annotation_type":"number","book_title":"string","full_name":"string","profile_image":"object","slug":"string"},"×10"],"status":"number"}`
+  - مقتطف: `{"message":[{"text":"هنا يذكر المؤلف مراتب التطوع في العبادات من جهة الأفضلية، فالمذهب أن مراتب التطوع:\n1-\tالجهاد.\n2-\tالنفقة فيه.\n3-\tالعلم.\n4-\tالعلم تعلمه وتعليمه.\n5-\tالصلاة.\nيقول شيخ الإسلام: والمتأخرون من أصحابنا أطلقوا القول بأن أفضل ما تطوع به الجهاد، وذلك لمن أراد أن يفعله تطوعًا.\n وعند الشافعي أفضل ما يتطوع به لصلاة، وعند أبي حنيفة ومالك أفضل ما تطوع به العلم.\n","quote":"وأفضلُ مَا يتطوّعُ بهِ: الجهادُ، ثمَّ النفقَةُ فيهِ، ثمَّ العلمُ تعلمُهُ وتعليمُهُ؛ منْ حديثٍ، وفقهٍ، وتفسيرٍ، ثمَّ الصلَاةُ.","created_at":"2017-10-06T19:50:40.156Z","likes_count":4,"video_url":null,"image_upload":null,"annotation_type":0,"book_title":"الروض المربع بشرح زاد المستقنع","full_name":"د. عبد الله المعيدي","profile_image":null,"slug":"almoaede"},{"text":"<p>ينتبه في ميراث الخنثى إلى أن التعبير عن الوارث يكون بلفظ يفيد الذكورة والأنوثة معًا، وهو لفظ “ولد”، ثم ينسب هذا الولد بما يبين صفة قرابته بالميت، لأن الغاية في المواريث دائمًا معرفة صلة قرابة الوارث بالميت لا بأحد آخر.</p><p>&nbsp;</p><p>وفي الصورة المرفقة توضيح لبعض هذه التعبيرات التي ترد في الباب لمعرفة صلة قرابة الخنثى بالميت، وعلى مثلها يقاس.</p>","quote":"وولد أبوين خنثى","created_at":"2026-06-29T02:35:57.173Z","likes_count":2`
+- GET_CATEGORIES_COUNT: `https://ithraa.io/api/home/categories` ← 200 application/json 30 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"73476","status":0}`
+- GET_MEMBERS_COUNT: `https://ithraa.io/api/home/accounts` ← 200 application/json 30 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"18270","status":0}`
+- أول كتاب: `{"book_id":26,"book_title":"الروض المربع بشرح زاد المستقنع","book_slug":"الروض-المربع-بشرح-زاد-المستقنع-مختصر-المقنع","can_annotate":1,"book_image":"26.webp","author_name":"منصور بن يونس البهوتي","book_category":"الفقه","category_id":1,"copies_count":"1769","annotations_count":"37763","is_copied":false}`
+- GET_BOOK_CHAPTERS: `https://ithraa.io/api/chapters/book/26` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- GET_PUBLIC_COPIES_OF_BOOK: `https://ithraa.io/api/books/publiccopies/copies/26/0` ← 200 application/json 37 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"No book data","status":0}`
+- وصف الكتاب: `https://ithraa.io/api/books/bookDescription/26` ← 200 application/json 37 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"No book data","status":0}`
+- فصول: `https://ithraa.io/api/chapters/book/26` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
 - /api: `https://ithraa.io/api` ← 200 text/html 60083 حرفًا
   - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
 - /api/books: `https://ithraa.io/api/books` ← 200 application/json 37 حرفًا
