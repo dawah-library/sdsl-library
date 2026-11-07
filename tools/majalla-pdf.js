@@ -27,14 +27,14 @@ function serve() {
   const browser = await chromium.launch();
   const report = fs.existsSync(path.join(OUT, "report.json")) ? JSON.parse(fs.readFileSync(path.join(OUT, "report.json"), "utf8")) : {};
   let bad = 0;
-  for (const id of ids) for (const mode of ["digital", "print"]) {
+  for (const id of ids) for (const mode of ["digital", "mobile", "print"]) {
     const page = await browser.newPage();
     page.on("pageerror", e => console.error("خطأ في الصفحة:", e.message));
     await page.goto(`http://localhost:${port}/majpress/?issue=${encodeURIComponent(id)}&mode=${mode}&auto=1`);
     await page.waitForFunction(() => window.MJP_DONE, null, { timeout: 600000 });
     const r = await page.evaluate(() => window.MJP_DONE);
     if (r.error) throw new Error(id + ": " + r.error);
-    const file = path.join(OUT, id + (mode === "print" ? "-print" : "") + ".pdf");
+    const file = path.join(OUT, id + (mode === "digital" ? "" : "-" + mode) + ".pdf");
     await page.pdf({ path: file, preferCSSPageSize: true, printBackground: true, outline: true, tagged: true });
     const kb = Math.round(fs.statSync(file).size / 1024);
     const hard = r.issues.filter(z => ["empty", "overflow", "font"].includes(z.type));

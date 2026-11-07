@@ -34,9 +34,11 @@
   --f-cls: "MJ Amiri", "Amiri", serif;                   /* الآيات والأحاديث والشعر والعناوين الكبرى وكتب التراث */
   --f-ui: "MJ Cairo", "MJ Amiri", "Cairo", sans-serif;               /* البيانات: الترويسة والمصادر والتصنيف والأرقام */
   /* المقاسات (نقاط طباعية) */
-  --fs-body: 10.6pt; --lh-body: 1.92;
-  --fs-small: 8.6pt; --fs-meta: 8pt;
-  --fs-h-item: 19pt; --fs-h-sec: 23pt; --fs-h-sub: 11pt;
+  /* معامل الحجم: A4 ‏١٫١٤ (متن ١٢ نقطة)، ونسخة الهاتف تضبطه في press.js */
+  --k: 1.14;
+  --fs-body: calc(10.6pt * var(--k)); --lh-body: 1.9;
+  --fs-small: calc(8.6pt * var(--k)); --fs-meta: calc(8pt * var(--k));
+  --fs-h-item: calc(19pt * var(--k)); --fs-h-sec: calc(23pt * var(--k)); --fs-h-sub: calc(11pt * var(--k));
 }
 html.mode-print { --paper: #ffffff; }
 
@@ -44,11 +46,11 @@ html.mode-print { --paper: #ffffff; }
 @page {
   size: A4 portrait;
   margin: 25mm 19mm 22mm 19mm;
-  @top-right { width: 58%; content: "مجلة مكتبة الدعوة السلفية"; font-family: var(--f-cls); font-weight: 700; font-size: 10.5pt; color: var(--g900); vertical-align: bottom; padding-bottom: 3.2mm; }
-  @top-left { width: 42%; text-align: left; content: string(sect); font-family: var(--f-ui); font-size: 8pt; font-weight: 600; color: var(--gr500); vertical-align: bottom; padding-bottom: 3.6mm; }
-  @bottom-center { content: counter(page, arabic-indic); font-family: var(--f-ui); font-weight: 700; font-size: 9pt; color: var(--white); vertical-align: middle; }
-  @bottom-right { content: ""; font-family: var(--f-ui); font-size: 7.6pt; color: var(--gr500); vertical-align: middle; }
-  @bottom-left { content: "dawahlibrary.org"; font-family: var(--f-ui); font-size: 7.6pt; color: var(--gr500); vertical-align: middle; }
+  @top-right { width: 58%; content: "مجلة مكتبة الدعوة السلفية"; font-family: var(--f-cls); font-weight: 700; font-size: calc(10.5pt * var(--k)); color: var(--g900); vertical-align: bottom; padding-bottom: 3.2mm; }
+  @top-left { width: 42%; text-align: left; content: string(sect); font-family: var(--f-ui); font-size: calc(8pt * var(--k)); font-weight: 600; color: var(--gr500); vertical-align: bottom; padding-bottom: 3.6mm; }
+  @bottom-center { content: counter(page, arabic-indic); font-family: var(--f-ui); font-weight: 700; font-size: calc(9pt * var(--k)); color: var(--white); vertical-align: middle; }
+  @bottom-right { content: ""; font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); color: var(--gr500); vertical-align: middle; }
+  @bottom-left { content: "dawahlibrary.org"; font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); color: var(--gr500); vertical-align: middle; }
 }
 @page front { @top-left { content: "فاتحة العدد"; } }
 @page cover { margin: 0; @top-right { content: none; } @top-left { content: none; } @bottom-center { content: none; } @bottom-right { content: none; } @bottom-left { content: none; } }
@@ -93,7 +95,9 @@ body { margin: 0; font-family: var(--f-body); font-size: var(--fs-body); line-he
 .cover .mast .dt i { width: 2mm; height: 2mm; color: var(--au500); display: inline-block; } .cover .mast .dt i svg { width: 100%; height: 100%; display: block; }
 .cover .art { position: absolute; top: 88mm; left: 50%; width: 78mm; height: 78mm; margin-left: -39mm; color: var(--au300); opacity: .95; }
 .cover .art svg { width: 100%; height: 100%; }
-.cover .theme { position: absolute; top: 170mm; right: 18mm; left: 18mm; text-align: center; }
+.cover .sky { position: absolute; left: 9.6mm; right: 9.6mm; top: 196mm; height: 26mm; color: var(--au300); }
+.cover .sky svg { width: 100%; height: 100%; display: block; }
+.cover .theme { position: absolute; top: 166mm; right: 18mm; left: 18mm; text-align: center; }
 .cover .theme .kk { font-family: var(--f-ui); font-weight: 600; font-size: 9pt; color: var(--au300); }
 .cover .theme h1 { font-family: var(--f-cls); font-weight: 700; font-size: 31pt; line-height: 1.3; color: var(--white); margin: 1mm 0 2mm; }
 .cover .theme p { text-align: center; font-family: var(--f-body); font-size: 10.5pt; line-height: 1.7; color: var(--g200); margin: 0 auto; max-width: 150mm; }
@@ -122,52 +126,54 @@ body { margin: 0; font-family: var(--f-body); font-size: var(--fs-body); line-he
 /* ---------- الفهرس ---------- */
 .front { page: front; break-before: page; }
 .toc-head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1pt solid var(--g900); padding-bottom: 2mm; margin-bottom: 4mm; }
-.toc-head h2 { font-family: var(--f-cls); font-weight: 700; font-size: 26pt; line-height: 1.2; color: var(--g900); margin: 0; }
-.toc-head .meta { font-family: var(--f-ui); font-size: 8.5pt; color: var(--gr500); text-align: left; line-height: 1.5; }
+.toc-head h2 { font-family: var(--f-cls); font-weight: 700; font-size: calc(26pt * var(--k)); line-height: 1.2; color: var(--g900); margin: 0; }
+.toc-head .meta { font-family: var(--f-ui); font-size: calc(8.5pt * var(--k)); color: var(--gr500); text-align: left; line-height: 1.5; }
 .toc-cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 9mm; }
 .toc-sec { break-inside: avoid; margin-bottom: 2.4mm; }
-.toc-sec .h3 { display: flex; align-items: center; gap: 2mm; margin: 0 0 .8mm; font-family: var(--f-ui); font-size: 9.2pt; font-weight: 700; color: var(--g800); background: var(--g100); border-right: 2pt solid var(--g900); padding: .6mm 2.4mm .8mm; line-height: 1.45; }
-.toc-sec .h3 .n { font-size: 8pt; color: var(--au700); }
+.toc-sec .h3 { display: flex; align-items: center; gap: 2mm; margin: 0 0 .8mm; font-family: var(--f-ui); font-size: calc(9.2pt * var(--k)); font-weight: 700; color: var(--g800); background: var(--g100); border-right: 2pt solid var(--g900); padding: .6mm 2.4mm .8mm; line-height: 1.45; }
+.toc-sec .h3 .n { font-size: calc(8pt * var(--k)); color: var(--au700); }
 .toc-sec .h3 .n.st svg { width: 2.6mm; height: 2.6mm; display: block; color: var(--au500); }
 .toc-sec .h3 a { color: inherit; }
 .toc-row { display: flex; align-items: baseline; gap: 1.5mm; padding: .5mm 2.4mm .5mm 0; line-height: 1.38; }
-.toc-row .t { font-size: 9.2pt; color: var(--ink); }
-.toc-row .t small { display: block; font-family: var(--f-ui); font-size: 7.3pt; color: var(--gr500); line-height: 1.3; }
+.toc-row .t { font-size: calc(9.2pt * var(--k)); color: var(--ink); }
+.toc-row .t small { display: block; font-family: var(--f-ui); font-size: calc(7.3pt * var(--k)); color: var(--gr500); line-height: 1.3; }
 .toc-row .ld { flex: 1; border-bottom: .8pt dotted var(--au300); transform: translateY(-1.2mm); min-width: 4mm; }
-.toc-row a.pg { font-family: var(--f-ui); font-weight: 700; font-size: 9pt; color: var(--au600); min-width: 6mm; text-align: left; }
+.toc-row a.pg { font-family: var(--f-ui); font-weight: 700; font-size: calc(9pt * var(--k)); color: var(--au600); min-width: 6mm; text-align: left; }
 .toc-row a.pg::after { content: target-counter(attr(href), page, arabic-indic); }
-.imprint { margin-top: 4mm; border-top: .5pt solid var(--au300); padding-top: 2.5mm; display: grid; grid-template-columns: auto 1fr; gap: 1mm 5mm; font-family: var(--f-ui); font-size: 7.8pt; line-height: 1.6; color: var(--gr700); break-inside: avoid; }
+.imprint { margin-top: 4mm; border-top: .5pt solid var(--au300); padding-top: 2.5mm; display: grid; grid-template-columns: auto 1fr; gap: 1mm 5mm; font-family: var(--f-ui); font-size: calc(7.8pt * var(--k)); line-height: 1.6; color: var(--gr700); break-inside: avoid; }
 .imprint b { color: var(--g800); font-weight: 700; }
 .imprint .wide { grid-column: 1 / -1; color: var(--gr500); }
 
 /* الافتتاحية */
 .editorial { break-before: page; }
-.editorial .bsm { text-align: center; font-family: var(--f-cls); font-size: 20pt; color: var(--g800); margin: 0 0 3mm; line-height: 1.6; }
+.editorial .bsm { text-align: center; font-family: var(--f-cls); font-size: calc(20pt * var(--k)); color: var(--g800); margin: 0 0 3mm; line-height: 1.6; }
 .ed-head { text-align: center; margin-bottom: 5mm; }
-.ed-head .kk { font-family: var(--f-ui); font-size: 8.5pt; font-weight: 600; color: var(--au600); }
-.ed-head h2 { font-family: var(--f-cls); font-size: 24pt; font-weight: 700; color: var(--g900); margin: 0; line-height: 1.35; }
+.ed-head .kk { font-family: var(--f-ui); font-size: calc(8.5pt * var(--k)); font-weight: 600; color: var(--au600); }
+.ed-head h2 { font-family: var(--f-cls); font-size: calc(24pt * var(--k)); font-weight: 700; color: var(--g900); margin: 0; line-height: 1.35; }
 .ed-head .orn { display: block; width: 46mm; height: 3mm; margin: 2mm auto 0; color: var(--au500); }
-.editorial .body p:first-child { font-size: 11.6pt; color: var(--g900); }
-.editorial .body p { font-size: 10.9pt; }
-.editorial .sign { text-align: left; font-family: var(--f-cls); font-weight: 700; font-size: 13pt; color: var(--au700); margin-top: 3mm; }
+.editorial .body p:first-child { font-size: calc(11.6pt * var(--k)); color: var(--g900); }
+.editorial .body p { font-size: calc(10.9pt * var(--k)); }
+.editorial .sign { text-align: left; font-family: var(--f-cls); font-weight: 700; font-size: calc(13pt * var(--k)); color: var(--au700); margin-top: 3mm; }
 .facts { margin-top: 6mm; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; break-inside: avoid; }
 .facts div { text-align: center; background: var(--g50); border: .5pt solid var(--g200); border-radius: 1.5mm; padding: 2.5mm 1mm 2mm; }
-.facts b { display: block; font-family: var(--f-ui); font-size: 18pt; color: var(--g900); line-height: 1.2; }
-.facts span { font-family: var(--f-ui); font-size: 7.6pt; color: var(--gr500); }
-.method { margin-top: 4mm; font-family: var(--f-ui); font-size: 8pt; line-height: 1.75; color: var(--gr700); background: var(--au100); border-right: 2pt solid var(--au500); padding: 2.5mm 4mm; break-inside: avoid; }
+.facts b { display: block; font-family: var(--f-ui); font-size: calc(18pt * var(--k)); color: var(--g900); line-height: 1.2; }
+.facts span { font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); color: var(--gr500); }
+.method { margin-top: 4mm; font-family: var(--f-ui); font-size: calc(8pt * var(--k)); line-height: 1.75; color: var(--gr700); background: var(--au100); border-right: 2pt solid var(--au500); padding: 2.5mm 4mm; break-inside: avoid; }
 .method b { color: var(--au700); }
 
 /* ---------- ٤) فواصل الأبواب ---------- */
 .sec { break-before: auto; }
 .sec.newpage, .sec:first-of-type, .brk { break-before: page; }
-.sec-head { position: relative; display: flex; align-items: center; gap: 4mm; margin: 2mm 0 6mm; padding: 4mm 5mm 4mm 4mm; background-color: var(--g50); background-image: var(--pat-green); background-size: 14mm 14mm; border-right: 3pt solid var(--g900); border-radius: 0 0 0 4mm; break-inside: avoid; break-after: avoid; }
-.sec .sec-head { margin-top: 7mm; } .sec.newpage .sec-head, .sec.brk .sec-head { margin-top: 1mm; }
-.sec-head .no { font-family: var(--f-cls); font-weight: 700; font-size: 30pt; line-height: 1; color: var(--au500); min-width: 13mm; text-align: center; }
+/* فاصل الباب: لوحة عنوان خضراء داكنة ورسم توضيحي للباب (art.js) */
+.sec-head { position: relative; display: grid; grid-template-columns: 1fr 44%; min-height: 40mm; margin: 2mm 0 6mm; border-radius: 0 0 0 5mm; overflow: hidden; background: var(--g900); break-inside: avoid; break-after: avoid; box-shadow: 0 0 0 .6pt var(--au500); }
+.sec .sec-head { margin-top: 8mm; } .sec.newpage .sec-head, .sec.brk .sec-head { margin-top: 1mm; }
+.sec-head .tx-w { display: flex; align-items: center; gap: 4mm; padding: 5mm 6mm 5mm 4mm; background-image: var(--pat-gold-s); background-size: 12mm 12mm; }
+.sec-head .no { font-family: var(--f-cls); font-weight: 700; font-size: calc(32pt * var(--k)); line-height: 1; color: var(--au300); min-width: 13mm; text-align: center; border-left: .6pt solid rgba(225,201,141,.45); padding-left: 3.5mm; }
 .sec-head .tx { flex: 1; }
-.sec-head .sec-name { display: block; font-family: var(--f-cls); font-weight: 700; font-size: var(--fs-h-sec); line-height: 1.25; color: var(--g900); margin: 0; }
-.sec-head .tg { display: block; font-family: var(--f-ui); font-size: 8.4pt; color: var(--gr500); margin-top: .8mm; }
-.sec-head .ic { width: 13mm; height: 13mm; border-radius: 50%; background: var(--g900); color: var(--au300); display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 0 0 1pt var(--au500), 0 0 0 2.4pt var(--g50), 0 0 0 3pt var(--au300); }
-.sec-head .ic svg { width: 7.5mm; height: 7.5mm; }
+.sec-head .sec-name { display: block; font-family: var(--f-cls); font-weight: 700; font-size: var(--fs-h-sec); line-height: 1.25; color: var(--white); margin: 0; }
+.sec-head .tg { display: block; font-family: var(--f-ui); font-size: calc(8.6pt * var(--k)); color: var(--au300); margin-top: 1.2mm; }
+.sec-head .art { position: relative; border-right: 1.2pt solid var(--au500); }
+.sec-head .art svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .sec-head h2 { margin: 0; font: inherit; }
 
 /* ---------- رأس المادة ---------- */
@@ -182,18 +188,18 @@ body { margin: 0; font-family: var(--f-body); font-size: var(--fs-body); line-he
 .ihead h3 { font-family: var(--f-cls); font-weight: 700; font-size: var(--fs-h-item); line-height: 1.38; color: var(--g900); margin: .5mm 0 1mm; }
 .ihead .by { font-family: var(--f-ui); font-size: var(--fs-small); color: var(--gr700); line-height: 1.55; display: flex; flex-wrap: wrap; gap: 0 2.5mm; align-items: center; }
 .ihead .by b { color: var(--g800); font-weight: 700; }
-.ihead .by .ed { color: var(--gr500); font-size: 7.4pt; }
+.ihead .by .ed { color: var(--gr500); font-size: calc(7.4pt * var(--k)); }
 .ihead .by::before { content: ""; width: 7mm; height: 1.2pt; background: var(--au500); display: inline-block; margin-left: .5mm; }
-.enote { margin: 2.4mm 0 0; padding: 2mm 3.6mm 2.2mm; background: var(--au100); border-right: 2pt solid var(--au500); font-family: var(--f-body); font-size: 9.3pt; line-height: 1.75; color: #3d3320; border-radius: 0 0 0 2mm; }
-.enote b { font-family: var(--f-ui); font-size: 7.6pt; color: var(--au700); display: block; line-height: 1.4; }
-.err { color: #8a2a1f; font-family: var(--f-ui); font-size: 9pt; }
+.enote { margin: 2.4mm 0 0; padding: 2mm 3.6mm 2.2mm; background: var(--au100); border-right: 2pt solid var(--au500); font-family: var(--f-body); font-size: calc(9.3pt * var(--k)); line-height: 1.75; color: #3d3320; border-radius: 0 0 0 2mm; }
+.enote b { font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); color: var(--au700); display: block; line-height: 1.4; }
+.err { color: #8a2a1f; font-family: var(--f-ui); font-size: calc(9pt * var(--k)); }
 
 /* عناوين فرعية داخل المادة (لا تدخل في فهرس PDF) */
 .mj-h { font-family: var(--f-ui); font-weight: 700; font-size: var(--fs-h-sub); line-height: 1.5; color: var(--g800); margin: 3.5mm 0 1.5mm; break-after: avoid; break-inside: avoid; display: flex; align-items: baseline; gap: 2mm; }
 .mj-h::before { content: ""; width: 1.8mm; height: 1.8mm; background: var(--au500); transform: rotate(45deg) translateY(-.4mm); flex: none; }
-.mj-h.lab { font-size: 10pt; color: var(--au700); margin-top: 2.4mm; }
+.mj-h.lab { font-size: calc(10pt * var(--k)); color: var(--au700); margin-top: 2.4mm; }
 .mj-h.lab::before { background: var(--g700); }
-.num { display: inline-flex; align-items: center; justify-content: center; min-width: 5.6mm; height: 5.6mm; padding: 0 1mm; margin-left: 1.6mm; border-radius: 3mm; background: var(--au500); color: var(--white); font-family: var(--f-ui); font-size: 7.6pt; font-weight: 700; line-height: 1; vertical-align: .3mm; }
+.num { display: inline-flex; align-items: center; justify-content: center; min-width: 5.6mm; height: 5.6mm; padding: 0 1mm; margin-left: 1.6mm; border-radius: 3mm; background: var(--au500); color: var(--white); font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); font-weight: 700; line-height: 1; vertical-align: .3mm; }
 .mj-h .num { background: var(--g900); }
 
 /* تنسيق داخل الفقرة */
@@ -202,8 +208,8 @@ h3 .ay, .toc-row .ay, .cover .ay { color: inherit; font-size: 1em; }
 .ayref { font-family: var(--f-ui); font-size: .72em; color: var(--au700); white-space: nowrap; }
 .hd { color: var(--g800); font-weight: 700; }
 .tk { font-family: var(--f-ui); font-size: .78em; color: var(--gr500); }
-p.lead { font-size: 11.4pt; line-height: 1.85; color: var(--g900); }
-p.mj-ayah { text-align: center; font-size: 11.6pt; background: var(--g50); border-radius: 2mm; padding: 1.6mm 4mm; break-inside: avoid; }
+p.lead { font-size: calc(11.4pt * var(--k)); line-height: 1.85; color: var(--g900); }
+p.mj-ayah { text-align: center; font-size: calc(11.6pt * var(--k)); background: var(--g50); border-radius: 2mm; padding: 1.6mm 4mm; break-inside: avoid; }
 p.hn { padding-right: 0; }
 
 /* القوائم */
@@ -213,17 +219,17 @@ ul.mj-list > li { position: relative; margin-bottom: 1.2mm; text-align: justify;
 ul.mj-list > li::before { content: ""; position: absolute; right: -4.2mm; top: 2.6mm; width: 1.6mm; height: 1.6mm; background: var(--au500); transform: rotate(45deg); }
 ol.mj-list { list-style: none; padding-right: 0; }
 ol.mj-list > li { display: flex; gap: 2.4mm; margin-bottom: 1.4mm; text-align: justify; break-inside: avoid; }
-ol.mj-list .mk { flex: none; min-width: 5.4mm; height: 5.4mm; margin-top: 1mm; border-radius: 50%; background: var(--g900); color: var(--au300); font-family: var(--f-ui); font-size: 7.6pt; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+ol.mj-list .mk { flex: none; min-width: 5.4mm; height: 5.4mm; margin-top: 1mm; border-radius: 50%; background: var(--g900); color: var(--au300); font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 
 /* الشعر: شطران متقابلان */
-.mj-poem { margin: 2.5mm 6mm 3.5mm; padding: 2.2mm 4mm; background: var(--au100); border-top: .5pt solid var(--au300); border-bottom: .5pt solid var(--au300); break-inside: avoid; font-family: var(--f-cls); font-size: 11.6pt; line-height: 2; color: var(--g900); }
+.mj-poem { margin: 2.5mm 6mm 3.5mm; padding: 2.2mm 4mm; background: var(--au100); border-top: .5pt solid var(--au300); border-bottom: .5pt solid var(--au300); break-inside: avoid; font-family: var(--f-cls); font-size: calc(11.6pt * var(--k)); line-height: 2; color: var(--g900); }
 .mj-poem .bt { display: grid; grid-template-columns: 1fr 1fr; column-gap: 9mm; }
 .mj-poem .bt span:first-child { text-align: right; } .mj-poem .bt span:last-child { text-align: left; }
 .mj-poem .bt.one { grid-template-columns: 1fr; text-align: center; } .mj-poem .bt.one span { text-align: center !important; }
 
 /* السؤال والجواب */
 .mj-qa { break-after: avoid; margin: 2.6mm 0 1.2mm; }
-.mj-qa span { display: inline-block; font-family: var(--f-ui); font-weight: 700; font-size: 8.6pt; line-height: 1.6; padding: .4mm 3.2mm .6mm; border-radius: 3mm; color: var(--white); background: var(--g900); }
+.mj-qa span { display: inline-block; font-family: var(--f-ui); font-weight: 700; font-size: calc(8.6pt * var(--k)); line-height: 1.6; padding: .4mm 3.2mm .6mm; border-radius: 3mm; color: var(--white); background: var(--g900); }
 .mj-qa.q span { background: var(--au600); }
 .qbox { background: var(--au100); border-radius: 0 0 0 3mm; padding: 2.4mm 4mm .4mm; border-right: 2pt solid var(--au500); margin-bottom: 1mm; }
 .qbox p { color: #3d3320; }
@@ -239,8 +245,8 @@ ol.mj-list .mk { flex: none; min-width: 5.4mm; height: 5.4mm; margin-top: 1mm; b
 /* ١ التأملات القرآنية: العنوان آية في إطار */
 .it-tafsir .ihead { text-align: center; }
 .it-tafsir .ihead .by { justify-content: center; }
-.it-tafsir .ihead h3 { font-size: 21pt; color: var(--g800); background: var(--g50); border: .6pt solid var(--au300); outline: .6pt solid var(--au300); outline-offset: 1.2mm; padding: 2.4mm 6mm 3mm; margin: 2.5mm 6mm 3mm; border-radius: 1mm; }
-.it-tafsir .body { font-size: 10.9pt; }
+.it-tafsir .ihead h3 { font-size: calc(21pt * var(--k)); color: var(--g800); background: var(--g50); border: .6pt solid var(--au300); outline: .6pt solid var(--au300); outline-offset: 1.2mm; padding: 2.4mm 6mm 3mm; margin: 2.5mm 6mm 3mm; border-radius: 1mm; }
+.it-tafsir .body { font-size: calc(10.9pt * var(--k)); }
 
 /* ٢ الأحاديث والآثار: المتن مميز، والرقم في وسام */
 .it-hadith .body p { padding-right: 3mm; border-right: 1pt solid var(--au300); }
@@ -254,47 +260,47 @@ ol.mj-list .mk { flex: none; min-width: 5.4mm; height: 5.4mm; margin-top: 1mm; b
 .it-fatwa .body { }
 
 /* ٥ كتب التراث ومؤلفات المشايخ: بطاقة الكتاب، ومتن التراث بخط أميري */
-.bookcard { display: flex; gap: 3mm; align-items: center; margin: 2mm 0 0; font-family: var(--f-ui); font-size: 8pt; color: var(--gr700); }
+.bookcard { display: flex; gap: 3mm; align-items: center; margin: 2mm 0 0; font-family: var(--f-ui); font-size: calc(8pt * var(--k)); color: var(--gr700); }
 .bookcard svg { width: 5mm; height: 5mm; color: var(--au600); flex: none; }
 .bookcard b { color: var(--g800); }
-.cls .body { font-family: var(--f-cls); font-size: 12pt; line-height: 1.85; }
+.cls .body { font-family: var(--f-cls); font-size: calc(12pt * var(--k)); line-height: 1.85; }
 .cls .body .hd { font-family: var(--f-cls); }
-.cls .mj-poem { font-size: 12.4pt; }
+.cls .mj-poem { font-size: calc(12.4pt * var(--k)); }
 
 /* ٦ الأخبار */
 .news-grp { margin-bottom: 4mm; }
-.news-grp h4 { display: flex; align-items: center; gap: 2.2mm; font-family: var(--f-ui); font-size: 10.4pt; font-weight: 700; line-height: 1.5; color: var(--white); background: var(--g900); border-bottom: 1.2pt solid var(--au500); padding: 1mm 3.5mm 1.3mm; margin: 0 0 1mm; border-radius: 0 0 0 2mm; break-after: avoid; }
+.news-grp h4 { display: flex; align-items: center; gap: 2.2mm; font-family: var(--f-ui); font-size: calc(10.4pt * var(--k)); font-weight: 700; line-height: 1.5; color: var(--white); background: var(--g900); border-bottom: 1.2pt solid var(--au500); padding: 1mm 3.5mm 1.3mm; margin: 0 0 1mm; border-radius: 0 0 0 2mm; break-after: avoid; }
 .news-grp h4 .ni { width: 4.6mm; height: 4.6mm; color: var(--au300); flex: none; }
 .news-it { padding: 2mm 1mm 2.2mm; border-bottom: .5pt solid var(--gr300); break-inside: avoid; }
 .news-it.lead { background: var(--au100); padding: 2.4mm 3mm; border-bottom: 0; border-radius: 0 0 0 2mm; }
-.news-it a.t { font-family: var(--f-body); font-weight: 700; font-size: 10.4pt; color: var(--ink); line-height: 1.6; display: block; }
-.news-it.lead a.t { font-family: var(--f-cls); font-size: 13pt; line-height: 1.45; color: var(--g900); }
-.news-it p { font-size: 9.4pt; line-height: 1.75; margin: .6mm 0 .4mm !important; color: var(--gr700); text-align: justify; }
-.news-it .m { display: flex; flex-wrap: wrap; gap: 0 3mm; font-family: var(--f-ui); font-size: 7.6pt; color: var(--gr500); }
+.news-it a.t { font-family: var(--f-body); font-weight: 700; font-size: calc(10.4pt * var(--k)); color: var(--ink); line-height: 1.6; display: block; }
+.news-it.lead a.t { font-family: var(--f-cls); font-size: calc(13pt * var(--k)); line-height: 1.45; color: var(--g900); }
+.news-it p { font-size: calc(9.4pt * var(--k)); line-height: 1.75; margin: .6mm 0 .4mm !important; color: var(--gr700); text-align: justify; }
+.news-it .m { display: flex; flex-wrap: wrap; gap: 0 3mm; font-family: var(--f-ui); font-size: calc(7.6pt * var(--k)); color: var(--gr500); }
 .news-it .m b { color: var(--g800); }
 .news-it .m a { color: var(--au700); font-weight: 700; margin-right: auto; }
-.news-note { font-family: var(--f-ui); font-size: 7.8pt; color: var(--gr500); }
+.news-note { font-family: var(--f-ui); font-size: calc(7.8pt * var(--k)); color: var(--gr500); }
 
 /* ٧ الأسرة والطفل: بطاقة لينة */
 .tone-soft .body, .tone-kids .body { background: var(--g50); border-radius: 3mm; padding: 3mm 4.5mm .6mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.tone-kids .body { font-size: 11pt; background: #f6f9f3; border: .6pt dashed var(--g200); }
+.tone-kids .body { font-size: calc(11pt * var(--k)); background: #f6f9f3; border: .6pt dashed var(--g200); }
 .tone-kids .ihead h3 { color: var(--g700); }
 .tone-kids ol.mj-list .mk { background: var(--au500); color: var(--white); }
 .tone-women .body { border-right: 1.2pt solid var(--au300); padding-right: 4mm; }
 
 /* ٨ الركن الأدبي */
-.it-adab .body { font-family: var(--f-cls); font-size: 11.8pt; line-height: 1.9; }
+.it-adab .body { font-family: var(--f-cls); font-size: calc(11.8pt * var(--k)); line-height: 1.9; }
 .it-adab .body p { text-align: justify; }
 
 /* ٩ الاقتباسات والقبسات: إطار مزخرف بلا انقسام */
 .it-quote { break-inside: avoid; }
 .it-quote .qframe { position: relative; margin: 1mm 4mm 1mm; padding: 5mm 8mm 2.5mm; border: .6pt solid var(--au300); background: var(--white); border-radius: 1mm; text-align: center; }
 html.mode-print .it-quote .qframe { background: var(--g50); }
-.it-quote .qframe::before { content: "”"; position: absolute; top: -5mm; right: 50%; transform: translateX(50%); font-family: var(--f-cls); font-size: 34pt; line-height: 1; color: var(--au500); background: var(--paper); padding: 0 3mm; }
+.it-quote .qframe::before { content: "”"; position: absolute; top: -5mm; right: 50%; transform: translateX(50%); font-family: var(--f-cls); font-size: calc(34pt * var(--k)); line-height: 1; color: var(--au500); background: var(--paper); padding: 0 3mm; }
 .it-quote .ihead { text-align: center; } .it-quote .ihead .by { justify-content: center; } .it-quote .ihead .by::before { display: none; }
-.it-quote .ihead h3 { font-size: 15pt; color: var(--au700); }
-.it-quote .body { font-family: var(--f-cls); font-size: 12.4pt; line-height: 1.8; color: var(--g900); }
-.it-quote .enote { font-size: 8.6pt; line-height: 1.6; padding: 1.4mm 3mm; margin-top: 1.6mm; }
+.it-quote .ihead h3 { font-size: calc(15pt * var(--k)); color: var(--au700); }
+.it-quote .body { font-family: var(--f-cls); font-size: calc(12.4pt * var(--k)); line-height: 1.8; color: var(--g900); }
+.it-quote .enote { font-size: calc(8.6pt * var(--k)); line-height: 1.6; padding: 1.4mm 3mm; margin-top: 1.6mm; }
 .it-quote .body p { margin-bottom: 1.4mm; }
 .it-quote .ihead { margin-bottom: 2mm; }
 .it-quote .body p { text-align: center; }
@@ -305,15 +311,67 @@ html.mode-print .it-quote .qframe { background: var(--g50); }
 .quiz { counter-reset: q; margin: 0; padding: 0; list-style: none; }
 .quiz > li { break-inside: avoid; margin-bottom: 3mm; padding: 2.4mm 3.5mm 2mm; border: .6pt solid var(--g200); border-radius: 2mm; background: var(--white); }
 .quiz .q { font-weight: 700; color: var(--g900); display: flex; gap: 2mm; }
-.quiz .q .mk { flex: none; width: 5.6mm; height: 5.6mm; border-radius: 50%; background: var(--au500); color: var(--white); display: inline-flex; align-items: center; justify-content: center; font-family: var(--f-ui); font-size: 8pt; margin-top: .8mm; }
-.quiz .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 6mm; margin: 1.2mm 7.6mm 0 0; font-size: 9.8pt; }
+.quiz .q .mk { flex: none; width: 5.6mm; height: 5.6mm; border-radius: 50%; background: var(--au500); color: var(--white); display: inline-flex; align-items: center; justify-content: center; font-family: var(--f-ui); font-size: calc(8pt * var(--k)); margin-top: .8mm; }
+.quiz .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 6mm; margin: 1.2mm 7.6mm 0 0; font-size: calc(9.8pt * var(--k)); }
 .quiz .opts span::before { content: ""; display: inline-block; width: 2.8mm; height: 2.8mm; border: .8pt solid var(--g500); border-radius: 50%; margin-left: 1.6mm; vertical-align: -.2mm; }
-.answers { break-inside: avoid; font-family: var(--f-ui); font-size: 8pt; color: var(--gr700); background: var(--au100); padding: 1.6mm 3.5mm; border-radius: 1.5mm; display: inline-block; }
+.answers { break-inside: avoid; font-family: var(--f-ui); font-size: calc(8pt * var(--k)); color: var(--gr700); background: var(--au100); padding: 1.6mm 3.5mm; border-radius: 1.5mm; display: inline-block; }
 
 /* ترجمة العلَم */
-.it-bio .body .mj-h:first-child { font-size: 12pt; }
+.it-bio .body .mj-h:first-child { font-size: calc(12pt * var(--k)); }
 
 /* ٥) قواعد التماسك العامة */
 h1, h2, h3, h4, .ihead, .sec-head, .mj-h, .mj-qa { break-after: avoid; }
 .mj-poem, .mj-ayah, .it-quote, .quiz > li, .facts, .toc-sec, .tail { break-inside: avoid; }
 img { max-width: 100%; }
+
+/* ---------- نسخة الهاتف: صفحة 110×195مم بنسبة شاشة الهاتف، عمود واحد وخط أكبر نسبيًّا ---------- */
+html.mode-mobile { --k: 1.2; --fs-h-item: calc(16.5pt * var(--k)); --fs-h-sec: calc(19pt * var(--k)); --lh-body: 1.85; }
+html.mode-mobile .doc p { text-align: right; }
+html.mode-mobile .cover, html.mode-mobile .back { width: 110mm; height: 195mm; }
+html.mode-mobile .cover .frame { inset: 4.5mm; } html.mode-mobile .cover::after { inset: 2.5mm; background-size: 5mm 5mm; }
+html.mode-mobile .cover .top { top: 9mm; right: 9mm; left: 9mm; gap: 2.4mm; }
+html.mode-mobile .cover .top img { width: 11mm; height: 11mm; }
+html.mode-mobile .cover .top .pub { font-size: 6.6pt; } html.mode-mobile .cover .top .pub b { font-size: 7.4pt; }
+html.mode-mobile .cover .top .no { padding: 1mm 2.6mm 1.2mm; } html.mode-mobile .cover .top .no small { font-size: 5.8pt; } html.mode-mobile .cover .top .no b { font-size: 11pt; }
+html.mode-mobile .cover .mast { top: 25mm; right: 8mm; left: 8mm; }
+html.mode-mobile .cover .mast .nm { font-size: 21pt; } html.mode-mobile .cover .mast .tg { font-size: 6.6pt; } html.mode-mobile .cover .mast .dt { font-size: 6.8pt; margin-top: 2mm; padding: .6mm 3mm; }
+html.mode-mobile .cover .art { top: 52mm; width: 44mm; height: 44mm; margin-left: -22mm; }
+html.mode-mobile .cover .theme { top: 98mm; right: 8mm; left: 8mm; }
+html.mode-mobile .cover .theme .kk { font-size: 7pt; } html.mode-mobile .cover .theme h1 { font-size: 19pt; } html.mode-mobile .cover .theme p { font-size: 8pt; }
+html.mode-mobile .cover .sky { top: 124mm; left: 5mm; right: 5mm; height: 16mm; }
+html.mode-mobile .cover .inside { top: 141mm; right: 7mm; left: 7mm; padding: 2.4mm 3.4mm 2mm; }
+html.mode-mobile .cover .inside .h2 { font-size: 7.6pt; margin-bottom: 1mm; }
+html.mode-mobile .cover .inside ol { column-gap: 3mm; }
+html.mode-mobile .cover .inside li { font-size: 6.8pt; line-height: 1.5; }
+html.mode-mobile .cover .inside li:nth-child(n+7) { display: none; }
+html.mode-mobile .cover .inside .foot { font-size: 6pt; margin-top: 1.2mm; padding-top: 1mm; }
+html.mode-mobile .back .in { top: 40mm; right: 10mm; left: 10mm; }
+html.mode-mobile .back img { width: 22mm; height: 22mm; }
+html.mode-mobile .back .nm { font-size: 15pt; margin-top: 4mm; } html.mode-mobile .back .pb { font-size: 7.4pt; }
+html.mode-mobile .back .ay { font-size: 12pt; margin-top: 8mm; } html.mode-mobile .back .ayr { font-size: 6.8pt; }
+html.mode-mobile .back .url { font-size: 9pt; margin-top: 8mm; padding: 1mm 4mm 1.4mm; }
+html.mode-mobile .back .note { bottom: 10mm; right: 10mm; left: 10mm; font-size: 6.2pt; }
+html.mode-mobile .toc-cols { grid-template-columns: 1fr; }
+html.mode-mobile .toc-head h2 { font-size: calc(19pt * var(--k)); }
+html.mode-mobile .toc-head .meta { display: none; }
+html.mode-mobile .facts { grid-template-columns: 1fr 1fr; }
+html.mode-mobile .imprint { grid-template-columns: 1fr; gap: 0; } html.mode-mobile .imprint b { margin-top: 1mm; }
+html.mode-mobile .sec-head { grid-template-columns: 1fr; min-height: 0; }
+html.mode-mobile .sec-head .art { order: -1; height: 30mm; border-right: 0; border-bottom: 1.2pt solid var(--au500); }
+html.mode-mobile .sec-head .tx-w { padding: 3.5mm 4mm; }
+html.mode-mobile .sec-head .no { font-size: calc(24pt * var(--k)); min-width: 10mm; }
+html.mode-mobile .mj-poem { margin: 2mm 0 3mm; padding: 2mm 3mm; }
+html.mode-mobile .mj-poem .bt { grid-template-columns: 1fr; }
+html.mode-mobile .mj-poem .bt span:last-child { text-align: left; padding-right: 8mm; }
+html.mode-mobile .quiz .opts { grid-template-columns: 1fr; margin-right: 5mm; }
+html.mode-mobile .it-tafsir .ihead h3 { margin: 2mm 0 2.5mm; padding: 2mm 3mm 2.4mm; font-size: calc(17pt * var(--k)); }
+html.mode-mobile .it-quote .qframe { margin: 1mm 0; padding: 5mm 4mm 2mm; }
+html.mode-mobile .enote { padding: 1.6mm 2.6mm; }
+html.mode-mobile .ihead .by::before { display: none; }
+html.mode-mobile .src a.go { margin-right: 0; }
+html.mode-mobile .item-sep::before, html.mode-mobile .item-sep::after { width: 20mm; }
+/* صفحات الفاتحة في A4: الفهرس صفحة واحدة بعمودين، والافتتاحية مع بيانات العدد صفحة واحدة */
+html:not(.mode-mobile) .toc { --k: 1.04; }
+html:not(.mode-mobile) .editorial { --k: 1.06; }
+/* الهاتف: القبس الطويل قد يتجاوز صفحة الهاتف فيُسمح بانقسامه */
+html.mode-mobile .it-quote, html.mode-mobile .mj-poem, html.mode-mobile .quiz > li, html.mode-mobile .tail { break-inside: auto; }

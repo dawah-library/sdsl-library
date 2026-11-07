@@ -5,7 +5,7 @@
 (async function () {
   "use strict";
   const { esc, toAr, ordinal, fmtDate, icon, star8, patternURL, motif, STY, NCATS, SITE, PUBLISHER } = MJP;
-  const Q = new URLSearchParams(location.search), MODE = Q.get("mode") === "print" ? "print" : "digital", AUTO = Q.get("auto") === "1";
+  const Q = new URLSearchParams(location.search), MODE = ["print", "mobile"].includes(Q.get("mode")) ? Q.get("mode") : "digital", AUTO = Q.get("auto") === "1";
   const BASE = "../";
   document.documentElement.classList.add("mode-" + MODE);
   if (AUTO) document.documentElement.classList.add("auto");
@@ -43,6 +43,7 @@
       <div class="mast"><div class="nm">${esc(NAME)}</div><div class="tg">من الوحيين وتراث السلف ومؤلفات مشايخ الدعوة السلفية</div>
         <div class="dt">${x.hijri ? `<span>${esc(x.hijri)}</span><i>${star8(30)}</i>` : ""}<span>${esc(fmtDate(x.date))}</span></div></div>
       <div class="art">${motif(C.motif)}</div>
+      <div class="sky">${typeof MJA !== "undefined" ? MJA.skyline() : ""}</div>
       <div class="theme"><div class="kk">موضوع العدد</div><h1>${esc(x.title || x.theme || "")}</h1>${x.sub ? `<p>${esc(x.sub)}</p>` : ""}</div>
       <div class="inside"><div class="h2">في هذا العدد</div><ol>${hl.map(o => `<li><a href="#${o.id}"><span>${ttl(o.title)}</span></a></li>`).join("")}</ol>
       <div class="foot"><span>${esc(SITE.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</span><span>${toAr(allItems.length)} مادة في ${toAr(secs.length)} بابًا</span></div></div></section>`;
@@ -106,7 +107,7 @@
   // الأبواب: يبدأ الباب صفحة جديدة إن كان أول الأبواب أو مقال العدد أو ركنًا دائمًا (تفضيلًا يُلغى إن ترك فراغًا كبيرًا)
   const sections = secs.map((s, i) => {
     const pref = i === 0 || /مقال العدد/.test(s.t) || !!s.corner;
-    return `<section class="sec${pref ? " newpage" : ""}" id="${s.id}" data-k="${s.id}"${pref ? ' data-soft="1"' : ""}><header class="sec-head"><div class="no">${toAr(String(i + 1).padStart(2, "0"))}</div><div class="tx"><h2 class="sec-name">${esc(s.t)}</h2>${s.meta.tag ? `<span class="tg">${esc(s.meta.tag)}</span>` : ""}</div><div class="ic">${icon(s.meta.icon)}</div></header>
+    return `<section class="sec${pref ? " newpage" : ""}" id="${s.id}" data-k="${s.id}"${pref ? ' data-soft="1"' : ""}><header class="sec-head"><div class="tx-w"><div class="no">${toAr(String(i + 1).padStart(2, "0"))}</div><div class="tx"><h2 class="sec-name">${esc(s.t)}</h2>${s.meta.tag ? `<span class="tg">${esc(s.meta.tag)}</span>` : ""}</div></div><div class="art">${typeof MJA !== "undefined" ? MJA.scene(s.meta.icon) : icon(s.meta.icon)}</div></header>
       ${s.live === "news" ? newsBlock() : ""}${s.items.map((o, k) => (k ? `<div class="item-sep">${star8(30)}</div>` : "") + item(o, s)).join("")}</section>`;
   });
 
@@ -117,17 +118,19 @@
 
   const SRC = document.createElement("div");
   SRC.className = "doc";
-  SRC.innerHTML = cover() + toc() + editorial() + `<div style="--pat-green:${patternURL("#0b3b2e", .07)}">` + sections.join("") + `</div>` + back;
+  SRC.innerHTML = cover() + toc() + editorial() + `<div style="--pat-green:${patternURL("#0b3b2e", .07)};--pat-gold-s:${patternURL("#e1c98d", .1)}">` + sections.join("") + `</div>` + back;
   // مفاتيح ثابتة لكل كتلة قابلة للنقل (لتطبيق إصلاحات الانقسام في الجولة التالية)
   let kc = 0; SRC.querySelectorAll("p, li, .mj-h, .mj-poem, .mj-qa, .news-it, .news-grp, .ihead, .item, .tail, .item-sep").forEach(e => { if (!e.dataset.k) e.dataset.k = "b" + (kc++); });
   window.MJP_SRC = () => SRC.outerHTML;
   // الاسم ورقم العدد في الترويسة والتذييل
-  const dynCSS = `@page { @top-right { width: 58%; content: "${NAME.replace(/"/g, "")}"; font-family: "MJ Amiri", serif; font-weight: 700; font-size: 10.5pt; color: #0b3b2e; vertical-align: bottom; padding-bottom: 3.2mm; } @bottom-right { content: "${issueLine.replace(/"/g, "")}"; font-family: "MJ Cairo", sans-serif; font-size: 7.6pt; color: #6f7772; vertical-align: middle; } } `;
+  const MOB = MODE === "mobile";
+  const dynCSS = `@page { @top-right { width: 58%; content: "${NAME.replace(/"/g, "")}"; font-family: "MJ Amiri", serif; font-weight: 700; font-size: ${MOB ? 8.4 : 11.4}pt; color: #0b3b2e; vertical-align: bottom; padding-bottom: ${MOB ? 2.2 : 3.2}mm; } @bottom-right { content: "${(MOB ? "العدد " + ordinal(x.no || 1) : issueLine).replace(/"/g, "")}"; font-family: "MJ Cairo", sans-serif; font-size: ${MOB ? 6.4 : 8.2}pt; color: #6f7772; vertical-align: middle; }${MOB ? ` @top-left { width: 42%; text-align: left; content: string(sect); font-family: "MJ Cairo", sans-serif; font-weight: 600; color: #6f7772; vertical-align: bottom; font-size: 6.8pt; padding-bottom: 2.4mm; } @bottom-left { content: none; } @bottom-center { content: counter(page, arabic-indic); font-family: "MJ Cairo", sans-serif; font-weight: 700; color: #ffffff; vertical-align: middle; font-size: 7.4pt; }` : ""} } ${MOB ? `.pagedjs_page:not(.pagedjs_cover_page) .pagedjs_margin-bottom-center > .pagedjs_margin-content { background-size: 8mm 8mm; min-height: 8mm; line-height: 8mm; } .pagedjs_page:not(.pagedjs_cover_page) .pagedjs_margin-bottom { background-position: 0 3mm; }` : ""}`;
 
   // ---------- الإخراج والإصلاح ----------
   // ورقة واحدة: Paged.js يأخذ مقاس الصفحة وحواف القص من قاعدة @page الأولى، فتُدمج إعدادات النسخة فيها
   const CSSURL = new URL("press.css", location.href).href;
   let CSSTEXT = await fetch(CSSURL).then(r => r.text());
+  if (MODE === "mobile") CSSTEXT = CSSTEXT.replace("size: A4 portrait;", "size: 110mm 195mm;").replace("margin: 25mm 19mm 22mm 19mm;", "margin: 15mm 8mm 13mm 8mm;");
   if (MODE === "print") CSSTEXT = CSSTEXT.replace("margin: 25mm 19mm 22mm 19mm;", "margin: 25mm 19mm 22mm 19mm; bleed: 3mm;" + (Q.get("marks") === "1" ? " marks: crop cross;" : ""));
   CSSTEXT += "\n" + dynCSS;
   const head0 = new Set([...document.head.children]);
@@ -140,7 +143,7 @@
     [...document.head.children].forEach(e => { if (!head0.has(e)) e.remove(); });
     stage.innerHTML = "";
     const src = SRC.cloneNode(true);
-    src.querySelectorAll("[data-k]").forEach(e => { const k = e.dataset.k; if (hints.has(k)) e.classList.add("brk"); if (dropped.has(k)) e.classList.remove("newpage"); });
+    src.querySelectorAll("[data-k]").forEach(e => { const k = e.dataset.k; if (hints.has(k)) { const pv = e.previousElementSibling; (pv && pv.classList.contains("item-sep") ? pv : e).classList.add("brk"); } if (dropped.has(k)) e.classList.remove("newpage"); });
     const prev = new Paged.Previewer();
     flow = await prev.preview(src.outerHTML, [{ [CSSURL]: CSSTEXT }], stage);
     runningHeads();
@@ -210,8 +213,11 @@
         const prevFrag = i > 0 && pages[i - 1].querySelector(`[data-ref="${first.dataset.ref}"]`);
         if (prevFrag && first.dataset.k && prevFrag.getBoundingClientRect().height <= lh * 4.2) fixes.push({ k: first.dataset.k, page: n, why: "سطر منفرد أعلى الصفحة: نُقلت الفقرة كاملة" });
         out.push({ page: n, type: "widow", msg: "سطر منفرد أعلى الصفحة (بقية فقرة)" }); } }
+      // سطر واحد من فقرة في أسفل الصفحة وبقيتها في التالية: تُنقل الفقرة كلها
+      if (last && last.matches("p, li") && last.hasAttribute("data-split-to") && last.dataset.k) { const lh = parseFloat(getComputedStyle(last).lineHeight) || 20; if (last.getBoundingClientRect().height < lh * 1.5 && !last.hasAttribute("data-split-from")) { fixes.push({ k: last.dataset.k, page: n, why: "سطر واحد من فقرة في أسفل الصفحة: نُقلت الفقرة" }); out.push({ page: n, type: "widow", msg: "سطر يتيم في أسفل الصفحة" }); } }
       // التوازن: صفحة قليلة الامتلاء
-      if (!lastPage && fill < 0.5) {
+      const frontEnd = !!area.querySelector(".front") && !!(pages[i + 1] && pages[i + 1].querySelector(".front, .sec"));   // آخر صفحة في الفهرس أو الافتتاحية: فراغها مقصود
+      if (!lastPage && !frontEnd && fill < 0.5) {
         const nx = pages[i + 1] && pages[i + 1].querySelector(".sec.newpage .sec-head, .sec .sec-head");
         const nsec = nx && nx.closest(".sec");
         const nfirst = pages[i + 1] && [...pages[i + 1].querySelectorAll(".pagedjs_page_content " + BLOCKS)][0];
@@ -248,12 +254,13 @@
   issues.forEach(z => { if (z.page) pages[z.page - 1].classList.add("mp-warn", "mp-" + z.type); });
   pages.forEach((p, i) => p.setAttribute("data-pn", toAr(i + 1)));
   document.getElementById("mprep").innerHTML = `<h3>تقرير الإخراج</h3>
-    <p><b>${toAr(res.pages)}</b> صفحة • ${MODE === "print" ? "نسخة الطباعة" : "النسخة الرقمية"} • ${toAr(pass)} جولة إخراج</p>
+    <p><b>${toAr(res.pages)}</b> صفحة • ${{ print: "نسخة الطباعة", mobile: "نسخة الهاتف", digital: "النسخة الرقمية A4" }[MODE]} • ${toAr(pass)} جولة إخراج</p>
     <ul class="mpchk">${["empty", "overflow", "orphan", "sparse", "unbalanced", "widow", "font"].map(k => `<li class="${byType[k] ? "bad" : "ok"}">${byType[k] ? "⚠" : "✓"} ${T[k]}: ${byType[k] ? toAr(byType[k].length) : "لا شيء"}</li>`).join("")}</ul>
     ${issues.length ? `<ol class="mpis">${issues.map(z => `<li>${z.page ? `<a href="#" data-go="${z.page}">ص ${toAr(z.page)}</a> — ` : ""}${esc(z.msg)}</li>`).join("")}</ol>` : `<p class="ok">لا ملاحظات: العدد جاهز للاعتماد.</p>`}
     ${log.length ? `<details><summary>إصلاحات آلية (${toAr(log.length)})</summary><ul>${log.map(l => `<li>${esc(l)}</li>`).join("")}</ul></details>` : ""}`;
-  const pdfURL = `${BASE}data/majalla/pdf/${encodeURIComponent(x.id)}${MODE === "print" ? "-print" : ""}.pdf`;
-  fetch(pdfURL, { method: "HEAD" }).then(r => { if (r.ok) { const a = document.getElementById("mpdl"); a.href = pdfURL; a.hidden = false; } }).catch(() => { });
+  // الملفات المعتمدة (تُصدَّر آليًّا بـ Chromium فتطابق المعاينة صفحةً صفحة): هي ما يُحمَّل، لا طباعة المتصفح
+  const dl = document.getElementById("mpdl");
+  [["", "PDF الرقمي (A4)"], ["-mobile", "PDF للهاتف"], ["-print", "PDF للطباعة"]].forEach(([suf, label]) => { const u = `${BASE}data/majalla/pdf/${encodeURIComponent(x.id)}${suf}.pdf`; fetch(u, { method: "HEAD" }).then(r => { if (r.ok) { dl.insertAdjacentHTML("beforeend", `<a class="mpbtn mpp" href="${u}" download>${label}</a>`); dl.hidden = false; } }).catch(() => { }); });
   stat(`${toAr(res.pages)} صفحة`);
   document.getElementById("mpgo").max = res.pages;
   ui.classList.add("ready"); document.body.classList.add("mpready");
@@ -263,12 +270,12 @@
     const b = e.target.closest("[data-mp]"); if (!b) return; const a = b.dataset.mp;
     if (a === "print") window.print();
     else if (a === "redo") location.reload();
-    else if (a === "mode") { Q.set("mode", MODE === "print" ? "digital" : "print"); location.search = Q.toString(); }
+    else if (a === "digital" || a === "mobile" || a === "pmode") { Q.set("mode", a === "pmode" ? "print" : a); location.search = Q.toString(); }
     else if (a === "rep") document.body.classList.toggle("mp-rep");
     else if (["one", "spread", "grid"].includes(a)) { document.body.dataset.view = a; document.querySelectorAll("[data-mp=one],[data-mp=spread],[data-mp=grid]").forEach(z => z.classList.toggle("on", z === b)); }
   });
   document.getElementById("mpgo").addEventListener("change", e => goto(+e.target.value));
   document.getElementById("mpzoom").addEventListener("change", e => { document.documentElement.style.setProperty("--mpz", e.target.value); });
-  document.getElementById("mpmode").textContent = MODE === "print" ? "التحويل إلى النسخة الرقمية" : "معاينة نسخة الطباعة";
+  document.querySelectorAll("[data-mp=digital],[data-mp=mobile],[data-mp=pmode]").forEach(b => b.classList.toggle("on", b.dataset.mp === (MODE === "print" ? "pmode" : MODE)));
   if (issues.length) document.body.classList.add("mp-rep");
 })();

@@ -1335,3 +1335,14 @@ body.mfull .mpage.mp{max-width:none!important;width:calc((100vw - 8px) * var(--m
 body.mfull .mfbar{display:flex;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:400;gap:6px;align-items:center;background:rgba(20,40,34,.82);backdrop-filter:blur(6px);border-radius:30px;padding:5px 10px;opacity:.45;transition:opacity .2s}
 body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .mfbar button,.mfbar a{color:#fff;background:transparent;border:0;font-size:1.25rem;min-width:36px;height:36px;border-radius:50%;cursor:pointer;text-decoration:none;display:grid;place-items:center}.mfbar span{color:#f7e7b8;font-weight:700;padding:0 4px}
+
+/* صفحة العدد: رسم الباب، وتبويبات الأبواب الثابتة، وقراءة مريحة على الهاتف */
+.majart{margin:26px 0 0;border-radius:14px 14px 0 0;overflow:hidden;aspect-ratio:360/120;border:1px solid var(--line);border-bottom:3px solid #c09a48}
+.majart svg{width:100%;height:100%;display:block}
+.majart+.majsect{margin-top:0;background:#0b3b2e;border-radius:0 0 14px 14px;padding:10px 12px}.majart+.majsect span{background:none;box-shadow:none;color:#f6edd6;font-size:1.4rem;padding:0}.majart+.majsect small{color:#e1c98d}
+.majsec{scroll-margin-top:calc(var(--hdr,60px) + 52px)}.majitem{scroll-margin-top:calc(var(--hdr,60px) + 52px)}
+.majtabs{position:sticky;top:var(--hdr,0);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 16px;margin:6px 0 0;background:color-mix(in srgb,var(--sf) 94%,transparent);backdrop-filter:blur(6px);border-block:1px solid var(--line);scrollbar-width:thin}
+.majtabs a{flex:none;white-space:nowrap;text-decoration:none;font-size:.86rem;font-weight:600;color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 30%,transparent);border-radius:16px;padding:3px 12px}
+.majtabs a:hover{background:#0b3b2e;color:#fff}
+@media (max-width:600px){.majtext{font-size:1.16rem;line-height:2}.majitem h4{font-size:1.4rem}.majcover h2{font-size:1.6rem}.majname{font-size:1.6rem}.majart{margin-top:18px}.majart+.majsect span{font-size:1.25rem}.majnote{font-size:1rem}.mjkind,.mjby{font-size:.9rem}}
+.majissue{overflow:clip}

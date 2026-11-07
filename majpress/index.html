@@ -10,6 +10,7 @@
 <script>window.PagedConfig = { auto: false };</script>
 <script src="vendor/paged.polyfill.min.js"></script>
 <script src="core.js"></script>
+<script src="art.js"></script>
 </head>
 <body data-view="one">
 <div id="mpui" class="mpui" dir="rtl">
@@ -21,10 +22,10 @@
   <label class="mpgrp">انتقل إلى <input id="mpgo" type="number" min="1" value="1" aria-label="رقم الصفحة"></label>
   <label class="mpgrp">التكبير <select id="mpzoom" aria-label="التكبير"><option value=".5">٥٠٪</option><option value=".75" selected>٧٥٪</option><option value="1">١٠٠٪</option><option value="1.25">١٢٥٪</option></select></label>
   <button data-mp="rep">تقرير الفحص</button>
-  <button data-mp="mode" id="mpmode">معاينة نسخة الطباعة</button>
+  <span class="mpgrp" title="النسخة"><button data-mp="digital">A4 رقمي</button><button data-mp="mobile">الهاتف</button><button data-mp="pmode">الطباعة</button></span>
   <button data-mp="redo" title="إعادة الإخراج بعد التعديل">إعادة الإخراج ⟳</button>
-  <a id="mpdl" class="mpbtn" hidden download>تحميل PDF المعتمد</a>
-  <button data-mp="print" class="mpp" title="اختر «حفظ بصيغة PDF» في نافذة الطباعة">حفظ PDF / طباعة</button>
+  <span id="mpdl" class="mpgrp" hidden></span>
+  <button data-mp="print" title="للمسودات قبل الاعتماد: من متصفح Chrome على الحاسوب، مع اختيار «حفظ بصيغة PDF» وبلا هوامش. أما الملفات المعتمدة فحمّلها من الأزرار المجاورة">طباعة المعاينة</button>
 </div>
 <aside id="mprep" class="mprep" dir="rtl" aria-label="تقرير الفحص"></aside>
 <main id="mpstage" class="mpstage"></main>
