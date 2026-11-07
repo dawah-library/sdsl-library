@@ -23,6 +23,12 @@ def main():
     req = [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
     only = [x for x in os.environ.get("PROOF_ONLY", "").split(",") if x]
     auto = [b["id"] for b in cat["books"] if (b.get("col") or "dawah") == "dawah" and not b.get("ocr") and not b.get("demo") and (b.get("type") or "book") == "book" and os.path.exists(os.path.join(D, "books", b["id"] + ".json"))]
+    # ثم الكتب المشهورة في المكتبة العامة (قائمة التراث المنتقاة وطابور turath.io) دون انتظار طلب الإدارة
+    fam = set()
+    for fp, key in ((os.path.join(ROOT, "tools", "turath-list.json"), "books"), (os.path.join(D, "turathio-queue.json"), "items")):
+        try: fam |= {x["id"] for x in jl(fp, {key: []})[key]}
+        except Exception: pass
+    auto += [b["id"] for b in cat["books"] if b.get("col") == "turath" and not b.get("ocr") and b["id"] in fam and os.path.exists(os.path.join(D, "books", b["id"] + ".json"))]
     todo = only or (req + [x for x in auto if x not in req])
     budget = int(os.environ.get("PROOF_PAGES", "120")); deadline = time.time() + 60 * float(os.environ.get("PROOF_MINUTES", "100")); lst = jl(os.path.join(OUT, "_list.json"), {})
     for bid in todo:
@@ -46,7 +52,7 @@ def main():
                     a, z = str(f.get("from") or ""), str(f.get("to") or "")
                     if not a or a == z or page.count(a) != 1 or len(a) > 300: continue
                     ok.append({"k": str(f.get("k") or ""), "from": a, "to": z, "why": str(f.get("why") or "")[:160]})
-                R["pages"][str(i + 1)] = {"h": H(page), "fx": ok}
+                R["pages"][str(i + 1)] = {"h": H(page), "fx": ok, "at": time.strftime("%Y-%m-%d")}
             budget -= len(grp); js(outp, R)
         n = sum(len(v.get("fx") or []) for v in R["pages"].values()); lst[bid] = {"t": b.get("setTitle") or b["title"], "n": n, "done": len(R["pages"]), "of": len(pages), "upd": time.strftime("%Y-%m-%d")}
         js(os.path.join(OUT, "_list.json"), lst)

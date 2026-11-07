@@ -95,6 +95,9 @@ def plan(cat, key):
 
 
 def main():
+    try: sw = (json.load(open(os.path.join(ROOT, "data", "switches.json"), encoding="utf-8")) or {}).get("s") or {}
+    except Exception: sw = {}
+    if (sw.get("edition") is False or sw.get("all_jobs") is False) and not sys.argv[1:]: print("موقوف من «الخدمات والمفاتيح»"); open(os.path.join(ROOT, ".ea-ids"), "w").write(""); return
     cat = json.load(open(CAT, encoding="utf-8"))
     want = sys.argv[1:]
     if not want:  # الأقدم أولًا من كتب التراث النصية التي لا مصوّرة لها

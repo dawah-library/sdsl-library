@@ -97,10 +97,23 @@ function extract(html, url) {
   return { url, title, author, date, category, text };
 }
 
+// البحث عن كتاب في مصادر الكتب النصية (tools/text-sources.md): تراث (نص الشاملة المنقح بطبعته ومصورته) وجامع الكتب الإسلامية (المجاني)
+async function findBooks(q, res) {
+  const J = async (u, ms) => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms || 9000); try { const r = await fetch(u, { headers: { "user-agent": "sdsl-library (dawahlibrary.org) book finder", accept: "application/json" }, signal: ac.signal }); return r.ok ? await r.json() : null; } catch (e) { return null; } finally { clearTimeout(t); } };
+  const strip = x => String(x || "").replace(/<[^>]+>/g, "");
+  const [T, K] = await Promise.all([J("https://api.turath.io/search?q=" + encodeURIComponent(q) + "&ver=3"), J("https://backend.ketabonline.com/api/v2/books?q=" + encodeURIComponent(q) + "&limit=15")]);
+  const seen = new Map();
+  for (const x of (T && T.data) || []) { let m = {}; try { m = JSON.parse(x.meta || "{}"); } catch (e) { } if (!seen.has(x.book_id)) seen.set(x.book_id, { src: "turath", id: x.book_id, t: m.book_name || "", a: m.author_name || "" }); }
+  const tur = [...seen.values()].slice(0, 15);
+  const ket = ((K && K.data) || []).filter(b => b.is_free && !b.price).slice(0, 15).map(b => ({ src: "ketab", id: b.id, t: strip(b.title), a: ((b.authors || [])[0] || {}).name || "", info: strip(b.description).slice(0, 300) }));
+  res.setHeader("cache-control", "no-store");
+  return res.status(200).json({ q, turath: tur, ketab: ket });
+}
 async function handler(req, res) {
   if (await require("../lib/switch").stopped("import", res, "الاستيراد")) return;
   const who = await require("../lib/auth").userOf(req);  // جلب صفحات من مواقع خارجية: للمشرفين فقط
   if (!who || !/^(admin|partner|editor)$/.test(who.role)) return res.status(403).json({ error: "للمشرفين فقط" });
+  if (req.query && req.query.find) return findBooks(String(req.query.find).slice(0, 120), res);
   let u;
   try { u = new URL(String((req.query && req.query.url) || "")); } catch (e) { return res.status(400).json({ error: "رابط غير صالح" }); }
   if (!/^https?:$/.test(u.protocol) || !ALLOWED.includes(u.hostname)) return res.status(400).json({ error: "هذا الموقع غير مسموح بالاستيراد منه" });

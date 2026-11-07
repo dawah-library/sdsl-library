@@ -1,4 +1,4 @@
-// استكشاف موقع إثراء (ithraa.io) — يعمل على خوادم GitHub: الصفحة الرئيسة، وملف robots وخريطة الموقع، والسكربتات ونقاط الاتصال
+// استكشاف موقع (افتراضيًّا إثراء ithraa.io؛ أو SITE=… OUTN=…) — يعمل على خوادم GitHub: الصفحة الرئيسة، وملف robots وخريطة الموقع، والسكربتات ونقاط الاتصال
 // المذكورة فيها (api)، وبيانات الإطار المضمّنة (__NEXT_DATA__ / __NUXT__)، وعينة صفحات كتاب إن وُجدت، والشروط.
 // الناتج: tools/books-probe/report4.md (والعينات ithraa-*.txt)
 const fs = require("fs"), path = require("path"), vm = require("vm");
@@ -6,8 +6,8 @@ const OUT = path.join(__dirname, "books-probe"); fs.mkdirSync(OUT, { recursive: 
 const UA = { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36", "accept": "text/html,application/json,*/*;q=0.8", "accept-language": "ar,en;q=0.8" };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function get(u) { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 30000); try { const r = await fetch(u, { headers: UA, redirect: "follow", signal: ac.signal }); const b = await r.text(); await sleep(700); return { s: r.status, u: r.url, ct: r.headers.get("content-type") || "", b }; } catch (e) { return { s: 0, e: e.message, b: "", ct: "" }; } finally { clearTimeout(t); } }
-const rep = ["# استكشاف إثراء (ithraa.io) — " + new Date().toISOString().slice(0, 16).replace("T", " "), ""];
-const save = (n, t) => fs.writeFileSync(path.join(OUT, "ithraa-" + n), String(t).slice(0, 60000));
+const rep = ["# استكشاف " + (process.env.SITE || "https://ithraa.io") + " — " + new Date().toISOString().slice(0, 16).replace("T", " "), ""];
+const save = (n, t) => fs.writeFileSync(path.join(OUT, (process.env.OUTN || "ithraa") + "-" + n), String(t).slice(0, 60000));
 const keysOf = (o, d = 0) => { if (d > 3 || o === null || typeof o !== "object") return typeof o; if (Array.isArray(o)) return o.length ? [keysOf(o[0], d + 1), "×" + o.length] : []; const r = {}; for (const k of Object.keys(o).slice(0, 50)) r[k] = keysOf(o[k], d + 1); return r; };
 const txt = h => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 const J = s => { try { return JSON.parse(s); } catch (e) { return null; } };
@@ -19,7 +19,7 @@ async function probe(label, u, name) {
   rep.push(l); if (name) save(name, r.b); r.j = j; return r;
 }
 (async () => {
-  const B = "https://ithraa.io";
+  const B = process.env.SITE || "https://ithraa.io";
   for (const p of ["/robots.txt", "/sitemap.xml", "/sitemap-index.xml", "/manifest.json"]) await probe(p, B + p);
   const h = await probe("الرئيسة", B + "/", "home.html");
   const base = h.u || B + "/";
@@ -55,6 +55,6 @@ async function probe(label, u, name) {
   }
   // واجهات شائعة
   for (const p of ["/api", "/api/books", "/api/v1/books", "/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9", "/api/categories", "/books", "/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9"]) await probe(p, B + p);
-  for (const sub of ["api", "app", "backend", "files", "cdn"]) await probe("نطاق " + sub, `https://${sub}.ithraa.io/`);
-  fs.writeFileSync(path.join(OUT, "report4.md"), rep.join("\n") + "\n"); console.log(rep.join("\n").slice(0, 3000));
+  for (const sub of ["api", "app", "backend"]) await probe("نطاق " + sub, B.replace("https://", "https://" + sub + "."));
+  fs.writeFileSync(path.join(OUT, process.env.OUTN ? "report-" + process.env.OUTN + ".md" : "report4.md"), rep.join("\n") + "\n"); console.log(rep.join("\n").slice(0, 3000));
 })();

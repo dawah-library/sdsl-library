@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 URL = os.environ.get("SUPABASE_URL", "https://nqxkkdexpodjjwfdkxoq.supabase.co").rstrip("/")
 KEY = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
 SITE = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
-UA = "Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0 sdsl-bot"
+UA = "sdsl-library-backup/1.0 (GitHub Actions)"  # لا هوية متصفح: Supabase يرفض المفتاح السري من المتصفحات
 
 
 def tables():
@@ -60,7 +60,7 @@ def oidc():
 
 def upload(key, data):
     body = json.dumps({"keys": [key]}).encode()
-    r = urllib.request.Request(SITE + "/api/r2put", data=body, method="POST", headers={"content-type": "application/json", "authorization": "Bearer " + oidc(), "User-Agent": UA})
+    r = urllib.request.Request(SITE + "/api/r2put", data=body, method="POST", headers={"content-type": "application/json", "authorization": "Bearer " + oidc(), "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0 sdsl-bot"})
     url = json.loads(urllib.request.urlopen(r, timeout=60).read())["urls"][key]
     urllib.request.urlopen(urllib.request.Request(url, data=data, method="PUT", headers={"Content-Type": "application/gzip"}), timeout=300).read()
 

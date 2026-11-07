@@ -26,7 +26,7 @@ def sentences(text):
         if not s or not AR.match(s) or BAD.search(s):
             continue
         w = s.replace("،", " ").split()
-        if 6 <= len(w) <= 13 and all(len(x) <= 12 for x in w) and not s.startswith(("و ", "ف ")):
+        if 6 <= len(w) <= 13 and all(len(x) <= 12 for x in w) and not s.startswith(("و ", "ف ")) and not any(len(x) == 1 and x not in "و" for x in w):  # لا كلمة مقطوعة (حرف منفرد)
             yield s, w
 
 

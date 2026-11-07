@@ -1,0 +1,46 @@
+name: تشغيل المهام بطلب المدير
+# زر «تشغيل الآن» في لوحة التشغيل (#/ops) يكتب طلبًا في data/run-requests.json؛ هذه المهمة تشغّل المطلوب فورًا
+# (workflow_dispatch برمز المهمة نفسها)، وتعلّم الطلب مرسلًا. لا تشغّل إلا مهام المستودع الموجودة.
+on:
+  push:
+    branches: [main]
+    paths: ["data/run-requests.json"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: run-requests
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: التشغيل
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, re, subprocess, datetime
+          p = "data/run-requests.json"
+          d = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {"items": []}
+          have = set(os.listdir(".github/workflows"))
+          for x in d.get("items", []):
+              if x.get("st"): continue
+              w = str(x.get("w") or "")
+              if w not in have or w == "run-requests.yml" or not re.fullmatch(r"[a-z0-9-]+\.yml", w):
+                  x["st"] = "rejected"; continue
+              args = ["gh", "workflow", "run", w, "--ref", "main"]
+              for k, v in (x.get("inputs") or {}).items():
+                  if re.fullmatch(r"[a-z_]{1,30}", k): args += ["-f", "%s=%s" % (k, str(v)[:300])]
+              r = subprocess.run(args, capture_output=True, text=True)
+              x["st"] = "sent" if r.returncode == 0 else "failed"; x["msg"] = (r.stderr or r.stdout)[-200:]
+              x["sent"] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+              print(w, x["st"], x.get("msg", ""))
+          d["items"] = d["items"][-200:]
+          json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          EOF
+      - run: |
+          bash tools/git-save.sh "تشغيل المهام بطلب المدير" data/run-requests.json
