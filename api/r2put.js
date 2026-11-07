@@ -55,7 +55,8 @@ module.exports = async (req, res) => {
   catch (e) { return out(403, { message: "هوية غير مقبولة: " + e.message }); }
   let body = req.body;
   if (!body || typeof body !== "object") { const ch = []; for await (const c of req) ch.push(c); try { body = JSON.parse(Buffer.concat(ch).toString() || "{}"); } catch (e) { body = {}; } }
-  const keys = (body.keys || []).filter(k => /^books\/[A-Za-z0-9_-]{1,80}\/(p\d{4}\.webp|book\.pdf)$/.test(k)).slice(0, 200);
+  // صور الكتب وملفاتها، والنسخة الاحتياطية الأسبوعية لقاعدة البيانات (tools/db-backup.py)
+  const keys = (body.keys || []).filter(k => /^books\/[A-Za-z0-9_-]{1,80}\/(p\d{4}\.webp|book\.pdf)$/.test(k) || /^backups\/db\/\d{4}-\d{2}-\d{2}\.json\.gz$/.test(k)).slice(0, 200);
   const urls = {}; keys.forEach(k => { urls[k] = presignPut(k, 3600); });
   out(200, { urls });
 };
