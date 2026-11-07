@@ -14,6 +14,7 @@ BID = os.environ["TIO_ID"]
 CONC = int(os.environ.get("TIO_CONC", "6"))
 # الاستئناف: الصفحات المجلوبة تُحفظ في .tio-cache (تحفظه المهمة بين التشغيلات)، ويتوقف الجلب قبل مهلة المهمة
 CACHE = os.path.join(ROOT, ".tio-cache", "%s.json.gz" % BOOK)
+EDI, PDFS = {}, None
 DEADLINE = time.time() + 60 * float(os.environ.get("TIO_MINUTES", "250"))
 
 
@@ -43,6 +44,36 @@ def clean(t):
     return t.strip()
 
 
+# ملف الكتاب الكامل في تراث (files.turath.io/books-v3/<id>.json): مفاتيحه حروف حركات مموَّهة، كشفناها بالاستكشاف
+# (tools/books-probe/report2.md): «ً» البيانات، «ٙ» الفهارس (المجلدات، والعناوين، وترقيم المطبوع)، و«pages» الصفحات {text, vol, page}.
+V3META = {"ٌ": "id", "ٍ": "name", "َ": "type", "ُ": "printed", "ِ": "pdf_links", "ّ": "info", "ْ": "info_long", "ٓ": "version", "ٕ": "author_id", "ٖ": "cat_id", "ٗ": "date_built", "٘": "author_page_start"}
+
+
+def v3(book):
+    """الكتاب كاملًا بطلب واحد بدل آلاف الطلبات؛ يعيد (meta, headings, pages) بصيغة الواجهة العادية، أو None."""
+    j = get("https://files.turath.io/books-v3/%s.json" % book, tries=3)
+    if not j or not isinstance(j.get("pages"), list):
+        return None
+    m = {V3META.get(k, k): v for k, v in (j.get("ً") or {}).items()}
+    ix = j.get("ٙ") or {}
+    heads = ix.get("ٛ") or []
+    pages = {}
+    for i, x in enumerate(j["pages"], 1):
+        pages[i] = {"text": x.get("text") or "", "meta": {"vol": x.get("vol"), "page": x.get("page") if isinstance(x.get("page"), (int, str)) else ""}}
+    return m, heads, pages
+
+
+def edition(m):
+    """بيانات الطبعة من بطاقة الشاملة (المحقق، الناشر، الطبعة، موافقة الترقيم للمطبوع) وروابط مصوَّرتها في تراث."""
+    info = m.get("info") or ""
+    f = lambda k: (re.search(r"^%s\s*:\s*(.+)$" % k, info, re.M) or [None, ""])[1].strip()
+    ed = {k: v for k, v in (("muh", f("المحقق")), ("pub", f("الناشر")), ("ed", f("الطبعة")), ("parts", f("عدد الأجزاء"))) if v}
+    ed["printed"] = 1 if ("موافق للمطبوع" in info or m.get("printed") == 1) else 0
+    pl = m.get("pdf_links") or {}
+    src = {"tio": int(BOOK), "root": pl.get("root"), "files": pl.get("files") or []} if pl.get("files") else None
+    return ed, src
+
+
 def main():
     meta = get("%s/book?id=%s&include=indexes" % (API, BOOK)) or {}
     m = meta.get("meta") or {}
@@ -51,9 +82,14 @@ def main():
     idx = meta.get("indexes") or {}
     for h in (idx.get("headings") or []):
         heads.append((int(h.get("page") or 0), h.get("title") or "", int(h.get("level") or 1)))
-    # الصفحات تباعًا حتى النهاية
-    pages, pg = {}, 1
-    if os.path.exists(CACHE):
+    full = v3(BOOK) if os.environ.get("TIO_V3", "1") != "0" else None
+    if full:
+        m = {**full[0], **m} if m else full[0]
+        heads = [(int(h.get("page") or 0), h.get("title") or "", int(h.get("level") or 1)) for h in full[1]] or heads
+        print("  الملف الكامل: %d صفحة بطلب واحد" % len(full[2]), flush=True)
+    # الصفحات تباعًا حتى النهاية (إن تعذر الملف الكامل)
+    pages, pg = (dict(full[2]), 10 ** 9) if full else ({}, 1)
+    if not full and os.path.exists(CACHE):
         c = json.load(gzip.open(CACHE, "rt", encoding="utf-8"))
         pages = {int(k): v for k, v in c.get("pages", {}).items()}
         pg = int(c.get("next", 1))
@@ -64,7 +100,7 @@ def main():
         with gzip.open(CACHE, "wt", encoding="utf-8") as f:
             json.dump({"next": nxt, "pages": pages}, f, ensure_ascii=False)
 
-    misses, step = 0, 200
+    misses, step = (3, 200) if full else (0, 200)
     while misses < 3:
         if time.time() > DEADLINE:
             save(pg)
@@ -87,6 +123,8 @@ def main():
     save(pg)
     if not pages:
         sys.exit("لم تُجلب أي صفحة")
+    global EDI, PDFS
+    EDI, PDFS = edition(m)
     order = sorted(pages)
     vols = {}
     for n in order:
@@ -120,7 +158,8 @@ def main():
         open(os.path.join(ROOT, "vols", id_ + ".json"), "w", encoding="utf-8").write(s)
         cat["books"].append({"id": id_, "title": "%s — ج %d" % (title, k), "set": BID, "setTitle": title, "vol": k, "vols": len(keys), "vf": 1, "big": 1,
                              "authorId": aid, "topicId": os.environ.get("TIO_TOPIC", "t4"), "col": "turath", "type": "book", "n": len(pg_text), "size": len(s),
-                             "source": "نص المكتبة الشاملة عبر turath.io (الكتاب %s)" % BOOK, "added": time.strftime("%Y-%m-%d")})
+                             "source": "نص المكتبة الشاملة عبر turath.io (الكتاب %s)" % BOOK, "added": time.strftime("%Y-%m-%d"),
+                             **({"edInfo": EDI} if EDI else {}), **({"pdfSrc": dict(PDFS, vol=v)} if PDFS else {})})
         print("  ج %s: %d صفحة" % (v, len(pg_text)), flush=True)
     cat["version"] = int(time.time() * 1000)
     json.dump(cat, open(os.path.join(ROOT, "data", "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
@@ -144,6 +183,8 @@ def replace_single(cat, old, order, pages, vols, heads, m):
                 "source": (m.get("name") or "") + " — نص المكتبة الشاملة المشكول عبر turath.io (الكتاب %s)" % BOOK,
                 "license": "نص المكتبة الشاملة (الكتاب %s) عبر turath.io" % BOOK})
     old.pop("openiti", None)
+    if EDI: old["edInfo"] = EDI
+    if PDFS: old["pdfSrc"] = PDFS
     cat["version"] = int(time.time() * 1000)
     json.dump(cat, open(os.path.join(ROOT, "data", "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     d = sum(len(re.findall(r"[\u064B-\u0652]", t)) for t in pg_text[::max(1, len(pg_text) // 30)])

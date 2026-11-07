@@ -1,0 +1,46 @@
+name: ربط الكتب النصية بمصورات طبعاتها
+# مصورة الطبعة نفسها من تراث ← مخزن R2 ← مطابقة صفحات النص بصفحات المصورة (tools/edition-attach.py ثم r2-store ثم pdf-match).
+on:
+  workflow_dispatch:
+    inputs:
+      books: { description: "معرّفات كتب أو أعمال مفصولة بمسافة (اختياري)", required: false, default: "" }
+      max: { description: "عدد الأعمال في الجولة", required: false, default: "3" }
+  schedule:
+    - cron: "37 5 * * *"   # يوميًّا: ثلاثة أعمال من كتب التراث النصية
+permissions:
+  contents: write
+  id-token: write
+env:
+  OMP_THREAD_LIMIT: "1"
+concurrency:
+  group: edition
+  cancel-in-progress: false
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils tesseract-ocr tesseract-ocr-ara >/dev/null && pip install -q pillow
+      - name: تنزيل المصورات
+        env:
+          EA_MAX: ${{ github.event.inputs.max || '3' }}
+        run: python3 tools/edition-attach.py ${{ github.event.inputs.books }}
+      - name: الرفع إلى المخزن والمطابقة
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          MATCH_APPLY: "1"
+          MATCH_MINUTES: "150"
+        run: |
+          ids="$(cat .ea-ids 2>/dev/null)"
+          if [ -z "$ids" ]; then echo "لا جديد"; exit 0; fi
+          if [ -n "$R2_ACCESS_KEY_ID" ]; then pip install -q boto3; fi
+          python3 tools/r2-store.py $ids
+          MATCH_ONLY="$(echo $ids | tr ' ' ',')" python3 tools/pdf-match.py
+      - name: الحفظ
+        if: always()
+        run: |
+          bash tools/git-save.sh "ربط الكتب بمصورات طبعاتها" data/catalog.json data/match data/books vols tools/edition-report.md tools/match-report.md

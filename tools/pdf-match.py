@@ -115,7 +115,9 @@ def main():
         if time.time() > deadline: print('انتهى الوقت المخصص؛ البقية في الجولة القادمة'); break
         bid = b['id']; tmp = tempfile.mkdtemp()
         try:
-            shp = os.path.join(D, 'books', bid + '.json'); sh = json.load(open(shp, encoding='utf-8')); pages = sh['pages']
+            shp = os.path.join(D, 'books', bid + '.json')
+            if not os.path.exists(shp): shp = os.path.join(ROOT, 'vols', bid + '.json')  # مجلدات الكتب الكبيرة (المربوطة بمصورات طبعاتها: tools/edition-attach.py)
+            sh = json.load(open(shp, encoding='utf-8')); pages = sh['pages']
             pdf = get_pdf(bid, tmp); N = npages(pdf); off = int(b.get('pdfOffset') or 0)
             if FULL:
                 info = {'t': b['title'], 'textPages': len(pages), 'pdfPages': N, 'offset': off}
@@ -155,7 +157,7 @@ def main():
             os.makedirs(os.path.join(D, 'match'), exist_ok=True); json.dump(rep, open(rp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
             if os.environ.get('MATCH_COMMIT') == '1':
                 run = lambda *a: subprocess.run(list(a), cwd=ROOT)
-                run('git', 'add', 'data/match', 'data/catalog.json', 'data/books')
+                run('git', 'add', 'data/match', 'data/catalog.json', 'data/books', 'vols')
                 if subprocess.run(['git', 'diff', '--cached', '--quiet'], cwd=ROOT).returncode:
                     run('git', 'commit', '-qm', 'مطابقة المصورة بالنص: ' + b['title'])
                     for _ in range(4):
