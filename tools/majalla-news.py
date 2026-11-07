@@ -15,7 +15,8 @@ import xml.etree.ElementTree as ET
 OUT = "data/majalla-news.json"
 MAJ = "data/majalla.json"
 DRY = os.environ.get("NEWS_DRY") == "1"
-MAX_AGE = int(os.environ.get("NEWS_MAX_AGE", "45"))      # أيام
+MAX_AGE = int(os.environ.get("NEWS_MAX_AGE", "45"))      # أيام، للأخبار العامة
+KEEP_AGE = 180                                           # أخبار حزب النور والدعوة السلفية (تصدر أقل) تبقى أطول
 MAX_ITEMS = 300
 FETCH_PAGES = int(os.environ.get("NEWS_FETCH", "70"))    # صفحات أخبار تُقرأ لاستخراج الموجز في الجولة
 SNAP_DAYS = 10
@@ -98,6 +99,9 @@ def similar(a, b):
 
 # الصفحات التي ليست أخبارًا: صفحات النواب والكتّاب والأقسام والبرامج
 JUNK = re.compile(r"^(?:النائب|الكاتب|المحرر|المهندس|الدكتور|الشيخ)\s?«?[^\s]+(?:\s[^\s]+){0,3}$|^(?:حزب النور\s?-\s?الموقع الرسمي|برنامج الحزب|تفاعلي النور|انجازات نواب النور|إنجازات نواب النور|من نحن|اتصل بنا|الرئيسية|أرشيف|الأخبار|مقالات)$|^[^\s]+\s?\|\s?[^\s]+$")
+def max_age(s, t):
+    return KEEP_AGE if s["cat"] == "nour" or DAWAH.search(t) or NOUR.search(t) else MAX_AGE
+
 def is_news(title):
     t = title.strip()
     if len(t) < 22 or len(t.split()) < 4: return False
@@ -185,12 +189,17 @@ def bing_snips(s):
     return out
 
 def via_gnews(s):
-    q = urllib.parse.quote(f"site:{s['host']} when:30d")
-    x, _ = get(f"https://news.google.com/rss/search?q={q}&hl=ar&gl=EG&ceid=EG:ar")
-    out = []
-    for z in rss_items(x):
-        z["title"] = strip_site(z["title"], s); z["sum"] = ""; z["gn"] = 1
-        out.append(z)
+    # أحدث أخبار المصدر، ثم أخبار حزب النور والدعوة السلفية فيه (تصدر أقل فتُطلب مدة أطول)
+    qs = [f"site:{s['host']} when:30d"] + ([] if s["cat"] == "nour" else [f'site:{s["host"]} "حزب النور"', f'site:{s["host"]} "الدعوة السلفية"'])
+    out, seen = [], set()
+    for q in qs:
+        try: x, _ = get("https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=ar&gl=EG&ceid=EG:ar")
+        except Exception: continue
+        for z in rss_items(x):
+            z["title"] = strip_site(z["title"], s); z["sum"] = ""; z["gn"] = 1
+            if z["url"] in seen: continue
+            seen.add(z["url"]); out.append(z)
+    if not out: raise RuntimeError("لا نتائج")
     return out
 
 def gn_decode(u):
@@ -248,7 +257,7 @@ def main():
     # تنظيف المحفوظ بالقواعد الحالية
     items = []
     for x in old.get("items", []):
-        if x.get("sid") not in S or not is_news(x["title"]) or age_days(x.get("date", "")) > MAX_AGE: continue
+        if x.get("sid") not in S or not is_news(x["title"]) or age_days(x.get("date", "")) > max_age(S[x["sid"]], x["title"]): continue
         items.append(x)
     dropped = len(old.get("items", [])) - len(items)
     rep = []
@@ -262,9 +271,9 @@ def main():
             except Exception as e:
                 if DRY: log(f"  {s['name']} [{name}]: {str(e)[:90]}")
         n = n_sum = 0
-        for z in got[:45]:
+        for z in got[:70]:
             z["title"] = strip_site(z["title"], s)
-            if not is_news(z["title"]) or age_days(z.get("date", "")) > MAX_AGE: continue
+            if not is_news(z["title"]) or age_days(z.get("date", "")) > max_age(s, z["title"]): continue
             if any(x["url"] == z["url"] or tkey(x["title"]) == tkey(z["title"]) for x in items): continue
             if (not z.get("sum") or z.get("gn")) and budget > 0:
                 budget -= 1
@@ -275,7 +284,7 @@ def main():
             if how == "html" and not z.get("date"):   # بلا تاريخ نشر: لا يُعرض خبرًا قديمًا على أنه جديد
                 if DRY: log(f"  بلا تاريخ: {z['title'][:60]}")
                 continue
-            if age_days(z.get("date", "")) > MAX_AGE:
+            if age_days(z.get("date", "")) > max_age(s, z["title"]):
                 if DRY: log(f"  قديم ({z['date'][:10]}): {z['title'][:60]}")
                 continue
             n += 1; n_sum += 1 if z.get("sum") else 0
@@ -296,7 +305,7 @@ def main():
         # المصدر الذي لم يُجلب منه شيء: أخباره من الخلاصة نفسها
         if not any(x["sid"] == s["id"] and age_days(x.get("date", "")) < 3 for x in items):
             for b in B[:30]:
-                if is_news(b["title"]) and age_days(b.get("date", "")) <= MAX_AGE and not any(b["url"] == x["url"] or similar(b["title"], x["title"]) for x in items):
+                if is_news(b["title"]) and age_days(b.get("date", "")) <= max_age(s, b["title"]) and not any(b["url"] == x["url"] or similar(b["title"], x["title"]) for x in items):
                     items.append({"title": b["title"], "url": b["url"], "date": b.get("date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sum": brief(b.get("sum", "")), "src": s["name"], "sid": s["id"], "cat": ""}); k += 1
         if DRY: log(f"  Bing {s['name']}: {len(B)} خبرًا، أُكمل أو أُضيف منها {k}")
     # إكمال موجز المحفوظ الذي بلا موجز (بقية الحصة)
@@ -318,6 +327,11 @@ def main():
             if x["src"] != d["src"] and not any(a["src"] == x["src"] for a in d["also"]): d["also"].append({"src": x["src"], "url": x["url"]})
             continue
         uniq.append(x)
+    # وصف عام للموقع يتكرر في كل صفحاته ليس موجزًا للخبر
+    from collections import Counter
+    gen = Counter((x["sid"], x.get("sum")) for x in uniq if x.get("sum"))
+    for x in uniq:
+        if x.get("sum") and gen[(x["sid"], x["sum"])] > 1 or re.match(r"^حزب سياسي مصر", x.get("sum") or ""): x["sum"] = ""
     for x in uniq: x["cat"] = cat(S[x["sid"]], x["title"] + " " + (x.get("sum") or ""))
     L = sorted(uniq, key=lambda x: x.get("date", ""), reverse=True)[:MAX_ITEMS]
     for x in L: x.pop("top", None)
