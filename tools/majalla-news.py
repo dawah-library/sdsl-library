@@ -272,8 +272,12 @@ def main():
                 except Exception as e:
                     if DRY: log(f"  تعذر إكمال «{z['title'][:40]}»: {str(e)[:80]}")
             if any(x["url"] == z["url"] for x in items): continue
-            if how == "html" and not z.get("date"): continue   # بلا تاريخ نشر: لا يُعرض خبرًا قديمًا على أنه جديد
-            if age_days(z.get("date", "")) > MAX_AGE: continue
+            if how == "html" and not z.get("date"):   # بلا تاريخ نشر: لا يُعرض خبرًا قديمًا على أنه جديد
+                if DRY: log(f"  بلا تاريخ: {z['title'][:60]}")
+                continue
+            if age_days(z.get("date", "")) > MAX_AGE:
+                if DRY: log(f"  قديم ({z['date'][:10]}): {z['title'][:60]}")
+                continue
             n += 1; n_sum += 1 if z.get("sum") else 0
             items.append({"title": z["title"], "url": z["url"], "date": z.get("date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sum": z.get("sum", ""), "src": s["name"], "sid": s["id"], "cat": ""})
         rep.append(f"{s['name']}: {n} جديد ({how or 'تعذر'})، بموجز {n_sum}")
@@ -324,7 +328,9 @@ def main():
     out = {"updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sources": [{"name": s["name"], "url": s["url"]} for s in SOURCES], "items": L}
     log("الركن الإخباري: " + "؛ ".join(rep) + f"؛ حُذف {dropped} قديم أو ليس خبرًا؛ المكرر المدموج {len(items) - len(uniq)}؛ الأقسام: " + "، ".join(f"{k} {v}" for k, v in cc.items()) + f"؛ بموجز {sum(1 for x in L if x.get('sum'))} من {len(L)}")
     if DRY:
-        for x in L[:25]: log(f"  [{x['cat']}] {x['date'][:10]} {x['src']}: {x['title'][:80]} | {(x.get('sum') or '')[:80]} | {x['url'][:70]}")
+        for c in ("dawah", "nour", "muslims", "egypt", "region", "world"):
+            for x in [y for y in L if y["cat"] == c][:3]: log(f"  <{c}> {x['date'][:10]} {x['src']}: {x['title'][:70]} | {(x.get('sum') or '')[:90]}")
+        for x in L[:0]: log(f"  [{x['cat']}] {x['date'][:10]} {x['src']}: {x['title'][:80]} | {(x.get('sum') or '')[:80]} | {x['url'][:70]}")
         return
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
     snapshot(L)
