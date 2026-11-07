@@ -18,6 +18,8 @@ KEYS = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KE
 DEAD = set(); KI = [0]
 SEG = {g["id"]: g for g in S["segments"]}
 REPORT = {"audition": {}, "segments": {}}
+_rp = os.path.join(OUT, "report.json")
+if S.get("redo") and os.path.exists(_rp): REPORT = json.load(open(_rp))
 
 
 def call(model, body, timeout=300):
@@ -117,9 +119,9 @@ if os.path.exists(_t):
     _r = judge("s03", _t); print("فحص المحكّم:", json.dumps(_r, ensure_ascii=False)[:400], flush=True)
     if _r.get("error"): sys.exit("المحكّم لا يعمل؛ أوقفتُ التسجيل حفظًا للحصة")
 
-# ١) تجربة الأداء
+# ١) تجربة الأداء (تُتخطى إذا ثُبّت الصوت)
 best_voice, best_avg = None, -1
-for v in S["voices"]:
+for v in ([] if S.get("fixed_voice") else S["voices"]):
     sc = []
     for sid in S["audition"]:
         p = os.path.join(WORK, f"aud_{v}_{sid}.wav")
@@ -132,7 +134,7 @@ for v in S["voices"]:
     avg = sum(sc) / len(sc)
     REPORT["audition"].setdefault(v, {})["avg"] = round(avg, 2)
     if avg > best_avg: best_voice, best_avg = v, avg
-FORCE = os.environ.get("PROMO_VOICE")
+FORCE = os.environ.get("PROMO_VOICE") or S.get("fixed_voice")
 if FORCE: best_voice = FORCE
 REPORT["voice"] = best_voice
 print("الصوت المختار:", best_voice, round(best_avg, 2), flush=True)
@@ -140,10 +142,11 @@ print("الصوت المختار:", best_voice, round(best_avg, 2), flush=True)
 # ٢) أفضل نسخة لكل مقطع
 for g in S["segments"]:
     sid = g["id"]; cands = []
+    if S.get("redo") and sid not in S["redo"]: continue
     aud = os.path.join(WORK, f"aud_{best_voice}_{sid}.wav")
     if os.path.exists(aud) and sid in REPORT["audition"].get(best_voice, {}): cands.append((REPORT["audition"][best_voice][sid], aud))
     for k in range(S["takes"]):
-        if cands and max(c[0]["score"] for c in cands) >= 33 and cands[0][0].get("wer", 1) == 0: break  # نسخة كاملة بلا أخطاء
+        if cands and any(c[0]["score"] >= 33 and c[0].get("wer", 1) == 0 and not c[0].get("issues") for c in cands): break  # نسخة كاملة بلا أخطاء
         p = os.path.join(WORK, f"{sid}_{k}.wav")
         try:
             m = tts(sid, best_voice, p); r = judge(sid, p); r.update(model=m, d=round(dur(p), 2)); cands.append((r, p))
