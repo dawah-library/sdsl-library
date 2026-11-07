@@ -1,6 +1,6 @@
 {
  "v": 1,
- "at": "2026-11-07T08:10:29.075Z",
+ "at": "2026-11-07",
  "by": "admin",
  "s": {
   "translate": false,
@@ -15,7 +15,6 @@
   "enrich": false,
   "tashjir": false,
   "study_ai": false,
-  "edu_ai": false,
   "i18n": false,
   "cards": false,
   "import_sources": false
