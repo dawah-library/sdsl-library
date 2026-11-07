@@ -43,6 +43,63 @@ function sanitize(contents) {
   if (size > 1200000 || out[0].role !== "user") return null;
   return out;
 }
+// ---------- Groq (مجاني، واجهة متوافقة مع OpenAI): بديل عن Gemini، ومراجع لغوي للجواب ----------
+const GROQ_MODELS = () => (process.env.GROQ_MODELS || "openai/gpt-oss-120b,qwen/qwen3-32b,llama-3.3-70b-versatile").split(",").map(x => x.trim()).filter(Boolean);
+async function groqChat(body, ms) {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms || 60000);
+  try {
+    for (const model of GROQ_MODELS()) {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", signal: ac.signal, headers: { "content-type": "application/json", authorization: "Bearer " + process.env.GROQ_API_KEY }, body: JSON.stringify(Object.assign({ model }, body)) }).catch(() => null);
+      if (r && r.ok) { const j = await r.json(); return (j.choices || [])[0] || null; }
+      if (r) console.error("groq", model, r.status, (await r.text().catch(() => "")).slice(0, 160));
+    }
+  } finally { clearTimeout(t); }
+  return null;
+}
+function toOpenAI(system, contents) {
+  const msgs = [{ role: "system", content: system }]; let ids = [];
+  contents.forEach((c, ci) => {
+    const ps = c.parts.filter(p => !p.cl);
+    if (c.role === "model") {
+      const tc = ps.filter(p => p.functionCall).map((p, i) => ({ id: "c" + ci + "_" + i, type: "function", function: { name: p.functionCall.name, arguments: JSON.stringify(p.functionCall.args || {}) } }));
+      ids = tc.map(x => x.id); const text = ps.filter(p => p.text).map(p => p.text).join("");
+      if (text || tc.length) msgs.push(Object.assign({ role: "assistant", content: text || null }, tc.length ? { tool_calls: tc } : {}));
+    } else {
+      let k = 0; ps.forEach(p => { if (p.text) msgs.push({ role: "user", content: p.text }); else if (p.functionResponse && ids[k]) msgs.push({ role: "tool", tool_call_id: ids[k++], content: JSON.stringify((p.functionResponse.response || {}).result ?? {}).slice(0, 20000) }); });
+      ids = [];
+    }
+  });
+  return msgs;
+}
+async function viaGroq(system, contents, body, deep, send) {
+  const ch = await groqChat({ messages: toOpenAI(system, contents), tools: body.last ? undefined : CL_TOOLS().map(t => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.input_schema } })), max_tokens: deep ? 8000 : 4000, temperature: 0.3 }, 90000);
+  const m = ch && ch.message; if (!m) return false;
+  if (m.content) send({ t: "text", v: m.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim() });
+  const tc = (m.tool_calls || []).map(x => { let a = {}; try { a = JSON.parse(x.function.arguments || "{}"); } catch (e) { } return { name: x.function.name, args: a }; });
+  if (tc.length) send({ t: "calls", calls: tc, parts: (m.content ? [{ text: m.content }] : []).concat(tc.map(c => ({ functionCall: c }))) });
+  send({ t: "done", engine: "groq" }); return true;
+}
+// المراجعة اللغوية للجواب النهائي: تحسين الفصاحة والترقيم والتنسيق وحده؛ وتُرفض إن غيّرت نقلًا «…» أو رابطًا [[…]]
+async function review(text) {
+  if (!process.env.GROQ_API_KEY || text.length < 250 || !(await require("../lib/switch").on("ask_review"))) return null;
+  const ch = await groqChat({ messages: [{ role: "system", content: "أنت مدقق لغوي عربي. حسّن لغة النص التالي: الفصاحة، وسلامة النحو والإملاء، وعلامات الترقيم، وتنسيق Markdown (العناوين والقوائم). لا تغيّر المعنى ولا الأحكام ولا الترتيب، ولا تحذف شيئًا ولا تضف معلومة. انقل كل ما بين «» وكل [[...]] وكل آية وحديث بلفظه حرفًا بحرف. أخرج النص المحسَّن وحده بلا مقدمة." }, { role: "user", content: text }], max_tokens: 6000, temperature: 0.1 }, 30000);
+  let out = ch && ch.message && ch.message.content; if (!out) return null;
+  out = out.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  const keep = s => (s.match(/«[^»]{3,}»|\[\[[^\]]+\]\]|﴿[^﴾]+﴾/g) || []);
+  if (keep(text).some(q => !out.includes(q)) || out.length < text.length * 0.8 || out.length > text.length * 1.3) return null;
+  return out;
+}
+// Workers AI: صيغ بحث بديلة للسؤال الأول (مرادفات ومصطلحات) تُضاف إلى التعليمات
+async function expand(q) {
+  const AI = globalThis.__CF_AI; if (!AI || !q || !(await require("../lib/switch").on("ask_expand"))) return "";
+  try {
+    const run = AI.run(process.env.CF_AI_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages: [{ role: "system", content: "أعطِ ٥ صيغ بحث عربية قصيرة (مرادفات، ومصطلحات فقهية أو حديثية، وألفاظ قرآنية) تفيد في البحث عن جواب السؤال في كتب شرعية. سطر لكل صيغة، بلا ترقيم ولا شرح." }, { role: "user", content: q.slice(0, 600) }], max_tokens: 120 });
+    const r = await Promise.race([run, new Promise(ok => setTimeout(() => ok(null), 5000))]);
+    const t = String((r && (r.response || r.result && r.result.response)) || "").split("\n").map(x => x.replace(/^[-*\d.)\s]+/, "").trim()).filter(x => x && x.length < 60).slice(0, 5);
+    return t.length ? "\nصيغ بحث مقترحة (استعن بها مع صيغك): " + t.join("، ") : "";
+  } catch (e) { return ""; }
+}
+
 // ---------- Claude ----------
 const CL_TOOLS = () => S.TOOLS.map(t => ({ name: t.name, description: t.description, input_schema: clean(t.input_schema) || { type: "object", properties: {} } }));
 // صيغة Gemini ← رسائل Claude: نص المستخدم، وطلبات الأدوات tool_use بمعرّفات ثابتة، ونتائجها tool_result بالترتيب نفسه
@@ -101,7 +158,7 @@ async function viaClaude(system, contents, body, deep, send) {
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("ask", res, "المساعد العلمي")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
-  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
+  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY && !process.env.GROQ_API_KEY) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
   const body = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
   const contents = sanitize(body.contents);
   if (!contents) return res.status(400).json({ error: "محادثة غير صالحة أو طويلة جدًا؛ ابدأ محادثة جديدة." });
@@ -110,10 +167,11 @@ module.exports = async (req, res) => {
   if (limited(user.id, !body.round)) return res.status(429).json({ error: "بلغت حد الأسئلة في الساعة، حاول بعد قليل." });
   const mode = S.MODES[body.mode] ? body.mode : "ask", col = ["dawah", "turath"].includes(body.col) ? body.col : "", bookId = typeof body.bookId === "string" ? body.bookId.slice(0, 80) : "";
   const deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(mode);
-  const system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
+  let system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
     (col ? "\nنطاق البحث: " + (col === "turath" ? "المكتبة العامة فقط." : "كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وفتاواهم فقط.") : "") +
     (bookId ? "\nنطاق البحث: كتاب واحد معرفه " + bookId + "." : "") +
     "\nاليوم: " + new Date().toISOString().slice(0, 10) + ".";
+  if (!body.round) { const lastQ = (contents[contents.length - 1].parts.find(x => x.text) || {}).text; system += await expand(lastQ); }
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" });
   const send = o => res.write(JSON.stringify(o) + "\n");
@@ -135,6 +193,7 @@ module.exports = async (req, res) => {
     if (!r || !r.ok || !r.body) {
       const st = r ? r.status : 0, t = r ? await r.text().catch(() => "") : "";
       if (k < models.length - 1 && (st === 429 || st >= 500 || st === 404 || !r)) { send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); continue; }
+      if (process.env.GROQ_API_KEY && await require("../lib/switch").on("ask_groq")) { send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); if (await viaGroq(system, contents, body, deep, send)) return res.end(); }
       let gm = ""; try { const e = JSON.parse(t).error || {}; gm = (e.status || "") + " " + String(e.message || "").slice(0, 160); } catch (x) { gm = String(t).slice(0, 160); }
       send({ t: "error", code: st === 429 ? "quota" : "server", detail: "Gemini " + st + " " + gm.trim(), v: st === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل." : "تعذر الاتصال بنموذج الذكاء الاصطناعي." });
       return res.end();
@@ -150,6 +209,7 @@ module.exports = async (req, res) => {
       }
     }
     if (calls.length) send({ t: "calls", calls, parts: parts.filter(p => !p.thought || p.functionCall) });
+    else { const full = parts.filter(p => p.text && !p.thought).map(p => p.text).join(""), rv = await review(full).catch(() => null); if (rv) send({ t: "replace", v: rv }); }
     send({ t: "done" });
     return res.end();
   }

@@ -52,7 +52,7 @@ AI.viaServer = async function (o) {
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", calls = null, parts = null, err = null; acc = "";
     try { for (;;) { const { value, done } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true }); let nl;
       while ((nl = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1); if (!line) continue; let ev; try { ev = JSON.parse(line); } catch (e) { continue; }
-        if (ev.t === "text") { acc += ev.v; o.onText(acc); } else if (ev.t === "calls") { calls = ev.calls; parts = ev.parts; } else if (ev.t === "status") o.onStatus(ev.v);
+        if (ev.t === "text") { acc += ev.v; o.onText(acc); } else if (ev.t === "replace") { acc = ev.v; o.onText(acc); } else if (ev.t === "calls") { calls = ev.calls; parts = ev.parts; } else if (ev.t === "status") o.onStatus(ev.v);
         else if (ev.t === "error") { err = ev; } } } }
     catch (e) { if (e.name === "AbortError") { if (acc) throw { text: acc }; throw { code: "cancelled" }; } if (acc) throw { text: acc }; throw { code: "offline", message: "انقطع الاتصال أثناء الإجابة." }; }
     if (err) { if (acc) throw { text: acc }; throw { code: err.code === "quota" ? "quota" : "fallback", reason: err.v + (err.detail ? " (" + err.detail + ")" : "") }; }
