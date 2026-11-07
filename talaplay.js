@@ -15,7 +15,7 @@ const TPLAY = (() => {
     ["haraka", "الحركة الصحيحة", "اختر ضبط آخر الكلمة كما في المصحف", "ـَ"],
     ["tartib", "رتّب الآية", "أيّ ترتيب للكلمات هو الآية كما في المصحف؟", "🧩"],
     ["jarr", "حرف الجر", "اعرف حرف الجر في جمل من مقالات مشايخ الدعوة", "🔗"]];
-  const has = g => GAMES.some(x => x[0] === g);
+  const has = g => g === "mine" || GAMES.some(x => x[0] === g);
   const J = {}, getj = u => J[u] || (J[u] = fetch(u).then(r => r.ok ? r.json() : null).catch(() => null));
   const AR = n => (typeof toAr === "function" ? toAr(n) : String(n));
   let rnd = Math.random;
@@ -106,14 +106,24 @@ const TPLAY = (() => {
 
   // ---------- المحرّك ----------
   let G = null, CTX = null, TM = null;
-  const name = g => (GAMES.find(x => x[0] === g) || [])[1] || "";
+  const name = g => g === "mine" ? "أسئلة اليوم" : (GAMES.find(x => x[0] === g) || [])[1] || "";
   function font() { if (document.getElementById("kidfont")) return; const l = document.createElement("link"); l.id = "kidfont"; l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap"; document.head.appendChild(l); }
   async function run(g, q, ctx) {
     font(); CTX = ctx; clearInterval(TM); const k = q.k || ctx.k || "t2", day = new Date().toISOString().slice(0, 10);
     rnd = g === "daily" ? seeded(day + k) : Math.random;
     view(ctx.head(name(g), true) + '<div class="tpload">🎈 جارٍ تجهيز الأسئلة…</div></div>');
+    // الأسئلة التي سبق أن أجابها الطفل (لكل ملف طفل) تؤخَّر، فيجد جديدًا في كل لعبة وكل زيارة
+    const kidId = (ctx.kid && ctx.kid.id) || "x", T0 = S.tala = S.tala || { stars: 0, done: {} }, QS = (T0.qseen = T0.qseen || {})[kidId] = T0.qseen[kidId] || [];
+    const hq = x => { let h = 0; const t = String(x.q || "") + "|" + String(x.o[x.a] || ""); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return h.toString(36); };
+    const unseen = a => { const n = a.filter(x => !QS.includes(hq(x))); return n.length >= Math.min(5, a.length) ? n.concat(a.filter(x => QS.includes(hq(x)))) : a; };
+    if (g === "mine") { rnd = seeded(day + k + kidId + ":" + (((T0.dn || {})[kidId + new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate()]) || 0)); const big = await mixed(k, 40, ctx); rnd = Math.random; G0 = { hq, QS }; return start(g, k, day, unseen(big).slice(0, 5), ctx); }
     let L = g === "daily" ? await mixed(k, 10, ctx) : g === "race" ? await mixed(k, 40, ctx).then(async a => a.length < 30 ? a.concat(await genSura(k, 15), await genHadith(k, 10)) : a) : await GEN[g](k, 10);
-    rnd = Math.random;
+    rnd = Math.random; G0 = { hq, QS };
+    if (g !== "daily") L = unseen(L);
+    return start(g, k, day, L, ctx);
+  }
+  let G0 = null;
+  function start(g, k, day, L, ctx) {
     if (!L.length) return view(ctx.head(name(g), true) + `<div class="note">${g === "exer" ? "لم تُعتمد إجابات تمارين هذه المرحلة بعد؛ تُعتمد من الإدارة في «تمارين الأساس والبنيان»." : "تعذّر تجهيز الأسئلة الآن."}</div></div>`);
     const done = (S.tala && S.tala.daily || {})[day + k];
     if (g === "daily" && done != null) return view(ctx.head(name(g), true) + `<div class="tpwin"><div class="tpbig">🎯</div><h2>أنهيت مسابقة اليوم</h2><p>نتيجتك: ${AR(done)} من ${AR(L.length)}</p><p class="mut">تعود غدًا بأسئلة جديدة. جرّب «سباق الدقيقة» الآن!</p><a class="btn p" href="#/talaea/games?g=race&k=${k}">⏱️ سباق الدقيقة</a></div></div>`);
@@ -131,6 +141,7 @@ const TPLAY = (() => {
     box.innerHTML = ["⭐", "🎉", "✨", "🌟", "🎈", "💚"].map((e, i) => `<i style="--a:${i * 60}deg">${e}</i>`).join(""); document.body.appendChild(box); setTimeout(() => box.remove(), 900); }
   function answer(el) {
     const x = G.L[G.i], i = +el.dataset.i, ok = i === x.a;
+    if (G0) { const h = G0.hq(x); if (!G0.QS.includes(h)) { G0.QS.push(h); if (G0.QS.length > 3000) G0.QS.splice(0, 500); } }
     document.querySelectorAll(".tpbtn").forEach(b => { b.disabled = true; if (+b.dataset.i === x.a) b.classList.add("right"); });
     if (ok) { G.s++; G.streak++; burst(el); } else { el.classList.add("wrong"); G.streak = 0; }
     if (G.end) { setTimeout(() => { G.i++; if (G.i >= G.L.length) finish(); else draw(); }, ok ? 350 : 900); return; }

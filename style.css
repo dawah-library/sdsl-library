@@ -1236,6 +1236,13 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .edbox{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;background:var(--sf);font-size:.92em;line-height:1.8}
 .devb{font-style:normal;background:#c0392b;color:#fff;border-radius:10px;padding:0 6px;font-size:.75em;margin-inline-start:auto}
 .devtpl{margin:8px 0}
+/* يومي في الطلائع */
+.tdaily{border-radius:20px;padding:14px;margin:12px 0;background:linear-gradient(135deg,#fff7e0,#e8f6ef);border:1px solid var(--line)}
+.tdhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tdhead h3{margin:0}.tdhead .btn{margin-inline-start:auto}
+.tdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
+.tdcard{background:var(--sf);border-radius:14px;padding:12px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.tdtxt{font-family:Amiri,serif;font-size:1.25rem;line-height:2}.tdstory p{line-height:1.9}
+@media (prefers-color-scheme:dark){.tdaily{background:linear-gradient(135deg,#2a2412,#12271f)}}
 /* أركان المجلة وتحسين العرض (البند ٣٧) */
 .mjcorners{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0 18px}
 .mjcorner{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--sf);border-inline-start:6px solid var(--crc,var(--ac))}

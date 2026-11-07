@@ -28,6 +28,7 @@ const TALA = (() => {
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     const sg = GEN[q.s] ? q.s : "", sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
+      ${sg ? "" : await daily()}
       <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
@@ -55,7 +56,7 @@ const TALA = (() => {
   // ---------- الألعاب ----------
   let G = null;
   async function game(g, q) {
-    if (typeof TPLAY !== "undefined" && TPLAY.has(g)) { const k = q.k || (kid() || {}).track || "t2", sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); return TPLAY.run(g, q, { k, head, star, qz: (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : []) }); }
+    if (typeof TPLAY !== "undefined" && TPLAY.has(g)) { const k = q.k || (kid() || {}).track || "t2", sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); return TPLAY.run(g, q, { k, head, star, kid: kid(), qz: (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : []) }); }
     if (g === "ayah" || g === "order") {
       const Qs = await quran(), am = Qs.filter(s => s.n >= 78), sn = +q.s || 0, s = am.find(x => x.n === sn);
       if (!s) return view_(head(g === "ayah" ? "أكمل الآية" : "رتّب الآيات", true) + `<h2 class="talat">${g === "ayah" ? "أكمل الآية" : "رتّب الآيات"}</h2><p>اختر سورة من جزء عمّ:</p><div class="chips">${am.slice().reverse().map(x => `<a class="chip" href="#/talaea/games?g=${g}&s=${x.n}">${esc(x.name.replace(/^سُورَةُ\s*/, ""))}</a>`).join("")}</div></div>`);
@@ -77,6 +78,51 @@ const TALA = (() => {
   // ---------- طلائع الدعوة السلفية: التعريف والأهداف (من مقال «طلائع الدعوة السلفية .. من نحن وماذا نريد؟» لمصطفى دياب، موقع أنا السلفي)
   // وقسمان: البنين والفتيات، لكل منهما قدواته ومهاراته وأنشطته الخاصة فوق المشترك بين القسمين.
   const INTRO_URL = "https://anasalafy.com/ar/44235";
+  // ---------- «يومي في الطلائع»: بطاقة يومية لكل طفل مسجل تتجدد كل يوم (وبزر «جديد») دون تكرار ما رآه ----------
+  // الأدعية بنصوصها الثابتة ومصادرها؛ والقصص من مقالات المكتبة وتراجم «سير أعلام النبلاء» (tools/tala-stories.py)
+  const DUA = [["قبل المذاكرة", "رَبِّ زِدْنِي عِلْمًا", "طه: ١١٤"], ["دعاء جامع", "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ", "البقرة: ٢٠١، وكان أكثر دعاء النبي ﷺ (متفق عليه)"], ["للوالدين", "رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ", "نوح: ٢٨"],
+    ["للثبات على الصلاة", "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِنْ ذُرِّيَّتِي رَبَّنَا وَتَقَبَّلْ دُعَاءِ", "إبراهيم: ٤٠"], ["بعد صلاة الفجر", "اللهم إني أسألك علمًا نافعًا، ورزقًا طيبًا، وعملًا متقبلًا", "ابن ماجه"], ["الثبات", "يا مقلب القلوب ثبت قلبي على دينك", "الترمذي"],
+    ["دبر كل صلاة", "اللهم أعني على ذكرك وشكرك وحسن عبادتك", "أبو داود والنسائي"], ["كلمتان حبيبتان إلى الرحمن", "سبحان الله وبحمده، سبحان الله العظيم", "متفق عليه"], ["كنز من كنوز الجنة", "لا حول ولا قوة إلا بالله", "متفق عليه"],
+    ["في الصباح والمساء", "بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم (ثلاثًا)", "أبو داود والترمذي"], ["في الصباح والمساء", "رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد ﷺ نبيًّا", "أبو داود والترمذي"],
+    ["العافية", "اللهم إني أسألك العفو والعافية في الدنيا والآخرة", "أبو داود وابن ماجه"], ["عند ركوب السيارة", "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنْقَلِبُونَ", "الزخرف: ١٣-١٤، ومسلم"],
+    ["عند لبس الثوب", "الحمد لله الذي كساني هذا ورزقنيه من غير حول مني ولا قوة", "أبو داود والترمذي"], ["الاستغفار", "أستغفر الله وأتوب إليه", "متفق عليه (كان النبي ﷺ يقولها أكثر من سبعين مرة في اليوم)"]];
+  const DACT = {
+    t1: [["🤲", "دعاء اليوم", "يحفظ دعاء اليوم ويقوله لأمه وأبيه"], ["🧸", "أرتّب ألعابي", "يرتب ألعابه بعد اللعب بنفسه"], ["😊", "أبتسم وأسلّم", "يقول «السلام عليكم» لكل من في البيت"], ["🍎", "آكل بيميني", "يأكل بيمينه ويسمّي الله"], ["📖", "آية اليوم", "يسمع آية قصيرة ويرددها ثلاث مرات"], ["🎁", "أشارك إخوتي", "يعطي أخاه أو صديقه من حلواه أو لعبته"], ["🛏️", "ذكر النوم", "يقول «باسمك اللهم أموت وأحيا» قبل النوم"], ["🙏", "شكرًا يا أمي", "يشكر أمه ويقبّل يدها"]],
+    t2: [["🕌", "صلاة في وقتها", "يصلي صلاة اليوم في أول وقتها"], ["📚", "صفحة من كتاب", "يقرأ صفحة من كتاب الطلائع ويحكي فائدتها"], ["🤝", "مساعدة في البيت", "يساعد في عمل منزلي دون أن يُطلب منه"], ["📖", "مراجعة الحفظ", "يراجع سورة حفظها ويسمّعها"], ["💧", "وضوء صحيح", "يتوضأ كما علّمه النبي ﷺ ويعدّ أعضاءه"], ["🧓", "صلة الرحم", "يتصل بجده أو جدته ويسأل عنهما"], ["✍️", "كلمة جديدة", "يتعلم كلمة قرآنية ومعناها من لعبة «معنى الكلمة»"], ["🌙", "أذكار المساء", "يقرأ أذكار المساء مع والده"], ["💰", "صدقة صغيرة", "يتصدق بشيء ولو قليل"]],
+    t3: [["🕌", "الفجر في وقتها", "يستيقظ لصلاة الفجر بنفسه"], ["📜", "حديث اليوم", "يقرأ حديثًا من الأربعين ويكتب فائدة منه"], ["🧑‍🎓", "شخصية اليوم", "يقرأ قصة شخصية اليوم ويحكيها لأسرته"], ["📖", "ورد القرآن", "يقرأ صفحتين من القرآن بتدبر"], ["🤝", "عون لوالديه", "يقضي حاجة لوالديه قبل أن يطلباها"], ["📵", "ساعة بلا شاشة", "يقضي ساعة في قراءة أو رياضة بدل الشاشة"], ["🗒️", "محاسبة الليل", "يسأل نفسه قبل النوم: ماذا فعلت اليوم لله؟"], ["🎯", "هدف اليوم", "يكتب هدفًا صغيرًا لليوم ويحققه"], ["🌿", "سنة اليوم", "يحيي سنة: السواك أو ركعتي الضحى أو التبكير"]],
+    t4: [["🕌", "الصلوات في المسجد", "يحافظ على الصلوات في جماعة"], ["📖", "الورد اليومي", "جزء أو نصف جزء مع مراجعة المحفوظ"], ["🧠", "مسألة علمية", "يتعلم مسألة من «المنة» أو المسار العلمي ويكتبها"], ["🧑‍🎓", "سيرة ملهمة", "يقرأ ترجمة شخصية اليوم ويستخرج صفة يقتدي بها"], ["🤝", "خدمة لغيره", "يخدم أهله أو جيرانه أو مسجده خدمة نافعة"], ["📵", "صيام عن الشاشة", "ساعتان بلا هاتف في قراءة أو حفظ"], ["🗒️", "محاسبة النفس", "يحاسب نفسه قبل النوم في الصلاة واللسان والوقت"], ["💬", "كلمة طيبة", "ينصح صديقًا برفق أو يدعو لخير"], ["🌙", "قيام الليل", "ركعتان قبل النوم أو في آخر الليل"]]
+  };
+  const today_ = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+  const sd = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+  let STO = null; const stories = async () => STO || (STO = await fetch("data/tala-stories.json").then(r => r.json()).catch(() => ({ items: [], figs: [] })));
+  // يختار من القائمة ما لم يره الطفل بعد (ثم يعيد الدورة إذا رأى الكل)، بترتيب ثابت ليومه
+  const fresh = (list, seen, rnd, n) => { const un = list.filter(x => !seen.includes(x.key)), pool = un.length >= n ? un : list; const a = pool.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); };
+  async function daily() {
+    const kd = kid(); if (!kd) return `<section class="tdaily"><div class="tdhead"><h3>☀️ بطاقة يومية لطفلك</h3></div><p>سجّل اسم طفلك وعمره في <a href="#/talaea/parents">ركن الوالدين</a>، فتتجدد له كل يوم: دعاء اليوم، وقصة شخصية إسلامية ملهمة (وللبنات الصحابيات والنساء الملهمات)، وأسئلة جديدة لم يجبها، وأنشطة يومية بنجومها.</p></section>`;
+    const T = st(), day = today_(), nk = (T.dn = T.dn || {})[kd.id + day] || 0, rnd = sd(kd.id + day + ":" + nk), sv = (T.seen = T.seen || {})[kd.id] = T.seen[kd.id] || { d: [], s: [], a: [] };
+    const k = kd.track || "t2", g = kd.g || "", S_ = await stories();
+    const du = fresh(DUA.concat(ADH.map(x => [x[0], x[1], x[2]])).map((x, i) => ({ x, key: "d" + i })), sv.d, rnd, 1)[0];
+    const pool = (S_.items || []).filter(x => x.st.includes(k) && (g === "g" ? true : x.g !== "g")).map(x => ({ x, key: x.id, kind: "a" })).concat(k === "t1" ? [] : (S_.figs || []).filter(x => g === "g" ? x.g === "g" || ["أبو بكر الصديق", "عمر بن عبد العزيز", "أنس بن مالك"].includes(x.who) : x.g !== "g").map(x => ({ x, key: x.who, kind: "f" })));
+    // للطالبات: قصص الصحابيات والنساء الملهمات أولًا ما بقي منها ما لم تره، ثم غيرها
+    const femL = pool.filter(x => x.x.g === "g"), unF = femL.filter(x => !sv.s.includes(x.key));
+    const sto = fresh(g === "g" && unF.length ? femL : pool, sv.s, rnd, 1)[0];
+    const acts = fresh((DACT[k] || DACT.t2).map((x, i) => ({ x, key: k + i })), sv.a, rnd, 2), A = T.act = T.act || {};
+    // تسجيل ما عُرض اليوم حتى لا يتكرر في الأيام التالية
+    const mark = (arr, key) => { if (key && !arr.includes(key)) { arr.push(key); if (arr.length > 400) arr.shift(); } };
+    if ((T.dshown || {})[kd.id] !== day + nk) { (T.dshown = T.dshown || {})[kd.id] = day + nk; mark(sv.d, du && du.key); mark(sv.s, sto && sto.key); acts.forEach(a => mark(sv.a, a.key)); saveS(); }
+    const name = esc(kd.name), fem = g === "g";
+    const storyHtml = !sto ? "" : sto.kind === "a" ? `<div class="tdcard tdstory"><b>📖 قصة اليوم: ${esc(sto.x.t)}</b><p>${esc(sto.x.ex)}</p><a class="btn s p" href="#/book/${esc(sto.x.id)}/1">${fem ? "اقرئي" : "اقرأ"} القصة كاملة</a></div>`
+      : `<div class="tdcard tdstory"><b>🌟 ${fem ? "شخصية ملهمة" : "شخصية ملهمة"}: ${esc(sto.x.who)}</b><p>${esc(sto.x.ex)}</p><p class="mut">من «سير أعلام النبلاء» للذهبي، ${esc(sto.x.pl)}</p><a class="btn s p" href="#/book/${esc(sto.x.b)}/${sto.x.p}">${fem ? "اقرئي" : "اقرأ"} الترجمة</a></div>`;
+    return `<section class="tdaily"><div class="tdhead"><h3>☀️ يومك يا ${name}</h3><span class="mut">${esc(new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" }))}</span><button class="btn s" data-act="tdnew" title="بطاقة جديدة">🔄 جديد</button></div>
+      <div class="tdgrid">${du ? `<div class="tdcard tddua"><b>🤲 دعاء اليوم — ${esc(du.x[0])}</b><p class="tdtxt">${esc(du.x[1])}</p><small class="mut">${esc(du.x[2])}</small><button class="btn s" data-act="tdsay" data-t="${esc(du.x[1])}">🔊 استمع</button></div>` : ""}
+      ${storyHtml}
+      <div class="tdcard"><b>🎯 أسئلة اليوم</b><p>خمسة أسئلة جديدة لك وحدك من القرآن والحديث واللغة، لم تجبها من قبل.</p><a class="btn s p" href="#/talaea/games?g=mine&k=${k}">ابدأ الأسئلة ⭐</a></div>
+      <div class="tdcard"><b>✅ نشاط اليوم</b>${acts.map((a, i) => { const key = "d:" + day + ":" + kd.id + ":" + a.key, on = !!A[key]; return `<label class="talaa${on ? " on" : ""}"><input type="checkbox" data-act="tdact" data-key="${esc(key)}"${on ? " checked" : ""}><i>${a.x[0]}</i><b>${esc(a.x[1])}</b><span>${esc(a.x[2])}</span></label>`; }).join("")}</div></div></section>`;
+  }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
+    if (a === "tdnew") { const kd = kid(); if (!kd) return; const T = st(), k = kd.id + today_(); T.dn = T.dn || {}; T.dn[k] = (T.dn[k] || 0) + 1; saveS(); show({}, ""); }
+    else if (a === "tdsay") { try { const u = new SpeechSynthesisUtterance(el.dataset.t); u.lang = "ar-SA"; u.rate = .8; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (x) { } } });
+  document.addEventListener("change", e => { const el = e.target.closest("[data-act=tdact]"); if (!el) return; const A = st().act = st().act || {}; if (el.checked) { A[el.dataset.key] = 1; star(2); } else delete A[el.dataset.key]; saveS(); el.closest(".talaa").classList.toggle("on", el.checked); });
   const intro = () => `<details class="card talaintro"><summary><b>🌟 طلائع الدعوة السلفية .. من نحن وماذا نريد؟</b></summary>
     <p>«الدعوة السلفية تحت العشرين وقبل سن الجامعة»: اقتداءً باهتمام النبي ﷺ بهذا السن، «وأن منهم مَن قاد الجيوش كأسامة بن زيد، ومنهم مَن صار عالمًا بل بحرًا في العلم مثل عبد الله بن عباس، أو معلِّمًا للقرآن مثل عبد الله بن مسعود، ومنهم مَن كان عابدًا كعبد الله بن عمر، ومنهم مَن كان خادمًا لدين الله وللرسول ﷺ كأنس بن مالك وزيد بن ثابت».</p>
     <p><b>الهدف:</b> «إعداد جيل سلفي رباني متميز يعمل على إصلاح عقيدة الشباب الناشئ وعبادتهم وأخلاقهم وسلوكهم ومعاملاتهم».</p>
