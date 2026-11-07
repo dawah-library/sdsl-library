@@ -115,6 +115,27 @@ SEC_PROMPT = """أنت معلّم ومصمم مذكرات تعليمية متق�
 النص (مقسّم بعلامات [ص N]):
 {text}"""
 
+DESIGN_PROMPT = """أنت مصمم مطبوعات تعليمية عربية مبدع. صمّم هوية بصرية لكراسة مذاكرة لكتاب «{title}» لـ{author}، وموضوعه: {s}
+اختر بحرية ما يناسب طبيعة الموضوع وجمهوره (رصانة العقيدة، دفء التربية، حيوية الطلاب…)، مع وضوح القراءة وراحة العين.
+أخرج JSON حرفيًا: {{"cols": ["#hex", ...٤–٦ ألوان داكنة متناسقة لعناوين الأقسام والكتل], "bg": "#hex لون ورق فاتح جدًا", "c1": "#hex", "c2": "#hex (لونا تدرج الغلاف، داكنان)", "acc": "#hex لون فاتح للكتابة الثانوية على الغلاف", "pat": "dots|stars|lines|waves|none", "font": "خط النص", "hfont": "خط العناوين", "why": "سبب الاختيار في جملة"}}
+الخطوط المتاحة فقط: {fonts}."""
+KFONTS = ["Amiri", "Noto Naskh Arabic", "Scheherazade New", "Lateef", "Markazi Text", "Aref Ruqaa", "Reem Kufi", "Cairo", "Tajawal", "Almarai", "IBM Plex Sans Arabic", "Changa", "Lemonada", "El Messiri", "Readex Pro", "Noto Kufi Arabic"]
+
+
+def design(title, au, summ):
+    """حرية التصميم: سمة بصرية يقترحها النموذج، ويُتحقق من قيمها (الواجهة تتحقق ثانية من التباين)."""
+    d = T.gemini(DESIGN_PROMPT.format(title=title, author=au, s=summ[:400], fonts="، ".join(KFONTS))) or {}
+    hx = lambda v: isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v.strip() or "") and v.strip()
+    th = {"cols": [c for c in (hx(x) for x in d.get("cols") or []) if c][:8]}
+    for k in ("bg", "c1", "c2", "acc"):
+        if hx(d.get(k)): th[k] = d[k].strip()
+    if d.get("pat") in ("dots", "stars", "lines", "waves", "none"): th["pat"] = d["pat"]
+    for k in ("font", "hfont"):
+        if d.get(k) in KFONTS: th[k] = d[k]
+    if d.get("why"): th["why"] = str(d["why"])[:200]
+    return th if len(th) > 1 else None
+
+
 BOOK_PROMPT = """هذه أقسام كراسة مذاكرة لكتاب «{title}» لـ{author}، بعناوينها وتمهيداتها:
 {secs}
 أخرج JSON حرفيًا: {{"s": "خلاصة الكتاب ومقصده في ثلاث جمل أمينة", "goals": ["ما يستفيده الدارس من الكتاب (٣–٥ بنود قصيرة)"], "qs": [{{"q": "سؤال شامل تام السياق", "a": "جوابه الموجز"}}]}}
@@ -261,6 +282,9 @@ def build(bid, cat, item=None):
     k = {"id": bid, "t": title, "a": au, "n": n, "s": str(top.get("s") or "").strip(), "goals": [str(x) for x in top.get("goals") or []][:6],
          "qs": [x for x in top.get("qs") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:8],
          "secs": out, "r": R, "st": ST, "built": str(datetime.date.today()), "model": T.MODEL}
+    if isinstance(item, dict) and item.get("design") == "free":
+        th = design(title, au, k["s"] or " — ".join(s_["t"] for s_ in out[:6]))
+        if th: k["theme"] = th; k["design"] = "free"
     if vmap: k["map"] = vmap; k["src"] = item.get("src")
     if isinstance(item, dict) and item.get("sample"): k["sample"] = 1
     if os.path.exists(wp):
