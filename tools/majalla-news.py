@@ -24,8 +24,7 @@ SOURCES = [
     {"id": "nour", "name": "حزب النور", "url": "https://alnourpartyeg.com", "host": "alnourpartyeg.com", "cat": "nour"},
     {"id": "fath", "name": "بوابة الفتح", "url": "https://fath-news.com", "host": "fath-news.com", "cat": "auto"},
 ]
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      "Accept-Language": "ar,en;q=0.8"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; dawahlibrary-news/2.0; +https://dawahlibrary.org)", "Accept-Language": "ar,en;q=0.8"}
 NOW = time.time()
 LOG = []
 def log(s):
@@ -151,6 +150,33 @@ def via_sitemap(s):
         except Exception: pass
     raise RuntimeError("لا خريطة أخبار")
 
+def via_html(s):
+    """روابط الأخبار من الصفحة الرئيسة وأقسام الأخبار: <a href=".../ar/123456-…">عنوان</a> (إن سمح الموقع بالطلب)"""
+    out, seen = [], set()
+    for path in ("/", "/ar", "/ar/category/news", "/ar/news"):
+        try: page, _ = get(s["url"] + path, t=20)
+        except Exception: continue
+        for href, txt in re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', page, re.S | re.I):
+            t = clean(txt)
+            if not re.search(r"/ar/\d{3,}[-/]|/news/\d{3,}", href) or len(t) < 22: continue
+            u = urllib.parse.urljoin(s["url"] + "/", href).split("#")[0]
+            if u in seen: continue
+            seen.add(u); out.append({"title": t, "url": u, "date": "", "sum": ""})
+    if not out: raise RuntimeError("لا روابط أخبار")
+    return out[:50]
+
+def bing_snips(s):
+    """موجزات أخبار المصدر من خلاصة أخبار Bing العامة (وصف لكل خبر)، لإكمال الموجز حين لا تُتاح صفحة الخبر."""
+    q = urllib.parse.quote(f"site:{s['host']}")
+    x, _ = get(f"https://www.bing.com/news/search?q={q}&format=rss&setlang=ar-EG&cc=EG&count=50")
+    out = []
+    for z in rss_items(x):
+        m = re.search(r"[?&]url=([^&]+)", z["url"])
+        if m: z["url"] = urllib.parse.unquote(m.group(1))
+        z["title"] = strip_site(z["title"], s)
+        out.append(z)
+    return out
+
 def via_gnews(s):
     q = urllib.parse.quote(f"site:{s['host']} when:30d")
     x, _ = get(f"https://news.google.com/rss/search?q={q}&hl=ar&gl=EG&ceid=EG:ar")
@@ -219,7 +245,7 @@ def main():
     budget = FETCH_PAGES
     for s in SOURCES:
         got, how = [], ""
-        for name, fn in (("wp", via_wp), ("rss", via_rss), ("sitemap", via_sitemap), ("gnews", via_gnews)):
+        for name, fn in (("wp", via_wp), ("rss", via_rss), ("sitemap", via_sitemap), ("html", via_html), ("gnews", via_gnews)):
             try:
                 got = [z for z in fn(s) if z.get("title") and z.get("url")]
                 if got: how = name; break
@@ -239,6 +265,24 @@ def main():
             n += 1; n_sum += 1 if z.get("sum") else 0
             items.append({"title": z["title"], "url": z["url"], "date": z.get("date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sum": z.get("sum", ""), "src": s["name"], "sid": s["id"], "cat": ""})
         rep.append(f"{s['name']}: {n} جديد ({how or 'تعذر'})، بموجز {n_sum}")
+    # موجزات Bing لما بقي بلا موجز
+    for s in SOURCES:
+        try: B = bing_snips(s)
+        except Exception as e:
+            if DRY: log(f"  Bing {s['name']}: {str(e)[:80]}")
+            continue
+        k = 0
+        for x in items:
+            if x["sid"] != s["id"] or x.get("sum"): continue
+            b = next((b for b in B if b["url"] == x["url"] or similar(b["title"], x["title"])), None)
+            if b and b.get("sum") and not similar(b["sum"], x["title"]):
+                x["sum"] = brief(b["sum"]); x.pop("nosum", None); k += 1
+        # المصدر الذي لم يُجلب منه شيء: أخباره من الخلاصة نفسها
+        if not any(x["sid"] == s["id"] and age_days(x.get("date", "")) < 3 for x in items):
+            for b in B[:30]:
+                if is_news(b["title"]) and age_days(b.get("date", "")) <= MAX_AGE and not any(b["url"] == x["url"] or similar(b["title"], x["title"]) for x in items):
+                    items.append({"title": b["title"], "url": b["url"], "date": b.get("date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sum": brief(b.get("sum", "")), "src": s["name"], "sid": s["id"], "cat": ""}); k += 1
+        if DRY: log(f"  Bing {s['name']}: {len(B)} خبرًا، أُكمل أو أُضيف منها {k}")
     # إكمال موجز المحفوظ الذي بلا موجز (بقية الحصة)
     for x in sorted(items, key=lambda y: y.get("date", ""), reverse=True):
         if budget <= 0: break
