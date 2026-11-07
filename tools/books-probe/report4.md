@@ -1,4 +1,4 @@
-# استكشاف إثراء (ithraa.io) — 2026-11-07 02:34
+# استكشاف إثراء (ithraa.io) — 2026-11-07 02:35
 
 - /robots.txt: `https://ithraa.io/robots.txt` ← 200 text/html 60083 حرفًا
   - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
@@ -58,6 +58,8 @@
   - `{this.apiUrl}chapters/bulk',e)}getBookChapters(e){return this.http.get('${this.apiUrl}chapters/book/${e}')}static ɵfac=function(n){return new(n||t)(M$3(VD))};static ɵprov=A$1({token:t,factory:t.ɵfac,providedIn:'root'})}return t})();var S9=['dyna`
   - `-top-left',timeOut:3e3})})}getAnnotations(){let e=this.dataSubmitted.epubBookId,n=this.dataSubmitted.chapterId;this.http.post('${this.apiBaseUrl}annotations/search',{book_id:e,toc_id:n,ann_owner_category:1,limit:100,offset:0,texttype:!0,imgtype:!0,audiotype:!0,videotype:!0}).subscribe(`
   - `st-top-left',timeOut:3e3})})}getQuestions(){let e=this.dataSubmitted.epubBookId,n=this.dataSubmitted.chapterId;this.http.post('${this.apiBaseUrl}qb/questions/byCfi',{book_id:e,toc_id:n}).subscribe(o=>{this.selectedItems=o,this.loading=!1,this.toastr.success('تم تحميل المسائل بنجاح','',`
+- api_url: 
+- ثوابت المسارات: `{"GET_ALL_BOOKS":"books/allBooks","GET_BOOK_DETAILS":"books/bookDetails","GET_COPIES_OF_BOOK":"books/copies","TAKE_COPY_OF_ABOOK":"books/bookcopies/addcopy/a/b","GET_PUBLIC_COPIES_OF_BOOK":"books/publiccopies/copies","GET_BOOKS_CATEGORIES":"books/categories","GET_AUTHORIZED_USER_COPY":"books/getAuthUserCopy","GET_BOOK_CHAPTERS":"chapters/book","DATE":"YYYY-MM-DD","MONTH":"YYYY-MM","GET_AUTH_USERS":"home","GET_ANNOTATIONS_COUNT":"home/annotations","GET_COPIES_COUNT":"home/copies","GET_CATEGORIES_COUNT":"home/categories","GET_DICTIONARIES_COUNT":"home/dictionaries","GET_MEMBERS_COUNT":"home/accounts","GET_FAVOURITE_ANNOTATIONS":"home/annotations/mostliked","SUBSCRIBE_EMAIL":"home/subscribe","ENCODED_VALS_BASE":"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"}`
 - /api: `https://ithraa.io/api` ← 200 text/html 60083 حرفًا
   - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
 - /api/books: `https://ithraa.io/api/books` ← 200 application/json 37 حرفًا
