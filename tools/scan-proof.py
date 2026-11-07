@@ -59,7 +59,7 @@ def main():
                 a, z = str(f.get("from") or ""), str(f.get("to") or "")
                 if a and a != z and page.count(a) == 1 and len(a) <= 300: ok.append({"k": str(f.get("k") or ""), "from": a, "to": z, "why": "على المصورة: " + str(f.get("why") or "")[:140]})
             prev = R["pages"].get(str(i + 1)) or {}
-            R["pages"][str(i + 1)] = {"h": H(page), "fx": (prev.get("fx") or []) + ok, "scan": 1 if r.get("same", True) else 0}
+            R["pages"][str(i + 1)] = {"h": H(page), "fx": (prev.get("fx") or []) + ok, "scan": 1 if r.get("same", True) else 0, "at": time.strftime("%Y-%m-%d")}
             done.append(i); budget -= 1
         if done:
             sh["unrev"] = [i for i in sh.get("unrev") or [] if i not in done]

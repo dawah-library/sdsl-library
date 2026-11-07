@@ -44,5 +44,7 @@ jobs:
           # الكتب النصية المربوطة بمصورات طبعاتها: الصفحات التي خالفت صورتها تُقرأ مع الصورة (tools/scan-proof.py)
           sudo apt-get -qq update && sudo apt-get -qq install -y poppler-utils >/dev/null
           python3 tools/scan-proof.py || echo "::warning::تعذّر التدقيق على المصورة"
+          # ما لم تراجعه الإدارة خلال ثلاثة أيام من التصحيحات الصغيرة الآمنة يُطبَّق تلقائيًّا بسجل (tools/proof-auto.py)
+          python3 tools/proof-auto.py
       - run: |
           bash tools/git-save.sh "تدقيق الكتب النصية: اقتراحات تصحيح تنتظر الاعتماد" data/proof data/catalog.json data/books vols
