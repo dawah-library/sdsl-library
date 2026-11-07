@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """تدقيق الكتب النصية (البندان ٤٠ و٤١): كتب مكتبة الدعوة الإلكترونية (غير المصورة) تلقائيًا، وكتب المكتبة العامة بطلب الإدارة
-(data/proof/_queue.json). يقرأ Gemini الصفحات (٤ في الطلب) ويقترح تصحيحات قطعية فقط: أخطاء الطباعة والإملاء والتصحيف،
+(data/proof/_queue.json). يقرأ Gemini الصفحات (٨ في الطلب، PROOF_GROUP) ويقترح تصحيحات قطعية فقط: أخطاء الطباعة والإملاء والتصحيف،
 وفصل الحواشي عن المتن، وتعليم العناوين؛ دون تغيير الأسلوب ولا الألفاظ الصحيحة. كل اقتراح {p, from, to, why, k} يُقبل
 إن وُجد «from» في الصفحة مرة واحدة. الناتج data/proof/<id>.json، ولا يُطبَّق شيء إلا باعتماد الإدارة أو المفوَّض (#/proof).
 المتغيرات: PROOF_PAGES (أقصى صفحات الجولة، ٤٠٠)، PROOF_ONLY."""
@@ -39,9 +39,10 @@ def main():
         todo_p = [i for i, t in enumerate(pages) if isinstance(t, str) and len(t) > 120 and (R["pages"].get(str(i + 1)) or {}).get("h") != H(t)]
         if not todo_p: continue
         print("تدقيق:", b.get("title"), len(todo_p), "صفحة", flush=True)
-        for k in range(0, len(todo_p), 4):
+        G = max(1, int(os.environ.get("PROOF_GROUP", "8")))  # صفحات الطلب الواحد: ٨ تضاعف ما يُدقَّق بالحصة نفسها (الحد اليومي بعدد الطلبات)
+        for k in range(0, len(todo_p), G):
             if budget <= 0 or time.time() > deadline: break
-            grp = todo_p[k:k + 4]; text = "\n".join("[ص %d]\n%s" % (i + 1, pages[i][:5000]) for i in grp)
+            grp = todo_p[k:k + G]; text = "\n".join("[ص %d]\n%s" % (i + 1, pages[i][:5000]) for i in grp)
             r = tj.gemini(PROMPT.format(title=b.get("setTitle") or b["title"], text=text))
             if r is None: break
             fx = [f for f in (r.get("fx") or []) if isinstance(f, dict)]

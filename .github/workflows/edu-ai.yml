@@ -1,6 +1,7 @@
 name: كراسات المكتبة وتجهيز التفريغات
 on:
   schedule:
+    - cron: "13 11 * * *"   # بعد تجدد الحصة اليومية
     - cron: "10 22 * * *"   # يوميًا: الكراسات التي تختارها الإدارة، ثم التفريغات التي لم تُجهَّز
   push:
     paths: ["data/kurrasa/_queue.json", "data/tfedit/_queue.json"]
