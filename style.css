@@ -1234,3 +1234,22 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .sttile{background:var(--sf);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;text-align:center}
 .sttile b{font-size:1.8rem;color:var(--ac)}.sttile small{color:var(--mut);font-size:.8rem}.sttile.bad{border-color:#c0392b}.sttile.bad b{color:#c0392b}
 .edbox{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;background:var(--sf);font-size:.92em;line-height:1.8}
+/* أركان المجلة وتحسين العرض (البند ٣٧) */
+.mjcorners{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0 18px}
+.mjcorner{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--sf);border-inline-start:6px solid var(--crc,var(--ac))}
+.mjcorner span{font-size:1.6rem}.mjcorner b{font-family:Amiri,serif;font-size:1.2rem;color:var(--crc,var(--ac))}.mjcorner small{color:var(--mut,#5b6b66);line-height:1.6}
+.cr-news{--crc:#8a1c1c}.cr-kids{--crc:#d9730d}.cr-women{--crc:#9b3b6b}.cr-adab{--crc:#7a5a12}
+.mjcorner-h{text-align:center;padding:18px 14px;border-radius:16px;margin:8px 0 14px;color:#fff;background:linear-gradient(150deg,var(--crc,#0f5c4d),color-mix(in srgb,var(--crc,#0f5c4d) 55%,#000))}.mjcorner-h span{font-size:2.4rem}.mjcorner-h h2{color:#fff;margin:4px 0}.mjcorner-h p{margin:0;opacity:.92}
+.majsec[class*=cr-]{border-top:3px solid var(--crc);margin-top:26px;padding-top:4px}.majsec[class*=cr-] .majsect span{background:var(--crc);color:#fff}
+.mjcrb{text-align:center;margin-top:10px;font-weight:700}.mjcrb a{color:var(--crc);text-decoration:none;font-size:.9rem;letter-spacing:.3px}
+.cr-kids .majitem{border-radius:20px;border:2px dashed color-mix(in srgb,var(--crc) 45%,transparent);background:color-mix(in srgb,var(--crc) 5%,transparent)}.cr-kids .majitem h4{font-family:"Aref Ruqaa",Amiri,serif;color:var(--crc)}
+.cr-women .majitem{background:color-mix(in srgb,var(--crc) 4%,transparent)}.cr-women .majitem h4{color:var(--crc)}
+.cr-adab .majtext{font-family:Amiri,serif;font-size:1.22rem}.cr-adab .majitem{background:color-mix(in srgb,var(--crc) 5%,transparent)}.cr-adab .majitem h4{color:var(--crc)}
+.mjnewsg h5{font-family:Amiri,serif;font-size:1.15rem;color:var(--crc,#8a1c1c);border-bottom:1px solid var(--line);margin:12px 0 4px;padding-bottom:3px}
+.mjnews{list-style:none;padding:0;margin:0}.mjnews li{padding:8px 0;border-bottom:1px dashed var(--line)}.mjnews li>a{font-weight:700;color:var(--ink);text-decoration:none;line-height:1.7}.mjnews li.top>a{font-size:1.1rem;color:#8a1c1c}.mjnews p{margin:2px 0;color:var(--mut,#5b6b66);font-size:.95rem}.mjnews small a{color:var(--ac)}
+.mjrefresh{animation:mjfloat 3s ease-in-out infinite}@keyframes mjfloat{50%{transform:translateY(-3px)}}
+.mjquiz{margin-top:10px}.mjq{padding:10px;border-radius:14px;background:var(--sf);border:1px solid var(--line);margin:8px 0}.mjq>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.mjq .btn.ok{background:#2e7d32;color:#fff;border-color:#2e7d32}.mjq .btn.no{background:#c62828;color:#fff;border-color:#c62828}.mjqr{display:block;margin-top:4px;font-weight:700;color:var(--crc,var(--ac))}
+.mjfig{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+/* القراءة في المجلة: سطر أقصر، ومسافات أوسع، وعناوين أوضح */
+.majtext{max-width:68ch;margin-inline:auto;text-align:justify;text-justify:inter-word}.majtext p{margin:.55em 0}.majitem h4{line-height:1.5}.majsect span{font-family:Amiri,serif;letter-spacing:.2px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+@media (max-width:600px){.majtext{font-size:1.08rem;line-height:1.95}.majitem{padding:12px 10px}.majbody{padding:0 10px}}

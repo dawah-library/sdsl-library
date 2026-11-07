@@ -1,0 +1,35 @@
+name: الركن الإخباري للمجلة
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # كل ثلاث ساعات
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: majalla-news
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" majalla_news)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  run:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: جمع الأخبار
+        run: python3 tools/majalla-news.py
+      - name: الحفظ
+        run: bash tools/git-save.sh "الركن الإخباري: تحديث الأخبار" data/majalla-news.json
