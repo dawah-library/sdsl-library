@@ -1,0 +1,36 @@
+name: استيراد كتاب من جامع الكتب الإسلامية
+# للكتب المجانية التي لا توجد في تراث/OpenITI (tools/import-ketab.py). dry=1 للتجربة على عشر صفحات.
+on:
+  workflow_dispatch:
+    inputs:
+      book: { description: "رقم الكتاب في ketabonline.com", required: true }
+      id: { description: "معرّف الكتاب في المكتبة (لاتيني)", required: true }
+      author_id: { description: "معرّف المؤلف في المكتبة (اختياري)", required: false, default: "" }
+      author: { description: "اسم المؤلف (اختياري)", required: false, default: "" }
+      topic: { description: "التصنيف (مثل t4)", required: false, default: "t4" }
+      dry: { description: "تجربة دون حفظ (1/0)", required: false, default: "0" }
+permissions:
+  contents: write
+concurrency:
+  group: import-ketab
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: الاستيراد
+        env:
+          KT_BOOK: ${{ github.event.inputs.book }}
+          KT_ID: ${{ github.event.inputs.id }}
+          KT_AUTHOR_ID: ${{ github.event.inputs.author_id }}
+          KT_AUTHOR: ${{ github.event.inputs.author }}
+          KT_TOPIC: ${{ github.event.inputs.topic }}
+          KT_DRY: ${{ github.event.inputs.dry }}
+        run: python3 tools/import-ketab.py
+      - run: |
+          bash tools/git-save.sh "استيراد من جامع الكتب الإسلامية" data/catalog.json data/books vols tools/books-probe/ketab-import-sample.md
+          if [ -f .kt-report.txt ]; then python3 tools/notify.py "$(cat .kt-report.txt)" || true; fi

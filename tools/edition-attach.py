@@ -43,8 +43,8 @@ def meta(tio):
 
 
 def download(root, name, dest):
-    for base in ("https://files.turath.io/pdf", "https://archive.org/download"):
-        u = base + "/" + root.strip("/") + "/" + name
+    urls = [name] if name.startswith("http") else [base + "/" + (root or "").strip("/") + "/" + name for base in ("https://files.turath.io/pdf", "https://archive.org/download")]
+    for u in urls:
         try:
             with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=900) as r, open(dest, "wb") as out:
                 size = 0
@@ -65,6 +65,8 @@ def plan(cat, key):
     vols = sorted([b for b in cat["books"] if b.get("set") == key], key=lambda b: b.get("vol", 0)) or [b for b in cat["books"] if b["id"] == key]
     if not vols: return None, "غير موجود"
     b0 = vols[0]
+    if all((v.get("pdfSrc") or {}).get("url") for v in vols):  # جامع الكتب: لكل جزء ملفه (import-ketab.py)
+        return [(v, v["pdfSrc"]["url"]) for v in vols], dict(b0["pdfSrc"])
     src = b0.get("pdfSrc")
     if not src:
         m = re.search(r"Shamela_0*(\d+)", b0.get("license", "") + " " + (b0.get("openiti") or "").replace("Shamela", "Shamela_"))
@@ -114,7 +116,7 @@ def main():
             dest = os.path.join(ROOT, "pdf", b["id"] + ".pdf")
             u = download(src["root"], name, dest)
             if not u: REP.append("- %s: تعذر تنزيل %s" % (b["id"], name)); continue
-            b["pdfSrc"] = {**{k: v for k, v in src.items() if k != "info"}, "file": name}
+            b["pdfSrc"] = {**(b.get("pdfSrc") or {}), **{k: v for k, v in src.items() if k not in ("info", "url")}, "file": name}
             # لا يُكتب pdf هنا: يكتبه r2-store بعد نجاح الرفع ("r2")، فلا يشير الفهرس إلى ملف غير موجود
             done.append(b["id"]); REP.append("- %s ← %s (%.0f م.ب)" % (b["id"], u, os.path.getsize(dest) / 1e6))
         if src.get("info") and p: p[0][0].setdefault("edInfo", {"info": src["info"]})
