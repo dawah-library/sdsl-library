@@ -463,6 +463,15 @@ const uncOf=(b,i)=>(S.admin||isAdmin())&&b&&b.unc&&b.unc[String(i)]||null;
 // صفحات فهرس الطبعة: سطر «العنوان ..... 12» يصير رابطًا إلى الصفحة المقابلة بترقيم الطبعة
 const TOCL=/^#*\s*(.{3,150}?)\s*[.…·_\-ـ]{3,}\s*\(?([\d٠-٩]{1,4})\)?\s*$/,LBLMAP=new Map();
 const arD=s=>+String(s).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+// الفهرس الأصلي: صفحات فهرس الطبعة نفسها (أسطر «العنوان …… ١٢» أو جدول «العنوان | الصفحة»)، وكل مدخل يُربط بصفحته في الموقع بترقيم الطبعة
+const PTOC=new Map(),TOCR=/^\|\s*([^|]{3,150}?)\s*\|\s*\(?([\d٠-٩]{1,4})\)?\s*\|?\s*$/,TOCH_=/^#*\s*\**\s*(فهرس|الفهرس|المحتويات|محتويات|فهرس الموضوعات|فهرس المحتويات|الموضوعات)\b/;
+function printedToc(b){if(!b||!b.pages)return[];if(PTOC.has(b))return PTOC.get(b);const out=[],seen=new Set();let chain=false;
+ b.pages.forEach((pg,i)=>{const ls=String(pg||"").split(/^\s*_{4,}\s*$/m)[0].split("\n").map(l=>l.trim()).filter(Boolean);
+  const lead=ls.map(l=>TOCL.exec(l)),tab=ls.map(l=>TOCR.exec(l)),okT=m=>m&&/[\u0621-\u064A]{3}/.test(m[1])&&!/^[\s\d٠-٩|/.,+-]+$/.test(m[1]);
+  const nl=lead.filter(okT).length,nt=tab.filter(okT).length,head=ls.slice(0,4).some(l=>TOCH_.test(l));
+  const isToc=nl>=4||((head||chain)&&nt>=4);chain=isToc&&(head||chain||nl>=4);if(!isToc)return;
+  ls.forEach((l,k)=>{const m=okT(lead[k])?lead[k]:okT(tab[k])?tab[k]:null;if(!m)return;const t=m[1].replace(/^#+\s*/,"").replace(/\*\*/g,"").replace(/[.…·_\-ـ\s|]+$/,"").trim(),n=arD(m[2]);if(!t||/^(الموضوع|الصفحة|العنوان|م)$/.test(t)||seen.has(t+n))return;seen.add(t+n);out.push({t,n,p:pageByLabel(b,n)||0,src:i+1})})});
+ PTOC.set(b,out);return out}
 function pageByLabel(b,n){if(!b||!b.pages)return 0;let m=LBLMAP.get(b);if(!m){m=new Map();for(let i=0;i<b.pages.length;i++){const x=/([\d٠-٩]+)\s*$/.exec(PL(b,i)||"");if(x&&!m.has(arD(x[1])))m.set(arD(x[1]),i+1)}LBLMAP.set(b,m)}return m.get(n)||0}
 // دمج الأسطر المكسورة: السطر الذي لا ينتهي بعلامة وقف يتصل بما بعده في فقرة واحدة
 function joinLines(tx){if(S.merge===false)return tx;const L=tx.split("\n"),o=[];for(const l of L){const t=l.trim(),prev=o.length?o[o.length-1]:null;
@@ -744,11 +753,12 @@ function tocSheet(){const c=cur();if(!c)return;const b=c.b,ch=chapterOf(b,c.p);
  ()=>{$("#tocq").oninput=e=>{const q=norm(e.target.value);$$("#toclist a,#ixlist a").forEach(a=>a.hidden=q&&!norm(a.textContent).includes(q))};const on=$("#toclist a.on");if(on)on.scrollIntoView({block:"center"});ixTabs(b)})}
 // الفهارس الفنية الآلية: الآيات والأحاديث والأعلام (data/idx)
 let IXL=null;const IXC=new Map();
-async function ixTabs(b){try{if(!IXL)IXL=await (await fetch("data/idx/_list.json")).json()}catch(e){IXL={}}const n=IXL[b.id],seg=$("#ixseg");if(!n||!seg)return;
- const T=[["toc","الأبواب",(b.toc||[]).length],["q","الآيات",n[0]],["h","الأحاديث",n[1]],["a","الأعلام",n[2]]].filter(x=>x[2]);if(T.length<2)return;
+async function ixTabs(b){try{if(!IXL)IXL=await (await fetch("data/idx/_list.json")).json()}catch(e){IXL={}}const n=IXL[b.id]||[0,0,0],seg=$("#ixseg");if(!seg)return;const pt=printedToc(b);
+ const T=[["toc","فهرس الموقع",(b.toc||[]).length||1],["pt","الفهرس الأصلي",pt.length],["q","الآيات",n[0]],["h","الأحاديث",n[1]],["a","الأعلام",n[2]]].filter(x=>x[2]);if(T.length<2)return;
  seg.innerHTML=T.map(([k,t,c],i)=>`<button type="button" data-ix="${k}" aria-checked="${i===0}">${t} <small>${toAr(c)}</small></button>`).join("");seg.hidden=false;
  seg.onclick=async e=>{const t=e.target.closest("[data-ix]");if(!t)return;$$("#ixseg button").forEach(x=>x.setAttribute("aria-checked",x===t));const k=t.dataset.ix,L=$("#ixlist"),TL=$("#toclist");$("#tocq").value="";
   if(k==="toc"){L.hidden=true;TL.hidden=false;return}TL.hidden=true;L.hidden=false;L.innerHTML='<p class="mut">جارٍ التحميل…</p>';
+  if(k==="pt"){L.innerHTML='<p class="mut">فهرس الطبعة كما في النسخة المصورة، وأرقامه أرقام صفحات الطبعة.</p>'+pt.map(x=>x.p?`<a href="#/book/${b.id}/${x.p}" data-act="closeSheet">${esc(x.t)} <span class="mut">ص ${toAr(x.n)}</span></a>`:`<a href="#/book/${b.id}/${x.src}" data-act="closeSheet" class="mut">${esc(x.t)} <span class="mut">ص ${toAr(x.n)} (في صفحات الفهرس)</span></a>`).join("");return}
   let ix=IXC.get(b.id);if(!ix){try{ix=await (await fetch("data/idx/"+b.id+".json?v="+(b.size||0))).json();IXC.set(b.id,ix)}catch(x){L.innerHTML='<p class="note">تعذر تحميل الفهرس.</p>';return}}
   const pg=p=>`<span class="mut">${esc(PL(b,p-1)||"ص "+toAr(p))}</span>`,go=p=>`href="#/book/${b.id}/${p}" data-act="closeSheet"`;
   L.innerHTML=(k==="q"?ix.q.map(([t,r,p])=>`<a ${go(p)}><span class="ixq">﴿${esc(t)}﴾</span>${r?` <em class="ixr">[${esc(r)}]</em>`:""} ${pg(p)}</a>`):k==="h"?ix.h.map(([t,p])=>`<a ${go(p)}>«${esc(t)}» ${pg(p)}</a>`):ix.a.map(([t,ps])=>`<a ${go(ps[0])}>${esc(t)} <span class="mut">${ps.slice(0,8).map(p=>esc(PL(b,p-1)||toAr(p))).join("، ")}${ps.length>8?"…":""}</span></a>`)).join("")+'<p class="mut ixn">فهرس مستخرج آليًا، وقد يفوته شيء أو يدخله ما ليس منه.</p>'}}
