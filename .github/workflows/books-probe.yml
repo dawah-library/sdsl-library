@@ -1,0 +1,18 @@
+name: استكشاف مصادر الكتب النصية
+# تراث والشاملة وجامع الكتب الإسلامية: بنية المواقع وواجهاتها (tools/books-probe.js) لبناء أدوات الاستيراد.
+on:
+  workflow_dispatch:
+  push:
+    paths: ["tools/books-probe.js"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tools/books-probe.js
+      - run: bash tools/git-save.sh "استكشاف مصادر الكتب النصية: تقرير" tools/books-probe
