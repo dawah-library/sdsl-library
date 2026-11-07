@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>إعلان المكتبة</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* لوحة واحدة 1920×1080 (أفقي) أو 1080×1920 (?v=1 عمودي). التوقيت كله من TIMELINE، والإطار يُعرض بـ seek(t) */
+:root{--teal:#0f5c4d;--teal2:#0a3f35;--deep:#06231d;--gold:#c99a3b;--gold2:#e8c477;--cream:#fbf6e9;--W:1920px;--H:1080px;--u:1px}
+:root.v{--W:1080px;--H:1920px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:var(--W);height:var(--H);overflow:hidden;background:#000}
+body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
+#stage{position:relative;width:var(--W);height:var(--H);overflow:hidden;background:radial-gradient(120% 90% at 50% 40%,#0f4d41 0%,#082f28 55%,#03140f 100%)}
+.bgpat{position:absolute;inset:-200px;opacity:.10;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23e8c477' stroke-width='1.4'%3E%3Crect x='35' y='35' width='50' height='50'/%3E%3Crect x='35' y='35' width='50' height='50' transform='rotate(45 60 60)'/%3E%3Ccircle cx='60' cy='60' r='12'/%3E%3Cpath d='M0 60h25M95 60h25M60 0v25M60 95v25'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 120px;animation:drift 120s linear 0s infinite}
+@keyframes drift{to{transform:translate(120px,120px)}}
+.vign{position:absolute;inset:0;background:radial-gradient(80% 70% at 50% 50%,transparent 40%,rgba(0,0,0,.65));pointer-events:none;z-index:50}
+.grain{position:absolute;inset:0;z-index:51;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.dust{position:absolute;border-radius:50%;background:var(--gold2);box-shadow:0 0 8px 2px rgba(232,196,119,.6);opacity:0}
+@keyframes rise{0%{transform:translateY(0) translateX(0);opacity:0}15%{opacity:.8}85%{opacity:.6}100%{transform:translateY(-420px) translateX(60px);opacity:0}}
+.lb{position:absolute;left:0;right:0;height:0;background:#000;z-index:60}
+.lb.t{top:0}.lb.b{bottom:0}
+
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;text-align:center;padding:0 140px}
+.v .scene{padding:0 70px}
+.gold{color:var(--gold2)}
+.am{font-family:Amiri,serif}
+.ruq{font-family:"Aref Ruqaa",serif}
+.kufi{font-family:"Reem Kufi",sans-serif}
+.small{font-size:30px;opacity:.8;letter-spacing:.5px}
+.hl{background:linear-gradient(90deg,var(--gold2),#fff3cf,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.line{display:block}
+
+/* مشهد الحديث */
+.hadith{font-family:Amiri,serif;font-size:64px;line-height:1.75;max-width:1500px}
+.v .hadith{font-size:58px}
+.qal{font-size:40px;color:var(--gold2);margin-bottom:26px;font-family:Amiri,serif}
+.src{margin-top:30px;font-size:28px;opacity:.7}
+.orn{width:420px;height:24px;margin:26px auto;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent);mask:radial-gradient(circle at 50% 50%,#000 6px,transparent 7px),linear-gradient(#000,#000) 0 50%/100% 2px no-repeat;-webkit-mask:radial-gradient(circle at 50% 50%,#000 7px,transparent 8px),linear-gradient(#000,#000) 0 50%/100% 2px no-repeat}
+
+/* مشهد الحيرة */
+.noise{position:absolute;font-size:46px;opacity:0;filter:blur(1px);color:#9fb8b1;white-space:nowrap}
+.q{font-family:Amiri,serif;font-size:92px;line-height:1.4;font-weight:700}
+.q small{display:block;font-size:52px;font-weight:400;opacity:.9;margin-top:20px}
+
+/* البداية */
+.spark{width:14px;height:14px;border-radius:50%;background:#fff6dc;box-shadow:0 0 40px 18px rgba(232,196,119,.8),0 0 160px 60px rgba(232,196,119,.35)}
+.beg{font-family:Amiri,serif;font-size:96px;margin-top:70px}
+
+/* الشعار */
+.rays{position:absolute;width:2200px;height:2200px;left:50%;top:50%;margin:-1100px 0 0 -1100px;background:repeating-conic-gradient(from 0deg,rgba(232,196,119,.13) 0 4deg,transparent 4deg 14deg);mask:radial-gradient(circle,#000 0,transparent 60%);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);opacity:0}
+.halo{position:absolute;width:900px;height:900px;left:50%;top:50%;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,200,.55),rgba(232,196,119,.15) 40%,transparent 70%);opacity:0}
+.logo{width:330px;height:330px;background:#fbf6e9;border-radius:50%;padding:42px;box-shadow:0 0 0 6px rgba(201,154,59,.9),0 0 0 16px rgba(201,154,59,.18),0 30px 80px rgba(0,0,0,.5);position:relative}
+.logo img{width:100%;height:100%;object-fit:contain}
+.ann{font-size:40px;letter-spacing:2px;margin-bottom:40px;color:var(--gold2)}
+.name{font-family:"Aref Ruqaa",serif;font-size:132px;line-height:1.25;margin-top:44px;text-shadow:0 6px 30px rgba(0,0,0,.5)}
+.v .name{font-size:112px}
+.url{font-family:"Readex Pro";font-size:40px;direction:ltr;margin-top:24px;letter-spacing:3px;color:var(--gold2)}
+
+/* الأرقام */
+.stats{display:flex;gap:70px;margin-top:60px}
+.v .stats{flex-direction:column;gap:40px}
+.st{min-width:400px;padding:44px 30px;border:1.5px solid rgba(232,196,119,.45);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));opacity:0}
+.st b{display:block;font-family:"Reem Kufi";font-size:128px;line-height:1.1;font-weight:700}
+.st span{font-size:40px}
+.h2{font-family:Amiri,serif;font-size:72px;line-height:1.45;font-weight:700}
+.h2 small{display:block;font-size:44px;font-weight:400;opacity:.85}
+
+/* الأجهزة */
+.row{display:flex;align-items:center;justify-content:center;gap:90px;width:100%}
+.v .row{flex-direction:column;gap:50px}
+.browser{width:1050px;border-radius:18px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);background:#fff;flex:none}
+.v .browser{width:940px}
+.browser .bar{height:44px;background:#e9ece9;display:flex;align-items:center;gap:10px;padding:0 18px;direction:ltr}
+.browser .bar i{width:14px;height:14px;border-radius:50%;background:#e06c5e}.browser .bar i:nth-child(2){background:#e9b949}.browser .bar i:nth-child(3){background:#5cb85c}
+.browser .bar em{margin-left:20px;font-style:normal;font-size:20px;color:#456;background:#fff;border-radius:8px;padding:4px 20px;flex:1;text-align:left}
+.browser .vp{height:640px;overflow:hidden;position:relative}
+.v .browser .vp{height:580px}
+.browser img,.phone img{width:100%;display:block;transform-origin:50% 0}
+.phone{width:360px;height:760px;border-radius:54px;padding:14px;background:#111;box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 2px #333,inset 0 0 0 2px #444;position:relative;flex:none}
+.phone .scr{width:100%;height:100%;border-radius:42px;overflow:hidden;background:#fff;position:relative}
+.phone .scr img{width:100%}
+.phone:after{content:"";position:absolute;top:26px;left:50%;width:110px;height:28px;margin-left:-55px;background:#111;border-radius:20px}
+.side{flex:1;text-align:right;max-width:620px}
+.v .side{text-align:center;max-width:none}
+.side .h2{font-size:66px}
+.chips{display:flex;flex-wrap:wrap;gap:16px;margin-top:34px}
+.v .chips{justify-content:center}
+.chip{font-size:32px;padding:12px 28px;border-radius:40px;background:rgba(232,196,119,.12);border:1.5px solid rgba(232,196,119,.55);color:#fff3d6;opacity:0}
+.typing{margin-top:34px;font-size:40px;background:#fff;color:#0f3d34;border-radius:18px;padding:22px 30px;box-shadow:0 10px 30px rgba(0,0,0,.35);text-align:right;min-height:96px;font-family:Amiri,serif;font-weight:700}
+.typing .cur{display:inline-block;width:3px;height:42px;background:var(--teal);vertical-align:middle;margin-right:4px}
+.answer{margin-top:20px;font-size:30px;background:rgba(255,255,255,.08);border-right:5px solid var(--gold);border-radius:12px;padding:18px 24px;text-align:right;line-height:1.7;opacity:0}
+
+.phones{display:flex;gap:50px;justify-content:center;align-items:flex-end}
+.v .phones{gap:28px}
+.v .phones .phone{width:300px;height:640px}
+.cap{margin-top:22px;font-size:34px;color:var(--gold2);text-align:center}
+.tri{display:flex;flex-direction:column;align-items:center}
+
+.icons{display:flex;gap:80px;margin-top:60px;justify-content:center}
+.ic{display:flex;flex-direction:column;align-items:center;gap:18px;font-size:34px;opacity:0}
+.ic svg{width:120px;height:120px;stroke:var(--gold2);fill:none;stroke-width:1.6}
+.free{font-family:"Aref Ruqaa";font-size:120px;margin-top:40px}
+
+.cards{display:flex;gap:44px;margin-top:56px}
+.v .cards{flex-direction:column;gap:30px}
+.card{width:440px;padding:46px 30px;border-radius:30px;background:linear-gradient(160deg,rgba(232,196,119,.18),rgba(255,255,255,.03));border:1.5px solid rgba(232,196,119,.5);opacity:0}
+.v .card{width:760px;padding:34px}
+.card svg{width:90px;height:90px;stroke:var(--gold2);fill:none;stroke-width:1.6}
+.card b{display:block;font-family:Amiri,serif;font-size:50px;margin-top:16px}
+.dal{font-family:Amiri,serif;font-size:76px;margin-top:60px;font-weight:700}
+.dal small{display:block;font-size:30px;opacity:.7;font-weight:400;margin-top:6px}
+
+.foot{position:absolute;bottom:70px;left:0;right:0;font-size:30px;opacity:0;letter-spacing:.5px}
+.v .foot{bottom:160px}
+.flash{position:absolute;inset:0;background:#fff8e6;opacity:0;z-index:40;pointer-events:none}
+
+/* الحركات */
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes up{from{opacity:0;transform:translateY(50px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes down{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:none}}
+@keyframes zoomIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}70%{opacity:1;transform:scale(1.06) rotate(0)}100%{opacity:1;transform:scale(1)}}
+@keyframes reveal{from{opacity:0;letter-spacing:30px;filter:blur(14px)}to{opacity:1;letter-spacing:0;filter:none}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(40deg)}}
+@keyframes raysIn{from{opacity:0}to{opacity:1}}
+@keyframes kb{from{transform:scale(1.02) translateY(0)}to{transform:scale(1.12) translateY(-90px)}}
+@keyframes scroll{from{transform:translateY(0)}to{transform:translateY(-38%)}}
+@keyframes slideR{from{opacity:0;transform:translateX(-160px) rotateY(18deg)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(160px) rotateY(-18deg)}to{opacity:1;transform:none}}
+@keyframes phoneUp{from{opacity:0;transform:translateY(260px) rotate(var(--rot,0deg))}to{opacity:1;transform:translateY(var(--y,0)) rotate(var(--rot,0deg))}}
+@keyframes noiseIn{0%{opacity:0;transform:scale(.9)}30%{opacity:.55}80%{opacity:.4}100%{opacity:0;transform:scale(1.15) translate(var(--dx),var(--dy));filter:blur(6px)}}
+@keyframes flash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}
+@keyframes sparkGrow{0%{transform:scale(0);opacity:0}30%{opacity:1;transform:scale(1)}100%{transform:scale(1.6)}}
+@keyframes slowzoom{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes lbIn{from{height:0}to{height:var(--lbh)}}
+@keyframes shine{from{background-position:200% 0}to{background-position:-100% 0}}
+.hl{background-size:300% 100%}
+
+.badge{font-family:"Aref Ruqaa";font-size:56px;padding:8px 46px;border-radius:60px;background:linear-gradient(90deg,#b8862c,#f0d08a,#b8862c);color:#2a1c05;margin-bottom:30px;opacity:0;box-shadow:0 10px 40px rgba(201,154,59,.45)}
+.fmts{display:flex;gap:36px;margin-top:50px}
+.v .fmts{flex-wrap:wrap;justify-content:center;gap:28px;max-width:900px}
+.fmt{width:300px;padding:34px 20px;border-radius:26px;border:1.5px solid rgba(232,196,119,.5);background:linear-gradient(160deg,rgba(232,196,119,.16),rgba(255,255,255,.03));opacity:0}
+.v .fmt{width:420px}
+.fmt svg{width:84px;height:84px;stroke:var(--gold2);fill:none;stroke-width:1.5}
+.fmt b{display:block;font-family:Amiri,serif;font-size:44px;margin-top:12px}
+.verbs{margin-top:56px;font-family:Amiri,serif;font-size:70px;font-weight:700;display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap}
+.verbs span{opacity:0}.verbs i{font-style:normal;color:var(--gold);opacity:0;font-size:40px}
+.maph{position:absolute;top:60px;left:0;right:0}
+.v .maph{top:230px}
+.map{position:relative;width:980px;height:980px;transform:scale(.72);margin:-60px 0 0}
+.v .map{transform:scale(.98);margin:0}
+.links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.links line{stroke:rgba(232,196,119,.18);stroke-width:2.5}
+.links line.on{stroke:rgba(240,208,138,.95);stroke-width:3.5;filter:drop-shadow(0 0 6px rgba(232,196,119,.9))}
+.hub{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:#fbf6e9;padding:26px;box-shadow:0 0 0 5px var(--gold),0 0 60px rgba(232,196,119,.5);opacity:0}
+.hub img{width:100%;height:100%;object-fit:contain}
+.node{position:absolute;left:50%;top:50%;width:250px;height:130px;margin:-65px 0 0 -125px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:rotate(calc(var(--i)*51.43deg - 90deg)) translate(390px) rotate(calc(-1*(var(--i)*51.43deg - 90deg)));background:rgba(10,40,34,.9);border:1.5px solid rgba(232,196,119,.25);opacity:.35}
+.node b{font-family:Amiri,serif;font-size:40px;line-height:1.2}
+.node span{font-size:22px;opacity:.8;margin-top:4px}
+@keyframes nodeOn{from{opacity:.35;border-color:rgba(232,196,119,.25);box-shadow:none}to{opacity:1;border-color:rgba(240,208,138,1);box-shadow:0 0 30px rgba(232,196,119,.55),inset 0 0 20px rgba(232,196,119,.15);background:rgba(18,70,58,.95)}}
+.maptag{position:absolute;bottom:46px;left:0;right:0;font-family:Amiri,serif;font-size:62px;font-weight:700;opacity:0}
+.v .maptag{bottom:260px}
+.side .h2 small{font-size:40px}
+
+.wall{position:absolute;inset:-120px -200px;display:grid;grid-template-columns:repeat(13,1fr);gap:18px;transform:perspective(1400px) rotateX(14deg) rotateZ(-6deg) scale(1.05);opacity:.55}
+.v .wall{grid-template-columns:repeat(8,1fr);inset:-200px -160px}
+.wall img{width:100%;aspect-ratio:3/4.2;object-fit:cover;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);opacity:0}
+.wallwrap{position:absolute;inset:0;overflow:hidden}
+.wallwrap:after{content:"";position:absolute;inset:0;background:radial-gradient(60% 55% at 50% 50%,rgba(4,26,21,.92),rgba(4,26,21,.55) 70%,rgba(4,26,21,.2))}
+@keyframes coverIn{from{opacity:0;transform:translateY(40px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes wallDrift{from{transform:perspective(1400px) rotateX(14deg) rotateZ(-6deg) scale(1.05) translateY(0)}to{transform:perspective(1400px) rotateX(14deg) rotateZ(-6deg) scale(1.12) translateY(-160px)}}
+.hero{position:relative;z-index:2;font-family:"Aref Ruqaa",serif;font-size:128px;line-height:1.25;text-shadow:0 8px 40px rgba(0,0,0,.8)}
+.v .hero{font-size:112px}
+.hero small{display:block;font-family:Amiri,serif;font-size:62px;color:var(--gold2);margin-top:10px}
+.mini{display:flex;gap:46px;margin-top:40px;justify-content:center}
+.mini div{font-size:30px;opacity:0}.mini b{font-family:"Reem Kufi";font-size:64px;color:var(--gold2);display:block;line-height:1.1}
+.tag2{font-family:Amiri,serif;font-size:46px;margin-top:22px;opacity:0}
+.steps{display:flex;align-items:center;gap:26px;margin-top:40px;justify-content:center}
+.v .steps{flex-direction:column;gap:14px}
+.step{font-family:Amiri,serif;font-size:58px;font-weight:700;padding:18px 44px;border-radius:22px;border:1.5px solid rgba(232,196,119,.5);background:rgba(255,255,255,.05);opacity:0}
+.arrow{font-size:54px;color:var(--gold);opacity:0}
+.v .arrow{transform:rotate(-90deg)}
+.grp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 120px}
+@keyframes hide{from{opacity:1;transform:none}to{opacity:0;transform:scale(.94);filter:blur(6px)}}
+.cloud{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;max-width:1500px;margin-top:40px}
+.v .cloud{max-width:960px}
+.cloud .chip{font-size:36px}
+.bar2{margin-top:10px;width:900px;max-width:90%;font-size:40px;background:#fff;color:#0f3d34;border-radius:60px;padding:20px 40px;text-align:right;font-family:Amiri,serif;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;align-items:center;gap:16px;opacity:0}
+.bar2 svg{width:40px;height:40px;stroke:var(--teal);fill:none;stroke-width:2;flex:none}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:46px;width:100%;max-width:1600px}
+.v .pillars{grid-template-columns:repeat(2,1fr);max-width:960px}
+.pil{padding:28px 16px;border-radius:24px;border:1.5px solid rgba(232,196,119,.5);background:linear-gradient(160deg,rgba(232,196,119,.16),rgba(255,255,255,.03));opacity:0}
+.pil svg{width:70px;height:70px;stroke:var(--gold2);fill:none;stroke-width:1.5}
+.pil b{display:block;font-family:Amiri,serif;font-size:40px;margin-top:8px}
+.v .phones .phone{width:270px;height:580px}
+.phones.sm .phone{width:290px;height:612px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bgpat"></div>
+  <div id="dust"></div>
+
+  <section class="scene" id="a1">
+    <div class="wallwrap"><div class="wall" data-a="wallDrift" data-d="0" data-dur="14" data-ease="linear"><img src="../assets/covers/p032b9da4.jpg" style="--k:0" data-a="coverIn" data-d="0.00" data-dur="0.9" alt=""><img src="../assets/covers/p09a85a8d.jpg" style="--k:1" data-a="coverIn" data-d="0.05" data-dur="0.9" alt=""><img src="../assets/covers/p0c7e3833.jpg" style="--k:2" data-a="coverIn" data-d="0.10" data-dur="0.9" alt=""><img src="../assets/covers/p0d9227b8.jpg" style="--k:3" data-a="coverIn" data-d="0.15" data-dur="0.9" alt=""><img src="../assets/covers/p103dc12a.jpg" style="--k:4" data-a="coverIn" data-d="0.20" data-dur="0.9" alt=""><img src="../assets/covers/p1acef349.jpg" style="--k:5" data-a="coverIn" data-d="0.25" data-dur="0.9" alt=""><img src="../assets/covers/p1f08a935.jpg" style="--k:6" data-a="coverIn" data-d="0.30" data-dur="0.9" alt=""><img src="../assets/covers/p1f54e4fb.jpg" style="--k:7" data-a="coverIn" data-d="0.35" data-dur="0.9" alt=""><img src="../assets/covers/p24c16cf5.jpg" style="--k:8" data-a="coverIn" data-d="0.40" data-dur="0.9" alt=""><img src="../assets/covers/p25133794.jpg" style="--k:9" data-a="coverIn" data-d="0.45" data-dur="0.9" alt=""><img src="../assets/covers/p26b6ca3f.jpg" style="--k:10" data-a="coverIn" data-d="0.50" data-dur="0.9" alt=""><img src="../assets/covers/p274f1526.jpg" style="--k:11" data-a="coverIn" data-d="0.55" data-dur="0.9" alt=""><img src="../assets/covers/p2bbce0f0.jpg" style="--k:12" data-a="coverIn" data-d="0.60" data-dur="0.9" alt=""><img src="../assets/covers/p2d64fddf.jpg" style="--k:13" data-a="coverIn" data-d="0.65" data-dur="0.9" alt=""><img src="../assets/covers/p32658dc3.jpg" style="--k:14" data-a="coverIn" data-d="0.70" data-dur="0.9" alt=""><img src="../assets/covers/p3b398246.jpg" style="--k:15" data-a="coverIn" data-d="0.75" data-dur="0.9" alt=""><img src="../assets/covers/p3d940679.jpg" style="--k:16" data-a="coverIn" data-d="0.80" data-dur="0.9" alt=""><img src="../assets/covers/p3f8e091b.jpg" style="--k:17" data-a="coverIn" data-d="0.85" data-dur="0.9" alt=""><img src="../assets/covers/p4289f23d.jpg" style="--k:18" data-a="coverIn" data-d="0.90" data-dur="0.9" alt=""><img src="../assets/covers/p472490cc.jpg" style="--k:19" data-a="coverIn" data-d="0.95" data-dur="0.9" alt=""><img src="../assets/covers/p51d75bb3.jpg" style="--k:20" data-a="coverIn" data-d="1.00" data-dur="0.9" alt=""><img src="../assets/covers/p58ad4ba3.jpg" style="--k:21" data-a="coverIn" data-d="1.05" data-dur="0.9" alt=""><img src="../assets/covers/p59c75278.jpg" style="--k:22" data-a="coverIn" data-d="1.10" data-dur="0.9" alt=""><img src="../assets/covers/p60fd2fc2.jpg" style="--k:23" data-a="coverIn" data-d="1.15" data-dur="0.9" alt=""><img src="../assets/covers/p6649ddf2.jpg" style="--k:24" data-a="coverIn" data-d="1.20" data-dur="0.9" alt=""><img src="../assets/covers/p6c9b38fc.jpg" style="--k:25" data-a="coverIn" data-d="1.25" data-dur="0.9" alt=""><img src="../assets/covers/p7719f53a.jpg" style="--k:26" data-a="coverIn" data-d="1.30" data-dur="0.9" alt=""><img src="../assets/covers/p817362d4.jpg" style="--k:27" data-a="coverIn" data-d="1.35" data-dur="0.9" alt=""><img src="../assets/covers/p82fcc95d.jpg" style="--k:28" data-a="coverIn" data-d="1.40" data-dur="0.9" alt=""><img src="../assets/covers/p842b98c1.jpg" style="--k:29" data-a="coverIn" data-d="1.45" data-dur="0.9" alt=""><img src="../assets/covers/p87e82f12.jpg" style="--k:30" data-a="coverIn" data-d="1.50" data-dur="0.9" alt=""><img src="../assets/covers/p88e55c72.jpg" style="--k:31" data-a="coverIn" data-d="1.55" data-dur="0.9" alt=""><img src="../assets/covers/p8f81a716.jpg" style="--k:32" data-a="coverIn" data-d="1.60" data-dur="0.9" alt=""><img src="../assets/covers/p90b00ec5.jpg" style="--k:33" data-a="coverIn" data-d="1.65" data-dur="0.9" alt=""><img src="../assets/covers/p92d51e73.jpg" style="--k:34" data-a="coverIn" data-d="1.70" data-dur="0.9" alt=""><img src="../assets/covers/p981b8b1b.jpg" style="--k:35" data-a="coverIn" data-d="1.75" data-dur="0.9" alt=""><img src="../assets/covers/p9fd336ef.jpg" style="--k:36" data-a="coverIn" data-d="1.80" data-dur="0.9" alt=""><img src="../assets/covers/pa0fe75d5.jpg" style="--k:37" data-a="coverIn" data-d="1.85" data-dur="0.9" alt=""><img src="../assets/covers/pa481e050.jpg" style="--k:38" data-a="coverIn" data-d="1.90" data-dur="0.9" alt=""><img src="../assets/covers/pa496de20.jpg" style="--k:39" data-a="coverIn" data-d="1.95" data-dur="0.9" alt=""><img src="../assets/covers/paee5db9e.jpg" style="--k:40" data-a="coverIn" data-d="2.00" data-dur="0.9" alt=""><img src="../assets/covers/pb62f7363.jpg" style="--k:41" data-a="coverIn" data-d="2.05" data-dur="0.9" alt=""><img src="../assets/covers/pb73bc08d.jpg" style="--k:42" data-a="coverIn" data-d="2.10" data-dur="0.9" alt=""><img src="../assets/covers/pc52251c0.jpg" style="--k:43" data-a="coverIn" data-d="2.15" data-dur="0.9" alt=""><img src="../assets/covers/pc64ccc07.jpg" style="--k:44" data-a="coverIn" data-d="2.20" data-dur="0.9" alt=""><img src="../assets/covers/pc7ca2eea.jpg" style="--k:45" data-a="coverIn" data-d="2.25" data-dur="0.9" alt=""><img src="../assets/covers/pd0e9a575.jpg" style="--k:46" data-a="coverIn" data-d="2.30" data-dur="0.9" alt=""><img src="../assets/covers/pd1dfedcc.jpg" style="--k:47" data-a="coverIn" data-d="2.35" data-dur="0.9" alt=""><img src="../assets/covers/pdbfbb888.jpg" style="--k:48" data-a="coverIn" data-d="2.40" data-dur="0.9" alt=""><img src="../assets/covers/peb296fa1.jpg" style="--k:49" data-a="coverIn" data-d="2.45" data-dur="0.9" alt=""><img src="../assets/covers/pf2a3a079.jpg" style="--k:50" data-a="coverIn" data-d="2.50" data-dur="0.9" alt=""><img src="../assets/covers/p032b9da4.jpg" style="--k:51" data-a="coverIn" data-d="2.55" data-dur="0.9" alt=""><img src="../assets/covers/p09a85a8d.jpg" style="--k:52" data-a="coverIn" data-d="2.60" data-dur="0.9" alt=""><img src="../assets/covers/p0c7e3833.jpg" style="--k:53" data-a="coverIn" data-d="2.65" data-dur="0.9" alt=""><img src="../assets/covers/p0d9227b8.jpg" style="--k:54" data-a="coverIn" data-d="2.70" data-dur="0.9" alt=""><img src="../assets/covers/p103dc12a.jpg" style="--k:55" data-a="coverIn" data-d="2.75" data-dur="0.9" alt=""><img src="../assets/covers/p1acef349.jpg" style="--k:56" data-a="coverIn" data-d="2.80" data-dur="0.9" alt=""><img src="../assets/covers/p1f08a935.jpg" style="--k:57" data-a="coverIn" data-d="2.85" data-dur="0.9" alt=""><img src="../assets/covers/p1f54e4fb.jpg" style="--k:58" data-a="coverIn" data-d="2.90" data-dur="0.9" alt=""><img src="../assets/covers/p24c16cf5.jpg" style="--k:59" data-a="coverIn" data-d="2.95" data-dur="0.9" alt=""><img src="../assets/covers/p25133794.jpg" style="--k:60" data-a="coverIn" data-d="3.00" data-dur="0.9" alt=""><img src="../assets/covers/p26b6ca3f.jpg" style="--k:61" data-a="coverIn" data-d="3.05" data-dur="0.9" alt=""><img src="../assets/covers/p274f1526.jpg" style="--k:62" data-a="coverIn" data-d="3.10" data-dur="0.9" alt=""><img src="../assets/covers/p2bbce0f0.jpg" style="--k:63" data-a="coverIn" data-d="3.15" data-dur="0.9" alt=""><img src="../assets/covers/p2d64fddf.jpg" style="--k:64" data-a="coverIn" data-d="3.20" data-dur="0.9" alt=""><img src="../assets/covers/p32658dc3.jpg" style="--k:65" data-a="coverIn" data-d="3.25" data-dur="0.9" alt=""><img src="../assets/covers/p3b398246.jpg" style="--k:66" data-a="coverIn" data-d="3.30" data-dur="0.9" alt=""><img src="../assets/covers/p3d940679.jpg" style="--k:67" data-a="coverIn" data-d="3.35" data-dur="0.9" alt=""><img src="../assets/covers/p3f8e091b.jpg" style="--k:68" data-a="coverIn" data-d="3.40" data-dur="0.9" alt=""><img src="../assets/covers/p4289f23d.jpg" style="--k:69" data-a="coverIn" data-d="3.45" data-dur="0.9" alt=""><img src="../assets/covers/p472490cc.jpg" style="--k:70" data-a="coverIn" data-d="3.50" data-dur="0.9" alt=""><img src="../assets/covers/p51d75bb3.jpg" style="--k:71" data-a="coverIn" data-d="3.55" data-dur="0.9" alt=""><img src="../assets/covers/p58ad4ba3.jpg" style="--k:72" data-a="coverIn" data-d="3.60" data-dur="0.9" alt=""><img src="../assets/covers/p59c75278.jpg" style="--k:73" data-a="coverIn" data-d="3.65" data-dur="0.9" alt=""><img src="../assets/covers/p60fd2fc2.jpg" style="--k:74" data-a="coverIn" data-d="3.70" data-dur="0.9" alt=""><img src="../assets/covers/p6649ddf2.jpg" style="--k:75" data-a="coverIn" data-d="3.75" data-dur="0.9" alt=""><img src="../assets/covers/p6c9b38fc.jpg" style="--k:76" data-a="coverIn" data-d="3.80" data-dur="0.9" alt=""><img src="../assets/covers/p7719f53a.jpg" style="--k:77" data-a="coverIn" data-d="3.85" data-dur="0.9" alt=""><img src="../assets/covers/p817362d4.jpg" style="--k:78" data-a="coverIn" data-d="3.90" data-dur="0.9" alt=""><img src="../assets/covers/p82fcc95d.jpg" style="--k:79" data-a="coverIn" data-d="3.95" data-dur="0.9" alt=""><img src="../assets/covers/p842b98c1.jpg" style="--k:80" data-a="coverIn" data-d="4.00" data-dur="0.9" alt=""><img src="../assets/covers/p87e82f12.jpg" style="--k:81" data-a="coverIn" data-d="4.05" data-dur="0.9" alt=""><img src="../assets/covers/p88e55c72.jpg" style="--k:82" data-a="coverIn" data-d="4.10" data-dur="0.9" alt=""><img src="../assets/covers/p8f81a716.jpg" style="--k:83" data-a="coverIn" data-d="4.15" data-dur="0.9" alt=""><img src="../assets/covers/p90b00ec5.jpg" style="--k:84" data-a="coverIn" data-d="4.20" data-dur="0.9" alt=""><img src="../assets/covers/p92d51e73.jpg" style="--k:85" data-a="coverIn" data-d="4.25" data-dur="0.9" alt=""><img src="../assets/covers/p981b8b1b.jpg" style="--k:86" data-a="coverIn" data-d="4.30" data-dur="0.9" alt=""><img src="../assets/covers/p9fd336ef.jpg" style="--k:87" data-a="coverIn" data-d="4.35" data-dur="0.9" alt=""><img src="../assets/covers/pa0fe75d5.jpg" style="--k:88" data-a="coverIn" data-d="4.40" data-dur="0.9" alt=""><img src="../assets/covers/pa481e050.jpg" style="--k:89" data-a="coverIn" data-d="4.45" data-dur="0.9" alt=""><img src="../assets/covers/pa496de20.jpg" style="--k:90" data-a="coverIn" data-d="4.50" data-dur="0.9" alt=""><img src="../assets/covers/paee5db9e.jpg" style="--k:91" data-a="coverIn" data-d="4.55" data-dur="0.9" alt=""><img src="../assets/covers/pb62f7363.jpg" style="--k:92" data-a="coverIn" data-d="4.60" data-dur="0.9" alt=""><img src="../assets/covers/pb73bc08d.jpg" style="--k:93" data-a="coverIn" data-d="4.65" data-dur="0.9" alt=""><img src="../assets/covers/pc52251c0.jpg" style="--k:94" data-a="coverIn" data-d="4.70" data-dur="0.9" alt=""><img src="../assets/covers/pc64ccc07.jpg" style="--k:95" data-a="coverIn" data-d="4.75" data-dur="0.9" alt=""><img src="../assets/covers/pc7ca2eea.jpg" style="--k:96" data-a="coverIn" data-d="4.80" data-dur="0.9" alt=""><img src="../assets/covers/pd0e9a575.jpg" style="--k:97" data-a="coverIn" data-d="4.85" data-dur="0.9" alt=""><img src="../assets/covers/pd1dfedcc.jpg" style="--k:98" data-a="coverIn" data-d="4.90" data-dur="0.9" alt=""><img src="../assets/covers/pdbfbb888.jpg" style="--k:99" data-a="coverIn" data-d="4.95" data-dur="0.9" alt=""><img src="../assets/covers/peb296fa1.jpg" style="--k:100" data-a="coverIn" data-d="5.00" data-dur="0.9" alt=""><img src="../assets/covers/pf2a3a079.jpg" style="--k:101" data-a="coverIn" data-d="5.05" data-dur="0.9" alt=""></div></div>
+    <div class="hero" data-a="reveal" data-d=".5" data-dur="1.4">تراث الدعوة السلفية بمصر<small data-a="up" data-kw="في مكان">في مكانٍ واحد</small></div>
+  </section>
+
+  <section class="scene" id="a2">
+    <div class="rays" data-a="raysIn,spin" data-d=".1" data-dur="1.2,20" data-ease="ease;linear"></div>
+    <div class="halo" data-a="raysIn" data-d="0" data-dur="1"></div>
+    <div class="logo" data-a="pop" data-d=".15" data-dur="1" style="width:240px;height:240px;padding:30px"><img src="../assets/logo-sdsl.png" alt=""></div>
+    <div class="name" data-a="reveal" data-d=".4" data-dur="1.2" style="font-size:100px;margin-top:26px"><span class="hl" data-a="shine" data-d=".8" data-dur="3">مكتبة الدعوة السلفية الرقمية</span></div>
+    <div class="tag2" data-a="up" data-kw="مستودع">مستودعٌ جامع • وكُنّاشةٌ لتراث الدعوة</div>
+    <div class="badge" data-a="pop" data-kw="لاول مره" style="margin:26px 0 0">كتب المشايخ رقميًّا لأول مرة</div>
+    <div class="mini">
+      <div data-a="up" data-kw="فيها كتب"><b data-count="911" data-cat="0" data-cdur="1.4" data-kwc="فيها كتب">٠</b>كتاب</div>
+      <div data-a="up" data-kw="لمشايخها"><b data-count="322" data-cat="0" data-cdur="1.4" data-kwc="لمشايخها">٠</b>مؤلِّف</div>
+      <div data-a="up" data-kw="تنشر"><b data-count="15000" data-cat="0" data-cdur="1.6" data-plus="1" data-kwc="تنشر">٠</b>مقال وفتوى</div>
+    </div>
+  </section>
+
+  <section class="scene" id="a3">
+    <div class="row">
+      <div class="browser" data-a="slideR" data-d=".05" data-dur="1"><div class="bar"><i></i><i></i><i></i><em>dawahlibrary.org/#/library</em></div>
+        <div class="vp"><img src="shots/d_library.jpg" data-a="kb" data-d="0" data-dur="9" data-ease="linear" alt=""></div></div>
+      <div class="side">
+        <div class="h2" data-a="up" data-kw="امهات">أمّهات المصادر والمراجع<small>التي لا يستغني عنها طالب العلم</small></div>
+        <div class="chips">
+          <span class="chip" data-a="pop" data-kw="والمراجع">التفسير</span><span class="chip" data-a="pop" data-kw="التي">الحديث</span>
+          <span class="chip" data-a="pop" data-kw="لا يستغني">العقيدة</span><span class="chip" data-a="pop" data-kw="عنها">الفقه</span>
+          <span class="chip" data-a="pop" data-kw="طالب">اللغة</span><span class="chip" data-a="pop" data-kw="العلم">السيرة</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="a4">
+    <div class="grp" data-a="hide" data-kw="بخدمات" data-dur=".6">
+      <div class="bar2" data-a="up" data-d=".1"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="M15 15l6 6"/></svg><span data-type="فضل طلب العلم" data-tat="0.02" data-tdur="1.2"></span><span class="cur"></span></div>
+      <div class="steps">
+        <span class="step" data-a="pop" data-kw="الى الكتاب">الكتاب</span><span class="arrow" data-a="fade" data-kw="والى موضعه">←</span>
+        <span class="step" data-a="pop" data-kw="والى موضعه">موضعه</span><span class="arrow" data-a="fade" data-kw="والى النص">←</span>
+        <span class="step gold" data-a="pop" data-kw="والى النص">النص الذي تريد</span>
+      </div>
+      <div class="h2" data-a="reveal" data-kw="في لحظه" data-dur=".9" style="margin-top:40px">في لحظة</div>
+    </div>
+    <div class="grp" data-a="fade" data-kw="بخدمات" data-dur=".6">
+      <div class="h2">خدمات علمية متكاملة<small class="gold">تُغنيك عن مواقع كثيرة</small></div>
+      <div class="cloud">
+        <span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.000" data-dur=".5">البحث المتقدم</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.035" data-dur=".5">اسأل المكتبة</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.070" data-dur=".5">تفسير الآية</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.105" data-dur=".5">شرح الحديث وتخريجه</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.140" data-dur=".5">معاني الكلمات</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.175" data-dur=".5">تشجير الكتب</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.210" data-dur=".5">اختصار الكتب</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.245" data-dur=".5">الفهارس الفنية</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.280" data-dur=".5">اختبارات الكتب</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.315" data-dur=".5">حفظ المتون</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.350" data-dur=".5">المسارات العلمية</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.385" data-dur=".5">التراجم والأعلام</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.420" data-dur=".5">تصميم الاقتباس</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.455" data-dur=".5">المصحف</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.490" data-dur=".5">الترجمة</span><span class="chip" data-a="pop" data-kw="بخدمات" data-off="0.525" data-dur=".5">التصدير</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="a5">
+    <div class="phones sm">
+      <div class="tri" data-a="phoneUp" data-d=".05" style="--rot:-4deg;--y:20px"><div class="phone"><div class="scr"><img src="shots/m_book_uluwhimma_12.jpg" alt=""></div></div></div>
+      <div class="tri" data-a="phoneUp" data-d=".25"><div class="phone"><div class="scr"><img src="shots/m_home.jpg" alt=""></div></div></div>
+      <div class="tri" data-a="phoneUp" data-d=".45" style="--rot:4deg;--y:20px"><div class="phone"><div class="scr"><img src="shots/m_hifz.jpg" alt=""></div></div></div>
+    </div>
+    <div class="pillars">
+      <div class="pil" data-a="pop" data-kw="قراءه ميسره"><svg viewBox="0 0 24 24"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg><b>قراءة ميسّرة تدوم</b></div>
+      <div class="pil" data-a="pop" data-kw="وتطوير"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><b>تطوير مستمر</b></div>
+      <div class="pil" data-a="pop" data-kw="وتصحيح"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><b>تصحيح دوري</b></div>
+      <div class="pil" data-a="pop" data-kw="واضافات"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 12v6M9 15h6"/></svg><b>إضافات يومية</b></div>
+    </div>
+  </section>
+
+  <section class="scene" id="a6">
+    <div class="halo" data-a="raysIn" data-d="0" data-dur="1.2"></div>
+    <div class="logo" data-a="zoomIn" data-d=".05" data-dur="1" style="width:230px;height:230px;padding:30px"><img src="../assets/logo-sdsl.png" alt=""></div>
+    <div class="name" data-a="reveal" data-d=".3" data-dur="1.3" style="font-size:104px;margin-top:30px">مكتبة الدعوة السلفية الرقمية</div>
+    <div class="h2 gold" data-a="up" data-kw="علم موثوق" style="font-size:62px;margin-top:6px">علمٌ موثوق… بين يديك</div>
+    <div class="url" data-a="up" data-kw="بين يديك" style="font-size:54px;margin-top:34px">dawahlibrary.org</div>
+    <div class="foot" data-a="fade" data-kw="بين يديك">الدعوة السلفية بمصر • جمعية الدعاة الخيرية</div>
+  </section>
+
+  <div class="flash" id="flash"></div>
+  <div class="vign"></div>
+  <div class="grain"></div>
+</div>
+<script>
+const Q = new URLSearchParams(location.search), V = Q.get("v") === "1";
+if (V) document.documentElement.classList.add("v");
+const VOICE = Q.get("voice") || "ad";
+const IDS = ["a1","a2","a3","a4","a5","a6"];
+const PRE = {a1:1.2,a2:0.5,a3:0.3,a4:0.3,a5:0.3,a6:0.6};
+const POST = {a1:0.5,a2:0.6,a3:0.4,a4:0.6,a5:0.5,a6:2.8};
+const FADE = 0.5;
+const TXT = {};
+const norm = t => t.replace(/[ً-ْٰـ]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+const kwAt = (id, kw) => { const t = TXT[id] || "", i = t.indexOf(norm(kw)); return i < 0 ? 0.5 : Math.max(0, i / t.length - 0.03); };
+async function timeline(){
+  let man = {}, est = {}, sp = 1;
+  try { man = await (await fetch("voice/manifest.json", {cache:"no-store"})).json(); } catch(e) {}
+  try { const s = await (await fetch("script3.json")).json(); sp = s.speed || 1; for (const g of s.segments) { est[g.id] = norm(g.text).length / 11; TXT[g.id] = norm(g.text); } } catch(e) {}
+  const T = []; let t = 0;
+  for (const id of IDS) {
+    const vd = ((man[VOICE + "/" + id] || {}).d || est[id] || 4) / sp;
+    const L = PRE[id] + vd + POST[id];
+    T.push({id, start: t, voiceAt: t + PRE[id], vd, L});
+    t += L - (id === "a6" ? 0 : FADE * 0.6);
+  }
+  return {T, total: t, speed: sp};
+}
+function anim(el, start){
+  const names = el.dataset.a.split(","), durs = (el.dataset.dur || "1").split(","), eases = (el.dataset.ease || "cubic-bezier(.2,.8,.2,1)").split(";");
+  el.style.animation = names.map((n, i) => `${n} ${durs[i] || durs[0]}s ${eases[i] || eases[0]} ${start}s both`).join(",");
+}
+let TL;
+async function build(){
+  TL = await timeline();
+  const dust = document.getElementById("dust"); let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+  for (let i = 0; i < 46; i++) {
+    const d = document.createElement("i"); d.className = "dust"; const s = 2 + rnd() * 4;
+    Object.assign(d.style, {width: s + "px", height: s + "px", left: rnd() * W + "px", top: (H * 0.3 + rnd() * H * 0.8) + "px", animation: `rise ${9 + rnd() * 9}s linear ${-rnd() * 18}s infinite`});
+    dust.appendChild(d);
+  }
+  for (const sc of TL.T) {
+    const el = document.getElementById(sc.id), start = sc.start, L = sc.L;
+    el.style.animation = sc.id === "a6" ? `fade ${FADE}s ease ${start}s both, fadeOut 1s ease ${start + L - 1}s forwards`
+                                        : `fade ${FADE}s ease ${start}s both, fadeOut ${FADE}s ease ${start + L - FADE}s forwards`;
+    el.querySelectorAll("[data-a]").forEach(x => {
+      if (x.dataset.kw) x.dataset.at = (kwAt(sc.id, x.dataset.kw) + parseFloat(x.dataset.off || 0) * 0).toFixed(3);
+      let st = x.dataset.at != null ? sc.voiceAt + parseFloat(x.dataset.at) * sc.vd : start + parseFloat(x.dataset.d || 0);
+      st += parseFloat(x.dataset.off || 0) * 3.5;   // تتابع سريع داخل المجموعة
+      anim(x, st);
+    });
+    el.querySelectorAll("[data-count]").forEach(x => { x._st = sc.voiceAt + kwAt(sc.id, x.dataset.kwc) * sc.vd; x._d = parseFloat(x.dataset.cdur); });
+    el.querySelectorAll("[data-type]").forEach(x => { x._st = sc.voiceAt + parseFloat(x.dataset.tat) * sc.vd; x._d = parseFloat(x.dataset.tdur); });
+  }
+  const a2 = TL.T.find(x => x.id === "a2"), a6 = TL.T.find(x => x.id === "a6");
+  document.getElementById("flash").style.animation = `flash 1.3s ease-out ${a2.start + 0.15}s both`;
+  window.CUES = {total: TL.total, speed: TL.speed, scenes: TL.T.map(({id, start, voiceAt, vd, L}) => ({id, start, voiceAt, vd, L})), flash: a2.start + 0.15, end: a6.start + 0.05};
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  document.getAnimations().forEach(a => a.pause());
+  window.READY = true;
+}
+const AR = n => n.toLocaleString("ar-EG", {useGrouping: false});
+const ease = p => 1 - Math.pow(1 - p, 3);
+window.seek = t => {
+  document.getAnimations().forEach(a => { a.currentTime = t * 1000; });
+  document.querySelectorAll("[data-count]").forEach(x => { const p = Math.max(0, Math.min(1, (t - x._st) / x._d)); x.textContent = (x.dataset.plus && p >= 1 ? "+" : "") + AR(Math.round(+x.dataset.count * ease(p))); });
+  document.querySelectorAll("[data-type]").forEach(x => { const s = x.dataset.type, p = Math.max(0, Math.min(1, (t - x._st) / x._d)); x.textContent = s.slice(0, Math.round(s.length * p)); });
+};
+build().then(() => { const q = Q.get("t"); seek(q ? +q : 0); });
+</script>
+</body>
+</html>

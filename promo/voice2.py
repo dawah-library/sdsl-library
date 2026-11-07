@@ -118,7 +118,7 @@ def dur(p):
 
 # فحص المحكّم أولًا على تسجيل سابق
 _t = os.path.join(ROOT, "voice", "Charon", "s03.wav")
-if os.path.exists(_t):
+if os.path.exists(_t) and "s03" in SEG:
     _r = judge("s03", _t); print("فحص المحكّم:", json.dumps(_r, ensure_ascii=False)[:400], flush=True)
     if _r.get("error"): sys.exit("المحكّم لا يعمل؛ أوقفتُ التسجيل حفظًا للحصة")
 

@@ -53,19 +53,19 @@ def air():  # نفَس هواء منخفض جدًا طوال الفيلم
 
 mix += air() * 0.035
 sc = {s["id"]: s for s in C["scenes"]}
-for s in C["scenes"]:
-    if s["id"] not in ("s01", "s04"): add(whoosh(1.5), max(0, s["start"] - 0.5), 0.16)
-add(riser(2.6), sc["s04"]["start"] - 2.3, 0.18)
+for k, s in enumerate(C["scenes"]):
+    if k > 0 and abs(s["start"] - C["flash"]) > 1: add(whoosh(1.5), max(0, s["start"] - 0.5), 0.16)
+add(riser(2.6), C["flash"] - 2.6, 0.18)
 add(boom(4.0, 48), C["flash"], 0.55)
 add(whoosh(1.2, 1500, 7000), C["flash"] + 0.1, 0.10)
-add(whoosh(1.4), C["free"] - 0.4, 0.14)
-add(boom(5.0, 42), sc["s11"]["start"] + 0.1, 0.38)
+if C.get("free"): add(whoosh(1.4), C["free"] - 0.4, 0.14)
+add(boom(5.0, 42), C.get("end", C["scenes"][-1]["start"]) + 0.1, 0.38)
 # التعليق
 vo = np.zeros(N)
 for s in C["scenes"]:
     p = os.path.join(ROOT, "voice", voice, s["id"] + ".wav")
     if os.path.exists(p):
-        v = load(p, VOX); i = int(s["voiceAt"] * SR); j = min(N, i + len(v)); vo[i:j] += v[:j - i]
+        v = load(p, VOX + (",atempo=%.3f" % C["speed"] if C.get("speed", 1) != 1 else "")); i = int(s["voiceAt"] * SR); j = min(N, i + len(v)); vo[i:j] += v[:j - i]
     else: print("لا صوت:", p)
 vo /= (np.abs(vo).max() + 1e-9)
 # خفض المؤثرات تحت الصوت

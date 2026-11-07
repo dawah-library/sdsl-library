@@ -439,7 +439,7 @@ async function build(){
     if (i > 0) { const [px, py] = pt(i - 1); mk(px, py, x, y, t + 0.2); }
     if (i === nd.length - 1) { const [fx, fy] = pt(0); mk(x, y, fx, fy, t + 0.4); }
   });
-  window.CUES = {total: TL.total, scenes: TL.T.map(({id, start, voiceAt, vd, L}) => ({id, start, voiceAt, vd, L})), flash: s4.start + 0.3, free: s9.split};
+  window.CUES = {total: TL.total, scenes: TL.T.map(({id, start, voiceAt, vd, L}) => ({id, start, voiceAt, vd, L})), flash: s4.start + 0.3, free: s9.split, end: TL.T.find(x => x.id === "s11").start};
   await document.fonts.ready;
   await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
   document.getAnimations().forEach(a => a.pause());
