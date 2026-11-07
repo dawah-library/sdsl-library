@@ -39,6 +39,19 @@ async function probe(label, u, name) {
   const ctx = new Set();
   for (const s of js) { const r = await get(s); for (const m of r.b.matchAll(/.{0,120}(?:apiUrl|baseUrl|api\/|\/api|environment|endpoint|HttpClient|\.get\(|\.post\().{0,160}/g)) { const x = m[0].replace(/\s+/g, " "); if (/api|Url|http/.test(x)) ctx.add(x); } }
   rep.push("- سياقات الاتصال:", ...[...ctx].slice(0, 120).map(x => "  - `" + x.replace(/`/g, "'") + "`"));
+  // قيم الإعداد (api_url) وثوابت المسارات (booksRoutes/homeRoutes) ثم تجربة القراءة العامة
+  let api = "", routes = {};
+  for (const s of js) { const r = await get(s);
+    const m = r.b.match(/api_url\s*:\s*["'`]([^"'`]+)["'`]/); if (m && !api) api = m[1];
+    for (const mm of r.b.matchAll(/\b([A-Z][A-Z_]{3,40})\s*:\s*["'`]([a-zA-Z0-9_\/\-]{3,80})["'`]/g)) routes[mm[1]] = mm[2]; }
+  rep.push("- api_url: " + api, "- ثوابت المسارات: `" + JSON.stringify(routes).slice(0, 3000) + "`");
+  if (api) { const A = new URL(api, B).href.replace(/\/?$/, "/");
+    for (const k of ["GET_ALL_BOOKS", "GET_BOOKS_CATEGORIES", "GET_ANNOTATIONS_COUNT", "GET_DICTIONARIES_COUNT", "GET_FAVOURITE_ANNOTATIONS", "GET_CATEGORIES_COUNT", "GET_MEMBERS_COUNT"]) if (routes[k]) await probe(k, A + routes[k] + (k === "GET_ALL_BOOKS" ? "/0?page=1&limit=5" : ""));
+    const L = await get(A + (routes.GET_ALL_BOOKS || "books/getAllBooks") + "/0?page=1&limit=5"), j = J(L.b), list = j && (j.message?.books || j.message || j.books || j.data); const one = Array.isArray(list) ? list[0] : null;
+    if (one) { rep.push("- أول كتاب: `" + JSON.stringify(one).slice(0, 1500) + "`"); const id = one.book_id || one.id;
+      for (const k of ["GET_BOOK_CHAPTERS", "GET_PUBLIC_COPIES_OF_BOOK"]) if (routes[k]) await probe(k, A + routes[k] + "/" + id + (k === "GET_PUBLIC_COPIES_OF_BOOK" ? "/0" : ""));
+      await probe("وصف الكتاب", A + "books/bookDescription/" + id); await probe("فصول", A + "chapters/book/" + id); }
+  }
   // واجهات شائعة
   for (const p of ["/api", "/api/books", "/api/v1/books", "/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9", "/api/categories", "/books", "/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9"]) await probe(p, B + p);
   for (const sub of ["api", "app", "backend", "files", "cdn"]) await probe("نطاق " + sub, `https://${sub}.ithraa.io/`);
