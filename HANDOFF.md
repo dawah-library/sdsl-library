@@ -362,3 +362,4 @@
 ## ٧ نوفمبر — طلبات المدير الستة (claude/stoic-cerf-vn4690)
 - loginNudge (app.js + .lgnudge في style.css)؛ HFS/HF_GROUPS (٤٦ خطًّا)؛ ED.panel وتبويب edition؛ رفع تسجيلات التفريغ من الجهاز (trUpload، transcribe.py: store:/parts:، وid-token في transcribe.yml، وr2put يقبل صيغًا أكثر)؛ enrich-new.py: ربط بالأقسام يعمل ولو أُوقف مفتاح enrich، والخدمات كلها للمصورات؛ dwLinked في dawah.js؛ قضايا الفرقان للناشئة في tala.js (data/tala-furqan.json).
 - مفتاح enrich موقوف (switches.json) — لم يُغيَّر؛ طوابير الخدمات تنتظر قرار المدير.
+- **ربط الآيات بالمصحف:** QREF في آخر mushaf.js (MutationObserver على .rd، يلف عناصر span.w المتجاورة برابط a.qref)، وMUS.ref(s,a,to) يفتح نافذة الآية من أي صفحة.

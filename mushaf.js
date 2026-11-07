@@ -166,8 +166,10 @@ const MUS = (() => {
     document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k)); }
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);
-    openSheet(`${nmP(s)}: ${AR(a)}`, `<p class="mqt big">${esc(t)} ﴿${AR(a)}﴾</p>
-    <div class="row"><button class="btn s" data-act="musone" data-s="${s}" data-a="${a}">▶ استمع</button><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
+    const inMus = /^#\/mushaf/.test(location.hash), until = +(sheet.to || 0) > a ? +sheet.to : 0; sheet.to = 0;
+    openSheet(`${nmP(s)}: ${AR(a)}${until ? "–" + AR(until) : ""}`, `<p class="mqt big">${words(t, s, a)} ﴿${AR(a)}﴾${until ? Array.from({ length: Math.min(until, Q.suras[s - 1].ayat.length) - a }, (_, i) => " " + words(ayah(s, a + i + 1), s, a + i + 1) + ` ﴿${AR(a + i + 1)}﴾`).join("") : ""}</p>
+    <p class="mut" style="font-size:.82rem;margin-top:-4px">اضغط أي كلمة لمعناها وغريبها في كتب الغريب والمعاجم.</p>
+    <div class="row">${inMus ? "" : `<a class="btn s p" href="#/mushaf/${s}?a=${a}" data-act="closeSheet">📖 موضعها في المصحف</a>`}<button class="btn s" data-act="musone" data-s="${s}" data-a="${a}">▶ استمع</button><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
     <div class="chips" id="mustk">${TFS.map(([k, n]) => `<button class="chip${k === tfk() ? " on" : ""}" data-act="mustk" data-k="${k}" data-s="${s}" data-a="${a}">${n}</button>`).join("")}</div><div id="musmk" class="mut tfbox">…</div>
     <h4>مواضع تفسيرها في التفاسير</h4><div id="mustf" class="mut">…</div>
     <h4>ما قيل فيها في كتب الدعوة ومقالاتها</h4><div id="musct" class="mut">جارٍ التحميل…</div>
@@ -239,5 +241,60 @@ const MUS = (() => {
     else if (a === "mustaf") { const [s, n] = el.dataset.k.split(":").map(Number); closeSheet(); setTimeout(() => tafsirSheet(Q.suras[s - 1].ayat[n - 1]), 150); }
     else if (a === "musexp") exportDlg(); else if (a === "musclr") { if (confirm("مسح الآيات المختارة؟")) { setSel([]); document.querySelectorAll(".may.sel").forEach(x => x.classList.remove("sel")); } } });
   window.addEventListener("hashchange", () => { setTimeout(bar, 50); if (PLAY && !window.__musAuto) stopAu(); else if (AU && window.__musAuto) { AU.pause(); AU = null; PLAY = null; } });
-  return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q) };
+  // نافذة الآية من أي صفحة (ربط عزو الآيات في الكتب: QREF أدناه)
+  async function ref(s, a, to) { try { await load(); } catch (e) { location.hash = "#/mushaf/" + s + "?a=" + a; return; } if (!Q.suras[s - 1] || !Q.suras[s - 1].ayat[a - 1]) return; sheet.to = to || 0; sheet(s, a); }
+  return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q), ref };
+})();
+
+/* ربط الآيات في كل الكتب والمقالات بالمصحف (طلب المدير، ٧ نوفمبر): كل عزو بصيغة [السورة: رقم] أو (السورة: الآية رقم)
+   أو [سورة السورة، الآية رقم] في نص القارئ أو حواشيه يصير رابطًا؛ بالضغط تُفتح نافذة الآية (نصها، ومعاني كلماتها بالضغط على الكلمة،
+   والتفاسير، وما قيل فيها في كتب الدعوة) وزر «موضعها في المصحف» (#/mushaf/<سورة>?a=<آية>). يعمل على كل ما يُعرض داخل .rd دون تغيير النص المحفوظ. */
+const QREF = (() => {
+  const N = ["الفاتحه","البقره","ال عمران","النساء","المائده","الانعام","الاعراف","الانفال","التوبه","يونس","هود","يوسف","الرعد","ابراهيم","الحجر","النحل","الاسراء","الكهف","مريم","طه","الانبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجده","الاحزاب","سبا","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشوري","الزخرف","الدخان","الجاثيه","الاحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعه","الحديد","المجادله","الحشر","الممتحنه","الصف","الجمعه","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقه","المعارج","نوح","الجن","المزمل","المدثر","القيامه","الانسان","المرسلات","النبا","النازعات","عبس","التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الاعلي","الغاشيه","الفجر","البلد","الشمس","الليل","الضحي","الشرح","التين","العلق","القدر","البينه","الزلزله","العاديات","القارعه","التكاثر","العصر","الهمزه","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الاخلاص","الفلق","الناس"];
+  const C = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+  const nz = x => String(x || "").replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim();
+  const M = {}; N.forEach((n, i) => { M[n] = i + 1; M[n.replace(/^ال/, "")] = M[n.replace(/^ال/, "")] || i + 1; });
+  Object.entries({ "بني اسرائيل": 17, "المؤمن": 40, "حم السجده": 41, "براءه": 9, "الدهر": 76, "هل اتي": 76, "تبارك": 67, "عم": 78, "عم يتساءلون": 78, "تبت": 111, "اللهب": 111, "الم نشرح": 94, "الانشراح": 94, "اقرا": 96, "قل هو الله احد": 112, "التوحيد": 112, "المعوذتين": 113, "سبح": 87, "الملائكه": 35, "الاحقاف": 46, "ن": 68, "ياسين": 36, "النساء الصغري": 65 }).forEach(([k, v]) => M[k] = M[k] || v);
+  const D = "[0-9٠-٩۰-۹]{1,3}", W = "(?:الآيات|الآية|الايات|الاية|آية|اية|آيه|ايه)";
+  const RX = new RegExp(`[\\[(]\\s*(?:سورة\\s+|سوره\\s+)?([\\u0621-\\u064A\\u064B-\\u0652\\u0670\\u0671 ]{1,22}?)\\s*(?::|،|,)\\s*(?:من\\s+)?${W}?\\s*(?:رقم\\s*)?(${D})(?:\\s*[-–]\\s*(${D}))?\\s*[\\])]`, "g");
+  const num = x => +String(x).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+  const sura = n => { const k = nz(n).replace(/^سوره\s+/, ""); return M[k] || M[k.replace(/^ال/, "")] || 0; };
+  const SKIP = "A,BUTTON,TEXTAREA,INPUT,SELECT,SCRIPT,STYLE,CODE";
+  const ok = el => el && el.closest(".rd") && !el.closest(SKIP + ",[contenteditable=true],.qref");
+  // الكلمات في القارئ يلف كلًّا منها عنصر span.w، فالعزو يمتد على عناصر متجاورة: تُجمع نصوص أبناء الحاوية ثم يُلف ما يغطيه العزو برابط
+  // (تبقى عناصر الكلمات كما هي داخل الرابط فلا تتأثر التعليقات والتظليل)
+  function linkIn(E) {
+    if (!ok(E) || E.classList.contains("w")) return;
+    const ch = [...E.childNodes], off = []; let str = "";
+    ch.forEach(n => { off.push(str.length); str += n.nodeType === 3 ? n.nodeValue : n.nodeType === 1 ? n.textContent : ""; });
+    if (str.length < 6 || !/[:،,]/.test(str)) return;
+    const hits = []; let m; RX.lastIndex = 0;
+    while ((m = RX.exec(str))) { const s_ = sura(m[1]), a = num(m[2]), b = m[3] ? num(m[3]) : 0; if (s_ && a && a <= C[s_ - 1] && !(b && (b < a || b > C[s_ - 1]))) hits.push([m.index, m.index + m[0].length, s_, a, b]); }
+    const at = p => { let i = 0; while (i + 1 < ch.length && off[i + 1] <= p) i++; return i; };
+    for (const [st, en, s_, a, b] of hits.reverse()) {
+      let i = at(st), j = at(en - 1);
+      const seg = ch.slice(i, j + 1); if (seg.some(n => n.nodeType === 1 && (n.matches(SKIP + ",.qref") || n.querySelector("a,button,.qref")))) continue;
+      let first = ch[i], last = ch[j];
+      if (last.nodeType === 3 && en - off[j] < last.nodeValue.length) last.splitText(en - off[j]);
+      if (first.nodeType === 3 && st > off[i]) { first = first.splitText(st - off[i]); if (i === j) last = first; }
+      const x = document.createElement("a"); x.className = "qref"; x.href = "#/mushaf/" + s_ + "?a=" + a; x.dataset.s = s_; x.dataset.a = a; if (b) x.dataset.b = b;
+      x.title = "افتح الآية: تفسيرها ومعاني كلماتها وموضعها في المصحف";
+      first.parentNode.insertBefore(x, first); let n = first; while (n) { const nx = n === last ? null : n.nextSibling; x.appendChild(n); n = nx; }
+    }
+  }
+  function scan(root) {
+    if (!root || (root.nodeType !== 1 && root.nodeType !== 3)) return;
+    if (root.nodeType === 3) return linkIn(root.parentElement);
+    if (!(root.closest(".rd") || root.querySelector(".rd"))) return;
+    const E = new Set(), w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (w.nextNode()) { const p = w.currentNode.parentElement; if (!p) continue; E.add(p.classList.contains("w") || p.classList.contains("qv") ? p.parentElement : p); }
+    E.forEach(e => { try { linkIn(e); } catch (x) { } });
+  }
+  let pend = new Set(), tm = 0;
+  const run = () => { tm = 0; const l = [...pend]; pend = new Set(); l.forEach(n => { if (n.isConnected) try { scan(n); } catch (e) { } }); };
+  new MutationObserver(ms => { ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1 && n.classList.contains("qref")) return; pend.add(n); })); if (pend.size && !tm) tm = setTimeout(run, 60); })
+    .observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("click", e => { const el = e.target.closest("a.qref"); if (!el || e.ctrlKey || e.metaKey || e.button || String(getSelection()).trim()) return; e.preventDefault(); e.stopPropagation();
+    MUS.ref(+el.dataset.s, +el.dataset.a, +el.dataset.b || 0); }, true);
+  return { scan, sura };
 })();
