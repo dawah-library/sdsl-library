@@ -23,6 +23,7 @@ jobs:
           try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
           except Exception: s={}
           print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" majalla_news)
+          [ "${{ github.event_name }}" = "workflow_dispatch" ] && on=true   # التشغيل اليدوي مقصود دائمًا
           echo "on=$on" >> "$GITHUB_OUTPUT"
   run:
     needs: gate
