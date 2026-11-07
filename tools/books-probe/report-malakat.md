@@ -1,0 +1,83 @@
+# استكشاف https://malakat.io — 2026-11-07 02:54
+
+- /robots.txt: `https://malakat.io/robots.txt` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /sitemap.xml: `https://malakat.io/sitemap.xml` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /sitemap-index.xml: `https://malakat.io/sitemap-index.xml` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /manifest.json: `https://malakat.io/manifest.json` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- الرئيسة: `https://malakat.io/` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- روابط داخلية (3): https://malakat.io/assets/favicon.ico ، https://malakat.io/ ، https://malakat.io/styles-HJV2HKHJ.css
+- السكربتات: 3
+- نقاط الاتصال المذكورة: /books?searchWord=${e}&category_id=${i}&getSpecificBooks=${t} ، /authors?searchWord=${e}
+- النطاقات المذكورة: angular.dev ، www.w3.org ، momentjs.com ، ithraa.sa ، darat.sa ، malakat.io ، cdnjs.cloudflare.com ، twitter.com ، api.whatsapp.com ، t.me ، www.googletagmanager.com ، ithraa.io ، miqyas.io
+- سياقات الاتصال:
+  - `ializer.serialize(f.extractedUrl),f.source,f.restoredState)),f.id!==this.navigationId?Je$2:Promise.resolve(f))),U2(this.environmentInjector,this.configLoader,this.rootComponentType,e.config,this.urlSerializer,this.paramsInheritanceStrategy,s.signal),Ct$1(f=>{r.targetSnapshot=f.targetSnapsho`
+  - `,extras:b}=c,g=new Zr$1(f,this.urlSerializer.serialize(h),p,y);this.events.next(g);let v=iw(this.rootComponentType,this.environmentInjector).snapshot;return this.currentTransition=r=J$3(C({},c),{targetSnapshot:v,urlAfterRedirects:h,extras:J$3(C({},b),{skipLocationChange:false,replaceUrl:fal`
+  - `;else {let l=new qi$1(r.id,this.urlSerializer.serialize(r.extractedUrl),c,r.targetSnapshot??void 0);try{let u=nt$1(this.environmentInjector,()=>this.navigationErrorHandler?.(l));if(u instanceof gs$2){let{message:d,cancellationCode:f}=zd(this.urlSerializer,u);this.events.next(new dn$2(r.id,t`
+  - `.length!==0&&(o.state=l);}let c=this.parseUrl(a);this.scheduleNavigation(c,r,s,o).catch(l=>{this.disposed||this.injector.get(Ot$1)(l);});}get url(){return this.serializeUrl(this.currentUrlTree)}getCurrentNavigation(){return ce$1(this.navigationTransitions.currentNavigation)}get lastSu`
+  - `erPayload.user_id:void 0,this.isLoggedIn.next(!!localStorage.getItem("PAYLOAD"));}checkEmailIfExists(e){return this.http.post(_e$1.api_url+"api/users/checkemail",{email:e})}loginUser(e){return this.http.post(_e$1.api_url+"api/users/login",e)}socialLogin(e){return this.http.post(_e$1.ap`
+  - `i_url+"api/users/social-login",e)}setAuthenticatedSession(e){let r=e.status==2?e.rememberMeAccessToken:e.accessToken;localStorage.setItem("X-AUTH",JSON.stringify(r)),local`
+  - `ggedIn.next(true),this.broadcastService.publish({type:"loginLogout",payload:{}});}forgetPasswordMail(e){return this.http.post(_e$1.api_url+"api/nodemailer/forgetpassword",{email:e})}ifCurrentPasswordCorrect(e){return this.http.post(_e$1.api_url+"api/users/checkpassword",e)}getUser(e,r)`
+  - `{let i=r?'${_e$1.api_url}api/users/${e}/${r}':'${_e$1.api_url}api/users/${e}';return this.http.get(i)}getBlockedUsers(){return this.http.get(_e$1.api_url+"api/users/getBlockedUsers")}unBlockUser(e){return this.http.get(_e$1.api_url+'api/users/unBlockedUsers/$`
+  - `{e}')}getUserById(e){return this.http.get(_e$1.api_url+'api/users/getUser/${e}')}getUserRoles(e){return e?this.http.get(_e$1.api_url+'api/users/roles/of/users/${e}'):q$2(null)}getUserArabicRoles(e){return this.http.get(_e$1.api_url+'api/users/getarabicroles/${e}')}resetPassword(e`
+  - `,r){return this.http.get(_e$1.api_url+'api/users/newpassword?encryptedSlug=${e}&newPassword=${r}')}confirmcreation(e){return this.http.get(_e$1.api_url+'api/users/createuser/${e}')}editUserProfile(e,r){r`
+  - `eturn console.log("userInfo= ",e),this.http.put(_e$1.api_url+'api/users/editprofile/${r}',e)}UploadUserImage(e,r){return this.http.post(_e$1.api_url+'api/users/uploaduserimage/${r}',e)}UploadUserImagebanner(e,r){return this.ht`
+  - `tp.post(_e$1.api_url+'api/users/uploaduserimagebanner/${r}',e)}removeProfileImage(e,r){return this.http.put(_e$1.api_url+'api/users/removeprofileimage/${e}',r)}removeBannerImage(e,r){ret`
+  - `urn this.http.put(_e$1.api_url+'api/users/removeBannerimage/${e}',r)}createUser(e){return this.http.post(_e$1.api_url+"api/nodemailer/sendverification",e)}getEmailLog(e){return this.http.get(_e$1.api_url+"api/users/get/email/log/"+e)}addUserLog(e){return this.http.post(_e$1.api_url+`
+  - `"api/users/add/user/log",e)}updateEmailLog(e){return this.http.put(_e$1.api_url+"api/users/update/email/log/of",e)}getUsersFullname(e){return this.http.get(_e$1.api_url+'api/users/check/fullname/${e}')}sendUpdateConfirmationMail(e){return this.h`
+  - `ttp.post(_e$1.api_url+"api/nodemailer/updateemail",e)}updatePassword(e){return this.http.put(_e$1.api_url+"api/users/updatepassword",e)}getDegrees(){return this.http.get(_e$1.api_url+"api/users/getdegrees")}contactUs(e){return this.http.post(_e$1.api_url+"api/home/contac`
+  - `er.navigate(["/"]);}hasAuthToken(e){return e.getItem("X-AUTH")!=null&&e.getItem("X-AUTH")!==void 0}gotoQbank(){this.http.get('${_e$1.api_url}api/epub/env_info').toPromise().then(e=>{let r=e.base_qbank_url;this.hasAuthToken(localStorage)&&this.isLoggedIn?(this.headers={},this.headers["`
+  - `transport-to-domain"]=""+r,this.http.get('${_e$1.api_url}api/users/transport',{headers:new Zt(this.headers)}).toPromise().then(i=>{this.headers={},i?.slug?window.open('${r}?sso=${i.slug}',"_blank"):window.open('${r}',"_bl`
+  - `ank");})):window.open('${r}',"_blank");});}goToIthraa(){this.http.get('${_e$1.api_url}api/epub/env_info').toPromise().then(e=>{let r=e.base_url;e.base_activities_url;this.hasAuthToken(localStorage)&&this.isLoggedIn?(this.headers={},this.headers["tran`
+  - `sport-to-domain"]=""+r,this.http.get('${_e$1.api_url}api/users/transport',{headers:new Zt(this.headers)}).toPromise().then(o=>{this.headers={},o?.slug?window.open('${r}?sso=${o.slug}',"_blank"):window.open('${r}',"_bl`
+  - `275inj=Ee({imports:[yr$1]})}return t})();var u=(()=>{class t{constructor(i){this.httpClient=i,this.apiURL=_e$1.api_url+"api/";}getCertificateCount(){return this.httpClient.get(this.apiURL+"users/certificates/count",{headers:{skip:"true"}})}getDoctorCount(){return this.httpClient.get(`
+  - `this.apiURL+"users/activityEditor/count",{headers:{skip:"true"}})}getUserCount(){return this.httpClient.get(this.apiURL+"users/general_users",{headers:{skip:"true"}})}getActivitiesCount(i){return this.httpClient.get(this.apiURL+'activities/count?${i}',{headers:{skip:"`
+  - `true"}})}getTotalLikes(i){return this.httpClient.get(this.apiURL+"activities/likes/count",{headers:{skip:"true"}})}getFamousActivities(){return this.httpClient.get(this.apiURL+"activities/popular/10",{headers:{ski`
+  - `p:"true"}})}getBooks(){return this.httpClient.get(this.apiURL+"activities/books",{headers:{skip:"true"}})}static{this.\u0275fac=function(n){return new(n||t)(H(Dd))};}static{this.\u0275prov=W$2({token:t,factory:`
+  - ` n(!1);}));}catch(l){s(false);}}))})}sessionTransportation(n){return Ae(this,null,function*(){return n&&(yield this.http.get('${_e$1.api_url}api/users/sso?sso=${n}').toPromise().then(s=>Ae(this,null,function*(){if(s.status==0){let l=JSON.parse(localStorage.getItem("PAYLOAD")),h=!!this`
+  - `ion*(){return console.log(s),false}))),false})}getSocketEndpoint(){return Ae(this,null,function*(){let n=yield this.http.get('${_e$1.api_url}api/epub/env_info').toPromise();this.gaIthraaId.next(n.tracking_ithraa_id),this.gaMalakatId.next(n.tracking_malakat_id),this.socket=(0, du$1.def`
+  - `lias(n,s=n){return this._fontCssClassesByAlias.set(n,s),this}classNameForFontAlias(n){return this._fontCssClassesByAlias.get(n)||n}setDefaultFontSetClass(...n){return this._defaultFontSetClass=n,this}getDefaultFontSetClass(){return this._defaultFontSetClass}getSvgIconFromUrl(n){let s=`
+  - `this._sanitizer.sanitize(Pt$2.RESOURCE_URL,n);if(!s)throw pu$1(n);let l=this._cachedIconsByUrl.get(s);return l?q$2(Ki(l)):this._loadSvgIconFromConfig(new pt$1(n,null)).pipe(Ct$1(c=>this._cachedIconsByUrl.set(s,c)),le$2(c=>Ki(c)))}getNamedSvgIcon(n,s=""){let l`
+  - `m URL "${s}".');let h=this._sanitizer.sanitize(Pt$2.RESOURCE_URL,s);if(!h)throw pu$1(s);let p=this._inProgressUrlFetches.get(h);if(p)return p;let _=this._httpClient.get(h,{responseType:"text",withCredentials:c}).pipe(le$2(C=>hB(C)),Io$1(()=>this._inProgressUrlFetches.delete(h)),ep());`
+  - `646 ${p} '},t}var Fu$1=aT(ku$1());var Du$1=(()=>{class t{constructor(n){this.http=n;}getPageBySlug(n,s){return this.http.get(_e$1.api_url+'api/back/contentEditor/get_pages/by/${n}/${s}')}static{this.\u0275fac=function(s){return new(s||t)(H(Dd))};}static{this.\u0275prov=W$2({token:t,fa`
+  - `})();var f1=(()=>{class t{constructor(n,s){this.httpClient=n,this.socketIoService=s,this.notificationsURL=_e$1.api_url+"api/ac/notifications",this.totalNotificationsCount=new G,this.totalNotificationsCount$=this.totalNotificationsCount.asObservable(),this.totalNotification$=new G,thi`
+  - `0627\u0631 \u062C\u062F\u064A\u062F"};return this.socketIoService.emitEvent("newActivityNotification",s),this.httpClient.post(this.notificationsURL,n)}getNotifications(n){let s=this.notificationsURL+'?options=${encodeURIComponent(JSON.stringify(n))}';return this.httpClient.get(s)}updat`
+  - `is.httpClient.put(this.notificationsURL,{})}getNotificationsCount(){let n=this.notificationsURL+"/count";this.httpClient.get(n).subscribe(s=>{this.emitNotSeenNotificationsCount(+s.notSeenNotificationsCount),this.emittotalNotificationsCount(+s.totalNotificationsCount);});}emitNotSeenNo`
+  - `imports:[de,yr$1]})}return n})();var Ue=(()=>{class n{constructor(e){this.httpClient=e,this.activitiesURL=_e$1.api_url+"api/activities",this.getEnvironmentInfo();}getActivities(e){let c=this.activitiesURL+"/get";return this.httpClient.post(c,e)}getActivityById(e,c){let t=this.activit`
+  - `iesURL+'/${e}?pageName=${c}';return this.httpClient.get(t)}getActivityBySlug(e,c){let t=this.activitiesURL+'/activity/${e}?pageName=${c}';return this.httpClient.get(t)}updateActivity(e,c){let t=this.activitiesURL+'/$`
+  - `fy(c):void 0,d=this.activitiesURL+'/books?searchWord=${e}&category_id=${i}&getSpecificBooks=${t}';return this.httpClient.get(d)}getActivitiesSkills(e){let c=_e$1.api_url+'api/ac/skills?searchWord=${e}';return this.httpClient.get(c)}getActivitiesChapters(e,c){let t=c?.length>0?JSON.str`
+  - `ingify(c):void 0,i=_e$1.api_url+'api/ac/chapters?bookId=${t}&searchWord=${e}';return this.httpClient.get(i)}getActivitiesCategories(e){let c=_e$1.api_url+'api/books/categories?searchWord=${e}&isAllCategories=true&isActivity=true';return this.httpClient.get(c)}getAc`
+  - `tivitiesAuthors(e){let c=this.activitiesURL+'/authors?searchWord=${e}';return this.httpClient.get(c)}getActivityQuestions(e){let c=this.activitiesURL+'/activity/questions/${e}';return this.httpClient.get(c)}getActivitiesQuestions(e){let c=this.activitiesURL+`
+  - `"/activity/questions";return this.httpClient.post(c,e)}answerQuestion(e){let c=this.activitiesURL+"/answer/question";return this.httpClient.post(c,e)}answerTextQuestion(e){let c=this.activitiesURL+"/answer/text`
+  - `Question";return this.httpClient.post(c,e)}retriveTrialData(e,c,t){let i=t?this.activitiesURL+'/trial/data/${e}/${c}/${t}':this.activitiesURL+'/trial/data/${e}/${c}';return this.httpClient.get(i)}fi`
+  - `tpClient.put(c,e)}getActivityParticipants(e,c){let t=this.activitiesURL+'/participants/${e}/${c}';return this.httpClient.get(t)}getUserActivityAnswers(e,c,t,i){let d=i?this.activitiesURL+'/answers/of/${c}/${e}/${t}/${i}':this.activitiesURL+'/answers/of/${c}/${e}/${t}';return this.http`
+  - `Client.get(d)}updateActivityWithQuestions(e){let c=this.activitiesURL+"/";return this.httpClient.put(c,e)}markAnswer(e){let c=this.activitiesURL+"/answer/mark";return this`
+  - `.httpClient.post(c,e)}checkUniqueValue(e){let c=this.activitiesURL+"/checkUniqueValue";return this.httpClient.post(c,e)}blockUser(e){let c=this.activitiesURL+'/blockUser/${e}';return this.httpClient.get(c)}blockActivity(e){let c=this.activitiesURL+'/blockActivity/${e}';retur`
+  - `n this.httpClient.get(c)}unBlockActivity(e){let c=this.activitiesURL+'/unBlockActivity/${e}';return this.httpClient.get(c)}getEnvironmentInfo(){this.httpClient.get('${_e$1.api_url}api/epub/env_info').subscribe(e=>{this.base_url=e.base_url,this.base_activities_url=e.base_activitie`
+  - `st:3200","myserver.example.com","myotherserver","mysecureserver"]}},selector:"textarea",images_upload_url:_e$1.api_url+"api/back/contents/uploadContentImage",content_css:"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.4.1/css/all.min.css",plugins:["advlist autolink lists link `
+  - `,this.addAnswerForm=new Xi$1({answers:new Ds$1("",av.required)});}ngOnInit(){let e=this.activatedRoute.snapshot.paramMap.get("id");e&&this.getActivitiyById(e,this.pageName),this.userId=this.userService.userId;}getURL(){let e='https://twitter.com/intent/tweet?source=tweetbutton&text=${`
+  - `se_activities_url}dashboard/explore/${this.activity.slug}';window.open('${e}',"_blank");}getURLWhatsApp(){let e='https://api.whatsapp.com/send?text=${this.activitiesService.base_activities_url}dashboard/explore/${this.activity.slug}';window.open('${e}',"_blank");}getURLTelegram(){var`
+- api_url: /
+- ثوابت المسارات: `{"DATE":"YYYY-MM-DD","MONTH":"YYYY-MM"}`
+- /api: `https://malakat.io/api` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /api/books: `https://malakat.io/api/books` ← 200 application/json 37 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"No book data","status":0}`
+- /api/v1/books: `https://malakat.io/api/v1/books` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://malakat.io/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /api/categories: `https://malakat.io/api/categories` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /books: `https://malakat.io/books` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- /search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://malakat.io/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 80285 حرفًا
+  - النص الظاهر: منصة مَلَكات
+- نطاق api: `https://api.malakat.io` ← تعذر fetch failed  0 حرفًا
+- نطاق app: `https://app.malakat.io` ← تعذر fetch failed  0 حرفًا
+- نطاق backend: `https://backend.malakat.io` ← تعذر fetch failed  0 حرفًا

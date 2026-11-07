@@ -1,0 +1,99 @@
+# استكشاف https://miqyas.io — 2026-11-07 02:55
+
+- /robots.txt: `https://miqyas.io/robots.txt` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /sitemap.xml: `https://miqyas.io/sitemap.xml` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /sitemap-index.xml: `https://miqyas.io/sitemap-index.xml` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /manifest.json: `https://miqyas.io/manifest.json` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- الرئيسة: `https://miqyas.io/` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- روابط داخلية (3): https://miqyas.io/ ، https://miqyas.io/favicon.ico ، https://miqyas.io/styles.61ade0adcf49aad1.css
+- السكربتات: 8
+- نقاط الاتصال المذكورة: /api2/ ، /api2
+- النطاقات المذكورة: opensource.org ، getbootstrap.com ، github.com ، popper.js.org ، www.cssanimatio.io ، www.linkedin.com ، www.w3.org ، miqyas.ithraa.sa ، darat.sa ، miqyas.io ، www.googletagmanager.com ، accounts.google.com ، connect.facebook.net ، www.primefaces.org ، npms.io ، momentjs.com ، angular.dev ، socket.io
+- سياقات الاتصال:
+  - `802),d=c(6354),l=c(5312),h=c(89);let v=(()=>{class a{constructor(){this.http=(0,n.WQX)(g.Qq)}getBooks(){return this.http.get(l.c.api_url+"books/authors").pipe((0,d.T)(D=>(0,h.c)(D)))}getBooksAdminQuestions(){return this.http.get(l.c.api_url+"books/admin_questions").pipe((0,d.T)(D=>(0,`
+  - `h.c)(D)))}getBook(D){return this.http.get(l.c.api_url+'books/bookDetails/${D}/0').pipe((0,d.T)(t=>t.message),(0,d.T)(t=>(0,h.A)(t)))}getChapters(D,t){let R=new g.Nl;return D&&(R=R.set("searchWord",D)),t`
+  - `&&(R=R.set("bookId",JSON.stringify([t]))),this.http.get(l.c.api_url+"ac/chapters",{params:R})}static{this.\u0275fac=function(t){return new(t||a)}}static{this.\u0275prov=n.jDH({token:a,factory:a.\u0275fac,providedIn:"`
+  - ` g=c(5802),n=c(1413),d=c(5312);let l=(()=>{class h{constructor(){this.http=(0,g.WQX)(n.Qq)}refreshAll(){return this.http.get(d.c.storage_path+"bugs/refresh/all")}getBugsStatistics(){return this.http.get(d.c.storage_path+"bugs/report")}getReportsStatistics(){return this.http.get(d.c.ap`
+  - `i_url+"api/back/statistics/reports_statistics")}getGeneralStatistics(){return this.http.get(d.c.api_url+"back/statistics/general_statistics")}getExamBooksStatistics(){return this.http.get(d.c.api_url+"back/statistics/exam_books_statistics")}getBooksSta`
+  - `tistics(){return this.http.get(d.c.api_url+"api/back/statistics/books_statistics")}getReferencesStatistics(a,w){return this.http.get(d.c.api_url+'api/back/statistics/references_statistics/${a}/${w}')}getAnnot`
+  - `ationsStatistics(a,w){return this.http.get(d.c.api_url+'api/back/statistics/annotations_statistics/${a}/${w}')}getReferencesTreesStatistics(a){return this.http.get(d.c.api_url+'api/back/statistics/references_trees_statis`
+  - `.get("text"))&&Ge.hasError("required")?15:-1)}}let Lt=(()=>{class wt{constructor(){this.fb=(0,g.WQX)(d.ok),this.http=(0,g.WQX)(A.Qq),this.toastr=(0,g.WQX)(V.tw),this`
+  - `rClosed().subscribe(se=>{se&&this.choices.removeAt(ne)})}ngOnInit(){this.loadQuestionData()}loadQuestionData(){this.http.get('${E.c.api_url}qb/questions/${this.data.questionId}').subscribe({next:ne=>{for(this.questionForm.patchValue({questionText:ne.text,quote:ne.quote,level:ne.level.`
+  - `}var fe=c(9437);let Q=(()=>{class B{constructor(){this.http=(0,n.WQX)(g.Qq)}requestWithTimeout(xe,he,K){return this.http.post(xe,he).pipe(function j(B,de){const{first:xe,each:he,with:K=oe,scheduler:T=de??a.E,meta:F=null}=(0,w.v)(B)?{first:B}:"number"==typeof B?{each:B}:B;if(null==xe&&n`
+  - `>{class B{constructor(){this.http=(0,n.WQX)(g.Qq),this.httpTimeoutService=(0,n.WQX)(Q)}getQuestions(xe){return this.http.post(l.c.api_url+"qb/questions/search",xe).pipe((0,d.T)(he=>(0,h.c)(he)))}getQuestionCount(xe){return this.http.post(l.c.api_url+"qb/questions/questionsCount",xe)}ge`
+  - `WithTimeout(l.c.api_url+"qb/questions/toc-id",xe,6e5).pipe((0,d.T)(K=>(0,h.c)(K)))}getQuestionEditors(){return this.http.get(l.c.api_url+"qb/questions/editors").pipe((0,d.T)(xe=>(0,h.c)(xe)))}updateQuestions(xe){return this.http.put(l.c.api_url+"qb/questions/update",xe).pipe((0,d.T)(h`
+  - `e=>(0,h.c)(he)))}getEnvironmentInfo(){return this.http.get('${l.c.api_url}epub/env_info')}getUserRoles(xe){return this.http.get(l.c.api_url+'users/roles/of/users/${xe}')}updateQuestionsField(xe,he){switch(xe){case 0:ret`
+  - `his.http.delete(l.c.api_url+'qb/questions/AllQuestions/${xe.book_id}/${xe.toc_id}')}getQuestionById(xe){return this.http.get(l.c.api_url+'qb/questions/${xe}').pipe((0,d.T)(he=>(0,h.A)(he)))}updateQuestion(xe,he){return this.http.put(l.c.api_url+'qb/questions/${xe}',he).pipe((0,d.T)(K=`
+  - `>(0,h.A)(K)))}getHistoryQuestion(xe,he=0){return this.http.get(l.c.api_url+'qb/questions/${xe}/${he}').pipe((0,d.T)(K=>(0,h.A)(K)))}static{this.\u0275fac=function(he){return new(he||B)}}static{this.\u0275prov=n.jDH({token:B`
+  - `ar g=c(1413),n=c(5802),d=c(5312);let l=(()=>{class h{constructor(){this.http=(0,n.WQX)(g.Qq)}addExam(a){return this.http.post(d.c.api_url+"qb/exam/add",a)}saveExam(a){return console.log("ExamDetails in saveExam: ",a),this.http.post(d.c.api_url+"qb/exam/save",a)}editExam(a,w,D){return c`
+  - `onsole.log("exam_id= ",w),this.http.put(d.c.api_url+'qb/exam/editExam/${w}/${D}',a)}unpublishExam(a){return this.http.get(d.c.api_url+'qb/exam/unpublishExam/${a}')}publishExam(a){return this.http.post(d.c.api_url+"qb/exam/publishExam",a)}removeChoice(a){return this.http.delete(d.c.`
+  - `stion/${a}')}removeEmail(a){return this.http.delete(d.c.api_url+'qb/exam/removeEmail/${a}')}addEmail(a){return this.http.post(d.c.api_url+"qb/exam/addEmail",a)}addSurvey(a){return this.http.post(d.c.api_url+"qb/exam/survey",a)}addSelectedChoice(a){return this.http.post(d.c.api_url+"qb/`
+  - `exam/answer",a)}preserveExamInfo(a){return console.log("preserveExamInfo body: ",a),this.http.post(d.c.api_url+"qb/exam/preserve/exam/info",a)}searchExamQuestions(a){return this.http.post(d.c.api_url+"qb/questions/search-exam-questions",a)}examFinish(a){retur`
+  - `n this.http.post(d.c.api_url+"qb/exam/finish",a)}makeCopyFromExam(a){return this.http.post(d.c.api_url+"qb/exam/makeCopyFromExam",a)}getChapters(a,w=!1,D){const t=JSON.stringify([a]);return this.http.get(d.c.api_url+'ac/chapters?bookId=${t}&back=${w}&`
+  - `searchWord=${D}')}getQuestionExam(a,w,D){return this.http.get(d.c.api_url+'qb/exam/getQuestion/${a}/${w}/${D}')}getExamIdBySlug(a){return this.http.get(d.c.api_url+'qb/exam/getExamIdBySlug/${a}')}getAllExams(a){return cons`
+  - `ole.log("getAllExams params: ",a),this.http.get(d.c.api_url+"qb/exam/getAllExams",{params:{page:a.page.toString(),limit:a.limit.toString(),search:a.search||"",sortField:a.sortField||"",sortOrder:a.sortOrder||`
+  - `""}})}getExamDetailsById(a){return this.http.get(d.c.api_url+'qb/exam/getExamDetailsById/${a}')}getQuestionsWithAnswers(a,w,D){return this.http.get(d.c.api_url+'qb/exam/getQuestionWithAnswers/${a}/${w}',{param`
+  - `s:D?{requesterUserId:D.toString()}:{}})}getUserExam(a,w,D){return this.http.get(d.c.api_url+'qb/exam/checkIfUserHasExam/${a}/${w}/${D}')}getExamDetails(a,w,D){return this.http.get(d.c.api_url+'qb/exam/getExamDetails/${a}/${w}',{params:D?{re`
+  - `licy(a,w){return this.http.put(d.c.api_url+'qb/exam/correct-answers-visibility/${a}',w)}getUserExams(a){return this.http.post(d.c.api_url+"qb/exam/getexams",a)}addReport(a){return this.http.post(d.c.api_url+"tree/quotation/newreport",{report:a})}getSurveyRequests(){return this.http.get`
+  - `(d.c.api_url+"back/exam/survey?")}getSurveyRequestsWithPagination(a){return this.http.get(a)}getCreatedExams(a){return this.http.post(d.c.api_url+"qb/exam/getCreatedExams",a)}removeExam(a){return this.http.put(d.c.api_url+'qb/exam/removeExam/${a}',{}`
+  - `rguments)}}())}catch{oe(!1)}})}sessionTransportation(E){var j=this;return(0,g.A)(function*(){if(!E)return!1;yield j.http.get('${d.c.api_url}users/sso?sso=${E}').toPromise().then(function(){var oe=(0,g.A)(function*(fe){if(0==fe.status){let Q=localStorage.getItem("PAYLOAD");null!==Q&&(Q`
+  - `tion(fe){return oe.apply(this,arguments)}}())})()}getEnvironmentInfo(){var E=this;return(0,g.A)(function*(){yield E.http.get('${d.c.api_url}epub/env_info').toPromise().then(j=>{if(console.log("[QbankSsoService] env_info response",{apiUrl:d.c.api_url,userId:E.userId,socketEndpoint:j?.s`
+  - `ocket_endpoint,baseUrl:j?.base_url,baseQbankUrl:j?.base_qbank_url}),E.googleAnalyticsTrackingID=j.tracking_id,E.userId){const oe=E.normalizeSocketUrl(j.socket_endpoint);console.log("`
+  - `socketSub.next(E.socket)}else console.warn("[QbankSsoService] Socket init skipped: no userId",{socketEndpoint:j?.socket_endpoint});E.base_url=j.base_url,E.base_activities_url=j.base_activities_url,E.base_qbank_url=j.base_qbank_url,E.apis_url=j.apis_url})})()}static{this.\u0275fac=functio`
+  - `il=this.userPayload?.email,this.userId=this.userPayload?.user_id,this.isLoggedIn.next(!!A)}loginUser(A){return this.http.post(a.c.api_url+"users/login",A)}socialLogin(A){return this.http.post(a.c.api_url+"users/social-login",A)}setAuthenticatedSession(A){localStorage.setItem("X-AUTH",J`
+  - `/login"]),sessionStorage.removeItem("currentRoute")):this.router.navigate(["/home"])}confirmcreation(A){return this.http.get(a.c.api_url+'users/createuser/${A}')}getUserId(){return this.getValidAuthTokenPayload()?.user_id??this.userId??null}hasValidAuthSession(){return!!this.getValidA`
+  - `.encrypt(JSON.stringify(A),a.c.encryptSecretKey).toString()}catch{return 0}}ifCurrentPasswordCorrect(A){return this.http.post(a.c.api_url+"users/checkpassword",A)}getUser(A,E){return this.http.get(E?'${a.c.api_url}users/${A}/${E}':'${a.c.api_url}users/${A}')}getUserById(A){return this.`
+  - `http.get(a.c.api_url+'users/getUser/${A}')}getCurrentUser(){return this.http.get(a.c.api_url+"users/me")}getUserRoles(A){return this.http.get(a.c.api_url+'users/roles/of/users/${A}')}getUserArabicRoles(A){return this.http.get(a.c.api_url+'us`
+  - `ers/getarabicroles/${A}')}getDegrees(){return this.http.get(a.c.api_url+"users/getdegrees")}checkEmailIfExists(A){return this.http.post(a.c.api_url+"users/checkemail",{email:A})}contactUs(A){return this.http.post(a.c.api`
+  - `_url+"home/contactus",A)}createUser(A){return this.http.post(a.c.api_url+"nodemailer/sendverification",A)}editUserProfile(A,E){return this.http.put(a.c.api_url+'users/editprofile/${E}',A)}forgetPasswordMail(A){return this`
+  - `.http.post(a.c.api_url+"nodemailer/forgetpassword",{email:A,qbank:"qbank"})}resetPassword(A,E){return this.http.get(a.c.api_url+'users/newpassword?encryptedSlug=${A}&newPassword=${E}')}UploadUserImage(A,E){return this.http.post(a.c.api_url+'users/uploaduserimage/${E}',A)}Uplo`
+  - `adUserImagebanner(A,E){return this.http.post(a.c.api_url+'users/uploaduserimagebanner/${E}',A)}updatePassword(A){return this.http.put(a.c.api_url+"users/updatepassword",A)}deleteMyAccount(A){return this.ht`
+  - `emoveBannerImage(A,E){return this.http.put(a.c.api_url+'users/removeBannerimage/${A}',E)}getEmailLog(A){return this.http.get(a.c.api_url+"users/get/email/log/"+A)}addUserLog(A){return this.http.post(a.c.api_url+"users/add/user/log",A)}updateEmailLog(A){return this.http.put(a.c.api_url`
+  - `AuthToken(){return null!=localStorage.getItem("X-AUTH")&&void 0!==localStorage.getItem("X-AUTH")}gotoMalakat(){this.http.get('${a.c.api_url}epub/env_info').toPromise().then(A=>{const E=A.base_activities_url;this.hasAuthToken()&&this.isLoggedIn?(this.headers={},this.headers["transport-`
+  - `to-domain"]=""+E,this.http.get('${a.c.api_url}users/transport',{headers:new g.Lr(this.headers)}).toPromise().then(j=>{this.headers={},j?.slug?window.open('${E}?sso=${j.slug}',"_blank"):window`
+  - `.open('${E}',"_blank")})):window.open('${E}',"_blank")})}goToIthraa(A){this.http.get('${a.c.api_url}epub/env_info').toPromise().then(E=>{const j=A?E.base_ithraa_url+A:E.base_ithraa_url;this.hasAuthToken()&&this.isLoggedIn?(this.headers={},this.h`
+  - `eaders["transport-to-domain"]=""+j,this.http.get('${a.c.api_url}users/transport',{headers:new g.Lr(this.headers)}).toPromise().then(oe=>{this.headers={},oe?.slug?window.open('${j}?sso=${oe.slug}',"_blank"):win`
+  - `dow.open('${j}',"_blank")})):window.open('${j}',"_blank")})}getEnviromentVariables(){return this.http.get('${a.c.api_url}epub/env_info')}static{this.\u0275fac=function(E){return new(E||R)}}static{this.\u0275prov=n.jDH({token:R,factory:R.\u0275fac,providedIn:"root"})`
+  - `="qbank_writer",R.ADMIN="admin",R}(t||{})},5312(Je,ie,c){"use strict";c.d(ie,{c:()=>g});const g={production:!0,api_url:"/api2/",storage_path:"/storage/",SOCKET_ENDPOINT:"https://miqyas.ithraa.sa",encryptSecretKey:"c1baf8fd6f89aeab6fff080161396e62",defaultUserId:48392017564839,socialA`
+  - `\u062f\u064a\u062f")})}fetchNotifications(){console.log("[NotificationService] Fetching recent notifications"),this.http.get('${l.c.api_url}notifications').subscribe(s=>{const _=(s||[]).map(M=>this.normalizeNotification(M));console.log("[NotificationService] Fetched recent notificatio`
+  - `ount()},s=>{console.error("[NotificationService] Failed to fetch recent notifications",s)})}fetchUnreadCount(){this.http.get('${l.c.api_url}notifications/unread/count').subscribe(s=>{this.$unreadCount.next(Number(s?.count||0))},s=>{console.error("[NotificationService] Failed to fetch `
+  - `on",{notificationId:s}),this.http.delete('${l.c.api_url}notifications/${s}')}resolveNotificationLink(s){return this.http.get('${l.c.api_url}notifications/${s}/link')}markAsReadLocally(s){console.log("[NotificationService] Marking notification as read locally",{notificationId:s});const`
+  - `tEnviromentVariables().subscribe(M=>{console.log(M.base_ithraa_url),s=M.base_url}),console.log(s);const _='${s.replace("/api2","")}admin';window.open(_,"_blank")}}ngOnInit(){const s=localStorage.getItem("your-component-state");if(s){const _=JSON.parse(s);this.isConfirm=_.confirm,this`
+  - `?.route?.snapshot?.data?.animation}getChild(s){return s.firstChild?this.getChild(s.firstChild):s}addGAScript(){this.http.get('${l.c.api_url}epub/env_info').toPromise().then(s=>{this.gaQbankId=s.tracking_qbank_id;const _=document.createElement("script");_.async=!0,_.src="https://www.go`
+  - `29 \u0627\u0644\u0628\u0627\u0646\u0631",1,"rounded-2xl",3,"src"],["name","demo[]","url","https://www.primefaces.org/cdn/api/upload.php","accept","image/*","invalidFileSizeMessageSummary","\u0627\u0644\u062d\u062f \u0627\u0644\u0627\u0642\u0635\u064a \u0644\u062d\u062c\u0645 \u0627\u`
+  - `635\u064a",1,"rounded-2xl","mt-[14px]","mb-5","h-[84px]",3,"src"],["name","demo[]","url","https://www.primefaces.org/cdn/api/upload.php","accept","image/*","invalidFileSizeMessageSummary","\u0627\u0644\u062d\u062f \u0627\u0644\u0627\u0642\u0635\u064a \u0644\u062d\u062c\u0645 \u0627\u`
+  - `t:60px;height:fit-content;padding:16px}"]})}}return p})(),y0=(()=>{class p{constructor(){this.http=(0,n.WQX)(g.Qq),this.apiUrl=l.c.api_url}getQuestionsCount(){return this.http.get('${this.apiUrl}back/statistics/questions-count')}static{this.\u0275fac=function(_){return new(_||p)}}stati`
+  - `orts:[on.jI]})}return p})(),Yd=(()=>{class p{constructor(){this.http=(0,n.WQX)(g.Qq)}getPageBySlug(s,_){return this.http.get(l.c.api_url+'back/contentEditor/get_pages/by/${s}/${_}')}static{this.\u0275fac=function(_){return new(_||p)}}static{this.\u0275prov=n.jDH({token:p,factory:p.\u0`
+  - `thService=(0,n.WQX)(fe.D),this.http=(0,n.WQX)(g.Qq),this.router=(0,n.WQX)(d.Ix)}canActivate(s){const _=Number(s.paramMap.get("examId")),M=this.authService.getUserId();return _&&M?this.http.get('${l.c.api_url}qb/exam/check-owner/${_}/${M}').pipe((0,Nt.T)(()=>!0),(0,Gu.W)(()=>(alert("\u`
+  - `e,se=ae){return this._fontCssClassesByAlias.set(ae,se),this}classNameForFontAlias(ae){return this._fontCssClassesByAlias.get(ae)||ae}setDefaultFontSetClass(...ae){return this._defaultFontSetClass=ae,this}getDefaultFontSetClass(){return this._defaultFontSetClass}getSvgIconFromUrl(ae){c`
+  - `onst se=this._sanitizer.sanitize(g.WPN.RESOURCE_URL,ae);if(!se)throw te(ae);const Ie=this._cachedIconsByUrl.get(se);return Ie?(0,D.of)(he(Ie)):this._loadSvgIconFromConfig(new de(ae,null)).pipe((0,V.M)(Ge=>this._cachedIconsByUrl.set(se,Ge)),(0,A.T)(Ge=>he(Ge)))}getNamedSvg`
+  - `t{url:se,options:Ie}=ae,Ge=Ie?.withCredentials??!1;if(!this._httpClient)throw function Q(){return Error("Could not find HttpClient for use with Angular Material icons. Please add provideHttpClient() to your providers.")}();if(null==se)throw Error('Cannot fetch icon from URL "${se}".');cons`
+  - `t Pe=this._sanitizer.sanitize(g.WPN.RESOURCE_URL,se);if(!Pe)throw te(se);const G=this._inProgressUrlFetches.get(Pe);if(G)return G;const we=this._httpClient.get(Pe,{responseType:"text",withCredentials:Ge}).pipe((0,A.T)(Ne=>(0,v.Mv)(Ne)),(0,j.j)(()=>this._inProgressUrlFetch`
+  - `r}=Ft,Qo=new Qi($i,this.urlSerializer.serialize(er),ht,Ds);this.events.next(Qo);const fo=jn(this.rootComponentType,this.environmentInjector).snapshot;return this.currentTransition=ee={...Ft,targetSnapshot:fo,urlAfterRedirects:er,extras:{...Hr,skipLocationChange:!1,replaceUrl:!1}},this.curre`
+  - `Pn=new mo(ee.id,this.urlSerializer.serialize(ee.extractedUrl),Ft,ee.targetSnapshot??void 0);try{const ei=(0,n.N4e)(this.environmentInjector,()=>this.navigationErrorHandler?.(Pn));if(!(ei instanceof On))throw this.events.next(Pn),Ft;{const{message:Ci,cancellationCode:$i}=Ai(0,ei);this.events`
+  - `th&&(Tt.state=Pn)}const Ft=this.parseUrl($);this.scheduleNavigation(Ft,ee,Gt,Tt).catch(Pn=>{this.disposed||this.injector.get(n.ZTf)(Pn)})}get url(){return this.serializeUrl(this.currentUrlTree)}getCurrentNavigation(){return(0,h.O8)(this.navigationTransitions.currentNavigation)}get las`
+- api_url: /api2/
+- ثوابت المسارات: `{"FLIP":"flip","CLOCKWISE":"clockwise","COUNTERCLOCKWISE":"counterclockwise","WARNING":"gpuAcceleration","TRANSITION_END":"bsTransitionEnd","TOUCH":"touch","AUTO":"auto","RIGHT":"right","BOTTOM":"bottom","LEFT":"left","DATE":"YYYY-MM-DD","MONTH":"YYYY-MM"}`
+- /api: `https://miqyas.io/api` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /api/books: `https://miqyas.io/api/books` ← 200 application/json 37 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"No book data","status":0}`
+- /api/v1/books: `https://miqyas.io/api/v1/books` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://miqyas.io/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /api/categories: `https://miqyas.io/api/categories` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /books: `https://miqyas.io/books` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- /search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://miqyas.io/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 63798 حرفًا
+  - النص الظاهر: مقياس
+- نطاق api: `https://api.miqyas.io` ← تعذر fetch failed  0 حرفًا
+- نطاق app: `https://app.miqyas.io` ← تعذر fetch failed  0 حرفًا
+- نطاق backend: `https://backend.miqyas.io` ← تعذر fetch failed  0 حرفًا
