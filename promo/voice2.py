@@ -13,7 +13,7 @@ S = json.load(open(os.path.join(ROOT, "script2.json"), encoding="utf-8"))
 OUT = os.path.join(ROOT, "voice", "best"); WORK = os.path.join(ROOT, ".takes")
 os.makedirs(OUT, exist_ok=True); os.makedirs(WORK, exist_ok=True)
 TTS = [m for m in os.environ.get("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts,gemini-2.5-pro-preview-tts,gemini-3.1-flash-tts-preview").split(",") if m]
-JUDGE = [m for m in os.environ.get("GEMINI_JUDGE_MODEL", "gemini-pro-latest,gemini-3.8-flash,gemini-flash-latest").split(",") if m]
+JUDGE = [m for m in os.environ.get("GEMINI_JUDGE_MODEL", "gemini-3.8-flash,gemini-pro-latest,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-flash-latest,gemini-flash-lite-latest").split(",") if m]
 KEYS = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
 DEAD = set(); KI = [0]
 SEG = {g["id"]: g for g in S["segments"]}
@@ -89,7 +89,8 @@ def judge(sid, path):
          "Return JSON only: {\"transcript\":\"\",\"issues\":[],\"pron\":0,\"vo\":0,\"instructions_read\":false}\nREFERENCE:\n" + SEG[sid]["text"])
     body = {"contents": [{"parts": [{"inlineData": {"mimeType": "audio/wav", "data": audio}}, {"text": q}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0}}
-    for m in JUDGE:
+    for m in [x for _ in range(3) for x in JUDGE]:  # ثلاث جولات، فالازدحام (503) عارض
+      if all((k, m) in DEAD for k in KEYS): continue
       for mode in (0, 1):
         try:
             if mode: body["generationConfig"].pop("responseMimeType", None)
@@ -101,7 +102,8 @@ def judge(sid, path):
             r["score"] = round(10 * (1 - min(1, w)) + 1.4 * float(r.get("pron", 0)) + float(r.get("vo", 0)) - (15 if r.get("instructions_read") else 0), 2)
             return r
         except Exception as e:
-            print("  judge", m, mode, str(e)[:300], flush=True)
+            print("  judge", m, mode, str(e)[:160].replace("\n", " "), flush=True)
+            if "503" in str(e): time.sleep(8); break
     return {"score": 0, "error": "judge failed"}
 
 
