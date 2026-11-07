@@ -5,8 +5,9 @@ on:
       id: { description: "معرّف كتاب السراج في الفهرس (اختياري: يُعرف بعنوانه)", required: false, default: "" }
       from: { description: "من صفحة", required: false, default: "1" }
       to: { description: "إلى صفحة (فارغ = الكل)", required: false, default: "" }
-  schedule:
-    - cron: "43 4 * * *"   # يوميًا حتى يكتمل (ينتهي فورًا إن لم يُرفع الكتاب أو اكتمل)
+  # الجدولة اليومية موقوفة مؤقتًا (٧ نوفمبر، قرار المدير: المفاتيح لتجهيز الكتب). لإعادتها:
+  # schedule:
+  #   - cron: "43 4 * * *"
 permissions:
   contents: write
   id-token: write

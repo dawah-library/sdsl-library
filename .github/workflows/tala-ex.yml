@@ -3,8 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       n: { description: "عدد الأسئلة في الجولة", required: false, default: "400" }
-  schedule:
-    - cron: "37 22 * * 2,5"   # مرتين أسبوعيًا حتى تكتمل
+  # الجدولة موقوفة مؤقتًا (٧ نوفمبر، قرار المدير: المفاتيح لتجهيز الكتب). لإعادتها:
+  # schedule:
+  #   - cron: "37 22 * * 2,5"
 permissions:
   contents: write
 concurrency:
