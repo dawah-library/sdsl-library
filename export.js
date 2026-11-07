@@ -44,12 +44,15 @@ function expDlg() {
    <label><input type="radio" name="sc" value="range"> نطاق صفحات</label>
    <label><input type="radio" name="sc" value="all"> ${b.set ? "المجلد كاملًا" : "الكتاب كاملًا"}${member ? "" : " (للأعضاء)"}</label></div>
   <div class="row"><div><label>من صفحة</label><input name="a" type="number" min="1" max="${n}" value="${c.p}"></div><div><label>إلى صفحة</label><input name="z" type="number" min="1" max="${n}" value="${c.p}"></div></div>
-  <label>الصيغة</label><select name="f"><option value="pdf">PDF (طباعة بقالب)</option><option value="doc">Word</option><option value="epub">EPUB (كتاب إلكتروني)</option><option value="html">صفحة HTML</option><option value="md">Markdown</option><option value="txt">نص عادي</option></select>
+  <label>الصيغة</label><select name="f"><option value="pdf">PDF (طباعة بقالب)</option><option value="docx" data-tx="1">Word منسّق (DOCX) — النص المدقق قابلًا للتحرير</option><option value="doc" data-tx="1">Word (نسخة مبسطة)</option><option value="epub">EPUB (كتاب إلكتروني)</option><option value="html" data-tx="1">صفحة HTML</option><option value="md" data-tx="1">Markdown</option><option value="txt" data-tx="1">نص عادي</option></select><p class="mut" id="extxn" hidden>صيغ النص القابل للتحرير (Word وغيرها) للإدارة ومن تمنحه الإدارة صلاحية «تنزيل النص».</p>
   <div class="row"><div><label>القالب</label><select name="tpl">${Object.entries(EXT_TPL).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join("")}</select></div><div><label>مقاس الصفحة (PDF)</label><select name="sz"><option value="A4">A4</option><option value="A5">A5 (كتاب)</option><option value="Letter">Letter</option></select></div></div>
   <label class="chk"><input type="checkbox" name="fn" checked> الحواشي</label><label class="chk"><input type="checkbox" name="toc" checked> فهرس في أول الملف</label><label class="chk"><input type="checkbox" name="pl" checked> أرقام صفحات الطبعة</label>
   ${typeof hasTash !== "function" || hasTash(b) || isArt(b) ? `<label class="chk"><input type="checkbox" name="tash"${S.tash ? " checked" : ""}> بالتشكيل${typeof origTash === "function" && (b.col || "dawah") !== "dawah" && origTash(b) ? " (تشكيل الطبعة)" : ""}</label>` : ""}
   <p class="mut">${member ? "" : "للزوار حتى ٥٠ صفحة في المرة؛ وللأعضاء الكتاب كاملًا."}</p>
   <button class="btn p">تصدير</button> <span id="expst" class="mut"></span></form>`);
+  // النص القابل للتحرير للإدارة ومن تأذن له وحدهم: تُخفى صيغه عن غيرهم
+  (async () => { const ok = typeof GRP !== "undefined" && await GRP.can("export_text"); const sel = document.querySelector("form.expx [name=f]"); if (!sel) return;
+    if (!ok) { sel.querySelectorAll("[data-tx]").forEach(o => o.remove()); const n = $("#extxn"); if (n) n.hidden = false; } else sel.value = "docx"; })();
 }
 async function expRun(f) {
   const c = cur(); if (!c) return; const b = c.b, n = b.pages.length, sc = f.sc.value;
@@ -59,7 +62,7 @@ async function expRun(f) {
   else if (sc === "all") { if (!Auth.user) return needLogin("تصدير الكتاب كاملًا متاح للأعضاء المسجلين مجانًا."); a = 1; z = n; }
   if (!Auth.user && z - a + 1 > 50) z = a + 49;
   // النص القابل للتحرير (غير PDF) لأكثر من ٥٠ صفحة: للمدير ومن فوّضه (صلاحية export_text)؛ ويبقى PDF للأعضاء
-  if (f.f.value !== "pdf" && z - a + 1 > 50 && !(typeof GRP !== "undefined" && await GRP.can("export_text"))) { const st = $("#expst"); if (st) st.textContent = "تنزيل أكثر من ٥٠ صفحة نصًا قابلًا للتحرير متاح للإدارة ومن تأذن له؛ اختر PDF أو نطاقًا أقصر، أو اطلب الصلاحية من الإدارة."; return; }
+  if (["docx", "doc", "html", "md", "txt"].includes(f.f.value) && !(typeof GRP !== "undefined" && await GRP.can("export_text"))) { const st = $("#expst"); if (st) st.textContent = "تنزيل النص القابل للتحرير متاح للإدارة ومن تمنحه الإدارة هذه الصلاحية؛ اختر PDF أو EPUB، أو اطلب الصلاحية من الإدارة."; return; }
   if (f.tash && f.tash.checked !== !!S.tash) { S.tash = f.tash.checked; saveS(); if (typeof refreshPage === "function") refreshPage(); }
   const fm = f.f.value, tpl = EXT_TPL[f.tpl.value] || EXT_TPL.classic, opt = { fn: f.fn.checked, toc: f.toc.checked, pl: f.pl.checked };
   const au = A(b.authorId).name, title = b.setTitle ? b.title : b.title, safe = title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) + (a === 1 && z === n ? "" : ` (${a}-${z})`);
@@ -74,6 +77,10 @@ async function expRun(f) {
   const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${X(title)}</title><style>${css}</style></head><body><h1>${X(title)}</h1><p class="au">${X(au)}</p>${src ? `<p class="pl">${X(src)}</p>` : ""}${tocH}${body}<p class="foot">${X(foot)}</p></body></html>`;
   if (fm === "html") return dl(safe + ".html", html, "text/html");
   if (fm === "doc") return dl(safe + ".doc", html, "application/msword");
+  if (fm === "docx") { const st = $("#expst"); if (st) st.textContent = "جارٍ إعداد ملف Word…";
+    const nm = (Auth.user && ((Auth.user.user_metadata || {}).name || (Auth.user.user_metadata || {}).full_name || Auth.user.email)) || "";
+    const blob = await DOCX.build({ title, author: au, pages, toc: toc.map(t => Object.assign({}, t, { pl: PL(b, t.p - 1) || "" })), opt, url: siteLink("#/book/" + b.id), src, who: nm, site: SITENAME, siteUrl: (CFG.siteUrl || "https://dawahlibrary.org").replace(/^https?:\/\//, "").replace(/\/+$/, "") });
+    if (st) st.textContent = ""; return dl(safe + ".docx", blob, blob.type); }
   if (fm === "pdf") { const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة ثم أعد المحاولة"); w.document.write(html + "<script>onload=()=>setTimeout(()=>print(),400)<\/script>"); w.document.close(); return; }
   if (fm === "epub") {
     const id = "urn:sdsl:" + b.id + ":" + a + "-" + z, chunks = []; let curC = null;
