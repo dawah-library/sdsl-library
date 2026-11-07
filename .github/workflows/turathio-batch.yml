@@ -2,8 +2,19 @@ name: استيراد كتب التراث المشكولة من الشاملة
 # مهمة متدرجة غير عاجلة: كتاب واحد كل ليلة، بطلبات قليلة، وتتنحى إذا كان تحويل كتب المشايخ يعمل
 on:
   workflow_dispatch:
+    inputs:
+      queue:
+        description: "الطابور: data/turathio-queue.json (التراث المشكول) أو data/adab-queue.json (كتب الأدباء والعلماء ومقالاتهم)"
+        required: false
+        default: "data/turathio-queue.json"
+      max:
+        description: "أقصى عدد كتب في التشغيل"
+        required: false
+        default: ""
   schedule:
     - cron: "23 23 * * *"
+    - cron: "47 4 * * *"    # كتب الأدباء والعلماء ومقالاتهم (data/adab-queue.json)
+    - cron: "47 15 * * *"   # جولة ثانية للطابور نفسه
 permissions:
   contents: write
   id-token: write
@@ -41,6 +52,7 @@ jobs:
           restore-keys: tiob-
       - name: التنحي لتحويل كتب المشايخ
         id: yield
+        if: ${{ !(github.event.inputs.queue == 'data/adab-queue.json' || github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -52,7 +64,8 @@ jobs:
         env:
           TIO_MINUTES: "170"
           TIO_CONC: "3"
-          TIO_MAX_BOOKS: "2"
+          TIO_QUEUE: ${{ github.event.inputs.queue || ((github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') && 'data/adab-queue.json' || 'data/turathio-queue.json') }}
+          TIO_MAX_BOOKS: ${{ github.event.inputs.max || ((github.event.inputs.queue == 'data/adab-queue.json' || github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') && '8' || '2') }}
         run: python3 tools/turathio-batch.py
       - name: حفظ ما جُلب للاستئناف
         if: always()

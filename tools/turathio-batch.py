@@ -8,7 +8,7 @@
 import json, os, re, subprocess, sys, time, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-QP = os.path.join(ROOT, "data", "turathio-queue.json")
+QP = os.path.join(ROOT, os.environ.get("TIO_QUEUE", "data/turathio-queue.json"))  # data/adab-queue.json: كتب الأدباء والعلماء المعاصرين
 API = "https://api.turath.io"
 DEADLINE = time.time() + 60 * float(os.environ.get("TIO_MINUTES", "300"))
 MAX_BOOKS = int(os.environ.get("TIO_MAX_BOOKS", "1"))  # مهمة متدرجة غير عاجلة: كتاب واحد في التشغيل
@@ -71,7 +71,43 @@ def find(item):
 
 
 def git_save(msg):
-    subprocess.run(["bash", "tools/git-save.sh", msg, "data/books", "vols", "data/catalog.json", "data/turathio-queue.json"], cwd=ROOT)
+    subprocess.run(["bash", "tools/git-save.sh", msg, "data/books", "vols", "data/catalog.json", os.path.relpath(QP, ROOT), "data/articles"], cwd=ROOT)
+
+
+# ---------- توسيع عناصر المؤلفين (au): كتب صاحبه في الشاملة، دون السياسية، ومجموعات المقالات أولًا ----------
+POL = re.compile(r"سياس|انتخاب|برلمان|دستور|ديمقراط|الثوره|ثوره|حزب|الحكم ب|العلمانيه والدوله|الانقلاب|المظاهرات")
+COLL = re.compile(r"مقالات|وحي القلم|النظرات|العبرات|اثار|جمهره|خواطر|من حديث النفس|تحت رايه القران|حديث القمر|اوراق|السحاب الاحمر|رسائل الاحزان|كلمات|صور وخواطر|ذكريات|كناشه|مجالس التذكير|فصول|نظرات|مختارات|ركائز|تاملات")
+def topic_of(name):
+    n = norm(name)
+    for rx, t in ((r"تفسير|القران|ايات", "t2"), (r"عقيده|التوحيد|الايمان|الشرك|السنه والبدعه", "t1"), (r"حديث|الحديث|السنن|صحيح", "t3"), (r"فقه|احكام|الصلاه|الصيام|الزكاه|الحج", "t4"),
+                  (r"سيره|الرسول|النبي", "t5"), (r"تاريخ|تراجم|اعلام|رجال|حضاره|الاندلس|قصه", "t18"), (r"نحو|لغه|العربيه|بلاغه|اعجاز|معجم|تحقيق النصوص", "t15"), (r"تربيه|الاسره|المراه|الشباب|الابناء|الاطفال|تزكيه|اخلاق|الرقائق|القلوب", "t8")):
+        if re.search(rx, n): return t
+    return "t17"
+def expand(q, cat):
+    have = {norm(b.get("setTitle") or b["title"]) for b in cat["books"]} | {norm(i.get("q", "")) for i in q["items"] if i.get("q")}
+    out, cap = [], int(os.environ.get("TIO_PER_AUTHOR", "15"))
+    for it in q["items"]:
+        out.append(it)
+        if not it.get("au") or it.get("expanded") is not None: continue
+        if DATA[0] is None: DATA[0] = get("https://files.turath.io/data-v3.json") or {}
+        key, d = norm(it["au"]), it.get("death")
+        bids = []
+        for a in (DATA[0].get("authors") or {}).values():
+            nm, ad = norm(a.get("name") or a.get("n") or ""), a.get("death")
+            if key in nm and (d is None or not ad or abs(int(ad) - int(d)) <= 1):
+                bids += a.get("books") or []
+        found = []
+        for bid in bids[:80]:
+            name = ((get("%s/book?id=%s" % (API, bid)) or {}).get("meta") or {}).get("name") or ""
+            if not name or POL.search(norm(name)) or norm(name) in have: continue
+            found.append((0 if COLL.search(norm(name)) else 1, name, bid))
+        found.sort()
+        it["expanded"] = len(found[:cap]); it["found"] = [x[1] for x in found[:cap]]
+        REPORT.append("- %s: %d كتابًا في الشاملة%s" % (it["an"], len(found[:cap]), "" if found else " (لم يوجد؛ تُراجع سنة الوفاة أو الاسم)"))
+        for c, name, bid in found[:cap]:
+            have.add(norm(name))
+            out.append({"id": "tio%s" % bid, "q": name, "b": bid, "a": it["a"], "an": it["an"], "tp": topic_of(name), "mintash": 0, "adab": 1, **({"art": 1} if c == 0 else {})})
+    q["items"] = out
 
 
 def main():
@@ -80,9 +116,11 @@ def main():
     q = json.load(open(QP, encoding="utf-8"))
     done = set(q.get("done") or [])
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
+    if any(i.get("au") and i.get("expanded") is None for i in q["items"]):
+        expand(q, cat); json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1); git_save("طابور كتب الأدباء والعلماء: توسيع المؤلفين")
     n_done = 0
     for it in q["items"]:
-        if it["id"] in done or it.get("skip"):
+        if it["id"] in done or it.get("skip") or it.get("au"):
             continue
         if n_done >= MAX_BOOKS:
             break
@@ -109,6 +147,8 @@ def main():
             json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1); break
         if r.returncode == 0:
             q.setdefault("done", []).append(it["id"]); done.add(it["id"]); n_done += 1
+            if it.get("art"):  # مجموعة مقالات: تُقسَّم مقالات في «مقالات المكتبة العامة»
+                subprocess.run([sys.executable, os.path.join(ROOT, "tools", "adab-articles.py"), it["id"]], cwd=ROOT)
             rep = os.path.join(ROOT, ".tio-report.txt")
             REPORT.append("- " + (open(rep, encoding="utf-8").read().strip() if os.path.exists(rep) else it["q"]))
             json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

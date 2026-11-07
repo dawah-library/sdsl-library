@@ -296,6 +296,13 @@ const MAJ = (() => {
   // ---------- المسودة الآلية ----------
   // تختار من المقالات والفتاوى والكتب ما يطابق كلمات الموضوع في العنوان أو القسم، دون تكرار ما نُشر في أعداد سابقة،
   // وبتنويع الكتّاب (مادة واحدة لكل كاتب في الباب، إلا الفتاوى فأغلبها لمفتٍ واحد)، ثم تبحث في نص الكتب المرشحة عن الصفحة الأنسب.
+  // الركن الأدبي: من مقالات أعلام الأدب في «مقالات المكتبة العامة» (data/majalla.json ← adab)، ما وافق الموضوع أولًا، وإلا مقال أو مقالان لم ينشرا قبلُ لكاتبين مختلفين
+  async function adabItems(w, skip) {
+    const qs = ((D && D.adab) || []).map(f => norm(f.q || "")).filter(Boolean), ids = new Set(lib.authors.filter(a => qs.some(k => norm(a.name).includes(k))).map(a => a.id));
+    const L = ARTS().filter(b => bc(b) === "turath" && ids.has(b.authorId) && !skip.has(b.id) && !b.hidden), sc = b => w.reduce((n, k) => n + (norm(b.title).includes(k) ? 1 : 0), 0);
+    const seen = {}, out = []; L.map(b => [b, sc(b) + Math.random() * .5]).sort((x, y) => y[1] - x[1]).forEach(([b]) => { if (out.length < 2 && !seen[b.authorId]) { seen[b.authorId] = 1; out.push({ ref: b.id, st: "adab" }); } });
+    return out;
+  }
   async function autoDraft(theme, except) {
     const w = norm(theme).split(/\s+/).filter(s => s.length > 1); if (!w.length) throw new Error("اكتب كلمات الموضوع");
     const skip = used(except), score = b => { const t = norm(b.title), tp = norm(topicLabel(T(b.topicId))); return w.reduce((n, k) => n + (t.includes(k) ? 3 : 0) + (tp.includes(k) ? 1 : 0), 0); };
@@ -305,7 +312,8 @@ const MAJ = (() => {
       { t: "مقالات العدد", items: pick(ARTS(), 4).map(b => ({ ref: b.id })) },
       { t: "فتاوى في الموضوع", items: pick(FATWAS(), 4, 4).map(b => ({ ref: b.id })) },
       { t: "من كتب مشايخ الدعوة", items: await books(BOOKS().filter(b => bc(b) === "dawah"), 2) },
-      { t: "من المكتبة العامة", items: await books(BOOKS().filter(b => bc(b) === "turath" && !b.vf), 2) }
+      { t: "من المكتبة العامة", items: await books(BOOKS().filter(b => bc(b) === "turath" && !b.vf), 2) },
+      { t: "الركن الأدبي", corner: "adab", items: await adabItems(w, skip) }
     ].filter(s => s.items.length);
     if (!secs.length) throw new Error("لم توجد مواد مطابقة؛ جرّب كلمات أخرى");
     return secs;
