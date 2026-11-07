@@ -1,0 +1,262 @@
+{
+ "Charon/s01": {
+  "h": "696a8062b884",
+  "d": 18.09,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s02": {
+  "h": "fe3404b3f85c",
+  "d": 18.53,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s03": {
+  "h": "b42efea99180",
+  "d": 3.83,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Charon/s04": {
+  "h": "557c35e9cc25",
+  "d": 6.17,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s05": {
+  "h": "32a89fefe6f5",
+  "d": 20.69,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s06": {
+  "h": "9da165e0c66b",
+  "d": 12.93,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s07": {
+  "h": "0a0a2f82c42a",
+  "d": 15.49,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s08": {
+  "h": "95ad267a3c76",
+  "d": 15.83,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Charon/s09": {
+  "h": "f399bda2813d",
+  "d": 18.81,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s10": {
+  "h": "59c943b1795c",
+  "d": 15.93,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Charon/s11": {
+  "h": "c23345d174c1",
+  "d": 7.19,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s01": {
+  "h": "696a8062b884",
+  "d": 27.73,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Orus/s02": {
+  "h": "fe3404b3f85c",
+  "d": 16.33,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Orus/s03": {
+  "h": "b42efea99180",
+  "d": 3.85,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s04": {
+  "h": "557c35e9cc25",
+  "d": 7.77,
+  "model": "gemini-3.8-flash-tts"
+ },
+ "Orus/s05": {
+  "h": "32a89fefe6f5",
+  "d": 25.18,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s06": {
+  "h": "9da165e0c66b",
+  "d": 16.22,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s07": {
+  "h": "0a0a2f82c42a",
+  "d": 12.1,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s08": {
+  "h": "95ad267a3c76",
+  "d": 14.72,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s09": {
+  "h": "f399bda2813d",
+  "d": 23.01,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s10": {
+  "h": "59c943b1795c",
+  "d": 22.42,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Orus/s11": {
+  "h": "c23345d174c1",
+  "d": 7.63,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s01": {
+  "h": "696a8062b884",
+  "d": 19.6,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s02": {
+  "h": "fe3404b3f85c",
+  "d": 20.13,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s03": {
+  "h": "b42efea99180",
+  "d": 3.31,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s04": {
+  "h": "557c35e9cc25",
+  "d": 6.71,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s05": {
+  "h": "32a89fefe6f5",
+  "d": 24.08,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s06": {
+  "h": "9da165e0c66b",
+  "d": 14.82,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s07": {
+  "h": "0a0a2f82c42a",
+  "d": 15.48,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s08": {
+  "h": "95ad267a3c76",
+  "d": 13.62,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s09": {
+  "h": "f399bda2813d",
+  "d": 22.21,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s10": {
+  "h": "59c943b1795c",
+  "d": 21.23,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "Alnilam/s11": {
+  "h": "c23345d174c1",
+  "d": 7.59,
+  "model": "gemini-3.1-flash-tts-preview"
+ },
+ "best/s02": {
+  "d": 20.36,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s03": {
+  "d": 3.9,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s04": {
+  "d": 6.5,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "best/s05": {
+  "d": 24.0,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s06": {
+  "d": 25.97,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s07": {
+  "d": 12.6,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s08": {
+  "d": 16.63,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s09": {
+  "d": 22.15,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s10": {
+  "d": 21.1,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s11": {
+  "d": 10.5,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s01": {
+  "d": 28.01,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "best/s05b": {
+  "d": 31.71,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "best/s08m": {
+  "d": 35.26,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 34.0
+ },
+ "ad/a1": {
+  "d": 6.29,
+  "model": "gemini-3.8-flash-tts",
+  "score": 34.0
+ },
+ "ad/a2": {
+  "d": 13.48,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a3": {
+  "d": 7.32,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a4": {
+  "d": 12.15,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a5": {
+  "d": 10.36,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ },
+ "ad/a6": {
+  "d": 7.35,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
+ }
+}

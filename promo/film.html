@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الفيديو التعريفي — مكتبة الدعوة السلفية الرقمية</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* لوحة واحدة 1920×1080 (أفقي) أو 1080×1920 (?v=1 عمودي). التوقيت كله من TIMELINE، والإطار يُعرض بـ seek(t) */
+:root{--teal:#0f5c4d;--teal2:#0a3f35;--deep:#06231d;--gold:#c99a3b;--gold2:#e8c477;--cream:#fbf6e9;--W:1920px;--H:1080px;--u:1px}
+:root.v{--W:1080px;--H:1920px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:var(--W);height:var(--H);overflow:hidden;background:#000}
+body{font-family:"Readex Pro",sans-serif;color:var(--cream)}
+#stage{position:relative;width:var(--W);height:var(--H);overflow:hidden;background:radial-gradient(120% 90% at 50% 40%,#0f4d41 0%,#082f28 55%,#03140f 100%)}
+.bgpat{position:absolute;inset:-200px;opacity:.10;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23e8c477' stroke-width='1.4'%3E%3Crect x='35' y='35' width='50' height='50'/%3E%3Crect x='35' y='35' width='50' height='50' transform='rotate(45 60 60)'/%3E%3Ccircle cx='60' cy='60' r='12'/%3E%3Cpath d='M0 60h25M95 60h25M60 0v25M60 95v25'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 120px;animation:drift 120s linear 0s infinite}
+@keyframes drift{to{transform:translate(120px,120px)}}
+.vign{position:absolute;inset:0;background:radial-gradient(80% 70% at 50% 50%,transparent 40%,rgba(0,0,0,.65));pointer-events:none;z-index:50}
+.grain{position:absolute;inset:0;z-index:51;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.dust{position:absolute;border-radius:50%;background:var(--gold2);box-shadow:0 0 8px 2px rgba(232,196,119,.6);opacity:0}
+@keyframes rise{0%{transform:translateY(0) translateX(0);opacity:0}15%{opacity:.8}85%{opacity:.6}100%{transform:translateY(-420px) translateX(60px);opacity:0}}
+.lb{position:absolute;left:0;right:0;height:0;background:#000;z-index:60}
+.lb.t{top:0}.lb.b{bottom:0}
+
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;text-align:center;padding:0 140px}
+.v .scene{padding:0 70px}
+.gold{color:var(--gold2)}
+.am{font-family:Amiri,serif}
+.ruq{font-family:"Aref Ruqaa",serif}
+.kufi{font-family:"Reem Kufi",sans-serif}
+.small{font-size:30px;opacity:.8;letter-spacing:.5px}
+.hl{background:linear-gradient(90deg,var(--gold2),#fff3cf,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.line{display:block}
+
+/* مشهد الحديث */
+.hadith{font-family:Amiri,serif;font-size:64px;line-height:1.75;max-width:1500px}
+.v .hadith{font-size:58px}
+.qal{font-size:40px;color:var(--gold2);margin-bottom:26px;font-family:Amiri,serif}
+.src{margin-top:30px;font-size:28px;opacity:.7}
+.orn{width:420px;height:24px;margin:26px auto;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent);mask:radial-gradient(circle at 50% 50%,#000 6px,transparent 7px),linear-gradient(#000,#000) 0 50%/100% 2px no-repeat;-webkit-mask:radial-gradient(circle at 50% 50%,#000 7px,transparent 8px),linear-gradient(#000,#000) 0 50%/100% 2px no-repeat}
+
+/* مشهد الحيرة */
+.noise{position:absolute;font-size:46px;opacity:0;filter:blur(1px);color:#9fb8b1;white-space:nowrap}
+.q{font-family:Amiri,serif;font-size:92px;line-height:1.4;font-weight:700}
+.q small{display:block;font-size:52px;font-weight:400;opacity:.9;margin-top:20px}
+
+/* البداية */
+.spark{width:14px;height:14px;border-radius:50%;background:#fff6dc;box-shadow:0 0 40px 18px rgba(232,196,119,.8),0 0 160px 60px rgba(232,196,119,.35)}
+.beg{font-family:Amiri,serif;font-size:96px;margin-top:70px}
+
+/* الشعار */
+.rays{position:absolute;width:2200px;height:2200px;left:50%;top:50%;margin:-1100px 0 0 -1100px;background:repeating-conic-gradient(from 0deg,rgba(232,196,119,.13) 0 4deg,transparent 4deg 14deg);mask:radial-gradient(circle,#000 0,transparent 60%);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);opacity:0}
+.halo{position:absolute;width:900px;height:900px;left:50%;top:50%;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,200,.55),rgba(232,196,119,.15) 40%,transparent 70%);opacity:0}
+.logo{width:330px;height:330px;background:#fbf6e9;border-radius:50%;padding:42px;box-shadow:0 0 0 6px rgba(201,154,59,.9),0 0 0 16px rgba(201,154,59,.18),0 30px 80px rgba(0,0,0,.5);position:relative}
+.logo img{width:100%;height:100%;object-fit:contain}
+.ann{font-size:40px;letter-spacing:2px;margin-bottom:40px;color:var(--gold2)}
+.name{font-family:"Aref Ruqaa",serif;font-size:132px;line-height:1.25;margin-top:44px;text-shadow:0 6px 30px rgba(0,0,0,.5)}
+.v .name{font-size:112px}
+.url{font-family:"Readex Pro";font-size:40px;direction:ltr;margin-top:24px;letter-spacing:3px;color:var(--gold2)}
+
+/* الأرقام */
+.stats{display:flex;gap:70px;margin-top:60px}
+.v .stats{flex-direction:column;gap:40px}
+.st{min-width:400px;padding:44px 30px;border:1.5px solid rgba(232,196,119,.45);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));opacity:0}
+.st b{display:block;font-family:"Reem Kufi";font-size:128px;line-height:1.1;font-weight:700}
+.st span{font-size:40px}
+.h2{font-family:Amiri,serif;font-size:72px;line-height:1.45;font-weight:700}
+.h2 small{display:block;font-size:44px;font-weight:400;opacity:.85}
+
+/* الأجهزة */
+.row{display:flex;align-items:center;justify-content:center;gap:90px;width:100%}
+.v .row{flex-direction:column;gap:50px}
+.browser{width:1050px;border-radius:18px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);background:#fff;flex:none}
+.v .browser{width:940px}
+.browser .bar{height:44px;background:#e9ece9;display:flex;align-items:center;gap:10px;padding:0 18px;direction:ltr}
+.browser .bar i{width:14px;height:14px;border-radius:50%;background:#e06c5e}.browser .bar i:nth-child(2){background:#e9b949}.browser .bar i:nth-child(3){background:#5cb85c}
+.browser .bar em{margin-left:20px;font-style:normal;font-size:20px;color:#456;background:#fff;border-radius:8px;padding:4px 20px;flex:1;text-align:left}
+.browser .vp{height:640px;overflow:hidden;position:relative}
+.v .browser .vp{height:580px}
+.browser img,.phone img{width:100%;display:block;transform-origin:50% 0}
+.phone{width:360px;height:760px;border-radius:54px;padding:14px;background:#111;box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 2px #333,inset 0 0 0 2px #444;position:relative;flex:none}
+.phone .scr{width:100%;height:100%;border-radius:42px;overflow:hidden;background:#fff;position:relative}
+.phone .scr img{width:100%}
+.phone:after{content:"";position:absolute;top:26px;left:50%;width:110px;height:28px;margin-left:-55px;background:#111;border-radius:20px}
+.side{flex:1;text-align:right;max-width:620px}
+.v .side{text-align:center;max-width:none}
+.side .h2{font-size:66px}
+.chips{display:flex;flex-wrap:wrap;gap:16px;margin-top:34px}
+.v .chips{justify-content:center}
+.chip{font-size:32px;padding:12px 28px;border-radius:40px;background:rgba(232,196,119,.12);border:1.5px solid rgba(232,196,119,.55);color:#fff3d6;opacity:0}
+.typing{margin-top:34px;font-size:40px;background:#fff;color:#0f3d34;border-radius:18px;padding:22px 30px;box-shadow:0 10px 30px rgba(0,0,0,.35);text-align:right;min-height:96px;font-family:Amiri,serif;font-weight:700}
+.typing .cur{display:inline-block;width:3px;height:42px;background:var(--teal);vertical-align:middle;margin-right:4px}
+.answer{margin-top:20px;font-size:30px;background:rgba(255,255,255,.08);border-right:5px solid var(--gold);border-radius:12px;padding:18px 24px;text-align:right;line-height:1.7;opacity:0}
+
+.phones{display:flex;gap:50px;justify-content:center;align-items:flex-end}
+.v .phones{gap:28px}
+.v .phones .phone{width:300px;height:640px}
+.cap{margin-top:22px;font-size:34px;color:var(--gold2);text-align:center}
+.tri{display:flex;flex-direction:column;align-items:center}
+
+.icons{display:flex;gap:80px;margin-top:60px;justify-content:center}
+.ic{display:flex;flex-direction:column;align-items:center;gap:18px;font-size:34px;opacity:0}
+.ic svg{width:120px;height:120px;stroke:var(--gold2);fill:none;stroke-width:1.6}
+.free{font-family:"Aref Ruqaa";font-size:120px;margin-top:40px}
+
+.cards{display:flex;gap:44px;margin-top:56px}
+.v .cards{flex-direction:column;gap:30px}
+.card{width:440px;padding:46px 30px;border-radius:30px;background:linear-gradient(160deg,rgba(232,196,119,.18),rgba(255,255,255,.03));border:1.5px solid rgba(232,196,119,.5);opacity:0}
+.v .card{width:760px;padding:34px}
+.card svg{width:90px;height:90px;stroke:var(--gold2);fill:none;stroke-width:1.6}
+.card b{display:block;font-family:Amiri,serif;font-size:50px;margin-top:16px}
+.dal{font-family:Amiri,serif;font-size:76px;margin-top:60px;font-weight:700}
+.dal small{display:block;font-size:30px;opacity:.7;font-weight:400;margin-top:6px}
+
+.foot{position:absolute;bottom:70px;left:0;right:0;font-size:30px;opacity:0;letter-spacing:.5px}
+.v .foot{bottom:160px}
+.flash{position:absolute;inset:0;background:#fff8e6;opacity:0;z-index:40;pointer-events:none}
+
+/* الحركات */
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes up{from{opacity:0;transform:translateY(50px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes down{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:none}}
+@keyframes zoomIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}70%{opacity:1;transform:scale(1.06) rotate(0)}100%{opacity:1;transform:scale(1)}}
+@keyframes reveal{from{opacity:0;letter-spacing:30px;filter:blur(14px)}to{opacity:1;letter-spacing:0;filter:none}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(40deg)}}
+@keyframes raysIn{from{opacity:0}to{opacity:1}}
+@keyframes kb{from{transform:scale(1.02) translateY(0)}to{transform:scale(1.12) translateY(-90px)}}
+@keyframes scroll{from{transform:translateY(0)}to{transform:translateY(-38%)}}
+@keyframes slideR{from{opacity:0;transform:translateX(-160px) rotateY(18deg)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(160px) rotateY(-18deg)}to{opacity:1;transform:none}}
+@keyframes phoneUp{from{opacity:0;transform:translateY(260px) rotate(var(--rot,0deg))}to{opacity:1;transform:translateY(var(--y,0)) rotate(var(--rot,0deg))}}
+@keyframes noiseIn{0%{opacity:0;transform:scale(.9)}30%{opacity:.55}80%{opacity:.4}100%{opacity:0;transform:scale(1.15) translate(var(--dx),var(--dy));filter:blur(6px)}}
+@keyframes flash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}
+@keyframes sparkGrow{0%{transform:scale(0);opacity:0}30%{opacity:1;transform:scale(1)}100%{transform:scale(1.6)}}
+@keyframes slowzoom{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes lbIn{from{height:0}to{height:var(--lbh)}}
+@keyframes shine{from{background-position:200% 0}to{background-position:-100% 0}}
+.hl{background-size:300% 100%}
+
+.badge{font-family:"Aref Ruqaa";font-size:56px;padding:8px 46px;border-radius:60px;background:linear-gradient(90deg,#b8862c,#f0d08a,#b8862c);color:#2a1c05;margin-bottom:30px;opacity:0;box-shadow:0 10px 40px rgba(201,154,59,.45)}
+.fmts{display:flex;gap:36px;margin-top:50px}
+.v .fmts{flex-wrap:wrap;justify-content:center;gap:28px;max-width:900px}
+.fmt{width:300px;padding:34px 20px;border-radius:26px;border:1.5px solid rgba(232,196,119,.5);background:linear-gradient(160deg,rgba(232,196,119,.16),rgba(255,255,255,.03));opacity:0}
+.v .fmt{width:420px}
+.fmt svg{width:84px;height:84px;stroke:var(--gold2);fill:none;stroke-width:1.5}
+.fmt b{display:block;font-family:Amiri,serif;font-size:44px;margin-top:12px}
+.verbs{margin-top:56px;font-family:Amiri,serif;font-size:70px;font-weight:700;display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap}
+.verbs span{opacity:0}.verbs i{font-style:normal;color:var(--gold);opacity:0;font-size:40px}
+.maph{position:absolute;top:60px;left:0;right:0}
+.v .maph{top:230px}
+.map{position:relative;width:980px;height:980px;transform:scale(.72);margin:-60px 0 0}
+.v .map{transform:scale(.98);margin:0}
+.links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.links line{stroke:rgba(232,196,119,.18);stroke-width:2.5}
+.links line.on{stroke:rgba(240,208,138,.95);stroke-width:3.5;filter:drop-shadow(0 0 6px rgba(232,196,119,.9))}
+.hub{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:#fbf6e9;padding:26px;box-shadow:0 0 0 5px var(--gold),0 0 60px rgba(232,196,119,.5);opacity:0}
+.hub img{width:100%;height:100%;object-fit:contain}
+.node{position:absolute;left:50%;top:50%;width:250px;height:130px;margin:-65px 0 0 -125px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:rotate(calc(var(--i)*51.43deg - 90deg)) translate(390px) rotate(calc(-1*(var(--i)*51.43deg - 90deg)));background:rgba(10,40,34,.9);border:1.5px solid rgba(232,196,119,.25);opacity:.35}
+.node b{font-family:Amiri,serif;font-size:40px;line-height:1.2}
+.node span{font-size:22px;opacity:.8;margin-top:4px}
+@keyframes nodeOn{from{opacity:.35;border-color:rgba(232,196,119,.25);box-shadow:none}to{opacity:1;border-color:rgba(240,208,138,1);box-shadow:0 0 30px rgba(232,196,119,.55),inset 0 0 20px rgba(232,196,119,.15);background:rgba(18,70,58,.95)}}
+.maptag{position:absolute;bottom:46px;left:0;right:0;font-family:Amiri,serif;font-size:62px;font-weight:700;opacity:0}
+.v .maptag{bottom:260px}
+.side .h2 small{font-size:40px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bgpat"></div>
+  <div id="dust"></div>
+
+  <!-- ١ الحديث -->
+  <section class="scene" id="s01">
+    <div class="qal" data-a="down" data-d=".2">قال رسول الله ﷺ</div>
+    <div class="hadith">
+      <span class="line" data-a="up" data-d=".9" data-dur="1.4">«إنَّ العلماءَ <span class="gold">ورثةُ الأنبياء</span>،</span>
+      <span class="line" data-a="up" data-dur="1.4" data-at="0.30">وإنَّ الأنبياءَ لم يُوَرِّثوا دينارًا ولا درهمًا،</span>
+      <span class="line" data-a="up" data-dur="1.4" data-at="0.62">وإنما وَرَّثوا <span class="gold">العِلم</span>؛</span>
+      <span class="line" data-a="up" data-dur="1.4" data-at="0.78">فمن أخذَه أخذَ بحظٍّ وافر»</span>
+    </div>
+    <div class="orn" data-a="fade" data-at="0.85"></div>
+    <div class="src" data-a="fade" data-at="0.88">رواه أبو داود والترمذي وابن ماجه</div>
+  </section>
+
+  <!-- ٢ الحيرة -->
+  <section class="scene" id="s02">
+    <div id="noiseWrap"></div>
+    <div class="q" data-a="up" data-at="0.42" data-dur="1.4">أين أجدُ العلمَ الموثوق؟
+      <small><span data-a="fade" data-at="0.66">مجموعًا…</span> <span data-a="fade" data-at="0.78">مُيَسَّرًا…</span> <span class="gold" data-a="fade" data-at="0.9">بين يديّ؟</span></small>
+    </div>
+  </section>
+
+  <!-- ٣ البداية -->
+  <section class="scene" id="s03">
+    <div class="spark" data-a="sparkGrow" data-d="0" data-dur="2.2" data-ease="cubic-bezier(.2,.7,.2,1)"></div>
+    <div class="beg" data-a="reveal" data-d=".5" data-dur="1.6">من هنا… <span class="hl">كانت البداية</span></div>
+  </section>
+
+  <!-- ٤ الإعلان والشعار -->
+  <section class="scene" id="s04">
+    <div class="rays" data-a="raysIn,spin" data-d=".2" data-dur="1.5,30" data-ease="ease;linear"></div>
+    <div class="halo" data-a="raysIn" data-d=".1" data-dur="1"></div>
+    <div class="ann" data-a="down" data-d=".1">نُعلن انطلاق</div>
+    <div class="logo" data-a="pop" data-d=".35" data-dur="1.1"><img src="../assets/logo-sdsl.png" alt=""></div>
+    <div class="name" data-a="reveal" data-at="0.45" data-dur="1.6"><span class="hl" data-a="shine" data-at="0.6" data-dur="3">مكتبة الدعوة السلفية الرقمية</span></div>
+    <div class="url" data-a="up" data-at="0.8">dawahlibrary.org</div>
+  </section>
+
+  <!-- ٥ المحتوى والأرقام -->
+  <section class="scene" id="s05">
+    <div class="h2" data-a="up" data-d=".1">كتب مشايخ الدعوة السلفية بمصر<small>وأمّهات كتب أهل العلم… في مكان واحد</small></div>
+    <div class="stats">
+      <div class="st" data-a="zoomIn" data-at="0.36"><b class="gold" data-count="911" data-cat="0.36" data-cdur="1.8">٠</b><span>كتاب</span></div>
+      <div class="st" data-a="zoomIn" data-at="0.55"><b class="gold" data-count="322" data-cat="0.55" data-cdur="1.6">٠</b><span>مؤلِّف</span></div>
+      <div class="st" data-a="zoomIn" data-at="0.70"><b class="gold" data-count="15000" data-cat="0.70" data-cdur="2" data-plus="1">٠</b><span>مقال وفتوى تتجدد يوميًا</span></div>
+    </div>
+  </section>
+
+  <!-- ٥ب لأول مرة بأكثر من صيغة -->
+  <section class="scene" id="s05b">
+    <div class="badge" data-a="pop" data-d=".1">لأول مرة</div>
+    <div class="h2" data-a="up" data-d=".4">كتب مشايخ الدعوة السلفية بمصر<small>بأكثر من صيغة</small></div>
+    <div class="fmts">
+      <div class="fmt" data-a="pop" data-kw="نصا يبحث"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10"/><circle cx="18" cy="17" r="3"/><path d="M20.2 19.2L22 21"/></svg><b>نص يُبحث فيه</b></div>
+      <div class="fmt" data-a="pop" data-kw="ونسخه مصوره"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg><b>نسخة مصوّرة</b></div>
+      <div class="fmt" data-a="pop" data-kw="ومختصرا"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg><b>مختصر</b></div>
+      <div class="fmt" data-a="pop" data-kw="وتشجيرا"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v11M12 11H5v6M12 11h7v6"/></svg><b>تشجير</b></div>
+    </div>
+    <div class="verbs">
+      <span data-a="up" data-kw="قراءه،">قراءة</span><i data-a="fade" data-kw="قراءه،">•</i>
+      <span data-a="up" data-kw="ودراسه">دراسة</span><i data-a="fade" data-kw="ودراسه">•</i>
+      <span data-a="up" data-kw="وبحثا">بحث</span><i data-a="fade" data-kw="وبحثا">•</i>
+      <span data-a="up" data-kw="واقتباسا">اقتباس</span>
+    </div>
+  </section>
+
+  <!-- ٦ القارئ -->
+  <section class="scene" id="s06">
+    <div class="row">
+      <div class="browser" data-a="slideR" data-d=".1" data-dur="1.2"><div class="bar"><i></i><i></i><i></i><em>dawahlibrary.org/#/book</em></div>
+        <div class="vp"><img src="shots/d_book_uluwhimma_12.jpg" data-a="kb" data-d="0" data-dur="12" data-ease="linear" alt=""></div></div>
+      <div class="side">
+        <div class="h2" data-a="up" data-d=".3">قراءة ميسّرة… تفاعلية<small>تُغريك بالمواصلة</small></div>
+        <div class="chips">
+          <span class="chip" data-a="pop" data-kw="تفسير الاية">تفسير الآية</span>
+          <span class="chip" data-a="pop" data-kw="شرح الحديث">شرح الحديث وتخريجه</span>
+          <span class="chip" data-a="pop" data-kw="ومعاني الكلمات">معاني الكلمات</span>
+          <span class="chip" data-a="pop" data-kw="والحواشي">الحواشي والتشكيل</span>
+          <span class="chip" data-a="pop" data-kw="وتظليلك">التظليل والمفكرة</span>
+          <span class="chip" data-a="pop" data-kw="وشريط تقدم">شريط التقدم</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ٧ البحث والسؤال -->
+  <section class="scene" id="s07">
+    <div class="row">
+      <div class="phone" data-a="slideL" data-d=".1" data-dur="1.2"><div class="scr"><img src="shots/m_ask.jpg" alt=""></div></div>
+      <div class="side">
+        <div class="h2" data-a="up" data-d=".2">ابحث… واسأل المكتبة</div>
+        <div class="typing"><span data-type="ما فضلُ طلبِ العلم؟" data-tat="0.12" data-tdur="1.8"></span><span class="cur"></span></div>
+        <div class="answer" data-a="up" data-at="0.5">«من سلك طريقًا يلتمس فيه علمًا سهّل الله له به طريقًا إلى الجنة» <br><span class="gold">— صحيح مسلم · كتاب الذكر والدعاء</span></div>
+        <div class="chips"><span class="chip" data-a="pop" data-at="0.72">موثَّقة بالكتاب والصفحة</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ٨ أدوات الدراسة -->
+  <section class="scene" id="s08">
+    <div class="phones">
+      <div class="tri" data-a="phoneUp" data-at="0.02" style="--rot:-4deg;--y:20px"><div class="phone"><div class="scr"><img src="shots/m_tashjir.jpg" alt=""></div></div><div class="cap">تشجير الكتب</div></div>
+      <div class="tri" data-a="phoneUp" data-at="0.28"><div class="phone"><div class="scr"><img src="shots/m_paths.jpg" alt=""></div></div><div class="cap">المسارات العلمية</div></div>
+      <div class="tri" data-a="phoneUp" data-at="0.52" style="--rot:4deg;--y:20px"><div class="phone"><div class="scr"><img src="shots/m_hifz.jpg" alt=""></div></div><div class="cap">حفظ المتون</div></div>
+    </div>
+    <div class="chips" style="justify-content:center">
+      <span class="chip" data-a="pop" data-at="0.18">خرائط العلوم</span>
+      <span class="chip" data-a="pop" data-at="0.4">الفهارس الفنية</span>
+      <span class="chip" data-a="pop" data-at="0.78">اختبارات تقيس فهمك</span>
+    </div>
+  </section>
+
+  <!-- ٨م خريطة الموقع وترابط الخدمات -->
+  <section class="scene" id="s08m">
+    <div class="h2 maph" data-a="up" data-d=".1">منظومة واحدة مترابطة</div>
+    <div class="map">
+      <svg class="links" viewBox="-500 -500 1000 1000"><g id="ring"></g></svg>
+      <div class="hub" data-a="zoomIn" data-d=".3"><img src="../assets/logo-sdsl.png" alt=""></div>
+      <div class="node" style="--i:0" data-a="nodeOn" data-dur="0.8" data-kw="المكتبه تجمع"><b>المكتبة</b><span>الكتب والمقالات والفتاوى</span></div>
+      <div class="node" style="--i:1" data-a="nodeOn" data-dur="0.8" data-kw="والقارئ"><b>القارئ</b><span>يخدم النصوص</span></div>
+      <div class="node" style="--i:2" data-a="nodeOn" data-dur="0.8" data-kw="والبحث"><b>البحث</b><span>يصلك بالمواضع</span></div>
+      <div class="node" style="--i:3" data-a="nodeOn" data-dur="0.8" data-kw="والمساعد"><b>المساعد العلمي</b><span>يجيب موثِّقًا</span></div>
+      <div class="node" style="--i:4" data-a="nodeOn" data-dur="0.8" data-kw="والدراسه"><b>الدراسة</b><span>مسارات واختبارات</span></div>
+      <div class="node" style="--i:5" data-a="nodeOn" data-dur="0.8" data-kw="ومكتبتي"><b>مكتبتي</b><span>رحلتك وإنجازك</span></div>
+      <div class="node" style="--i:6" data-a="nodeOn" data-dur="0.8" data-kw="والمجتمع"><b>المجتمع</b><span>القراءة مع إخوانك</span></div>
+    </div>
+    <div class="maptag gold" data-a="reveal" data-kw="فكل خدمه" data-dur="1.2">فكلُّ خدمةٍ تُسلمك إلى أختها</div>
+  </section>
+
+  <!-- ٩ المجتمع والطلائع والإتاحة -->
+  <section class="scene" id="s09">
+    <div class="phones">
+      <div class="tri" data-a="phoneUp" data-at="0.02" style="--rot:-3deg"><div class="phone"><div class="scr"><img src="shots/m_community.jpg" alt=""></div></div><div class="cap">مجتمع يقرأ معًا</div></div>
+      <div class="tri" data-a="phoneUp" data-at="0.2" style="--rot:3deg"><div class="phone"><div class="scr"><img src="shots/m_talaea.jpg" alt=""></div></div><div class="cap">ركن الطلائع</div></div>
+    </div>
+    <div class="icons">
+      <div class="ic" data-a="up" data-at="0.5"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>الهاتف</div>
+      <div class="ic" data-a="up" data-at="0.56"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M1 19h22"/></svg>الحاسوب</div>
+      <div class="ic" data-a="up" data-at="0.64"><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/></svg>دون إنترنت</div>
+    </div>
+  </section>
+
+  <!-- ٩ب مجانًا (يُعرض في آخر مقطع ٩) -->
+  <section class="scene" id="s09b">
+    <div class="free hl" data-a="reveal" data-d="0" data-dur="1.2">مجانًا</div>
+    <div class="h2" data-a="up" data-d=".4" style="font-size:60px;margin-top:10px">لكلِّ طالبِ علم</div>
+  </section>
+
+  <!-- ١٠ الدعوة إلى المشاركة -->
+  <section class="scene" id="s10">
+    <div class="h2" data-a="up" data-d=".1">مشايخَنا… كُتّابَنا… طلّابَ العلم<small>كونوا شركاء هذا البناء</small></div>
+    <div class="cards">
+      <div class="card" data-a="pop" data-at="0.44"><svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11H4z"/><path d="M15 4v5h5M8 13h8M8 17h6"/></svg><b>كتابٌ تنشرونه</b></div>
+      <div class="card" data-a="pop" data-at="0.55"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><b>تصحيحٌ تُسدونه</b></div>
+      <div class="card" data-a="pop" data-at="0.66"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></svg><b>رابطٌ تشاركونه</b></div>
+    </div>
+    <div class="dal gold" data-a="reveal" data-at="0.8" data-dur="1.3">«الدالُّ على الخيرِ كفاعلِه»<small>رواه الترمذي</small></div>
+  </section>
+
+  <!-- ١١ الختام -->
+  <section class="scene" id="s11">
+    <div class="halo" data-a="raysIn" data-d="0" data-dur="1.4"></div>
+    <div class="logo" data-a="zoomIn" data-d=".1" data-dur="1.2" style="width:260px;height:260px;padding:34px"><img src="../assets/logo-sdsl.png" alt=""></div>
+    <div class="name" data-a="reveal" data-d=".5" data-dur="1.6" style="font-size:110px">مكتبة الدعوة السلفية الرقمية</div>
+    <div class="h2 gold" data-a="up" data-at="0.55" style="font-size:62px;margin-top:10px">علمٌ موثوق… بين يديك</div>
+    <div class="url" data-a="up" data-at="0.75" style="font-size:52px;margin-top:40px">dawahlibrary.org</div>
+    <div class="foot" data-a="fade" data-at="0.8">الدعوة السلفية بمصر • جمعية الدعاة الخيرية</div>
+  </section>
+
+  <div class="flash" id="flash"></div>
+  <div class="vign"></div>
+  <div class="grain"></div>
+</div>
+
+<script>
+const V = new URLSearchParams(location.search).get("v") === "1";
+if (V) document.documentElement.classList.add("v");
+const VOICE = new URLSearchParams(location.search).get("voice") || "Charon";
+const IDS = ["s01","s02","s03","s04","s05","s05b","s06","s07","s08","s08m","s09","s10","s11"];
+// زمن ما قبل الصوت وما بعده لكل مشهد (ث)
+const PRE = {s05b:0.6,s08m:0.6,s01:1.4,s02:0.6,s03:0.9,s04:1.6,s05:0.6,s06:0.5,s07:0.5,s08:0.5,s09:0.5,s10:0.8,s11:1.2};
+const POST = {s05b:1.4,s08m:1.8,s01:1.4,s02:1.0,s03:1.0,s04:2.2,s05:1.2,s06:0.8,s07:1.0,s08:0.9,s09:0.4,s10:1.6,s11:4.5};
+const FADE = 0.7;
+
+const TXT = {};
+const norm = t => t.replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+// موضع الكلمة في نص المقطع ← نسبة من مدة النطق (للمزامنة مع الكلام)
+const kwAt = (id, kw) => { const t = TXT[id] || "", i = t.indexOf(norm(kw)); return i < 0 ? 0.5 : Math.max(0, i / t.length - 0.03); };
+async function timeline(){
+  let man = {}, est = {};
+  try { man = await (await fetch("voice/manifest.json", {cache:"no-store"})).json(); } catch(e) {}
+  try { const s = await (await fetch("script2.json")).json(); for (const g of s.segments) { est[g.id] = norm(g.text).length / 9; TXT[g.id] = norm(g.text); } } catch(e) {}
+  const T = []; let t = 0;
+  for (const id of IDS) {
+    const vd = (man[VOICE + "/" + id] || {}).d || est[id] || 5;
+    const L = PRE[id] + vd + POST[id];
+    T.push({id, start: t, voiceAt: t + PRE[id], vd, L});
+    t += L - (id === "s11" ? 0 : FADE * 0.6);   // تداخل يسير بين المشاهد
+  }
+  // «مجانًا» يغطي آخر جملة من مقطع ٩
+  const s9 = T.find(x => x.id === "s09");
+  s9.split = s9.voiceAt + s9.vd * 0.72;
+  return {T, total: t};
+}
+
+function anim(el, start, sceneEnd){
+  const names = el.dataset.a.split(","), durs = (el.dataset.dur || "1").split(","), eases = (el.dataset.ease || "cubic-bezier(.2,.8,.2,1)").split(";");
+  el.style.animation = names.map((n, i) => `${n} ${durs[i] || durs[0]}s ${eases[i] || eases[0]} ${start}s both`).join(",");
+}
+
+let TL;
+async function build(){
+  TL = await timeline();
+  // غبار ذهبي
+  const dust = document.getElementById("dust"); let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+  for (let i = 0; i < 46; i++) {
+    const d = document.createElement("i"); d.className = "dust"; const s = 2 + rnd() * 4;
+    Object.assign(d.style, {width: s + "px", height: s + "px", left: rnd() * W + "px", top: (H * 0.3 + rnd() * H * 0.8) + "px",
+      animation: `rise ${9 + rnd() * 9}s linear ${-rnd() * 18}s infinite`});
+    dust.appendChild(d);
+  }
+  // كلمات الضجيج في مشهد الحيرة
+  const words = ["منشور","رابط","مقطع","قيل","نُقل","مصدر؟","تعليق","مشاركة","إشاعة","رأي","بلا إسناد","مجهول","تريند","إعادة نشر","سمعت","يقولون"];
+  const nw = document.getElementById("noiseWrap");
+  words.forEach((w, i) => {
+    const s = document.createElement("span"); s.className = "noise"; s.textContent = w;
+    s.style.left = (5 + rnd() * 80) + "%"; s.style.top = (8 + rnd() * 80) + "%"; s.style.fontSize = (30 + rnd() * 40) + "px";
+    s.style.setProperty("--dx", (rnd() * 200 - 100) + "px"); s.style.setProperty("--dy", (rnd() * 200 - 100) + "px");
+    s.dataset.a = "noiseIn"; s.dataset.at = (0.02 + i * 0.022).toFixed(3); s.dataset.dur = "3.2";
+    nw.appendChild(s);
+  });
+
+  for (const sc of TL.T) {
+    const el = document.getElementById(sc.id);
+    let L = sc.L, start = sc.start;
+    if (sc.id === "s09") L = sc.split - sc.start + FADE;
+    el.style.animation = `fade ${FADE}s ease ${start}s both, fadeOut ${FADE}s ease ${start + L - FADE}s forwards`;
+    if (sc.id === "s11") el.style.animation = `fade ${FADE}s ease ${start}s both, fadeOut 1.2s ease ${start + L - 1.2}s forwards`;
+    sc.el = el; sc.Lv = L;
+    el.querySelectorAll("[data-a]").forEach(x => {
+      // data-at: نسبة من مدة الصوت (لمزامنة الكلمة مع النطق)؛ data-d: ثوانٍ من بداية المشهد
+      if (x.dataset.kw) x.dataset.at = kwAt(sc.id, x.dataset.kw).toFixed(3);
+      const st = x.dataset.at != null ? sc.voiceAt + parseFloat(x.dataset.at) * sc.vd : start + parseFloat(x.dataset.d || 0);
+      anim(x, st);
+    });
+    el.querySelectorAll("[data-count]").forEach(x => { x._st = sc.voiceAt + parseFloat(x.dataset.cat) * sc.vd; x._d = parseFloat(x.dataset.cdur); });
+    el.querySelectorAll("[data-type]").forEach(x => { x._st = sc.voiceAt + parseFloat(x.dataset.tat) * sc.vd; x._d = parseFloat(x.dataset.tdur); });
+  }
+  const s9 = TL.T.find(x => x.id === "s09"), b = document.getElementById("s09b");
+  const bL = s9.start + s9.L - s9.split + 0.4;
+  b.style.animation = `fade ${FADE}s ease ${s9.split}s both, fadeOut ${FADE}s ease ${s9.split + bL - FADE}s forwards`;
+  b.querySelectorAll("[data-a]").forEach(x => anim(x, s9.split + parseFloat(x.dataset.d || 0)));
+  // ومضة عند كشف الشعار
+  const s4 = TL.T.find(x => x.id === "s04");
+  document.getElementById("flash").style.animation = `flash 1.4s ease-out ${s4.start + 0.3}s both`;
+  // خطوط الخريطة: من المركز إلى كل قسم وبين المتجاورين، تضيء مع ظهور القسم
+  const ring = document.getElementById("ring"), R = 390, nd = [...document.querySelectorAll(".node")];
+  const pt = i => { const a = (i * 51.43 - 90) * Math.PI / 180; return [R * Math.cos(a), R * Math.sin(a)]; };
+  window.LINKS = [];
+  const sm = TL.T.find(x => x.id === "s08m");
+  nd.forEach((n, i) => {
+    const t = sm.voiceAt + parseFloat(n.dataset.at) * sm.vd, [x, y] = pt(i);
+    const mk = (x1, y1, x2, y2, tt) => { const l = document.createElementNS("http://www.w3.org/2000/svg", "line"); Object.entries({x1, y1, x2, y2}).forEach(([k, v]) => l.setAttribute(k, v)); ring.appendChild(l); LINKS.push([l, tt]); };
+    mk(0, 0, x, y, t);
+    if (i > 0) { const [px, py] = pt(i - 1); mk(px, py, x, y, t + 0.2); }
+    if (i === nd.length - 1) { const [fx, fy] = pt(0); mk(x, y, fx, fy, t + 0.4); }
+  });
+  window.CUES = {total: TL.total, scenes: TL.T.map(({id, start, voiceAt, vd, L}) => ({id, start, voiceAt, vd, L})), flash: s4.start + 0.3, free: s9.split, end: TL.T.find(x => x.id === "s11").start};
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  document.getAnimations().forEach(a => a.pause());
+  window.READY = true;
+}
+
+const AR = n => n.toLocaleString("ar-EG", {useGrouping: false});
+const ease = p => 1 - Math.pow(1 - p, 3);
+window.seek = t => {
+  (window.LINKS || []).forEach(([l, tt]) => l.classList.toggle("on", t >= tt));
+  document.getAnimations().forEach(a => { a.currentTime = t * 1000; });
+  document.querySelectorAll("[data-count]").forEach(x => {
+    const p = Math.max(0, Math.min(1, (t - x._st) / x._d)); const to = +x.dataset.count;
+    x.textContent = (x.dataset.plus && p >= 1 ? "+" : "") + AR(Math.round(to * ease(p)));
+  });
+  document.querySelectorAll("[data-type]").forEach(x => {
+    const s = x.dataset.type, p = Math.max(0, Math.min(1, (t - x._st) / x._d));
+    x.textContent = s.slice(0, Math.round(s.length * p));
+  });
+};
+build().then(() => { const q = new URLSearchParams(location.search).get("t"); seek(q ? +q : 0); });
+</script>
+</body>
+</html>
