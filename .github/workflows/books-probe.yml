@@ -17,7 +17,7 @@ jobs:
         with: { node-version: 22 }
       - run: |
           ch="$(git diff --name-only HEAD~1)"
-          if [ "${{ github.event_name }}" = "push" ] && echo "$ch" | grep -q books-probe4; then node tools/books-probe4.js
+          if [ "${{ github.event_name }}" = "push" ] && echo "$ch" | grep -q books-probe4; then SITE=https://malakat.io OUTN=malakat node tools/books-probe4.js; SITE=https://miqyas.io OUTN=miqyas node tools/books-probe4.js
           elif [ "${{ github.event_name }}" = "push" ] && echo "$ch" | grep -q books-probe3; then node tools/books-probe3.js
           elif [ "${{ github.event_name }}" = "push" ] && echo "$ch" | grep -q books-probe2; then node tools/books-probe2.js
           else node tools/books-probe.js; node tools/books-probe2.js; node tools/books-probe3.js; fi
