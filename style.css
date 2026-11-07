@@ -1234,3 +1234,5 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .sttile{background:var(--sf);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;text-align:center}
 .sttile b{font-size:1.8rem;color:var(--ac)}.sttile small{color:var(--mut);font-size:.8rem}.sttile.bad{border-color:#c0392b}.sttile.bad b{color:#c0392b}
 .edbox{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;background:var(--sf);font-size:.92em;line-height:1.8}
+.devb{font-style:normal;background:#c0392b;color:#fff;border-radius:10px;padding:0 6px;font-size:.75em;margin-inline-start:auto}
+.devtpl{margin:8px 0}

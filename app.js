@@ -1653,7 +1653,7 @@ const Cloud={role:"member",author:null,isSheikh(){return this.on()&&!!Auth.user&
  async loadRole(){this.role="member";this.perms=[];if(!this.on()||!Auth.user){sideRe();return}Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id,perms").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.role=data.role;this.author=data.author_id||null;this.perms=data.perms||[]}}catch(e){}
   if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}sideRe()}};
 // الشريط الجانبي الثابت على الحاسوب يُرسم قبل معرفة صلاحية الحساب؛ يعاد رسمه بعد تحميلها فتظهر مجموعة «الإدارة»
-function sideRe(){try{if(typeof SIDE!=="undefined"&&document.getElementById("side"))SIDE.render()}catch(e){}}
+function sideRe(){try{if(typeof SIDE!=="undefined"&&document.getElementById("side"))SIDE.render();if(typeof DEV!=="undefined"&&DEV.badge)setTimeout(DEV.badge,200)}catch(e){}}
 const Social={
  k(n){return"soc:"+n+":"+(Auth.user?Auth.user.id:"-")},
  async state(ids){const out={stats:{},likes:new Set(),saves:new Set()};if(!ids.length)return out;

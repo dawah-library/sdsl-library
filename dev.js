@@ -5,24 +5,45 @@
 const DEV = (() => {
   const P = "data/dev-requests.json", ST = { pending: ["⏳", "بانتظار التنفيذ"], doing: ["⚙️", "قيد التنفيذ"], done: ["✅", "نُفِّذ"], need: ["❓", "يحتاج توضيحًا"], rejected: ["⛔", "لم يُنفَّذ"] };
   const get = async () => { try { return JSON.parse((await GH.get(P)).text) || { items: [] }; } catch (e) { return { items: [] }; } };
+  // قوالب طلبات شائعة تُملأ في المربع ثم يكمّلها المدير
+  const TPL = [["إصلاح خلل", "في صفحة: …\nالمشكلة: …\nالمتوقع: …"], ["قسم أو خدمة جديدة", "أضف قسمًا/خدمة: …\nمكانه في الموقع: …\nمن يراه: الزوار / الأعضاء / المدير"], ["استيراد كتاب", "استورد كتاب «…» لـ … (من تراث أو جامع الكتب أو OpenITI)، الطبعة المفضلة: …"], ["تدقيق كتاب", "دقّق كتاب «…» على مصورته وطبّق التصحيحات القطعية"], ["تعديل نص أو بيانات", "في كتاب/مقال «…» الصفحة …: غيّر «…» إلى «…»"], ["تقرير أو إحصاء", "أريد تقريرًا عن: …"]];
+  // آخر صفحة كان فيها المدير قبل فتح المساعد (يُتتبع الحاليّ والسابق لأن الموجّه قد يرسم الصفحة قبل هذا المستمع)
+  const here = () => (typeof HERE === "function" ? HERE() : location.hash) || "";
+  let CUR = here(), PREV = "";
+  const lastPage = () => (CUR && !/^#\/(dev|ops)/.test(CUR) ? CUR : PREV) || "";
+  const track = () => { const h = here(); if (h === CUR) return; if (!/^#\/(dev|ops)/.test(CUR)) PREV = CUR; CUR = h; };
+  // الموقع يستعمل روابط بلا «#» (pushState)، فيُتتبع الانتقال من الموجّه نفسه
+  setTimeout(() => { if (typeof route === "function" && !route.__dev) { const _r = route; window.route = route = function () { track(); return _r.apply(this, arguments); }; route.__dev = 1; } }, 0);
+  window.addEventListener("popstate", track);
+  // الطلبات المنجزة أو التي تنتظر جواب المدير ولم يرها بعد: تظهر شارة في الشريط الجانبي
+  async function badge() { if (!(Cloud.role === "admin" || GH.token)) return; try { const o = await fetch("data/dev-requests.json?fresh=" + Date.now()).then(r => r.json()); let seen = {}; try { seen = JSON.parse(localStorage.getItem("dev_seen") || "{}"); } catch (e) { }
+      const n = (o.items || []).filter(x => /^(done|need|rejected)$/.test(x.st) && seen[x.id] !== x.st).length, a = document.querySelector('#side a[href="#/dev"]'); if (a) { let b = a.querySelector(".devb"); if (!b) { b = document.createElement("em"); b.className = "devb"; a.appendChild(b); } b.textContent = n ? toAr(n) : ""; b.hidden = !n; } } catch (e) { } }
+  setTimeout(badge, 4000);
   async function page(q) {
     if (!(Cloud.role === "admin" || GH.token)) return view('<div class="note">المساعد التقني للمدير.</div>');
-    view(`<div class="cmhero"><div><h2>المساعد التقني</h2><p>اكتب ما تريد تطويره أو تعديله أو إصلاحه في الموقع، كما تكتبه لمبرمج. ينفّذه المساعد في جولاته المجدولة (مرتين يوميًا)، ويكتب لك هنا ما فعله.</p></div></div>
+    view(`<div class="cmhero"><div><h2>المساعد التقني</h2><p>اكتب ما تريد تطويره أو تعديله أو إصلاحه في الموقع، كما تكتبه لمبرمج. ينفّذه المساعد في جولاته المجدولة (مرتين يوميًا)، ويكتب لك هنا ما فعله. وللتشغيل الفوري لأي مهمة آلية: <a href="#/ops">لوحة التشغيل</a>.</p></div></div>
+    <div class="chips devtpl">${TPL.map(([n, t]) => `<button class="chip" data-act="devtpl" data-t="${esc(t)}">${esc(n)}</button>`).join("")}</div>
     <form id="devf" data-form="noop" class="card"><label>الطلب</label><textarea name="t" rows="5" required maxlength="4000" placeholder="مثال: أضف في صفحة المؤلف زرًا لتنزيل قائمة كتبه بصيغة Excel"></textarea>
      <div class="row"><div><label>النوع</label><select name="k"><option value="feature">تطوير أو إضافة</option><option value="fix">إصلاح خلل</option><option value="content">محتوى وبيانات</option><option value="ops">مهمة تشغيلية (مفاتيح، مهام آلية، نشر)</option></select></div><div><label>الأولوية</label><select name="p"><option value="2">عادية</option><option value="1">عاجلة</option><option value="3">لاحقًا</option></select></div></div>
+     <label>الصفحة المعنية (اختياري)</label><input name="u" dir="ltr" value="${esc(lastPage())}" placeholder="#/book/…">
      <label class="inl"><input type="checkbox" name="del"> أأذن بالحذف أو ما يمس حسابات الأعضاء إن لزم لهذا الطلب</label><br><button class="btn p">أرسل الطلب</button> <span id="devst" class="mut"></span></form>
+    <details class="card" id="devbr"><summary><b>تقارير جولات المساعد</b></summary><div class="mut">…</div></details>
     <h3>الطلبات</h3><div id="devl" class="mut">جارٍ التحميل…</div>`);
+    fetch("data/dev-brief.json?fresh=" + Date.now()).then(r => r.ok ? r.json() : null).then(o => { const el = $("#devbr div"); if (!el) return; const L = ((o && (o.items || o)) || []); const A = Array.isArray(L) ? L.slice(-10).reverse() : [];
+      el.innerHTML = A.length ? A.map(x => `<p><b>${esc(x.at || "")}</b><br>${(x.done || []).map(esc).join("<br>")}${(x.issues || []).length ? `<br><span class="mut">ملاحظات: ${(x.issues || []).map(esc).join("، ")}</span>` : ""}</p>`).join("") : "لم تُكتب تقارير بعد؛ تُكتب بعد كل جولة."; }).catch(() => { });
     $("#devf").addEventListener("submit", async e => { e.preventDefault(); const f = e.target, st = $("#devst"); st.textContent = "جارٍ الحفظ…";
-      const it = { id: "d" + Date.now().toString(36), t: f.t.value.trim(), k: f.k.value, p: +f.p.value, del: f.del.checked ? 1 : 0, st: "pending", at: new Date().toISOString() };
+      const it = { id: "d" + Date.now().toString(36), t: f.t.value.trim() + (f.u.value.trim() ? "\n\nالصفحة: " + f.u.value.trim() : ""), k: f.k.value, p: +f.p.value, del: f.del.checked ? 1 : 0, st: "pending", at: new Date().toISOString() };
       try { await GH.editJSON(P, o => { o = o && o.items ? o : { items: [] }; o.items.push(it); return o; }, "طلب للمساعد التقني: " + it.t.slice(0, 60)); st.textContent = "✓ أُرسل، ويُنفَّذ في الجولة القادمة"; f.reset(); list(); } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } });
     list();
   }
   async function list() {
     const el = $("#devl"); if (!el) return; const o = await get(), L = (o.items || []).slice().reverse();
+    try { const seen = {}; (o.items || []).forEach(x => seen[x.id] = x.st); localStorage.setItem("dev_seen", JSON.stringify(seen)); } catch (e) { } setTimeout(badge, 300);
     el.innerHTML = L.length ? L.map(x => `<div class="stsec" style="margin:8px 0"><b>${(ST[x.st] || ["", ""])[0]} ${esc((ST[x.st] || ["", x.st])[1])}</b> <span class="mut">${esc(new Date(x.at).toLocaleString("ar-EG"))}${x.p === 1 ? " • عاجل" : ""}</span><p style="white-space:pre-line">${esc(x.t)}</p>${x.r ? `<div class="note" style="white-space:pre-line">${esc(x.r)}</div>` : ""}${x.st === "need" ? `<form data-form="noop" class="devans" data-id="${esc(x.id)}"><input name="a" placeholder="توضيحك" required><button class="btn s p">أرسل التوضيح</button></form>` : ""}${x.st === "pending" ? `<button class="btn s" data-act="devcancel" data-id="${esc(x.id)}">إلغاء</button>` : ""}</div>`).join("") : "<p>لا طلبات بعد.</p>";
     el.querySelectorAll(".devans").forEach(f => f.addEventListener("submit", async e => { e.preventDefault(); const id = f.dataset.id, a = f.a.value.trim();
       await GH.editJSON(P, o => { const x = o.items.find(y => y.id === id); if (x) { x.t += "\n\nتوضيح المدير: " + a; x.st = "pending"; } return o; }, "توضيح طلب للمساعد التقني"); list(); }));
   }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act=devtpl]"); if (!el) return; const f = $("#devf"); if (f) { f.t.value = el.dataset.t; f.t.focus(); } });
   document.addEventListener("click", async e => { const el = e.target.closest("[data-act=devcancel]"); if (!el) return;
     if (!confirm("إلغاء الطلب؟")) return; await GH.editJSON(P, o => { o.items = o.items.filter(x => x.id !== el.dataset.id); return o; }, "إلغاء طلب للمساعد التقني"); list(); });
   // لوحة التشغيل (#/ops): حالة كل مهمة آلية (آخر تشغيل من GitHub Actions)، والمفاتيح، وطابور التحويل والتدقيق، والنشر
@@ -47,10 +68,14 @@ const DEV = (() => {
     const rows = (W.workflows || []).filter(x => x.state === "active").map(x => ({ x, r: last[x.id] })), rank = o => !o.r ? 3 : o.r.status !== "completed" ? 1 : o.r.conclusion === "failure" ? 0 : 2;
     rows.sort((a, b) => rank(a) - rank(b) || (b.r ? new Date(b.r.updated_at) : 0) - (a.r ? new Date(a.r.updated_at) : 0));
     const fail = rows.filter(o => rank(o) === 0).length, run = rows.filter(o => rank(o) === 1).length;
-    w.innerHTML = `<p class="mut">${toAr(rows.length)} مهمة • تعمل الآن ${toAr(run)} • متعثرة في آخر تشغيل ${toAr(fail)}</p><div class="sttab"><table><thead><tr><th>المهمة</th><th>آخر تشغيل</th><th>الحالة</th></tr></thead><tbody>${rows.map(({ x, r }) => { const st = !r ? ["—", "mut"] : r.status !== "completed" ? ["⏳ يعمل", "gr-h"] : r.conclusion === "success" ? ["✓ نجح", "gr-s"] : r.conclusion === "failure" ? ["✗ تعثّر", "gr-x"] : [esc(r.conclusion || ""), "gr-d"];
-      return `<tr><td>${esc(x.name)}</td><td>${r ? "منذ " + ago(r.updated_at) : "<span class=mut>لم يعمل مؤخرًا</span>"}</td><td>${r ? `<a class="grb ${st[1]}" href="${esc(r.html_url)}" target="_blank" rel="noopener">${st[0]}</a>` : st[0]}</td></tr>`; }).join("")}</tbody></table></div>
+    w.innerHTML = `<p class="mut">${toAr(rows.length)} مهمة • تعمل الآن ${toAr(run)} • متعثرة في آخر تشغيل ${toAr(fail)}</p><div class="sttab"><table><thead><tr><th>المهمة</th><th>آخر تشغيل</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(({ x, r }) => { const st = !r ? ["—", "mut"] : r.status !== "completed" ? ["⏳ يعمل", "gr-h"] : r.conclusion === "success" ? ["✓ نجح", "gr-s"] : r.conclusion === "failure" ? ["✗ تعثّر", "gr-x"] : [esc(r.conclusion || ""), "gr-d"];
+      return `<tr><td>${esc(x.name)}</td><td>${r ? "منذ " + ago(r.updated_at) : "<span class=mut>لم يعمل مؤخرًا</span>"}</td><td>${r ? `<a class="grb ${st[1]}" href="${esc(r.html_url)}" target="_blank" rel="noopener">${st[0]}</a>` : st[0]}</td><td><button class="btn s" data-act="opsrun" data-w="${esc(String(x.path).split("/").pop())}" data-n="${esc(x.name)}" title="تشغيل الآن">▶</button></td></tr>`; }).join("")}</tbody></table></div>
       <p class="mut">«لم يعمل مؤخرًا» يعني أنه ليس بين آخر ١٠٠ تشغيل. حارس المهام يعيد تشغيل المتأخر تلقائيًّا، والصيانة المجدولة تُصلح المتعثر وتنبّه الإدارة.</p>`;
   }
-  document.addEventListener("click", e => { if (e.target.closest("[data-act=opsre]")) ops(); });
-  return { view: page, ops };
+  // تشغيل مهمة الآن: طلب في data/run-requests.json تنفذه مهمة run-requests.yml خلال دقيقة
+  async function runNow(w, n) { if (!confirm("تشغيل «" + n + "» الآن؟")) return;
+    try { await GH.editJSON("data/run-requests.json", o => { o = o && o.items ? o : { items: [] }; o.items.push({ w, at: new Date().toISOString(), by: (Auth.user && Auth.user.name) || "المدير" }); return o; }, "تشغيل مهمة: " + n); toast("أُرسل الطلب؛ تبدأ المهمة خلال دقيقة تقريبًا"); }
+    catch (e) { toast("تعذّر: " + (e.message || e)); } }
+  document.addEventListener("click", e => { if (e.target.closest("[data-act=opsre]")) ops(); const r = e.target.closest("[data-act=opsrun]"); if (r) runNow(r.dataset.w, r.dataset.n); });
+  return { view: page, ops, badge };
 })();
