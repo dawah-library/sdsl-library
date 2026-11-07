@@ -1,5 +1,5 @@
 {
-"updated": "2026-11-07T07:27:06Z",
+"updated": "2026-11-07T07:28:29Z",
 "sources": [
 {
 "name": "بوابة الفتح",
@@ -22,7 +22,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah",
+"cat": "world",
 "top": 1
 },
 {
@@ -32,7 +32,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah",
+"cat": "world",
 "top": 1
 },
 {
@@ -42,7 +42,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "ترامب: يصفون ما يحدث في إيران احتلالاً.. نعم هي كذلك",
@@ -51,8 +51,7 @@
 "sum": "",
 "src": "آخر الأنباء",
 "sid": "akher",
-"cat": "world",
-"top": 1
+"cat": "world"
 },
 {
 "title": "الحكومة تقرر ترشيد الإنفاق الحكومي 3 أشهر.. خفض استهلاك الكهرباء 20% والوقود 30%",
@@ -61,7 +60,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "المصرية للمطارات ترفع درجة الاستعداد وتضع خطة لترشيد الطاقة ومواجهة المتغيرات الإقليمية",
@@ -70,7 +69,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "عاجل|دوي انفجار في مدينة معرة النعمان بريف إدلب شمالي سوريا",
@@ -99,8 +98,7 @@
 "sum": "",
 "src": "آخر الأنباء",
 "sid": "akher",
-"cat": "world",
-"top": 1
+"cat": "world"
 },
 {
 "title": "وزارة الأشغال والإسكان في غزة تعلن بدء الإخلاء الجبري للمباني الآيلة للسقوط بعد 10 نوفمبر",
@@ -136,7 +134,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "وزارة التعليم: انخفاض ضعف القراءة والكتابة بين الطلاب من 45% إلى 13.9%",
@@ -181,7 +179,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "ترامب: سأقبل نتائج انتخابات التجديد النصفي ومستعد للعمل مع الديمقراطيين",
@@ -199,7 +197,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "مصر تستهدف إنتاج 222 ألف سيارة كهربائية سنويًا بحلول 2032",
@@ -208,7 +206,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "خامنئي عن نتائج انتخابات الكونجرس: الاعتقاد بتغيير السلوك الأمريكي خطأ فادح.. ومستعدون لمواجهة أي عدوان",
@@ -217,7 +215,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "ارتفاع جديد في سعر جرام الذهب.. وعيار 21 يصل لهذا المستوى",
@@ -226,7 +224,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "بعد طلب ومتابعة \"رشاد\".. استبدال خط التيار العالي المار داخل قرية \"سيدي عيسى\" بأبو حمص",
@@ -253,7 +251,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "ضوابط امتحانات الميدتيرم بالجامعات المصرية 2026",
@@ -262,7 +260,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "وسائل إعلام سورية: قصف مدفعي للاحتلال الإسرائيلي يستهدف أراضي زراعية بريف القنيطرة الجنوبي",
@@ -280,7 +278,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "سفير العراق بالقاهرة يبحث مع مساعد وزير الخارجية تعزيز التعاون في المراسم والبروتوكول",
@@ -289,7 +287,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "رئيس البرلمان الإيراني: طهران قدمت لواشنطن ردا قويا وعقلانيا والكرة في ملعب أمريكا لتجنب الحرب",
@@ -307,7 +305,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "وزير الخارجية يبحث هاتفيا مع نظيره الأردني مستجدات الأوضاع الإقليمية وجهود خفض التصعيد",
@@ -316,7 +314,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "سعر الذهب اليوم في مصر.. عيار 21 يرتفع 20 جنيها خلال التعاملات المسائية",
@@ -325,7 +323,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "تحسبا لتداعيات التصعيد الإقليمي.. الحكومة تضع خطة لترشيد الإنفاق واستهلاك الوقود والطاقة",
@@ -334,7 +332,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "تركيا تتجه لإقرار \"حلف مكة للدفاع المشترك\" بعد موافقة لجنة البرلمان",
@@ -343,7 +341,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "الناتو: حاملة طائرات بريطانية تتزود بالذخائر في النرويج خلال عملياتها بالقطب الشمالي",
@@ -379,7 +377,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "القمح المقاوم للملوحة والجفاف.. تعاون «البحوث الزراعية» و«أكساد» لتعزيز الأمن الغذائي",
@@ -388,7 +386,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "روسيا: خسائر أوكرانيا بلغت 925 جنديا بين قتيل وجريح خلال يوم واحد",
@@ -397,7 +395,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "تراجع جديد في سعر الدولار أمام الجنيه بالبنوك المصرية",
@@ -406,7 +404,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "سعر الريال السعودي اليوم الاثنين 2-11-2026 أمام الجنيه المصري في البنوك",
@@ -415,7 +413,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "مسيرات للدعم السريع تستهدف محطة الكهرباء بمدينة حلفا الجديدة شرقي السودان",
@@ -433,7 +431,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "احتجاجات شبابية في 34 مدينة ألمانية للمطالبة بتحسين التعليم وخفض تكاليف المعيشة",
@@ -451,7 +449,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "احتدام معارك «فجر اليمن» على عدة جبهات واستهداف مواقع ومخازن الحوثيين",
@@ -460,7 +458,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "muslims"
 },
 {
 "title": "عاجل | الحرس الثوري الإيراني يعلن انفجار ناقلة نفط رابعة في مضيق هرمز",
@@ -577,7 +575,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "وزير الري: توحيد المرجعية الهندسية لتصميم وإدارة المنشآت المائية في مصر",
@@ -586,7 +584,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "المحرر «علاء السعداوي",
@@ -595,7 +593,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "الجيش اليمني يستهدف قيادات حوثية في تعز والجوف بغارات جوية ومسيّرة",
@@ -641,7 +639,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "dawah",
+"top": 1
 },
 {
 "title": "حوار| النائب محمود تركي: الدراسة البرلمانية وقياس الأثر التشريعي من أقوى أدوات مجلس الشيوخ",
@@ -660,7 +659,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "ماذا دار في لقاء النائب حمادة سليمان ووزير الزراعة؟.. 8 ملفات على طاولة النقاش لخدمة المواطنين",
@@ -678,7 +677,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "الدفاعات الجوية الكويتية تتصدى لهجمات معادية وصفارات الإنذار تدوي في البحرين",
@@ -825,6 +824,15 @@
 "cat": "nour"
 },
 {
+"title": "بيان حزب النور بشأن تشكيل الحكومة الجديدة",
+"url": "https://news.google.com/rss/articles/CBMi6gJBVV95cUxNbE55Z1RlR3R3N3FRa3ozOFJheTFxaTB5UlJCTjBWQXdnMjBIZkYyZXY2N3ctUmYzOUJqMUxCbFJ2R0M5OXpPaVNQb3h4WUxoWktDblV1LTdIM2htNkRScWduTloyYXNmSU9NVmV2aDFOb1EzTTFscnBFOFlQS2pDOXFjeGRUd2FiaTJKZUdKdUMwX3lYTFYyVVhETkJjV2Y1bGNZbkhGTGRwYm5PcnBHWGY2YW0yem10YkM0Ujl6T0FnNW5NZnFrR0ppVzljRTRBRFY1TWMtcHZkd3V1RkZyNkd3VW42RW5jenJhWElkNEdtSVVLWFpTUXpCalZPNHlLUWdCOWZ4RDBDUTRrX3JfbWlIUXN0ZXFjazZDMGpWRW5zMjA4bmZXQVBCZXBWSTBPczk4QTFlVVluckx2TWk0X1ZESm9DUm9FMWlBY3cxNkZvQ25CQTlueFdQd1RPa3ZaMjRnWHdpVE9fZw?oc=5",
+"date": "2024-07-04T07:00:00Z",
+"sum": "",
+"src": "حزب النور",
+"sid": "nour",
+"cat": "nour"
+},
+{
 "title": "\"حمدي\" يتابع أعمال إنشاء المعهد الديني الأزهري بقرية \"معمل القزاز\" بكفر الدوار.. صور",
 "url": "https://news.google.com/rss/articles/CBMiggNBVV95cUxQYnhyY1dRUW8zbzVOWkhobURaV3JHVDlGVU9aRTdIa2ZBT19TcEtpU3JJMGxydHVjMEhRbnJwdVJxdXpOdnZxZ0lEblhRYUpON3F3VWpadVV3YTFlandBRzc3S0RrazN3ZUpMVS1ZenJFZlpndms3WFdES3RHV2hGT3B1NUZTRmx6ZUZIYkgySDh3dzZFcjd4aGdxWGcyMzZCUGE1eEdRczQzWk9TdkwtNXl1OTJyV0JtNHliQl9DSzd2WXJKbmhta3djREFZRzNFcDA5UEdNNGJtZjVyTGVJWXZJMzNrV0FiMnFiZ291djVTblNXU3VDZllxS2dHckxKWUozVERQc2JnVkh3aTJlazh3LXJpUHZodTk5WWpVYTNHRi1HUm8zc3ptcFNkd2pPVnJEM3Y4ck5UNERQZldmTUc3dVZzdy1aVHZ5NFhBTTlQZDlMUGpuOGZGYWMwSTdJTkZXUW9LekVTUE9MUzVfNUVEc05WV1hralNxZEpMU2p5QQ?oc=5",
 "date": "2024-06-22T15:48:41Z",
@@ -849,7 +857,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "النائب أحمد حمدي يحصل على موافقة بإحلال وتجديد شبكة مياه الشرب لعزبة فراج بشارع المحكمة.. مستندات",
@@ -903,7 +911,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "\"أبو خطيب\" ينجح في تخصيص عدد من أراضي شركات قطاع الأعمال لإقامة مشروعات عامة تخدم أهالي أبو المطامير",
@@ -975,7 +983,7 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "dawah"
+"cat": "world"
 },
 {
 "title": "طبيبك يجيب: مريض بالكبد وأعانى من السعال.. فما العلاج المناسب؟",
