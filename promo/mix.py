@@ -10,8 +10,12 @@ C = json.load(open(cuesp)); T = C["total"] + 0.5
 N = int(T * SR); mix = np.zeros(N); rng = np.random.default_rng(3)
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-def load(path):
-    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"], capture_output=True, check=True)
+# معالجة الاستوديو للتعليق: دفء وعمق في الطبقة المنخفضة، وصفاء الحروف، وتهذيب الصفير، وضغط متزن، وغرفة خفيفة جدًا
+VOX = ("highpass=f=60,equalizer=f=115:t=q:w=0.9:g=3.5,equalizer=f=320:t=q:w=1.3:g=-1.8,equalizer=f=3300:t=q:w=1.4:g=1.8,"
+       "deesser=i=0.35,acompressor=threshold=-21dB:ratio=3:attack=8:release=140:makeup=3,aecho=0.9:0.5:28|61:0.07|0.04")
+
+def load(path, af=None):
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path] + (["-af", af] if af else []) + ["-f", "f32le", "-ac", "1", "-ar", str(SR), "-"], capture_output=True, check=True)
     return np.frombuffer(r.stdout, dtype=np.float32).astype(float)
 
 def add(sig, t, g=1.0):
@@ -61,7 +65,7 @@ vo = np.zeros(N)
 for s in C["scenes"]:
     p = os.path.join(ROOT, "voice", voice, s["id"] + ".wav")
     if os.path.exists(p):
-        v = load(p); i = int(s["voiceAt"] * SR); j = min(N, i + len(v)); vo[i:j] += v[:j - i]
+        v = load(p, VOX); i = int(s["voiceAt"] * SR); j = min(N, i + len(v)); vo[i:j] += v[:j - i]
     else: print("لا صوت:", p)
 vo /= (np.abs(vo).max() + 1e-9)
 # خفض المؤثرات تحت الصوت

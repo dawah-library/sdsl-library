@@ -4,6 +4,10 @@
 في promo/voice/best/sNN.wav، والتقرير في promo/voice/best/report.json."""
 import base64, json, os, re, subprocess, sys, time, urllib.request, urllib.error
 
+def dur(p):
+    return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], capture_output=True, text=True).stdout or 0)
+
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 S = json.load(open(os.path.join(ROOT, "script2.json"), encoding="utf-8"))
 OUT = os.path.join(ROOT, "voice", "best"); WORK = os.path.join(ROOT, ".takes")
@@ -26,8 +30,11 @@ def call(model, body, timeout=300):
                                          data=json.dumps(body).encode(), headers={"content-type": "application/json", "x-goog-api-key": k})
             return json.load(urllib.request.urlopen(req, timeout=timeout))
         except urllib.error.HTTPError as e:
-            err = f"{model} HTTP {e.code}"
-            if e.code in (429, 403, 404, 400): DEAD.add((k, model))
+            try: msg = e.read().decode()[:300]
+            except Exception: msg = ""
+            err = f"{model} HTTP {e.code} {msg}"
+            if e.code in (429, 403, 404): DEAD.add((k, model))
+            if e.code in (400, 404): break  # خطأ في الطلب نفسه لا في المفتاح
         except Exception as e:
             err = f"{model} {e}"
     raise RuntimeError(err)
@@ -46,6 +53,9 @@ def tts(sid, voice, out):
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", "-", "-af",
                             "silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse", out],
                            input=pcm, check=True)
+            d, want = dur(out), len(DIAC.sub("", g["text"])) / 12.0
+            if d > want * 1.9 + 3 or d < want * 0.45:  # قرأ التعليمات أو كرّر أو قطع
+                err = f"{m}: مدة {d:.1f}ث والمتوقع نحو {want:.1f}ث"; print("  رُفضت:", err, flush=True); continue
             return m
         except Exception as e:
             err = e
@@ -80,21 +90,30 @@ def judge(sid, path):
     body = {"contents": [{"parts": [{"inlineData": {"mimeType": "audio/wav", "data": audio}}, {"text": q}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0}}
     for m in JUDGE:
+      for mode in (0, 1):
         try:
+            if mode: body["generationConfig"].pop("responseMimeType", None)
             j = call(m, body, 180)
-            r = json.loads(j["candidates"][0]["content"]["parts"][0]["text"])
+            txt = j["candidates"][0]["content"]["parts"][0]["text"]
+            r = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
             w = wer(SEG[sid]["text"], r.get("transcript", ""))
             r["wer"] = round(w, 3); r["judge"] = m
             r["score"] = round(10 * (1 - min(1, w)) + 1.4 * float(r.get("pron", 0)) + float(r.get("vo", 0)) - (15 if r.get("instructions_read") else 0), 2)
             return r
         except Exception as e:
-            print("  judge", m, e, flush=True)
+            print("  judge", m, mode, str(e)[:300], flush=True)
     return {"score": 0, "error": "judge failed"}
 
 
 def dur(p):
     return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], capture_output=True, text=True).stdout or 0)
 
+
+# فحص المحكّم أولًا على تسجيل سابق
+_t = os.path.join(ROOT, "voice", "Charon", "s03.wav")
+if os.path.exists(_t):
+    _r = judge("s03", _t); print("فحص المحكّم:", json.dumps(_r, ensure_ascii=False)[:400], flush=True)
+    if _r.get("error"): sys.exit("المحكّم لا يعمل؛ أوقفتُ التسجيل حفظًا للحصة")
 
 # ١) تجربة الأداء
 best_voice, best_avg = None, -1
