@@ -111,6 +111,7 @@ const HDS = (() => {
     const showList = qq || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
     view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة الثمانية (الصحيحان والسنن الأربع والموطأ والدارمي، نحو ٣٩ ألف حديث) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
+    <div class="row"><button class="btn s" data-act="hdoff">${offState("hadith", "قسم الحديث")}</button></div>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
     <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>
     ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
@@ -169,6 +170,9 @@ const HDS = (() => {
     } catch (e) { el.innerHTML = `<p class="mut">تعذّر الوصول إلى الموسوعة الحديثية الآن. <a href="https://dorar.net/hadith/search?q=${encodeURIComponent(q)}" target="_blank" rel="noopener">ابحث في الدرر السنية ↗</a></p>`; } }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "hddorar") dorar(el.dataset.q);
+    if (a === "hdoff") offSave("hadith", async say => { say("جارٍ تجهيز القائمة…"); const L = await klist(), out = ["data/hadith/index.json", "data/hadith/arbain.json", "data/hadith/riyad.json", "data/hadith/bulugh.json", RAWK("_list.json"), RAWT("_index.json")];
+      Object.entries(L).forEach(([b, v]) => { out.push(RAWK(b + ".json"), RAWL(b + ".json")); for (let i = 0; i < Math.ceil((v.n || 0) / 500); i++) out.push(RAWK(b + "/m" + i + ".json")); if (["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b)) out.push(RAWK("").replace("/k/", "/grades/") + b + ".json"); });
+      ["arbain", "riyad", "bulugh"].forEach(b => out.push(RAWL(b + ".json"))); for (let i = 0; i < 27; i++) out.push(RAWT(i + ".json")); return out; }, el, "قسم الحديث");
     else if (a === "hdbrief") brief(el.dataset.b, el.dataset.n);
     else if (a === "hkcopy") navigator.clipboard.writeText(el.dataset.t + "\n" + SITENAME).then(() => toast("نُسخ"));
     else if (a === "hksharh") hadithSheet(el.dataset.m);

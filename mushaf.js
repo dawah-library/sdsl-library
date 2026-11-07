@@ -62,6 +62,7 @@ const MUS = (() => {
     view(`<div class="cmhero"><div><h2>المصحف</h2><p>اقرأ السورة، واضغط رقم أي آية لترى مواضع تفسيرها، وما قاله مشايخ الدعوة فيها في كتبهم ومقالاتهم وفتاواهم، وانقل الآيات بتفسيرها أو تعليقك.</p></div></div>
     <form class="sbox" data-form="noop" id="musq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث عن آية بكلماتها" aria-label="ابحث في الآيات"><button class="btn p">بحث</button></form>
     ${(() => { let l = 0; try { l = +localStorage.getItem("mus_last") || 0; } catch (e) { } return `<div class="row"><a class="btn p" href="#/mushaf/p/${l || 1}">📖 ${l ? "تابع القراءة من الصفحة " + AR(l) : "اقرأ بصفحات المصحف"}</a>${[1, 2, 5, 10, 20, 30].map(j => "").join("")}</div>`; })()}
+    ${qq ? "" : `<div class="row mus-off"><button class="btn s" data-act="musoff" data-v="text">${offState("mushaf-text", "نص المصحف والمختصر والسراج")}</button><button class="btn s" data-act="musoff" data-v="pages">${offState("mushaf-pages", "صفحات المصحف بخطه")}</button></div>`}
     <div id="musres">${res}</div>${qq ? "" : ixHtml()}`);
     $("#musq").addEventListener("submit", e => { e.preventDefault(); const v = e.target.q.value.trim(); location.hash = "#/mushaf" + (v ? "?q=" + encodeURIComponent(v) : ""); });
     bar();
@@ -217,7 +218,13 @@ const MUS = (() => {
     x.textAlign = "center"; x.font = `18px "Amiri"`; x.fillStyle = "#8a7a5a"; x.fillText(SITENAME, W / 2, cv.height - 40);
     cv.toBlob(bl => dl("آيات.png", bl, "image/png"), "image/png");
   }
+  // حفظ المصحف دون إنترنت: النص والتفسير المختصر وغريب السراج، أو صفحات مصحف المدينة بخطوطها (الخطوط مشتركة بين الصفحات)
+  const offText = () => ["data/quran/quran.json", "data/quran/uthmani.json", "data/quran/meta.json", "data/quran/quran-tash.json"].concat(...Array.from({ length: 114 }, (_, i) => ["mokhtasar", "siraj"].map(k => `data/quran/tafsir/${k}/${i + 1}.json`)));
+  async function offPages(say) { const pages = Array.from({ length: 604 }, (_, i) => `data/quran/qcf/${i + 1}.json`), fonts = new Set(); let i = 0;
+    const q = pages.slice(); await Promise.all(Array.from({ length: 6 }, async () => { while (q.length) { const u = q.shift(); try { const D = await fetch(u).then(r => r.json()); fonts.add(D.f); D.l.forEach(l => l.forEach(w => { const x = w.find(v => typeof v === "string" && v.startsWith("@")); if (x) fonts.add(x.slice(1)); })); } catch (e) { } say("جارٍ تجهيز الصفحات… " + AR(Math.round(100 * ++i / 604)) + "٪"); } }));
+    return [...fonts].map(f => qurl(f, 0)).concat(["data/quran/quran.json", "data/quran/uthmani.json", "data/quran/meta.json"]); }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
+    if (a === "musoff") { const t = el.dataset.v === "text"; return offSave(t ? "mushaf-text" : "mushaf-pages", t ? offText() : offPages, el, t ? "نص المصحف والمختصر والسراج" : "صفحات المصحف بخطه"); }
     if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n; el.textContent = "⏸ إيقاف"; playList(PG[n] || [], 0, () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } }); }
     else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
     else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);

@@ -2242,6 +2242,15 @@ document.addEventListener("change",e=>{if(e.target.id!=="qorgl"||!e.target.files
 document.addEventListener("click",e=>{if(e.target.closest('[data-act="qorgx"]')){ls.set("qorg",{});const n=$("#qorgn");if(n)n.value="";draw()}});
 
 /* حفظ كتاب (بكل مجلداته) للقراءة دون إنترنت: تُحمَّل نصوصه فيحفظها عامل الخدمة في ذاكرة الجهاز */
+/* حفظ قسم كامل للقراءة دون إنترنت (المصحف، الحديث): يطلب الملفات فيحفظها عامل الخدمة، مع التقدم، ويطلب تخزينًا دائمًا */
+async function offSave(key,list,el,label){if(!("caches" in window)||!navigator.serviceWorker)return toast("المتصفح لا يدعم الحفظ دون إنترنت");
+ try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(x){}
+ const urls=typeof list==="function"?await list(t=>{el.textContent=t}):list;let i=0,bad=0;el.disabled=true;
+ const one=async u=>{try{const r=await fetch(u,{mode:/^https?:/.test(u)&&!u.startsWith(location.origin)?"cors":"same-origin"});if(!r.ok)bad++}catch(x){bad++}el.textContent="جارٍ الحفظ… "+toAr(Math.round(100*++i/urls.length))+"٪"};
+ const q=urls.slice();await Promise.all(Array.from({length:6},async()=>{while(q.length)await one(q.shift())}));
+ el.disabled=false;const o=ls.get("offsecs",{});o[key]={d:new Date().toISOString().slice(0,10),n:urls.length-bad};ls.set("offsecs",o);
+ el.textContent="✓ "+label+" محفوظ دون إنترنت";toast(bad?"حُفظ معظم الملفات، وتعذّر "+toAr(bad)+"؛ أعد المحاولة لاحقًا":"حُفظ؛ يعمل الآن ولو انقطع الإنترنت")}
+const offState=(key,label)=>{const o=(ls.get("offsecs",{})||{})[key];return o?"✓ "+label+" محفوظ دون إنترنت ("+o.d+") — تحديث":"⇩ احفظ "+label+" للقراءة دون إنترنت"};
 document.addEventListener("click",async e=>{const el=e.target.closest('[data-act="offbook"]');if(!el)return;e.preventDefault();const b=B(el.dataset.id);if(!b)return;
  const vols=b.set?lib.books.filter(x=>x.set===b.set):[b];el.disabled=true;let i=0;
  try{for(const v of vols){el.textContent="جارٍ الحفظ… "+toAr(++i)+"/"+toAr(vols.length);await loadBook(v.id)}const l=ls.get("offbooks",[]);const k=b.set||b.id;if(!l.includes(k))l.push(k);ls.set("offbooks",l);el.textContent="✓ محفوظ دون إنترنت";toast("حُفظ الكتاب؛ يُقرأ الآن ولو انقطع الإنترنت")}catch(x){toast(x.message);el.disabled=false}});
