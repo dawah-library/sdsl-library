@@ -1,0 +1,42 @@
+/* واجهة معاينة مطبعة المجلة (للشاشة فقط؛ لا تظهر في PDF) */
+:root { --mpz: .75; }
+body { margin: 0; background: #d9ddd9; font-family: "MJ Cairo", "Cairo", system-ui, sans-serif; }
+@font-face { font-family: "MJ Cairo"; font-weight: 400; src: url(fonts/cairo-arabic-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "MJ Cairo"; font-weight: 700; src: url(fonts/cairo-arabic-700-normal.woff2) format("woff2"); }
+.mpui { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 14px; background: #0b3b2e; color: #fff; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.mpui button, .mpui .mpbtn, .mpui select, .mpui input { font: inherit; font-size: 13px; border: 1px solid #c09a48; background: #104a39; color: #fff; border-radius: 6px; padding: 4px 10px; cursor: pointer; text-decoration: none; }
+.mpui input { width: 64px; }
+.mpui button.on { background: #c09a48; color: #0b3b2e; }
+.mpui .mpp { background: #c09a48; color: #0b3b2e; font-weight: 700; }
+.mpbrand { color: #e1c98d; font-weight: 700; text-decoration: none; margin-left: 6px; }
+.mpst { opacity: .85; margin-left: auto; }
+.mpgrp { display: inline-flex; gap: 4px; align-items: center; }
+html.auto .mpui, html.auto .mprep { display: none; }
+.mprep { display: none; position: fixed; top: 56px; left: 12px; width: 320px; max-height: calc(100vh - 80px); overflow: auto; z-index: 9; background: #fff; border: 1px solid #c09a48; border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.7; box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+body.mp-rep .mprep { display: block; }
+.mprep h3 { margin: 0 0 4px; color: #0b3b2e; }
+.mpchk { list-style: none; padding: 0; margin: 6px 0; }
+.mpchk .ok { color: #17604a; } .mpchk .bad, .mpis { color: #8a3b14; }
+.mprep .ok { color: #17604a; }
+.mpis { padding-right: 18px; }
+.mpstage { padding: 18px 0 60px; }
+/* ترتيب الصفحات للمعاينة */
+.mpstage .pagedjs_pages { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+/* التكبير بعد اكتمال الإخراج فقط: zoom أثناء التقسيم يفسد قياس Paged.js */
+body.mpready .mpstage .pagedjs_pages { zoom: var(--mpz); }
+body[data-view="spread"] .mpstage .pagedjs_pages { display: grid; grid-template-columns: repeat(2, max-content); justify-content: center; gap: 18px 0; direction: rtl; }
+body[data-view="spread"] .mpstage .pagedjs_first_page { grid-column: 1 / -1; justify-self: center; }
+body.mpready[data-view="grid"] .mpstage .pagedjs_pages { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 28px; zoom: .3; direction: rtl; }
+.mpstage .pagedjs_page { box-shadow: 0 2px 10px rgba(0,0,0,.18); position: relative; }
+.mpstage .pagedjs_page::after { content: attr(data-pn); position: absolute; top: 4px; left: -36px; font: 700 14px "MJ Cairo", sans-serif; color: #47504b; }
+.mpstage .pagedjs_page.mp-warn { outline: 3px solid #d9822b; outline-offset: 2px; }
+.mpstage .pagedjs_page.mp-overflow, .mpstage .pagedjs_page.mp-empty { outline-color: #b3261e; }
+@media (max-width: 700px) { :root { --mpz: .42; } .mpui { font-size: 12px; } .mprep { width: auto; right: 8px; } }
+@media print {
+  .mpui, .mprep { display: none !important; }
+  body { background: none; }
+  .mpstage { padding: 0; }
+  .mpstage .pagedjs_pages { display: block !important; zoom: 1 !important; }
+  .mpstage .pagedjs_page { box-shadow: none; outline: none !important; }
+  .mpstage .pagedjs_page::after { display: none; }
+}

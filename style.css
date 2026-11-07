@@ -1262,3 +1262,25 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 /* القراءة في المجلة: سطر أقصر، ومسافات أوسع، وعناوين أوضح */
 .majtext{max-width:68ch;margin-inline:auto;text-align:justify;text-justify:inter-word}.majtext p{margin:.55em 0}.majitem h4{line-height:1.5}.majsect span{font-family:Amiri,serif;letter-spacing:.2px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 @media (max-width:600px){.majtext{font-size:1.08rem;line-height:1.95}.majitem{padding:12px 10px}.majbody{padding:0 10px}}
+/* مجلة المكتبة: قوالب «مطبعة المجلة» في صفحة العدد (majpress/core.js) — الهوية نفسها في ملف PDF */
+.majissue{--mjg:#0b3b2e;--mjg7:#17604a;--mjau:#a67f2e;--mjau3:#e1c98d;--mjau1:color-mix(in srgb,#c09a48 13%,var(--sf))}
+.majsect small{display:block;font-size:.82rem;color:var(--mut,#6f7772);margin-top:4px;font-family:"IBM Plex Sans Arabic",sans-serif}
+.majtext .ay{font-family:Amiri,serif;color:var(--mjg7);font-size:1.06em}
+html[data-theme=dark] .majtext .ay,html[data-theme=dark] .majtext .hd{color:#8fd0b2}
+.majtext .ayref{font-size:.74em;color:var(--mjau);white-space:nowrap}
+.majtext .hd{color:var(--mjg7);font-weight:700}
+.majtext .tk{font-size:.8em;color:var(--mut,#6f7772)}
+.majtext .mj-h{font-family:"IBM Plex Sans Arabic",sans-serif;font-size:1.02rem;font-weight:700;color:var(--ac);margin:1em 0 .35em;display:flex;gap:8px;align-items:baseline}
+.majtext .mj-h::before{content:"";width:7px;height:7px;background:#c09a48;transform:rotate(45deg);flex:none}
+.majtext .mj-h.lab{font-size:.95rem;color:var(--mjau)}
+.majtext .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;height:1.6em;padding:0 .3em;margin-inline-end:.4em;border-radius:1em;background:#c09a48;color:#fff;font:700 .72rem "IBM Plex Sans Arabic",sans-serif;vertical-align:.1em}
+.majtext p.mj-ayah{text-align:center;background:color-mix(in srgb,var(--ac) 7%,transparent);border-radius:10px;padding:6px 12px}
+.majtext p.lead{font-size:1.08em;color:var(--ac)}
+.majtext .mj-list{padding-inline-start:1.4em;margin:.4em 0}.majtext ol.mj-list{list-style:none;padding-inline-start:0}.majtext ol.mj-list li{display:flex;gap:8px;margin:.25em 0}
+.majtext ol.mj-list .mk{flex:none;min-width:1.55em;height:1.55em;margin-top:.35em;border-radius:50%;background:var(--ac);color:#f6edd6;font:700 .72rem "IBM Plex Sans Arabic",sans-serif;display:inline-flex;align-items:center;justify-content:center}
+.majtext ul.mj-list li::marker{color:#c09a48}
+.majtext .mj-poem{margin:.6em auto;max-width:600px;padding:8px 16px;background:var(--mjau1);border-block:1px solid var(--mjau3);font-family:Amiri,serif;font-size:1.08em;line-height:2}
+.majtext .mj-poem .bt{display:grid;grid-template-columns:1fr 1fr;gap:0 2em}.majtext .mj-poem .bt span:last-child{text-align:end}.majtext .mj-poem .bt.one{grid-template-columns:1fr;text-align:center}
+@media (max-width:600px){.majtext .mj-poem .bt{grid-template-columns:1fr}.majtext .mj-poem .bt span:last-child{text-align:start;padding-inline-start:2em}}
+.majtext .mj-qa{margin:.8em 0 .3em}.majtext .mj-qa span{display:inline-block;font:700 .82rem "IBM Plex Sans Arabic",sans-serif;color:#fff;background:var(--ac);border-radius:14px;padding:1px 12px}.majtext .mj-qa.q span{background:var(--mjau)}
+.majtext .qbox{background:var(--mjau1);border-inline-start:3px solid #c09a48;border-radius:8px;padding:2px 12px}
