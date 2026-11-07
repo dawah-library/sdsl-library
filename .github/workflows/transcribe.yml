@@ -7,6 +7,7 @@ on:
     - cron: "13 1 * * *"   # يوميًا: استكمال ما بقي
 permissions:
   contents: write
+  id-token: write   # رابط مؤقت لملفات صندوق الرفع (api/r2put)
 concurrency:
   group: transcribe
   cancel-in-progress: false

@@ -1262,3 +1262,15 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 /* القراءة في المجلة: سطر أقصر، ومسافات أوسع، وعناوين أوضح */
 .majtext{max-width:68ch;margin-inline:auto;text-align:justify;text-justify:inter-word}.majtext p{margin:.55em 0}.majitem h4{line-height:1.5}.majsect span{font-family:Amiri,serif;letter-spacing:.2px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 @media (max-width:600px){.majtext{font-size:1.08rem;line-height:1.95}.majitem{padding:12px 10px}.majbody{padding:0 10px}}
+/* نافذة دعوة الزائر إلى الدخول (loginNudge في app.js) */
+.lgnudge{position:fixed;z-index:90;inset-inline-start:16px;bottom:18px;max-width:min(330px,calc(100vw - 32px));display:flex;flex-direction:column;gap:6px;padding:14px 16px 14px;border-radius:18px;
+ background:color-mix(in srgb,var(--sf) 62%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid color-mix(in srgb,#fff 35%,var(--line));
+ box-shadow:0 12px 34px rgba(0,0,0,.18);opacity:0;transform:translateY(16px) scale(.97);transition:opacity .35s,transform .35s}
+.lgnudge.on{opacity:1;transform:none}.lgnudge b{font-family:var(--hf,inherit);font-size:1.02rem;padding-inline-end:20px}.lgnudge span{font-size:.84rem;color:var(--mut);line-height:1.6}
+.lgnudge .btn{align-self:flex-start;margin-top:4px}.lgnudge .lgx{position:absolute;top:6px;inset-inline-end:8px;border:0;background:none;font-size:1.2rem;color:var(--mut);cursor:pointer;line-height:1}
+@media (prefers-reduced-motion:reduce){.lgnudge{transition:none}}
+/* قضايا الفرقان للناشئة (tala.js) */
+.fqintro p{margin:6px 0 0;line-height:1.9}.fqpts li,.fqqs li{margin:6px 0;line-height:1.8}
+blockquote.fqq{margin:12px 0;padding:12px 16px;border-inline-start:4px solid var(--ac);background:color-mix(in srgb,var(--ac) 6%,var(--sf));border-radius:10px;line-height:2;font-family:var(--rf,inherit)}
+blockquote.fqq footer{margin-top:6px;font-size:.85rem;color:var(--mut);font-family:inherit}
+@media (max-width:760px){.lgnudge{bottom:92px}}

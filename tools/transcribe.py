@@ -2,6 +2,8 @@
 """تحويل الصوتيات والمرئيات إلى نصوص ثم إلى كتب (البند ٣٨).
 الطابور data/transcribe/_queue.json: {"items": [{"id": "...", "t": "عنوان الدرس أو السلسلة", "a": "معرّف المؤلف",
    "src": ["رابط مباشر أو يوتيوب أو فيسبوك", ...]  (أجزاء السلسلة بالترتيب), "date": "...", "note": "..."}]}
+   ومن ملفات الجهاز (نموذج الإدارة): "store:au….mp3" في صندوق الرفع الخاص (رابط مؤقت من /api/r2put برمز OIDC)،
+   أو "parts:<أساس>:<عدد>:<امتداد>" أجزاءً في data/transcribe/in/ تُجمع ثم تُحذف بعد اكتمال الكتاب. "fn": أسماء الملفات الأصلية.
 المراحل:
  ١) التنزيل: yt-dlp (يوتيوب وفيسبوك وغيرهما) أو الرابط المباشر، ثم ffmpeg إلى صوت أحادي مضغوط، ويُقسَّم مقاطع (٢٠ دقيقة).
  ٢) التفريغ الحرفي: Gemini يستمع لكل مقطع ويكتب كلام الشيخ بلفظه (بالعربية الفصحى كما نطق، مع ضبط الآيات والأحاديث)،
@@ -26,15 +28,40 @@ def jl(p, d):
 def js(p, o): os.makedirs(os.path.dirname(p), exist_ok=True); json.dump(o, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 def sh(*a, **k): return subprocess.run(list(a), capture_output=True, text=True, **k)
 
+INB = os.path.join(D, "transcribe", "in")
+
+
+def oidc_url(name):
+    tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library",
+                     headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
+    site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
+    return json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + name, headers={"Authorization": "Bearer " + tok}), timeout=30).read())["url"]
+
+
+def part_files(src):
+    m = re.match(r"parts:([0-9a-z]+):(\d+):(\w+)$", src or "")
+    return sorted(glob.glob(os.path.join(INB, m.group(1) + ".part*"))) if m else []
+
+
 def fetch_audio(url, tmp, n):
     out = os.path.join(tmp, "src%d" % n)
-    if re.search(r"youtu|facebook\.com|fb\.watch|soundcloud|archive\.org/details", url):
+    if url.startswith("store:"):  # ملف رفعه المشرف من جهازه إلى صندوق الرفع الخاص
+        src = out + os.path.splitext(url)[1]
+        with urllib.request.urlopen(oidc_url(url[6:]), timeout=900) as r, open(src, "wb") as o: o.write(r.read())
+    elif url.startswith("parts:"):  # ملف كبير أو فيديو رُفع أجزاءً إلى المستودع
+        _, base, cnt, ext = url.split(":"); ps = part_files(url)
+        if len(ps) != int(cnt): raise RuntimeError("أجزاء ناقصة %d من %s" % (len(ps), cnt))
+        src = out + "." + ext
+        with open(src, "wb") as o:
+            for x in ps: o.write(open(x, "rb").read())
+    elif re.search(r"youtu|facebook\.com|fb\.watch|soundcloud|archive\.org/details", url):
         r = sh("yt-dlp", "-q", "-f", "bestaudio/best", "-o", out + ".%(ext)s", "--no-playlist", url)
         files = glob.glob(out + ".*")
         if not files: raise RuntimeError("تعذّر التنزيل: " + (r.stderr or "")[-300:])
         src = files[0]
     else:
         src = out + ".bin"; urllib.request.urlretrieve(url, src)
+    if not os.path.exists(src) or os.path.getsize(src) < 1000: raise RuntimeError("الملف فارغ أو لم يُنزَّل")
     mono = os.path.join(tmp, "a%d.ogg" % n)
     sh("ffmpeg", "-y", "-loglevel", "error", "-i", src, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libopus", "-b:a", "24k", mono)
     os.remove(src)
@@ -111,15 +138,18 @@ def main():
                 if m: toc.append({"t": m.group(1), "p": i + 1, "l": 1})
         js(os.path.join(D, "books", bid + ".json"), {"id": bid, "pages": pages, "toc": toc})
         meta = {"id": bid, "title": it.get("t") or bid, "authorId": it.get("a") or "", "topicId": it.get("tp") or "", "col": "dawah", "type": "book", "n": len(pages),
-                "added": str(datetime.date.today()), "size": sum(len(p) for p in pages), "tags": ["tafrigh"], "source": "تفريغ آلي لدروس صوتية: " + " ، ".join(srcs[:3]) + (" …" if len(srcs) > 3 else ""),
-                "audio": srcs[0], "hidden": True, "unrev": len(pages), "tfauto": 1}
+                "added": str(datetime.date.today()), "size": sum(len(p) for p in pages), "tags": ["tafrigh"], "source": "تفريغ آلي لدروس صوتية: " + (" ، ".join((it.get("fn") or [])[:3]) or " ، ".join(x for x in srcs[:3] if x.startswith("http"))) + (" …" if len(srcs) > 3 else ""),
+                "hidden": True, "unrev": len(pages), "tfauto": 1}
+        web = [x for x in srcs if x.startswith("http")]
+        if web: meta["audio"] = web[0]
         cat["books"] = [b for b in cat["books"] if b["id"] != bid] + [meta]; cat["version"] = int(time.time() * 1000)
         js(os.path.join(D, "catalog.json"), cat)
         tq = jl(os.path.join(D, "tfedit", "_queue.json"), {"items": []})
         if not any((x.get("id") if isinstance(x, dict) else x) == bid for x in tq["items"]): tq["items"].append({"id": bid}); js(os.path.join(D, "tfedit", "_queue.json"), tq)
         done.append(bid); q["items"] = [x for x in q["items"] if x["id"] != bid]; js(Q, q)
-        try: os.remove(work)
-        except Exception: pass
+        for x in [y for u in srcs for y in part_files(u)] + [work]:  # أجزاء الملفات المرفوعة لم تعد لازمة بعد اكتمال الكتاب
+            try: os.remove(x)
+            except Exception: pass
         print("  ✓ كتاب «%s»: %d صفحة (مخفي حتى المراجعة)، وأُضيف إلى طابور النسخة المحررة" % (meta["title"], len(pages)), flush=True)
     open(os.path.join(ROOT, ".tr-report.txt"), "w", encoding="utf-8").write(("🎙️ <b>تفريغ الصوتيات</b>: " + "، ".join(done)) if done else "")
 

@@ -91,6 +91,7 @@ async function dwFull() {
   <h3 id="dw-self">دعوتنا: تعريف الدعوة بنفسها</h3>
   <div class="paper art" id="dawahText"><p class="mut">جارٍ التحميل…</p></div>
   <p class="mut">من مقال «دعوتنا» المنشور على موقع صوت السلف.</p>
+  ${dwLinkedHtml("intro", "من مكتبة الدعوة: كتب ومقالات في التعريف بالدعوة ومنهجها")}
   <div class="row" style="margin-top:10px"><a class="btn nf" href="#/history">تاريخ الدعوة السلفية بمصر</a><a class="btn nf" href="#/tarajim">تراجم مشايخ الدعوة</a>${B("sv180") ? '<a class="btn nf" href="#/book/sv180/1">السلفية منهج فكري لا حقبة تاريخية</a>' : ""}<a class="btn nf" href="#/contact">اقتراح تصحيح أو إضافة</a></div></div>`);
   const id = B("sv32") ? "sv32" : B("sv36") ? "sv36" : null;
   if (!id) { $("#dawahText").innerHTML = '<p class="mut">لم يُستورد النص بعد.</p>'; return; }
@@ -102,11 +103,24 @@ async function dwFull() {
 const DW_PUBLIC = false;
 const DW_DRAFT = '<p class="note">مسودة قيد المراجعة تظهر للمشرفين فقط، ولا يراها الزوار والأعضاء حتى تُعتمد مراجعها.</p>';
 const dwShow = () => DW_PUBLIC || (typeof isAdmin === "function" && isAdmin());
+/* مواد المكتبة المرتبطة بالقسم (تتحدث آليًا كلما رُفع كتاب أو مقال): الوسم من tools/enrich-new.py أو من نموذج الرفع، أو دلالة العنوان */
+const DW_RX = { hist: /تاريخ الدعوة|الدعوة السلفية|الصحوة الإسلامية|السلفية في مصر|مسيرة الدعوة|نشأة الدعوة|ذكريات|مذكرات|معهد الفرقان|المدرسة السلفية|مجلس أمناء الدعوة/,
+  intro: /دعوتنا|منهج الدعوة|المنهج السلفي|منطلقات الدعوة|أصول الدعوة|أهداف الدعوة|التعريف بالدعوة|الدعوة السلفية/ };  // العنوان يُعتبر في الكتب وحدها (البيانات كثيرًا ما تذكر اسم الدعوة)
+function dwLinked(k) {
+  const tag = k === "hist" ? "dawah-hist" : "dawah-intro";
+  return lib.books.filter(b => !b.demo && !b.hidden && !(typeof VOL2 === "function" && VOL2(b)) && bc(b) === "dawah" && ((b.tags || []).includes(tag) || (k === "intro" && (b.tags || []).includes("dawah-hist")) || (kindOf(b) === "book" && DW_RX[k].test(b.setTitle || b.title))))
+    .sort((x, y) => String(y.added || y.date || "").localeCompare(String(x.added || x.date || "")));
+}
+function dwLinkedHtml(k, title) {
+  const l = dwLinked(k); if (!l.length) return "";
+  return `<h3>${title} <span class="mut">(${toAr(l.length)})</span></h3><p class="mut">يُحدَّث آليًا: كل كتاب أو مقال يُرفع في هذا الباب يُضاف هنا.</p>${l.slice(0, 12).map(anyCard).join("")}${l.length > 12 ? `<details><summary>عرض الباقي (${toAr(l.length - 12)})</summary>${l.slice(12).map(anyCard).join("")}</details>` : ""}`;
+}
 async function vDawah() {
   if (dwShow()) return dwFull();
   view(`<div class="page dw"><div class="cmhero dwh"><div><h2>التعريف بالدعوة السلفية بمصر</h2><p>دعوة إلى الرجوع إلى الكتاب والسنة بفهم سلف الأمة، نشأت في الإسكندرية في سبعينيات القرن الماضي، وانتشرت في محافظات مصر.</p></div><div class="row"><a class="btn" href="#/tarajim">تراجم المشايخ</a></div></div>
   <h3>دعوتنا: تعريف الدعوة بنفسها</h3><div class="paper art" id="dawahText"><p class="mut">جارٍ التحميل…</p></div><p class="mut">من مقال «دعوتنا» المنشور على موقع صوت السلف.</p>
   <p class="note">يجري إعداد تعريف موسّع بالدعوة السلفية ومنهجها من مراجع معتمدة، ويُنشر هنا بعد مراجعته.</p>
+  ${dwLinkedHtml("intro", "من مكتبة الدعوة: كتب ومقالات في التعريف بالدعوة ومنهجها")}
   <div class="row"><a class="btn nf" href="#/history">تاريخ الدعوة</a><a class="btn nf" href="#/tarajim">تراجم مشايخ الدعوة</a>${B("sv180") ? '<a class="btn nf" href="#/book/sv180/1">السلفية منهج فكري لا حقبة تاريخية</a>' : ""}<a class="btn nf" href="#/contact">تواصل معنا</a></div></div>`);
   const id = B("sv32") ? "sv32" : B("sv36") ? "sv36" : null;
   if (!id) { $("#dawahText").innerHTML = '<p class="mut">لم يُستورد النص بعد.</p>'; return; }
@@ -134,6 +148,7 @@ function vHistory(q, sub) {
   <ol class="timeline">${HS_BRIEF.map(([d, t]) => `<li><b>${esc(d)}</b><p>${esc(t)}</p></li>`).join("")}</ol>
   <h3>تنوع أعمال الدعوة وجهودها</h3>
   <div class="chips">${HS_WORKS.map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div>
+  ${dwLinkedHtml("hist", "من مكتبة الدعوة: كتب ومواد في تاريخ الدعوة")}
   <div class="row" style="margin-top:16px"><a class="btn p" href="#/history/full">اقرأ تاريخ الدعوة بالتفصيل</a><a class="btn nf" href="#/dawah">التعريف بالدعوة</a><a class="btn nf" href="#/tarajim">تراجم مشايخ الدعوة</a></div>
   <p class="mut">هذا موجز يُستكمل ويُدقَّق باستمرار؛ لديك تصحيح أو إضافة موثقة؟ <a href="#/contact">راسل المكتبة</a>.</p></div>`);
 }

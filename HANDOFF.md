@@ -359,3 +359,6 @@
 - **أوقف المدير رفع كتب مصورة جديدة** حتى يُنجَز تجهيز الموجود (الطابور ١٢٥٥٨ صفحة ويزيد ~٥٧٥ يوميًّا قبل الإيقاف). أبلغه حين ينخفض بوضوح.
 - **تعزيز المهام:** خدمات الكتب تتنقل بين ٨ نماذج flash (أولها gemini-2.5-flash الذي لا يستعمله التحويل)؛ والتدقيق ٨ صفحات في الطلب بدل ٤ (PROOF_GROUP)؛ وجولة إضافية بعد تجدد الحصة لكل من study-ai (09:17) وtashjir (10:23) وedu-ai (11:13) بتوقيت UTC، بعد proof (08:41).
 
+## ٧ نوفمبر — طلبات المدير الستة (claude/stoic-cerf-vn4690)
+- loginNudge (app.js + .lgnudge في style.css)؛ HFS/HF_GROUPS (٤٦ خطًّا)؛ ED.panel وتبويب edition؛ رفع تسجيلات التفريغ من الجهاز (trUpload، transcribe.py: store:/parts:، وid-token في transcribe.yml، وr2put يقبل صيغًا أكثر)؛ enrich-new.py: ربط بالأقسام يعمل ولو أُوقف مفتاح enrich، والخدمات كلها للمصورات؛ dwLinked في dawah.js؛ قضايا الفرقان للناشئة في tala.js (data/tala-furqan.json).
+- مفتاح enrich موقوف (switches.json) — لم يُغيَّر؛ طوابير الخدمات تنتظر قرار المدير.
