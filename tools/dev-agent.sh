@@ -18,7 +18,7 @@ read HAS_C HAS_G < <(engines)
 run_claude() {
   [ "$HAS_C" = 1 ] || return 1
   command -v claude >/dev/null || npm i -g -s @anthropic-ai/claude-code >/dev/null 2>&1 || return 1
-  timeout 50m claude -p "$(cat .dev-prompt.md)" --dangerously-skip-permissions --max-turns 120 > .dev-log.txt 2>&1; local r=$?
+  env -u GH_TOKEN -u GITHUB_TOKEN timeout 50m claude -p "$(cat .dev-prompt.md)" --dangerously-skip-permissions --max-turns 120 > .dev-log.txt 2>&1; local r=$?
   tail -c 3000 .dev-log.txt; [ $r = 0 ] && ! grep -qiE "usage limit|rate limit|credit balance|invalid api key|authentication" .dev-log.txt
 }
 run_gemini() {
@@ -27,7 +27,7 @@ run_gemini() {
   for m in gemini-2.5-pro gemini-2.5-flash; do
     for i in "" _2 _3 _4 _5 _6 _7 _8 _9 _10 _11 _12 _13 _14 _15 _16 _17 _18 _19 _20; do
       v="GEMINI_API_KEY$i"; [ -n "${!v:-}" ] || continue
-      GEMINI_API_KEY="${!v}" timeout 40m gemini -m "$m" -y -p "$(cat .dev-prompt.md)" > .dev-log.txt 2>&1; local r=$?
+      GEMINI_API_KEY="${!v}" env -u GH_TOKEN -u GITHUB_TOKEN timeout 40m gemini -m "$m" -y -p "$(cat .dev-prompt.md)" > .dev-log.txt 2>&1; local r=$?
       tail -c 2000 .dev-log.txt
       if [ $r = 0 ] && ! grep -qiE "quota|RESOURCE_EXHAUSTED|429|API key not valid" .dev-log.txt; then echo "gemini:$m" > .dev-eng; return 0; fi
     done

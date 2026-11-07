@@ -6,3 +6,5 @@ __pycache__/
 .quran-report.txt
 .audit-report.txt
 data/sx/
+node_modules/
+.dev-*

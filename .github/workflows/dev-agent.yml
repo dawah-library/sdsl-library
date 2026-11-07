@@ -1,0 +1,92 @@
+name: المساعد التقني (الوكيل البرمجي)
+# ينفّذ طلبات المدير من #/dev فور حفظها: يبرمج التعديل في فرع agent/dev/<id> بمحرك Claude Code
+# (CLAUDE_CODE_OAUTH_TOKEN أو ANTHROPIC_API_KEY إن وُجد) وإلا Gemini CLI بالمفاتيح المجانية (GEMINI_API_KEY…_20)،
+# ويفحصه، ويعرضه على المدير؛ ولا يُدمج في main إلا باعتماد المدير من الموقع (أو بخيار «النشر المباشر» إن اجتاز الفحص).
+# التفاصيل: tools/dev-agent.sh. الإيقاف: مفتاح dev_agent في «الإدارة ← الخدمات والمفاتيح».
+on:
+  push:
+    branches: [main]
+    paths: ["data/dev-requests.json"]
+  schedule:
+    - cron: "23 */2 * * *"   # جولة احتياطية كل ساعتين
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: dev-agent
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get(sys.argv[2]) is False else "true")' "$j" dev_agent)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  agent:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: التنفيذ
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+        run: |
+          # حتى ثلاثة أعمال في التشغيل: دمج المعتمد وإغلاق المرفوض ثم تنفيذ طلب واحد
+          for n in 1 2 3; do
+            git fetch -q "https://github.com/$REPO.git" main
+            git checkout -q -f FETCH_HEAD
+            python3 tools/dev-agent.py pick > /tmp/pick
+            ACT=$(grep -o 'act=[^ ]*' /tmp/pick | cut -d= -f2); ID=$(grep -o 'id=[^ ]*' /tmp/pick | cut -d= -f2)
+            BR=$(grep -o 'branch=[^ ]*' /tmp/pick | cut -d= -f2); ENG=$(grep -o 'eng=[^ ]*' /tmp/pick | cut -d= -f2); AUTO=$(grep -o 'auto=[^ ]*' /tmp/pick | cut -d= -f2)
+            [ "${ACT:-none}" = none ] && { echo "لا عمل"; break; }
+            echo "العمل $n: $ACT $ID ($ENG)"
+            ACT="$ACT" ID="$ID" BR="$BR" ENG="$ENG" AUTO="$AUTO" bash tools/dev-agent.sh
+            git worktree remove -f /tmp/meta 2>/dev/null || true
+            [ "$ACT" = run ] && break
+          done
+      - name: إشعار
+        if: always()
+        run: |
+          [ -f tools/notify.py ] || exit 0
+          git fetch -q "https://github.com/${{ github.repository }}.git" main && git show FETCH_HEAD:data/dev-requests.json > /tmp/d.json || exit 0
+          python3 tools/dev-agent.py notify /tmp/d.json > /tmp/msg || exit 0
+          [ -s /tmp/msg ] && python3 tools/notify.py "$(cat /tmp/msg)" || true

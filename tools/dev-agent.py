@@ -54,12 +54,10 @@ def out(**kw):
 def pick():
     o = load()
     L = o.get("items", [])
-    # الطلب العالق في «قيد التنفيذ» أكثر من ساعتين (توقف التشغيل) يعود معلّقًا
+    # الطلب العالق في «قيد التنفيذ» أكثر من ساعتين (توقف التشغيل) يُعاد تنفيذه (دون حفظ هنا؛ التنفيذ يحدّث حالته)
     for x in L:
         if x.get("st") == "doing" and x.get("t0") and time.time() - time.mktime(time.strptime(x["t0"], "%Y-%m-%dT%H:%M:%SZ")) > 7200:
             x["st"] = "pending"
-            x.setdefault("h", []).append({"at": now(), "by": "agent", "m": "توقف التشغيل السابق؛ أُعيد الطلب إلى الانتظار."})
-            save(o)
     for st, act in (("approved", "merge"), ("rejected", "close")):
         for x in L:
             if x.get("st") == st and (act == "merge" or x.get("br")) and not x.get("closed"):
@@ -131,6 +129,14 @@ def status(kv):
     save(s, S)
 
 
+def notify(path):
+    L = [x for x in load(path).get("items", []) if x.get("u", "") > time.strftime("%Y-%m-%dT%H:%M", time.gmtime(time.time() - 3600))]
+    M = {"review": "🔍 بانتظار اعتمادك", "done": "✅ نُفّذ", "need": "❓ يحتاج توضيحًا", "pending": "⏳ يُعاد"}
+    for x in L:
+        if x.get("st") in M:
+            print(f"🛠️ المساعد التقني — {M[x['st']]}: {x.get('t', '')[:80]}\n#/dev")
+
+
 if __name__ == "__main__":
     c = sys.argv[1] if len(sys.argv) > 1 else ""
     if c == "pick":
@@ -141,6 +147,8 @@ if __name__ == "__main__":
         setf(sys.argv[2], sys.argv[3:])
     elif c == "log":
         log(sys.argv[2], " ".join(sys.argv[3:]))
+    elif c == "notify":
+        notify(sys.argv[2])
     elif c == "status":
         status(sys.argv[2:])
     else:

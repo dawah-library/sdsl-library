@@ -66,3 +66,9 @@
 - `tools/NEXT-TASKS.md` — المتبقي بالأولوية، وما ينتظر المالك.
 - `HANDOFF.md` — السجل الزمني والقرارات والملاحظات التقنية.
 - `data/dev-requests.json` — طلبات المدير من #/dev.
+
+## ٨. الوكيل البرمجي من داخل الموقع (#/dev)
+- المدير يكتب الطلب في `#/dev` ← يُحفظ في `data/dev-requests.json` ← تعمل `dev-agent.yml` فورًا (وكل ساعتين احتياطًا).
+- المحرك: Claude Code إن وُجد سر `CLAUDE_CODE_OAUTH_TOKEN` أو `ANTHROPIC_API_KEY`، وإلا Gemini CLI بالمفاتيح المجانية (gemini-2.5-pro ثم flash، مع التنقل بين المفاتيح).
+- يعمل في الفرع `agent/dev/<id>` بلا صلاحية رفع، ثم يُفحص (صياغة، صفحة التعريف، أسرار، فحص دخان بالمتصفح)، ويُصلَح مرة إن فشل، ثم «بانتظار اعتمادك» برابط الفروق. الاعتماد من الموقع يدمجه في main. المتابعة على الطلب تكمل على الفرع نفسه.
+- الملفات: tools/dev-agent.sh (المنفّذ)، tools/dev-agent.py (حالة الطلبات)، tools/agents/dev-agent-prompt.md (التكليف)، tools/agent-smoke.js. الإيقاف: مفتاح `dev_agent`.
