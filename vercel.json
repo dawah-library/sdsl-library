@@ -140,11 +140,11 @@
       "destination": "/api/sitemap?robots=1"
     },
     {
-      "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)",
+      "source": "/:first(book|mushaf|hadith|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)",
       "destination": "/api/page?__p=/:first"
     },
     {
-      "source": "/:first(book|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)/:rest*",
+      "source": "/:first(book|mushaf|hadith|library|articles|fatawa|bayanat|posts|post|author|authors|furqan|tafrighat|about|dawah|history|contact|search|qabasat|favs|admin|ask|ai|tarajim|tarjama|account|topics|topic)/:rest*",
       "destination": "/api/page?__p=/:first/:rest*"
     },
     {

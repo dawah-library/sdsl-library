@@ -21,6 +21,8 @@ module.exports = (req, res) => {
   arts.filter(a => !a.h).forEach(a => add("book/" + a.id + "/1", a.d, "0.6"));
   cat.authors.filter(a => !a.mergedInto).forEach(a => add("author/" + a.id, null, "0.6")); // المدموج يُفهرس بالسجل الموحَّد
   posts.filter(p => !p.demo).forEach(p => add("post/" + p.id, p.date, "0.4"));
+  for (let i = 1; i <= 114; i++) add("mushaf/" + i, null, "0.7"); // سور المصحف
+  try { (read("data/hadith/index.json").items || []).forEach(h => add("hadith/x/" + h[0], null, "0.5")); } catch (e) { } // الأربعون ورياض الصالحين وبلوغ المرام
   res.setHeader("content-type", "application/xml; charset=utf-8");
   res.status(200).end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`);
 };

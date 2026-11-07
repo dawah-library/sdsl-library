@@ -77,6 +77,32 @@ async function build(p, q, base) {
 ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Boolean).map(l => `<p>${esc(l)}</p>`).join("\n")}${nav}${toc && pg === 1 ? `<h2>الفهرس</h2><ul>${toc}</ul>` : ""}</article>`;
     return r;
   }
+  // المصحف: صفحة لكل سورة بنصها وبياناتها المنظمة (Chapter من كتاب «القرآن الكريم»)
+  if (v === "mushaf" && /^\d+$/.test(seg[1] || "")) {
+    let Q = null; try { Q = read("data/quran/quran.json"); } catch (e) { }
+    const sn = +seg[1], su = Q && Q.suras[sn - 1]; if (!su) { r.noindex = true; return r; }
+    const nm = String(su.name).replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "");
+    r.title = nm + " — المصحف | " + SITE; r.desc = cut(nm + ": " + su.ayat.slice(0, 3).join(" "), 180); r.type = "article";
+    r.ld = { "@context": "https://schema.org", "@type": "Chapter", name: nm, position: sn, inLanguage: "ar", isPartOf: { "@type": "Book", name: "القرآن الكريم", inLanguage: "ar" }, url: base + "mushaf/" + sn };
+    r.body = `<article><h1>${esc(nm)}</h1><p>${su.ayat.map((a, i) => esc(a) + " ﴿" + (i + 1) + "﴾").join(" ")}</p><p>${sn > 1 ? `<a href="/mushaf/${sn - 1}">السورة السابقة</a> ` : ""}${sn < 114 ? `<a href="/mushaf/${sn + 1}">السورة التالية</a>` : ""}</p></article>`;
+    return r;
+  }
+  // الحديث: الأربعون ورياض الصالحين وبلوغ المرام (في النشر)، وكتب السنة (من المستودع)، بيانات Quotation
+  if (v === "hadith" && (seg[1] === "x" || seg[1] === "k") && seg[2]) {
+    const hq = (m, src, who, extra) => { r.title = cut(m, 70) + " — " + src + " | " + SITE; r.desc = cut((who ? "عن " + who + ": " : "") + m, 180); r.type = "article";
+      r.ld = { "@context": "https://schema.org", "@type": "Quotation", text: cut(m, 1000), inLanguage: "ar", spokenByCharacter: { "@type": "Person", name: "محمد رسول الله ﷺ" }, isPartOf: { "@type": "Book", name: src, inLanguage: "ar" } };
+      r.body = `<article><h1>${esc(cut(m, 90))}</h1>${who ? `<p>عن ${esc(who)}</p>` : ""}<blockquote>«${esc(m)}»</blockquote><p>${esc(src)}${extra ? " — " + esc(extra) : ""}</p></article>`; return r; };
+    if (seg[1] === "x") { const bk = seg[2].split("-")[0]; if (!/^(arbain|riyad|bulugh)$/.test(bk)) { r.noindex = true; return r; }
+      let D = null, I = null; try { D = read("data/hadith/" + bk + ".json"); I = read("data/hadith/index.json"); } catch (e) { }
+      const h = D && D[seg[2]], row = I && (I.items || []).find(y => y[0] === seg[2]); if (!h) { r.noindex = true; return r; }
+      return hq(h.m || h.full, (I.books || {})[bk] || bk, row && row[5], row && [row[4], row[7] && cut(row[7], 120)].filter(Boolean).join(" — ")); }
+    try { const b = seg[2], n = seg[3], raw = f => "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/data/hadith/k/" + f;
+      const get = async f => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000); try { const x = await fetch(raw(f), { signal: ac.signal }); return x.ok ? await x.json() : null; } finally { clearTimeout(t); } };
+      if (!/^[a-z]+$/.test(b) || !n) { r.noindex = true; return r; }
+      const K = await get(b + ".json"), k = K ? (K.items || []).findIndex(y => String(y[0]) === String(n)) : -1; if (k < 0) { r.noindex = true; return r; }
+      const M = await get(b + "/m" + Math.floor(k / 500) + ".json") || {}, x = K.items[k];
+      return hq(M[String(x[0])] || x[6], K.t, x[5], [x[3], x[4], "رقم " + x[0]].filter(Boolean).join(" — ")); } catch (e) { r.noindex = true; return r; }
+  }
   if (v === "author" && seg[1]) {
     let a = author(seg[1]); if (a.mergedInto) { a = author(a.mergedInto); r.canon = "author/" + a.id; } if (!a.name) { r.noindex = true; return r; } // المدموج يعرض المؤلف الموحَّد برابطه المعتمد
     const books = cat().books.filter(b => b.authorId === a.id && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))), arts = aidx().filter(x => x.a === a.id);
