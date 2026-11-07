@@ -25,4 +25,5 @@ jobs:
       - name: الإخراج والفحص
         run: MAJ_STRICT=0 node tools/majalla-pdf.js ${{ github.event.inputs.issue }}
       - name: الحفظ
-        run: bash tools/git-save.sh "مطبعة المجلة: تحديث ملفات PDF" data/majalla/pdf
+        run: |
+          bash tools/git-save.sh "مطبعة المجلة: تحديث ملفات PDF" data/majalla/pdf
