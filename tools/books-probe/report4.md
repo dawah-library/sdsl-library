@@ -1,0 +1,37 @@
+# استكشاف إثراء (ithraa.io) — 2026-11-07 02:32
+
+- /robots.txt: `https://ithraa.io/robots.txt` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /sitemap.xml: `https://ithraa.io/sitemap.xml` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /sitemap-index.xml: `https://ithraa.io/sitemap-index.xml` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /manifest.json: `https://ithraa.io/manifest.json` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- الرئيسة: `https://ithraa.io/` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- روابط داخلية (3): https://ithraa.io/favicon.ico ، https://ithraa.io/ ، https://ithraa.io/styles-YU6WAT5Z.css
+- السكربتات: 5
+- نقاط الاتصال المذكورة: /books/Book-pdf/${this.bookId}/${this.bookCopyId} ، /books/Book-pdf/${this.bookId} ، /books ، /books/Book-pdf/${e}${a? ، /books/Books/${e}${p} ، /books/Book-pdf/${e.book_id}${o} ، /books/Books/${e.book_id}${o};sr=${e?.start_rank};er=${e.end_rank} ، /books/Book-pdf/${A} ، /books/Books/${_}#${a} ، /books/Books/${_};sr=${n};er=${o} ، /books/Books/${_} ، https://firebaseinstallations.googleapis.com/v1 ، https://fcmregistrations.googleapis.com/v1 ، /books/Book-pdf ، /books/Books
+- النطاقات المذكورة: eligrey.com ، github.com ، developer.microsoft.com ، raw.githubusercontent.com ، www.w3.org ، www.youtube.com ، ithraa.io ، apps.apple.com ، play.google.com ، support.mozilla.org ، www.example.com ، momentjs.com ، twitter.com ، www.ataat.com.sa ، www.rf.org.sa ، ithraa.sa ، darat.sa ، firebaseinstallations.googleapis.com ، fcmregistrations.googleapis.com ، www.googletagmanager.com ، miqyas.io ، malakat.io
+- /api: `https://ithraa.io/api` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /api/books: `https://ithraa.io/api/books` ← 200 application/json 37 حرفًا
+  - البنية: `{"message":"string","status":"number"}`
+  - مقتطف: `{"message":"No book data","status":0}`
+- /api/v1/books: `https://ithraa.io/api/v1/books` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://ithraa.io/api/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /api/categories: `https://ithraa.io/api/categories` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /books: `https://ithraa.io/books` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- /search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9: `https://ithraa.io/search?q=%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9` ← 200 text/html 60083 حرفًا
+  - النص الظاهر: إثراء المتون Please enable JavaScript to continue using this application.
+- نطاق api: `https://api.ithraa.io/` ← تعذر fetch failed  0 حرفًا
+- نطاق app: `https://app.ithraa.io/` ← 200 text/html 5 حرفًا
+  - النص الظاهر: test
+- نطاق backend: `https://backend.ithraa.io/` ← تعذر fetch failed  0 حرفًا
+- نطاق files: `https://files.ithraa.io/` ← تعذر fetch failed  0 حرفًا
+- نطاق cdn: `https://cdn.ithraa.io/` ← تعذر fetch failed  0 حرفًا
