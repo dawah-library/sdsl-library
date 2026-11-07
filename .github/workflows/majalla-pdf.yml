@@ -22,8 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: تحديث الأخبار ولقطة العدد
+        run: python3 tools/majalla-news.py || true
       - name: الإخراج والفحص
         run: MAJ_STRICT=0 node tools/majalla-pdf.js ${{ github.event.inputs.issue }}
       - name: الحفظ
         run: |
-          bash tools/git-save.sh "مطبعة المجلة: تحديث ملفات PDF" data/majalla/pdf
+          bash tools/git-save.sh "مطبعة المجلة: تحديث ملفات PDF" data/majalla/pdf data/majalla-news.json data/majalla.json

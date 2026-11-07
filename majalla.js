@@ -115,7 +115,7 @@ const MAJ = (() => {
      </article>`);
     document.querySelectorAll("[data-majpdf]").forEach(el => fetch(el.getAttribute("href"), { method: "HEAD" }).then(r => { if (r.ok) el.hidden = false; }).catch(() => { }));
     const jobs = [];
-    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => { const until = Date.parse(x.date) + 7 * 864e5; const L = N.items.filter(z => !z.date || Date.parse(z.date) <= until); lv.innerHTML = newsHtml(L, 5) + `<p><a class="btn s" href="#/majalla/c/news">كل الأخبار المحدَّثة ←</a></p>`; });
+    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => { const L = typeof MJP !== "undefined" ? MJP.issueNews(x, N) : N.items; lv.innerHTML = (typeof MJP !== "undefined" ? MJP.newsHTML(L, { per: 4, abs: true }) : newsHtml(L, 5)) + `<p class="mjn-more">${x.news && x.news.at ? `<span class="mut">أخبار العدد كما كانت عند صدوره (${esc(fmtDate(x.news.at))}).</span> ` : ""}<a class="btn s" href="#/majalla/c/news">آخر الأخبار المحدَّثة ←</a></p>`; });
     secs.forEach((s, si) => s.items.forEach((it, ii) => { const el = document.querySelector(`[data-mt="${si}-${ii}"]`);
       if (styOf(it) === "quiz") { if (el) el.innerHTML = (it.text ? html(it.text) : "") + quizHtml(it.qs); return; }
       jobs.push(itemText(it).then(t => { if (el) el.innerHTML = html(t, styOf(it)) || '<p class="mut">لا نص.</p>'; }).catch(e => { if (el) el.innerHTML = `<p class="mut">تعذر تحميل النص (${esc(e.message)}).</p>`; })); }));
@@ -129,7 +129,12 @@ const MAJ = (() => {
     const hits = []; visible().forEach(x => (x.secs || []).forEach((s, si) => { if (s.corner === k) s.items.forEach((it, ii) => hits.push({ x, s, si, ii, it })); }));
     const head = `<p><a href="#/majalla">${NAME}</a> › ${esc(c[1])}</p><div class="mjcorner-h cr-${k}"><span>${c[2]}</span><h2>${esc(c[1])}</h2><p>${esc(c[3])}</p></div>`;
     let body = "";
-    if (k === "news") { const N = await loadNews(q.r === "1"); body = `<div class="row" style="justify-content:space-between;align-items:center"><span class="mut">${N.updated ? "آخر تحديث: " + esc(new Date(N.updated).toLocaleString("ar-EG")) : ""}</span><a class="btn s mjrefresh" href="#/majalla/c/news?r=1">☁️ تحديث الأخبار</a></div>${newsHtml(N.items, 12)}<p class="mut">الأخبار عناوين وموجزات بروابط مصادرها الأصلية، ولا تُنقل نصوصها كاملة. المصادر: ${(N.sources || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join("، ") || "بوابة الفتح، آخر الأنباء، حزب النور"}.</p>`; }
+    if (k === "news") { const N = await loadNews(q.r === "1"), M_ = typeof MJP !== "undefined";
+      const cats = M_ ? MJP.NCATS.filter(c => N.items.some(z => MJP.ncat(z) === c[0])) : [];
+      body = `<div class="mjn-bar"><span class="mut">${N.updated ? "آخر تحديث: " + esc(new Date(N.updated).toLocaleString("ar-EG", { dateStyle: "long", timeStyle: "short" })) : ""} • يتجدد آليًّا كل ثلاث ساعات</span><a class="btn s" href="#/majalla/c/news?r=1">تحديث العرض</a></div>
+        ${cats.length > 1 ? `<div class="mjn-chips" role="toolbar" aria-label="أقسام الأخبار"><button class="chip x" data-mjnc="">الكل</button>${cats.map(c => `<button class="chip" data-mjnc="${c[0]}">${esc(c[1])}</button>`).join("")}</div>` : ""}
+        <div id="mjnall">${M_ ? MJP.newsHTML(N.items, { per: 12 }) : newsHtml(N.items, 12)}</div>
+        <p class="mut mjn-note">الأخبار عناوين وموجزات بروابط مصادرها الأصلية، ولا تُنقل نصوصها كاملة. المصادر المعتمدة: ${(N.sources || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join("، ") || "آخر الأنباء، حزب النور، بوابة الفتح"}.</p>`; }
     if (k === "adab" && (D.adab || []).length) body += `<h3>أعلام الأدب العربي والإسلامي</h3><div class="mjfig">${D.adab.map(f => `<div class="bk"><b>${esc(f.n)}</b>${f.d ? ` <span class="mut">(${esc(f.d)})</span>` : ""}<span>${esc(f.t || "")}</span>${f.w ? `<small class="mut">من آثاره: ${esc(f.w)}</small>` : ""}${f.q ? ` <a class="btn s" href="#/search?q=${encodeURIComponent(f.q)}">في المكتبة</a>` : ""}</div>`).join("")}</div>`;
     body += `<h3>${k === "news" ? "الركن الإخباري في الأعداد" : "مواد الركن في الأعداد"}</h3>` + (hits.map(h => `<a class="bk" href="#/majalla/${esc(h.x.id)}?m=${anchor(h.si, h.ii)}"><b>${esc(itemTitle(h.it))}</b><span>العدد ${toAr(h.x.no || "")} • ${esc(h.s.t)}${itemAuthor(h.it) ? " • " + esc(itemAuthor(h.it)) : ""}</span></a>`).join("") || '<p class="mut">لا مواد بعد في هذا الركن.</p>');
     view(head + body);
@@ -384,6 +389,7 @@ const MAJ = (() => {
   });
 
   document.addEventListener("click", async e => {
+    const nc = e.target.closest("[data-mjnc]"); if (nc) { const k = nc.dataset.mjnc; document.querySelectorAll("[data-mjnc]").forEach(b => b.classList.toggle("x", b === nc)); document.querySelectorAll("#mjnall .mjn-g").forEach(g => { g.hidden = !!k && g.dataset.cat !== k; }); return; }
     const qb = e.target.closest("[data-mjqz]"); if (qb) { const box = qb.closest(".mjq"), ok = +qb.dataset.mjqz === +box.dataset.a; box.querySelectorAll("[data-mjqz]").forEach(b => b.classList.toggle("ok", +b.dataset.mjqz === +box.dataset.a)); if (!ok) qb.classList.add("no"); box.querySelector(".mjqr").textContent = ok ? "أحسنت! إجابة صحيحة 🌟" : "حاول مرة أخرى، والصحيحة مظللة بالأخضر."; return; }
     const g = e.target.closest("[data-majgo]"); if (g) { e.preventDefault(); const el = document.getElementById(g.dataset.majgo); if (el) el.scrollIntoView({ behavior: "smooth" }); return; }
     const el = e.target.closest("[data-majact]"); if (!el || el.tagName === "SELECT") return; e.preventDefault(); e.stopImmediatePropagation();

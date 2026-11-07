@@ -262,13 +262,17 @@ ol.mj-list .mk { flex: none; min-width: 5.4mm; height: 5.4mm; margin-top: 1mm; b
 .cls .mj-poem { font-size: 12.4pt; }
 
 /* ٦ الأخبار */
-.news-grp { break-inside: auto; margin-bottom: 3mm; }
-.news-grp h4 { font-family: var(--f-ui); font-size: 10pt; font-weight: 700; color: var(--white); background: var(--g900); display: inline-block; padding: .5mm 3.4mm .8mm; margin: 0 0 1.6mm; border-radius: 0 0 0 2mm; break-after: avoid; }
-.news-it { padding: 1.6mm 0 1.8mm; border-bottom: .5pt solid var(--gr100); break-inside: avoid; }
-.news-it a.t { font-family: var(--f-body); font-weight: 700; font-size: 10pt; color: var(--g900); line-height: 1.6; display: block; }
-.news-it p { font-size: 9.2pt; line-height: 1.7; margin: .4mm 0 .2mm !important; color: var(--gr700); }
-.news-it .m { font-family: var(--f-ui); font-size: 7.4pt; color: var(--gr500); }
-.news-it .m a { color: var(--au700); }
+.news-grp { margin-bottom: 4mm; }
+.news-grp h4 { display: flex; align-items: center; gap: 2.2mm; font-family: var(--f-ui); font-size: 10.4pt; font-weight: 700; line-height: 1.5; color: var(--white); background: var(--g900); border-bottom: 1.2pt solid var(--au500); padding: 1mm 3.5mm 1.3mm; margin: 0 0 1mm; border-radius: 0 0 0 2mm; break-after: avoid; }
+.news-grp h4 .ni { width: 4.6mm; height: 4.6mm; color: var(--au300); flex: none; }
+.news-it { padding: 2mm 1mm 2.2mm; border-bottom: .5pt solid var(--gr300); break-inside: avoid; }
+.news-it.lead { background: var(--au100); padding: 2.4mm 3mm; border-bottom: 0; border-radius: 0 0 0 2mm; }
+.news-it a.t { font-family: var(--f-body); font-weight: 700; font-size: 10.4pt; color: var(--ink); line-height: 1.6; display: block; }
+.news-it.lead a.t { font-family: var(--f-cls); font-size: 13pt; line-height: 1.45; color: var(--g900); }
+.news-it p { font-size: 9.4pt; line-height: 1.75; margin: .6mm 0 .4mm !important; color: var(--gr700); text-align: justify; }
+.news-it .m { display: flex; flex-wrap: wrap; gap: 0 3mm; font-family: var(--f-ui); font-size: 7.6pt; color: var(--gr500); }
+.news-it .m b { color: var(--g800); }
+.news-it .m a { color: var(--au700); font-weight: 700; margin-right: auto; }
 .news-note { font-family: var(--f-ui); font-size: 7.8pt; color: var(--gr500); }
 
 /* ٧ الأسرة والطفل: بطاقة لينة */

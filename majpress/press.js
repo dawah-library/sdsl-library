@@ -97,8 +97,10 @@
   }
 
   function newsBlock() {
-    const L = C.news; if (!L.length) return `<p class="news-note">تُجمع الأخبار آليًّا من مصادرها وتظهر هنا عند التحديث.</p>`;
-    return NCATS.map(([k, t]) => [t, L.filter(z => (z.cat || "world") === k).slice(0, 4)]).filter(g => g[1].length).map(([t, a]) => `<div class="news-grp"><h4>${esc(t)}</h4>${a.map(z => `<div class="news-it"><a class="t" href="${esc(z.url)}">${esc(z.title)}</a>${z.sum ? `<p>${esc(z.sum)}</p>` : ""}<div class="m">${esc(z.src || "")}${z.date ? " • " + esc(fmtDate(z.date)) : ""} • <a href="${esc(z.url)}">الخبر في مصدره</a></div></div>`).join("")}</div>`).join("") + `<p class="news-note">عناوين وموجزات أخبار الأسبوع حتى تاريخ العدد، بروابط مصادرها الأصلية، ولا تُنقل نصوصها كاملة.</p>`;
+    const L = C.news; if (!L.length) return `<p class="news-note">تُجمع الأخبار آليًّا من مصادرها المعتمدة وتظهر هنا عند التحديث.</p>`;
+    const G = NCATS.map(c => [c, L.filter(z => MJP.ncat(z) === c[0]).slice(0, c[0] === "dawah" || c[0] === "nour" ? 4 : 3)]).filter(g => g[1].length);
+    const it = (z, lead) => `<div class="news-it${lead ? " lead" : ""}"><a class="t" href="${esc(z.url)}">${esc(z.title)}</a>${z.sum ? `<p>${esc(z.sum)}</p>` : ""}<div class="m"><b>${esc(z.src || "")}</b>${z.date ? `<span>${esc(fmtDate(z.date))}</span>` : ""}<a href="${esc(z.url)}">الخبر في مصدره</a></div></div>`;
+    return G.map(([c, a]) => `<div class="news-grp"><h4>${icon(c[2], "ni")}<span>${esc(c[1])}</span></h4>${a.map((z, i) => it(z, i === 0)).join("")}</div>`).join("") + `<p class="news-note">أبرز الأخبار حتى تاريخ العدد من المصادر المعتمدة (آخر الأنباء، حزب النور، بوابة الفتح): عناوين وموجزات بروابط مصادرها، ولا تُنقل نصوصها كاملة. وآخر الأخبار المحدَّثة في صفحة الركن الإخباري بالموقع.</p>`;
   }
 
   // الأبواب: يبدأ الباب صفحة جديدة إن كان أول الأبواب أو مقال العدد أو ركنًا دائمًا (تفضيلًا يُلغى إن ترك فراغًا كبيرًا)

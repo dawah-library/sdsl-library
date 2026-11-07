@@ -231,17 +231,32 @@
       }
       secs.push({ si, t: s.t, corner: s.corner || "", live: s.live || "", meta: secMeta(s), items, id: `s${si}` });
     }
-    let news = [];
-    if (secs.some(s => s.live === "news") && opt.news) {
-      const until = Date.parse(x.date) + 7 * 864e5;
-      news = (opt.news.items || []).filter(z => !z.date || Date.parse(z.date) <= until);
-    }
+    // أخبار العدد: لقطته المحفوظة عند صدوره، وإلا أخبار الشهر السابق لتاريخه
+    const news = secs.some(s => s.live === "news") ? issueNews(x, opt.news) : [];
     return { x, secs, news, motif: motifOf(x) };
   }
 
   const fmtDate = d => { try { return new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return d || ""; } };
-  const NCATS = [["dawah", "أخبار الدعوة السلفية"], ["nour", "أخبار حزب النور"], ["muslims", "أخبار المسلمين حول العالم"], ["world", "أبرز أخبار العالم"]];
+  // ---------- الركن الإخباري (يشترك فيه الموقع وملف PDF) ----------
+  const NCATS = [["dawah", "أخبار الدعوة السلفية", "lamp"], ["nour", "أخبار حزب النور", "medal"], ["muslims", "أخبار المسلمين", "star"], ["egypt", "الشأن المصري", "home"], ["region", "الأخبار الإقليمية", "globe"], ["world", "أخبار العالم", "news"]];
+  const ncat = z => NCATS.some(c => c[0] === z.cat) ? z.cat : "world";
+  const SRCC = { "آخر الأنباء": "akher", "حزب النور": "nour", "بوابة الفتح": "fath" };
+  // أخبار العدد: لقطته المحفوظة عند صدوره، وإلا أخبار الشهر السابق لتاريخه حتى أسبوع بعده
+  function issueNews(x, N) {
+    if (x.news && (x.news.items || []).length) return x.news.items;
+    const d0 = Date.parse(x.date), until = d0 + 7 * 864e5, since = d0 - 35 * 864e5;
+    return ((N && N.items) || []).filter(z => { const d = Date.parse(z.date); return !z.date || (d <= until && d >= since); });
+  }
+  const ago = d => { const m = (Date.now() - Date.parse(d)) / 6e4; if (!(m >= 0)) return ""; if (m < 60) return "منذ " + toAr(Math.max(1, Math.round(m))) + " دقيقة"; if (m < 1440) return "منذ " + toAr(Math.round(m / 60)) + " ساعة"; if (m < 2880) return "أمس"; if (m < 43200) return "منذ " + toAr(Math.round(m / 1440)) + " أيام"; return fmtDate(d); };
+  // بطاقات الأخبار للموقع: لكل قسم شريط عنوان، وأول خبر فيه بارز، والعنوان كاملًا والموجز والمصدر والتاريخ والرابط
+  function newsHTML(L, opt) {
+    opt = opt || {}; const per = opt.per || 5;
+    const G = NCATS.map(c => [c, L.filter(z => ncat(z) === c[0]).slice(0, per)]).filter(g => g[1].length);
+    if (!G.length) return '<p class="mjn-empty">تُجمع الأخبار آليًّا من مصادرها المعتمدة، وتظهر هنا عند أول تحديث.</p>';
+    const card = (z, lead) => `<article class="mjn-card${lead ? " lead" : ""}"><a class="mjn-t" href="${esc(z.url)}" target="_blank" rel="noopener nofollow">${esc(z.title)}</a>${z.sum ? `<p class="mjn-s">${esc(z.sum)}</p>` : ""}<div class="mjn-m"><span class="mjn-src s-${SRCC[z.src] || "x"}">${esc(z.src || "")}</span>${z.date ? `<time datetime="${esc(z.date)}" title="${esc(fmtDate(z.date))}">${esc(opt.abs ? fmtDate(z.date) : ago(z.date))}</time>` : ""}${(z.also || []).length ? `<span class="mjn-also">ونشرته أيضًا: ${z.also.map(a => `<a href="${esc(a.url)}" target="_blank" rel="noopener nofollow">${esc(a.src)}</a>`).join("، ")}</span>` : ""}<a class="mjn-go" href="${esc(z.url)}" target="_blank" rel="noopener nofollow">الخبر في مصدره ↗</a></div></article>`;
+    return `<div class="mjn">${G.map(([c, a]) => `<section class="mjn-g" data-cat="${c[0]}"><h4 class="mjn-h">${icon(c[2], "mjn-i")}<span>${esc(c[1])}</span><small>${toAr(a.length)}</small></h4><div class="mjn-list">${a.map((z, i) => card(z, i === 0 && opt.lead !== false)).join("")}</div></section>`).join("")}</div>`;
+  }
 
-  const MJP = { SITE, PUBLISHER, STY, SECTIONS, NCATS, toAr, esc, ordinal, fmtDate, icon, star8, patternURL, motif, motifOf, secMeta, Library, sliceText, resolveItem, parse, inline, render, compile };
+  const MJP = { SITE, PUBLISHER, STY, SECTIONS, NCATS, ncat, issueNews, newsHTML, ago, toAr, esc, ordinal, fmtDate, icon, star8, patternURL, motif, motifOf, secMeta, Library, sliceText, resolveItem, parse, inline, render, compile };
   if (typeof module !== "undefined" && module.exports) module.exports = MJP; else root.MJP = MJP;
 })(typeof self !== "undefined" ? self : this);

@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: "17 */3 * * *"   # كل ثلاث ساعات
   workflow_dispatch:
+    inputs:
+      dry: { description: "تجربة بلا حفظ (1) مع تقرير مفصل", required: false, default: "" }
 permissions:
   contents: write
 concurrency:
@@ -30,7 +32,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: جمع الأخبار
-        run: python3 tools/majalla-news.py
-      - name: الحفظ
+        id: news
+        env:
+          NEWS_DRY: ${{ github.event.inputs.dry }}
         run: |
-          bash tools/git-save.sh "الركن الإخباري - تحديث الأخبار" data/majalla-news.json
+          python3 tools/majalla-news.py
+          git diff --quiet data/majalla.json || echo "snap=1" >> "$GITHUB_OUTPUT"
+      # تغيّرت لقطة أخبار عدد حديث: يُعاد إخراج ملفات PDF للعدد
+      - uses: actions/setup-node@v4
+        if: steps.news.outputs.snap == '1'
+        with: { node-version: 20 }
+      - name: إعادة إخراج PDF
+        if: steps.news.outputs.snap == '1'
+        run: |
+          npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+          MAJ_STRICT=0 node tools/majalla-pdf.js
+      - name: الحفظ
+        if: github.event.inputs.dry != '1'
+        run: |
+          bash tools/git-save.sh "الركن الإخباري - تحديث الأخبار" data/majalla-news.json data/majalla.json data/majalla/pdf
