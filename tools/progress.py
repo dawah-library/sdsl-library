@@ -47,6 +47,9 @@ def main():
 
     books = [b for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book" and not b.get("demo")]
     out, dispatch = {}, set()
+    sw = (jl(D("switches.json"), {}) or {}).get("s") or {}
+    au_only = set(jl(D("audio", "_settings.json"), {}).get("only") or [])
+    tj_off = sw.get("tashjir") is False or sw.get("all_jobs") is False  # الموقوف لا يُضاف إلى طابوره فلا تتكدس الطلبات
     tj_have = set(tj) | {x.get("id") if isinstance(x, dict) else x for x in tjq.get("items", [])}
     au_have = set(au) | {x.get("id") if isinstance(x, dict) else x for x in auq.get("items", [])}
 
@@ -96,9 +99,9 @@ def main():
                     "pct": pct, "next": nxt["t"] if nxt else "اكتمل", "eta": eta, "st": st, "h": hist, "path": bid in in_paths}
 
         # التقديم الآلي للخدمات بعد اكتمال تدقيق النص
-        if text_ready and bid not in tj_have:
+        if text_ready and bid not in tj_have and not tj_off:
             tjq.setdefault("items", []).append({"id": bid, "auto": 1}); tj_have.add(bid); dispatch.add("tashjir")
-        if text_ready and t.get("ok") and bid not in au_have:
+        if text_ready and t.get("ok") and bid not in au_have and (not au_only or bid in au_only):
             auq.setdefault("items", []).append({"id": bid, "auto": 1}); au_have.add(bid); dispatch.add("tts " + bid)
 
     # الكتب المرفوعة التي لم تُحوَّل بعد (صندوق التحويل)

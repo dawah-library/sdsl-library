@@ -584,6 +584,14 @@ async def main():
         cb = {b["id"]: b for b in catalog()["books"]}
         unrev = lambda k: bool(cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))  # يُنتظر اكتمال مراجعة النص قبل إعادة التسجيل
         items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not unrev(k) and not any(i["id"] == k for i in items)]
+    ONLY = set(jload(os.path.join(AUD, "_settings.json"), {}).get("only") or [])  # قصر التسجيل على كتب بعينها (قرار المدير ٧ نوفمبر: تمام المنة وحده)
+    if ONLY:
+        items = [i for i in items if i.get("id") in ONLY or i.get("del")]
+        cb = {b["id"]: b for b in catalog()["books"]}
+        for k in ONLY:  # يُسجَّل بعد اكتمال تدقيق نصه فقط (لا يُسجَّل نص لم يُراجَع على الصور)
+            ready = not (cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))
+            if ready and not any(i.get("id") == k for i in items): items.append({"id": k, "voice": (lst.get(k) or {}).get("v")})
+        items = [i for i in items if i.get("del") or not (cb.get(i["id"], {}).get("ocr") and (cb[i["id"]].get("unrev") or cb[i["id"]].get("lite")))]
     left_items = []
     for it in items:
         if left() < 300:
