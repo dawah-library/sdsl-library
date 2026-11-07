@@ -45,6 +45,7 @@ const MAJ = (() => {
     let t;
     if (!it.ref) t = (it.text || "") + (it.qs ? (it.text ? "\n" : "") + it.qs.map((z, i) => `${i + 1}. ${z.q} (${z.o.join(" - ")})`).join("\n") : "");
     else { const b = await loadBook(it.ref);
+      if (typeof MJP !== "undefined") return MJP.sliceText(b.pages, it, kindOf(b) === "book"); // وصل الصفحات المنقسمة كما في ملف PDF
       if (kindOf(b) !== "book") t = b.pages.join("\n");
       else { const p = Math.max(1, it.p || 1), p2 = Math.min(b.pages.length, Math.max(p, it.p2 || p), p + 4); t = b.pages.slice(p - 1, p2).join("\n"); } }
     if (it.from) { const i = t.indexOf(it.from); if (i >= 0) { t = t.slice(i); if (it.to) { const j = t.indexOf(it.to); if (j >= 0) t = t.slice(0, j + it.to.length); } } }
@@ -55,7 +56,9 @@ const MAJ = (() => {
     return String(t || "").split(/\n+/).map(s => s.replace(/^@@\s*/, "").replace(/\[ص:\s*\d+\]/g, "").replace(/\[\[[^\]]*\]\]/g, "").replace(/([ء-يً-ْ])\d{1,2}(?=[\s،.:؛!؟)»"]|$)/g, "$1").trim())
       .filter(s => s && !/^#\s*[\d\s\-–—.]*$/.test(s) && s !== "#" && !/^\(\d+\/\d+\)$/.test(s) && !/^[-–—\s*]+$/.test(s)).map(s => /^#\s*/.test(s) ? { h: s.replace(/^#+\s*(AUTO\s*)?/, "").replace(/^\d+\s*[-–]\s*/, "") } : { p: s });
   }
-  const html = (t, sty) => blocks(t).map(b => b.h ? `<h5>${esc(b.h)}</h5>` : sty === "fatwa" && /^(السؤال|الجواب)\s*:?$/.test(b.p) ? `<p class="mjlab">${esc(b.p.replace(/\s*:$/, ""))}</p>` : `<p>${esc(b.p)}</p>`).join("");
+  // العرض بقوالب «مطبعة المجلة» (الآيات، متون الأحاديث، الشعر شطرين، السؤال والجواب، القوائم)، والاحتياط العرض القديم
+  const html = (t, sty) => typeof MJP !== "undefined" ? MJP.render(MJP.parse(t, sty), sty) : html0(t, sty);
+  const html0 = (t, sty) => blocks(t).map(b => b.h ? `<h5>${esc(b.h)}</h5>` : sty === "fatwa" && /^(السؤال|الجواب)\s*:?$/.test(b.p) ? `<p class="mjlab">${esc(b.p.replace(/\s*:$/, ""))}</p>` : `<p>${esc(b.p)}</p>`).join("");
   const srcLink = it => { const b = it.ref && B(it.ref); if (!b) return it.src ? esc(it.src) : ""; const pg = kindOf(b) === "book" ? "/" + (it.p || 1) : ""; return `<a href="#/book/${esc(b.id)}${pg}">${esc(b.setTitle || b.title)}${pg ? " — ص" + toAr(it.p || 1) + (it.p2 > it.p ? "–" + toAr(it.p2) : "") : ""}</a>`; };
   const colOf = it => { const b = it.ref && B(it.ref); return b ? (bc(b) === "dawah" ? "مكتبة الدعوة السلفية" : COL.turath || "المكتبة العامة") : ""; };
 
@@ -101,17 +104,18 @@ const MAJ = (() => {
        <h2>${esc(x.title || x.theme || "")}</h2>${x.sub ? `<p class="majsub">${esc(x.sub)}</p>` : ""}
        <div class="majin"><b>في هذا العدد</b><ul>${all.slice(0, 8).map(it => `<li>${esc(itemTitle(it))}</li>`).join("")}</ul></div>
        <div class="majmix">${toAr(all.length)} مادة: ${toAr(nDawah)} من مكتبة الدعوة السلفية، و${toAr(nGen)} من المكتبة العامة</div></header>
-      <div class="row noprint majtools"><button class="btn p s" data-majact="flip" data-id="${esc(x.id)}">📖 تصفح كملف مصور</button><button class="btn s" data-majact="zip" data-id="${esc(x.id)}">تحميل صورًا</button><button class="btn s" data-majact="pdf">PDF / طباعة</button><button class="btn s" data-majact="word" data-id="${esc(x.id)}">Word</button><button class="btn s" data-majact="fav" data-id="${esc(x.id)}">${fav ? "★ في المفضلة" : "☆ حفظ العدد"}</button><button class="btn s" data-majact="share" data-id="${esc(x.id)}">مشاركة</button>${staff() ? `<a class="btn s" href="#/admin?t=majalla&i=${esc(x.id)}">تحرير العدد</a>` : ""}</div>
+      <div class="row noprint majtools"><button class="btn p s" data-majact="flip" data-id="${esc(x.id)}">📖 تصفح كملف مصور</button><button class="btn s" data-majact="zip" data-id="${esc(x.id)}">تحميل صورًا</button><a class="btn p s" href="majpress/?issue=${esc(x.id)}" target="_blank" rel="noopener">📄 معاينة PDF الاحترافي</a><a class="btn s" data-majpdf="${esc(x.id)}" href="data/majalla/pdf/${esc(x.id)}.pdf" download hidden>تحميل PDF</a><a class="btn s" data-majpdf="${esc(x.id)}-print" href="data/majalla/pdf/${esc(x.id)}-print.pdf" download hidden>PDF للطباعة</a><button class="btn s" data-majact="pdf">طباعة الصفحة</button><button class="btn s" data-majact="word" data-id="${esc(x.id)}">Word</button><button class="btn s" data-majact="fav" data-id="${esc(x.id)}">${fav ? "★ في المفضلة" : "☆ حفظ العدد"}</button><button class="btn s" data-majact="share" data-id="${esc(x.id)}">مشاركة</button>${staff() ? `<a class="btn s" href="#/admin?t=majalla&i=${esc(x.id)}">تحرير العدد</a>` : ""}</div>
       <form class="sbox noprint" data-form="majiq" style="max-width:none"><input name="q" type="search" placeholder="ابحث في هذا العدد" aria-label="بحث في العدد"><button class="btn">بحث</button></form><p id="majiqr" class="mut noprint" role="status"></p>
       <div class="majbody">
       <nav class="majtoc"><h3>فهرس العدد</h3><ol>${toc}</ol></nav>
       ${x.intro ? `<section class="majintro"><h3>افتتاحية العدد</h3>${html(x.intro)}<p class="mut" style="text-align:left">— هيئة التحرير</p></section>` : ""}
-      ${secs.map((s, si) => `<section class="majsec${s.corner ? " cr-" + esc(s.corner) : ""}">${s.corner && cornerOf(s.corner) ? `<div class="mjcrb"><span>${cornerOf(s.corner)[2]}</span> <a href="#/majalla/c/${esc(s.corner)}">${esc(cornerOf(s.corner)[1])}</a></div>` : ""}<h3 class="majsect"><span>${esc(s.t)}</span></h3>${s.live === "news" ? `<div class="majitem mj-news" data-mjlive="news"><p class="mut">جارٍ تحميل الأخبار…</p></div>` : ""}${s.items.map((it, ii) => `<div class="majitem mj-${styOf(it)}" id="${anchor(si, ii)}"><div class="mjkind">${esc((STY.find(z => z[0] === styOf(it)) || STY[0])[1])}${colOf(it) ? " • " + esc(colOf(it)) : ""}</div><h4>${esc(itemTitle(it))}</h4><p class="mut mjby">${esc(itemAuthor(it))}${itemOrig(it) && itemOrig(it) !== itemTitle(it) ? ` • من «${esc(itemOrig(it))}» <small>(العنوان أعلاه من إعداد المجلة)</small>` : ""}</p>${it.intro ? `<aside class="majnote"><b>مقدمة المجلة:</b> ${esc(it.intro)}</aside>` : ""}<div class="majtext" data-mt="${si}-${ii}"><p class="mut">جارٍ تحميل النص…</p></div><p class="majsrc mut">المصدر: ${srcLink(it)}</p></div>`).join("")}</section>`).join("")}
+      ${secs.map((s, si) => `<section class="majsec${s.corner ? " cr-" + esc(s.corner) : ""}">${s.corner && cornerOf(s.corner) ? `<div class="mjcrb"><span>${cornerOf(s.corner)[2]}</span> <a href="#/majalla/c/${esc(s.corner)}">${esc(cornerOf(s.corner)[1])}</a></div>` : ""}<h3 class="majsect"><span>${esc(s.t)}</span>${typeof MJP !== "undefined" && MJP.secMeta(s).tag ? `<small>${esc(MJP.secMeta(s).tag)}</small>` : ""}</h3>${s.live === "news" ? `<div class="majitem mj-news" data-mjlive="news"><p class="mut">جارٍ تحميل الأخبار…</p></div>` : ""}${s.items.map((it, ii) => `<div class="majitem mj-${styOf(it)}" id="${anchor(si, ii)}"><div class="mjkind">${esc((STY.find(z => z[0] === styOf(it)) || STY[0])[1])}${colOf(it) ? " • " + esc(colOf(it)) : ""}</div><h4>${esc(itemTitle(it))}</h4><p class="mut mjby">${esc(itemAuthor(it))}${itemOrig(it) && itemOrig(it) !== itemTitle(it) ? ` • من «${esc(itemOrig(it))}» <small>(العنوان أعلاه من إعداد المجلة)</small>` : ""}</p>${it.intro ? `<aside class="majnote"><b>مقدمة المجلة:</b> ${esc(it.intro)}</aside>` : ""}<div class="majtext" data-mt="${si}-${ii}"><p class="mut">جارٍ تحميل النص…</p></div><p class="majsrc mut">المصدر: ${srcLink(it)}</p></div>`).join("")}</section>`).join("")}
       </div>
       <footer class="majfoot mut">${esc(D.name || NAME)} — العدد ${toAr(x.no || "")} — ${esc(fmtDate(x.date))}. النصوص منقولة بلفظها من مصادرها في المكتبة، والعناوين المميزة والمقدمات من إعداد المجلة.</footer>
      </article>`);
+    document.querySelectorAll("[data-majpdf]").forEach(el => fetch(el.getAttribute("href"), { method: "HEAD" }).then(r => { if (r.ok) el.hidden = false; }).catch(() => { }));
     const jobs = [];
-    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => { const until = Date.parse(x.date) + 7 * 864e5; const L = N.items.filter(z => !z.date || Date.parse(z.date) <= until); lv.innerHTML = newsHtml(L, 5) + `<p><a class="btn s" href="#/majalla/c/news">كل الأخبار المحدَّثة ←</a></p>`; });
+    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => { const L = typeof MJP !== "undefined" ? MJP.issueNews(x, N) : N.items; lv.innerHTML = (typeof MJP !== "undefined" ? MJP.newsHTML(L, { per: 4, abs: true }) : newsHtml(L, 5)) + `<p class="mjn-more">${x.news && x.news.at ? `<span class="mut">أخبار العدد كما كانت عند صدوره (${esc(fmtDate(x.news.at))}).</span> ` : ""}<a class="btn s" href="#/majalla/c/news">آخر الأخبار المحدَّثة ←</a></p>`; });
     secs.forEach((s, si) => s.items.forEach((it, ii) => { const el = document.querySelector(`[data-mt="${si}-${ii}"]`);
       if (styOf(it) === "quiz") { if (el) el.innerHTML = (it.text ? html(it.text) : "") + quizHtml(it.qs); return; }
       jobs.push(itemText(it).then(t => { if (el) el.innerHTML = html(t, styOf(it)) || '<p class="mut">لا نص.</p>'; }).catch(e => { if (el) el.innerHTML = `<p class="mut">تعذر تحميل النص (${esc(e.message)}).</p>`; })); }));
@@ -125,7 +129,12 @@ const MAJ = (() => {
     const hits = []; visible().forEach(x => (x.secs || []).forEach((s, si) => { if (s.corner === k) s.items.forEach((it, ii) => hits.push({ x, s, si, ii, it })); }));
     const head = `<p><a href="#/majalla">${NAME}</a> › ${esc(c[1])}</p><div class="mjcorner-h cr-${k}"><span>${c[2]}</span><h2>${esc(c[1])}</h2><p>${esc(c[3])}</p></div>`;
     let body = "";
-    if (k === "news") { const N = await loadNews(q.r === "1"); body = `<div class="row" style="justify-content:space-between;align-items:center"><span class="mut">${N.updated ? "آخر تحديث: " + esc(new Date(N.updated).toLocaleString("ar-EG")) : ""}</span><a class="btn s mjrefresh" href="#/majalla/c/news?r=1">☁️ تحديث الأخبار</a></div>${newsHtml(N.items, 12)}<p class="mut">الأخبار عناوين وموجزات بروابط مصادرها الأصلية، ولا تُنقل نصوصها كاملة. المصادر: ${(N.sources || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join("، ") || "بوابة الفتح، آخر الأنباء، حزب النور"}.</p>`; }
+    if (k === "news") { const N = await loadNews(q.r === "1"), M_ = typeof MJP !== "undefined";
+      const cats = M_ ? MJP.NCATS.filter(c => N.items.some(z => MJP.ncat(z) === c[0])) : [];
+      body = `<div class="mjn-bar"><span class="mut">${N.updated ? "آخر تحديث: " + esc(new Date(N.updated).toLocaleString("ar-EG", { dateStyle: "long", timeStyle: "short" })) : ""} • يتجدد آليًّا كل ثلاث ساعات</span><a class="btn s" href="#/majalla/c/news?r=1">تحديث العرض</a></div>
+        ${cats.length > 1 ? `<div class="mjn-chips" role="toolbar" aria-label="أقسام الأخبار"><button class="chip x" data-mjnc="">الكل</button>${cats.map(c => `<button class="chip" data-mjnc="${c[0]}">${esc(c[1])}</button>`).join("")}</div>` : ""}
+        <div id="mjnall">${M_ ? MJP.newsHTML(N.items, { per: 12 }) : newsHtml(N.items, 12)}</div>
+        <p class="mut mjn-note">الأخبار عناوين وموجزات بروابط مصادرها الأصلية، ولا تُنقل نصوصها كاملة. المصادر المعتمدة: ${(N.sources || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join("، ") || "آخر الأنباء، حزب النور، بوابة الفتح"}.</p>`; }
     if (k === "adab" && (D.adab || []).length) body += `<h3>أعلام الأدب العربي والإسلامي</h3><div class="mjfig">${D.adab.map(f => `<div class="bk"><b>${esc(f.n)}</b>${f.d ? ` <span class="mut">(${esc(f.d)})</span>` : ""}<span>${esc(f.t || "")}</span>${f.w ? `<small class="mut">من آثاره: ${esc(f.w)}</small>` : ""}${f.q ? ` <a class="btn s" href="#/search?q=${encodeURIComponent(f.q)}">في المكتبة</a>` : ""}</div>`).join("")}</div>`;
     body += `<h3>${k === "news" ? "الركن الإخباري في الأعداد" : "مواد الركن في الأعداد"}</h3>` + (hits.map(h => `<a class="bk" href="#/majalla/${esc(h.x.id)}?m=${anchor(h.si, h.ii)}"><b>${esc(itemTitle(h.it))}</b><span>العدد ${toAr(h.x.no || "")} • ${esc(h.s.t)}${itemAuthor(h.it) ? " • " + esc(itemAuthor(h.it)) : ""}</span></a>`).join("") || '<p class="mut">لا مواد بعد في هذا الركن.</p>');
     view(head + body);
@@ -330,7 +339,7 @@ const MAJ = (() => {
        <button class="btn s" data-majact="rmsec" data-k="${si}">حذف الباب من العدد</button></fieldset>`).join("")}
      <div class="row"><input id="majnewsec" placeholder="اسم باب جديد" maxlength="80"><button class="btn s" data-majact="addsec">إضافة باب</button></div>
      <details><summary>إعادة إنشاء المسودة الآلية بموضوع آخر (يستبدل الأبواب الحالية)</summary><div class="row"><input id="majretheme" value="${esc(x.theme || "")}" maxlength="120"><button class="btn s" data-majact="regen">إنشاء</button></div></details>
-     <div class="savebar"><button class="btn p" data-majact="save">حفظ العدد</button> <span id="majst" class="mut">${x.log && x.log.length ? "آخر تعديل: " + esc(fmtDate(x.log[x.log.length - 1].at)) : ""}</span></div>
+     <div class="savebar"><button class="btn p" data-majact="save">حفظ العدد</button> <button class="btn" data-majact="preview" title="يعرض الغلاف والفهرس وكل الصفحات بالتعديلات الحالية، ويكشف الصفحات الفارغة والمتجاوزة وغير المتوازنة">معاينة PDF قبل الاعتماد</button> <span id="majst" class="mut">${x.log && x.log.length ? "آخر تعديل: " + esc(fmtDate(x.log[x.log.length - 1].at)) : ""}</span></div>
      ${x.log && x.log.length ? `<details><summary>سجل العدد</summary><ul class="mut">${x.log.slice(-30).reverse().map(l => `<li>${esc(fmtDate(l.at))} — ${esc(l.by)}: ${esc(l.act)}</li>`).join("")}</ul></details>` : ""}`;
   }
   const at = k => { const [si, ii] = k.split(".").map(Number); return [ED.secs[si], ii, si]; };
@@ -380,6 +389,7 @@ const MAJ = (() => {
   });
 
   document.addEventListener("click", async e => {
+    const nc = e.target.closest("[data-mjnc]"); if (nc) { const k = nc.dataset.mjnc; document.querySelectorAll("[data-mjnc]").forEach(b => b.classList.toggle("x", b === nc)); document.querySelectorAll("#mjnall .mjn-g").forEach(g => { g.hidden = !!k && g.dataset.cat !== k; }); return; }
     const qb = e.target.closest("[data-mjqz]"); if (qb) { const box = qb.closest(".mjq"), ok = +qb.dataset.mjqz === +box.dataset.a; box.querySelectorAll("[data-mjqz]").forEach(b => b.classList.toggle("ok", +b.dataset.mjqz === +box.dataset.a)); if (!ok) qb.classList.add("no"); box.querySelector(".mjqr").textContent = ok ? "أحسنت! إجابة صحيحة 🌟" : "حاول مرة أخرى، والصحيحة مظللة بالأخضر."; return; }
     const g = e.target.closest("[data-majgo]"); if (g) { e.preventDefault(); const el = document.getElementById(g.dataset.majgo); if (el) el.scrollIntoView({ behavior: "smooth" }); return; }
     const el = e.target.closest("[data-majact]"); if (!el || el.tagName === "SELECT") return; e.preventDefault(); e.stopImmediatePropagation();
@@ -392,6 +402,7 @@ const MAJ = (() => {
     if (a === "share") { const x = D && D.issues.find(y => y.id === el.dataset.id), url = location.origin + location.pathname + "#/majalla/" + el.dataset.id, t = (D.name || NAME) + " — العدد " + ((x && x.no) || "") + ": " + ((x && x.title) || ""); if (navigator.share) navigator.share({ title: t, url }).catch(() => { }); else { navigator.clipboard.writeText(t + "\n" + url).then(() => toast("نُسخ الرابط")); } return; }
     if (!ED) return;
     const st = document.getElementById("majst");
+    if (a === "preview") { try { localStorage.setItem("majpress:draft", JSON.stringify(ED)); window.open("majpress/?src=draft", "_blank", "noopener"); } catch (err) { st.textContent = "تعذر فتح المعاينة: " + err.message; } return; }
     if (a === "up" || a === "down") { const [s, ii] = at(el.dataset.k), j = a === "up" ? ii - 1 : ii + 1; [s.items[ii], s.items[j]] = [s.items[j], s.items[ii]]; paint(); }
     else if (a === "rm") { const [s, ii] = at(el.dataset.k); s.items.splice(ii, 1); paint(); }
     else if (a === "rmsec") { if (!ED.secs[+el.dataset.k].items.length || confirm("حذف الباب وما فيه من العدد؟ (لا تُحذف المواد من المكتبة)")) { ED.secs.splice(+el.dataset.k, 1); paint(); } }

@@ -1247,7 +1247,7 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 .mjcorners{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0 18px}
 .mjcorner{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--sf);border-inline-start:6px solid var(--crc,var(--ac))}
 .mjcorner span{font-size:1.6rem}.mjcorner b{font-family:Amiri,serif;font-size:1.2rem;color:var(--crc,var(--ac))}.mjcorner small{color:var(--mut,#5b6b66);line-height:1.6}
-.cr-news{--crc:#8a1c1c}.cr-kids{--crc:#d9730d}.cr-women{--crc:#9b3b6b}.cr-adab{--crc:#7a5a12}
+.cr-news{--crc:#0b3b2e}.cr-kids{--crc:#d9730d}.cr-women{--crc:#9b3b6b}.cr-adab{--crc:#7a5a12}
 .mjcorner-h{text-align:center;padding:18px 14px;border-radius:16px;margin:8px 0 14px;color:#fff;background:linear-gradient(150deg,var(--crc,#0f5c4d),color-mix(in srgb,var(--crc,#0f5c4d) 55%,#000))}.mjcorner-h span{font-size:2.4rem}.mjcorner-h h2{color:#fff;margin:4px 0}.mjcorner-h p{margin:0;opacity:.92}
 .majsec[class*=cr-]{border-top:3px solid var(--crc);margin-top:26px;padding-top:4px}.majsec[class*=cr-] .majsect span{background:var(--crc);color:#fff}
 .mjcrb{text-align:center;margin-top:10px;font-weight:700}.mjcrb a{color:var(--crc);text-decoration:none;font-size:.9rem;letter-spacing:.3px}
@@ -1278,3 +1278,51 @@ blockquote.fqq footer{margin-top:6px;font-size:.85rem;color:var(--mut);font-fami
 .rd a.qref{color:inherit;text-decoration:underline dotted color-mix(in srgb,var(--ac) 70%,transparent);text-underline-offset:4px;cursor:pointer;border-radius:4px}
 .rd a.qref:hover,.rd a.qref:focus-visible{color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
 .rd a.qref.qadd{font-size:.72em;opacity:.7;text-decoration:none;margin-inline-start:3px;white-space:nowrap;font-family:var(--hf,inherit)}
+/* مجلة المكتبة: قوالب «مطبعة المجلة» في صفحة العدد (majpress/core.js) — الهوية نفسها في ملف PDF */
+.majissue{--mjg:#0b3b2e;--mjg7:#17604a;--mjau:#a67f2e;--mjau3:#e1c98d;--mjau1:color-mix(in srgb,#c09a48 13%,var(--sf))}
+.majsect small{display:block;font-size:.82rem;color:var(--mut,#6f7772);margin-top:4px;font-family:"IBM Plex Sans Arabic",sans-serif}
+.majtext .ay{font-family:Amiri,serif;color:var(--mjg7);font-size:1.06em}
+html[data-theme=dark] .majtext .ay,html[data-theme=dark] .majtext .hd{color:#8fd0b2}
+.majtext .ayref{font-size:.74em;color:var(--mjau);white-space:nowrap}
+.majtext .hd{color:var(--mjg7);font-weight:700}
+.majtext .tk{font-size:.8em;color:var(--mut,#6f7772)}
+.majtext .mj-h{font-family:"IBM Plex Sans Arabic",sans-serif;font-size:1.02rem;font-weight:700;color:var(--ac);margin:1em 0 .35em;display:flex;gap:8px;align-items:baseline}
+.majtext .mj-h::before{content:"";width:7px;height:7px;background:#c09a48;transform:rotate(45deg);flex:none}
+.majtext .mj-h.lab{font-size:.95rem;color:var(--mjau)}
+.majtext .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;height:1.6em;padding:0 .3em;margin-inline-end:.4em;border-radius:1em;background:#c09a48;color:#fff;font:700 .72rem "IBM Plex Sans Arabic",sans-serif;vertical-align:.1em}
+.majtext p.mj-ayah{text-align:center;background:color-mix(in srgb,var(--ac) 7%,transparent);border-radius:10px;padding:6px 12px}
+.majtext p.lead{font-size:1.08em;color:var(--ac)}
+.majtext .mj-list{padding-inline-start:1.4em;margin:.4em 0}.majtext ol.mj-list{list-style:none;padding-inline-start:0}.majtext ol.mj-list li{display:flex;gap:8px;margin:.25em 0}
+.majtext ol.mj-list .mk{flex:none;min-width:1.55em;height:1.55em;margin-top:.35em;border-radius:50%;background:var(--ac);color:#f6edd6;font:700 .72rem "IBM Plex Sans Arabic",sans-serif;display:inline-flex;align-items:center;justify-content:center}
+.majtext ul.mj-list li::marker{color:#c09a48}
+.majtext .mj-poem{margin:.6em auto;max-width:600px;padding:8px 16px;background:var(--mjau1);border-block:1px solid var(--mjau3);font-family:Amiri,serif;font-size:1.08em;line-height:2}
+.majtext .mj-poem .bt{display:grid;grid-template-columns:1fr 1fr;gap:0 2em}.majtext .mj-poem .bt span:last-child{text-align:end}.majtext .mj-poem .bt.one{grid-template-columns:1fr;text-align:center}
+@media (max-width:600px){.majtext .mj-poem .bt{grid-template-columns:1fr}.majtext .mj-poem .bt span:last-child{text-align:start;padding-inline-start:2em}}
+.majtext .mj-qa{margin:.8em 0 .3em}.majtext .mj-qa span{display:inline-block;font:700 .82rem "IBM Plex Sans Arabic",sans-serif;color:#fff;background:var(--ac);border-radius:14px;padding:1px 12px}.majtext .mj-qa.q span{background:var(--mjau)}
+.majtext .qbox{background:var(--mjau1);border-inline-start:3px solid #c09a48;border-radius:8px;padding:2px 12px}
+
+/* الركن الإخباري: بطاقات واضحة بهوية المجلة (الأخضر الداكن والذهبي)، في الموقع وفي صفحة العدد */
+.mjn{display:grid;gap:18px}
+.mjn-g{background:var(--sf);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.mjn-h{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;background:#0b3b2e;color:#fff;font:700 1.08rem/1.4 "IBM Plex Sans Arabic",sans-serif;border-bottom:3px solid #c09a48}
+.mjn-h .mjn-i{width:22px;height:22px;color:#e1c98d;flex:none}.mjn-h small{margin-inline-start:auto;background:rgba(255,255,255,.14);border-radius:10px;padding:0 9px;font-size:.8rem;font-weight:600}
+.mjn-g[data-cat=dawah] .mjn-h,.mjn-g[data-cat=nour] .mjn-h{background:linear-gradient(90deg,#0b3b2e,#17604a)}
+.mjn-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0}
+.mjn-card{padding:14px 16px;border-bottom:1px solid var(--line);border-inline-start:1px solid var(--line);display:flex;flex-direction:column;gap:6px;margin-inline-start:-1px}
+.mjn-card.lead{grid-column:1/-1;background:color-mix(in srgb,#c09a48 7%,var(--sf))}
+.mjn-t{color:var(--ink);font-weight:700;font-size:1.04rem;line-height:1.65;text-decoration:none}
+.mjn-card.lead .mjn-t{font-family:Amiri,serif;font-size:1.38rem;line-height:1.55;color:var(--ac)}
+.mjn-t:hover{color:var(--ac);text-decoration:underline;text-underline-offset:4px}
+.mjn-s{margin:0;color:color-mix(in srgb,var(--ink) 78%,var(--sf));font-size:.95rem;line-height:1.85}
+.mjn-card.lead .mjn-s{font-size:1.02rem}
+.mjn-m{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:auto;font-size:.8rem;color:var(--mut,#6f7772)}
+.mjn-src{font-weight:700;border-radius:10px;padding:1px 9px;background:color-mix(in srgb,var(--ac) 12%,var(--sf));color:var(--ac)}
+.mjn-src.s-nour{background:#0b3b2e;color:#f6edd6}.mjn-src.s-akher{background:color-mix(in srgb,#c09a48 22%,var(--sf));color:#6b5218}
+html[data-theme=dark] .mjn-src.s-akher{color:#e1c98d}
+.mjn-also a{color:inherit}.mjn-go{margin-inline-start:auto;color:#a67f2e;font-weight:700;text-decoration:none}
+.mjn-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin:4px 0 10px}
+.mjn-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.mjn-chips .chip.x{background:#0b3b2e;color:#fff;border-color:#0b3b2e}
+.mjn-more{margin-top:12px}.mjn-note{margin-top:14px;font-size:.88rem}.mjn-empty{color:var(--mut,#6f7772)}
+.mj-news .mjn{gap:14px}
+@media (max-width:600px){.mjn-list{grid-template-columns:1fr}.mjn-card.lead .mjn-t{font-size:1.2rem}.mjn-go{margin-inline-start:0}}
+.kurpara p{font-family:Amiri,"Traditional Arabic",serif;font-size:1.15rem;line-height:2;margin:.4em 0;text-align:justify}.kurpara.full{border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}

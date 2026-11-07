@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="ltr"><!-- صناديق Paged.js يجب أن تكون LTR؛ المحتوى RTL من press.css -->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>مطبعة المجلة — معاينة العدد</title>
+<link rel="icon" href="../assets/favicon-64.png">
+<link rel="stylesheet" href="ui.css">
+<script>window.PagedConfig = { auto: false };</script>
+<script src="vendor/paged.polyfill.min.js"></script>
+<script src="core.js"></script>
+</head>
+<body data-view="one">
+<div id="mpui" class="mpui" dir="rtl">
+  <a class="mpbrand" href="../#/majalla">مطبعة المجلة</a>
+  <span id="mpst" class="mpst" role="status">جارٍ التحميل…</span>
+  <span class="mpgrp">
+    <button data-mp="one" class="on" title="صفحة صفحة">صفحة</button><button data-mp="spread" title="صفحتان متقابلتان">متقابلتان</button><button data-mp="grid" title="كل الصفحات مصغرة">كل الصفحات</button>
+  </span>
+  <label class="mpgrp">انتقل إلى <input id="mpgo" type="number" min="1" value="1" aria-label="رقم الصفحة"></label>
+  <label class="mpgrp">التكبير <select id="mpzoom" aria-label="التكبير"><option value=".5">٥٠٪</option><option value=".75" selected>٧٥٪</option><option value="1">١٠٠٪</option><option value="1.25">١٢٥٪</option></select></label>
+  <button data-mp="rep">تقرير الفحص</button>
+  <button data-mp="mode" id="mpmode">معاينة نسخة الطباعة</button>
+  <button data-mp="redo" title="إعادة الإخراج بعد التعديل">إعادة الإخراج ⟳</button>
+  <a id="mpdl" class="mpbtn" hidden download>تحميل PDF المعتمد</a>
+  <button data-mp="print" class="mpp" title="اختر «حفظ بصيغة PDF» في نافذة الطباعة">حفظ PDF / طباعة</button>
+</div>
+<aside id="mprep" class="mprep" dir="rtl" aria-label="تقرير الفحص"></aside>
+<main id="mpstage" class="mpstage"></main>
+<script src="press.js"></script>
+</body>
+</html>

@@ -17,12 +17,15 @@ from frontmatter import content_range  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "kurrasa")
 REPORT = []
-KINDS = {"points", "def", "table", "map", "steps", "quote", "note", "qs", "compare", "sum"}
+KINDS = {"para", "points", "def", "table", "map", "steps", "quote", "note", "qs", "compare", "sum"}
 # نسبة الاختصار: صفحة كراسة لكل R صفحة من الأصل (٥ مفصّلة، ١٠ متوسطة، ٢٠ موجزة) ⇒ عدد الأقسام وكثافة الكتل
-RATIO = {5: (6, 9, "مفصّلة: اشرح كل مسألة ببند، واستوعب التقسيمات والأدلة والأمثلة التي ذكرها المؤلف"),
+# ٢: نصف الأصل (نص الكتاب مختصرًا إلى نحو نصفه في فقرات para مع وسائل المذاكرة)، ١: دون اختصار (نص الكتاب كاملًا بلفظه + وسائل المذاكرة)
+RATIO = {1: (3, 6, "دون اختصار: نص القسم يُعرض كاملًا بلفظه (يُضاف آليًا)، فأخرج وسائل المذاكرة وحدها: خريطة القسم وتعريفاته وتنبيهاته وتلخيصه وأسئلته"),
+         2: (4, 8, "نصف الأصل: أعد كتابة نص القسم كله مختصرًا إلى نحو نصف طوله في كتل para متتابعة بترتيب الأصل، تستوفي كل مسألة ودليل ومثال ذكره المؤلف بأوجز من لفظه وأقرب إليه، ثم وسائل المذاكرة (ويجوز تكرار كتل para بقدر الحاجة)"),
+         5: (6, 9, "مفصّلة: اشرح كل مسألة ببند، واستوعب التقسيمات والأدلة والأمثلة التي ذكرها المؤلف"),
          10: (5, 7, "متوسطة: أهم المسائل والتقسيمات والأدلة"),
          20: (4, 5, "موجزة: أصول المسائل فقط")}
-STYLES = {"sum": "تلخيص", "table": "جداول", "map": "تشجيرات وخرائط ذهنية", "compare": "مقارنات", "qs": "أسئلة وأجوبة", "points": "أهم المسائل",
+STYLES = {"para": "نص الكتاب (مختصرًا أو كاملًا)", "sum": "تلخيص", "table": "جداول", "map": "تشجيرات وخرائط ذهنية", "compare": "مقارنات", "qs": "أسئلة وأجوبة", "points": "أهم المسائل",
           "def": "تعريفات", "steps": "خطوات ومراحل", "quote": "نصوص بلفظها", "note": "تنبيهات"}
 
 
@@ -90,6 +93,7 @@ SEC_PROMPT = """أنت معلّم ومصمم مذكرات تعليمية متق�
 درجة التفصيل: {depth}. عدد الكتل {bmin} إلى {bmax}، متنوعة بحسب ما يناسب المادة، ولا تكرر نوعًا أكثر من مرتين.
 الأنواع المسموح بها في هذه الكراسة فقط: {allowed}.{must}
 أنواع الكتل:
+ {{"k": "para", "t": "عنوان فرعي من عناوين الأصل أو مناسب له", "items": ["فقرة متصلة", ...]}}   نص القسم مختصرًا (لنصف الأصل فقط: كتل para أولًا تغطي القسم كله، ٢–٥ فقرات في الكتلة)
  {{"k": "points", "t": "عنوان", "items": ["مسألة أو فكرة موجزة", ...]}}            أهم المسائل (٣–٧)
  {{"k": "def", "items": [{{"t": "مصطلح", "d": "تعريفه كما في الكتاب", "p": صفحة}}]}}   تعريفات ذكرها المؤلف
  {{"k": "table", "t": "عنوان الجدول", "head": ["عمود", "عمود"], "rows": [["خلية", "خلية"]]}}   جدول تصنيف أو مقارنة (٢–٤ أعمدة، ٢–٧ صفوف، خلايا قصيرة)
@@ -121,6 +125,10 @@ def clean_block(b, pages, a, z):
     if not isinstance(b, dict) or b.get("k") not in KINDS:
         return None
     k = b["k"]
+    if k == "para":
+        b["items"] = [str(x).strip() for x in b.get("items") or [] if len(str(x).strip()) > 20][:8]
+        b["t"] = str(b.get("t") or "").strip()[:120]
+        return b if b["items"] else None
     if k in ("points", "steps"):
         b["items"] = [str(x).strip() for x in b.get("items") or [] if str(x).strip()][:8]
         return b if len(b["items"]) >= 2 else None
@@ -165,6 +173,7 @@ def opts_of(item):
     o = item if isinstance(item, dict) else {}
     r = int(o.get("r") or 10); r = r if r in RATIO else 10
     st = [x for x in (o.get("st") or list(STYLES)) if x in STYLES] or list(STYLES)
+    st = [x for x in st if x != "para"] + (["para"] if r <= 2 else [])  # نص الكتاب لنصف الأصل ودون الاختصار فقط
     return r, st
 
 
@@ -198,7 +207,7 @@ def build(bid, cat, item=None):
     n = len(pages)
     R, ST = opts_of(item)
     bmin, bmax, depth = RATIO[R]
-    target = max(3, min(60, round(n / R)))
+    target = max(3, min(60, round(n / R))) if R >= 5 else max(3, min(80, round(n / (6 if R == 2 else 5))))
     secs = sections(sh, pages, target - 1 if target > 3 else target)
     if isinstance(item, dict) and item.get("sample"): secs = secs[:1]  # صفحة تجريبية: القسم الأول وحده للمعاينة قبل الاعتماد
     wp = os.path.join(OUT, "_work", bid + ".json")
@@ -222,10 +231,24 @@ def build(bid, cat, item=None):
         if len(re.sub(r"\s", "", text)) < 300:
             work[key] = None; continue
         r = T.gemini(SEC_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + "، ".join(chap)) if chap else "", text=text[:80000],
-                                       depth=depth, bmin=bmin, bmax=bmax, allowed=allowed, must=must))
+                                       depth=depth, bmin=bmin + ((z - a + 1) if R == 2 else 0), bmax=bmax + (2 * (z - a + 1) if R == 2 else 0),
+                                       allowed="، ".join(x for x in allowed.split("، ") if not (R == 1 and x.startswith("para"))), must=must))
         if not r:
             return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
-        bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x and x["k"] in ST]
+        bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x and x["k"] in ST and not (R == 1 and x["k"] == "para")]
+        if R == 1:  # النص كاملًا بلفظه من الأصل، كل ثلاث فقرات كتلة (حتى لا تطول الكتلة عن الصفحة)
+            paras = [l.strip() for i in range(a - 1, z) for l in body(pages[i]).split("\n") if len(l.strip()) > 2]
+            full, buf, cur = [], [], ""
+            for l in paras:
+                if l.startswith("#"):
+                    if buf: full.append({"k": "para", "t": cur, "items": buf, "full": 1}); buf = []
+                    cur = l.lstrip("# ").strip(); continue
+                buf.append(l)
+                if len(buf) >= 3: full.append({"k": "para", "t": cur, "items": buf, "full": 1}); buf, cur = [], ""
+            if buf: full.append({"k": "para", "t": cur, "items": buf, "full": 1})
+            bl = full + bl
+        elif R == 2:
+            bl = [x for x in bl if x["k"] == "para"] + [x for x in bl if x["k"] != "para"]
         sm, qs = [b for b in bl if b["k"] == "sum"], [b for b in bl if b["k"] == "qs"]
         bl = [b for b in bl if b["k"] not in ("qs", "sum")] + sm[:1] + qs[:1]  # تلخيص القسم ثم أسئلته في آخره
         sec = {"t": str(r.get("t") or (chap[0] if chap else "")).strip(), "lead": str(r.get("lead") or "").strip(), "p": [a, z], "blocks": bl}
