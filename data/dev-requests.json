@@ -13,7 +13,14 @@
    "br": "agent/dev/dmw636549",
    "run": "https://github.com/dawah-library/sdsl-library/actions/runs/42351733762",
    "u": "2026-11-07T07:35:00Z",
-   "eng": "auto"
+   "eng": "auto",
+   "h": [
+    {
+     "at": "2026-11-07T07:35:02Z",
+     "by": "agent",
+     "m": "تعذر تشغيل محرك البرمجة الآن (المحركات المتاحة: Claude=0، مفاتيح Gemini=20). يُعاد تلقائيًا في الجولة القادمة."
+    }
+   ]
   }
  ]
 }
