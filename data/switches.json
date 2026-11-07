@@ -11,7 +11,7 @@
   "statp_readers": false,
   "statp_pct": false,
   "import_salafvoice": false,
-  "majalla_news": false,
+  "majalla_news": true,
   "enrich": false,
   "tashjir": false,
   "study_ai": false,
