@@ -11,7 +11,7 @@ on:
     inputs:
       setup: { description: "تهيئة المشروع والمفاتيح", type: boolean, default: false }
       domain: { description: "ربط النطاق dawahlibrary.org بعد نجاح الفحص", type: boolean, default: false }
-concurrency: { group: cf-deploy, cancel-in-progress: true }
+concurrency: { group: cf-deploy, cancel-in-progress: false }  # لا يُلغى النشر الجاري: كثرة الإيداعات كانت تلغي كل نشر فلا يكتمل أي منها؛ ويبقى في الانتظار أحدثها فقط
 env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: e54869c38d968d8f54d1a011d6cacca4
