@@ -1,0 +1,400 @@
+{
+ "note": "نصوص القراءة في «العربية لغير الناطقين» (arabic.js): الآيات تُقرأ بنصها المشكول من data/quran/quran-tash.json بعزوها، والأحاديث والحكم والأشعار مشكولة هنا مع معناها بالإنجليزية.",
+ "q": [
+  [
+   112,
+   1
+  ],
+  [
+   112,
+   2
+  ],
+  [
+   94,
+   5
+  ],
+  [
+   94,
+   6
+  ],
+  [
+   103,
+   2
+  ],
+  [
+   96,
+   1
+  ],
+  [
+   96,
+   3
+  ],
+  [
+   2,
+   152
+  ],
+  [
+   13,
+   28
+  ],
+  [
+   49,
+   10
+  ],
+  [
+   2,
+   153
+  ],
+  [
+   3,
+   8
+  ],
+  [
+   20,
+   114
+  ],
+  [
+   18,
+   46
+  ],
+  [
+   29,
+   69
+  ],
+  [
+   59,
+   18
+  ],
+  [
+   33,
+   70
+  ],
+  [
+   3,
+   103
+  ],
+  [
+   16,
+   125
+  ],
+  [
+   12,
+   108
+  ],
+  [
+   41,
+   33
+  ],
+  [
+   49,
+   13
+  ],
+  [
+   31,
+   17
+  ],
+  [
+   16,
+   90
+  ],
+  [
+   3,
+   104
+  ]
+ ],
+ "h": [
+  {
+   "t": "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى",
+   "s": "متفق عليه",
+   "en": "Actions are only by intentions, and every person shall have only what he intended."
+  },
+  {
+   "t": "الدِّينُ النَّصِيحَةُ",
+   "s": "رواه مسلم",
+   "en": "The religion is sincere advice (naṣīḥa)."
+  },
+  {
+   "t": "لَا تَغْضَبْ",
+   "s": "رواه البخاري",
+   "en": "Do not become angry."
+  },
+  {
+   "t": "الطُّهُورُ شَطْرُ الْإِيمَانِ",
+   "s": "رواه مسلم",
+   "en": "Purity is half of faith."
+  },
+  {
+   "t": "الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ",
+   "s": "متفق عليه",
+   "en": "A good word is charity."
+  },
+  {
+   "t": "الْبِرُّ حُسْنُ الْخُلُقِ",
+   "s": "رواه مسلم",
+   "en": "Righteousness is good character."
+  },
+  {
+   "t": "احْفَظِ اللَّهَ يَحْفَظْكَ",
+   "s": "رواه الترمذي",
+   "en": "Be mindful of Allah, and He will protect you."
+  },
+  {
+   "t": "إِنَّ مِنَ الْبَيَانِ لَسِحْرًا",
+   "s": "رواه البخاري",
+   "en": "Indeed, some eloquence is (like) magic."
+  },
+  {
+   "t": "تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ",
+   "s": "رواه الترمذي",
+   "en": "Your smile in the face of your brother is charity."
+  },
+  {
+   "t": "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
+   "s": "رواه البخاري",
+   "en": "The best of you are those who learn the Qur’an and teach it."
+  },
+  {
+   "t": "يَسِّرُوا وَلَا تُعَسِّرُوا، وَبَشِّرُوا وَلَا تُنَفِّرُوا",
+   "s": "متفق عليه",
+   "en": "Make things easy and do not make them hard; give glad tidings and do not drive people away."
+  },
+  {
+   "t": "الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ",
+   "s": "متفق عليه",
+   "en": "The Muslim is the one from whose tongue and hand the Muslims are safe."
+  },
+  {
+   "t": "مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ",
+   "s": "رواه الترمذي",
+   "en": "Part of the excellence of a person’s Islam is leaving what does not concern him."
+  },
+  {
+   "t": "لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ",
+   "s": "متفق عليه",
+   "en": "None of you truly believes until he loves for his brother what he loves for himself."
+  },
+  {
+   "t": "مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ",
+   "s": "متفق عليه",
+   "en": "Whoever believes in Allah and the Last Day, let him speak good or remain silent."
+  },
+  {
+   "t": "اتَّقِ اللَّهَ حَيْثُمَا كُنْتَ، وَأَتْبِعِ السَّيِّئَةَ الْحَسَنَةَ تَمْحُهَا، وَخَالِقِ النَّاسَ بِخُلُقٍ حَسَنٍ",
+   "s": "رواه الترمذي",
+   "en": "Fear Allah wherever you are; follow a bad deed with a good one and it will wipe it out; and treat people with good character."
+  },
+  {
+   "t": "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ",
+   "s": "رواه مسلم",
+   "en": "Whoever takes a path seeking knowledge, Allah makes easy for him a path to Paradise."
+  }
+ ],
+ "k": [
+  {
+   "t": "مَنْ جَدَّ وَجَدَ، وَمَنْ زَرَعَ حَصَدَ",
+   "s": "مثل عربي",
+   "en": "Whoever strives, finds; whoever sows, reaps."
+  },
+  {
+   "t": "مَنْ صَبَرَ ظَفِرَ",
+   "s": "مثل عربي",
+   "en": "Whoever is patient, succeeds."
+  },
+  {
+   "t": "لِكُلِّ مَقَامٍ مَقَالٌ",
+   "s": "مثل عربي",
+   "en": "Every situation has its fitting words."
+  },
+  {
+   "t": "خَيْرُ الْكَلَامِ مَا قَلَّ وَدَلَّ",
+   "s": "مثل عربي",
+   "en": "The best speech is brief and to the point."
+  },
+  {
+   "t": "الصَّبْرُ مِفْتَاحُ الْفَرَجِ",
+   "s": "مثل عربي",
+   "en": "Patience is the key to relief."
+  },
+  {
+   "t": "رُبَّ أَخٍ لَكَ لَمْ تَلِدْهُ أُمُّكَ",
+   "s": "مثل عربي",
+   "en": "Many a brother of yours was not born of your mother."
+  },
+  {
+   "t": "الْعِلْمُ فِي الصِّغَرِ كَالنَّقْشِ عَلَى الْحَجَرِ",
+   "s": "مثل عربي",
+   "en": "Learning in youth is like engraving on stone."
+  },
+  {
+   "t": "الْوَقْتُ كَالسَّيْفِ، إِنْ لَمْ تَقْطَعْهُ قَطَعَكَ",
+   "s": "مثل عربي",
+   "en": "Time is like a sword: if you do not cut it, it cuts you."
+  },
+  {
+   "t": "سَلَامَةُ الْإِنْسَانِ فِي حِفْظِ اللِّسَانِ",
+   "s": "مثل عربي",
+   "en": "A person’s safety lies in guarding the tongue."
+  },
+  {
+   "t": "الْجَارَ قَبْلَ الدَّارِ، وَالرَّفِيقَ قَبْلَ الطَّرِيقِ",
+   "s": "مثل عربي",
+   "en": "(Choose) the neighbour before the house, and the companion before the journey."
+  },
+  {
+   "t": "عِنْدَ الِامْتِحَانِ يُكْرَمُ الْمَرْءُ أَوْ يُهَانُ",
+   "s": "مثل عربي",
+   "en": "At the time of trial a person is honoured or disgraced."
+  },
+  {
+   "t": "مَنْ طَلَبَ الْعُلَا سَهِرَ اللَّيَالِي",
+   "s": "مثل عربي",
+   "en": "Whoever seeks the heights stays awake at night."
+  },
+  {
+   "t": "قِيمَةُ كُلِّ امْرِئٍ مَا يُحْسِنُهُ",
+   "s": "يُروى عن علي بن أبي طالب رضي الله عنه",
+   "en": "The worth of every person is what he does well."
+  },
+  {
+   "t": "النَّاسُ أَعْدَاءُ مَا جَهِلُوا",
+   "s": "يُروى عن علي بن أبي طالب رضي الله عنه",
+   "en": "People are enemies of what they do not know."
+  },
+  {
+   "t": "إِذَا تَمَّ الْعَقْلُ نَقَصَ الْكَلَامُ",
+   "s": "يُروى عن علي بن أبي طالب رضي الله عنه",
+   "en": "When the mind is complete, speech becomes less."
+  },
+  {
+   "t": "تَعَلَّمُوا الْعَرَبِيَّةَ فَإِنَّهَا مِنْ دِينِكُمْ",
+   "s": "أثر عن عمر بن الخطاب رضي الله عنه",
+   "en": "Learn Arabic, for it is part of your religion."
+  },
+  {
+   "t": "كُنْ عَالِمًا أَوْ مُتَعَلِّمًا أَوْ مُسْتَمِعًا أَوْ مُحِبًّا، وَلَا تَكُنِ الْخَامِسَ فَتَهْلِكَ",
+   "s": "أثر عن السلف",
+   "en": "Be a scholar, a learner, a listener or one who loves them — and do not be the fifth, lest you perish."
+  },
+  {
+   "t": "فَإِنَّ نَفْسَ اللُّغَةِ الْعَرَبِيَّةِ مِنَ الدِّينِ، وَمَعْرِفَتَهَا فَرْضٌ وَاجِبٌ",
+   "s": "شيخ الإسلام ابن تيمية، اقتضاء الصراط المستقيم",
+   "en": "The Arabic language itself is part of the religion, and knowing it is an obligation."
+  }
+ ],
+ "p": [
+  {
+   "v": [
+    "عَلَى قَدْرِ أَهْلِ الْعَزْمِ تَأْتِي الْعَزَائِمُ",
+    "وَتَأْتِي عَلَى قَدْرِ الْكِرَامِ الْمَكَارِمُ"
+   ],
+   "s": "المتنبي",
+   "en": "Resolve comes in the measure of resolute people, and noble deeds in the measure of the noble."
+  },
+  {
+   "v": [
+    "أَعَزُّ مَكَانٍ فِي الدُّنَى سَرْجُ سَابِحٍ",
+    "وَخَيْرُ جَلِيسٍ فِي الزَّمَانِ كِتَابُ"
+   ],
+   "s": "المتنبي",
+   "en": "The dearest place in the world is the saddle of a swift horse, and the best companion at all times is a book."
+  },
+  {
+   "v": [
+    "مَا كُلُّ مَا يَتَمَنَّى الْمَرْءُ يُدْرِكُهُ",
+    "تَجْرِي الرِّيَاحُ بِمَا لَا تَشْتَهِي السُّفُنُ"
+   ],
+   "s": "المتنبي",
+   "en": "Not all that a person wishes does he attain; the winds blow in ways the ships do not desire."
+  },
+  {
+   "v": [
+    "وَإِذَا كَانَتِ النُّفُوسُ كِبَارًا",
+    "تَعِبَتْ فِي مُرَادِهَا الْأَجْسَامُ"
+   ],
+   "s": "المتنبي",
+   "en": "When souls are great, bodies grow weary in pursuing their aims."
+  },
+  {
+   "v": [
+    "إِذَا أَنْتَ أَكْرَمْتَ الْكَرِيمَ مَلَكْتَهُ",
+    "وَإِنْ أَنْتَ أَكْرَمْتَ اللَّئِيمَ تَمَرَّدَا"
+   ],
+   "s": "المتنبي",
+   "en": "If you honour the noble, you win him; if you honour the base, he rebels."
+  },
+  {
+   "v": [
+    "وَإِنَّمَا الْأُمَمُ الْأَخْلَاقُ مَا بَقِيَتْ",
+    "فَإِنْ هُمُ ذَهَبَتْ أَخْلَاقُهُمْ ذَهَبُوا"
+   ],
+   "s": "أحمد شوقي",
+   "en": "Nations last only as long as their morals; if their morals go, they go."
+  },
+  {
+   "v": [
+    "قُمْ لِلْمُعَلِّمِ وَفِّهِ التَّبْجِيلَا",
+    "كَادَ الْمُعَلِّمُ أَنْ يَكُونَ رَسُولَا"
+   ],
+   "s": "أحمد شوقي",
+   "en": "Stand for the teacher and give him full honour; the teacher is almost a messenger."
+  },
+  {
+   "v": [
+    "أَنَا الْبَحْرُ فِي أَحْشَائِهِ الدُّرُّ كَامِنٌ",
+    "فَهَلْ سَأَلُوا الْغَوَّاصَ عَنْ صَدَفَاتِي"
+   ],
+   "s": "حافظ إبراهيم (على لسان اللغة العربية)",
+   "en": "(Arabic speaks:) I am the sea, pearls lie hidden in its depths — have they asked the diver about my shells?"
+  },
+  {
+   "v": [
+    "شَكَوْتُ إِلَى وَكِيعٍ سُوءَ حِفْظِي",
+    "فَأَرْشَدَنِي إِلَى تَرْكِ الْمَعَاصِي",
+    "وَأَخْبَرَنِي بِأَنَّ الْعِلْمَ نُورٌ",
+    "وَنُورُ اللَّهِ لَا يُهْدَى لِعَاصِي"
+   ],
+   "s": "يُنسب إلى الإمام الشافعي",
+   "en": "I complained to Wakī‘ of my poor memory; he guided me to leave sins, and told me that knowledge is light, and Allah’s light is not given to a sinner."
+  },
+  {
+   "v": [
+    "دَعِ الْأَيَّامَ تَفْعَلُ مَا تَشَاءُ",
+    "وَطِبْ نَفْسًا إِذَا حَكَمَ الْقَضَاءُ"
+   ],
+   "s": "يُنسب إلى الإمام الشافعي",
+   "en": "Let the days do as they will, and be content when the decree is passed."
+  },
+  {
+   "v": [
+    "لِسَانَكَ لَا تَذْكُرْ بِهِ عَوْرَةَ امْرِئٍ",
+    "فَكُلُّكَ عَوْرَاتٌ وَلِلنَّاسِ أَعْيُنُ"
+   ],
+   "s": "يُنسب إلى الإمام الشافعي",
+   "en": "Do not mention anyone’s faults with your tongue: you are all faults, and people have eyes."
+  },
+  {
+   "v": [
+    "وَمَهْمَا تَكُنْ عِنْدَ امْرِئٍ مِنْ خَلِيقَةٍ",
+    "وَإِنْ خَالَهَا تَخْفَى عَلَى النَّاسِ تُعْلَمِ"
+   ],
+   "s": "زهير بن أبي سلمى",
+   "en": "Whatever trait a person has, though he thinks it hidden from people, it becomes known."
+  },
+  {
+   "v": [
+    "إِنَّ الشَّبَابَ وَالْفَرَاغَ وَالْجِدَهْ",
+    "مَفْسَدَةٌ لِلْمَرْءِ أَيُّ مَفْسَدَهْ"
+   ],
+   "s": "أبو العتاهية",
+   "en": "Youth, free time and wealth are a great corruption for a person."
+  },
+  {
+   "v": [
+    "اطْلُبِ الْعِلْمَ وَلَا تَكْسَلْ فَمَا",
+    "أَبْعَدَ الْخَيْرَ عَلَى أَهْلِ الْكَسَلْ"
+   ],
+   "s": "ابن الوردي، اللامية",
+   "en": "Seek knowledge and do not be lazy — how far good is from the lazy!"
+  }
+ ]
+}
