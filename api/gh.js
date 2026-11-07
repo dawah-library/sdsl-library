@@ -40,6 +40,7 @@ async function batch(req, res, who) {
   if (!files.length || files.length > 60) return res.status(400).json({ message: "عدد الملفات بين ١ و٦٠ في الدفعة." });
   for (const f of files) {
     const p = String(f.path || "");
+    if (p === "data/dev-requests.json" && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!ALLOWED.test("/contents/" + p) || !delegateOk(who, p) || /(^|\/)\.\.(\/|$)/.test(p) || (typeof f.text !== "string" && typeof f.b64 !== "string"))
       return res.status(400).json({ message: "مسار غير مسموح: " + p });
   }
@@ -77,6 +78,8 @@ module.exports = async (req, res) => {
     const path = String((req.query && req.query.p) || new URL(req.url, "http://x").searchParams.get("p") || "");
     if (!ALLOWED.test(path)) return res.status(400).json({ message: "مسار غير مسموح." });
     if (req.method === "PUT" && !delegateOk(who, path)) return res.status(403).json({ message: "صلاحيتك المفوَّضة لا تشمل هذا الملف." });
+    // طلبات المساعد التقني (الوكيل البرمجي) يكتبها المدير وشركاؤه وحدهم
+    if (req.method !== "GET" && /^\/contents\/data\/dev-requests\.json/.test(path) && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!["GET", "PUT", "DELETE"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
     if (req.method === "DELETE" && who.role !== "admin") return res.status(403).json({ message: "الحذف النهائي للمدير وحده." });
     let body;
