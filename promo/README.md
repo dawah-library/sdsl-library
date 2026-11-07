@@ -12,7 +12,12 @@
 ## الإخراج
 ```bash
 python3 -m http.server 8765 &          # من جذر المستودع
-node promo/render.js out/h.mp4 0 Charon 30   # أفقي 1920×1080
-node promo/render.js out/v.mp4 1 Charon 30   # عمودي 1080×1920 (ريلز/شورتس/تيك توك)
-python3 promo/mix.py out/h.mp4 out/h.cues.json Charon out/final-h.mp4
+node promo/render.js out/h.mp4 0 best 30   # أفقي 1920×1080
+node promo/render.js out/v.mp4 1 best 30   # عمودي 1080×1920 (ريلز/شورتس/تيك توك)
+python3 promo/mix.py out/h.mp4 out/h.cues.json best out/final-h.mp4
 ```
+
+## التعليق الاحترافي (المعتمد)
+`script2.json` نص مشكول كامل مع توجيه أداء لكل مقطع، و`voice2.py` يجري تجربة أداء لثمانية أصوات ثم يسجل عدة نسخ لكل مقطع،
+ويفرّغها Gemini ويقارنها بالنص (نسبة خطأ الكلمات ودرجتا النطق والأداء) فيحفظ الأفضل في `voice/best/` مع `report.json`.
+الصوت المختار: Algenib. ولإعادة مقاطع بعينها: `"redo": ["s01"]` و`"fixed_voice"` في script2.json.
