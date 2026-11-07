@@ -306,7 +306,7 @@ const QREF = (() => {
   const num = x => +String(x).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
   const sura = n => { const k = nz(n).replace(/^سوره\s+/, "").replace(/(\s+(الايه|الايات|ايه|رقم|من))+$/, "").trim(); return M[k] || M[k.replace(/^ال/, "")] || 0; };
   const SKIP = "A,BUTTON,TEXTAREA,INPUT,SELECT,SCRIPT,STYLE,CODE";
-  const AREA = ".rd,.qscan,.majtext,.sumtx,.kurtext,.tjwrap";  // حيث يُربط عزو الآيات بنافذتها (التفسير وغريب السراج)
+  const AREA = ".rd,.qscan,.majtext,.sumtx,.kurtext,.tjwrap,.aimd";  // حيث يُربط عزو الآيات بنافذتها (التفسير وغريب السراج)، ومنها إجابات المساعد العلمي (.aimd)
   const ok = el => el && el.closest(AREA) && !el.closest(SKIP + ",[contenteditable=true],.qref");
   // الكلمات في القارئ يلف كلًّا منها عنصر span.w، فالعزو يمتد على عناصر متجاورة: تُجمع نصوص أبناء الحاوية ثم يُلف ما يغطيه العزو برابط
   // (تبقى عناصر الكلمات كما هي داخل الرابط فلا تتأثر التعليقات والتظليل)
@@ -400,5 +400,5 @@ const QREF = (() => {
     MUS.ref(+v.dataset.s, +v.dataset.a, +v.dataset.b || 0); }, true);
   document.addEventListener("click", e => { const el = e.target.closest("a.qref"); if (!el || e.ctrlKey || e.metaKey || e.button || String(getSelection()).trim()) return; e.preventDefault(); e.stopPropagation();
     MUS.ref(+el.dataset.s, +el.dataset.a, +el.dataset.b || 0); }, true);
-  return { scan, sura };
+  return { scan, sura, N: N_ };
 })();

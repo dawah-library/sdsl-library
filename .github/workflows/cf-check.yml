@@ -19,6 +19,8 @@ jobs:
           npx wrangler pages functions build --outdir /tmp/fb --compatibility-flags nodejs_compat --compatibility-date 2025-09-01 > /tmp/build.log 2>&1 || { grep -v '^\s*$' /tmp/build.log | tail -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - name: تشغيل وفحص
         run: |
+          # ربط Workers AI يطلب جلسة بعيدة بمفتاح Cloudflare فلا يبدأ الخادم المحلي؛ يُحذف للفحص المحلي وحده (يبقى في النشر)
+          sed -i '/^\[ai\]/,/^binding *=.*$/d' wrangler.toml
           npx wrangler pages dev . --port 8788 --ip 127.0.0.1 > /tmp/dev.log 2>&1 &
           for i in $(seq 1 60); do curl -s -o /dev/null http://127.0.0.1:8788/ && break; sleep 2; done
           fail=0
