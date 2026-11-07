@@ -78,15 +78,35 @@ const MUS = (() => {
     bar();
   }
   // التلاوة: مقاطع الآيات من everyayah.com بصوت القارئ المختار، وتظليل الآية المتلوّة، والانتقال إلى الصفحة التالية
-  const RECS = [["Alafasy_128kbps", "مشاري العفاسي"], ["Husary_128kbps", "محمود خليل الحصري"], ["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد"]];
+  const RECS = [["Alafasy_128kbps", "مشاري العفاسي"], ["Husary_128kbps", "محمود خليل الحصري"], ["Husary_Muallim_128kbps", "الحصري — المصحف المعلّم"], ["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد"]];
   const rec = () => { try { return localStorage.getItem("mus_rec") || RECS[0][0]; } catch (e) { return RECS[0][0]; } };
   const aurl = (s, a) => `https://everyayah.com/data/${rec()}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
   let AU = null, PLAY = null;
+  // إعدادات التلاوة: تكرار الآية، وتكرار المقطع (الصفحة أو السورة)، والنطاق، والسرعة، والاستماع بالضغط على الآية
+  const PO = () => { try { return Object.assign({ rep: 1, loop: 1, scope: "page", speed: 1, tap: 0 }, JSON.parse(localStorage.getItem("mus_play") || "{}")); } catch (e) { return { rep: 1, loop: 1, scope: "page", speed: 1, tap: 0 }; } };
+  const POs = o => { try { localStorage.setItem("mus_play", JSON.stringify(o)); } catch (e) { } };
+  const curPage = () => { try { const p = parse().p; return p[0] === "mushaf" && p[1] === "p" ? +p[2] || 0 : 0; } catch (e) { return 0; } };
+  const suraList = s => Array.from({ length: (META[s] || []).length }, (_, i) => [s, i + 1]);
+  function playerHtml() { const o = PO(), sel = (k, L) => `<select data-mpo="${k}">${L.map(([v, t]) => `<option value="${v}"${String(o[k]) === String(v) ? " selected" : ""}>${t}</option>`).join("")}</select>`;
+    return `<details class="mplayer"><summary>🎧 إعدادات التلاوة</summary><div class="row">
+      <label>النطاق ${sel("scope", [["page", "الصفحة"], ["sura", "السورة كاملة"], ["ayah", "آية واحدة"]])}</label>
+      <label>تكرار الآية ${sel("rep", [[1, "مرة"], [2, "مرتان"], [3, "٣ مرات"], [5, "٥ مرات"], [7, "٧ مرات"], [10, "١٠ مرات"]])}</label>
+      <label>تكرار المقطع ${sel("loop", [[1, "مرة"], [2, "مرتان"], [3, "٣ مرات"], [5, "٥ مرات"], [0, "بلا توقف"]])}</label>
+      <label>السرعة ${sel("speed", [[0.6, "٠٫٦×"], [0.75, "٠٫٧٥×"], [0.9, "٠٫٩×"], [1, "عادية"], [1.15, "١٫١٥×"], [1.25, "١٫٢٥×"], [1.5, "١٫٥×"]])}</label>
+      <label class="inl"><input type="checkbox" data-mpo="tap"${o.tap ? " checked" : ""}> الاستماع إلى الآية بالضغط عليها</label></div></details>`; }
   function stopAu() { if (AU) { AU.pause(); AU = null; } PLAY = null; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play")); const b = $("#mplay"); if (b) b.textContent = "▶ تلاوة"; }
-  function playList(L, i, onEnd) { if (!L[i]) { stopAu(); if (onEnd) onEnd(); return; } const [s, a] = L[i]; document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play"));
+  function playList(L, i, onEnd, r, loop) { const o = PO(); r = r || 0; loop = loop || 1;
+    if (!L[i]) { if (!+o.loop || loop < +o.loop) return playList(L, 0, onEnd, 0, loop + 1); stopAu(); if (onEnd) onEnd(); return; }
+    const [s, a] = L[i];
+    // تلاوة السورة عبر الصفحات: إن كانت الآية في صفحة أخرى انتقل إليها وأكمل منها
+    const pn = pageOf(s, a), cp = curPage(); if (cp && pn && pn !== cp) { window.__musCont = { L, i, onEnd, loop, n: pn }; location.hash = "#/mushaf/p/" + pn; return; }
+    document.querySelectorAll(".may.play").forEach(x => x.classList.remove("play"));
     const el = document.getElementById("ay" + s + "_" + a) || document.getElementById("ay" + a); if (el) { el.classList.add("play"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
     document.querySelectorAll(".qg.play").forEach(x => x.classList.remove("play")); document.querySelectorAll(`.qg[data-k="${s}:${a}"]`).forEach(x => x.classList.add("play"));
-    AU = new Audio(aurl(s, a)); PLAY = { L, i, onEnd }; AU.onended = () => PLAY && playList(L, i + 1, onEnd); AU.onerror = () => { toast("تعذّر تشغيل التلاوة"); stopAu(); }; AU.play().catch(() => stopAu()); }
+    AU = new Audio(aurl(s, a)); AU.playbackRate = +o.speed || 1; PLAY = { L, i, onEnd };
+    AU.onended = () => PLAY && (r + 1 < (+o.rep || 1) ? playList(L, i, onEnd, r + 1, loop) : playList(L, i + 1, onEnd, 0, loop));
+    AU.onerror = () => { toast("تعذّر تشغيل التلاوة"); stopAu(); }; AU.play().catch(() => stopAu()); const b = $("#mplay"); if (b) b.textContent = "⏸ إيقاف"; }
+  const scopeList = (n, s, a) => { const o = PO(); return o.scope === "sura" ? suraList(s || (PG[n] || [[1]])[0][0]).filter(x => !a || x[1] >= a) : o.scope === "ayah" && s ? [[s, a]] : (PG[n] || []).filter(x => !a || x[0] !== s || x[1] >= a); };
   // عرض «خط المصحف»: صفحات مصحف المدينة ١٤٤١هـ بخطوط QCF4 (مجمع الملك فهد، تُحمَّل من jsDelivr) وبيانات أسطرها (data/quran/qcf)
   const QCFV = "https://cdn.jsdelivr.net/npm/quran-qcf4@1.1.0/fonts-woff2/", FONTS = {};
   // تحميل خط الصفحة مع إعادة المحاولة؛ لا يُحفظ الفشل حتى لا تتعطل الصفحات بعد انقطاع عابر
@@ -123,7 +143,8 @@ const MUS = (() => {
     L.forEach(([s, a]) => { if (a === 1) body += `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${s !== 1 && s !== 9 ? `<p class="mbasm">${BASMT}</p>` : ""}`;
       const sj = META[s][a - 1][3]; body += `<span class="may" id="ay${s}_${a}">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}" aria-label="الآية ${a}">${AR(a)}</button>${sj ? '<span class="msj" title="موضع سجدة">۩</span>' : ""}</span> `; });
     const Q4 = qmode() === "qcf" ? await qcfPage(n) : null;
-    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>
+    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><button class="btn s" data-act="musfull" title="ملء الشاشة لقراءة صفحات المصحف">⛶ تكبير</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>${playerHtml()}
+    <div class="mfbar"><button data-act="musfull" aria-label="خروج من ملء الشاشة">✕</button><button data-act="muszoom" data-d="-1" aria-label="تصغير">－</button><button data-act="muszoom" data-d="1" aria-label="تكبير">＋</button>${n > 1 ? `<a href="#/mushaf/p/${n - 1}" aria-label="الصفحة السابقة">›</a>` : ""}<span>${AR(n)}</span>${n < 604 ? `<a href="#/mushaf/p/${n + 1}" aria-label="الصفحة التالية">‹</a>` : ""}<button data-act="musplay" data-n="${n}" aria-label="تلاوة">▶</button></div>
     <div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
     ${!Q4 && qmode() === "qcf" ? `<p class="note mqerr">تعذّر تحميل خط المصحف على هذا الجهاز الآن، فعُرض النص العثماني. <button class="btn s p" data-act="musretry">إعادة المحاولة</button>${QERR.length ? `<small class="mut" dir="ltr">${esc(QERR.slice(-2).join(" | ").slice(0, 160))}</small>` : ""}</p>` : ""}
     ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf"><span>${AR(n)}</span></div></div>
@@ -132,6 +153,8 @@ const MUS = (() => {
     if (Q4) { fit(); window.onresize = fit; }
     $("#mrec").onchange = e => { try { localStorage.setItem("mus_rec", e.target.value); } catch (x) { } };
     if (window.__musAuto === n) { window.__musAuto = 0; setTimeout(() => $("#mplay") && $("#mplay").click(), 400); }
+    if (window.__musCont && window.__musCont.n === n) { const c = window.__musCont; window.__musCont = null; setTimeout(() => playList(c.L, c.i, c.onEnd, 0, c.loop), 300); }
+    applyFull();
     let x0 = null; const pg = $(".mpage"); pg.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
     pg.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 70) location.hash = "#/mushaf/p/" + Math.max(1, Math.min(604, n + (dx > 0 ? 1 : -1))); x0 = null; }, { passive: true });
     bar();
@@ -225,8 +248,11 @@ const MUS = (() => {
     return [...fonts].map(f => qurl(f, 0)).concat(["data/quran/quran.json", "data/quran/uthmani.json", "data/quran/meta.json"]); }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "musoff") { const t = el.dataset.v === "text"; return offSave(t ? "mushaf-text" : "mushaf-pages", t ? offText() : offPages, el, t ? "نص المصحف والمختصر والسراج" : "صفحات المصحف بخطه"); }
-    if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n; el.textContent = "⏸ إيقاف"; playList(PG[n] || [], 0, () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } }); }
-    else if (a === "musone") { stopAu(); AU = new Audio(aurl(+el.dataset.s, +el.dataset.a)); AU.play().catch(() => toast("تعذّر تشغيل التلاوة")); }
+    if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n, sc = PO().scope; el.textContent = "⏸ إيقاف";
+      playList(scopeList(n), 0, sc === "page" ? () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } } : null); }
+    else if (a === "musone") { stopAu(); playList([[+el.dataset.s, +el.dataset.a]], 0); }
+    else if (a === "musfull") { const on = !document.body.classList.contains("mfull"); try { localStorage.setItem("mus_full", on ? "1" : ""); } catch (x) { } applyFull(true); }
+    else if (a === "muszoom") { const z = Math.max(1, Math.min(3, (+localStorage.getItem("mus_zoom") || 1) + 0.25 * +el.dataset.d)); try { localStorage.setItem("mus_zoom", z); } catch (x) { } applyFull(); }
     else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
     else if (a === "musix" || a === "musixc") { const o = ixo(); o[el.dataset.k] = a === "musixc" ? (el.checked ? 1 : 0) : el.dataset.v; ixs(o); const r = $("#musres"); if (r) { const box = document.createElement("div"); box.innerHTML = ixHtml(); [...document.querySelectorAll(".mixc, .msuras")].forEach(x => x.remove()); r.after(...box.children); } }
     else if (a === "musretry") { Object.keys(FONTS).forEach(k => delete FONTS[k]); QERR.length = 0; const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
@@ -238,6 +264,17 @@ const MUS = (() => {
     else if (a === "muscopy") { const [s, n] = el.dataset.k.split(":").map(Number); navigator.clipboard && navigator.clipboard.writeText(`﴿${ayah(s, n)}﴾ [${nmP(s)}: ${n}]`).then(() => toast("نُسخت")); }
     else if (a === "mustaf") { const [s, n] = el.dataset.k.split(":").map(Number); closeSheet(); setTimeout(() => tafsirSheet(Q.suras[s - 1].ayat[n - 1]), 150); }
     else if (a === "musexp") exportDlg(); else if (a === "musclr") { if (confirm("مسح الآيات المختارة؟")) { setSel([]); document.querySelectorAll(".may.sel").forEach(x => x.classList.remove("sel")); } } });
-  window.addEventListener("hashchange", () => { setTimeout(bar, 50); if (PLAY && !window.__musAuto) stopAu(); else if (AU && window.__musAuto) { AU.pause(); AU = null; PLAY = null; } });
+  // ملء الشاشة: الصفحة وحدها بعرض الهاتف، مع تكبير وتصغير، ويبقى عند التنقل بين الصفحات حتى الخروج منه
+  function applyFull(toggle) { let on = false; try { on = localStorage.getItem("mus_full") === "1"; } catch (e) { } const inPage = !!curPage();
+    document.body.classList.toggle("mfull", on && inPage); document.body.style.setProperty("--mz", (+localStorage.getItem("mus_zoom") || 1));
+    if (toggle) { try { if (on && inPage && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => { }); else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => { }); } catch (e) { } }
+    setTimeout(fit, 30); }
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("mfull")) { try { localStorage.setItem("mus_full", ""); } catch (e) { } applyFull(); } });
+  document.addEventListener("change", e => { const t = e.target.closest("[data-mpo]"); if (!t) return; const o = PO(); o[t.dataset.mpo] = t.type === "checkbox" ? (t.checked ? 1 : 0) : t.value; POs(o); if (AU && t.dataset.mpo === "speed") AU.playbackRate = +o.speed || 1; });
+  // الاستماع بالضغط على الآية (عند تفعيله): يتلو الآية بإعدادات التكرار والسرعة بدل فتح بطاقة الكلمة
+  document.addEventListener("click", e => { if (!PO().tap || !curPage()) return; const g = e.target.closest(".qg[data-k], .may"); if (!g || e.target.closest(".mno")) return;
+    let s, a; if (g.dataset.k) [s, a] = g.dataset.k.split(":").map(Number); else { const m = (g.id || "").match(/ay(\d+)_(\d+)/); if (!m) return; s = +m[1]; a = +m[2]; }
+    if (!s || !a) return; e.preventDefault(); e.stopImmediatePropagation(); stopAu(); const o = PO(); playList(o.scope === "ayah" ? [[s, a]] : scopeList(curPage(), s, a), 0); }, true);
+  window.addEventListener("hashchange", () => { setTimeout(bar, 50); if (!curPage()) document.body.classList.remove("mfull"); if (PLAY && !window.__musAuto && !window.__musCont) stopAu(); else if (AU && window.__musAuto) { AU.pause(); AU = null; PLAY = null; } });
   return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q) };
 })();

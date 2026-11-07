@@ -1310,3 +1310,12 @@ html[data-theme=dark] .mjn-src.s-akher{color:#e1c98d}
 .mj-news .mjn{gap:14px}
 @media (max-width:600px){.mjn-list{grid-template-columns:1fr}.mjn-card.lead .mjn-t{font-size:1.2rem}.mjn-go{margin-inline-start:0}}
 .kurpara p{font-family:Amiri,"Traditional Arabic",serif;font-size:1.15rem;line-height:2;margin:.4em 0;text-align:justify}.kurpara.full{border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}
+/* المصحف: إعدادات التلاوة، وملء الشاشة مع التكبير والتصغير */
+.mplayer{margin:4px 0 10px;border:1px solid var(--line);border-radius:10px;padding:6px 10px}.mplayer summary{cursor:pointer;font-weight:700}.mplayer .row{gap:10px;align-items:center;margin-top:6px}.mplayer label{display:flex;gap:6px;align-items:center}
+.mfbar{display:none}
+body.mfull header.top,body.mfull #ticker,body.mfull #banner,body.mfull footer,body.mfull .mnav,body.mfull .mplayer,body.mfull #side,body.mfull .side,body.mfull .bnav,body.mfull #apbar,body.mfull #gdbtn,body.mfull #sdbtn,body.mfull #sidebg{display:none!important}
+body.mfull #app{max-width:none!important;padding:0!important;margin:0!important;overflow-x:auto}
+body.mfull .mpage.mp{max-width:none!important;width:calc((100vw - 8px) * var(--mz,1))!important;min-height:100vh;margin:0 auto!important;border-radius:0!important;padding:14px 10px 64px!important;box-sizing:border-box}
+body.mfull .mfbar{display:flex;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:400;gap:6px;align-items:center;background:rgba(20,40,34,.82);backdrop-filter:blur(6px);border-radius:30px;padding:5px 10px;opacity:.45;transition:opacity .2s}
+body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
+.mfbar button,.mfbar a{color:#fff;background:transparent;border:0;font-size:1.25rem;min-width:36px;height:36px;border-radius:50%;cursor:pointer;text-decoration:none;display:grid;place-items:center}.mfbar span{color:#f7e7b8;font-weight:700;padding:0 4px}
