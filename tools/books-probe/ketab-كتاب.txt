@@ -1,0 +1,220 @@
+<!doctype html>
+<html data-n-head-ssr dir="rtl" lang="ar" class="display-page" data-n-head="%7B%22dir%22:%7B%22ssr%22:%22rtl%22%7D,%22lang%22:%7B%22ssr%22:%22ar%22%7D,%22class%22:%7B%22ssr%22:%22display-page%22%7D%7D">
+  <head >
+    <title>الطريق المستقيم في نظم علامات الترقيم | جامع الكتب الإسلامية</title><meta data-n-head="ssr" charset="utf-8"><meta data-n-head="ssr" name="viewport" content="width=device-width, initial-scale=1"><meta data-n-head="ssr" name="title" content="الطريق المستقيم في نظم علامات الترقيم | جامع الكتب الإسلامية"><meta data-n-head="ssr" name="description" content="الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم
+المؤلف: محمود محمد محمود مرسى، أبو سريع
+عدد الأجزاء: 1
+[الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة"><meta data-n-head="ssr" name="keywords" content="كتب اللغة, محمود أبو سريع, ملفات إلكترونية, الكتاب مرقم آليا"><meta data-n-head="ssr" name="og:type" property="og:type" content="book"><meta data-n-head="ssr" name="og:site_name" property="og:site_name" content="جامع الكتب الإسلامية"><meta data-n-head="ssr" name="og:title" property="og:title" content="الطريق المستقيم في نظم علامات الترقيم | جامع الكتب الإسلامية"><meta data-n-head="ssr" name="og:description" property="og:description" content="الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم
+المؤلف: محمود محمد محمود مرسى، أبو سريع
+عدد الأجزاء: 1
+[الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة الشاملة]"><meta data-n-head="ssr" name="og:image" property="og:image" content="https://ketabonline.com/default/cover.png"><meta data-n-head="ssr" name="og:url" property="og:url" content="https://ketabonline.com/ar/books/1"><meta data-n-head="ssr" name="twitter:card" content="summary_large_image"><meta data-n-head="ssr" name="twitter:site" content="جامع الكتب الإسلامية"><meta data-n-head="ssr" name="twitter:creator" content="@ketab_online"><meta data-n-head="ssr" name="twitter:title" content="الطريق المستقيم في نظم علامات الترقيم | جامع الكتب الإسلامية"><meta data-n-head="ssr" name="twitter:description" content="الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم
+المؤلف: محمود محمد محمود مرسى، أبو سريع
+عدد الأجزاء: 1
+[الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة الشاملة]"><meta data-n-head="ssr" name="twitter:image" content="https://ketabonline.com/default/cover.png"><meta data-n-head="ssr" name="twitter:url" content="https://ketabonline.com/ar/books/1"><link data-n-head="ssr" rel="icon" type="image/png" href="/default/logo-64.png"><link data-n-head="ssr" rel="canonical" href="https://ketabonline.com/ar/books/1"><script data-n-head="ssr" type="text/javascript" src="https://code.tidio.co/xfp6y5lgnjighotldcsl28fpwf4fl212.js"></script><script data-n-head="ssr" type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script><script data-n-head="ssr" type="application/ld+json">{
+				"@context": "http://schema.org",
+				"@type": "Organization",
+				"name": "Ketabonline",
+				"url": "https://ketabonline.com",
+				"image": "https://ketabonline.com/logo.png",
+				"sameAs": [
+					"https://www.facebook.com/Ketabonline2",
+					"https://twitter.com/Ketab_online",
+					"https://www.youtube.com/channel/UCYcbNUHHqiI4Al8IPxt9Hkw?view_as=subscriber",
+					"https://www.instagram.com/Ketabonline2"
+				]
+				}</script><script data-n-head="ssr" data-hid="gtm-script">if(!window._gtm_init){window._gtm_init=1;(function(w,n,d,m,e,p){w[d]=(w[d]==1||n[d]=='yes'||n[d]==1||n[m]==1||(w[e]&&w[e][p]&&w[e][p]()))?1:0})(window,navigator,'doNotTrack','msDoNotTrack','external','msTrackingProtectionEnabled');(function(w,d,s,l,x,y){w[x]={};w._gtm_inject=function(i){if(w.doNotTrack||w[x][i])return;w[x][i]=1;w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);};w[y]('GTM-588KLLC')})(window,document,'script','dataLayer','_gtm_ids','_gtm_inject')}</script><script data-n-head="ssr" type="application/ld+json">{
+					"@context": "http://schema.org",
+					"@type": "Book",
+					"name": "الطريق المستقيم في نظم علامات الترقيم",
+					"url": "https://ketabonline.com/ar/books/1",
+					"image": "https://ketabonline.com/logo.png",
+					"description": "الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم المؤلف: محمود محمد محمود مرسى، أبو سريع عدد الأجزاء: 1 [الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة"
+					,"author": {"@type": "Person","name": "محمود أبو سريع"}
+					}</script><link rel="preload" href="/_nuxt/177ada0.js" as="script"><link rel="preload" href="/_nuxt/c8b0283.js" as="script"><link rel="preload" href="/_nuxt/css/d10b347.css" as="style"><link rel="preload" href="/_nuxt/b2142c8.js" as="script"><link rel="preload" href="/_nuxt/css/8fc5460.css" as="style"><link rel="preload" href="/_nuxt/c2c0ce1.js" as="script"><link rel="preload" href="/_nuxt/css/f995e3a.css" as="style"><link rel="preload" href="/_nuxt/12b0d6f.js" as="script"><link rel="stylesheet" href="/_nuxt/css/d10b347.css"><link rel="stylesheet" href="/_nuxt/css/8fc5460.css"><link rel="stylesheet" href="/_nuxt/css/f995e3a.css">
+  </head>
+  <body >
+    <noscript data-n-head="ssr" data-hid="gtm-noscript" data-pbody="true"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-588KLLC&" height="0" width="0" style="display:none;visibility:hidden" title="gtm"></iframe></noscript><div data-server-rendered="true" id="__nuxt"><!----><div id="__layout"><div><!----> <header id="PcHeader" class="PcHeader"><div class="PcHeader-center WBg"><div class="sec-container"><nav class="d-flex align-items-center"><div class="main-brand"><a class="MainNavTrigger MobHeader-link"><i class="ico-menu"></i></a> <a href="/ar" class="main-logo nuxt-link-active"><img src="/logo-pc.svg" alt="" class="logo-dark"> <img src="/logo-pc-light.svg" alt="" class="logo-light"> <img src="/logo-pc-ar.svg" alt="" class="logo-dark-ar"> <img src="/logo-pc-light-ar.svg" alt="" class="logo-light-ar"></a></div> <form id="mainSearch" class="mainSearch mt-0 mr-4 ml-4"><form class="mainSearchHome header-search-box" data-v-ad738f5a><div class="form-control-icon input-fly-submit" data-v-ad738f5a><span class="input-icon" data-v-ad738f5a><i class="ico-search2" data-v-ad738f5a></i></span> <div class=" autocomplete-wrapper" data-v-ad738f5a><input type="text" placeholder="البحث في عناوين الكتب" autocomplete="off" class="form-control autocomplete-input"> <div class="data-list-header autocomplete autocomplete-list" style="display:none;"><ul></ul></div></div> <!----></div> <!----> <!----></form></form> <div class="TopNavSide"><ul class="nav nav-md"><li class="nav-item HideXl"><a href="/ar" alt="الرئيسية" class="nuxt-link-active">الرئيسية</a></li> <li class="nav-item HideXl"><a href="/ar/books" alt="الكتب" class="active">الكتب</a></li> <li class="nav-item HideXl"><a href="/ar/authors" alt="المؤلفون">المؤلفون</a></li> <li class="nav-item SearchNav"><a class="list-item"><i class="ico-search"></i></a></li> <!----> <li class="dropdown MenuHover LangNav"><a data-toggle="dropdown" class="dropdown-toggle btn-borderd btn-dark"><i class="ico-sphere"></i> <span class="HideMd">ar</span> <i class="ico-angle-down HideMd"></i></a> <div class="dropdown-menu dropdown-menu-rev"><ul class="list-items list-items-xs"><li><a class="list-item"><div class="list-item-head"><div class="thumb thumb-xs LightBg strong5">
+														AR
+													</div></div> <div class="list-item-body"><h4 class="list-item-title h6 OneLine">
+														العربية
+													</h4></div></a></li> <li><a class="list-item"><div class="list-item-head"><div class="thumb thumb-xs LightBg strong5">
+														EN
+													</div></div> <div class="list-item-body"><h4 class="list-item-title h6 OneLine">
+														English
+													</h4></div></a></li> <li><a class="list-item"><div class="list-item-head"><div class="thumb thumb-xs LightBg strong5">
+														UR
+													</div></div> <div class="list-item-body"><h4 class="list-item-title h6 OneLine">
+														اردو
+													</h4></div></a></li></ul></div></li></ul></div></nav></div></div> <a class="ToggleNavOverlay"></a></header> <span data-v-34453108><!----></span> <div tabindex="-1" class="b-sidebar-outer" data-v-2405671c><!----><div id="MiniCart" tabindex="-1" role="dialog" aria-modal="true" aria-hidden="true" class="b-sidebar shadow b-sidebar-right bg-light text-dark" style="display:none;"><!----><div class="b-sidebar-body"><div class="HeaderTop HeaderCenter HeaderDark MainBg border-b" data-v-2405671c><div class="d-flex" data-v-2405671c><div class="MobHeader-LSide d-flex" data-v-2405671c><div class="MobHeader-ico" data-v-2405671c><a href="#" target="_self" class="MobHeader-link" data-v-2405671c><i class="ico-close headerIcosizeFix" data-v-2405671c></i></a></div></div> <div class="MobHeader-title" data-v-2405671c><span class="MobHeader-link" data-v-2405671c>سلة المشتروات
+						<!----></span></div> <div class="MobHeader-RSide d-flex EditCart" data-v-2405671c><a href="/ar/cart" class="MobHeader-link" data-v-2405671c>عرض &gt;&gt;</a></div></div></div> <div class="SCart-content modal-content-center" style="padding:60px 0 100px 0;" data-v-2405671c><!----> <ul class="SCart-items side-thumbnail-items mt-3" data-v-2405671c></ul></div> <div class="SCart-action" data-v-2405671c><ul class="d-flex d-flex-sides mt-2 mb-2" data-v-2405671c><li data-v-2405671c>
+					السعر:
+					<strong class="strong6 MainText" data-v-2405671c>0$</strong></li> <li data-v-2405671c>
+					عدد الكتب
+					:
+					0</li></ul> <a href="/checkout" class="btn-solid btn-green btn-big btn-block btn-bold" data-v-2405671c>إتمام الدفع</a></div> <div class="CartEmptyMessage" data-v-2405671c><div class="CartEmptyMessageInner" data-v-2405671c><div data-v-2405671c><img src="/uploads/empty-state-cart.svg" data-v-2405671c> <h1 class="LightText mt-4 strong6" data-v-2405671c>
+						سلة المشتروات فارغة
+					</h1> <p class="LighterText mt-2" data-v-2405671c>
+						قم بإضافة الكتب التي ترغب بشراؤها إلي سلة المشتروات
+					</p> <a class="btn-solid btn-green mt-3" data-v-2405671c>إبدأ الشراء</a></div></div></div></div><!----></div><!----><div class="b-sidebar-backdrop bg-dark" style="display:none;"></div></div> <div class="MainContentWrapp"><div class="MainNavSec"><div class="MainNavSecInner"><div data-v-b6bfc836><div class="SideNavMenu" data-v-b6bfc836><div class="SideNavHead" data-v-b6bfc836><a href="/ar" class="main-logo nuxt-link-active" data-v-b6bfc836><img src="/logo-pc.svg" alt="" class="logo-dark" data-v-b6bfc836> <img src="/logo-pc-ar.svg" alt="" class="logo-dark-ar" data-v-b6bfc836></a> <a href="#" class="ToggleNavClose" data-v-b6bfc836><span class="thumb thumb-xs thumb-round" data-v-b6bfc836><i class="ico-close" data-v-b6bfc836></i></span>
+				إغلاق
+			</a></div> <div class="box-inner LightBg" data-v-b6bfc836><div class="mb-3" data-v-b6bfc836><h2 class="SideNavMenuTitle OneLine strong6 mb-2" data-v-b6bfc836>
+					مرحبا بك!
+				</h2> <span class="light-text" data-v-b6bfc836>قم بالتسجيل الآن للإستفادة من جميع خدمات الموقع</span></div> <button type="button" class="btn btn-solid btn-grad strong6 btn-secondary" data-v-b6bfc836 data-v-b6bfc836>تسجيل الدخول!</button> <button type="button" class="btn btn-solid btn-alt strong6 btn-secondary" data-v-b6bfc836 data-v-b6bfc836>تسجيل</button></div></div> <!----> <div class="SideNavMenu" data-v-b6bfc836><div class="SideNavMenuHeader" data-v-b6bfc836><h4 class="SideNavMenuTitle OneLine" data-v-b6bfc836><a data-v-b6bfc836>الأقسام</a></h4> <a href="#" target="_self" data-v-b6bfc836>عرض الكل <i class="ico-arrow-right" data-v-b6bfc836></i></a></div> <div id="SideNavMenu-2" role="tabpanel" class="collapse show" data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-b6bfc836><li data-v-b6bfc836><a href="/ar/categories/1" alt="العقيدة" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/2420573076903799832.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								العقيدة
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								1874
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub1" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/2" alt="التفاسير" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/3193678906904709799.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								التفاسير
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								553
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub2" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/3" alt="علوم القرآن" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/2875825982342773845.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								علوم القرآن
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								1360
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub3" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/4" alt="متون الحديث" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/2190608472332063844.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								متون الحديث
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								470
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub4" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/5" alt="الأجزاء الحديثية" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/910256120871555931.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								الأجزاء الحديثية
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								900
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub5" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/6" alt="كتب ابن أبي الدنيا" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/1862750639482297308.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								كتب ابن أبي الدنيا
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								126
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub6" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/7" alt="شروح الحديث" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/355135686628097172.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								شروح الحديث
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								364
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub7" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/8" alt="كتب التخريج والزوائد" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/1438292134851026104.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								كتب التخريج والزوائد
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								356
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub8" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li><li data-v-b6bfc836><a href="/ar/categories/9" alt="كتب الألباني" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb-xs WBg category-image" data-v-b6bfc836><img src="https://s2.ketabonline.com/uploads/2020/09/1577208784048723650.svg" alt="" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 strong6 OneLine" data-v-b6bfc836>
+								كتب الألباني
+							</h4></div> <div class="list-item-side LightText" data-v-b6bfc836><span data-v-b6bfc836>
+								139
+							</span> <!----></div></a> <div style="display:none;" data-v-b6bfc836><div id="main-sub9" class="collapse" style="display:none;" data-v-b6bfc836><div class="cat-childs" data-v-b6bfc836><div data-v-92801582 data-v-b6bfc836><ul class="list-items CollapseList list-items-xs" data-v-92801582></ul></div></div></div></div></li></ul></div></div> <div class="SideNavMenu mt-15" data-v-b6bfc836><div class="SideNavMenuHeader" data-v-b6bfc836><h4 class="SideNavMenuTitle OneLine" data-v-b6bfc836><a data-v-b6bfc836>روابط هامة</a></h4></div> <div id="SideNavMenu-useful" role="tabpanel" class="collapse show" data-v-b6bfc836><ul class="ProfileList list-items list-items-xs" data-v-b6bfc836><li data-v-b6bfc836><a href="/ar/narrators" alt="رواة الأحاديث" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb thumb-xs thumb-round LightBg" data-v-b6bfc836><img src="/uploads/icons/muslim.svg" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 OneLine" data-v-b6bfc836>
+								رواة الأحاديث
+							</h4></div></a></li> <li data-v-b6bfc836><a href="/ar/quran" alt="القرآن الكريم" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb thumb-xs thumb-round LightBg" data-v-b6bfc836><img src="/uploads/icons/quran.svg" data-v-b6bfc836></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 OneLine" data-v-b6bfc836>
+								القرآن الكريم
+							</h4></div></a></li> <!----> <li data-v-b6bfc836><a href="/ar/uploadbooks" alt="إرسال كتاب للموقع" class="list-item" data-v-b6bfc836><div class="list-item-head" data-v-b6bfc836><div class="thumb thumb-xs thumb-round thumb-dark bg-success" data-v-b6bfc836><i class="ico-upload" data-v-b6bfc836></i></div></div> <div class="list-item-body" data-v-b6bfc836><h4 class="list-item-title h6 OneLine" data-v-b6bfc836>
+								إرسال كتاب للموقع
+							</h4></div></a></li></ul></div></div> <div class="SideNavMenu mt-15" data-v-b6bfc836><div class="SideNavMenuHeader" data-v-b6bfc836><h4 class="SideNavMenuTitle OneLine" data-v-b6bfc836><a data-v-b6bfc836>المؤلفون</a></h4> <a href="/ar/authors" alt="المؤلفون" data-v-b6bfc836>عرض الكل <i class="ico-arrow-right" data-v-b6bfc836></i></a></div> <div id="SideNavMenu-3" role="tabpanel" class="collapse" style="display:none;" data-v-b6bfc836><ul class="ProfileList list-items list-items-xs" data-v-b6bfc836></ul></div></div> <div class="SideNavMenu mt-15" data-v-b6bfc836><div class="SideNavMenuHeader" data-v-b6bfc836><h4 class="SideNavMenuTitle OneLine" data-v-b6bfc836><a data-v-b6bfc836>حمل تطبيق جامع الكتب الإسلامية</a></h4></div> <div id="SideNavMenu-4" role="tabpanel" class="collapse show" data-v-b6bfc836><ul class="IconBoxs DownloadBoxs" data-v-b6bfc836><li data-v-b6bfc836><a href="/ar/apps/ios/download" target="_blank" class="box IconBox LighterBg" data-v-b6bfc836><div class="IconBoxIco" data-v-b6bfc836><i class="ico-appleinc" data-v-b6bfc836></i></div> <h4 class="strong6 mb-1" data-v-b6bfc836>Ios</h4> <span data-v-b6bfc836>IPhone/iPad</span></a></li> <li data-v-b6bfc836><a href="/ar/apps/android/download" target="_blank" class="box IconBox LighterBg" data-v-b6bfc836><div class="IconBoxIco" data-v-b6bfc836><i class="ico-android1" data-v-b6bfc836></i></div> <h4 class="strong6 mb-1" data-v-b6bfc836>Android</h4> <span data-v-b6bfc836>All Devices</span></a></li> <li data-v-b6bfc836><a href="/ar/apps/windows/download" target="_blank" class="box IconBox LighterBg" data-v-b6bfc836><div class="IconBoxIco" data-v-b6bfc836><i class="ico-windows8" data-v-b6bfc836></i></div> <h4 class="strong6 mb-1" data-v-b6bfc836>Windows</h4> <span data-v-b6bfc836>Pc Version</span></a></li></ul> <div class="p-main" data-v-b6bfc836><small class="LightText" data-v-b6bfc836>حمل الآن التطبيق وتمتع بالمزامنة بين الأجهزة، تنزيل الكتب، إضافة التعليقات، إنشاء مجموعاتك الخاصة، وأكثر من ذلك بكثير…</small></div></div></div> <!----> <!----></div></div></div> <div class="MainContentSec BookInfoPage" data-v-5eafe10b><section class="pb-5 pt-3 BookViewHead WBg" data-v-5eafe10b><div class="sec-container" data-v-5eafe10b><div class="breadcrumb-wrap" data-v-5eafe10b><ol class="breadcrumb" data-v-5eafe10b><li class="breadcrumb-item" data-v-5eafe10b><a href="/ar" class="nuxt-link-active" data-v-5eafe10b>الرئيسية</a></li> <li class="breadcrumb-item" data-v-5eafe10b><a href="/ar/categories/39" alt="كتب اللغة" data-v-5eafe10b>كتب اللغة
+              </a></li> <li class="breadcrumb-item active" data-v-5eafe10b><span aria-current="location" data-v-5eafe10b>الطريق المستقيم في نظم علامات الترقيم</span></li></ol></div> <div class="BookViewWrap" data-v-5eafe10b><div class="row" data-v-5eafe10b><div class="col-lg-2 col-md-3 text-center mb-4" data-v-5eafe10b><div class="book-thumb book-thumb-lg mt-3" data-v-5eafe10b><div class="book-cover" data-v-5eafe10b><img alt="book-descriptions" data-v-5eafe10b> <span class="book-cover-mark" style="background:linear-gradient(45deg, #67783a 0%, #e0af6c 100%);" data-v-5eafe10b><span data-v-5eafe10b>الطريق المستقيم في نظم علامات الترقيم</span></span></div></div> <div class="text-center mt-4 HideSm" data-v-5eafe10b><social-sharing url="https://ketabonline.com/ar/books/1" title="الطريق المستقيم في نظم علامات الترقيم" description="الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم
+المؤلف: محمود محمد محمود مرسى، أبو سريع
+عدد الأجزاء: 1
+[الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة الشاملة]
+" hashtags="جامع_الكتب_الإسلامية" data-v-5eafe10b></social-sharing></div></div> <div class="col-lg-10 col-md-9" data-v-5eafe10b><div class="row" data-v-5eafe10b><div class="col-lg-7 col-12" data-v-5eafe10b><div class="mt-3" data-v-5eafe10b><h1 class="strong7" data-v-5eafe10b>
+                      الطريق المستقيم في نظم علامات الترقيم
+                    </h1> <div class="mt-4 BookActions d-flex d-flex-sides" data-v-5eafe10b><div class="main-buttons" data-v-5eafe10b><a href="/ar/books/1/read" class="btn-solid btn-wide btn-solid-alt2" data-v-5eafe10b><span class="d-flex align-items-center play-icon-white" data-v-5eafe10b>
+
+                            ابدأ القراءة
+                          </span></a> <!----></div> <div class="d-flex justify-content-center align-items-center" style="height: 35px" data-v-5eafe10b><!----> <!----></div></div> <div class="mt-5" data-v-5eafe10b><h5 class="strong6 mb-2" data-v-5eafe10b>
+                        ملخص الكتاب
+                      </h5> <div id="BookDetailsText" class="CollapseWrap collapse" style="display:none;" data-v-5eafe10b><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            نوع النسخة
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            كتاب نصي
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            المصدر
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            المكتبة الشاملة
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            الكتاب
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            المؤلف
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            محمود محمد محمود مرسى، أبو سريع
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            عدد الأجزاء
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            1
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            نوع المادة
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            ملفات إلكترونية
+                          </div></div><div class="book-attr" data-v-5eafe10b><div class="book-attr-key" data-v-5eafe10b>
+                            الترقيم
+                          </div> <div class="book-attr-value" data-v-5eafe10b>
+                            مرقم آليا
+                          </div></div></div></div> <div class="mt-5 BookContents" data-v-5eafe10b><h5 class="strong6 mb-2" data-v-5eafe10b>
+                        محتوى الكتاب
+                      </h5> <div id="BookContents" class="CollapseWrap collapse" style="display:none;" data-v-5eafe10b><div class="CollapseContent" style="max-height:170px;" data-v-5eafe10b><ul data-v-5eafe10b><li data-v-5eafe10b><a href="/ar/books/1/read?page=4&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                1.
+                                الطريق المستقيم في نظم علامات الترقيم
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=4&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                2.
+                                مقدمة النظم
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=6&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                3.
+                                علامات الترقيم
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=7&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                4.
+                                الفصلة (،)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=8&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                5.
+                                تنبيه
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=9&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                6.
+                                الفصلة المنقوطة (؛)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=10&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                7.
+                                الوقفة أو النقطة (.)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=11&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                8.
+                                الوصلة أو الشرطة (ــ)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=12&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                9.
+                                القوسان ()
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=13&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                10.
+                                علامة التنصيص (&quot;&quot;)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=14&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                11.
+                                النقطتان الرأسيتان (:)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=15&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                12.
+                                تنبيه
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=16&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                13.
+                                علامة الاستفهام (؟)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=17&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                14.
+                                علامة الانفعال أو التعجب (!)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=18&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                15.
+                                الاستفهام التعجبي (؟!)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=19&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                16.
+                                علامة الحذف (....)
+                              </a></li><li data-v-5eafe10b><a href="/ar/books/1/read?page=20&amp;part=1" class="OneLine" data-v-5eafe10b>
+                                17.
+                                الخاتمة
+                              </a></li></ul></div> <a class="MainText d-block BookContentsMore mt-3" data-v-5eafe10b><span class="CollapseMore" data-v-5eafe10b>عرض المزيد...</span> <span class="CollapseLess" data-v-5eafe10b>...عرض ملخص</span></a></div></div></div></div> <div class="col-lg-5 col-12" data-v-5eafe10b><!----> <div class="LighterBg box-borderd mt-3" data-v-5eafe10b><div class="box-title" data-v-5eafe10b><h5 class="strong6" data-v-5eafe10b>
+                        أجزاء الكتاب (1)
+                      </h5></div> <div class="box-innerLR books-parts" data-v-5eafe10b><div class="list-item border-b" data-v-5eafe10b><!----> <a href="/ar/books/1/read?page=4&amp;part=1" class="item-link-overlay" data-v-5eafe10b></a> <div class="list-item-head" data-v-5eafe10b><div class="book-thumb" data-v-5eafe10b><div class="book-cover" data-v-5eafe10b><img alt="book-descriptions" data-v-5eafe10b> <span class="book-cover-mark" style="font-size:4px;background:linear-gradient(45deg, #67783a 0%, #e0af6c 100%);" data-v-5eafe10b><span data-v-5eafe10b>الطريق المستقيم في نظم علامات الترقيم</span></span></div></div></div> <div class="list-item-body" data-v-5eafe10b><h5 class="h6 TwoLines" data-v-5eafe10b>
+                            المجلد (1)
+                          </h5></div></div></div></div> <div class="LighterBg box-borderd mt-3" data-v-5eafe10b><div class="box-title" data-v-5eafe10b><h5 class="strong6" data-v-5eafe10b>
+                        تفاصيل الكتاب
+                      </h5></div> <div class="box-inner" data-v-5eafe10b><ul class="Text-list" data-v-5eafe10b><li data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-dark thumb-dark" data-v-5eafe10b><i class="ico-files" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b>
+                            الصفحات:<span class="strong6 mr-2 ml-2" data-v-5eafe10b>16</span></span></li> <li data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-dark thumb-dark" data-v-5eafe10b><i class="ico-eye" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b>
+                            المشاهدات:
+                            <span class="strong6" data-v-5eafe10b>2276</span></span></li> <li data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-dark thumb-dark" data-v-5eafe10b><i class="ico-download1" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b>
+                            التنزيلات:
+                            <span class="strong6" data-v-5eafe10b>1753</span></span></li> <li data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-dark thumb-dark" data-v-5eafe10b><i class="ico-calendar" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b>
+                            التاريخ:
+                            <strong class="strong6" data-v-5eafe10b>18 أكتوبر 2019</strong></span></li> <li data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-dark thumb-dark" data-v-5eafe10b><i class="ico-light-bulb" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b>
+                            آخر تحديث:
+                            <strong class="strong6" data-v-5eafe10b>24 يناير 2023</strong></span></li> <li class="text_green" data-v-5eafe10b><span class="thumb thumb-xs thumb-round bg-green thumb-dark" data-v-5eafe10b><i class="ico-printer1" data-v-5eafe10b></i></span> <span class="mr-2 ml-2" data-v-5eafe10b><strong class="strong6" data-v-5eafe10b>
+                              الكتاب مرقم آليا
+                            </strong></span></li></ul></div></div> <div class="box-borderd mt-3" data-v-5eafe10b><div class="box-title" data-v-5eafe10b><h5 class="strong6" data-v-5eafe10b>
+                        المؤلفون (1)
+                      </h5></div> <div class="box-innerLR" data-v-5eafe10b><div class="list-item" data-v-5eafe10b><div class="list-item-head" data-v-5eafe10b><div class="thumb LighterBg thumb-sm thumb-round" data-v-5eafe10b><img src="/default/author.jpg" data-v-5eafe10b></div></div> <div class="list-item-body" data-v-5eafe10b><div class="d-flex d-flex-sides d-flex-center" data-v-5eafe10b><div data-v-5eafe10b><a href="/ar/authors/512" alt="محمود أبو سريع" data-v-5eafe10b><h5 class="h5 strong6" data-v-5eafe10b>
+                                  محمود أبو سريع
+                                </h5></a> <small class="ScndTitle LightText" data-v-5eafe10b></small></div> <div data-v-5eafe10b><a href="/ar/authors/512" alt="محمود أبو سريع" class="btn-solid btn-solid-alt2 btn-small btn-round" data-v-5eafe10b>
+                                الكتب
+                              </a></div></div></div></div></div></div> <div class="text-center mt-4 ShowSm" data-v-5eafe10b><social-sharing url="https://ketabonline.com/ar/books/1" title="الطريق المستقيم في نظم علامات الترقيم" description="الطريق المستقيم في نظم علامات الترقيم" quote="الطريق المستقيم في نظم علامات الترقيم" hashtags="جامع_الكتب_الإسلامية" data-v-5eafe10b></social-sharing> <!----> <!----></div></div></div></div></div></div></div></section> <!----> <!----> <!----></div></div> <!----></div></div></div><script>window.__NUXT__=(function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,_,$,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,aA,aB,aC,aD,aE,aF,aG,aH,aI,aJ,aK,aL,aM,aN,aO,aP,aQ,aR,aS,aT,aU,aV,aW,aX,aY,aZ,a_,a$,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv,bw,bx,by,bz,bA,bB,bC,bD,bE,bF,bG,bH,bI,bJ,bK,bL,bM,bN,bO,bP,bQ,bR,bS,bT,bU,bV,bW,bX,bY,bZ,b_,b$,ca,cb,cc,cd,ce,cf,cg,ch,ci,cj,ck,cl,cm,cn,co,cp,cq,cr,cs,ct,cu,cv,cw,cx,cy,cz,cA,cB,cC,cD,cE,cF,cG,cH,cI,cJ,cK,cL,cM,cN,cO,cP,cQ,cR,cS){bZ.name="محمود أبو سريع";bZ.id=b_;b$.name=ca;b$.id=bm;return {layout:"default",data:[{book:{id:c,lang:d,docs_only:b,title:bY,description:"الكتاب: الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم\r\nالمؤلف: محمود محمد محمود مرسى، أبو سريع\r\nعدد الأجزاء: 1\r\n[الكتاب مرقم آليا، وقد أهداه مؤلفه للمكتبة الشاملة]",bibliography:"الناشر:\r\nالطبعة:",info:"الكتاب نظم من الرجز لأهم علامات الترقيم : حدودها ، ومواضعها",notes:N,publisher:N,print:N,country:N,year:N,reviewer:N,authors:[bZ],categories:[b$],meta:[{name:"نوع النسخة",value:"كتاب نصي"},{name:"المصدر",value:cb},{name:"الكتاب",value:"الطريقُ المستقيمُ فِي نظم علاماتِ الترقيم"},{name:"المؤلف",value:"محمود محمد محمود مرسى، أبو سريع"},{name:"عدد الأجزاء",value:s},{name:"نوع المادة",value:"ملفات إلكترونية"},{name:"الترقيم",value:"مرقم آليا"}],image_url:a,ris_url:"https:\u002F\u002Fs2.ketabonline.com\u002Fbooks\u002F1\u002F1.ris",created_at:"2019-10-18 19:05:18",updated_at:"2023-01-24 12:59:55",deleted_at:a,published_at:a,version:c,type:r,print_status:k,services:[],colors:["#67783a","#e0af6c"],views:2276,downloads:1753,reads:471,content_status:c,is_active:c,is_deleted:b,is_editable:c,is_free:c,price:b,price_before_discount:b,is_purchased:b,is_favorited:b,readers_choice:11737,featured:b,parts_count:c,parts:[{creator:a,is_encrypted:b,author:a,is_optimized:b,title:a,javascript:b,page_id:v,pages:t,form:b,size:b,name:s,producer:a,id:9322,page:c,pdf_url:a}],copies_count:b,copies:[],pages_count:t,index_count:J,index:[{parent:b,page_id:v,children:[],title_level:c,id:673332,page:c,title:bY,part_name:s,reciters:[]},{parent:b,page_id:v,children:[],title_level:c,id:673333,page:c,title:"مقدمة النظم",part_name:s,reciters:[]},{parent:b,page_id:B,children:[],title_level:c,id:673334,page:c,title:"علامات الترقيم",part_name:s,reciters:[]},{parent:b,page_id:o,children:[],title_level:c,id:673335,page:c,title:"الفصلة (،)",part_name:s,reciters:[]},{parent:b,page_id:m,children:[],title_level:c,id:673336,page:c,title:cc,part_name:s,reciters:[]},{parent:b,page_id:u,children:[],title_level:c,id:673337,page:c,title:"الفصلة المنقوطة (؛)",part_name:s,reciters:[]},{parent:b,page_id:K,children:[],title_level:c,id:673338,page:c,title:"الوقفة أو النقطة (.)",part_name:s,reciters:[]},{parent:b,page_id:bn,children:[],title_level:c,id:673339,page:c,title:"الوصلة أو الشرطة (ــ
