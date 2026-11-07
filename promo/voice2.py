@@ -55,8 +55,8 @@ def tts(sid, voice, out):
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", "-", "-af",
                             "silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse", out],
                            input=pcm, check=True)
-            d, want = dur(out), len(DIAC.sub("", g["text"])) / 12.0
-            if d > want * 1.9 + 3 or d < want * 0.45:  # قرأ التعليمات أو كرّر أو قطع
+            d, want = dur(out), len(DIAC.sub("", g["text"])) / 9.0  # الإيقاع الوقور نحو ٩ أحرف في الثانية
+            if d > want * 1.8 + 3 or d < want * 0.4:  # قرأ التعليمات أو كرّر أو قطع
                 err = f"{m}: مدة {d:.1f}ث والمتوقع نحو {want:.1f}ث"; print("  رُفضت:", err, flush=True); continue
             return m
         except Exception as e:
