@@ -375,3 +375,5 @@ html:not(.mode-mobile) .toc { --k: 1.04; }
 html:not(.mode-mobile) .editorial { --k: 1.06; }
 /* الهاتف: القبس الطويل قد يتجاوز صفحة الهاتف فيُسمح بانقسامه */
 html.mode-mobile .it-quote, html.mode-mobile .mj-poem, html.mode-mobile .quiz > li, html.mode-mobile .tail { break-inside: auto; }
+/* بداية الفقرة بمسافة كالكتاب المطبوع (لا للآيات والأقوال المقتبسة والفقرات المرقمة) */
+.doc p:not([class*="mj-"]):not(.hn):not(.lead) { text-indent: 4.5mm; }

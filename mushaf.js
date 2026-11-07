@@ -185,6 +185,10 @@ const MUS = (() => {
     el.innerHTML = L.length ? `${(hit.length ? hit : L).map(([w2, m]) => `<p><b>﴿${esc(w2)}﴾</b>: ${esc(m)}</p>`).join("")}${hit.length ? "" : '<p class="mut">غريب هذه الآية في «السراج» (لم تُفرد الكلمة المختارة).</p>'}<p class="mut" style="font-size:.8rem">«السراج في بيان غريب القرآن» للدكتور محمد بن عبد العزيز الخضيري</p>`
       : 'لا غريب لهذه الكلمة في «السراج»؛ اضغط «المعاجم وكتب الشريعة».';
   }
+  // غريب الآية (أو الآيات) من «السراج»: الكلمة ومعناها، لكل قسم يعرض آية (المصحف، والقارئ، والمجلة، والعربية لغير الناطقين…)
+  async function gharib(s, a, to) { const g = (await tf("siraj", s)) || {}, out = []; for (let k = a; k <= Math.max(a, to || a); k++) (Array.isArray(g[k]) ? g[k] : []).forEach(([w, m]) => w && m && out.push([w, m, k])); return out; }
+  async function gharibHtml(s, a, to) { let L = []; try { L = await gharib(s, a, to); } catch (e) { }
+    return L.length ? `<dl class="qgr">${L.map(([w, m, k]) => `<dt>﴿${esc(w)}﴾${to > a ? ` <small class="mut">(${AR(k)})</small>` : ""}</dt><dd>${esc(m)}</dd>`).join("")}</dl>` : "لا كلمات غريبة في هذه الآية في «السراج»."; }
   async function showTf(k, s, a) { const t = await tf(k, s), el = $("#musmk"); if (!el) return; el.textContent = sjTxt(t[a]) || (k === "siraj" ? "لا غريب في هذه الآية في «السراج»، أو لم يُستخرج بعد." : "غير متاح لهذه الآية بعد.");
     document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k)); }
   async function sheet(s, a) {
@@ -193,6 +197,7 @@ const MUS = (() => {
     openSheet(`${nmP(s)}: ${AR(a)}${until ? "–" + AR(until) : ""}`, `<p class="mqt big">${words(t, s, a)} ﴿${AR(a)}﴾${until ? Array.from({ length: Math.min(until, Q.suras[s - 1].ayat.length) - a }, (_, i) => " " + words(ayah(s, a + i + 1), s, a + i + 1) + ` ﴿${AR(a + i + 1)}﴾`).join("") : ""}</p>
     <p class="mut" style="font-size:.82rem;margin-top:-4px">اضغط أي كلمة لمعناها وغريبها في كتب الغريب والمعاجم.</p>
     <div class="row">${inMus ? "" : `<a class="btn s p" href="#/mushaf/${s}?a=${a}" data-act="closeSheet">📖 موضعها في المصحف</a>`}<button class="btn s" data-act="musone" data-s="${s}" data-a="${a}">▶ استمع</button><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
+    <h4>غريب الآية <small class="mut">(السراج في بيان غريب القرآن)</small></h4><div id="musgr" class="mut">…</div>
     <div class="chips" id="mustk">${TFS.map(([k, n]) => `<button class="chip${k === tfk() ? " on" : ""}" data-act="mustk" data-k="${k}" data-s="${s}" data-a="${a}">${n}</button>`).join("")}</div><div id="musmk" class="mut tfbox">…</div>
     <h4>مواضع تفسيرها في التفاسير</h4><div id="mustf" class="mut">…</div>
     <h4>ما قيل فيها في كتب الدعوة ومقالاتها</h4><div id="musct" class="mut">جارٍ التحميل…</div>
@@ -200,6 +205,7 @@ const MUS = (() => {
       $("#musn").addEventListener("input", e => { setNote(k, e.target.value.trim()); const b = document.querySelector(`#ay${a} .mno`); if (b) b.classList.toggle("hasn", !!e.target.value.trim()); });
     });
     showTf(tfk(), s, a);
+    gharibHtml(s, a, until).then(h => { const el = $("#musgr"); if (el) el.innerHTML = h; });
     taf(s).then(ix => { const el = $("#mustf"); if (!el) return; const L = (ix && ix[a]) || [];
       el.innerHTML = L.length ? L.map(e => `<a class="chip" href="#/book/${esc(e[0])}/${e[1]}" data-act="closeSheet">${esc(e[0].startsWith("ibnkathir") ? "تفسير ابن كثير" : e[0].startsWith("baghawi") ? "تفسير البغوي" : (B(e[0]) || {}).title || e[0])}${e[2] ? "" : " (تقريبي)"}</a>`).join(" ") : "لم تُفهرس بعد."; });
     const [C, M] = await Promise.all([cites(s), meta()]), L = (C[a] || []).filter(x => M[x[0]]), el = $("#musct"); if (!el) return;
@@ -280,7 +286,7 @@ const MUS = (() => {
   window.addEventListener("hashchange", () => { setTimeout(bar, 50); if (!curPage()) document.body.classList.remove("mfull"); if (PLAY && !window.__musAuto && !window.__musCont) stopAu(); else if (AU && window.__musAuto) { AU.pause(); AU = null; PLAY = null; } });
   // نافذة الآية من أي صفحة (ربط عزو الآيات في الكتب: QREF أدناه)
   async function ref(s, a, to) { try { await load(); } catch (e) { location.hash = "#/mushaf/" + s + "?a=" + a; return; } if (!Q.suras[s - 1] || !Q.suras[s - 1].ayat[a - 1]) return; sheet.to = to || 0; sheet(s, a); }
-  return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q), ref };
+  return { view: (q, s, n) => s === "p" ? mpage(n) : s ? sura(s, q) : index(q), ref, gharib, gharibHtml };
 })();
 
 /* ربط الآيات في كل الكتب والمقالات بالمصحف (طلب المدير، ٧ نوفمبر): كل عزو بصيغة [السورة: رقم] أو (السورة: الآية رقم)
@@ -300,7 +306,8 @@ const QREF = (() => {
   const num = x => +String(x).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
   const sura = n => { const k = nz(n).replace(/^سوره\s+/, "").replace(/(\s+(الايه|الايات|ايه|رقم|من))+$/, "").trim(); return M[k] || M[k.replace(/^ال/, "")] || 0; };
   const SKIP = "A,BUTTON,TEXTAREA,INPUT,SELECT,SCRIPT,STYLE,CODE";
-  const ok = el => el && el.closest(".rd,.aimd") && !el.closest(SKIP + ",[contenteditable=true],.qref");
+  const AREA = ".rd,.qscan,.majtext,.sumtx,.kurtext,.tjwrap,.aimd";  // حيث يُربط عزو الآيات بنافذتها (التفسير وغريب السراج)، ومنها إجابات المساعد العلمي (.aimd)
+  const ok = el => el && el.closest(AREA) && !el.closest(SKIP + ",[contenteditable=true],.qref");
   // الكلمات في القارئ يلف كلًّا منها عنصر span.w، فالعزو يمتد على عناصر متجاورة: تُجمع نصوص أبناء الحاوية ثم يُلف ما يغطيه العزو برابط
   // (تبقى عناصر الكلمات كما هي داخل الرابط فلا تتأثر التعليقات والتظليل)
   function linkIn(E) {
@@ -380,7 +387,7 @@ const QREF = (() => {
     if (!root || (root.nodeType !== 1 && root.nodeType !== 3)) return;
     if (root.nodeType === 1) { const rds = root.matches && root.matches(".rd[data-id]") ? [root] : [...(root.querySelectorAll ? root.querySelectorAll(".rd[data-id]") : [])]; const up = root.closest && root.closest(".rd[data-id]"); if (up) rds.push(up); rds.forEach(r => { try { addIn(r); } catch (e) { } }); setTimeout(() => rds.forEach(r => { try { markCited(r); } catch (e) { } }), 0); }
     if (root.nodeType === 3) return linkIn(root.parentElement);
-    if (!(root.closest(".rd,.aimd") || root.querySelector(".rd,.aimd"))) return;
+    if (!(root.closest(AREA) || root.querySelector(AREA))) return;
     const E = new Set(), w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     while (w.nextNode()) { const p = w.currentNode.parentElement; if (!p) continue; E.add(p.classList.contains("w") || p.classList.contains("qv") ? p.parentElement : p); }
     E.forEach(e => { try { linkIn(e); } catch (x) { } });
