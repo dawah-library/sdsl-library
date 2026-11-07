@@ -90,6 +90,7 @@ async function load(ctx, keys) {
 // يشغّل المعالج؛ إن طلب ملف بيانات غير محمَّل يُجلب الملف ويُعاد التشغيل (حتى ٣ مرات، للمعالجات غير المتدفقة)
 export async function run(handler, ctx, { url, preload = [], retry = false } = {}) {
   envInto(ctx.env);
+  globalThis.__CF_AI = ctx.env && ctx.env.AI || null;  // Workers AI (الربط AI في wrangler.toml) لتوسيع صيغ البحث في المساعد
   const ip = ctx.request.headers.get("cf-connecting-ip") || "";
   const parsed = await parseBody(ctx.request);
   if (preload.length) await load(ctx, preload);
