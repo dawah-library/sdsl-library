@@ -20,7 +20,7 @@ async function staffOf(req) {
   const user = await u.json(); if (!user || !user.id) return null;
   const p = await fetch(url + "/rest/v1/profiles?select=role,perms&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } });
   const rows = p.ok ? await p.json() : [];
-  const role = rows[0] && rows[0].role;
+  const role = rows[0] && rows[0].role === "partner" ? "admin" : rows[0] && rows[0].role;
   if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role };
   const perms = ((rows[0] && rows[0].perms) || []).filter(k => PERM_PATHS[k]);
   return perms.length ? { id: user.id, email: user.email, role: "delegate", perms } : null;

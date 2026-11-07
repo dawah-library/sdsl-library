@@ -41,19 +41,20 @@ module.exports = async (req, res) => {
     if (x && (!x.until || Date.parse(x.until) > Date.now())) return out(res, 403, { message: "أوقفت إدارة المكتبة النشر من حسابك" + (x.until ? " حتى " + String(x.until).slice(0, 10) : "") + (x.reason ? ": " + x.reason : ".") }); } catch (e) { }
   // إعدادات المجتمع: إيقاف النشر مؤقتًا، أو المراجعة قبل الظهور
   let cset = {}, staff = false, prof = null;
-  try { const r = await sb("app_settings?select=value&key=eq.community_open"); cset = (r && r[0] && r[0].value) || {}; const pr = await sb("profiles?select=role,author_id&id=eq." + user.id); prof = pr && pr[0]; staff = !!(prof && /^(admin|editor)$/.test(prof.role)); } catch (e) { }
+  try { const r = await sb("app_settings?select=value&key=eq.community_open"); cset = (r && r[0] && r[0].value) || {}; const pr = await sb("profiles?select=role,author_id&id=eq." + user.id); prof = pr && pr[0]; staff = !!(prof && /^(admin|partner|editor)$/.test(prof.role)); } catch (e) { }
   if (cset.closed && !staff) return out(res, 403, { message: "النشر في مجتمع المكتبة متوقف مؤقتًا بقرار الإدارة." });
   const q0 = await body(req);
   // حساب الشيخ (عضو مميز بموافقة الإدارة): ينشر ما يشاء نصًا حرًا، ويظهر في «منشورات المشايخ» وفي المجتمع
   if (q0.free) {
-    if (!prof || prof.role !== "sheikh") return out(res, 403, { message: "النشر الحر لحسابات المشايخ المعتمدة من الإدارة فقط." });
+    if (!prof || !/^(sheikh|premium|editor|partner|admin)$/.test(prof.role)) return out(res, 403, { message: "النشر الحر لحسابات المشايخ والأعضاء المميزين المعتمدين من الإدارة فقط." });
     const text = String(q0.text || "").replace(/\r/g, "").trim();
     if (text.length < 10 || text.length > 6000) return out(res, 400, { message: "اكتب منشورًا بين ١٠ و٦٠٠٠ حرف." });
-    let nm = "الشيخ";
-    try { const pg = await sb("member_pages?select=name&user_id=eq." + user.id); if (pg && pg[0]) nm = pg[0].name; if (prof.author_id && CAT0()) { const a = CAT0().authors.find(x => x.id === prof.author_id); if (a) nm = a.name; } } catch (e) { }
+    const isSh = prof.role === "sheikh"; let nm = isSh ? "الشيخ" : "عضو";
+    if (!isSh) { try { const pg0 = await sb("profiles?select=name&id=eq." + user.id); if (pg0 && pg0[0] && pg0[0].name) nm = pg0[0].name; } catch (e) { } }
+    try { const pg = await sb("member_pages?select=name&user_id=eq." + user.id); if (pg && pg[0] && isSh) nm = pg[0].name; if (isSh && prof.author_id && CAT0()) { const a = CAT0().authors.find(x => x.id === prof.author_id); if (a) nm = a.name; } } catch (e) { }
     try {
-      const r = await sb("member_posts", { method: "POST", body: JSON.stringify({ user_id: user.id, user_name: nm, body: text, quote: null, sheikh: true, author_id: prof.author_id || null }) });
-      try { const { notify, escH } = require("../lib/tg"); await notify(`🕌 <b>منشور جديد من حساب شيخ</b>: ${escH(nm)}\n${escH(text.slice(0, 300))}`, { url: "#/posts?k=posts" }); } catch (e) { }
+      const r = await sb("member_posts", { method: "POST", body: JSON.stringify({ user_id: user.id, user_name: nm, body: text, quote: null, sheikh: isSh, author_id: prof.author_id || null }) });
+      try { const { notify, escH } = require("../lib/tg"); await notify(`🕌 <b>منشور جديد من ${isSh ? "حساب شيخ" : "عضو مميز"}</b>: ${escH(nm)}\n${escH(text.slice(0, 300))}`, { url: "#/posts?k=posts" }); } catch (e) { }
       return out(res, 200, { post: r[0] });
     } catch (e) { console.error("mpost free", e.message); return out(res, 500, { message: "تعذر النشر الآن." }); }
   }

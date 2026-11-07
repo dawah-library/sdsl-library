@@ -1,0 +1,37 @@
+name: agent-ci
+# فحص آلي لكل طلب دمج من الوكلاء (وأي فرع): صياغة JS وPython، وشمول صفحة التعريف، وعدم تسرب أسرار
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: صياغة الملفات المعدلة
+        run: |
+          set -e
+          base="${{ github.event.pull_request.base.sha }}"
+          files=$(git diff --name-only --diff-filter=AM "$base" HEAD)
+          for f in $files; do
+            case "$f" in
+              vendor/*) ;;
+              *.js) node --check "$f" ;;
+              *.py) python3 -m py_compile "$f" ;;
+              *.json) python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$f" ;;
+            esac
+          done
+      - name: شمول صفحة التعريف
+        run: python3 tools/check-about.py
+      - name: فحص الأسرار
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          if git diff "$base" HEAD | grep -E '^\+' | grep -E 'AIza[0-9A-Za-z_-]{30,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|sb_secret_[A-Za-z0-9_-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY'; then
+            echo "::error::يبدو أن التعديل يتضمن مفتاحًا سريًا"; exit 1; fi

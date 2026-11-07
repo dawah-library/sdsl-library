@@ -11,8 +11,8 @@ const TEAM = (() => {
   const PERMS = [["content", "إدارة المحتوى والمواد"], ["review", "المراجعة والاعتماد العلمي"], ["audio", "الصوتيات والراديو"], ["tech", "الشؤون الفنية والخوادم"], ["community", "مراقبة المجتمع"], ["team", "تنظيم الفريق والاجتماعات"]];
   let people = null;
   const sb = () => Auth.sb, me = () => Auth.user && Auth.user.id;
-  const isAdm = () => Cloud.role === "admin";
-  async function team() { if (people) return people; const { data } = await sb().from("profiles").select("id,name,role,team_perms").in("role", ["editor", "admin"]); people = data || []; return people; }
+  const isAdm = () => Cloud.role === "admin"; // الشريك يُحمَّل بدور admin في الواجهة
+  async function team() { if (people) return people; const { data } = await sb().from("profiles").select("id,name,role,team_perms").in("role", ["editor", "admin", "partner"]); people = data || []; return people; }
   const nm = id => ((people || []).find(p => p.id === id) || {}).name || "عضو";
   const sections = () => (typeof ABOUT_SECS !== "undefined" ? ABOUT_SECS : []).flatMap(([g, items]) => items.map(([n]) => g + " › " + n));
   const audit = (action, target, detail) => sb().from("team_audit").insert({ actor: me(), action, target: String(target), detail: detail || {} }).then(() => { });
@@ -132,13 +132,13 @@ const TEAM = (() => {
     const { data } = await sb().from("profiles").select("id,name,role,team_perms").order("name");
     const all = data || [];
     view(head + `<p class="mut">أعضاء الفريق وصلاحياتهم. يمنحها المدير أو يعدّلها أو يسحبها، ويُسجَّل كل تغيير آليًا في «سجل القرارات والتعديلات». المدير له كل الصلاحيات.</p>
-     <div class="mglist">${all.filter(p => p.role !== "member" || all.length < 60).map(p => `<form class="mgrow" data-form="tmperm" data-id="${p.id}"><span class="mgt"><b>${esc(p.name || "عضو")}</b> <em class="tag">${({ admin: "مدير", editor: "عضو فريق", sheikh: "حساب شيخ", member: "عضو" })[p.role] || p.role}</em><br>
-       ${p.role === "admin" ? '<span class="mut">كل الصلاحيات</span>' : p.role === "editor" ? PERMS.map(([k, l]) => `<label class="inl"><input type="checkbox" name="p" value="${k}"${(p.team_perms || []).includes(k) ? " checked" : ""}> ${l}</label>`).join("") : ""}</span>
-       ${p.role === "admin" || p.id === me() ? "" : `<span><select name="role"><option value="member"${p.role === "member" ? " selected" : ""}>عضو</option><option value="editor"${p.role === "editor" ? " selected" : ""}>عضو فريق</option>${p.role === "sheikh" ? '<option value="sheikh" selected>حساب شيخ</option>' : ""}</select><button class="btn s">حفظ</button></span>`}</form>`).join("")}</div>`);
+     <div class="mglist">${all.filter(p => p.role !== "member" || all.length < 60).map(p => `<form class="mgrow" data-form="tmperm" data-id="${p.id}"><span class="mgt"><b>${esc(p.name || "عضو")}</b> <em class="tag">${({ admin: "المدير الأصلي", partner: "شريك مدير", editor: "عضو فريق الإدارة", premium: "عضو مميز", sheikh: "حساب شيخ", member: "عضو" })[p.role] || p.role}</em><br>
+       ${p.role === "admin" || p.role === "partner" ? '<span class="mut">كل الصلاحيات' + (p.role === "partner" ? " عدا إزالة المدير الأصلي وتعطيل الموقع" : "") + '</span>' : p.role === "editor" ? PERMS.map(([k, l]) => `<label class="inl"><input type="checkbox" name="p" value="${k}"${(p.team_perms || []).includes(k) ? " checked" : ""}> ${l}</label>`).join("") : ""}</span>
+       ${p.role === "admin" || p.id === me() ? "" : `<span><select name="role"><option value="member"${p.role === "member" ? " selected" : ""}>عضو</option><option value="premium"${p.role === "premium" ? " selected" : ""}>عضو مميز</option><option value="editor"${p.role === "editor" ? " selected" : ""}>عضو فريق الإدارة</option><option value="partner"${p.role === "partner" ? " selected" : ""}>شريك مدير (المجلس الأعلى)</option>${p.role === "sheikh" ? '<option value="sheikh" selected>حساب شيخ</option>' : ""}</select><button class="btn s">حفظ</button></span>`}</form>`).join("")}</div>`);
   }
   async function savePerm(f) {
     const fd = new FormData(f), role = fd.get("role"), perms = fd.getAll("p");
-    if (!confirm(role === "editor" ? "منح عضوية الفريق بالصلاحيات المحددة؟" : "سحب عضوية الفريق وصلاحياتها؟")) return;
+    if (!confirm(({ editor: "منح عضوية فريق الإدارة بالصلاحيات المحددة؟", partner: "منح الشراكة في إدارة الموقع (صلاحيات كاملة عدا إزالة المدير الأصلي وتعطيل الموقع)؟", premium: "منح العضوية المميزة (النشر الحر وخدمات الأعضاء المميزين)؟" })[role] || "إرجاعه عضوًا عاديًا وسحب صلاحياته؟")) return;
     const { error } = await sb().from("profiles").update({ role, team_perms: role === "editor" ? perms : [] }).eq("id", f.dataset.id);
     if (error) return alert(error.message); people = null; toast("حُفظت الصلاحيات، وسُجّل التغيير."); vTeam(null, { t: "people" });
   }
