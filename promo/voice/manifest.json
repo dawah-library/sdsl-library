@@ -213,5 +213,10 @@
   "d": 10.5,
   "model": "gemini-3.1-flash-tts-preview",
   "score": 34.0
+ },
+ "best/s01": {
+  "d": 28.01,
+  "model": "gemini-3.1-flash-tts-preview",
+  "score": 33.0
  }
 }
