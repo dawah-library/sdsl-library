@@ -43,6 +43,43 @@ def virtue(h):
     return (s.rsplit(" ", 1)[0] + "…") if len(s) >= 420 else s
 
 
+STORY_RX = re.compile(r"قصص|قصة|حكاي|للأطفال|للصغار|للناشئة|للفتيان|مغامر|الأذكياء|الفرج بعد الشدة|حياة الصحابة|رجال حول الرسول|صور من حياة|أبطال")
+SAFE_TURATH = {"qisasanbiya", "adhkiya"}
+KIDBAD = re.compile(r"قبر|ضريح|مشهد|سجن|حبس|قتل|دم |دمه|خمر|عشق|غناء|جارية|جواري|سحر|كاهن|منام|رؤيا|الحجاج|صلب|زنا|فاحشة")
+ISNAD = re.compile(r"^(?:[\d٠-٩:\s\-–.]+)?(?:(?:و?(?:حدثنا|حدثني|أخبرنا|أخبرني|أنبأنا|قال|عن|سمعت)\b[^،:«\u0022]{0,80}[،:]\s*){1,12})")
+def ready(b):  # لا يُبنى على نص لم يكتمل تدقيقه (دليل المعايير)
+    return not b.get("ocr") or (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) == 0
+def book_stories():
+    cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8")); res = []; seen = set()
+    for b in cat["books"]:
+        k = b.get("set") or b["id"]; t = b.get("setTitle") or b["title"]
+        tala = [x[5:] for x in b.get("tags", []) if x.startswith("tala:")]
+        if b.get("hidden") or b.get("demo") or (b.get("type") or "book") != "book" or not (STORY_RX.search(t) or "story" in b.get("tags", [])) or not ready(b): continue  # علامة الطلائع وحدها لا تجعل الكتاب قصصًا
+        # من المكتبة العامة: كتب القصص الموثوقة وحدها (بعض كتب الأخبار فيها ما لا يناسب الأطفال)؛ وكتب الدعوة المرفوعة كلها
+        if (b.get("col") or "dawah") == "turath" and k not in SAFE_TURATH and "story" not in b.get("tags", []): continue
+        fp = os.path.join(ROOT, "data", "books", b["id"] + ".json")
+        if not os.path.exists(fp): fp = os.path.join(ROOT, "vols", b["id"] + ".json")
+        try: sh = json.load(open(fp, encoding="utf-8"))
+        except Exception: continue
+        pages = sh.get("pages") or []; n = 0
+        for e in sh.get("toc") or []:
+            h = re.sub(r"\s+", " ", e.get("t") or "").strip(" :"); p_ = int(e.get("p") or 0)
+            if len(h.split()) < 3 or re.fullmatch(r"[\d٠-٩\s\-–.()]+", h) or not (0 < p_ <= len(pages)) or (b["id"], p_) in seen or BAD.search(h): continue
+            if re.search(r"تراجم أبواب|مقدمة|الفهرس|فهرس|خاتمة الكتاب|المصادر", h): continue
+            seen.add((b["id"], p_))
+            lines = re.sub(r"^#+\s*", "", pages[p_ - 1], flags=re.M).split("\n"); key = re.sub(r"^[\d٠-٩\s\-–.:]+", "", h)[:15]
+            j = next((i for i, x in enumerate(lines) if key and key in x), -1); body = "\n".join(lines[j + 1:] if j >= 0 else lines)  # ما بعد سطر العنوان
+            body = re.split(r"^\s*_{4,}\s*$", body, flags=re.M)[0]
+            ex = " ".join(x.strip() for x in body.split("\n") if len(x.strip()) > 30)
+            ex = ISNAD.sub("", ex).lstrip(" :،-")[:420]  # الأسانيد تُحذف من المقتطف (والنص كاملًا في موضعه)
+            if len(ex) < 120 or KIDBAD.search(h + " " + ex) or len(re.findall(r"الباب|الفصل", ex)) >= 3: continue  # لا صفحات فهارس
+            h = re.sub(r"^[\d٠-٩\s\-–.:]+", "", h)
+            res.append({"id": "%s:%d" % (b["id"], p_), "b": b["id"], "p": p_, "t": h + " — من «" + t + "»", "who": h, "g": "g" if any(w in h for w in WOMEN) else "", "st": tala or ["t3", "t4"], "ex": ex.rsplit(" ", 1)[0] + "…", "a": b.get("authorId")})
+            n += 1
+            if n >= 80: break
+    return res
+
+
 def main():
     idx = json.load(open(os.path.join(ROOT, "data", "articles", "index.json"), encoding="utf-8"))["items"]
     want = {}
@@ -63,6 +100,8 @@ def main():
             if len(ex) < 120: continue
             kids = (i.get("c") or "").endswith(("فتية الإسلام", "أطفالنا")) or re.search(r"أعلام في زمن الصبا|الأمين|الغلام|الفتى|أبطال", i["t"])
             out.append({"id": i["id"], "t": i["t"], "who": who, "g": g, "st": ["t2", "t3", "t4"] if kids else ["t3", "t4"], "ex": ex, "a": i.get("a")})
+    # قصص من كتب القصص في المكتبة (المعلّمة tala:… أو ما يدل عنوانه على القصص) بعد اكتمال تدقيقها: كل عنوان في فهرسها قصة
+    out += book_stories()
     out.sort(key=lambda x: x["t"])
     # شخصيات من «سير أعلام النبلاء» للذهبي في المكتبة (الصحابة والصحابيات المشهورون): أول الترجمة بنصها ورابط موضعها
     import glob

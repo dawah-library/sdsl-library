@@ -111,7 +111,7 @@ const TALA = (() => {
     const mark = (arr, key) => { if (key && !arr.includes(key)) { arr.push(key); if (arr.length > 400) arr.shift(); } };
     if ((T.dshown || {})[kd.id] !== day + nk) { (T.dshown = T.dshown || {})[kd.id] = day + nk; mark(sv.d, du && du.key); mark(sv.s, sto && sto.key); acts.forEach(a => mark(sv.a, a.key)); saveS(); }
     const name = esc(kd.name), fem = g === "g";
-    const storyHtml = !sto ? "" : sto.kind === "a" ? `<div class="tdcard tdstory"><b>📖 قصة اليوم: ${esc(sto.x.t)}</b><p>${esc(sto.x.ex)}</p><a class="btn s p" href="#/book/${esc(sto.x.id)}/1">${fem ? "اقرئي" : "اقرأ"} القصة كاملة</a></div>`
+    const storyHtml = !sto ? "" : sto.kind === "a" ? `<div class="tdcard tdstory"><b>📖 قصة اليوم: ${esc(sto.x.t)}</b><p>${esc(sto.x.ex)}</p><a class="btn s p" href="#/book/${esc(sto.x.b || sto.x.id)}/${sto.x.p || 1}">${fem ? "اقرئي" : "اقرأ"} القصة كاملة</a></div>`
       : `<div class="tdcard tdstory"><b>🌟 ${fem ? "شخصية ملهمة" : "شخصية ملهمة"}: ${esc(sto.x.who)}</b><p>${esc(sto.x.ex)}</p><p class="mut">من «سير أعلام النبلاء» للذهبي، ${esc(sto.x.pl)}</p><a class="btn s p" href="#/book/${esc(sto.x.b)}/${sto.x.p}">${fem ? "اقرئي" : "اقرأ"} الترجمة</a></div>`;
     return `<section class="tdaily"><div class="tdhead"><h3>☀️ يومك يا ${name}</h3><span class="mut">${esc(new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" }))}</span><button class="btn s" data-act="tdnew" title="بطاقة جديدة">🔄 جديد</button></div>
       <div class="tdgrid">${du ? `<div class="tdcard tddua"><b>🤲 دعاء اليوم — ${esc(du.x[0])}</b><p class="tdtxt">${esc(du.x[1])}</p><small class="mut">${esc(du.x[2])}</small><button class="btn s" data-act="tdsay" data-t="${esc(du.x[1])}">🔊 استمع</button></div>` : ""}

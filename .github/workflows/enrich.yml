@@ -1,0 +1,26 @@
+name: إثراء الأقسام من الكتب الجديدة
+# كل كتاب جديد (بعد اكتمال تدقيقه) يُوجَّه إلى خدمات الأقسام بحسب موضوعه، وتُستخرج قصص كتب القصص للطلائع.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "13 */6 * * *"   # كل ست ساعات
+  push:
+    branches: [main]
+    paths: ["data/catalog.json", "tools/enrich-new.py", "tools/tala-stories.py"]
+permissions:
+  contents: write
+concurrency:
+  group: enrich
+  cancel-in-progress: false
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: التوجيه واستخراج القصص
+        run: |
+          python3 tools/enrich-new.py
+          python3 tools/tala-stories.py
+      - run: |
+          bash tools/git-save.sh "إثراء الأقسام من الكتب الجديدة" data/catalog.json data/enrich-state.json data/tashjir/_queue.json data/study-queue.json data/proof/_queue.json data/tala-stories.json tools/enrich-new.md
