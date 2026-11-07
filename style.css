@@ -1230,3 +1230,6 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 /* وحدات «المنة» في الطلائع */
 .mjpts blockquote{margin:6px 0;padding:6px 10px;border-inline-start:3px solid var(--gold,#b88a2e);background:var(--sf);border-radius:8px;line-height:1.9}
 .mjq .tmq{margin:8px 0}
+/* لوحة التشغيل */
+.sttile{background:var(--sf);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;text-align:center}
+.sttile b{font-size:1.8rem;color:var(--ac)}.sttile small{color:var(--mut);font-size:.8rem}.sttile.bad{border-color:#c0392b}.sttile.bad b{color:#c0392b}

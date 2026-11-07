@@ -10,7 +10,7 @@ const SIDE = (() => {
     ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"]]],
     ["عن المكتبة", [["#/about", "من نحن", "info"], ["#/dawah", "التعريف بالدعوة", "flag"], ["#/history", "تاريخ الدعوة", "scroll-text"], ["#/standards", "معايير التحرير", "ruler"], ["#/contact", "تواصل معنا", "mail"]]],
   ];
-  const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/proof", "تدقيق الكتب النصية", "pen-line"]];
+  const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"]];
   const MAP = {}; G.forEach(([, l]) => l.forEach(([h, , i]) => MAP[h.split("?")[0]] = MAP[h.split("?")[0]] || i));
   const fold = () => { try { return JSON.parse(localStorage.getItem("side_fold") || "{}"); } catch (e) { return {}; } };
   function render() {
