@@ -1348,3 +1348,9 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .majissue{overflow:clip}
 /* نص الآية رابطٌ إلى المصحف (QREF.markRange) */
 .rd .qvl{cursor:pointer;border-radius:4px;transition:background .15s}.rd .qvl:hover{background:color-mix(in srgb,var(--ac) 10%,transparent)}
+/* خيارات التنسيق في نافذة التصدير */
+.expfmt{border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:8px 0}.expfmt summary{cursor:pointer;font-weight:700}.expfmt .chips{margin:8px 0}
+.expgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;align-items:center}.expgrid label{display:flex;flex-direction:column;gap:3px;font-size:.9rem}.expgrid label.inl{flex-direction:row;align-items:center}
+.expgrid select{max-width:100%}.expgrid input[type=color]{width:54px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px}
+.expgrid label{min-width:0}.expgrid select,.expgrid input[type=number]{width:100%;min-width:0;box-sizing:border-box}.expgrid>span{display:none}
+@media (max-width:600px){.expgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.expgrid label{font-size:.85rem}}
