@@ -591,7 +591,7 @@ async def main():
         for k in ONLY:  # يُسجَّل بعد اكتمال تدقيق نصه فقط (لا يُسجَّل نص لم يُراجَع على الصور)
             ready = not (cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))
             if ready and not any(i.get("id") == k for i in items): items.append({"id": k, "voice": (lst.get(k) or {}).get("v")})
-        items = [i for i in items if i.get("del") or not (cb.get(i["id"], {}).get("ocr") and (cb[i["id"]].get("unrev") or cb[i["id"]].get("lite")))]
+        items = [i for i in items if i.get("del") or i.get("now") or not (cb.get(i["id"], {}).get("ocr") and (cb[i["id"]].get("unrev") or cb[i["id"]].get("lite")))]  # now=1: بطلب المدير دون انتظار التدقيق
     left_items = []
     for it in items:
         if left() < 300:
