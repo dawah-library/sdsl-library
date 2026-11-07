@@ -8,10 +8,10 @@ const KUR = (() => {
   const PW = 1240, PH = 1754, M = 84, CW = PW - M * 2;
   const COLS = ["#0f5c4d", "#1f6f8b", "#6b4fa3", "#a3462f", "#3c7a3b", "#b07a1e", "#2f5e9e", "#8a3b62"];
   const F = { s: '"IBM Plex Sans Arabic",Tahoma,sans-serif', r: 'Amiri,"Traditional Arabic",serif' };
-  const ICON = { sum: "📝", points: "📌", def: "📖", table: "📊", compare: "⚖️", map: "🧠", steps: "🪜", quote: "❝", note: "⚠️", qs: "✍️" };
-  const TTL = { sum: "خلاصة القسم", points: "أهم المسائل", def: "تعريفات", table: "جدول", compare: "مقارنة", map: "خريطة ذهنية", steps: "خطوات ومراحل", quote: "من نص الكتاب", note: "تنبيه", qs: "اختبر نفسك" };
-  const RL = { 5: "مفصّلة", 10: "متوسطة", 20: "موجزة" };
-  const RATIOS = [[5, "مفصّلة — صفحة لكل ٥ صفحات"], [10, "متوسطة — صفحة لكل ١٠ صفحات"], [20, "موجزة — صفحة لكل ٢٠ صفحة"]];
+  const ICON = { para: "📄", sum: "📝", points: "📌", def: "📖", table: "📊", compare: "⚖️", map: "🧠", steps: "🪜", quote: "❝", note: "⚠️", qs: "✍️" };
+  const TTL = { para: "نص الكتاب", sum: "خلاصة القسم", points: "أهم المسائل", def: "تعريفات", table: "جدول", compare: "مقارنة", map: "خريطة ذهنية", steps: "خطوات ومراحل", quote: "من نص الكتاب", note: "تنبيه", qs: "اختبر نفسك" };
+  const RL = { 1: "دون اختصار", 2: "نصف الأصل", 5: "مفصّلة", 10: "متوسطة", 20: "موجزة" };
+  const RATIOS = [[1, "دون اختصار — نص الكتاب كاملًا بلفظه مع وسائل المذاكرة"], [2, "نصف الأصل — النص مختصرًا إلى نحو نصفه مع وسائل المذاكرة"], [5, "مفصّلة — صفحة لكل ٥ صفحات"], [10, "متوسطة — صفحة لكل ١٠ صفحات"], [20, "موجزة — صفحة لكل ٢٠ صفحة"]];
   const STY = [["sum", "تلخيص بعد كل قسم"], ["qs", "أسئلة وأجوبة بعد كل قسم"], ["table", "جداول"], ["map", "تشجيرات وخرائط ذهنية"], ["compare", "مقارنات"], ["points", "أهم المسائل"], ["def", "تعريفات"], ["steps", "خطوات ومراحل"], ["quote", "نصوص بلفظها"], ["note", "تنبيهات"]];
   const optsForm = (r, st) => `<label>نسبة الاختصار <select name="r">${RATIOS.map(([k, t]) => `<option value="${k}"${k === (r || 10) ? " selected" : ""}>${t}</option>`).join("")}</select></label>
     <fieldset class="kurst"><legend>طرق العرض في الصفحات</legend>${STY.map(([k, t]) => `<label class="chip"><input type="checkbox" name="st" value="${k}"${!st || st.includes(k) ? " checked" : ""}> ${t}</label>`).join("")}</fieldset>`;
@@ -73,6 +73,11 @@ const KUR = (() => {
       frame(h, "#f7f3ea", null); if (draw) { c.fillStyle = col; c.fillRect(xr - 8, y, 8, h); text(c, l, xr - pad - 20, y + 20, 50, `30px ${F.r}`, "#2a2015"); c.font = `20px ${F.s}`; c.fillStyle = "#7a6a4a"; c.textAlign = "left"; c.fillText((b.by ? b.by + " — " : "") + "ص " + toAr(b.p || 1), x0 + pad, y + h - 18); }
       return h;
     }
+    if (k === "para") {  // نص الكتاب مختصرًا (نصف الأصل) أو كاملًا بلفظه
+      const ls = b.items.map(x => wrap(x, bw - pad * 2 - 10, `26px ${F.r}`)), hh = b.t ? 58 : 22; h = hh + ls.reduce((a, l) => a + l.length * 44 + 14, 0) + 12;
+      frame(h, "#ffffff", tint(col, .25)); if (b.t) head(b.t); if (draw) { let yy = y + hh; ls.forEach(l => { text(c, l, xr - pad, yy, 44, `26px ${F.r}`, "#1d2b27"); yy += l.length * 44 + 14; }); }
+      return h;
+    }
     if (k === "sum") {
       const l = wrap(b.t, bw - pad * 2 - 10, `26px ${F.r}`); h = 58 + l.length * 44 + 24;
       frame(h, "#eef6f3", tint(col, .45)); head(TTL.sum); if (draw) text(c, l, xr - pad, y + 58, 44, `26px ${F.r}`, "#1d2b27");
@@ -102,7 +107,7 @@ const KUR = (() => {
       const col = COLS[si % COLS.length], lead = wrap(s.lead, CW - 40, `italic 25px ${F.r}`), hh = 120 + lead.length * 40 + 20;
       if (!cur || room() < hh + 260) newPage(s, si); else y += 20;
       cur.items.push({ head: s, si, y, h: hh, lead }); y += hh + 14;
-      s.blocks.forEach(b => { const h = block(ctx(), b, 0, col, false); if (h > room()) newPage(s, si, 1); cur.items.push({ b, si, y, h }); y += h + 22; });
+      s.blocks.flatMap(b => b.k === "para" && b.items.length > 1 ? b.items.map((x, i) => Object.assign({}, b, { t: i ? "" : b.t, items: [x] })) : [b]).forEach(b => { const h = block(ctx(), b, 0, col, false); if (h > room()) newPage(s, si, 1); cur.items.push({ b, si, y, h }); y += h + 22; });
     });
     if ((K.qs || []).length) { const b = { k: "qs", items: K.qs }, h = block(ctx(), b, 0, COLS[0], false); if (!cur || h + 120 > room()) newPage(null, 0); cur.items.push({ final: 1, y, h: 70 }); y += 80; cur.items.push({ b, si: 0, y, h }); }
     return pages;
@@ -158,7 +163,8 @@ const KUR = (() => {
     document.querySelectorAll(".kurpg").forEach(f => io.observe(f));
   }
   function textView(K) {
-    const bl = b => b.k === "points" || b.k === "steps" ? `<h4>${ICON[b.k]} ${esc(b.t || TTL[b.k])}</h4><${b.k === "steps" ? "ol" : "ul"}>${b.items.map(x => `<li>${esc(x)}</li>`).join("")}</${b.k === "steps" ? "ol" : "ul"}>`
+    const bl = b => b.k === "para" ? `${b.t ? `<h4>📄 ${esc(b.t)}</h4>` : ""}<div class="kurpara${b.full ? " full" : ""}">${b.items.map(x => `<p>${esc(x)}</p>`).join("")}</div>`
+      : b.k === "points" || b.k === "steps" ? `<h4>${ICON[b.k]} ${esc(b.t || TTL[b.k])}</h4><${b.k === "steps" ? "ol" : "ul"}>${b.items.map(x => `<li>${esc(x)}</li>`).join("")}</${b.k === "steps" ? "ol" : "ul"}>`
       : b.k === "def" ? `<h4>📖 تعريفات</h4><dl>${b.items.map(d => `<dt>${esc(d.t)}</dt><dd>${esc(d.d)}</dd>`).join("")}</dl>`
       : b.k === "table" || b.k === "compare" ? `<h4>${ICON[b.k]} ${esc(b.t || TTL[b.k])}</h4><table class="kurtb"><tr>${(b.k === "compare" ? ["", b.a, b.b] : b.head).map(h => `<th>${esc(h)}</th>`).join("")}</tr>${b.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`
       : b.k === "map" ? `<h4>🧠 ${esc(b.t || TTL.map)}</h4><ul><li><b>${esc(b.root)}</b><ul>${b.c.map(x => `<li>${esc(x.t)}${x.c.length ? `<ul>${x.c.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></li></ul>`

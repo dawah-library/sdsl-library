@@ -1309,3 +1309,4 @@ html[data-theme=dark] .mjn-src.s-akher{color:#e1c98d}
 .mjn-more{margin-top:12px}.mjn-note{margin-top:14px;font-size:.88rem}.mjn-empty{color:var(--mut,#6f7772)}
 .mj-news .mjn{gap:14px}
 @media (max-width:600px){.mjn-list{grid-template-columns:1fr}.mjn-card.lead .mjn-t{font-size:1.2rem}.mjn-go{margin-inline-start:0}}
+.kurpara p{font-family:Amiri,"Traditional Arabic",serif;font-size:1.15rem;line-height:2;margin:.4em 0;text-align:justify}.kurpara.full{border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}
