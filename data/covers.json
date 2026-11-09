@@ -1,11 +1,17 @@
 {
 "note": "يولّده tools/covers.py (covers.yml)",
 "ids": [
+"arbain",
+"bukhari",
+"bulugh",
+"muqusul",
 "p032b9da4",
+"p0793f40c",
 "p09a85a8d",
 "p0c7e3833",
 "p0d9227b8",
 "p103dc12a",
+"p1145b3d4",
 "p1acef349",
 "p1f08a935",
 "p1f54e4fb",
@@ -44,6 +50,7 @@
 "paee5db9e",
 "pb62f7363",
 "pb73bc08d",
+"pc490e52b",
 "pc52251c0",
 "pc64ccc07",
 "pc7ca2eea",
@@ -51,11 +58,16 @@
 "pd1dfedcc",
 "pdbfbb888",
 "peb296fa1",
-"pf2a3a079"
+"pf2a3a079",
+"riyad"
 ],
 "page": {},
 "skip": [],
-"bw": [],
+"bw": [
+"arbain",
+"muqusul",
+"pc490e52b"
+],
 "manual": [],
 "v": {
 "p1f08a935": "6aed86f8",
@@ -108,6 +120,14 @@
 "p1acef349": "6aed86f4",
 "p103dc12a": "6aed86f5",
 "p6649ddf2": "6aed86f7",
-"p82fcc95d": "6aed86f8"
+"p82fcc95d": "6aed86f8",
+"muqusul": "6af1c36c",
+"bukhari": "6af1c36e",
+"riyad": "6af1c370",
+"arbain": "6af1c371",
+"bulugh": "6af1c373",
+"p1145b3d4": "6af1c375",
+"pc490e52b": "6af1c377",
+"p0793f40c": "6af1c379"
 }
 }
