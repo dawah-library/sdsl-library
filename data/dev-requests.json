@@ -28,7 +28,7 @@
    "k": "fix",
    "p": 1,
    "del": 0,
-   "st": "pending",
+   "st": "doing",
    "at": "2026-11-07T09:46:46.213Z",
    "eng": "gemini",
    "auto": 0,
@@ -180,10 +180,10 @@
      "m": "تعذر تشغيل محرك البرمجة الآن (المحركات المتاحة: Claude=0، مفاتيح Gemini=20). يُعاد تلقائيًا في الجولة القادمة."
     }
    ],
-   "t0": "2026-11-10T20:55:41Z",
+   "t0": "2026-11-11T02:00:28Z",
    "br": "agent/dev/dmw67yfyd",
-   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/42899832424",
-   "u": "2026-11-10T20:56:44Z"
+   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/42942846518",
+   "u": "2026-11-11T02:00:29Z"
   },
   {
    "id": "dmw6k38uv",
