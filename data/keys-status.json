@@ -1,8 +1,8 @@
 {
  "tts": {
-  "gemini-3.8-flash-tts": "ok:376800",
-  "gemini-3.1-flash-tts-preview": "ok:232960",
-  "gemini-2.5-flash-preview-tts": "ok:254144"
+  "gemini-3.8-flash-tts": "ok:379356",
+  "gemini-3.1-flash-tts-preview": "ok:197120",
+  "gemini-2.5-flash-preview-tts": "ok:208064"
  },
  "models": [
   "gemini-2.5-flash",
@@ -35,6 +35,7 @@
   "gemini-3.7-flash",
   "gemini-3.8-flash",
   "gemini-4-argon",
+  "gemini-4-carbon",
   "gemini-3.1-flash-tts-preview",
   "gemini-3.8-flash-tts",
   "gemini-3.8-flash-lite-tts",
@@ -53,7 +54,7 @@
   "gemini-robotics-er-2-streaming-preview",
   "gemini-3.5-live-translate-preview"
  ],
- "at": "2026-11-10T14:47Z",
+ "at": "2026-11-11T14:07Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
@@ -127,7 +128,7 @@
   },
   {
    "name": "GEMINI_API_KEY_15",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -156,5 +157,5 @@
    "type": "AQ"
   }
  ],
- "working": 19
+ "working": 20
 }
