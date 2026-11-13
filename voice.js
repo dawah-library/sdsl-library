@@ -45,7 +45,7 @@ const VOICE = (() => {
   // ---------- البحث الصوتي في كل خانات البحث ----------
   const SEL = 'input[type=search],input[name=q],input[data-voice],textarea[data-voice]';
   function arm(inp) {
-    if (inp.dataset.vmic || inp.dataset.novoice !== undefined || (!canSR && !canRec)) return; inp.dataset.vmic = 1;
+    if (inp.dataset.vmic || inp.dataset.novoice !== undefined || inp.closest("#side,#sheetB .pbl") || (!canSR && !canRec)) return; inp.dataset.vmic = 1;
     const b = document.createElement("button"); b.type = "button"; b.className = "vmic"; b.title = "البحث بالصوت"; b.setAttribute("aria-label", "البحث بالصوت"); b.textContent = "🎤";
     inp.insertAdjacentElement("afterend", b);
     let h = null; b.onclick = () => {

@@ -1428,3 +1428,10 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .tsmp{display:flex;align-items:center;gap:8px;font-size:.85rem}.tsmp em{flex:1;height:8px;border-radius:9px;background:color-mix(in srgb,var(--ac) 14%,transparent);overflow:hidden}.tsmp i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--gold,#c9a227));transition:width .3s}
 .tsmm{margin:6px 0;font-size:.88rem;min-height:1.2em}.tsmb{display:flex;flex-wrap:wrap;gap:6px}.tsmb .on{background:#e11d48;color:#fff}.tsmtype input{width:100%;margin-top:6px}
 .tsmbtn{background:linear-gradient(90deg,#0f766e,#14b8a6);color:#fff;border:0}
+/* الكتب المفتوحة في القارئ */
+.btabs{position:fixed;top:118px;inset-inline-end:14px;z-index:58;display:flex;align-items:flex-start;gap:6px;max-width:min(92vw,900px)}
+.btabt{border:1px solid var(--line);background:color-mix(in srgb,var(--sf) 92%,transparent);backdrop-filter:blur(8px);border-radius:999px;padding:4px 10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btabl{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;max-width:min(80vw,860px);scrollbar-width:thin}.obtab{flex:none}.btabs:not(.open) .btabl{display:none}
+.obtab{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--sf);font-size:.8rem;overflow:hidden}
+.obtab a{padding:3px 10px;color:inherit;text-decoration:none;white-space:nowrap}.obtab.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--sf))}
+.obtab button{border:0;background:none;cursor:pointer;padding:0 8px 0 4px}@media(min-width:900px){.btabs .btabl{display:flex!important}.btabt{display:none}}

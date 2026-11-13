@@ -99,7 +99,7 @@ const RDASH = (() => {
     if (!b) return; const r = rec(b.id); cur = b.id; r.pg = k; r.n = nPages(b) || r.n; r.at = Date.now();
     if (!r.s.includes(k)) { r.s.push(k); if (r.s.length > 6000) r.s = r.s.slice(-6000); }
     if (!r.done && r.n > 2 && (r.s.length >= r.n * .9 || k >= r.n)) { r.done = MKT.day(); setTimeout(() => toast("🎉 مبارك! أتممت قراءة «" + (b.setTitle || b.title) + "» — زادك الله علمًا"), 600); }
-    sv(); badge(b, k);
+    sv(); badge(b, k); if (typeof BTABS !== "undefined") BTABS.touch(b, k);
   }
   const pct = r => r.done ? 100 : r.n ? Math.min(99, Math.round(Math.max(r.s.length, 0) * 100 / r.n)) : 0;
   const posPct = (k, n) => n > 1 ? Math.round(k * 100 / n) : 0;
@@ -126,4 +126,23 @@ const RDASH = (() => {
       ${prog.length ? `<div class="rdl">${prog.map(x => { const p = pct(x.r); return `<a class="rdb" href="#/book/${x.id}/${x.r.pg || 1}"><span class="rdring" style="--p:${p}"><b>${toAr(p)}٪</b></span><span><b>${esc(x.b.setTitle || x.b.title)}</b><small>${esc(A(x.b.authorId).name)} • توقفت عند ص ${toAr(x.r.pg || 1)}${x.r.n ? " من " + toAr(x.r.n) : ""}${x.r.t >= 60 ? " • " + dur(x.r.t) : ""}</small><em class="rdbar"><i style="width:${p}%"></i></em></span><span class="btn s p">أكمل ←</span></a>`; }).join("")}</div>` : `<p class="mut">أتممت كل ما بدأته — اختر كتابك التالي من <a href="#/library">المكتبة</a>.</p>`}</section>`;
   }
   return { page, home, pct };
+})();
+
+/* الكتب المفتوحة (تبويبات داخل القارئ): كل كتاب تفتحه يُضاف إلى شريط أعلى القارئ، فتنتقل بينها دون إغلاق كتاب أو فتح تبويب جديد في المتصفح،
+   ولكل كتاب موضع قراءته مستقلًّا (S.lastBy)؛ ويُغلق التبويب بزر ×. تُحفظ القائمة على الجهاز (حتى ١٠ كتب). */
+const BTABS = (() => {
+  const K = "btabs_v1"; let L = null;
+  const ld = () => { if (L) return L; try { L = JSON.parse(localStorage.getItem(K) || "[]"); } catch (e) { L = []; } return L; };
+  const sv = () => { try { localStorage.setItem(K, JSON.stringify(L)); } catch (e) { } };
+  function touch(b, p) { if (!b || b.demo) return; ld(); const i = L.findIndex(x => x.id === b.id); if (i >= 0) L[i].p = p; else { L.push({ id: b.id, p }); if (L.length > 10) L.shift(); } sv(); paint(b.id); }
+  function paint(cur) { let el = document.getElementById("btabs"); const l = ld().filter(x => B(x.id));
+    if (l.length < 2 || !document.body.classList.contains("reading")) { if (el) el.hidden = true; return; }
+    if (!el) { document.body.insertAdjacentHTML("beforeend", '<div id="btabs" class="btabs" role="navigation" aria-label="الكتب المفتوحة"></div>'); el = document.getElementById("btabs"); }
+    el.hidden = false; el.innerHTML = `<button class="btabt" data-act="btabsx" aria-expanded="false" title="الكتب المفتوحة">📚 <b>${toAr(l.length)}</b></button><div class="btabl">${l.map(x => { const b = B(x.id); return `<span class="obtab${x.id === cur ? " on" : ""}"><a href="#/book/${x.id}/${(S.lastBy && S.lastBy[x.id]) || x.p || 1}" title="${esc(b.setTitle || b.title)}">${esc((b.setTitle || b.title).slice(0, 28))}</a><button data-act="btabc" data-id="${x.id}" aria-label="إغلاق">×</button></span>`; }).join("")}</div>`; }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act^=btab]"); if (!el) return; e.preventDefault();
+    if (el.dataset.act === "btabc") { L = ld().filter(x => x.id !== el.dataset.id); sv(); const m = location.pathname.match(/book\/([^/]+)/); if (m && m[1] === el.dataset.id && L.length) { const n = L[L.length - 1]; location.hash = "#/book/" + n.id + "/" + ((S.lastBy && S.lastBy[n.id]) || n.p || 1); } else paint(m && m[1]); }
+    else { const n = document.getElementById("btabs"); n.classList.toggle("open"); el.setAttribute("aria-expanded", n.classList.contains("open")); } });
+  addEventListener("popstate", () => setTimeout(() => { const m = location.pathname.match(/book\/([^/]+)/); paint(m && m[1]); }, 50));
+  addEventListener("hashchange", () => setTimeout(() => { const m = location.pathname.match(/book\/([^/]+)/); paint(m && m[1]); }, 50));
+  return { touch, paint };
 })();
