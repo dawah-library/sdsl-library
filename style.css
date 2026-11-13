@@ -1462,3 +1462,4 @@ button.vmic.on{opacity:1!important;color:#fff!important;background:#d93025!impor
 .wnbox .btn.p{width:100%;margin-top:10px;padding:12px}
 .axmicb{display:inline-flex;align-items:center;gap:4px}.axmicb .vmic{width:24px;height:24px;pointer-events:none}.axmicb .vmic svg{width:16px;height:16px}span.vmic.on{color:#fff;background:#d93025}
 .vidgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:12px}.vidc{display:grid;gap:6px}.vidc video{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9}.vidc video.tall{aspect-ratio:9/16;max-height:70vh}
+.vchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.vchips .chip{cursor:pointer}.vchips .chip:has(input:checked){background:var(--ac);color:#fff;border-color:transparent}.vchips input{accent-color:#fff}.vidform label{display:block;margin-top:8px;font-weight:600}.vidc video.sq{aspect-ratio:1}.vscene textarea,.vscene input{width:100%}

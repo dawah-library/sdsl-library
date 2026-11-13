@@ -24,7 +24,7 @@ jobs:
           set -e
           case "$FILE" in */*|*..*) echo "اسم ملف غير صالح"; exit 1;; esac
           f="supabase/migrations/$FILE"; [ -f "$f" ] || { echo "غير موجود: $f"; exit 1; }
-          python3 -c "import json,sys; print(json.dumps({'query': open(sys.argv[1], encoding='utf-8').read()}))" "$f" > /tmp/q.json
+          python3 -c "import json,sys; print(json.dumps({'query': open(sys.argv[1], encoding='utf-8').read(), 'read_only': False}))" "$f" > /tmp/q.json
           code=$(curl -sS -o /tmp/r.json -w "%{http_code}" -X POST "https://api.supabase.com/v1/projects/nqxkkdexpodjjwfdkxoq/database/query" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @/tmp/q.json)
           head -c 2000 /tmp/r.json; echo; echo "HTTP $code"; [ "$code" -lt 300 ]
