@@ -15,7 +15,7 @@ const TMR = (() => {
   const KIDV = { t1: ["asas", [1, 2]], t2: ["asas", [3, 4, 5, 6]], t3: ["bunyan", null], t4: ["bunyan", null] };
   const lockOf = () => { const T = S.tala || {}, k = (T.kids || []).find(x => x.id === T.cur) || (T.kids || [])[0]; return k && !T.allst ? KIDV[k.track] || null : null; };
   async function page(q) {
-    await load(); const lk = lockOf(); let s = lk ? lk[0] : (q.s || "asas"), v = +q.v || (lk && lk[1] ? lk[1][0] : 1); const adm = isAdmin();
+    await load(); const lk = lockOf(); let s = lk ? lk[0] : (q.s || "asas"), v = +q.v || (lk && lk[1] ? lk[1][0] : 1); const adm = isAdmin() || can("tala");
     if (lk && lk[1] && !lk[1].includes(v)) v = lk[1][0];
     const L = EX.filter(x => x.s === s && x.v === v), lessons = [...new Map(L.map(x => [x.l + "|" + x.lp, [x.l, x.lp]])).values()], ls_ = q.l ? decodeURIComponent(q.l) : null;
     const vols = [...new Set(EX.filter(x => x.s === s).map(x => x.v))].filter(x => !lk || !lk[1] || lk[1].includes(x)).sort((a, b) => a - b), st = stars();

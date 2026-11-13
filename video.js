@@ -8,7 +8,7 @@ const VIDX = (() => {
   const fmt = s => toAr(Math.floor(s / 60)) + ":" + toAr(String(s % 60).padStart(2, "0"));
   const VO = [["gemini:Orus", "Orus — رخيم هادئ (مقترح)"], ["gemini:Charon", "Charon — إخباري واضح"], ["gemini:Kore", "Kore — صوت أنثوي هادئ"], ["gemini:Puck", "Puck — حيوي للناشئة"]];
   async function page(q) {
-    const L = await list(true), adm = isAdmin(), bid = q.b;
+    const L = await list(true), adm = isAdmin() || can("video"), bid = q.b;
     const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid)).reverse();
     const sel = (n, o, d) => `<select name="${n}">${o.map(([v, t]) => `<option value="${v}"${v === d ? " selected" : ""}>${t}</option>`).join("")}</select>`;
     view(`<div class="cmhero"><div><h2>🎬 فيديوهات الكتب</h2><p>ملخص الكتاب أو مراجعته في دقائق: مشاهد بعناوين الأبواب ونقاطها، وراوٍ يقرأ بألفاظ المؤلف، للمشاهدة والمشاركة.</p></div></div>
@@ -33,6 +33,6 @@ const VIDX = (() => {
     else if (el.dataset.act === "vidok") { const b = el.dataset.b, k = +el.dataset.k; await GH.editJSON("data/video/_list.json", o => { if (o[b] && o[b][k]) o[b][k].ok = o[b][k].ok ? 0 : 1; return o; }, "فيديو: اعتماد"); LIST = null; route(); } });
   // رابط في «خدمات الكتاب»
   new MutationObserver(async () => { const nav = document.querySelector(".bkhub nav:not([data-vid])"); if (!nav) return; nav.dataset.vid = 1; const m = location.pathname.match(/book\/([^/]+)/); if (!m) return; const L = await list(), b = B(m[1]), id = b && b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : m[1];
-    const l = (L[id] || []).filter(v => v.ok || isAdmin()); if (l.length || isAdmin()) nav.insertAdjacentHTML("beforeend", `<a href="#/video?b=${encodeURIComponent(id)}">🎬 ${l.length ? "فيديو الملخص" : "توليد فيديو"}</a>`); }).observe(document.documentElement, { childList: true, subtree: true });
+    const l = (L[id] || []).filter(v => v.ok || isAdmin() || can("video")); if (l.length || isAdmin() || can("video")) nav.insertAdjacentHTML("beforeend", `<a href="#/video?b=${encodeURIComponent(id)}">🎬 ${l.length ? "فيديو الملخص" : "توليد فيديو"}</a>`); }).observe(document.documentElement, { childList: true, subtree: true });
   return { view: page };
 })();
