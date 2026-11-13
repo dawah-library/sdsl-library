@@ -165,7 +165,7 @@ const ASKX = (() => {
     const vis = may(c, "vision", "ask_vision"), web = may(c, "web", "ask_web"), mdl = may(c, "models", "ask_models"), E = c.engines || {};
     form.insertAdjacentHTML("beforeend", `<div id="axatt" class="axatt"></div><div class="axbar">
       ${vis ? `<label class="btn s" title="إرفاق صورة أو ملف PDF أو نص أو صوت">📎 إرفاق<input type="file" id="axf" multiple accept="image/*,application/pdf,text/plain,.md,audio/*" hidden></label>` : `<label class="btn s" title="إرفاق ملف صوتي يُفرَّغ إلى نص">🎙 ملف صوتي<input type="file" id="axf" accept="audio/*" hidden></label>`}
-      ${VOICE.ok ? `<button type="button" class="btn s" data-act="axmic">🎤 اسأل بصوتك</button>` : ""}
+      ${VOICE.ok ? `<button type="button" class="btn s axmicb" data-act="axmic"><span class="vmic">${VOICE.MIC}</span> اسأل بصوتك</button>` : ""}
       <details class="axopt"><summary class="btn s">⚙️ خيارات الإجابة</summary><div class="axpanel">
         ${mdl ? `<label>النموذج</label><select data-o="engine">${so("auto", "تلقائي (الأنسب للمهمة)", o.engine)}${E.claude !== false ? so("claude", "Claude — تحليل وتحرير عميق", o.engine) : ""}${E.gemini !== false ? so("gemini", "Gemini — سريع وطويل السياق", o.engine) : ""}${E.groq !== false ? so("groq", "نموذج مفتوح (Groq) — سريع", o.engine) : ""}</select>` : ""}
         <label>أساس الجواب</label><select data-o="basis">${so("mix", "متوازن", o.basis)}${so("naql", "النقل من الكتب", o.basis)}${so("tahlil", "التحليل", o.basis)}${so("istintaj", "الاستنتاج", o.basis)}</select>
@@ -197,8 +197,8 @@ const ASKX = (() => {
   document.addEventListener("click", async e => { const el = e.target.closest("[data-act^=ax]"); if (!el) return; const a = el.dataset.act;
     if (a === "axrm") { ATT.splice(+el.dataset.i, 1); paint(); }
     else if (a === "axsay") speak(el.parentElement._t, el); else if (a === "axdoc") exportAns(el.parentElement._t, "doc"); else if (a === "axmd") exportAns(el.parentElement._t, "md");
-    else if (a === "axmic") { const ta = document.querySelector(".askbox [name=m]"); if (MIC) { MIC.stop(); return; } const base = ta.value ? ta.value + " " : ""; el.classList.add("on"); el.textContent = "⏹ أنهِ التسجيل";
-      MIC = VOICE.listen({ continuous: true, interim: true, onResult: (t, fin) => { ta.value = base + t; if (fin) ta.dispatchEvent(new Event("input")); }, onError: m => toast("🎤 " + m), onEnd: () => { MIC = null; el.classList.remove("on"); el.textContent = "🎤 اسأل بصوتك"; } }); }
+    else if (a === "axmic") { const ta = document.querySelector(".askbox [name=m]"); if (MIC) { MIC.stop(); return; } const base = ta.value ? ta.value + " " : ""; el.classList.add("on"); el.innerHTML = `<span class="vmic on">${VOICE.MIC}</span> أنهِ التسجيل`;
+      MIC = VOICE.listen({ continuous: true, interim: true, onResult: (t, fin) => { ta.value = base + t; if (fin) ta.dispatchEvent(new Event("input")); }, onError: m => toast("🎤 " + m), onEnd: () => { MIC = null; el.classList.remove("on"); el.innerHTML = `<span class="vmic">${VOICE.MIC}</span> اسأل بصوتك`; } }); }
     else if (a === "axcfg") panel(); });
   // لوحة إعدادات المساعد (للمدير)
   async function panel() { const c = JSON.parse(JSON.stringify(await cfg())), F = c.features || {}, L = c.limits || {}, E = c.engines || {};
