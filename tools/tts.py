@@ -480,7 +480,9 @@ def rec_book(item, lst):
     ext = os.path.splitext(r["f"])[1].lower() or ".mp3"
     os.makedirs(WORK, exist_ok=True)
     tmp = os.path.join(WORK, "rec" + ext)
-    url = oidc_get("/api/r2put?f=" + r["f"])["url"]
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from storeurl import direct_url
+    url = direct_url(r["f"]) or oidc_get("/api/r2put?f=" + r["f"])["url"]
     with urllib.request.urlopen(url, timeout=900) as s, open(tmp, "wb") as o:
         o.write(s.read())
     tag = "audio-" + bid
