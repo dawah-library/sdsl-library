@@ -153,3 +153,42 @@ const BTABS = (() => {
   if (!seen) { try { localStorage.setItem("wn_seen", W.v); } catch (e) { } return; }  // الزائر الأول لا تُعرض له
   document.body.insertAdjacentHTML("beforeend", `<div id="wnew" class="wnew" role="dialog" aria-label="${esc(W.title)}"><div class="wnbox"><img src="assets/logo-sdsl-128.png" alt="" width="84" height="84"><h2>${esc(W.title)}</h2>${W.items.map(([i, t, d]) => `<div class="wni"><span>${i}</span><p><b>${esc(t)}؛</b> ${esc(d)}</p></div>`).join("")}<button class="btn p" id="wnok">ابدأ</button></div></div>`);
   document.getElementById("wnok").onclick = () => { try { localStorage.setItem("wn_seen", W.v); } catch (e) { } document.getElementById("wnew").remove(); }; }, 2500); })();
+
+/* المكتبة دون إنترنت (#/offline): تثبيت الموقع تطبيقًا على Windows وmacOS وAndroid وiPhone/iPad (تطبيق ويب تقدّمي PWA)،
+   وتنزيل الحزم التي تسمح بها الإدارة (data/offline.json) للعمل دون إنترنت، والتحديث بتنزيل الجديد والمتغير وحده (بصمة كل كتاب)،
+   وإشعار بجديد المكتبة عند فتح التطبيق. التنزيل عبر عامل الخدمة نفسه، فيُقرأ المنزَّل من القارئ مباشرة. */
+const OFFX = (() => {
+  const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+  let DEF = null, IP = null; addEventListener("beforeinstallprompt", e => { e.preventDefault(); IP = e; });
+  const cfg = async () => DEF || (DEF = await fetch(RAWGH + "data/offline.json?t=" + Math.floor(Date.now() / 600e3)).then(r => r.json()).catch(() => fetch("data/offline.json").then(r => r.json())).catch(() => ({ packs: [] })));
+  const booksOf = p => p.kind === "col" ? BOOKS().filter(b => !b.demo && !b.hidden && bc(b) === p.col && !isArt(b)) : p.kind === "arts" ? lib.books.filter(b => !b.demo && isArt(b)) : [];
+  const st = () => LS("offx") || { packs: {}, v: {} };
+  function changed(p) { const s = st(); return booksOf(p).filter(b => s.v[b.id] !== (b.size || 1)); }
+  async function dl(p, el) { const s = st(), L = p.kind === "mushaf" || p.kind === "hadith" ? null : changed(p);
+    if (!L) { const b = document.querySelector(`[data-act="${p.kind === "mushaf" ? "musoff" : "hdoff"}"]`); s.packs[p.id] = { d: MKT.day() }; LS("offx", s); toast("افتح قسم " + (p.kind === "mushaf" ? "المصحف" : "الحديث") + " واضغط «احفظ للقراءة دون إنترنت»"); location.hash = p.kind === "mushaf" ? "#/mushaf" : "#/hadith"; return; }
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { }
+    let i = 0, bad = 0; el.disabled = true; const q = L.slice();
+    await Promise.all(Array.from({ length: 4 }, async () => { while (q.length) { const b = q.shift(); try { const vs = b.set ? lib.books.filter(x => x.set === b.set) : [b]; for (const v of vs) await loadBook(v.id); s.v[b.id] = b.size || 1; } catch (e) { bad++; } el.textContent = "جارٍ التنزيل… " + toAr(Math.round(100 * ++i / L.length)) + "٪"; if (i % 20 === 0) LS("offx", s); } }));
+    s.packs[p.id] = { d: MKT.day(), n: booksOf(p).length }; LS("offx", s); el.disabled = false; toast(bad ? "نُزّل معظمها، وتعذّر " + toAr(bad) + "؛ أعد المحاولة" : "✓ نُزّلت «" + p.n + "» للقراءة دون إنترنت"); view_(); }
+  const plat = () => { const u = navigator.userAgent; return /iPhone|iPad|iPod/.test(u) ? "ios" : /Android/.test(u) ? "android" : /Mac/.test(u) ? "mac" : "win"; };
+  const HOW = { ios: "في Safari: اضغط زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية».", android: "في Chrome: القائمة ⋮ ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».", mac: "في Chrome أو Edge: أيقونة التثبيت ⊕ في شريط العنوان، وفي Safari (macOS ١٤+): ملف ← «إضافة إلى Dock».", win: "في Edge أو Chrome: أيقونة التثبيت ⊕ في شريط العنوان، أو القائمة ← «التطبيقات» ← «تثبيت هذا الموقع كتطبيق»." };
+  async function view_() { const c = await cfg(), s = st(), adm = isAdmin(), packs = (c.packs || []).filter(p => p.on || adm);
+    view(`<div class="cmhero"><div><h2>المكتبة دون إنترنت</h2><p>ثبّت المكتبة تطبيقًا على جهازك (Windows وmacOS وAndroid وiPhone وiPad)، ونزّل ما تحتاجه من الكتب والأقسام لتقرأها بلا اتصال؛ ثم حدّث المحمَّل بضغطة فلا يُنزَّل إلا الجديد والمتغير.</p></div></div>
+      <div class="card"><h3>📲 تثبيت التطبيق</h3>${matchMedia("(display-mode: standalone)").matches ? '<p class="note">✓ المكتبة مثبتة على هذا الجهاز.</p>' : `${IP ? '<button class="btn p" data-act="offxinst">ثبّت الآن</button>' : ""}<p>${HOW[plat()]}</p><details><summary>بقية الأجهزة</summary>${Object.entries(HOW).map(([k, t]) => `<p><b>${{ ios: "iPhone وiPad", android: "Android", mac: "macOS", win: "Windows" }[k]}:</b> ${t}</p>`).join("")}</details>`}</div>
+      <div class="card"><h3>⬇️ الحزم المتاحة للتنزيل</h3>${packs.map(p => { const L = booksOf(p), ch = L.length ? changed(p).length : 0, done = s.packs[p.id];
+        return `<div class="offp"><div><b>${esc(p.n)}</b>${!p.on ? ' <em class="tag">موقوفة للأعضاء</em>' : ""}<small class="mut">${L.length ? toAr(L.length) + " مادة" : ""}${done ? " • نُزّلت " + esc(done.d) + (ch ? ` • <b>${toAr(ch)} جديد أو محدَّث</b>` : " • محدَّثة") : ""}</small></div><div class="row">${adm ? `<label class="chk"><input type="checkbox" data-offon="${p.id}"${p.on ? " checked" : ""}> متاحة</label>` : ""}<button class="btn ${done && !ch ? "" : "p"} s" data-act="offxdl" data-p="${p.id}">${done ? (ch ? "تحديث (" + toAr(ch) + ")" : "✓ محدَّثة") : "تنزيل"}</button></div></div>`; }).join("")}</div>
+      <div class="card"><h3>🔔 إشعارات جديد المكتبة</h3><p class="mut">يُنبّهك التطبيق عند فتحه إلى الكتب الجديدة والمحدَّثة في الحزم التي نزّلتها.</p><button class="btn s" data-act="offxnot">${typeof Notification !== "undefined" && Notification.permission === "granted" ? "✓ الإشعارات مفعّلة" : "فعّل الإشعارات"}</button></div>
+      <p class="mut">المساحة المستعملة: <span id="offsz">…</span></p>`);
+    try { const e = await navigator.storage.estimate(); const el = document.getElementById("offsz"); if (el) el.textContent = toAr(Math.round(e.usage / 1048576)) + " ميجابايت من " + toAr(Math.round(e.quota / 1048576)); } catch (e) { } }
+  document.addEventListener("click", async e => { const el = e.target.closest("[data-act^=offx]"); if (!el) return; e.preventDefault(); const a = el.dataset.act;
+    if (a === "offxdl") { const p = ((await cfg()).packs || []).find(x => x.id === el.dataset.p); if (p) dl(p, el); }
+    else if (a === "offxinst" && IP) { IP.prompt(); IP = null; }
+    else if (a === "offxnot" && typeof Notification !== "undefined") { const r = await Notification.requestPermission(); el.textContent = r === "granted" ? "✓ الإشعارات مفعّلة" : "لم يُسمح بالإشعارات"; } });
+  document.addEventListener("change", async e => { const x = e.target.closest("[data-offon]"); if (!x) return; const c = await cfg(); const p = c.packs.find(y => y.id === x.dataset.offon); p.on = x.checked;
+    try { await GH.editJSON("data/offline.json", () => c, "المكتبة دون إنترنت: حزمة «" + p.n + "»"); toast("حُفظ"); } catch (er) { toast("تعذّر: " + (er.message || er)); } });
+  // التنبيه بجديد المحمَّل عند فتح التطبيق
+  setTimeout(async () => { const s = st(); if (!Object.keys(s.packs).length || typeof lib === "undefined") return; const c = await cfg(); let n = 0; (c.packs || []).filter(p => s.packs[p.id] && p.kind !== "mushaf" && p.kind !== "hadith").forEach(p => n += changed(p).length);
+    if (!n || LS("offx_n") === n) return; LS("offx_n", n); const msg = "جديد المكتبة: " + toAr(n) + " كتابًا جديدًا أو محدَّثًا في ما نزّلته — حدّثه من «المكتبة دون إنترنت».";
+    try { if (Notification.permission === "granted") new Notification("المكتبة الرقمية", { body: msg, icon: "assets/logo-sdsl-128.png" }); else toast(msg); } catch (e) { toast(msg); } }, 8000);
+  return { view: view_ };
+})();

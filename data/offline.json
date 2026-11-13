@@ -1,0 +1,10 @@
+{
+ "note": "حزم المكتبة دون إنترنت (#/offline): الإدارة تختار ما يُسمح بتنزيله. kind: col (مجموعة كتب)، arts (المقالات والفتاوى)، mushaf، hadith.",
+ "packs": [
+  { "id": "dawah", "n": "كتب مكتبة الدعوة السلفية", "kind": "col", "col": "dawah", "on": true },
+  { "id": "arts", "n": "المقالات والفتاوى والبيانات", "kind": "arts", "on": true },
+  { "id": "mushaf", "n": "المصحف الشريف والتفاسير", "kind": "mushaf", "on": true },
+  { "id": "hadith", "n": "الحديث النبوي (المختارات وكتب السنة)", "kind": "hadith", "on": true },
+  { "id": "turath", "n": "المكتبة العامة (كبيرة الحجم)", "kind": "col", "col": "turath", "on": false }
+ ]
+}
