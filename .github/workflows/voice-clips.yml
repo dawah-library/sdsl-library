@@ -2,7 +2,7 @@ name: مقاطع صوتية قصيرة (تشجيع الطلائع وفواصل �
 on:
   push:
     branches: [main]
-    paths: ["data/clips.json", "data/radio.json", "tools/voice-clips.py"]
+    paths: ["data/clips.json", "data/radio.json", "data/audio/_list.json", "tools/voice-clips.py"]
   workflow_dispatch:
     inputs:
       only:

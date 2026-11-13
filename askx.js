@@ -171,7 +171,7 @@ const ASKX = (() => {
         <label>أساس الجواب</label><select data-o="basis">${so("mix", "متوازن", o.basis)}${so("naql", "النقل من الكتب", o.basis)}${so("tahlil", "التحليل", o.basis)}${so("istintaj", "الاستنتاج", o.basis)}</select>
         <label>الصياغة</label><select data-o="form">${so("generated", "مولّدة بأسلوب علمي", o.form)}${so("composed", "مركّبة من النقول منسّقة", o.form)}</select>
         ${web ? `<label>مصادر خارجية (أسماء مواقع)</label><input data-o="sites" dir="ltr" placeholder="dorar.net islamweb.net" value="${esc(o.sites)}"><label>أو روابط صفحات</label><textarea data-o="urls" rows="2" dir="ltr" placeholder="https://…">${esc(o.urls)}</textarea><small class="mut">المسموح: ${esc((c.webDomains || []).join("، "))}${c.webAnyDomain ? " وغيرها" : ""}</small>` : ""}
-      </div></details>${isAdmin() ? `<button type="button" class="btn s" data-act="axcfg">🛠 إعدادات المساعد</button>` : ""}</div>`);
+      </div></details>${isAdmin() || can("ask_cfg") ? `<button type="button" class="btn s" data-act="axcfg">🛠 إعدادات المساعد</button>` : ""}</div>`);
     form.addEventListener("change", e => { const x = e.target.closest("[data-o]"); if (x) { const n = O(); n[x.dataset.o] = x.value; ls("o", n); } if (e.target.id === "axf") { addFiles([...e.target.files]); e.target.value = ""; } });
     form.addEventListener("input", e => { const x = e.target.closest("[data-o]"); if (x) { const n = O(); n[x.dataset.o] = x.value; ls("o", n); } });
     const ta = form.querySelector("[name=m]"); if (ta && vis) { ta.addEventListener("paste", e => { const f = [...(e.clipboardData || {}).files || []]; if (f.length) { e.preventDefault(); addFiles(f); } });

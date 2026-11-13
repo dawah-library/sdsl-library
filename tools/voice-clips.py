@@ -21,8 +21,13 @@ def radio_specs():
     """فواصل الإذاعة لكل كتاب في القنوات: بداية، استئناف، متابعة، ختام آخر مقطع، ختام العرض."""
     R = jl(os.path.join(D, "radio.json"), {}); cat = {b["id"]: b for b in (jl(os.path.join(D, "catalog.json"), {"books": []}).get("books") or [])}
     v = (R.get("voice") or "gemini:Charon"); out = {}
+    AL = jl(os.path.join(D, "audio", "_list.json"), {})
     for ch in R.get("channels") or []:
-        for it in ch.get("items") or []:
+        its = list(ch.get("items") or [])
+        if ch.get("auto") is not False:  # الإدراج التلقائي: كل كتاب صوتي معتمد مكتمل تُسجَّل فواصله
+            have = {x.get("book") for x in its} | set(ch.get("exclude") or [])
+            its += [{"book": k} for k, x in AL.items() if x.get("ok") and x.get("n") and x.get("n", 0) >= x.get("of", 0) and k not in have]
+        for it in its:
             bid = it.get("book")
             if not bid: continue
             t = it.get("say") or (cat.get(bid) or {}).get("title") or ""

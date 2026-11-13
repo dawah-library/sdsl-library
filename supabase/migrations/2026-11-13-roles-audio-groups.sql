@@ -44,3 +44,19 @@ begin
   update public.group_reads set week_days = (select array_agg(distinct x order by x) from unnest(wd) x where x between 0 and 6) where id = g;
 end $$;
 grant execute on function public.gr_set_days(bigint, int[]) to authenticated;
+
+-- ١٣ نوفمبر ٢٠٢٦ (٢): منح دور بالبريد الإلكتروني (شريك مدير أو فريق الإدارة أو عضو مميز)، وصلاحيات مفوَّضة متعددة بالبريد.
+-- الشراكة يمنحها المدير الأصلي أو شريك؛ وguard_roles يمنع الشريك من حذف المدير الأصلي أو تغيير دوره.
+create or replace function public.set_role_by_email(em text, r text, ps text[] default null) returns text
+language plpgsql security definer set search_path = public, auth as $$
+declare uid uuid; me text;
+begin
+  select role into me from public.profiles where id = auth.uid();
+  if me is null or me not in ('admin','partner') then raise exception 'للمدير وشركائه فقط'; end if;
+  if r not in ('member','premium','editor','partner') then raise exception 'دور غير مسموح'; end if;
+  select id into uid from auth.users where lower(email) = lower(trim(em)) limit 1;
+  if uid is null then return 'لا يوجد حساب بهذا البريد؛ اطلب من صاحبه إنشاء حساب أولًا ثم أعد المحاولة.'; end if;
+  update public.profiles set role = r, perms = coalesce(ps, perms) where id = uid;
+  return 'تم';
+end $$;
+grant execute on function public.set_role_by_email(text, text, text[]) to authenticated;
