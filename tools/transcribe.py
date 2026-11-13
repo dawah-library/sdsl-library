@@ -31,11 +31,18 @@ def sh(*a, **k): return subprocess.run(list(a), capture_output=True, text=True, 
 INB = os.path.join(D, "transcribe", "in")
 
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from storeurl import direct_url  # noqa: E402
+
+
 def oidc_url(name):
+    d = direct_url(name)
+    if d: return d
     tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library",
                      headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
     site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
-    return json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + name, headers=dict(UA, Authorization="Bearer " + tok)), timeout=30).read())["url"]
+    try: return json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + name, headers=dict(UA, Authorization="Bearer " + tok)), timeout=30).read())["url"]
+    except urllib.error.HTTPError as e: raise RuntimeError("الموقع رفض طلب الرابط: %s %s" % (e.code, e.read()[:200]))
 
 
 UA = {"User-Agent": "dawahlibrary-transcribe/1.0"}
