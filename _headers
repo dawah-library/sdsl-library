@@ -160,6 +160,9 @@
 /team.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/video.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /voice.js
   Cache-Control: public, max-age=60, must-revalidate
 

@@ -1461,3 +1461,4 @@ button.vmic.on{opacity:1!important;color:#fff!important;background:#d93025!impor
 .wni{display:flex;gap:12px;align-items:flex-start;margin:12px 0}.wni span{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--gold,#c9a227);display:grid;place-items:center;font-size:1.2rem}.wni p{margin:0;line-height:1.8}
 .wnbox .btn.p{width:100%;margin-top:10px;padding:12px}
 .axmicb{display:inline-flex;align-items:center;gap:4px}.axmicb .vmic{width:24px;height:24px;pointer-events:none}.axmicb .vmic svg{width:16px;height:16px}span.vmic.on{color:#fff;background:#d93025}
+.vidgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:12px}.vidc{display:grid;gap:6px}.vidc video{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9}.vidc video.tall{aspect-ratio:9/16;max-height:70vh}

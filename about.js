@@ -2,9 +2,10 @@
    قاعدة ثابتة: كل خدمة جديدة تُضاف إلى الموقع تُدرج هنا في ABOUT_SECS (في القسم المناسب) في الإيداع نفسه.
    العنصر: [الاسم، الوصف، "مسارات الصفحات التي يغطيها"]. وtools/check-about.py (مهمة about-check.yml) يفحص عند كل إيداع
    أن كل صفحة في موجّه app.js وكل ملف خدمة في index.html مذكوران هنا، وإلا نبّه الإدارة. ABOUT_MODULES: ملفات الخدمات المغطاة. */
-const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export docx hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about talaplay voice";
+const ABOUT_MODULES = "config i18n search app askx social community audio words qa tashjir export docx hifz dm paths dawah manage eds team alam ithra releases majalla learn tala study kurrasa mutun stats groups standards guide mushaf hadith tamarin arabic fbin side icons dev proof about talaplay voice video";
 const ABOUT_SECS = [
   ["المحتوى", [
+    ["فيديوهات الكتب", "ملخص الكتاب أو مراجعته في فيديو بمشاهد وراوٍ بألفاظ المؤلف، أفقي أو عمودي للهاتف، بصوت Orus أو Charon؛ يولّده المدير بخياراته أو بـ«إبداع من الموقع»، وينشره بعد اعتماده.", "video"],
     ["المكتبة دون إنترنت", "تثبيت المكتبة تطبيقًا على Windows وmacOS وAndroid وiPhone، وتنزيل الحزم التي تسمح بها الإدارة للعمل دون اتصال، وتحديثها بتنزيل الجديد والمتغير وحده، وإشعار بجديد المكتبة.", "offline"],
     ["البحث الصوتي والتسميع", "زر 🎤 في كل خانات البحث بالموقع للبحث بالصوت بدل الكتابة، مع تقريب ما يُسمع إلى عناوين الكتب وأسماء المؤلفين والمصطلحات الشرعية؛ ووضع «التسميع والحفظ» في المصحف والحديث: يُخفى النص وتظهر الكلمة بعد قراءتها صحيحة فقط، مع التلميح وإعادة موضع الخطأ ونسبة الإتمام وسجل الإتقان.", "tasmee"],
     ["لوحة قراءتي والكتب المفتوحة", "تنقّل بين عدة كتب مفتوحة من شريط أعلى القارئ مع حفظ موضع كل كتاب؛ وفي الرئيسية: ساعات القراءة الفعلية، والكتب المتممة، ونسبة الإنجاز أمام كل كتاب بدأته مع الاستكمال من آخر موضع، ورسم أسبوعي؛ ومؤشر تحفيزي في القارئ بالنسبة المقروءة والمتبقية. التواريخ والساعات بتوقيت مكة المكرمة.", "home"],

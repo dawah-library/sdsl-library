@@ -1,0 +1,48 @@
+name: فيديوهات ملخصات الكتب ومراجعتها
+on:
+  push:
+    branches: [main]
+    paths: ["data/video/_queue.json"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: book-video
+  cancel-in-progress: false
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: الأدوات
+        run: |
+          pip install -q "edge-tts>=7"
+          npm i -s --no-save playwright@1.48.2 >/dev/null 2>&1 && npx -y playwright@1.48.2 install --with-deps chromium >/dev/null 2>&1
+          which ffprobe || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - name: التسجيل
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+        run: |
+          python3 tools/book-video.py
+          bash tools/git-save.sh "فيديوهات الكتب" data/video
