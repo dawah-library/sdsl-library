@@ -374,7 +374,7 @@
    "k": "feature",
    "p": 2,
    "del": 0,
-   "st": "doing",
+   "st": "pending",
    "at": "2026-11-08T09:07:45.389Z",
    "eng": "auto",
    "auto": 0,
@@ -389,7 +389,7 @@
    "t0": "2026-11-13T09:45:36Z",
    "br": "agent/dev/dmw7m04fh",
    "run": "https://github.com/dawah-library/sdsl-library/actions/runs/43403853536",
-   "u": "2026-11-13T09:45:37Z"
+   "u": "2026-11-13T09:49:56Z"
   },
   {
    "id": "dmw8rv443",
