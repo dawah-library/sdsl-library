@@ -43,10 +43,12 @@ const VOICE = (() => {
   }
 
   // ---------- البحث الصوتي في كل خانات البحث ----------
+  // رمز الميكروفون العالمي (خطّي بلون السمة)، ومعه موجات تنبض أثناء الاستماع
+  const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg><i class="vwave" aria-hidden="true"><b></b><b></b><b></b></i>';
   const SEL = 'input[type=search],input[name=q],input[data-voice],textarea[data-voice]';
   function arm(inp) {
     if (inp.dataset.vmic || inp.dataset.novoice !== undefined || inp.closest("#side,#sheetB .pbl") || (!canSR && !canRec)) return; inp.dataset.vmic = 1;
-    const b = document.createElement("button"); b.type = "button"; b.className = "vmic"; b.title = "البحث بالصوت"; b.setAttribute("aria-label", "البحث بالصوت"); b.textContent = "🎤";
+    const b = document.createElement("button"); b.type = "button"; b.className = "vmic"; b.title = "البحث بالصوت"; b.setAttribute("aria-label", "البحث بالصوت"); b.innerHTML = MIC;
     inp.insertAdjacentElement("afterend", b);
     let h = null; b.onclick = () => {
       if (h) { h.stop(); return; } const ph = inp.placeholder; b.classList.add("on"); inp.placeholder = "تكلَّم الآن…";
@@ -58,7 +60,7 @@ const VOICE = (() => {
   const scan = root => (root.querySelectorAll ? root : document).querySelectorAll(SEL).forEach(arm);
   if (document.readyState !== "loading") scan(document); else document.addEventListener("DOMContentLoaded", () => scan(document));
   new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches && n.matches(SEL)) arm(n); else if (n.querySelector && n.querySelector(SEL)) scan(n); } }).observe(document.documentElement, { childList: true, subtree: true });
-  return { listen, stt, AR, canSR, canRec, ok: canSR || canRec, arm };
+  return { listen, stt, AR, canSR, canRec, ok: canSR || canRec, arm, MIC };
 })();
 
 /* ---------- وضع التسميع والحفظ (TASMEE) ----------

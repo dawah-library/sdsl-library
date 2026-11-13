@@ -1406,10 +1406,16 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 #rpct svg{width:30px;height:30px;transform:rotate(-90deg)}#rpct circle{fill:none;stroke-width:4}#rpct .bg{stroke:color-mix(in srgb,var(--ac) 16%,transparent)}#rpct .fg{stroke:var(--ac);stroke-linecap:round;transition:stroke-dasharray .4s}
 #rpct b{font-size:.82rem}#rpct span{color:var(--mut)}body:not(.reading) #rpct{display:none}
 @media(max-width:560px){#rpct{bottom:62px}#rpct span{display:none}}
-/* زر البحث الصوتي */
-.vmic{border:0;background:transparent;cursor:pointer;font-size:1.05rem;padding:0 6px;border-radius:999px;line-height:1;align-self:center;flex:none}
-.vmic:hover{background:color-mix(in srgb,var(--ac) 12%,transparent)}.vmic.on{background:#e11d48;color:#fff;animation:vmicp 1.2s infinite}
-@keyframes vmicp{0%{box-shadow:0 0 0 0 rgba(225,29,72,.5)}70%{box-shadow:0 0 0 10px rgba(225,29,72,0)}100%{box-shadow:0 0 0 0 rgba(225,29,72,0)}}
+/* زر البحث الصوتي: رمز الميكروفون العالمي */
+.vmic{position:relative;flex:none;align-self:center;display:inline-grid;place-items:center;width:36px;height:36px;padding:0;margin-inline:2px;border:0;border-radius:50%;background:transparent;color:inherit;opacity:.75;cursor:pointer;transition:background .2s,opacity .2s,transform .15s}
+.vmic svg{width:20px;height:20px}.vmic:hover,.vmic:focus-visible{opacity:1;background:color-mix(in srgb,currentColor 12%,transparent)}.vmic:active{transform:scale(.92)}
+.vmic .vwave{display:none}
+button.vmic.on{opacity:1!important;color:#fff!important;background:#d93025!important;box-shadow:0 0 0 0 rgba(217,48,37,.45);animation:vmicp 1.4s infinite}
+.vmic.on svg{display:none}.vmic.on .vwave{display:flex;gap:2px;align-items:center;height:16px}
+.vmic.on .vwave b{display:block;width:3px;height:8px;border-radius:2px;background:#fff;animation:vwav .9s ease-in-out infinite}.vmic.on .vwave b:nth-child(2){animation-delay:.15s}.vmic.on .vwave b:nth-child(3){animation-delay:.3s}
+@keyframes vwav{0%,100%{height:4px}50%{height:16px}}
+@keyframes vmicp{0%{box-shadow:0 0 0 0 rgba(217,48,37,.45)}70%{box-shadow:0 0 0 10px rgba(217,48,37,0)}100%{box-shadow:0 0 0 0 rgba(217,48,37,0)}}
+@media(prefers-reduced-motion:reduce){.vmic.on,.vmic.on .vwave b{animation:none}}
 /* أدوات المساعد العلمي */
 .axbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-start}.axbar .on{background:#e11d48;color:#fff}
 .axopt{position:relative}.axopt summary{list-style:none;cursor:pointer}.axopt summary::-webkit-details-marker{display:none}
@@ -1454,3 +1460,4 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .wnbox img{display:block;margin:0 auto 8px;border-radius:50%}.wnbox h2{color:var(--gold,#b8892b);border-bottom:3px solid var(--gold,#c9a227);display:inline-block;padding-bottom:4px}
 .wni{display:flex;gap:12px;align-items:flex-start;margin:12px 0}.wni span{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--gold,#c9a227);display:grid;place-items:center;font-size:1.2rem}.wni p{margin:0;line-height:1.8}
 .wnbox .btn.p{width:100%;margin-top:10px;padding:12px}
+.axmicb{display:inline-flex;align-items:center;gap:4px}.axmicb .vmic{width:24px;height:24px;pointer-events:none}.axmicb .vmic svg{width:16px;height:16px}span.vmic.on{color:#fff;background:#d93025}
