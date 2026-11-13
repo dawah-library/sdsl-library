@@ -1,8 +1,8 @@
 {
  "tts": {
-  "gemini-3.8-flash-tts": "ok:407516",
-  "gemini-3.1-flash-tts-preview": "ok:238080",
-  "gemini-2.5-flash-preview-tts": "ok:238784"
+  "gemini-3.8-flash-tts": "ok:376360",
+  "gemini-3.1-flash-tts-preview": "ok:212480",
+  "gemini-2.5-flash-preview-tts": "ok:179904"
  },
  "models": [
   "gemini-2.5-flash",
@@ -36,6 +36,7 @@
   "gemini-3.8-flash",
   "gemini-4-argon",
   "gemini-4-carbon",
+  "gemini-4-hydrogen",
   "gemini-3.1-flash-tts-preview",
   "gemini-3.8-flash-tts",
   "gemini-3.8-flash-lite-tts",
@@ -55,7 +56,7 @@
   "gemini-3.5-live-translate-preview",
   "gemini-decision-1"
  ],
- "at": "2026-11-12T15:05Z",
+ "at": "2026-11-13T14:29Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
@@ -89,7 +90,7 @@
   },
   {
    "name": "GEMINI_API_KEY_7",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -119,7 +120,7 @@
   },
   {
    "name": "GEMINI_API_KEY_13",
-   "status": "error",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -158,5 +159,5 @@
    "type": "AQ"
   }
  ],
- "working": 18
+ "working": 20
 }
