@@ -402,3 +402,26 @@ const QREF = (() => {
     MUS.ref(+el.dataset.s, +el.dataset.a, +el.dataset.b || 0); }, true);
   return { scan, sura, N: N_ };
 })();
+/* أدوات المصحف (زر عائم في صفحات المصحف، على نسق قسم الحديث): البحث في المصحف، والفهرس، والانتقال إلى صفحة أو سورة وآية،
+   ووضع التسميع، ونسخ الإحالة، والمشاركة، وحفظ الصفحة في مجلد من مجلدات المفضلة (على الجهاز، مع مجلدات الحديث). */
+const MUSX = (() => {
+  const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+  const info = () => { const n = (location.pathname.match(/mushaf\/p\/(\d+)/) || [])[1], su = (document.querySelector(".mph span") || {}).textContent || ""; return { n, su, url: location.pathname }; };
+  function menu() { const c = info(), F = LS("mus_folders") || { "محفوظاتي": [] };
+    openSheet("أدوات المصحف", `<div class="hdmenu"><button data-act="musxdo" data-k="find">🔎 البحث في المصحف</button><button data-act="musxdo" data-k="index">📑 فهرس السور</button><button data-act="musxdo" data-k="jump">#️⃣ الانتقال إلى صفحة أو سورة وآية</button><button data-act="musxdo" data-k="tsm">🎙 وضع التسميع والحفظ</button><button data-act="musxdo" data-k="cite">🔗 نسخ الإحالة</button><button data-act="musxdo" data-k="share">⤴ مشاركة الصفحة</button>
+      ${c.n ? `<h4>احفظ الصفحة في مجلد</h4>${Object.keys(F).map(f => `<button class="hdfold" data-act="musxsave" data-f="${esc(f)}">📁 ${esc(f)} <small>${toAr(F[f].length)}</small> ${F[f].some(x => x.url === c.url) ? "✓" : "＋"}</button>`).join("")}<button data-act="musxnew">📂 إنشاء مجلد جديد</button>` : ""}
+      ${Object.values(F).some(l => l.length) ? `<h4>المجلدات</h4>${Object.entries(F).filter(([, l]) => l.length).map(([f, l]) => `<details><summary>📁 ${esc(f)} (${toAr(l.length)})</summary>${l.map(x => `<a class="chip" href="${esc(x.url)}">${esc(x.t)}</a>`).join("")}</details>`).join("")}` : ""}</div>`); }
+  function save(f) { const c = info(), F = LS("mus_folders") || { "محفوظاتي": [] }; F[f] = F[f] || []; const i = F[f].findIndex(x => x.url === c.url); if (i >= 0) F[f].splice(i, 1); else F[f].unshift({ url: c.url, t: "ص " + toAr(c.n) + " — " + c.su }); LS("mus_folders", F); toast(i >= 0 ? "أُزيلت" : "حُفظت في «" + f + "»"); menu(); }
+  document.addEventListener("click", async e => { const el = e.target.closest("[data-act^=musx]"); if (!el) return; e.preventDefault(); const a = el.dataset.act, c = info();
+    if (a === "musxmenu") return menu(); if (a === "musxsave") return save(el.dataset.f);
+    if (a === "musxnew") { const n = (prompt("اسم المجلد:") || "").trim().slice(0, 40); if (!n) return; const F = LS("mus_folders") || {}; F[n] = F[n] || []; LS("mus_folders", F); return save(n); }
+    const k = el.dataset.k; closeSheet();
+    if (k === "find" || k === "index") { location.hash = "#/mushaf"; if (k === "find") setTimeout(() => { const i = document.querySelector("#app input[type=search],#app input[name=q]"); if (i) i.focus(); }, 800); }
+    else if (k === "jump") { const v = (prompt("اكتب رقم الصفحة (١–٦٠٤) أو السورة:الآية مثل ٢:٢٥٥") || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim(); const m = v.match(/^(\d+)\s*[:：/]\s*(\d+)$/);
+      if (m) { location.hash = "#/mushaf/" + m[1]; setTimeout(() => { const x = document.getElementById("ay" + m[1] + "_" + m[2]); if (x) x.scrollIntoView({ block: "center" }); }, 1500); } else if (+v >= 1 && +v <= 604) location.hash = "#/mushaf/p/" + (+v); }
+    else if (k === "tsm") { const b = document.querySelector(".tsmbtn"); if (b) b.click(); }
+    else if (k === "cite") { try { await navigator.clipboard.writeText("المصحف الشريف — " + c.su + (c.n ? "، الصفحة " + c.n : "") + "\n" + location.origin + c.url); toast("نُسخت الإحالة"); } catch (x) { } }
+    else if (k === "share") { const d = { title: "المصحف الشريف", text: c.su, url: location.origin + c.url }; if (navigator.share) navigator.share(d).catch(() => { }); else { navigator.clipboard.writeText(d.url); toast("نُسخ الرابط"); } } });
+  new MutationObserver(() => { const on = !!document.querySelector(".mpage,.qtext"), f = document.getElementById("musfab"); if (on && !f) document.body.insertAdjacentHTML("beforeend", '<button id="musfab" class="hdfab" data-act="musxmenu" aria-label="أدوات المصحف">▦</button>'); else if (!on && f) f.remove(); }).observe(document.documentElement, { childList: true, subtree: true });
+  return { menu };
+})();
