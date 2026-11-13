@@ -146,3 +146,10 @@ const BTABS = (() => {
   addEventListener("hashchange", () => setTimeout(() => { const m = location.pathname.match(/book\/([^/]+)/); paint(m && m[1]); }, 50));
   return { touch, paint };
 })();
+
+/* «جديد المكتبة»: شاشة تعريف بالخدمات الجديدة تظهر مرة واحدة لكل إصدار (data/whatsnew.json). */
+(() => { setTimeout(async () => { let W = null; try { W = await (await fetch("data/whatsnew.json")).json(); } catch (e) { return; } if (!W || !W.v) return;
+  let seen = ""; try { seen = localStorage.getItem("wn_seen") || ""; } catch (e) { } if (seen === W.v) return;
+  if (!seen) { try { localStorage.setItem("wn_seen", W.v); } catch (e) { } return; }  // الزائر الأول لا تُعرض له
+  document.body.insertAdjacentHTML("beforeend", `<div id="wnew" class="wnew" role="dialog" aria-label="${esc(W.title)}"><div class="wnbox"><img src="assets/logo-sdsl-128.png" alt="" width="84" height="84"><h2>${esc(W.title)}</h2>${W.items.map(([i, t, d]) => `<div class="wni"><span>${i}</span><p><b>${esc(t)}؛</b> ${esc(d)}</p></div>`).join("")}<button class="btn p" id="wnok">ابدأ</button></div></div>`);
+  document.getElementById("wnok").onclick = () => { try { localStorage.setItem("wn_seen", W.v); } catch (e) { } document.getElementById("wnew").remove(); }; }, 2500); })();
