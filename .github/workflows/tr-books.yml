@@ -1,0 +1,72 @@
+name: الترجمة المسبقة للكتب والمقالات (نظام الترجمة)
+on:
+  workflow_dispatch:
+    inputs:
+      id: { description: "معرّف كتاب بعينه (اختياري)", required: false }
+      pages: { description: "حد الصفحات في الجولة", required: false, default: "250" }
+  push:
+    branches: [main]
+    paths: ["data/tr/_queue.json"]
+  schedule:
+    - cron: "17 13 * * *"   # بعد جولات خدمات الكتب اليومية
+permissions:
+  contents: write
+concurrency:
+  group: tr-books
+  cancel-in-progress: false
+jobs:
+  # مفتاح الإيقاف tr_batch من «الخدمات والمفاتيح»؛ والجولة المجدولة تتأجل ما دام طابور تصحيح المصورات كبيرًا (أولوية الكتب)
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" tr_batch)
+          if [ "$on" = "true" ] && [ "${{ github.event_name }}" = "schedule" ]; then
+            pp=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/progress.json" | python3 -c 'import json,sys
+          try: print(int(json.load(sys.stdin).get("pending_pages") or 0))
+          except Exception: print(0)')
+            if [ "${pp:-0}" -gt 400 ]; then on=false; echo "تأجيل الجولة المجدولة: ${pp} صفحة مصورة تنتظر التصحيح أولًا (الطابور اليدوي يعمل)"; fi
+          fi
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح tr_batch: $on"
+  tr:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - env:
+          TR_ONLY: ${{ github.event.inputs.id }}
+          TR_PAGES: ${{ github.event.inputs.pages }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+        run: node tools/tr-book.js
+      - if: always()
+        run: bash tools/git-save.sh "الترجمة المسبقة - صفحات مترجمة جديدة" data/tr
