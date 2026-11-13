@@ -18,6 +18,7 @@ const GL = {
   // مداخل الكلمة: الكلمة نفسها، ثم جذورها المحتملة (للمعاجم)
   async lookup(word) {
     const k = this.key(word), keys = [k];
+    try { if (typeof MORPH !== "undefined") MORPH.analyze(word).slice(0, 3).forEach(a => { const rk = this.key(a.r); if (!keys.includes(rk)) keys.push(rk); }); } catch (e) { }  // الجذور المرجّحة صرفيًّا أولًا
     try { roots(word).forEach(r => { const rk = this.key(r); if (!keys.includes(rk)) keys.push(rk); }); } catch (e) { }
     if (k.length > 3 && /(ه|ات|ون|ين|ان)$/.test(k)) keys.push(k.replace(/(ه|ات|ون|ين|ان)$/, ""));
     const all = [], seen = new Set();
@@ -59,7 +60,10 @@ async function wordSheet(word, ctx, focus, bid, p) {
   const cw = new Set(norm(ctx).split(/\s+/).filter(x => x.length > 2)), score = e => (e[4] ? 1 : 0) * -2 + norm(e[3]).split(/\s+/).filter(x => cw.has(x)).length;
   const item = e => { const b = B(e[0]); return `<details class="gitem"><summary><b>${esc(b ? (b.setTitle || b.title) : e[0])}</b> <span class="mut">${esc((b && PL(b, e[1] - 1)) || "ص " + toAr(e[1]))} • ${GTYP[e[2]] || ""}</span></summary><p>${esc(e[3])}</p><div class="row"><button class="btn s" data-act="gmore" data-b="${esc(e[0])}" data-p="${e[1]}">المزيد من الشرح</button><a class="btn s nf" href="#/book/${esc(e[0])}/${e[1]}?h=${encodeURIComponent(w)}" data-act="closeSheet">افتح الموضع في الكتاب</a></div></details>`; };
   // اللغوي: مختار الصحاح ثم بقية المعاجم
-  let mk = ""; try { if (!DICT) DICT = window.__DICT__ || await (await fetch("data/dict/mukhtar.json")).json(); const found = roots(w).map(r => DICT[r]).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 2); mk = found.map(x => `<details class="gitem" open><summary><b>مختار الصحاح</b> <span class="mut">مادة (${esc(x.r)})</span></summary><p>${esc(x.t.length > 700 ? x.t.slice(0, 700) + "…" : x.t)}</p></details>`).join(""); } catch (e) { }
+  let mk = ""; try { if (!DICT) DICT = window.__DICT__ || await (await fetch("data/dict/mukhtar.json")).json(); const AN = MORPH.analyze(w, DICT), cws = norm(ctx || "").split(/\s+/).filter(x => x.length > 2).map(x => MORPH.nk(x));
+    AN.forEach(a => { const t = DICT[a.r] && MORPH.nk(DICT[a.r].t); if (t && cws.some(c => c !== MORPH.nk(w) && t.includes(c))) a.c -= .4; }); AN.sort((a, b) => a.c - b.c);  // السياق يرجّح بين جذرين متقاربين
+    const found = AN.map(a => DICT[a.r]).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 2), A0 = AN.find(a => DICT[a.r]) || AN[0];
+    mk = (A0 ? `<p class="wmorph">🔍 الجذر الأرجح: <b>${esc(A0.r.split("").join(" "))}</b>${A0.how.length ? " • " + esc(A0.how.join(" • ")) : ""}${AN.length > 1 ? ` <small class="mut">(ومحتمل: ${AN.slice(1, 3).map(a => esc(a.r)).join("، ")})</small>` : ""}</p>` : "") + found.map(x => `<details class="gitem" open><summary><b>مختار الصحاح</b> <span class="mut">مادة (${esc(x.r)})</span></summary><p>${esc(x.t.length > 700 ? x.t.slice(0, 700) + "…" : x.t)}</p></details>`).join(""); } catch (e) { }
   const lex = entries.filter(e => books[e[0]] === "lex").sort((a, b) => score(b) - score(a)).slice(0, 6);
   const el1 = $("#wlug"); if (el1) { el1.className = ""; el1.innerHTML = (mk + lex.map(item).join("")) || `<p class="mut">لم أجد الكلمة في معاجم المكتبة.</p>`; el1.insertAdjacentHTML("beforeend", `<p class="mut" style="font-size:.8rem">معاجم أخرى: <a target="_blank" rel="noopener" href="https://www.almaany.com/ar/dict/ar-ar/${encodeURIComponent(w)}/">المعاني</a> • <a target="_blank" rel="noopener" href="https://www.baheth.info/all.jsp?term=${encodeURIComponent(w)}">الباحث العربي</a></p>`); }
   const sh = entries.filter(e => books[e[0]] && books[e[0]] !== "lex"), g = {};
@@ -318,3 +322,35 @@ document.addEventListener("click", async e => {
   else if (a === "hdsrch") hdSearch(el.dataset.p, el);
   else if (a === "hdall") { el.disabled = true; for (const b of document.querySelectorAll('[data-act="hdsrch"]')) await hdSearch(b.dataset.p, b); el.textContent = "✓ بُحث فيها كلها"; }
 });
+
+/* التحليل الصرفي للكشف المعجمي (MORPH): يجرّد الكلمة من السوابق (و، ف، ب، ك، ل، س، أ، ال) واللواحق (الضمائر المتصلة،
+   وعلامات المثنى والجمع والتأنيث)، ثم يطابق الجذع بأوزان العربية الشائعة (فاعل، مفعول، استفعال، مفاعلة، أفعال، فواعل…) ليستخرج الجذر
+   الأرجح مرتبًا بالثقة، مع وصف الصيغة (جمع، مثنى، اسم فاعل، مصدر…) والضمير المتصل؛ ويُقدَّم من الجذور ما وُجد في المعجم وما وافق السياق. */
+const MORPH = (() => {
+  const nk = w => String(w || "").replace(/[ً-ْٰـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/[^ء-ي]/g, "");
+  const PRE = [["وال", "و + ال"], ["فال", "ف + ال"], ["بال", "ب + ال"], ["كال", "ك + ال"], ["لل", "ل + ال"], ["وبال", "و + ب + ال"], ["وكال", "و + ك + ال"], ["ولل", "و + ل + ال"], ["فلل", "ف + ل + ال"], ["ال", "ال التعريف"], ["وس", "و + س الاستقبال"], ["فس", "ف + س الاستقبال"], ["اف", "همزة الاستفهام + ف"], ["او", "همزة الاستفهام + و"], ["و", "واو العطف"], ["ف", "الفاء"], ["ب", "باء الجر"], ["ك", "كاف التشبيه"], ["ل", "لام الجر أو التعليل"], ["س", "سين الاستقبال"]];
+  const SUF = [["تموها", "ضمير المخاطبين + ها"], ["كموها", "كم + ها"], ["ناها", "نا + ها"], ["هما", "ضمير الغائبين المثنى"], ["كما", "ضمير المخاطبين المثنى"], ["تما", "ضمير المخاطبين المثنى"], ["هم", "ضمير الغائبين"], ["هن", "ضمير الغائبات"], ["كم", "ضمير المخاطبين"], ["كن", "ضمير المخاطبات"], ["نا", "ضمير المتكلمين"], ["ها", "ضمير الغائبة"], ["ني", "ياء المتكلم مع نون الوقاية"], ["تم", "ضمير المخاطبين (فاعل)"], ["ه", "ضمير الغائب"], ["ك", "ضمير المخاطب"], ["ي", "ياء المتكلم"]];
+  const NUM = [["تان", "مثنى مؤنث"], ["تين", "مثنى مؤنث"], ["ات", "جمع مؤنث سالم"], ["ون", "جمع مذكر سالم"], ["ين", "جمع مذكر سالم أو مثنى"], ["ان", "مثنى"], ["وا", "واو الجماعة"], ["ة", "تاء التأنيث"], ["ت", "تاء التأنيث أو الفاعل"]];
+  // الأوزان: ف ع ل مواضع الجذر، وما سواها حروف زائدة
+  const W = [["فاعل", "اسم فاعل"], ["مفعول", "اسم مفعول"], ["فعيل", "صفة مشبهة أو مبالغة"], ["فعول", "صيغة مبالغة أو جمع"], ["فعال", "مصدر أو جمع أو مبالغة"], ["فعل", "فعل أو مصدر"], ["افعل", "اسم تفضيل أو فعل رباعي"], ["افعال", "جمع تكسير أو مصدر (إفعال)"], ["تفعيل", "مصدر الفعل المضعّف (فعّل)"], ["تفعل", "فعل مضارع أو تفعّل"], ["تفاعل", "مصدر أو فعل (تفاعل)"], ["مفاعل", "جمع تكسير أو اسم فاعل (مُفاعِل)"], ["مفاعله", "مصدر (مُفاعَلة)"], ["مفاعيل", "جمع تكسير"], ["فواعل", "جمع تكسير"], ["فعائل", "جمع تكسير"], ["افتعال", "مصدر (افتعال)"], ["افتعل", "فعل (افتعل)"], ["مفتعل", "اسم فاعل أو مفعول من افتعل"], ["استفعال", "مصدر (استفعال)"], ["استفعل", "فعل (استفعل)"], ["مستفعل", "اسم فاعل أو مفعول من استفعل"], ["انفعال", "مصدر (انفعال)"], ["انفعل", "فعل (انفعل)"], ["منفعل", "اسم فاعل من انفعل"], ["مفعل", "اسم مكان أو زمان أو آلة"], ["مفعال", "اسم آلة أو مبالغة"], ["فعلان", "صفة أو مصدر"], ["فعلاء", "مؤنث أو جمع"], ["فعلي", "اسم منسوب أو مؤنث"], ["يفعل", "فعل مضارع"], ["تفعل", "فعل مضارع"], ["نفعل", "فعل مضارع"], ["يفعلون", "فعل مضارع لجماعة"], ["فعله", "اسم مرة أو هيئة"], ["مفعله", "اسم مكان"], ["فعاله", "مصدر أو صنعة"], ["فعوله", "مصدر"], ["تفعله", "مصدر"]];
+  const match = (s, p) => { if (s.length !== p.length) return null; let r = ""; for (let i = 0; i < p.length; i++) { if ("فعل".includes(p[i])) r += s[i]; else if (p[i] !== s[i]) return null; } return r.length === 3 ? r : null; };
+  function strips(w) { const out = [{ s: w, how: [] }];
+    for (let k = 0; k < 2; k++) [...out].forEach(o => PRE.forEach(([p, d]) => { if (o.s.startsWith(p) && o.s.length - p.length >= 2 && o.how.length === k) out.push({ s: o.s.slice(p.length), how: o.how.concat(d) }); }));  // سابقتان متتاليتان: فسيكفيكهم
+    for (let k = 0; k < 2; k++) [...out].forEach(o => { SUF.forEach(([x, d]) => { if (o.s.endsWith(x) && o.s.length - x.length >= 2 && o.how.filter(h => /^ضمير/.test(h)).length === k) out.push({ s: o.s.slice(0, -x.length), how: o.how.concat("ضمير متصل: " + d) }); }); });
+    [...out].forEach(o => { NUM.forEach(([x, d]) => { if (o.s.endsWith(x) && o.s.length - x.length >= 2) out.push({ s: o.s.slice(0, -x.length), how: o.how.concat(d) }); }); });
+    return out; }
+  // الإعلال: الألف الوسطى أصلها واو أو ياء، والآخر المعتل، والمضعّف
+  const variants = r => { const v = [r]; if (r[1] === "ا") v.push(r[0] + "و" + r[2], r[0] + "ي" + r[2]); if (r[2] === "ا" || r[2] === "ي") v.push(r.slice(0, 2) + "و", r.slice(0, 2) + "ي"); if (r[0] === "ا") v.push("ء" + r.slice(1), "و" + r.slice(1)); return v; };
+  function analyze(word, dict) {
+    const w = nk(word), seen = new Map(), add = (r, how, cost) => { if (!r || r.length < 3 || r.length > 4) return; variants(r).forEach((x, k) => { const c = cost + k * .5 + (dict && !dict[x] ? 3 : 0); if (!seen.has(x) || seen.get(x).c > c) seen.set(x, { r: x, how, c }); }); };
+    strips(w).forEach(o => { const s = o.s.replace(/ه$/, "ه"); const base = o.how.length * .3;
+      if (s.length === 3) add(s, o.how.concat("الجذع ثلاثي"), base);
+      if (s.length === 4 && !/^[امتي]/.test(s)) add(s, o.how.concat("رباعي مجرد"), base + 1.2);
+      W.forEach(([p, d]) => { [p, p.replace(/ه$/, "ة")].forEach(pp => { const r = match(s, nk(pp)); if (r) add(r, o.how.concat("على وزن «" + p + "»: " + d), base + .2 + (/ت/.test(p) && !/^ت|^است|^مست/.test(p) ? .3 : 0) + p.length * .01); }); });
+      // المضعف: فعّ ← فعل
+      if (s.length === 2) add(s + s[1], o.how.concat("مضعّف"), base + 1); });
+    try { if (typeof roots === "function") roots(word).forEach((r, i) => add(r, ["تجريد تقريبي"], 4 + i * .1)); } catch (e) { }
+    return [...seen.values()].sort((a, b) => a.c - b.c).slice(0, 6);
+  }
+  return { analyze, nk };
+})();

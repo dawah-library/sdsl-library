@@ -91,12 +91,9 @@ GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip() if os.environ.get(
 GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
 GHM_EXH = set()
 NBOOKS = max(1, int(os.environ.get("OCR_NBOOKS", "1") or 1))
-# الأجهزة التي تعمل معًا فعلًا (max-parallel في ocr.yml) لا عدد الكتب كلها: كانت ١٤ مفتاحًا ÷ ١٠ كتب = خيط واحد لكل جهاز،
-# مع أن ٣ أجهزة فقط تعمل معًا، فلا يعمل إلا ٣ مفاتيح من ١٤ (١٣ نوفمبر).
-PAR = max(1, min(NBOOKS, int(os.environ.get("OCR_PARALLEL", "0") or 0) or NBOOKS))
-KW = max(1, len(GKEYS) // min(PAR, max(1, len(GKEYS)))) if GKEYS else 1  # خيوط هذا الجهاز (مفتاح لكل خيط)
+KW = max(1, len(GKEYS) // min(NBOOKS, max(1, len(GKEYS)))) if GKEYS else 1  # خيوط هذا الجهاز (مفتاح لكل خيط)
 if GKEYS:  # في التحويل المتوازي يبدأ كل جهاز بمفاتيح مختلفة، فلا يتزاحم جهازان على مفتاح واحد
-    _k = (int(os.environ.get("GEMINI_KEY_START", "0") or 0) % PAR) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
+    _k = int(os.environ.get("GEMINI_KEY_START", "0") or 0) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
 GKEY = GKEYS[0] if GKEYS else ""
 KI = [0]
 def _load_quality():
@@ -111,13 +108,6 @@ page_bad = _load_quality()
 GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3-flash-preview",
                         "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"] if m]  # لكل نموذج حصة يومية مستقلة: تجهيز الكتب المصورة أولًا ثم بقية الخدمات  # الأولوية لتجهيز الكتب المصورة: تأخذ حصص نماذج التشجير والاختبارات قبل النموذج الخفيف
 GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
-# إعادة قراءة صفحة قرأها النموذج الخفيف بنموذج خفيف آخر جهد ضائع: تبقى «خفيفة» ويُستهلك من الحصة بلا تقدم
-# (ظل طابور التدقيق ثابتًا ١٢٩٩٣ صفحة من ٧ إلى ١٣ نوفمبر لهذا). فهذه الصفحات لا تُقرأ إلا بالنماذج الأساسية،
-# وإن ازدحمت كلها بقيت الصفحة كما هي لجولة لاحقة.
-# تنبيه: «mini» وحدها تطابق «gemini» نفسها، فكانت كل صفحة يقرؤها أي نموذج Gemini تُعلَّم خفيفة إلى الأبد (١٣ نوفمبر)
-LITE_RE = re.compile(r"lite|-mini\b|-mini-")
-GMODELS_FULL = [m for m in GMODELS if not LITE_RE.search(m)]
-NOLITE = set()  # أرقام صفحات المصورة التي لا تُقبل قراءتها إلا بنموذج أساسي
 PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
 - حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.
 - تجاهل ترويسة الصفحة المتكررة أعلاها (اسم الكتاب أو الباب) ورقم الصفحة والزخارف.
@@ -129,6 +119,10 @@ PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع 
 - الأحاديث والآثار: انقلها كما في الصورة بين علامات التنصيص « » إن وُجدت، بتشكيلها، ولا تختصرها.
 - المحاذاة: السطر الذي يتوسط الصفحة في الصورة (البسملة، والعناوين المفردة، والأبيات، والعبارة المفردة في الوسط) ابدأه بـ «@@ »، والسطر المنحاز إلى اليسار (كالتوقيع والتاريخ في آخر المقدمة) ابدأه بـ «<< »، وما سوى ذلك فقرات عادية.
 - الحواشي أسفل الصفحة: إن وُجدت فاكتب بعد المتن سطرًا فيه ______ ثم كل حاشية تبدأ برقمها كما في الكتاب في أول سطرها، وإن امتدت الحاشية فقرات فاكتبها كلها بعد السطر (لا تترك شيئًا من الحواشي أو التعليقات المرقمة في المتن)، وتتمة حاشية من الصفحة السابقة تُكتب في أول الحواشي بلا رقم.
+- طبقات النص: فرّق بين متن الكتاب (كلام المؤلف) والحاشية والتعليق والتحقيق. كل ما تحت خط الفصل أسفل الصفحة، أو كان بخط أصغر من خط المتن، أو كان تعليقًا للمحقق أو الشارح على كلمة مرقمة، فهو حاشية تُكتب بعد سطر ______ ولا يُدمج في المتن ولا يُنسب إلى المؤلف.
+- الحاشية الممتدة: إذا امتدت الحاشية فملأت الصفحة كلها أو أكثرها (بخطها الأصغر) دون متن ظاهر، فاكتب أول الصفحة سطر ______ مباشرة ثم نص الحاشية؛ ولا تجعلها متنًا ولو خلت الصفحة من المتن.
+- في كتب الشروح: إذا كان المتن المشروح مميزًا (بخط أغلظ أو بين قوسين أو في أعلى الصفحة) فانقله بتمييزه كما هو (بين قوسين أو « »)، وكلام الشارح بعده فقرات عادية.
+- العناصر المتكررة أعلى الصفحة أو أسفلها (اسم الكتاب أو المؤلف أو الباب أو الفصل ورقم الصفحة) ترويسة لا تُنسخ، وإن جاءت بصيغة عنوان.
 - الجداول: اكتبها جدولًا بصيغة Markdown (| خانة | خانة |) بالترتيب نفسه من اليمين.
 - الرسوم والمشجّرات والخرائط والصور داخل الصفحة: لا تحاول نسخها، بل اكتب في موضعها سطرًا: [رسم: وصف قصير لمحتواه]، وانسخ ما فيها من كلمات مهمة داخل الوصف.
 - إن كانت الصفحة مكتوبة بخط اليد (مخطوط) فاجعل أول سطر بعد رقم الصفحة: [مخطوط] ثم انسخها بأدق ما تستطيع، وضع كل كلمة غير متيقنة بين ⟪ ⟫.
@@ -211,7 +205,6 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
         return None
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
-    if models is None and getattr(TL, "nolite", False) and GMODELS_FULL: models = GMODELS_FULL
     models = list(models or GMODELS); models_all = list(models)
     attempt, spins = 0, 0
     while attempt < 9 and spins < 4 * len(GKEYS) * len(models_all) + 20:  # نفاد حصة نموذج لا يُحسب محاولة: ننتقل إلى غيره
@@ -262,7 +255,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
                 if nk is not None and getattr(TL, "k", None) is not None: TL.k = nk
                 time.sleep(min(60, 10 * (attempt + 1))); continue
             if e.code in (401, 403): fail[0] = 99; return None
-            if e.code in (500, 503) and len(models) > 1 and attempt >= 2: models.append(models.pop(0))  # الازدحام: جرّب النموذج البديل (ويبقى الأول في آخر الدور)
+            if e.code in (500, 503) and len(models) > 1 and attempt >= 3: models.pop(0)  # بعد عدة محاولات جرّب النموذج البديل
             time.sleep(min(90, 8 * 2 ** min(attempt, 3)))  # صبر متزايد على الازدحام المؤقت
         except Exception as e:
             ERRS["خطأ اتصال"] += 1
@@ -862,11 +855,10 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
-            if LITE_RE.search(getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
+            if re.search(r"lite|mini", getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
             else: LITE.discard(i)
         if (GKEY or GHM_TOKEN) and scan:
-            sc = [i for i in scan if nums[i] not in NOLITE] + [i for i in scan if nums[i] in NOLITE]  # دفعات متجانسة: الخفيفة وحدها
-            groups = [sc[k:k + batch] for k in range(0, len(sc), batch)]
+            groups = [scan[k:k + batch] for k in range(0, len(scan), batch)]
             GW = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
             HW = int(os.environ.get("GHM_WORKERS", "2")) if GHM_TOKEN else 0
             workers = GW + HW
@@ -880,7 +872,6 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
                 if getattr(TL, "provider", "") == "ghm" and len(idx) > 2:  # حد الخطة المجانية لحجم الطلب: صفحتان في الطلب
                     for k2 in range(0, len(idx), 2): review((wi, idx[k2:k2 + 2]))
                     return
-                TL.nolite = bool(NOLITE) and all(nums[i] in NOLITE for i in idx)
                 imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
                 res = gemini_batch(imgs, [drafts_of(i) for i in idx]) if len(idx) > 1 else None
                 if res:
@@ -1065,7 +1056,6 @@ def rereview(bid):
     # النص الحالي مسودةً يستعين بها Gemini مع الصورة
     os.environ["OCR_DRAFTS"] = ""
     pn = lambda i: (pmap[i] if i < len(pmap) and pmap[i] else i + 1)
-    NOLITE.clear(); NOLITE.update(pn(i) for i in idx if i in set(lite) and i not in set(unrev) and str(i) not in unc0)
     new = ocr(pdf, only=[pn(i) for i in idx], prior={pn(i): sh["pages"][i] for i in idx})
     left, lite2, unc = set(unrev), set(lite), dict(unc0)
     fixed = 0
