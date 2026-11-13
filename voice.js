@@ -20,7 +20,7 @@ const VOICE = (() => {
     if (canSR) {
       const r = new SR(); r.lang = lang; r.interimResults = !!o.interim; r.continuous = !!o.continuous; r.maxAlternatives = o.alts || 5;
       r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i], alts = [...res].map(a => ({ t: a.transcript, c: a.confidence }));
-        if (o.onResult) o.onResult(o.raw ? alts : best(alts), res.isFinal, alts); } };
+        if (o.onResult) o.onResult(o.raw ? alts : best(alts), res.isFinal, alts, i); } };
       r.onerror = e => o.onError && o.onError(e.error === "not-allowed" ? "لم يُسمح باستخدام الميكروفون" : e.error === "no-speech" ? "لم يُسمع كلام" : e.error);
       r.onend = () => o.onEnd && o.onEnd(); try { r.start(); } catch (e) { o.onError && o.onError(e.message); }
       return { stop: () => { try { r.stop(); } catch (e) { } }, abort: () => { try { r.abort(); } catch (e) { } } };
@@ -46,21 +46,45 @@ const VOICE = (() => {
   // رمز الميكروفون العالمي (خطّي بلون السمة)، ومعه موجات تنبض أثناء الاستماع
   const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg><i class="vwave" aria-hidden="true"><b></b><b></b><b></b></i>';
   const SEL = 'input[type=search],input[name=q],input[data-voice],textarea[data-voice]';
+  // الإملاء المتصل: يجمع الكلام عبر التوقفات ولا يمسح ما قيل؛ إذا أنهى المتصفح الاستماع عند السكوت أُعيد تلقائيًّا
+  // وأُلحق الكلام الجديد بما سبقه. o.submit: إرسال تلقائي بعد سكوت o.silence (البحث)، وإلا يبقى حتى يضغط المستخدم (السؤال).
+  const ANDROID = /Android/i.test(navigator.userAgent);
+  function dictate(inp, o) {
+    o = o || {}; const keep = o.append && inp.value.trim() ? inp.value.replace(/\s*$/, " ") : "";
+    let acc = keep, cur = "", h = null, live = true, sub = false, heard = false, t1 = null, t0 = Date.now();
+    const put = () => { inp.value = (acc + cur).replace(/[ \t]+/g, " ").replace(/^ /, ""); inp.dispatchEvent(new Event("input", { bubbles: true })); try { inp.scrollLeft = inp.scrollWidth; inp.scrollTop = inp.scrollHeight; } catch (e) { } };
+    const idle = () => { clearTimeout(t1); const ms = heard ? (o.silence || 0) : (o.wait || 9000); if (ms) t1 = setTimeout(() => finish(!!o.submit && heard), ms); };
+    const done = () => { clearTimeout(t1); cur = ""; put(); o.onEnd && o.onEnd(); if (sub && inp.value.trim()) { const f = inp.form; if (f && !inp.dataset.nosubmit) { if (f.requestSubmit) f.requestSubmit(); else f.submit(); } else inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); } };
+    function run() {
+      const seg = []; h = listen({ continuous: !ANDROID, interim: true, lang: o.lang,
+        onResult: (t, fin, alts, i) => { heard = heard || !!String(t).trim(); if (!canSR) { acc += t + " "; cur = ""; put(); return; }
+          seg[i == null ? seg.length : i] = t; cur = seg.filter(Boolean).join(" "); put(); idle(); },
+        onError: m => { if (/لم يُسمع|aborted/.test(m)) return; if (/لم يُسمح|not-allowed|service-not-allowed|المتصفح لا يدعم/.test(m)) live = false; o.onError && o.onError(m); },
+        onEnd: () => { h = null; acc = (acc + cur).replace(/\s*$/, " "); cur = "";
+          if (live && canSR && Date.now() - t0 < (o.max || 180000)) setTimeout(() => live ? run() : done(), 120); else { live = false; done(); } } });
+    }
+    function finish(s) { if (!live && !h) return; live = false; sub = s; clearTimeout(t1); if (h) h.stop(); else done(); }
+    run(); idle(); return { stop: s => finish(s === undefined ? !!o.submit && heard : s), abort: () => { sub = false; live = false; if (h) h.abort(); else done(); } };
+  }
   function arm(inp) {
     if (inp.dataset.vmic || inp.dataset.novoice !== undefined || inp.closest("#side,#sheetB .pbl") || (!canSR && !canRec)) return; inp.dataset.vmic = 1;
     const b = document.createElement("button"); b.type = "button"; b.className = "vmic"; b.title = "البحث بالصوت"; b.setAttribute("aria-label", "البحث بالصوت"); b.innerHTML = MIC;
-    inp.insertAdjacentElement("afterend", b);
-    let h = null; b.onclick = () => {
-      if (h) { h.stop(); return; } const ph = inp.placeholder; b.classList.add("on"); inp.placeholder = "تكلَّم الآن…";
-      h = listen({ interim: true, onResult: (t, fin) => { inp.value = t; inp.dispatchEvent(new Event("input", { bubbles: true }));
-          if (fin) { const f = inp.form; if (f && !inp.dataset.nosubmit) { if (f.requestSubmit) f.requestSubmit(); else f.submit(); } else inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); } },
-        onError: m => typeof toast === "function" && toast("🎤 " + m), onEnd: () => { h = null; b.classList.remove("on"); inp.placeholder = ph; } });
+    // الميكروفون داخل الخانة نفسها (كمحركات البحث): غلاف نسبي يحمل الخانة والزر في طرفها
+    const ta = inp.tagName === "TEXTAREA", inbox = inp.parentElement && inp.parentElement.classList.contains("aiin");
+    if (inbox) { inp.insertAdjacentElement("afterend", b); b.classList.add("vin"); }
+    else { const w = document.createElement("span"); w.className = "vfield" + (ta ? " vta" : ""); if (inp.style.flex) w.style.flex = inp.style.flex; if (inp.style.width) { w.style.width = inp.style.width; inp.style.width = ""; }
+      if (inp.style.maxWidth) w.style.maxWidth = inp.style.maxWidth; const af = document.activeElement === inp; inp.parentNode.insertBefore(w, inp); w.appendChild(inp); w.appendChild(b); if (af) inp.focus(); }
+    let h = null; const ask = ta || inp.dataset.nosubmit !== undefined;
+    b.onclick = () => {
+      if (h) { h.stop(); return; } const ph = inp.placeholder; b.classList.add("on"); b.title = "إنهاء"; inp.placeholder = "تكلَّم الآن… يُكمل الكلام بعد التوقف";
+      h = dictate(inp, { append: ask, submit: !ask, silence: ask ? 0 : 2200, onError: m => typeof toast === "function" && toast("🎤 " + m),
+        onEnd: () => { h = null; b.classList.remove("on"); b.title = "البحث بالصوت"; inp.placeholder = ph; if (ask) inp.focus(); } });
     };
   }
   const scan = root => (root.querySelectorAll ? root : document).querySelectorAll(SEL).forEach(arm);
   if (document.readyState !== "loading") scan(document); else document.addEventListener("DOMContentLoaded", () => scan(document));
   new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches && n.matches(SEL)) arm(n); else if (n.querySelector && n.querySelector(SEL)) scan(n); } }).observe(document.documentElement, { childList: true, subtree: true });
-  return { listen, stt, AR, canSR, canRec, ok: canSR || canRec, arm, MIC };
+  return { listen, dictate, stt, AR, canSR, canRec, ok: canSR || canRec, arm, MIC };
 })();
 
 /* ---------- وضع التسميع والحفظ (TASMEE) ----------

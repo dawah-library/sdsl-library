@@ -98,6 +98,34 @@ async function dorar(req, res, q) {
   } catch (e) { return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
 }
 
+// شرح الحديث من «شروح الأحاديث» في الموسوعة الحديثية بالدرر السنية: ?dsharh=<متن الحديث أو طرفه>
+// يُبحث بالمتن في الموسوعة، ويؤخذ أول حديث له شرح (معرّف الشرح xplain أو رابط /hadith/sharh/<n>)، ثم يُستخرج نص الشرح من صفحته. يُخزَّن شهرًا.
+async function dsharh(req, res, q) {
+  res.setHeader("content-type", "application/json; charset=utf-8");
+  const clean = s => String(s || "").replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "").replace(/[^ء-ي\s]/g, " ").replace(/\s+/g, " ").trim();
+  const words = clean(q).split(" ").filter(w => w.length > 1); if (words.length < 3) return res.status(400).json({ message: "اكتب جزءًا من متن الحديث" });
+  const UA = { "User-Agent": "Mozilla/5.0 (compatible; dawahlibrary.org)", "accept-language": "ar" };
+  const plain = x => String(x).replace(/<br\s*\/?>|<\/p>|<\/div>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).split("\n").map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
+  const get = async u => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 15000); try { const r = await fetch(u, { headers: UA, signal: ac.signal }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.text(); } finally { clearTimeout(t); } };
+  try {
+    let id = "";
+    for (const n of [10, 6]) { const term = words.slice(0, n).join(" ");
+      for (const u of ["https://dorar.net/hadith/search?q=" + encodeURIComponent(term) + "&st=a", "https://dorar.net/dorar_api.json?skey=" + encodeURIComponent(term)]) {
+        try { let h = await get(u); if (/^\s*\{/.test(h)) { try { h = String((JSON.parse(h).ahadith || {}).result || ""); } catch (e) { } }
+          const m = h.match(/xplain=["']?(\d+)/) || h.match(/\/hadith\/sharh\/(\d+)/); if (m) { id = m[1]; break; } } catch (e) { } }
+      if (id) break; }
+    if (!id) { res.setHeader("cache-control", "public, s-maxage=604800"); return res.status(200).json({ text: "", url: "" }); }
+    const url = "https://dorar.net/hadith/sharh/" + id, h = await get(url);
+    // نص الشرح: ما بعد عنوان «الشرح» في المقالة، وإلا أكثف كتلة عربية في الصفحة
+    let body = (h.match(/<article[\s\S]*?<\/article>/i) || [h])[0].replace(/<(script|style|nav|footer|aside)[\s\S]*?<\/\1>/gi, " ");
+    let t = plain(body); const i = t.search(/(^|\n)\s*الشرح\s*[:：]?\s*(\n|$)/); if (i >= 0) t = t.slice(i).replace(/^\s*الشرح\s*[:：]?\s*/, "");
+    t = t.split("\n").filter(l => (l.match(/[ء-ي]/g) || []).length > 20 && !/الدرر السنية|جميع الحقوق|شارك|تحميل|طباعة/.test(l)).join("\n").replace(/\n?(في الحديث|وفي الحديث)\s*[:：]/g, "\n$1:");
+    if (t.length < 150) { const blocks = plain(h.replace(/<(script|style|nav|footer|aside|header)[\s\S]*?<\/\1>/gi, " ")).split("\n").filter(l => (l.match(/[ء-ي]/g) || []).length > 60); t = blocks.sort((a, b) => b.length - a.length).slice(0, 6).join("\n"); }
+    res.setHeader("cache-control", "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000");
+    return res.status(200).json({ text: t.slice(0, 9000), url, src: "شروح الأحاديث — الدرر السنية" });
+  } catch (e) { res.setHeader("cache-control", "no-store"); return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
+}
+
 // الشرح الموجز للحديث على طريقة «الموسوعة الحديثية»: يُلخَّص من نص شرحه المشهور في المكتبة وحده (فتح الباري، المنهاج للنووي، عون المعبود…)
 // الطلب: ?sharh=<كتاب>&n=<رقم الحديث>؛ المتن وموضع الشرح يُقرآن من المستودع (tools/hadith-links.py) لا من الطلب، والنتيجة تُخزَّن للجميع.
 const SNAME = { fathbari: "فتح الباري لابن حجر", fathbarirajab: "فتح الباري لابن رجب", nawawimuslim: "المنهاج شرح صحيح مسلم للنووي", awnmabud: "عون المعبود", tuhfaahwadhi: "تحفة الأحوذي", istidhkar: "الاستذكار لابن عبد البر", subulsalam: "سبل السلام للصنعاني", jamiulum: "جامع العلوم والحكم لابن رجب" };
@@ -140,6 +168,7 @@ module.exports = async (req, res) => {
   if (req.query && req.query.dorar) return dorar(req, res, req.query.dorar);
   if (req.query && req.query.sharh) return sharh(req, res, req.query.sharh, req.query.n);
   if (req.query && req.query.op === "fb") return feedback(req, res);
+  if (req.query && req.query.dsharh) return dsharh(req, res, req.query.dsharh);
   const u = new URL(req.url, "https://" + (req.headers.host || "dawahlibrary.org"));
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");
