@@ -34,7 +34,8 @@ const HDS = (() => {
   async function linksBox(b, n) { const el = $("#hdlk"); if (!el) return; await klist(); const e = (await lget(b + ".json"))[String(n)] || {};
     const sh = (e.sh || []).map(([v, p]) => { const bk = B(v); return `<a class="chip" href="#/book/${esc(v)}/${p}">📖 ${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? " • ج" + toAr(bk.vol) : ""} • ص ${toAr(p)}</a>`; }).join("");
     const tk = (e.t || []).map(([b2, n2]) => `<a class="chip" href="${hurl(b2, n2)}">${esc(bname(b2))}${CUR.test(b2) ? "" : " (" + toAr(n2) + ")"}</a>`).join("");
-    el.innerHTML = `<h3>شرح الحديث</h3>${sh ? `<div class="row"><button class="btn p" data-act="hdbrief" data-b="${b}" data-n="${esc(String(n))}">📝 شرح موجز من الشروح المشهورة</button></div><p class="mut">موضع شرحه في المكتبة:</p><div class="chips">${sh}</div>` : '<p class="mut">لم يُحدَّد موضع شرحه في شروح المكتبة بعد.</p>'}
+    const sh2 = !sh ? (e.sh2 || []).map(([v, p, b2, n2]) => { const bk = B(v); return `<a class="chip" href="#/book/${esc(v)}/${p}">📖 ${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? " • ج" + toAr(bk.vol) : ""} • ص ${toAr(p)} <small>(روايته في ${esc(bname(b2))})</small></a>`; }).join("") : "";
+    el.innerHTML = `<h3>شرح الحديث</h3>${!sh && sh2 ? `<p class="mut">شرح الحديث نفسه في رواية أخرى منه:</p><div class="chips">${sh2}</div>` : ""}${sh ? `<div class="row"><button class="btn p" data-act="hdbrief" data-b="${b}" data-n="${esc(String(n))}">📝 شرح موجز من الشروح المشهورة</button></div><p class="mut">موضع شرحه في المكتبة:</p><div class="chips">${sh}</div>` : (sh2 ? "" : '<p class="mut">لم يُحدَّد موضع شرحه في شروح المكتبة بعد.</p>')}
       <h3>تخريجه في كتب السنة بالمكتبة</h3>${tk ? `<div class="chips">${tk}</div>` : '<p class="mut">لم يُعثر على رواية أخرى له في كتب السنة بالمكتبة؛ انظر أحكام المحدثين وتخريجهم أدناه.</p>'}`; }
   async function brief(b, n) { openSheet("شرح موجز", '<p class="mut">جارٍ إعداد الشرح الموجز من الشرح المعتمد…</p>');
     try { const r = await fetch("api/translate?sharh=" + encodeURIComponent(b) + "&n=" + encodeURIComponent(n)), j = await r.json(); if (!r.ok) throw new Error(j.message || "");
@@ -180,4 +181,18 @@ const HDS = (() => {
     else if (a === "hdcopy") { const r = IX.find(x => x[0] === el.dataset.id), x = F(r); det(x.b).then(D => navigator.clipboard.writeText(`عن ${x.sah} رضي الله عنه: «${(D[x.id] || {}).m || x.tarf}» ${x.t}${x.h ? " — " + x.h : ""}\n${BK[x.b] || x.b}`).then(() => toast("نُسخ"))); }
     else if (a === "hdsharh") { const r = IX.find(x => x[0] === el.dataset.id), x = F(r); det(x.b).then(D => hadithSheet((D[x.id] || {}).m || x.tarf)); } });
   return { view: page };
+})();
+
+/* من الشرح إلى الحديث: في صفحة من كتب الشروح (فتح الباري، المنهاج، عون المعبود…) يظهر أعلاها «هذا الموضع شرح حديث …» برابطه في قسم الحديث
+   (data/hadith/links/_rev/<ملف الشرح>.json من tools/hadith-rev.py). */
+const HDREV = (() => { const C = new Map(); let last = "";
+  const get = f => C.get(f) || (C.set(f, fetch("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/links/_rev/" + f + ".json").then(r => r.ok ? r.json() : null).catch(() => null)), C.get(f));
+  const NAMES = { bukhari: "صحيح البخاري", muslim: "صحيح مسلم", abudawud: "سنن أبي داود", tirmidhi: "سنن الترمذي", nasai: "سنن النسائي", ibnmajah: "سنن ابن ماجه", muwatta: "الموطأ", darimi: "سنن الدارمي", arbain: "الأربعين النووية", riyad: "رياض الصالحين", bulugh: "بلوغ المرام" };
+  async function paint() { const m = location.pathname.match(/^\/book\/([^/]+)\/(\d+)/); if (!m) return; const key = m[1] + ":" + m[2]; if (key === last) return; last = key;
+    const d = await get(m[1]); const old = document.getElementById("hdrev"); if (old) old.remove(); if (!d || !d[m[2]]) return;
+    const host = document.querySelector("#rb") || document.querySelector(".rd"); if (!host) return;
+    host.insertAdjacentHTML("beforebegin", `<div id="hdrev" class="hdrev">📜 هذا الموضع شرحُ ${d[m[2]].map(([b, n]) => `<a href="${/^(arbain|riyad|bulugh)/.test(b) ? "#/hadith/x/" + n : "#/hadith/k/" + b + "/" + n}">الحديث ${/^(arbain|riyad|bulugh)/.test(b) ? toAr(String(n).split("-").pop()) : toAr(n)} من ${NAMES[b] || b}</a>`).join("، ")} — اعرض نصه وتخريجه وشروحه الأخرى.</div>`); }
+  addEventListener("popstate", () => setTimeout(paint, 300)); addEventListener("hashchange", () => setTimeout(paint, 300));
+  new MutationObserver(() => { if (document.querySelector("#rb") && !document.getElementById("hdrev")) { last = ""; paint(); } }).observe(document.documentElement, { childList: true, subtree: true });
+  return { paint };
 })();
