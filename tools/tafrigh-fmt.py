@@ -86,7 +86,10 @@ def do_book(bid, cat, lst):
             if len(T.EXH) >= len(T.KEYS):
                 break
             continue
-        for x in r.get("pages") or []:
+        items = r if isinstance(r, list) else (r.get("pages") or []) if isinstance(r, dict) else []
+        for x in items:
+            if not isinstance(x, dict):
+                continue
             try:
                 p = int(x.get("p"))
             except Exception:

@@ -43,7 +43,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           TR_MINUTES: "300"
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}  # تنزيل احتياطي من صندوق الرفع إن تعذّر الرابط المؤقت (بإذن المدير ١٣ نوفمبر)
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: python3 tools/transcribe.py
       - run: |
           bash tools/git-save.sh "تفريغ الصوتيات والمرئيات إلى كتب" data/books data/catalog.json data/transcribe data/tfedit

@@ -8,7 +8,11 @@
    - للإدارة: إضافة متن (من كتاب في المكتبة أو بلصق نصه فيُنشأ كتابًا)، وتصنيفه علمًا ومرحلة وترتيبًا، وتعديل ذلك. */
 const MTN = (() => {
   let D = null;
-  const load = async () => { if (D) return D; for (const u of ["https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/mutun.json?t=" + Math.floor(Date.now() / 300e3), "data/mutun.json"]) { try { const r = await fetch(u); if (r.ok) { D = await r.json(); break; } } catch (e) { } } return (D = D || { sci: [], lv: [], items: [] }); };
+  // متون العضو الخاصة: أي كتاب من المكتبة يضيفه العضو إلى حفظه (S.mtnx، متزامنة بالحساب) فتعمل عليه خدمات الحفظ كلها
+  const own = () => (Array.isArray(S.mtnx) ? S.mtnx : (S.mtnx = [])).filter(x => x && x.b);
+  const withOwn = d => Object.assign({}, d, { items: d.items.concat(own().filter(x => !d.items.some(y => y.id === x.id || (y.b && y.b === x.b && !x.from)))) });
+  const load = async () => withOwn(await load0());
+  const load0 = async () => { if (D) return D; for (const u of ["https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/mutun.json?t=" + Math.floor(Date.now() / 300e3), "data/mutun.json"]) { try { const r = await fetch(u); if (r.ok) { D = await r.json(); break; } } catch (e) { } } return (D = D || { sci: [], lv: [], items: [] }); };
   const P = () => (S.mtn = S.mtn || {}), push = () => { saveS(); try { Prefs.push(); } catch (e) { } };
   const nz = s => norm(String(s || "")).replace(/[^ء-ي\s]/g, " ").split(/\s+/).filter(Boolean);
   const day = () => new Date().toISOString().slice(0, 10);
@@ -66,7 +70,7 @@ const MTN = (() => {
     if (typeof HZ !== "undefined") await HZ.pull();
     const tab = q.t || (Object.keys(P()).length ? "mine" : "ladder"), l = typeof HZ !== "undefined" ? HZ.all() : [], due = typeof HZ !== "undefined" ? HZ.due(l) : [];
     const mine = d.items.filter(x => P()[x.id]);
-    const tabs = `<div class="tabs" role="tablist">${[["ladder", "سلّم المتون"], ["mine", "محفوظاتي وورد اليوم"], ["cards", "بطاقات المراجعة"]].concat(isAdmin() ? [["admin", "إضافة متن وتصنيفه"]] : []).map(([k, t]) => `<a role="tab" aria-selected="${tab === k}" href="#/hifz?t=${k}">${t}</a>`).join("")}</div>`;
+    const tabs = `<div class="tabs" role="tablist">${[["ladder", "سلّم المتون"], ["mine", "محفوظاتي وورد اليوم"], ["add", "➕ متن من المكتبة"], ["cards", "بطاقات المراجعة"]].concat(isAdmin() ? [["admin", "إضافة متن وتصنيفه"]] : []).map(([k, t]) => `<a role="tab" aria-selected="${tab === k}" href="#/hifz?t=${k}">${t}</a>`).join("")}</div>`;
     const head = `<div class="cmhero hz"><div><h2>حفظ المتون</h2><p>سلّم موضوعي متدرج للمتون العلمية: اختر المتن المناسب لمرحلتك، وحدّد وردك اليومي، واحفظ بطرق متنوعة (التكرار المسموع، والإخفاء التدريجي، والربط، واختبار الحفظ)، ثم ثبّته بالمراجعة القريبة والمتباعدة.</p></div>
       <div class="row">${due.length ? `<button class="btn p" data-act="hzgo">▶ مراجعة اليوم (${toAr(due.length)})</button>` : ""}<a class="btn" href="#/hifz?t=mine">ورد اليوم</a></div></div>`;
     let body = "";
@@ -74,18 +78,19 @@ const MTN = (() => {
       const s0 = q.s || "";
       body = `<nav class="chips">${[["", "كل العلوم", "📚"]].concat(d.sci).map(([k, n, i]) => `<a class="chip${s0 === k ? " x" : ""}" href="#/hifz?t=ladder${k ? "&s=" + k : ""}">${i} ${esc(n)}</a>`).join("")}</nav>
         <p class="mut">الترتيب المقترح: ابدأ بالمرحلة الأولى في العلم الذي تحتاجه، ولا تنتقل إلى ما بعدها حتى تتقن ما قبلها. المتن غير المتاح بعد في المكتبة يُضاف من الإدارة.</p>
-        ${d.lv.map(([lv, ln, ld]) => { const its = d.items.filter(x => x.lv === lv && (!s0 || x.sci === s0)).sort((x, y) => d.sci.findIndex(s => s[0] === x.sci) - d.sci.findIndex(s => s[0] === y.sci) || (x.ord || 0) - (y.ord || 0)); return its.length ? `<section class="mlv"><h3>${esc(ln)} <small class="mut">— ${esc(ld)}</small></h3><div class="mgrid">${its.map(x => card(d, x)).join("")}</div></section>` : ""; }).join("")}`;
+        ${d.lv.map(([lv, ln, ld]) => { const its = d.items.filter(x => !x.own && x.lv === lv && (!s0 || x.sci === s0)).sort((x, y) => d.sci.findIndex(s => s[0] === x.sci) - d.sci.findIndex(s => s[0] === y.sci) || (x.ord || 0) - (y.ord || 0)); return its.length ? `<section class="mlv"><h3>${esc(ln)} <small class="mut">— ${esc(ld)}</small></h3><div class="mgrid">${its.map(x => card(d, x)).join("")}</div></section>` : ""; }).join("")}`;
     } else if (tab === "mine") {
       body = mine.length ? `<div class="mgrid">${mine.map(x => card(d, x, 1)).join("")}</div><div id="mtoday"></div>` : `<p class="note">لم تبدأ حفظ متن بعد. اختر من <a href="#/hifz?t=ladder">سلّم المتون</a> ثم «ابدأ الحفظ».</p>`;
       setTimeout(() => today(d, mine), 0);
     } else if (tab === "cards") { setTimeout(() => cardsTab(), 0); body = '<div id="hzold"></div>'; }
+    else if (tab === "add") body = ownForm(d, q);
     else if (tab === "admin" && isAdmin()) body = adminForm(d);
     view(head + tabs + `<div style="margin-top:10px">${body}</div><div id="hzbox"></div>`);
   }
   function card(d, x, mine) {
     const s = d.sci.find(z => z[0] === x.sci) || ["", "", "📘"], p = P()[x.id], ok = x.b && B(x.b);
     const pct = p && p.n ? Math.round(100 * (p.d || 0) / p.n) : 0;
-    return `<a class="mcard${ok ? "" : " soon"}" href="${ok ? "#/hifz/m/" + esc(x.id) : "#/hifz?t=" + (isAdmin() ? "admin&add=" + esc(x.id) : "ladder")}"><span class="mic">${s[2]}</span><b>${esc(x.t)}</b><small class="mut">${esc(s[1])}${x.au ? " • " + esc(x.au) : ok ? " • " + esc(A(B(x.b).authorId).name) : ""} • ${x.kind === "nazm" ? "منظوم" : "منثور"}</small>
+    return `<a class="mcard${ok ? "" : " soon"}" href="${ok ? "#/hifz/m/" + esc(x.id) : "#/hifz?t=" + (isAdmin() ? "admin&add=" + esc(x.id) : "ladder")}"><span class="mic">${s[2]}</span><b>${esc(x.t)}</b><small class="mut">${x.own ? "📌 متن أضفته" : esc(s[1])}${x.au ? " • " + esc(x.au) : ok ? " • " + esc(A(B(x.b).authorId).name) : ""} • ${x.kind === "nazm" ? "منظوم" : "منثور"}</small>
       ${ok ? (p ? `<span class="mbar"><i style="width:${pct}%"></i></span><small>${toAr(p.d || 0)} من ${toAr(p.n || 0)} وردًا${p.d >= p.n ? " • ✓ أتممته" : ""}</small>` : `<small class="mut">لم تبدأ</small>`) : `<small class="mut">غير متاح بعد${isAdmin() ? " — أضفه" : ""}</small>`}</a>`;
   }
   async function today(d, mine) {
@@ -114,7 +119,7 @@ const MTN = (() => {
     const b = B(x.b), s = d.sci.find(z => z[0] === x.sci) || ["", "", ""], lv = d.lv.find(z => z[0] === x.lv) || [0, ""], p = P()[x.id];
     const sh = BOOKS().filter(y => (y.sharh && (y.sharh === b.id || y.sharh === b.set)) || (/شرح|حاشية|تعليق/.test(y.title) && norm(y.title).includes(norm(x.t).split(" ").slice(-2).join(" ")) && y.id !== b.id)).slice(0, 8);
     if (p) { p.n = ss.length; push(); }
-    view(`<p><a href="#/hifz?t=ladder&s=${esc(x.sci)}">← سلّم المتون</a></p><div class="mhead"><span class="mic big">${s[2]}</span><div><h2>${esc(x.t)}</h2><p class="mut">${esc(A(b.authorId).name)} • ${esc(s[1])} • ${esc(lv[1])} • ${x.kind === "nazm" ? "منظوم" : "منثور"} • ${toAr(ss.length)} وردًا</p></div></div>
+    view(`<p><a href="#/hifz?t=ladder&s=${esc(x.sci)}">← سلّم المتون</a></p><div class="mhead"><span class="mic big">${s[2]}</span><div><h2>${esc(x.t)}</h2><p class="mut">${[A(b.authorId).name, x.own ? "📌 متن أضفته من المكتبة" : s[1], lv[1]].filter(Boolean).map(esc).join(" • ")} • ${x.kind === "nazm" ? "منظوم" : "منثور"} • ${toAr(ss.length)} وردًا</p></div></div>
       ${p ? `<div class="card"><b>خطتك:</b> ${toAr(p.pd || 1)} ورد في اليوم • حفظت ${toAr(p.d || 0)} من ${toAr(ss.length)} <span class="mbar"><i style="width:${Math.round(100 * (p.d || 0) / ss.length)}%"></i></span>
         <form class="row" data-form="mplan" data-id="${esc(x.id)}" style="gap:6px;margin-top:6px"><label>الورد اليومي <select name="pd">${[1, 2, 3, 5].map(n => `<option${n === +(p.pd || 1) ? " selected" : ""}>${n}</option>`).join("")}</select></label><button class="btn s">تحديث</button><button class="btn s danger" type="button" data-mt="stop" data-id="${esc(x.id)}">إيقاف حفظ المتن</button></form></div>`
       : `<form class="card" data-form="mplan" data-id="${esc(x.id)}"><b>ابدأ الحفظ</b><p class="mut">اختر قدر وردك اليومي؛ الأفضل القليل الدائم. يُقترح ${x.kind === "nazm" ? "خمسة أبيات" : "ورد واحد (نحو ستين كلمة)"} يوميًا للمبتدئ.</p><label>الورد اليومي <select name="pd"><option>1</option><option>2</option><option>3</option><option>5</option></select></label> <button class="btn p">ابدأ</button> <span class="mut">الختم المتوقع بورد واحد: بعد ${toAr(ss.length)} يومًا.</span></form>`}
@@ -177,12 +182,40 @@ const MTN = (() => {
     const out = []; let i = 0, j = 0; while (i < n && j < m) { if (A[i] === Bw[j]) { out.push([0, TA[i][1]]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) { out.push([-1, TA[i][1]]); i++; } else { out.push([1, TB[j][1]]); j++; } }
     while (i < n) out.push([-1, TA[i++][1]]); while (j < m) out.push([1, TB[j++][1]]); return { out, sc: n ? L[0][0] / n : 0 }; }
   document.addEventListener("submit", async e => {
-    const f = e.target.closest("[data-form=mplan],[data-form=mcl],[data-form=mfull],[data-form=madd]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); const k = f.dataset.form;
+    const f = e.target.closest("[data-form=mplan],[data-form=mcl],[data-form=mfull],[data-form=madd],[data-form=mown]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); const k = f.dataset.form;
     if (k === "mplan") { const p = P(), id = f.dataset.id; p[id] = Object.assign(p[id] || { d: 0, st: day() }, { pd: +f.pd.value || 1 }); push(); toast("حُفظت خطتك"); location.hash = p[id].d ? "#/hifz?t=mine" : "#/hifz/m/" + id + "/0"; }
     else if (k === "mcl") { let ok = 0, n = 0; f.querySelectorAll("input[data-a]").forEach(i => { n++; const g = nz(i.value).join(" ") === nz(i.dataset.a).join(" "); if (g) ok++; i.classList.toggle("ok", g); i.classList.toggle("no", !g); if (!g) i.title = i.dataset.a; }); $("#mres").textContent = `${toAr(ok)} من ${toAr(n)} — ${ok === n ? "ممتاز" : "مرّر على الخانة الحمراء لترى الصواب"}`; }
     else if (k === "mfull" && SES) { const r = diff(SES.g.u.map(u => strip(u.t).replace(/\.\.\./g, " ")).join(" "), f.t.value), pc = Math.round(r.sc * 100); $("#mres").innerHTML = `<p class="note"><b>المطابقة ${toAr(pc)}٪</b> — ${pc >= 95 ? "حفظ متقن، أحسنت" : pc >= 80 ? "جيد، راجع المواضع المظللة" : "يحتاج إلى مزيد تكرار"}</p><div class="mtext mdiff">${r.out.map(([t, w]) => t === 0 ? esc(w) : t < 0 ? `<del title="سقط من حفظك">${esc(w)}</del>` : `<ins title="زيادة أو خطأ">${esc(w)}</ins>`).join(" ")}</div><p class="mut"><del>المشطوب</del> سقط منك، و<ins>المظلل</ins> زيادة أو خطأ.</p>`; }
     else if (k === "madd") await saveAdd(f);
+    else if (k === "mown") ownAdd(f);
   }, true);
+
+  /* ---------- إضافة العضو متنًا من المكتبة إلى حفظه ---------- */
+  function ownForm(d, q) {
+    const pre = q.b && B(q.b) ? B(q.b) : null, mine = own(), guess = b => /منظوم|نظم|ألفية|الفية|منظومة|قصيدة|لامية|نونية|ميمية|تحفة الأطفال|الجزرية|الشاطبية|البيقونية|الرحبية|السلم المنورق|ملحة/.test(b ? b.title : "") ? "nazm" : "nathr";
+    return `<form class="card" data-form="mown"><h3>أضف متنًا من المكتبة إلى حفظك</h3><p class="mut">اختر أي كتاب أو متن من المكتبة، فيُقسَّم أورادًا وتعمل عليه خدمات الحفظ كلها: ورد اليوم، والقراءة والاستماع والتكرار، والإخفاء التدريجي، والحروف الأولى، والاختبارات، والتسميع بالصوت، وبطاقات المراجعة المتباعدة. يظهر في «محفوظاتي» ويتزامن بحسابك.</p>
+      <label>الكتاب أو المتن</label><input name="b" list="mobooks" required placeholder="اكتب اسم الكتاب واختره من القائمة" value="${pre ? esc(pre.title) : ""}"><datalist id="mobooks">${BOOKS().filter(x => !x.hidden && !isArt(x) && !VOL2(x)).slice(0, 6000).map(x => `<option value="${esc(x.title)}">${esc(A(x.authorId).name || "")}</option>`).join("")}</datalist>
+      <div class="row"><div><label>نوعه</label><select name="kind"><option value="nathr"${guess(pre) === "nathr" ? " selected" : ""}>منثور</option><option value="nazm"${guess(pre) === "nazm" ? " selected" : ""}>منظوم (أبيات)</option></select></div>
+        <div><label>حجم الورد</label><input name="per" type="number" min="1" placeholder="٥ أبيات / ٦٠ كلمة"></div><div><label>الورد اليومي</label><select name="pd"><option>1</option><option>2</option><option>3</option><option>5</option></select></div></div>
+      <label>نطاق الحفظ (اختياري): من صفحة — إلى صفحة، لحفظ جزء من كتاب أو باب منه</label><div class="row"><input name="from" type="number" min="1" placeholder="من"><input name="to" type="number" min="1" placeholder="إلى"></div>
+      <div class="savebar"><button class="btn p">أضف وابدأ الحفظ</button> <span id="mownst" class="mut"></span></div></form>
+      ${mine.length ? `<h3>متونك المضافة</h3>${mine.map(x => `<div class="bk"><b>${esc(x.t)}</b><span>${x.kind === "nazm" ? "منظوم" : "منثور"}${x.from ? " • ص " + toAr(x.from) + "–" + toAr(x.to || "") : ""}</span> <a class="btn s p" href="#/hifz/m/${esc(x.id)}">افتح</a> <button class="btn s danger" data-mt="ownrm" data-id="${esc(x.id)}">إزالة</button></div>`).join("")}` : ""}
+      <p class="mut">ومتون السلّم المعتمدة في تبويب «سلّم المتون». ويمكنك أيضًا من صفحة أي كتاب: «📿 احفظه متنًا».</p>`;
+  }
+  function ownAdd(f) {
+    const st = $("#mownst"), bt = String(f.b.value || "").trim(), b = BOOKS().find(y => y.title === bt) || BOOKS().find(y => norm(y.title) === norm(bt));
+    if (!b) { st.textContent = "اختر الكتاب من القائمة"; return; }
+    const from = +f.from.value || 0, to = +f.to.value || 0, ex = !from && !to && ((D && D.items) || []).find(y => y.b === b.id);
+    if (ex) { const p = P(); p[ex.id] = Object.assign(p[ex.id] || { d: 0, st: day() }, { pd: +f.pd.value || 1 }); push(); toast("«" + ex.t + "» في سلّم المتون؛ بدأت حفظه"); location.hash = "#/hifz/m/" + encodeURIComponent(ex.id); return; }
+    const id = "u" + b.id + (from ? "_" + from + "-" + (to || "") : "");
+    const it = { id, t: b.title + (from ? ` (ص ${toAr(from)}${to ? "–" + toAr(to) : ""})` : ""), b: b.id, kind: f.kind.value, own: 1, sci: "own", lv: 0 };
+    if (+f.per.value) it.per = +f.per.value; if (from) it.from = from; if (to) it.to = to;
+    const l = own().filter(x => x.id !== id); l.push(it); S.mtnx = l; SEGC.delete(id);
+    const p = P(); p[id] = Object.assign(p[id] || { d: 0, st: day() }, { pd: +f.pd.value || 1 }); push(); toast("أضيف «" + b.title + "» إلى حفظك");
+    location.hash = "#/hifz/m/" + encodeURIComponent(id);
+  }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-mt=ownrm]"); if (!el) return; e.preventDefault(); if (!confirm("إزالة هذا المتن من حفظك؟ (يبقى تقدمك محفوظًا إن أعدت إضافته)")) return;
+    S.mtnx = own().filter(x => x.id !== el.dataset.id); push(); route(); });
 
   /* ---------- الإدارة: إضافة متن وتصنيفه ---------- */
   function adminForm(d) {
@@ -196,7 +229,7 @@ const MTN = (() => {
       <label>حجم الورد (أبيات للمنظوم، أو كلمات للمنثور؛ اختياري)</label><input name="per" type="number" min="1" value="${pre.per || ""}">
       <label>نطاق المتن في الكتاب (اختياري): من صفحة — إلى صفحة. يُستبعد آليًا ما سواه: المقدمات وبيانات الطبعة والفهارس</label><div class="row"><input name="from" type="number" min="1" value="${pre.from || ""}" placeholder="من"><input name="to" type="number" min="1" value="${pre.to || ""}" placeholder="إلى"></div>
       <div class="savebar"><button class="btn p">حفظ</button> <span id="maddst" class="mut"></span></div></form>
-      <h3>المتون في السلّم</h3>${d.items.map(x => `<div class="bk"><b>${esc(x.t)}</b><span>${esc((d.sci.find(s => s[0] === x.sci) || [])[1] || "")} • المرحلة ${toAr(x.lv)} • ${toAr(x.ord || 1)}${x.b && B(x.b) ? "" : " • غير متاح"}</span> <a class="btn s" href="#/hifz?t=admin&add=${esc(x.id)}">تعديل</a></div>`).join("")}`;
+      <h3>المتون في السلّم</h3>${d.items.filter(x => !x.own).map(x => `<div class="bk"><b>${esc(x.t)}</b><span>${esc((d.sci.find(s => s[0] === x.sci) || [])[1] || "")} • المرحلة ${toAr(x.lv)} • ${toAr(x.ord || 1)}${x.b && B(x.b) ? "" : " • غير متاح"}</span> <a class="btn s" href="#/hifz?t=admin&add=${esc(x.id)}">تعديل</a></div>`).join("")}`;
   }
   async function saveAdd(f) {
     const st = $("#maddst"), fd = new FormData(f); if (!GH.on) { st.textContent = "فعّل الإدارة المباشرة أولًا."; return; }
