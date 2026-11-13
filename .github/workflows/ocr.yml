@@ -64,6 +64,7 @@ jobs:
           OCR_SHARD: ${{ vars.OCR_SHARD || '12' }}
           OCR_TESS: ${{ vars.OCR_TESS || '0' }}
           OCR_QARI: ${{ vars.OCR_QARI || '1' }}
+          OCR_REREVIEW_BOOKS: ${{ vars.OCR_REREVIEW_BOOKS || '24' }}  # كانت ١٠: فتُختار الكتب العشرة نفسها كل جولة ولا يصل الدور إلى ٤٠ كتابًا
           OCR_REREVIEW: ${{ (github.event_name == 'schedule' || github.event.inputs.rereview == '1') && '1' || '0' }}
         run: |
           python3 tools/ocr-pdf.py --plan
@@ -141,7 +142,7 @@ jobs:
     timeout-minutes: 330
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 6  # مع OCR_PARALLEL: مفاتيح التحويل (١٤) تتوزع على الأجهزة المتزامنة، مفتاحان لكل جهاز
       matrix:
         book: ${{ fromJSON(needs.plan.outputs.books) }}
     steps:
@@ -185,6 +186,7 @@ jobs:
           OCR_PRO_MAX: ${{ vars.OCR_PRO_MAX || '0' }}  # Gemini Pro صار مدفوعًا فقط؛ يُفعَّل بالمتغير عند تفعيل الدفع
           OCR_ONLY: ${{ matrix.book }}
           OCR_NBOOKS: ${{ needs.plan.outputs.nbooks }}
+          OCR_PARALLEL: "6"  # يطابق max-parallel أعلاه
           GEMINI_KEY_START: ${{ strategy.job-index }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - name: رفع المصورة وصور الصفحات إلى مخزن R2 (إن ضُبط)
