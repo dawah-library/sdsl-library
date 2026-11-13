@@ -1416,6 +1416,11 @@ button.vmic.on{opacity:1!important;color:#fff!important;background:#d93025!impor
 @keyframes vwav{0%,100%{height:4px}50%{height:16px}}
 @keyframes vmicp{0%{box-shadow:0 0 0 0 rgba(217,48,37,.45)}70%{box-shadow:0 0 0 10px rgba(217,48,37,0)}100%{box-shadow:0 0 0 0 rgba(217,48,37,0)}}
 @media(prefers-reduced-motion:reduce){.vmic.on,.vmic.on .vwave b{animation:none}}
+.vfield{position:relative;display:flex;align-items:center;flex:1 1 auto;min-width:0;max-width:100%}
+.vfield>input,.vfield>textarea{flex:1 1 auto;width:100%;min-width:0;margin:0;padding-inline-end:44px!important}
+.vfield>.vmic{position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);margin:0;width:34px;height:34px}
+.vfield>.vmic:active{transform:translateY(-50%) scale(.92)}.vfield.vta>.vmic{top:auto;bottom:6px;transform:none}
+.vmic.vin{align-self:flex-end;width:42px;height:42px}
 /* أدوات المساعد العلمي */
 .axbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-start}.axbar .on{background:#e11d48;color:#fff}
 .axopt{position:relative}.axopt summary{list-style:none;cursor:pointer}.axopt summary::-webkit-details-marker{display:none}
@@ -1487,3 +1492,17 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .trv .trh .trmodes,.trv .trh .trmodes *{flex:0 0 auto}.trv .trh .trmodes button{white-space:nowrap}
 .trlangs input{width:9em}.trlangs td{padding:3px}
 .trlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+/* قراءة كتاب السنة كاملًا (hadith.js: kread) */
+.hread{background:var(--sf);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:8px 0}
+.hrk{text-align:center;color:var(--ac);margin:18px 0 6px;font-size:1.15rem;border-bottom:1px solid var(--line);padding-bottom:6px}
+.hrb{color:var(--ac);margin:14px 0 4px;font-size:1rem}
+.hrh{position:relative;padding:10px 0 10px;border-bottom:1px dashed var(--line);scroll-margin-top:80px}.hrh:last-child{border-bottom:0}
+.hrh .hdm{font-family:Amiri,"Traditional Arabic",serif;font-size:1.18rem;line-height:2;text-align:justify;margin:4px 0}
+.hrh .hds{margin:0;color:var(--mut,#666);font-size:.9rem}
+.hrn{float:inline-start;margin-inline-end:8px;min-width:2.2em;padding:0 6px;height:1.9em;border-radius:1em;display:inline-grid;place-items:center;background:color-mix(in srgb,var(--ac) 12%,transparent);color:var(--ac);font-weight:700;text-decoration:none;font-size:.85rem}
+.hra{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.hra .btn{font-size:.78rem}
+.hrsh{margin-top:8px;padding:8px 12px;border-inline-start:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 5%,transparent);border-radius:8px}
+.hrhit{animation:hrhit 2.4s ease-out}@keyframes hrhit{from{background:color-mix(in srgb,var(--ac) 18%,transparent)}to{background:transparent}}
+.hrtools{flex-wrap:wrap;gap:8px;align-items:center}.hrtools select{max-width:100%;flex:1 1 220px}.hrpg{flex-wrap:wrap;justify-content:center}
+.hrh .hdm{color:inherit}
+.fns.only{margin-top:0;border-top:0}.fns.only .fnt{font-weight:700}

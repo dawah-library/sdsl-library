@@ -50,19 +50,25 @@ def main():
     acc = {x["n"]: [] for x in issues}
     big = re.compile("|".join("(?P<g%d>%s)" % (i, rx[x["n"]].pattern) for i, x in enumerate(issues)))
     names = [x["n"] for x in issues]
+    # ما يشترك مع القضية في الحروف دون المعنى: «فقه الخلاف» غير «الخلافة» والإمامة (طلب المدير dmw8xhg9p)
+    EXC = {"فقه الخلاف": re.compile(r"(?<![ء-ي])(?:ال|و|ب|ل|لل)?خلافه|الخليفه|الخلفاء|الاماميه|الامامه العظمي|الامامه الكبري")}
     for bid, pages in texts.items():
-        b = books[bid]; hits = {}; best = {}; words = 0
+        b = books[bid]; hits = {}; best = {}; words = 0; exc = {k: 0 for k in EXC}
         for i, pg in enumerate(pages):
             if not isinstance(pg, str): continue
             for line in pg.split("\n"):
                 w = 3 if line.lstrip().startswith("#") else 1; t = nz(line); words += len(t.split())
+                for k, r in EXC.items(): exc[k] += w * len(r.findall(t))
                 for m in big.finditer(t):
                     k = names[int(m.lastgroup[1:])]; hits[k] = hits.get(k, 0) + w
                     pb = best.setdefault(k, {}); pb[i + 1] = pb.get(i + 1, 0) + w
         tt = nz(b.get("title", ""))
+        for k, r in EXC.items():
+            if r.search(tt): exc[k] += 50
         for m in big.finditer(tt):
             k = names[int(m.lastgroup[1:])]; hits[k] = hits.get(k, 0) + 8; best.setdefault(k, {}).setdefault(1, 0)
         for k, h in hits.items():
+            if k in exc and exc[k] >= h: continue   # موضوعه الخلافة لا الخلاف
             score = round(h * 1000 / max(words, 200) * math.log(1 + h), 2)
             if h >= 3 and score >= 1.5: acc[k].append([bid, score, max(best[k].items(), key=lambda z: z[1])[0]])
     res = {k: sorted(v, key=lambda z: -z[1])[:120] for k, v in acc.items()}

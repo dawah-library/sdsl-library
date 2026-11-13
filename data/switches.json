@@ -1,6 +1,6 @@
 {
  "v": 1,
- "at": "2026-11-07",
+ "at": "2026-11-13",
  "by": "admin",
  "s": {
   "translate": false,
@@ -13,10 +13,10 @@
   "import_salafvoice": false,
   "majalla_news": true,
   "enrich": true,
-  "tashjir": false,
-  "study_ai": false,
+  "tashjir": true,
+  "study_ai": true,
   "i18n": false,
-  "cards": false,
-  "import_sources": false
+  "cards": true,
+  "import_sources": true
  }
 }

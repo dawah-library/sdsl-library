@@ -354,12 +354,20 @@ def snapshot(L):
     try: D = json.load(open(MAJ, encoding="utf-8"))
     except Exception: return
     ch = False
+    # أحدث عدد صادر يبقى ركنه الإخباري حيًّا: تتجدد لقطته يوميًّا بأحدث الأخبار حتى يصدر العدد التالي (طلب المدير ١٣ نوفمبر)
+    live_ids = [y.get("id") for y in sorted([y for y in D.get("issues", []) if y.get("date") and y.get("status", "published") == "published"], key=lambda y: y["date"])[-1:]]
+    today = time.strftime("%Y-%m-%d", time.gmtime())
     for x in D.get("issues", []):
         if not any(s.get("live") == "news" for s in x.get("secs", [])): continue
         try: d0 = datetime.datetime.fromisoformat(x["date"]).replace(tzinfo=datetime.timezone.utc).timestamp()
         except Exception: continue
-        if NOW - d0 > SNAP_DAYS * 86400 and x.get("news"): continue   # عدد قديم: لقطته ثابتة
-        until = d0 + 7 * 86400; since = d0 - 35 * 86400
+        latest = x.get("id") in live_ids
+        if latest:
+            if ((x.get("news") or {}).get("at") or "")[:10] == today: continue   # مرة في اليوم (تُعاد معها ملفات PDF)
+            until = NOW + 86400; since = NOW - 7 * 86400
+        else:
+            if NOW - d0 > SNAP_DAYS * 86400 and x.get("news"): continue   # عدد قديم: لقطته ثابتة
+            until = d0 + 7 * 86400; since = d0 - 35 * 86400
         pick = []
         for c in ("dawah", "nour", "muslims", "egypt", "region", "world"):
             C = [y for y in L if y["cat"] == c and since <= datetime.datetime.fromisoformat(y["date"].replace("Z", "+00:00")).timestamp() <= until]

@@ -1692,6 +1692,130 @@
      "errs": 0
     }
    }
+  },
+  {
+   "id": "islamweb",
+   "name": "إسلام ويب — المقالات",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.islamweb.net",
+   "lists": [
+    "https://www.islamweb.net/ar/articles/",
+    "https://www.islamweb.net/ar/articles/174/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9-%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/172/%D8%A7%D9%84%D8%AD%D8%AF%D9%8A%D8%AB-%D8%A7%D9%84%D8%B4%D8%B1%D9%8A%D9%81",
+    "https://www.islamweb.net/ar/articles/46/%D8%A3%D8%AE%D9%84%D8%A7%D9%82-%D9%88%D8%AA%D8%B2%D9%83%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/138/%D8%A7%D9%84%D8%B3%D9%8A%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/69/%D8%A7%D9%84%D8%A3%D8%B3%D8%B1%D8%A9",
+    "https://www.islamweb.net/ar/articles/34/%D8%AF%D8%B9%D9%88%D8%A9-%D9%88%D8%A5%D8%B9%D9%84%D8%A7%D9%85"
+   ],
+   "linkRx": "(?:https://www\\.islamweb\\.net)?/ar/article/\\d{3,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "إسلام ويب|islamweb",
+   "skipRx": "\\((?:مرئي|صوتي|فيديو)\\)",
+   "minChars": 800,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: مقالات إسلام ويب الشرعية (العقيدة، الحديث، الأخلاق والتزكية، السيرة، الأسرة، الدعوة) — حُددت الأقسام بالاستكشاف"
+  },
+  {
+   "id": "alukah-sharia",
+   "name": "شبكة الألوكة — آفاق الشريعة",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.alukah.net",
+   "lists": [
+    "https://www.alukah.net/sharia/1001/",
+    "https://www.alukah.net/sharia/1002/",
+    "https://www.alukah.net/sharia/1044/",
+    "https://www.alukah.net/sharia/1046/",
+    "https://www.alukah.net/sharia/1048/",
+    "https://www.alukah.net/sharia/1047/"
+   ],
+   "linkRx": "(?:https://www\\.alukah\\.net)?/sharia/0/\\d{4,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "شبكة الألوكة|الألوكة",
+   "skipRx": "\\((?:PDF|WORD|كتاب صوتي|مرئي|صوتي)\\)|^ملخص بحث",
+   "minChars": 800,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: المقالات والدراسات الشرعية (العقيدة، الحديث، الفقه وأصوله، السيرة)"
+  },
+  {
+   "id": "alukah-adab",
+   "name": "شبكة الألوكة — حضارة الكلمة (الأدب واللغة)",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.alukah.net",
+   "lists": [
+    "https://www.alukah.net/literature_language/1175/",
+    "https://www.alukah.net/literature_language/1176/",
+    "https://www.alukah.net/literature_language/1184/",
+    "https://www.alukah.net/literature_language/1187/",
+    "https://www.alukah.net/literature_language/1180/"
+   ],
+   "linkRx": "(?:https://www\\.alukah\\.net)?/literature_language/0/\\d{4,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "شبكة الألوكة|الألوكة",
+   "skipRx": "\\((?:PDF|WORD|كتاب صوتي|مرئي|صوتي)\\)",
+   "minChars": 600,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: المقالات الأدبية واللغوية (اللغة والقلم، أدبنا، الدراسات النقدية، من روائع الماضي، فن الكتابة)"
+  },
+  {
+   "id": "mdarek",
+   "name": "مجلة مدارك",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.mdarek.net",
+   "lists": [
+    "https://www.mdarek.net/sections/articles",
+    "https://www.mdarek.net/sections/refutations",
+    "https://www.mdarek.net/sections/history",
+    "https://www.mdarek.net/sections/profiles",
+    "https://www.mdarek.net/sections/library",
+    "https://www.mdarek.net/sections/opening",
+    "https://www.mdarek.net/sections/glossary",
+    "https://www.mdarek.net/"
+   ],
+   "linkRx": "(?:https://www\\.mdarek\\.net)?/articles/\\d+",
+   "siteSuffix": "مدارك|مجلة مدارك",
+   "minChars": 700,
+   "perRun": 40,
+   "delayMs": 2000,
+   "note": "طلب المدير dmwb1xru8: مجلة علمية في بيان حقيقة التصوف (مقالات، شبهات، محطات تاريخية، شخصيات، قاموس المصطلحات)"
+  },
+  {
+   "id": "rwaq",
+   "name": "مركز رواق للأبحاث والرؤى والدراسات",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://rwaqcenter.net",
+   "key": "url",
+   "lists": [
+    "https://rwaqcenter.net/articles",
+    "https://rwaqcenter.net/category/%D8%A2%D8%B1%D8%A7%D8%A1/",
+    "https://rwaqcenter.net/category/%D9%85%D8%B5%D8%B1%D9%8A%D8%A9/",
+    "https://rwaqcenter.net/category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A-%D8%AF%D9%88%D9%84%D9%8A/"
+   ],
+   "linkRx": "(?:https://rwaqcenter\\.net)?/articles/%[^\"'\\s<>#?]{20,}",
+   "siteSuffix": "مركز رواق|رواق",
+   "minChars": 900,
+   "perRun": 30,
+   "delayMs": 2000,
+   "note": "طلب المدير dmwb1xru8: الدراسات والرؤى والتقارير"
   }
  ]
 }
