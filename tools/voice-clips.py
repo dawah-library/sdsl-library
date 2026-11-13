@@ -41,7 +41,7 @@ async def make(cid, it, st):
     if st.get(cid) == h and os.path.exists(p): return False
     os.makedirs(OUT, exist_ok=True)
     if v.startswith("gemini:"):
-        try: TTS.speak_gemini(t, v.split(":", 1)[1], p, it.get("s") or ""); st[cid] = h; return True
+        try: TTS.speak_gemini(t, v.split(":", 1)[1], p); st[cid] = h; return True  # بلا تعليمات أداء: كان الصوت يقرؤها مع النص
         except Exception as e: print("Gemini تعذر لـ", cid, str(e)[:120]); v = "edge:" + ("ar-SA-ZariyahNeural" if v.split(":", 1)[1] in FEMALE else "ar-SA-HamedNeural")
     await TTS.speak(t, v.split(":", 1)[1] if v.startswith("edge:") else v, "-5%", p); st[cid] = h; return True
 

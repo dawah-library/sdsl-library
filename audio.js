@@ -72,21 +72,22 @@ const AP = {
   },
   load(i, t, play) {
     const a = this.audio(), it = this.q[i]; if (!it) return this.stop();
-    this.i = i; a.src = AUDIO.url(it.bid, it.f); a.playbackRate = this.mode === "radio" ? 1 : this.rate;
+    this.i = i; a.src = it.u || AUDIO.url(it.bid, it.f); a.playbackRate = this.mode === "radio" ? 1 : this.rate;
     const seekTo = () => { if (t) { try { a.currentTime = t; } catch (e) { } } a.removeEventListener("loadedmetadata", seekTo); };
     a.addEventListener("loadedmetadata", seekTo);
     if (play) a.play().catch(() => this.paint());
     this.sents = []; this.si = -1; this.meta(); this.paint(); this.loadText(it);
   },
-  async loadText(it) { const m = await AUDIO.manifest(it.bid); if (this.cur() !== it) return; const pg = m && m.pages && m.pages[String(it.p)]; this.sents = (!it.rec && pg && pg.s) || []; this.si = -1; this.paintText(); },
+  async loadText(it) { if (it.u) { this.sents = []; this.si = -1; this.paintText(); return; } const m = await AUDIO.manifest(it.bid); if (this.cur() !== it) return; const pg = m && m.pages && m.pages[String(it.p)]; this.sents = (!it.rec && pg && pg.s) || []; this.si = -1; this.paintText(); },
   meta() {
     const it = this.cur(); if (!it || !("mediaSession" in navigator)) return; const b = B(it.bid);
-    try { navigator.mediaSession.metadata = new MediaMetadata({ title: it.rec || ((b ? b.setTitle || b.title : it.bid) + (it.rec ? "" : " — " + (b && PL(b, it.p - 1) || "صفحة " + it.p))), artist: this.mode === "radio" ? "راديو المكتبة: " + this.ch.n : b ? A(b.authorId).name : "", album: SITENAME, artwork: [{ src: "assets/logo-sdsl-128.png", sizes: "128x128", type: "image/png" }, { src: "assets/logo-sdsl.png", sizes: "512x512", type: "image/png" }] }); } catch (e) { }
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: it.title || it.rec || ((b ? b.setTitle || b.title : it.bid) + (it.rec ? "" : " — " + (b && PL(b, it.p - 1) || "صفحة " + it.p))), artist: this.mode === "radio" ? "راديو المكتبة: " + this.ch.n : b ? A(b.authorId).name : "", album: SITENAME, artwork: [{ src: "assets/logo-sdsl-128.png", sizes: "128x128", type: "image/png" }, { src: "assets/logo-sdsl.png", sizes: "512x512", type: "image/png" }] }); } catch (e) { }
   },
   toggle(on) { const a = this.audio(); if (this.i < 0) return; if (on === undefined) on = a.paused; if (on) { if (this.mode === "radio") { const { i, off } = radioPos(this.ch); if (i !== this.i) return this.load(i, off, true); try { a.currentTime = off; } catch (e) { } } a.play().catch(() => { }); } else a.pause(); },
   next(auto) {
     if (auto && this.mode === "book") ARev.onEnd(this.cur());
     if (auto && this.sleepEnd) { this.sleepEnd = false; this.audio().pause(); toast("انتهى مؤقت النوم"); return; }
+    if (this.mode === "radio" && this.ch && this.ch.station) { const { i, off } = radioPos(this.ch); if (i > this.i + 1) return this.load(i, off, true); if (this.i + 1 >= this.q.length) return RSTATION.refresh(this); }  // الإذاعة: متزامنة بالساعة وتتجدد شبكتها
     if (this.i + 1 < this.q.length) this.load(this.i + 1, 0, true);
     else if (this.mode === "radio") this.load(0, 0, true);
     else { this.audio().pause(); this.paint(); toast("انتهت قائمة الاستماع"); }
@@ -166,6 +167,7 @@ async function radioChannels() {
   // البث المتواصل ٢٤ ساعة (ب12-33 … ب12-44): شبكة يومية متجددة بالساعات، ثلاثة أرباعها من مكتبة الدعوة وربعها من كتب المكتبة العامة
   // التي تختارها الإدارة (radio_auto.turath)، وكل ساعة لها موضوع، ويتقدم كل كتاب يومًا بعد يوم فلا يتكرر المسموع.
   try { const g = await radioGrid(L, ready); if (g) ch.unshift(g); } catch (e) { }
+  try { (await RSTATION.channels(L)).reverse().forEach(c => ch.unshift(c)); } catch (e) { console.warn("station", e); }
   // البرامج الإذاعية بمواعيد ثابتة (ب12-35 … ب12-38): البرنامج الجاري الآن قناة في المقدمة تبدأ من أول مواده عند موعده
   for (const pr of await radioPrograms()) { const live = progLive(pr); if (!live) continue; const ids = (pr.books || []).filter(id => L[id] && AUDIO.ready(L[id]) && !L[id].preview); if (!ids.length) continue;
     const c = mk("p-" + pr.id, "📡 " + pr.n, (pr.d || "برنامج إذاعي") + " • حتى " + live.end, ids, false); c.start = live.t0; c.prog = 1; ch.unshift(c); }
@@ -231,7 +233,7 @@ function radioPos(ch) {
 function radioNextHtml(ch) {
   const { i, off } = radioPos(ch); let t = Date.now() + (ch.items[i].d - off) * 1000; const out = [];
   let lastB = ch.items[i].bid, lastT = Date.now();
-  for (let k = i + 1; k < ch.items.length + i && out.length < 6; k++) { const it = ch.items[k % ch.items.length]; if (it.bid !== lastB || t - lastT >= 600e3) { lastB = it.bid; lastT = t; const b = B(it.bid); out.push(`<li><b>${new Date(t).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" })}</b> ${esc(b ? b.setTitle || b.title : it.bid)} <span class="mut">${esc((b && PL(b, it.p - 1)) || "ص " + toAr(it.p))}</span></li>`); } t += it.d * 1000; }
+  for (let k = i + 1; k < ch.items.length + i && out.length < 6; k++) { const it = ch.items[k % ch.items.length]; if (it.bid !== lastB || t - lastT >= 600e3) { lastB = it.bid; lastT = t; const b = B(it.bid); out.push(`<li><b>${new Date(t).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" })}</b> ${it.title ? esc(it.bid === "_q" ? "📖 " + it.title.replace(/ — .*/, "") + " — " + (it.title.split(" — ")[1] || "") : it.title) : esc(b ? b.setTitle || b.title : it.bid) + ` <span class="mut">${esc((b && PL(b, it.p - 1)) || "ص " + toAr(it.p))}</span>`}</li>`); } t += it.d * 1000; }
   return out.length ? `<h4>التالي في ${esc(ch.n)}</h4><ul class="rnext">${out.join("")}</ul>` : "";
 }
 
@@ -242,7 +244,7 @@ const audioCard = (id, x) => { const b = B(id), a = b ? A(b.authorId) : { name: 
 async function vAudio(q, bid) {
   if (bid) return q.rev && Cloud.staff() ? vAudioRev(bid, q) : vAudioBook(bid);
   if (q.k === "admin") return vAudioAdmin();
-  view(`<div class="cmhero aud"><div><h2>صوتيات المكتبة</h2>${typeof Cloud !== "undefined" && (Cloud.staff() || (Cloud.perms || []).includes("audio_upload")) ? `<a class="btn s" href="#/audio?k=admin">⬆️ ${Cloud.staff() ? "إدارة الصوتيات ورفع الكتب" : "رفع كتاب صوتي"}</a>` : ""}<p>كتب المكتبة مسموعة: استمع في الطريق والبيت، ولو أغلقت الشاشة، مع النص متزامنًا، وعلامات التوقف، وقائمة تشغيل لأكثر من كتاب.</p></div><div class="row"><a class="btn p" href="#/radio">📻 راديو المكتبة</a>${Cloud.staff() ? '<a class="btn" href="#/audio?k=admin">إدارة الصوتيات</a>' : ""}</div></div><div id="audbox"><p class="mut">جارٍ التحميل…</p></div>`);
+  view(`<div class="cmhero aud"><div><h2>صوتيات المكتبة</h2>${typeof Cloud !== "undefined" && (Cloud.staff() || (Cloud.perms || []).includes("audio_upload") || (Cloud.perms || []).includes("radio")) ? `<a class="btn s" href="#/audio?k=admin">⬆️ ${Cloud.staff() ? "إدارة الصوتيات ورفع الكتب" : "رفع كتاب صوتي"}</a>` : ""}<p>كتب المكتبة مسموعة: استمع في الطريق والبيت، ولو أغلقت الشاشة، مع النص متزامنًا، وعلامات التوقف، وقائمة تشغيل لأكثر من كتاب.</p></div><div class="row"><a class="btn p" href="#/radio">📻 راديو المكتبة</a>${Cloud.staff() ? '<a class="btn" href="#/audio?k=admin">إدارة الصوتيات</a>' : ""}</div></div><div id="audbox"><p class="mut">جارٍ التحميل…</p></div>`);
   const L = await AUDIO.load(), ids = Object.keys(L).filter(id => B(id)), last = ls.get("ap_last", null), marks = AMarks.all();
   const ready = ids.filter(id => AUDIO.ready(L[id]) || (L[id].rd && L[id].rd.length)), prep = ids.filter(id => !ready.includes(id) || (L[id].of && L[id].n < L[id].of));
   const f = q.c || "", show = ready.filter(id => !f || (f === "rec" ? L[id].rec : (L[id].c || B(id).col) === f));
@@ -276,16 +278,16 @@ async function vAudioBook(bid) {
 async function vRadio(q, cid) {
   view(`<div class="radio"><div class="rdhead"><h2>📻 راديو المكتبة</h2><p>بث متواصل من كتب المكتبة المسموعة، يسمعه كل المستمعين في اللحظة نفسها كالإذاعة. يعمل في خلفية جهازك ولو أغلقت الشاشة.</p></div><div id="rdbox"><p class="mut">جارٍ ضبط الموجات…</p></div></div>`);
   const ch = await radioChannels(), box = $("#rdbox"); if (!box) return;
-  const sched = await radioScheduleHtml() + radioGridHtml();
+  const sched = (await RSTATION.todayHtml().catch(() => "")) + await radioScheduleHtml() + radioGridHtml();
   if (!ch.length) { box.innerHTML = AUDIO_SOON + sched; return; }
   const sel = ch.find(c => c.id === (cid || q.c)) || ch[0], live = AP.mode === "radio" && AP.ch && AP.ch.id === sel.id;
   const { i } = radioPos(sel), now = sel.items[i], nb = B(now.bid);
   box.innerHTML = `<div class="chips rch">${ch.map(c => `<a class="chip${c.id === sel.id ? " x" : ""}" href="#/radio/${c.id}">${esc(c.n)}</a>`).join("")}</div>
   <div class="rdial${live && !AP.audio().paused ? " on" : ""}"><div class="rfreq">${esc(sel.n)}</div><p class="mut">${esc(sel.d)}</p>
-  <div class="rnow"><span class="live">● الآن</span> <b>${esc(nb ? nb.setTitle || nb.title : now.bid)}</b> <span class="mut">${esc(nb ? A(nb.authorId).name : "")} • ${esc((nb && PL(nb, now.p - 1)) || "صفحة " + toAr(now.p))}</span></div>
+  <div class="rnow"><span class="live">● الآن</span> <b>${esc(now.title || (nb ? nb.setTitle || nb.title : now.bid))}</b> ${now.title ? "" : `<span class="mut">${esc(nb ? A(nb.authorId).name : "")} • ${esc((nb && PL(nb, now.p - 1)) || "صفحة " + toAr(now.p))}</span>`}</div>
   <i class="eq"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i>
   <button class="btn p big" data-act="rdplay" data-c="${sel.id}">${live && !AP.audio().paused ? "⏸ إيقاف" : "▶ استمع الآن"}</button>
-  <p class="mut">مدة دورة القناة ${fmtDur(sel.T)} • ${toAr(sel.ids.length)} ${sel.ids.length > 2 && sel.ids.length < 11 ? "كتب" : "كتاب"}</p></div>
+  <p class="mut">${sel.station ? "بث متجدد بالساعة" : "مدة دورة القناة " + fmtDur(sel.T)} • ${toAr(sel.ids.length)} ${sel.ids.length > 2 && sel.ids.length < 11 ? "كتب" : "كتاب"}</p></div>
   ${radioNextHtml(sel)}
   ${sched}
   <p class="mut">تريد كتابًا من أوله بالترتيب الذي تختاره؟ <a href="#/audio">صوتيات المكتبة</a>.</p>`;
@@ -380,6 +382,7 @@ async function vAudioRev(bid, q) {
 
 /* ---------- إدارة الصوتيات (للمشرفين) ---------- */
 async function vAudioAdmin() {
+  if (!Cloud.staff() && !GH.token && (Cloud.perms || []).includes("radio") && !(Cloud.perms || []).includes("audio_upload")) return view(`<h2>إذاعة المكتبة</h2><div class="card"><div id="rstf" class="mut">جارٍ التحميل…</div></div>`);
   const upOnly = !Cloud.staff() && !GH.token && (Cloud.perms || []).includes("audio_upload");  // عضو فوّضه المدير برفع الكتب الصوتية فقط
   if (!Cloud.staff() && !GH.on) return view('<p class="note">للمشرفين ومن فوّضه المدير برفع الكتب الصوتية.</p>');
   if (upOnly) { const bk = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.setTitle || x.title).localeCompare(y.setTitle || y.title, "ar"));
@@ -409,6 +412,7 @@ async function vAudioAdmin() {
   <form data-form="audrec"><label>الكتاب</label><select name="b" required>${opt}</select><label>عنوان التسجيل</label><input name="t" maxlength="120" placeholder="مثال: شرح الباب الأول" required><label>يبدأ من صفحة</label><input name="p" type="number" min="1" value="1"><label>الملف</label><input name="f" type="file" accept="audio/*" required><button class="btn p" style="margin-top:8px">رفع التسجيل</button> <span id="audrs" class="mut"></span></form></div>
   <div class="card"><h3>طابور التحويل</h3>${(Q.items || []).length ? `<ol>${Q.items.map(it => `<li>${esc((B(it.id) || {}).title || it.id)} ${it.rec ? "— 🎙 " + esc(it.rec.t || "") : "— " + esc(it.voice || "")}${it.err ? ` <span class="warn">(تعثّر ${toAr(it.err)})</span>` : ""}</li>`).join("")}</ol>` : '<p class="mut">الطابور فارغ.</p>'}
   <h4>الكتب المسموعة</h4><p class="mut">استمع إلى الكتاب كاملًا من «🎧 استمع وراجع» قبل اعتماده: يُعلَّم كل مقطع مسموعًا عند سماعه إلى آخره، وتُسجَّل ملاحظات أخطاء النطق والتشكيل لتصحيحها وإعادة تسجيلها. لا يظهر الكتاب للأعضاء ولا يدخل الراديو إلا بعد الاعتماد.</p>${Object.entries(L).map(([id, x]) => `<div class="bk"><b>${esc((B(id) || {}).title || x.t || id)}</b> ${x.ok ? '<em class="tag">منشور للأعضاء</em>' : '<em class="tag">غير منشور</em>'} <a class="btn s${x.ok ? "" : " p"}" href="#/audio/${id}?rev=1">🎧 استمع وراجع</a> <button class="btn s" data-act="apok" data-id="${id}" data-on="${x.ok ? 0 : 1}">${x.ok ? "إلغاء النشر" : "اعتماد ونشر للأعضاء"}</button> <button class="btn s" data-act="apredo" data-id="${id}" title="يحذف التسجيل كله ثم يعيد تسجيله بالصوت الافتراضي وقاموس النطق">♻ حذف وإعادة التسجيل</button> <button class="btn s" data-act="apdel" data-id="${id}" title="يحذف التسجيل ويستبعد الكتاب من التحويل التلقائي">🗑 حذف</button><span>${(() => { const st = ARev.stat(id, x); return st.N ? `<b class="${st.heard >= st.N && !st.notes ? "" : "warn"}">مراجعة السماع: ${toAr(st.heard)} من ${toAr(st.N)}${st.notes ? " • " + toAr(st.notes) + " ملاحظة" : ""}${st.by ? " (" + esc(st.by) + ")" : ""}</b> • ` : ""; })()}${toAr(x.n)} من ${toAr(x.of || 0)} صفحة • ${fmtDur(x.d)}${x.vn ? " • " + esc(x.vn) : ""}${x.rec ? " • " + toAr(x.rec) + " تسجيل" : ""} • آخر تحديث ${esc(x.upd || "")}</span></div>`).join("") || '<p class="mut">لا كتب مسموعة بعد.</p>'}</div>
+  <div class="card" id="rstcard"><h3>📻 إذاعة المكتبة: ترتيب المواد وجدول البث</h3><p class="mut">الكتب الصوتية بالترتيب، تتخللها ختمة قرآنية في مواعيد ثابتة يوميًّا وبمدة واحدة (تكتمل الختمة ثم تبدأ أخرى بالقارئ التالي)، والأذان بتوقيت القاهرة، وفواصل «والآن مع كتاب…» تُسجَّل آليًّا عند الحفظ.</p><div id="rstf" class="mut">جارٍ التحميل…</div></div>
   <div class="card"><h3>قنوات الراديو</h3><p class="mut">القنوات التلقائية: «مختارات المكتبة» و«إذاعة الدعوة السلفية» و«إذاعة التراث». وأنشئ قنوات خاصة من الكتب المسموعة:</p>
   ${(RC.list || []).map((c, k) => `<div class="bk"><b>${esc(c.n)}</b><span>${toAr((c.books || []).length)} كتاب${c.mix ? " • مختارات متنوعة" : " • كتب كاملة"}</span><button class="btn s" data-act="rcdel" data-k="${k}">حذف القناة</button></div>`).join("")}
   <form data-form="rcadd"><label>اسم القناة</label><input name="n" maxlength="60" required placeholder="مثال: إذاعة العقيدة"><label>وصف قصير</label><input name="d" maxlength="120"><label>الكتب</label><div class="ckl">${Object.keys(L).filter(id => AUDIO.ready(L[id]) && L[id].ok && B(id)).map(id => `<label class="chk"><input type="checkbox" name="bk" value="${id}"> ${esc(B(id).setTitle || B(id).title)}</label>`).join("") || '<p class="mut">تظهر الكتب هنا بعد اكتمال صوتياتها واعتمادها.</p>'}</div><label class="chk"><input type="checkbox" name="mix"> مختارات متنوعة (مقاطع قصيرة) بدل الكتب كاملة</label><button class="btn p" style="margin-top:8px">إنشاء القناة</button></form></div>`;
@@ -532,3 +536,99 @@ document.addEventListener("submit", async e => {
 }, true);
 // استئناف الراديو عند العودة إلى الصفحة بعد انقطاع طويل (يبقى متزامنًا مع البث)
 document.addEventListener("visibilitychange", () => { if (!document.hidden && AP.mode === "radio" && AP.el && !AP.el.paused) { const { i, off } = radioPos(AP.ch); if (i !== AP.i || Math.abs(AP.el.currentTime - off) > 20) AP.load(i, off, true); } });
+
+/* ---------- إذاعة المكتبة (data/radio.json): كتب صوتية تتخللها ختمة قرآنية منتظمة، والأذان بتوقيت القاهرة، وفواصل إذاعية ----------
+   - مواعيد التلاوة ثابتة يوميًّا وبمدة واحدة (quran.slots/minutes)، والختمة تتصل من حيث انتهت، فإذا تمت بدأت ختمة بالقارئ التالي
+     (المنشاوي ثم الحصري ثم محمود علي البنا…). مواضع الآيات تُقدَّر بطول نصها فيتزامن المستمعون (يُعاد التزامن عند كل مقطع).
+   - الأذان: إعلان صوتي بموعده حسب التوقيت المحلي للقاهرة (الهيئة المصرية: الفجر ١٩٫٥° والعشاء ١٧٫٥°، والعصر بالمثل)، يُحسب كل يوم آليًّا.
+   - الكتب: بالترتيب في items، ويتقدم البث فيها يومًا بعد يوم؛ والفواصل: «والآن مع كتاب…» و«ونستكمل كتاب…» و«ونتابع…» و«مع ختام كتاب…» و«كنا مع كتاب…». */
+const RSTATION = (() => {
+  let CFG_ = null, CLIPS = null, QL = null, QN = [];
+  const D2R = Math.PI / 180, sin = x => Math.sin(x * D2R), cos = x => Math.cos(x * D2R), tan = x => Math.tan(x * D2R), asin = x => Math.asin(x) / D2R, acos = x => Math.acos(x) / D2R, atan2 = (y, x) => Math.atan2(y, x) / D2R, acot = x => Math.atan(1 / x) / D2R;
+  const fix = (a, b) => { a = a - b * Math.floor(a / b); return a < 0 ? a + b : a; };
+  function sun(jd) { const D = jd - 2451545, g = fix(357.529 + .98560028 * D, 360), q = fix(280.459 + .98564736 * D, 360), L = fix(q + 1.915 * sin(g) + .02 * sin(2 * g), 360), e = 23.439 - .00000036 * D;
+    const RA = atan2(cos(e) * sin(L), cos(L)) / 15, eq = q / 15 - fix(RA, 24); return { dec: asin(sin(e) * sin(L)), eq }; }
+  // مواقيت يوم (تاريخ ميلادي) بتوقيت UTC بالملي ثانية
+  function prayers(y, m, d, A) { const jd = Date.UTC(y, m - 1, d) / 864e5 + 2440587.5 - A.lng / 360;
+    const mid = t => 12 - sun(jd + t).eq, ang = (a, t, ccw) => { const s = sun(jd + t), v = acos((-sin(a) - sin(s.dec) * sin(A.lat)) / (cos(s.dec) * cos(A.lat))) / 15; return mid(t) + (ccw ? -v : v); };
+    const asrA = t => { const s = sun(jd + t); return -acot(1 + tan(Math.abs(A.lat - s.dec))); };
+    const hrs = { fajr: ang(A.fajr || 19.5, 5 / 24, true), dhuhr: mid(.5) + 1 / 60, asr: ang(asrA(13 / 24), 13 / 24), maghrib: ang(.833, 18 / 24) + 1 / 60, isha: ang(A.isha || 17.5, 18 / 24) };
+    const base = Date.UTC(y, m - 1, d); const o = {}; for (const k in hrs) o[k] = base + (hrs[k] - A.lng / 15) * 36e5; return o; }
+  const ymd = (t, tz) => new Date(t).toLocaleDateString("en-CA", { timeZone: tz }).split("-").map(Number);
+  const tzOff = (t, tz) => { const p = new Date(t).toLocaleString("en-US", { timeZone: tz, hour12: false }); return (Date.parse(p + " UTC") - Math.floor(t / 1000) * 1000) / 6e4; };
+  const midnight = (t, tz) => { const [y, m, d] = ymd(t, tz), u = Date.UTC(y, m - 1, d); return u - tzOff(u, tz) * 6e4; };
+  async function cfg() { if (CFG_) return CFG_; for (const u of [RAW("data/radio.json") + "?t=" + Math.floor(Date.now() / 600e3), "data/radio.json"]) { try { const r = await fetch(u); if (r.ok) return (CFG_ = await r.json()); } catch (e) { } } return (CFG_ = { channels: [] }); }
+  async function clips() { if (CLIPS) return CLIPS; try { const r = await fetch(RAW("assets/clips/index.json") + "?t=" + Math.floor(Date.now() / 600e3)); CLIPS = r.ok ? new Set(await r.json()) : new Set(); } catch (e) { CLIPS = new Set(); } return CLIPS; }
+  const clipU = id => (/dawahlibrary\.org$|\.pages\.dev$/.test(location.hostname) ? "" : RAW("")) + "assets/clips/" + id + ".mp3";
+  async function qlist() { if (QL) return QL; const q = await fetch("data/quran/quran.json").then(r => r.json()); QL = []; QN = q.suras.map(x => String(x.name).replace(/^سُورَةُ\s*/, "")); q.suras.forEach((s, i) => s.ayat.forEach((a, k) => QL.push([i + 1, k + 1, String(a).replace(/\s|﻿/g, "").length]))); return QL; }
+  const RATE = { Minshawy_Murattal_128kbps: .29, Husary_128kbps: .27, mahmoud_ali_al_banna_32kbps: .29 }, RNAME = { Minshawy_Murattal_128kbps: "محمد صديق المنشاوي", Husary_128kbps: "محمود خليل الحصري", mahmoud_ali_al_banna_32kbps: "محمود علي البنا", Alafasy_128kbps: "مشاري العفاسي", Abdul_Basit_Murattal_192kbps: "عبد الباسط عبد الصمد" };
+  const adur = (r, c) => 1.1 + c * (RATE[r] || .29);
+  const ayU = (r, s, a) => `https://everyayah.com/data/${r}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
+  // الكتل الخاصة في يوم (تلاوة وأذان) بالملي ثانية
+  function specials(C, t) { const tz = (C.adhan || {}).tz || "Africa/Cairo", m0 = midnight(t, tz), out = [], Q = C.quran || {}, qm = (+Q.minutes || 30) * 6e4;
+    (Q.slots || []).forEach(h => { const [H, M] = h.split(":").map(Number), a = m0 + (H * 60 + (M || 0)) * 6e4; out.push({ k: "quran", a, b: a + qm }); });
+    if (C.adhan) { const [y, mo, d] = ymd(t, tz), P = prayers(y, mo, d, C.adhan), NM = { fajr: "الفجر", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" };
+      for (const k in P) { const a = Math.round(P[k] / 6e4) * 6e4, len = C.adhan.url ? (+C.adhan.minutes || 5) * 6e4 : 15e3; out.push({ k: "adhan", p: k, pn: NM[k], a, b: a + len }); } }
+    out.sort((x, y) => x.a - y.a); const res = []; out.forEach(x => { const l = res[res.length - 1]; if (l && x.a < l.b) { if (x.k === "adhan") { const tail = Object.assign({}, l, { a: x.b, b: Math.max(l.b, x.b) + 0 }); l.b = x.a; res.push(x); if (tail.b > tail.a) res.push(tail); } else x.a = l.b; if (x.b > x.a && x.k !== "adhan") res.push(x); } else res.push(x); });
+    return res.filter(x => x.b > x.a); }
+  const dayQ = C => ((C.quran || {}).slots || []).length * (+(C.quran || {}).minutes || 30) * 60;
+  async function build(C, L, now) {
+    const cl = await clips(), tz = (C.adhan || {}).tz || "Africa/Cairo", ep = midnight(Date.parse(((C.quran || {}).epoch || "2026-11-14") + "T12:00:00Z"), tz);
+    const W0 = now - 30 * 6e4, W1 = now + 8 * 36e5, items = []; let t = W0;
+    const books = (C.items || []).map(x => ({ x, b: x.book && L[x.book] && AUDIO.ready(L[x.book]) ? x.book : null })).filter(y => y.b), P = books.map(({ b }) => (L[b].ds || []).map((d, k) => ({ bid: b, p: k + 1, d, f: AUDIO.page(k + 1) })).filter(z => z.d > 0));
+    const totB = P.reduce((s, l) => s + l.reduce((a, z) => a + z.d, 0), 0);
+    // ثوانٍ مضت من الكتب ومن التلاوة منذ بداية الإذاعة حتى لحظة ما
+    const consumed = until => { let days = Math.floor((until - ep) / 864e5), q = 0, sp = 0; if (days < 0) return { q: 0, b: 0 };
+      const m = ep + days * 864e5, SP = specials(C, m + 6 * 36e5); SP.forEach(x => { const e = Math.min(x.b, until); if (e > x.a && x.a >= m) { sp += (e - x.a) / 1e3; if (x.k === "quran") q += (e - x.a) / 1e3; } });
+      const perDaySp = specials(C, ep + 6 * 36e5).reduce((s, x) => s + (x.b - x.a) / 1e3, 0); return { q: days * dayQ(C) + q, b: (until - ep) / 1e3 - days * perDaySp - sp }; };
+    const clip = (id, d, title) => cl.has(id) ? { u: clipU(id), d, title, bid: "_clip", p: 1 } : null, push = x => { if (x && x.d > 0) { items.push(x); t += x.d * 1e3; } };
+    // التلاوة: مؤشر الختمة بالثواني ← القارئ والآية
+    const Q = await qlist(), R = ((C.quran || {}).reciters || ["Minshawy_Murattal_128kbps"]), kl = r => Q.reduce((s, z) => s + adur(r, z[2]), 0) + 113 * 3;
+    const qAt = sec => { let k = 0; for (;;) { const r = R[k % R.length], len = kl(r); if (sec < len || k > 50) return { r, sec, k }; sec -= len; k++; } };
+    const fillQuran = (a, b) => { const st = qAt(consumed(a).q); let s = st.sec, i = 0; const r = st.r; while (i < Q.length && s > adur(r, Q[i][2])) { s -= adur(r, Q[i][2]); i++; } const i0 = i;
+      push(clip("radio-quran-start", 7, "تلاوة من الختمة المرتلة")); push(clip("radio-r-" + r, 3, RNAME[r] || r));
+      while (t < b - 8e3) { if (i >= Q.length) { push(clip("radio-khatma-done", 6, "تمت الختمة")); i = 0; break; } const [su, ay, c] = Q[i]; if (ay === 1 && su !== 1 && su !== 9) push({ u: ayU(r, 1, 1), d: 6, title: "بسم الله الرحمن الرحيم — " + (RNAME[r] || ""), bid: "_q", p: 1 });
+        push({ u: ayU(r, su, ay), d: Math.max(2, adur(r, c) - (i === i0 ? s : 0)), title: "سورة " + (QN[su - 1] || su) + " • الآية " + toAr(ay) + " — " + (RNAME[r] || ""), bid: "_q", p: 1, q: [su, ay] }); i++; }
+      push(clip("radio-quran-end", Math.max(1, (b - t) / 1e3), "صدق الله العظيم")); if (t < b) t = b; };
+    // الكتب: الموضع من مجموع ما بُثّ منها، مع فواصل البداية والاستئناف والمتابعة والختام
+    const fillBooks = (a, b) => { if (!P.length) { push({ u: clipU("radio-station-id"), d: (b - a) / 1e3, title: C.n, bid: "_clip", p: 1 }); return; }
+      let sec = consumed(a).b % Math.max(1, totB), bi = 0; while (bi < P.length) { const len = P[bi].reduce((x, z) => x + z.d, 0); if (sec < len) break; sec -= len; bi++; } bi %= P.length;
+      let pi = 0; while (pi < P[bi].length && sec > P[bi][pi].d) { sec -= P[bi][pi].d; pi++; }
+      const id = books[bi].b; push(clip("radio-" + id + (pi === 0 ? "-start" : "-resume"), 5, pi === 0 ? "والآن مع كتاب" : "ونستكمل كتاب")); let n = 0;
+      while (t < b) { const pg = P[bi][pi]; if (!pg) { push(clip("radio-" + books[bi].b + "-end", 6, "كنا مع كتاب")); bi = (bi + 1) % P.length; pi = 0; push(clip("radio-" + books[bi].b + "-start", 5, "والآن مع كتاب")); continue; }
+        if (pi === P[bi].length - 1) push(clip("radio-" + pg.bid + "-last", 4, "مع ختام الكتاب")); else if (n && C.nextEvery && n % C.nextEvery === 0) push(clip("radio-" + pg.bid + (n / C.nextEvery % 2 ? "-next" : "-next2"), 3, "ونتابع"));
+        const d = Math.min(pg.d - (n === 0 ? sec : 0), (b - t) / 1e3); push(Object.assign({}, pg, { d: Math.max(1, d) })); pi++; n++; } t = b; };
+    const SP = [].concat(specials(C, W0 - 864e5), specials(C, W0), specials(C, W0 + 864e5)).filter(x => x.b > W0 && x.a < W1).sort((x, y) => x.a - y.a);
+    for (const x of SP) { if (x.a > t) fillBooks(t, x.a); if (x.b <= t) continue;
+      if (x.k === "quran") fillQuran(Math.max(t, x.a), x.b); else { push(clip("radio-adhan-" + x.p, 6, "أذان " + x.pn + " بتوقيت القاهرة")); if (C.adhan.url) push({ u: C.adhan.url, d: Math.max(1, (x.b - t) / 1e3), title: "الأذان", bid: "_clip", p: 1 }); if (t < x.b) t = x.b; } }
+    if (t < W1) fillBooks(t, W1);
+    window.__rsched = SP; return { id: "st-" + C.id, n: "📻 " + C.n, d: C.d || "", station: C.id, ids: books.map(y => y.b), items, T: items.reduce((a, x) => a + x.d, 0) + 1e6, start: W0 };
+  }
+  async function channels(L) { const c = await cfg(), out = []; for (const C of c.channels || []) { try { const ch = await build(C, L, Date.now()); if (ch.items.length) out.push(ch); } catch (e) { console.warn(e); } } return out; }
+  async function refresh(ap) { const L = await AUDIO.load(), C = ((await cfg()).channels || []).find(x => "st-" + x.id === ap.ch.id); if (!C) return; const ch = await build(C, L, Date.now()); ap.ch = ch; ap.q = ch.items; const { i, off } = radioPos(ch); ap.load(i, off, true); }
+  // جدول اليوم: مواعيد التلاوة والأذان (للصفحة)
+  async function todayHtml() { const c = await cfg(), C = (c.channels || [])[0]; if (!C) return ""; const tz = (C.adhan || {}).tz || "Africa/Cairo", SP = specials(C, Date.now()), f = x => new Date(x).toLocaleTimeString("ar-EG", { timeZone: tz, hour: "numeric", minute: "2-digit" });
+    return `<details class="card rsched" open><summary><b>🕌 ${esc(C.n)}: التلاوة والأذان اليوم</b> <small class="mut">بتوقيت ${esc((C.adhan || {}).city || "القاهرة")}</small></summary>${SP.map(x => `<div class="rprog${Date.now() >= x.a && Date.now() < x.b ? " live" : ""}"><b>${f(x.a)}</b> <span>${x.k === "quran" ? "📖 تلاوة من الختمة المرتلة (" + toAr(Math.round((x.b - x.a) / 6e4)) + " دقيقة)" : "🔔 أذان " + x.pn}</span></div>`).join("")}<p class="mut">وبين ذلك: ${(C.items || []).map(x => "«" + esc((B(x.book) || {}).title || x.book) + "»").join("، ")}.</p></details>`; }
+  return { channels, refresh, todayHtml, prayers, specials, cfg };
+})();
+
+/* محرر إذاعة المكتبة (للمدير ومن فوّضه بصلاحية radio): data/radio.json */
+async function rstEditor() {
+  const box = document.getElementById("rstf"); if (!box) return; const c = JSON.parse(JSON.stringify(await RSTATION.cfg())), C = (c.channels || [])[0] || { id: "main", n: "إذاعة المكتبة", items: [], quran: {}, adhan: {} }, L = await AUDIO.load(true);
+  const ready = Object.keys(L).filter(id => AUDIO.ready(L[id]) && B(id)), ord = id => { const i = (C.items || []).findIndex(x => x.book === id); return i < 0 ? "" : i + 1; };
+  const REC = [["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي"], ["Husary_128kbps", "محمود خليل الحصري"], ["mahmoud_ali_al_banna_32kbps", "محمود علي البنا"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد"], ["Alafasy_128kbps", "مشاري العفاسي"]], Q = C.quran || {};
+  box.className = ""; box.innerHTML = `<form id="rstform"><label>اسم الإذاعة</label><input name="n" value="${esc(C.n || "")}"><h4>الكتب وترتيبها في البث</h4><p class="mut">اكتب رقم الترتيب أمام الكتاب لإدراجه (فارغ = غير مدرج). يتقدم البث في الكتاب يومًا بعد يوم ثم ينتقل إلى التالي.</p>
+    ${ready.map(id => `<div class="row"><input type="number" min="1" data-bk="${id}" value="${ord(id)}" style="width:5em"><span style="flex:1">${esc(B(id).setTitle || B(id).title)}</span></div>`).join("") || '<p class="mut">لا كتب صوتية معتمدة بعد.</p>'}
+    <h4>الختمة القرآنية</h4><label>مواعيد التلاوة اليومية (بتوقيت القاهرة، مفصولة بفواصل)</label><input name="slots" dir="ltr" value="${esc((Q.slots || []).join(", "))}"><label>مدة كل فترة (دقيقة)</label><input name="min" type="number" min="5" max="180" value="${+Q.minutes || 30}">
+    <label>القراء بالترتيب (ختمة كاملة لكل قارئ ثم التالي)</label>${[0, 1, 2].map(k => `<select name="rc${k}"><option value="">—</option>${REC.map(([v, n]) => `<option value="${v}"${(Q.reciters || [])[k] === v ? " selected" : ""}>${n}</option>`).join("")}</select>`).join(" ")}
+    <label>بداية الختمة الأولى</label><input name="ep" type="date" value="${esc(Q.epoch || MKT.day())}">
+    <h4>الأذان</h4><label>رابط ملف صوت الأذان (اختياري؛ وإلا يُذاع الإعلان وحده)</label><input name="au" dir="ltr" value="${esc((C.adhan || {}).url || "")}">
+    <label>فاصل «ونتابع» كل (مقطعًا)</label><input name="ne" type="number" min="0" max="100" value="${+C.nextEvery || 12}">
+    <p><button class="btn p">حفظ جدول الإذاعة</button> <span id="rsts" class="mut"></span></p></form>`;
+  document.getElementById("rstform").onsubmit = async e => { e.preventDefault(); const f = e.target, st = document.getElementById("rsts");
+    const items = [...f.querySelectorAll("[data-bk]")].filter(x => +x.value > 0).sort((a, b) => a.value - b.value).map(x => ({ book: x.dataset.bk, by: (A((B(x.dataset.bk) || {}).authorId) || {}).name || "" }));
+    Object.assign(C, { n: f.n.value.trim() || "إذاعة المكتبة", items, nextEvery: +f.ne.value || 0, quran: Object.assign(Q, { slots: f.slots.value.split(/[,،\s]+/).filter(x => /^\d{1,2}:\d{2}$/.test(x)), minutes: +f.min.value || 30, reciters: [f.rc0.value, f.rc1.value, f.rc2.value].filter(Boolean), epoch: f.ep.value }), adhan: Object.assign({ city: "القاهرة", lat: 30.0444, lng: 31.2357, tz: "Africa/Cairo", fajr: 19.5, isha: 17.5, minutes: 5 }, C.adhan || {}, { url: f.au.value.trim() }) });
+    c.channels = [C].concat((c.channels || []).slice(1)); st.textContent = "جارٍ الحفظ…";
+    try { await GH.editJSON("data/radio.json", () => c, "إذاعة المكتبة: تحديث الجدول"); st.textContent = "✓ حُفظ؛ تُسجَّل فواصل الكتب الجديدة آليًّا خلال دقائق."; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
+}
+new MutationObserver(() => { const b = document.getElementById("rstf"); if (b && !b.dataset.on) { b.dataset.on = 1; rstEditor(); } }).observe(document.documentElement, { childList: true, subtree: true });
