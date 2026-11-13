@@ -62,7 +62,7 @@ def pick():
         for x in L:
             if x.get("st") == st and (act == "merge" or x.get("br")) and not x.get("closed"):
                 return out(act=act, id=x["id"], branch=x.get("br") or "agent/dev/" + x["id"], eng=x.get("eng") or "auto", auto=x.get("auto") or 0)
-    pend = sorted([x for x in L if x.get("st") == "pending" and x.get("eng") != "session"], key=lambda x: (x.get("p") or 2, x.get("at") or ""))
+    pend = sorted([x for x in L if x.get("st") == "pending" and x.get("eng") != "session"], key=lambda x: (sum("تعذر تشغيل محرك" in (h.get("m") or "") for h in (x.get("h") or [])), x.get("p") or 2, x.get("at") or ""))  # المتعثر يتأخر فلا يحجز الطابور
     if pend:
         x = pend[0]
         return out(act="run", id=x["id"], branch=x.get("br") or "agent/dev/" + x["id"], eng=x.get("eng") or "auto", auto=x.get("auto") or 0)

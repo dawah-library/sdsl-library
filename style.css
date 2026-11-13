@@ -1406,3 +1406,13 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 #rpct svg{width:30px;height:30px;transform:rotate(-90deg)}#rpct circle{fill:none;stroke-width:4}#rpct .bg{stroke:color-mix(in srgb,var(--ac) 16%,transparent)}#rpct .fg{stroke:var(--ac);stroke-linecap:round;transition:stroke-dasharray .4s}
 #rpct b{font-size:.82rem}#rpct span{color:var(--mut)}body:not(.reading) #rpct{display:none}
 @media(max-width:560px){#rpct{bottom:62px}#rpct span{display:none}}
+/* زر البحث الصوتي */
+.vmic{border:0;background:transparent;cursor:pointer;font-size:1.05rem;padding:0 6px;border-radius:999px;line-height:1;align-self:center;flex:none}
+.vmic:hover{background:color-mix(in srgb,var(--ac) 12%,transparent)}.vmic.on{background:#e11d48;color:#fff;animation:vmicp 1.2s infinite}
+@keyframes vmicp{0%{box-shadow:0 0 0 0 rgba(225,29,72,.5)}70%{box-shadow:0 0 0 10px rgba(225,29,72,0)}100%{box-shadow:0 0 0 0 rgba(225,29,72,0)}}
+/* أدوات المساعد العلمي */
+.axbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-start}.axbar .on{background:#e11d48;color:#fff}
+.axopt{position:relative}.axopt summary{list-style:none;cursor:pointer}.axopt summary::-webkit-details-marker{display:none}
+.axpanel{display:grid;gap:4px;padding:10px;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--sf);min-width:min(320px,86vw)}
+.axatt{display:flex;flex-wrap:wrap;gap:6px}.axchip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--ac) 10%,var(--sf));font-size:.82rem}
+.axchip img{width:28px;height:28px;object-fit:cover;border-radius:6px}.axchip button{border:0;background:none;cursor:pointer;font-size:1rem}

@@ -242,7 +242,7 @@ const audioCard = (id, x) => { const b = B(id), a = b ? A(b.authorId) : { name: 
 async function vAudio(q, bid) {
   if (bid) return q.rev && Cloud.staff() ? vAudioRev(bid, q) : vAudioBook(bid);
   if (q.k === "admin") return vAudioAdmin();
-  view(`<div class="cmhero aud"><div><h2>صوتيات المكتبة</h2><p>كتب المكتبة مسموعة: استمع في الطريق والبيت، ولو أغلقت الشاشة، مع النص متزامنًا، وعلامات التوقف، وقائمة تشغيل لأكثر من كتاب.</p></div><div class="row"><a class="btn p" href="#/radio">📻 راديو المكتبة</a>${Cloud.staff() ? '<a class="btn" href="#/audio?k=admin">إدارة الصوتيات</a>' : ""}</div></div><div id="audbox"><p class="mut">جارٍ التحميل…</p></div>`);
+  view(`<div class="cmhero aud"><div><h2>صوتيات المكتبة</h2>${typeof Cloud !== "undefined" && (Cloud.staff() || (Cloud.perms || []).includes("audio_upload")) ? `<a class="btn s" href="#/audio?k=admin">⬆️ ${Cloud.staff() ? "إدارة الصوتيات ورفع الكتب" : "رفع كتاب صوتي"}</a>` : ""}<p>كتب المكتبة مسموعة: استمع في الطريق والبيت، ولو أغلقت الشاشة، مع النص متزامنًا، وعلامات التوقف، وقائمة تشغيل لأكثر من كتاب.</p></div><div class="row"><a class="btn p" href="#/radio">📻 راديو المكتبة</a>${Cloud.staff() ? '<a class="btn" href="#/audio?k=admin">إدارة الصوتيات</a>' : ""}</div></div><div id="audbox"><p class="mut">جارٍ التحميل…</p></div>`);
   const L = await AUDIO.load(), ids = Object.keys(L).filter(id => B(id)), last = ls.get("ap_last", null), marks = AMarks.all();
   const ready = ids.filter(id => AUDIO.ready(L[id]) || (L[id].rd && L[id].rd.length)), prep = ids.filter(id => !ready.includes(id) || (L[id].of && L[id].n < L[id].of));
   const f = q.c || "", show = ready.filter(id => !f || (f === "rec" ? L[id].rec : (L[id].c || B(id).col) === f));
@@ -380,7 +380,11 @@ async function vAudioRev(bid, q) {
 
 /* ---------- إدارة الصوتيات (للمشرفين) ---------- */
 async function vAudioAdmin() {
-  if (!Cloud.staff() && !GH.on) return view('<p class="note">للمشرفين.</p>');
+  const upOnly = !Cloud.staff() && !GH.token && (Cloud.perms || []).includes("audio_upload");  // عضو فوّضه المدير برفع الكتب الصوتية فقط
+  if (!Cloud.staff() && !GH.on) return view('<p class="note">للمشرفين ومن فوّضه المدير برفع الكتب الصوتية.</p>');
+  if (upOnly) { const bk = lib.books.filter(b => kindOf(b) === "book" && !b.demo).sort((x, y) => (x.setTitle || x.title).localeCompare(y.setTitle || y.title, "ar"));
+    return view(`<h2>رفع الكتب الصوتية</h2><p class="mut">فوّضك المدير برفع التسجيلات الصوتية للكتب. يُنقل التسجيل إلى قسم الصوتيات ويظهر في صفحة الكتاب المسموع بعد مراجعة الإدارة.</p>
+    <div class="card"><form data-form="audrec"><label>الكتاب</label><select name="b" required>${bk.map(b => `<option value="${b.id}">${esc(b.setTitle || b.title)}</option>`).join("")}</select><label>عنوان التسجيل</label><input name="t" maxlength="120" placeholder="مثال: الشريط الأول — المقدمة" required><label>يبدأ من صفحة</label><input name="p" type="number" min="1" value="1"><label>الملف (mp3 أو m4a حتى ٥٠ ميجابايت)</label><input name="f" type="file" accept="audio/*" required><button class="btn p" style="margin-top:8px">رفع التسجيل</button> <span id="audrs" class="mut"></span></form></div>`); }
   view('<h2>إدارة الصوتيات والراديو</h2><div id="aadm" class="mut">جارٍ التحميل…</div>');
   const L = await AUDIO.load(true); await ARev.loadRemote(true); let Q = { items: [] }; try { const r = await fetch(RAW("data/audio/_queue.json") + "?t=" + Date.now()); if (r.ok) Q = await r.json(); } catch (e) { }
   let RC = { list: [] }; try { const { data } = await Auth.sb.from("app_settings").select("value").eq("key", "radio_channels").maybeSingle(); if (data && data.value) RC = data.value; } catch (e) { }
@@ -502,7 +506,7 @@ document.addEventListener("submit", async e => {
       const v = f.v.value; await GH.editJSON("data/audio/_settings.json", o => Object.assign(o || {}, { voice: v, at: new Date().toISOString() }), "صوتيات: الصوت الافتراضي " + v);
       $("#audss").textContent = "حُفظ؛ يُستعمل في التحويل القادم."; btn.disabled = false;
     } else if (f.dataset.form === "audrec") {
-      if (!GH.on || !Cloud.on()) throw new Error("رفع التسجيلات يحتاج تسجيل الدخول بحساب المشرف.");
+      if (!GH.on || !Cloud.on()) throw new Error("رفع التسجيلات يحتاج تسجيل الدخول بحساب المشرف أو بحساب فوّضه المدير برفع الكتب الصوتية.");
       const file = f.f.files[0]; if (!file) throw new Error("اختر الملف"); if (file.size > 50 * 1048576) throw new Error("الحد ٥٠ ميجابايت للملف الواحد.");
       const ext = (file.name.match(/\.(mp3|m4a|aac|ogg|wav|webm)$/i) || [, "mp3"])[1].toLowerCase(), name = "au" + Date.now().toString(36) + "." + ext;
       $("#audrs").textContent = "جارٍ الرفع…";

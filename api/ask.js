@@ -10,8 +10,8 @@
 require("../search.js");
 const S = globalThis.SDSLSearch;
 const hits = new Map();
-function limited(id, first) {
-  const now = Date.now(), win = 36e5, max = +(process.env.SDSL_HOURLY_LIMIT || 20), arr = (hits.get(id) || []).filter(t => now - t.at < win);
+function limited(id, first, lim) {
+  const now = Date.now(), win = 36e5, max = +(lim || process.env.SDSL_HOURLY_LIMIT || 20), arr = (hits.get(id) || []).filter(t => now - t.at < win);
   const q = arr.filter(t => t.first).length, all = arr.length;
   if (first && q >= max) return true;
   if (all >= max * 10) return true;                     // جولات الأدوات كذلك محدودة
@@ -34,13 +34,14 @@ function sanitize(contents) {
     for (const p of c.parts.slice(0, 16)) {
       if (typeof p.text === "string") parts.push(Object.assign({ text: p.text.slice(0, 14000) }, p.thoughtSignature ? { thoughtSignature: String(p.thoughtSignature).slice(0, 20000) } : {}));
       else if (p.functionCall && typeof p.functionCall.name === "string") parts.push(Object.assign({ functionCall: { name: p.functionCall.name, args: p.functionCall.args || {} } }, p.functionCall.id ? {} : {}, p.thoughtSignature ? { thoughtSignature: String(p.thoughtSignature).slice(0, 20000) } : {}));
+      else if (p.inlineData && c.role === "user" && /^(image\/(png|jpeg|webp|gif)|application\/pdf|audio\/[a-z0-9.+-]+|text\/plain)$/.test(String(p.inlineData.mimeType)) && typeof p.inlineData.data === "string" && p.inlineData.data.length < 9e6) parts.push({ inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data } });
       else if (p.functionResponse && typeof p.functionResponse.name === "string") parts.push({ functionResponse: { name: p.functionResponse.name, response: p.functionResponse.response || {} } });
       else if (Array.isArray(p.cl) && c.role === "model" && JSON.stringify(p.cl).length < 300000) { const cl = p.cl.filter(b => b && ["text", "thinking", "redacted_thinking", "tool_use", "fallback"].includes(b.type)); if (cl.length) parts.push({ cl }); }
     }
     if (!parts.length) return null;
     size += JSON.stringify(parts).length; out.push({ role: c.role, parts });
   }
-  if (size > 1200000 || out[0].role !== "user") return null;
+  if (size > 20e6 || out[0].role !== "user") return null;
   return out;
 }
 // ---------- Groq (مجاني، واجهة متوافقة مع OpenAI): بديل عن Gemini، ومراجع لغوي للجواب ----------
@@ -112,7 +113,7 @@ function toClaude(contents) {
       lastIds = content.filter(b => b.type === "tool_use").map(b => b.id);
       if (content.length) msgs.push({ role: "assistant", content });
     } else {
-      let k = 0; const content = c.parts.map(p => p.text ? { type: "text", text: p.text } : p.functionResponse && lastIds[k] ? { type: "tool_result", tool_use_id: lastIds[k++], content: JSON.stringify((p.functionResponse.response || {}).result ?? p.functionResponse.response ?? {}).slice(0, 30000) } : null).filter(Boolean);
+      let k = 0; const content = c.parts.map(p => p.inlineData ? (/^image\//.test(p.inlineData.mimeType) ? { type: "image", source: { type: "base64", media_type: p.inlineData.mimeType, data: p.inlineData.data } } : p.inlineData.mimeType === "application/pdf" ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: p.inlineData.data } } : null) : p.text ? { type: "text", text: p.text } : p.functionResponse && lastIds[k] ? { type: "tool_result", tool_use_id: lastIds[k++], content: JSON.stringify((p.functionResponse.response || {}).result ?? p.functionResponse.response ?? {}).slice(0, 30000) } : null).filter(Boolean);
       if (content.length) msgs.push({ role: "user", content });
       lastIds = [];
     }
@@ -155,27 +156,83 @@ async function viaClaude(system, contents, body, deep, send) {
   }
 }
 
+
+// ---------- إعدادات المساعد وصلاحيات الأعضاء (data/ask-config.json + profiles.role/perms) ----------
+const SW = () => require("../lib/switch");
+async function profileOf(req, user) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY, tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!user || !url) return { role: "guest", perms: [] };
+  try { const r = await fetch(url + "/rest/v1/profiles?select=role,perms&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } }); const j = r.ok ? await r.json() : []; return { role: (j[0] && j[0].role) || "member", perms: (j[0] && j[0].perms) || [] }; } catch (e) { return { role: "member", perms: [] }; }
+}
+const STAFF = r => /^(admin|partner|editor)$/.test(r);
+function allowed(cfg, feat, prof, perm) { const v = ((cfg && cfg.features) || {})[feat] || "perm"; if (v === "off") return false; if (v === "all") return prof.role !== "guest" || feat === "stt"; if (STAFF(prof.role)) return true; if (v === "staff") return false; return (prof.perms || []).includes(perm); }
+// تفريغ الصوت إلى نص (البحث الصوتي، وأسئلة المساعد المسجلة، والملفات الصوتية المرفوعة)
+async function sttGemini(b64, mime, hint) {
+  const prompt = "فرّغ الكلام العربي في هذا التسجيل حرفيًّا بدقة عالية، بالإملاء الصحيح للمصطلحات الشرعية والعلمية وأسماء الكتب والأعلام (مثل: صلى الله عليه وسلم، رضي الله عنه، ابن تيمية، صحيح البخاري). أخرج النص وحده بلا مقدمة." + (hint ? "\nسياق مساعد: " + String(hint).slice(0, 300) : "");
+  for (const m of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter(Boolean)) {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ inlineData: { mimeType: mime, data: b64 } }, { text: prompt }] }], generationConfig: { temperature: 0 } }) }).catch(() => null);
+    if (r && r.ok) { const j = await r.json(); const t = ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || "").join("").trim(); if (t) return t; }
+  }
+  return "";
+}
+// المصادر الخارجية: بحث Google المؤسَّس وقراءة الروابط (Gemini) مقصورًا على المواقع التي اختارها العضو أو أذنت بها الإدارة
+async function webContext(q, web, cfg) {
+  if (!process.env.GEMINI_API_KEY || !q) return "";
+  const okDom = d => cfg.webAnyDomain || (cfg.webDomains || []).some(x => d === x || d.endsWith("." + x));
+  const urls = (web.urls || []).filter(u => /^https?:\/\//.test(u)).slice(0, 5).filter(u => { try { return okDom(new URL(u).hostname.replace(/^www\./, "")); } catch (e) { return false; } });
+  const sites = (web.sites || []).map(x => String(x).replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]).filter(okDom).slice(0, 6);
+  if (!urls.length && !sites.length) return "";
+  const prompt = "ابحث عن جواب السؤال التالي في المصادر المحددة فقط، وانقل النصوص المهمة بألفاظها بين «» مع رابط كل نقل واسم الموقع، ثم ملخصًا قصيرًا. لا تضف من عندك.\nالسؤال: " + q.slice(0, 1500) + (sites.length ? "\nالمواقع: " + sites.map(x => "site:" + x).join(" OR ") : "") + (urls.length ? "\nالروابط: " + urls.join("\n") : "");
+  try { const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + (process.env.GEMINI_WEB_MODEL || "gemini-flash-latest") + ":generateContent", { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], tools: [{ google_search: {} }, { url_context: {} }], generationConfig: { temperature: 0.2, maxOutputTokens: 3000 } }) });
+    if (!r.ok) return ""; const j = await r.json(), t = ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || "").join("").trim();
+    return t ? "\n\nنتائج من مصادر خارجية اختارها العضو (ليست من المكتبة؛ إذا نقلت منها فاذكر اسم الموقع ورابطه صراحةً، ولا تحِلها بصيغة [[...]]، وميّزها عن نصوص المكتبة):\n" + t.slice(0, 12000) : ""; } catch (e) { return ""; }
+}
+const STYLE = { naql: "اعتمد على النقل: أكثر من النصوص المنقولة بألفاظها من الكتب مع الإحالة، وأقلّ من كلامك.", tahlil: "اعتمد على التحليل: انقل الشواهد الأساسية ثم حلّلها وبيّن وجه الدلالة.", istintaj: "اعتمد على الاستنتاج: استخلص النتائج والفوائد من النصوص بعد إيرادها، مع بيان أنها استنتاج.", mix: "وازن بين النقل والتحليل والاستنتاج." };
+const FORM = { generated: "صُغ الجواب بأسلوبك العلمي الفصيح المتصل، مع الإحالات.", composed: "ركّب الجواب من النقول نفسها منسقةً بين عناوين وروابط قصيرة منك تربط بينها، دون إعادة صياغتها." };
+
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("ask", res, "المساعد العلمي")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
   if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY && !process.env.GROQ_API_KEY) return res.status(503).json({ code: "no_key", error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
   const body = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
+  const cfg = await SW().json("data/ask-config.json", { features: {} }) || { features: {} };
+  if (body.op === "stt") {  // البحث الصوتي وأسئلة المساعد المسجلة
+    const u0 = await userFrom(req), p0 = await profileOf(req, u0), ip = String(req.headers["cf-connecting-ip"] || req.headers["x-forwarded-for"] || "ip").split(",")[0];
+    if (!allowed(cfg, "stt", p0, "ask_vision")) return res.status(403).json({ error: "التفريغ الصوتي غير متاح." });
+    if (!process.env.GEMINI_API_KEY) return res.status(503).json({ error: "لم يُضبط مفتاح التفريغ." });
+    if (typeof body.audio !== "string" || body.audio.length > 14e6 || !/^audio\/|^video\/webm/.test(String(body.mime))) return res.status(400).json({ error: "ملف صوتي غير صالح (الحد نحو ١٠ ميجابايت)." });
+    if (limited("stt:" + (u0 ? u0.id : ip), true)) return res.status(429).json({ error: "كثرت الطلبات، حاول بعد قليل." });
+    const text = await sttGemini(body.audio, body.mime, body.hint).catch(() => "");
+    return res.status(text ? 200 : 502).json(text ? { text } : { error: "تعذّر التفريغ" });
+  }
   const contents = sanitize(body.contents);
   if (!contents) return res.status(400).json({ error: "محادثة غير صالحة أو طويلة جدًا؛ ابدأ محادثة جديدة." });
   const user = await userFrom(req);
   if (!user) return res.status(401).json({ error: "سجّل الدخول لاستخدام المساعد العلمي." });
-  if (limited(user.id, !body.round)) return res.status(429).json({ error: "بلغت حد الأسئلة في الساعة، حاول بعد قليل." });
+  const prof = await profileOf(req, user);
+  // المرفقات (صور وملفات وصوت): لمن أذنت له الإدارة؛ وإلا تُحذف ويُنبَّه
+  let dropped = false; const visOk = allowed(cfg, "vision", prof, "ask_vision");
+  if (!visOk) contents.forEach(c => { const n = c.parts.length; c.parts = c.parts.filter(p => !p.inlineData); if (c.parts.length < n) dropped = true; if (!c.parts.length) c.parts.push({ text: "(مرفق)" }); });
+  const lim = (cfg.limits || {})[STAFF(prof.role) ? "staff" : (prof.perms || []).some(x => /^ask_/.test(x)) ? "perm" : "member"];
+  if (limited(user.id, !body.round, lim)) return res.status(429).json({ error: "بلغت حد الأسئلة في الساعة، حاول بعد قليل." });
+  const ENG = cfg.engines || {}, engine = allowed(cfg, "models", prof, "ask_models") && ["claude", "gemini", "groq"].includes(body.engine) && ENG[body.engine] !== false ? body.engine : (ENG[cfg.defaultEngine] !== false && cfg.defaultEngine !== "auto" ? cfg.defaultEngine : "auto");
   const mode = S.MODES[body.mode] ? body.mode : "ask", col = ["dawah", "turath"].includes(body.col) ? body.col : "", bookId = typeof body.bookId === "string" ? body.bookId.slice(0, 80) : "";
   const deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(mode);
   let system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
     (col ? "\nنطاق البحث: " + (col === "turath" ? "المكتبة العامة فقط." : "كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وفتاواهم فقط.") : "") +
     (bookId ? "\nنطاق البحث: كتاب واحد معرفه " + bookId + "." : "") +
     "\nاليوم: " + new Date().toISOString().slice(0, 10) + ".";
-  if (!body.round) { const lastQ = (contents[contents.length - 1].parts.find(x => x.text) || {}).text; system += await expand(lastQ); }
+  const st = body.style || {}; if (STYLE[st.basis]) system += "\nأسلوب الجواب: " + STYLE[st.basis]; if (FORM[st.form]) system += "\n" + FORM[st.form];
+  system += "\nميّز في جوابك بين النقل (بين «» مع الإحالة) والتحليل والاستنتاج، ونسّق الجواب بعناوين وقوائم وجداول عند الحاجة، بعربية فصيحة سليمة النحو والإملاء." + (cfg.extra ? "\nتوجيه الإدارة: " + String(cfg.extra).slice(0, 2000) : "");
+  if (contents.some(c => c.parts.some(p => p.inlineData))) system += "\nفي المحادثة مرفقات (صور أو ملفات أو صوت) من العضو: اقرأها وحلّلها بحسب سؤاله، وإن كانت نصًّا مصوّرًا فانقل نصه بدقة قبل التعليق عليه.";
+  if (!body.round) { const lastQ = (contents[contents.length - 1].parts.find(x => x.text) || {}).text; system += await expand(lastQ);
+    if (body.web && allowed(cfg, "web", prof, "ask_web")) system += await webContext(lastQ, body.web, cfg); }
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
   res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" });
   const send = o => res.write(JSON.stringify(o) + "\n");
-  if (process.env.ANTHROPIC_API_KEY && await require("../lib/switch").on("ask_claude")) {
+  if (dropped) send({ t: "status", v: "تحليل المرفقات غير مفعّل لحسابك؛ أُرسل السؤال بلا مرفقات." });
+  if (engine === "groq" && process.env.GROQ_API_KEY) { if (await viaGroq(system, contents, body, deep, send)) return res.end(); }
+  if (engine !== "gemini" && engine !== "groq" && process.env.ANTHROPIC_API_KEY && await require("../lib/switch").on("ask_claude")) {
     if (await viaClaude(system, contents, body, deep, send)) return res.end();
     if (!process.env.GEMINI_API_KEY) { send({ t: "error", code: "server", v: "تعذر الاتصال بنموذج الذكاء الاصطناعي." }); return res.end(); }
     send({ t: "status", v: "يجرّب نموذجًا بديلًا…" });

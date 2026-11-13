@@ -766,8 +766,8 @@ async function ixTabs(b){try{if(!IXL)IXL=await (await fetch("data/idx/_list.json
   const pg=p=>`<span class="mut">${esc(PL(b,p-1)||"ص "+toAr(p))}</span>`,go=p=>`href="#/book/${b.id}/${p}" data-act="closeSheet"`;
   L.innerHTML=(k==="q"?ix.q.map(([t,r,p])=>`<a ${go(p)}><span class="ixq">﴿${esc(t)}﴾</span>${r?` <em class="ixr">[${esc(r)}]</em>`:""} ${pg(p)}</a>`):k==="h"?ix.h.map(([t,p])=>`<a ${go(p)}>«${esc(t)}» ${pg(p)}</a>`):ix.a.map(([t,ps])=>`<a ${go(ps[0])}>${esc(t)} <span class="mut">${ps.slice(0,8).map(p=>esc(PL(b,p-1)||toAr(p))).join("، ")}${ps.length>8?"…":""}</span></a>`)).join("")+'<p class="mut ixn">فهرس مستخرج آليًا، وقد يفوته شيء أو يدخله ما ليس منه.</p>'}}
 function gotoSheet(){const c=cur();if(!c)return;const n=c.b.pages.length;
- openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="number" min="1" max="${n}" value="${c.p}" aria-label="رقم الصفحة"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p></form>`,
- ()=>{const sync=v=>{$("#gp").value=v;$("#gr").value=v;$("#gl").textContent=(PL(c.b,v-1)||"")+" "+chapterOf(c.b,v)};$("#gr").oninput=e=>sync(+e.target.value);$("#gp").oninput=e=>sync(Math.max(1,Math.min(n,+e.target.value||1)))})}
+ openSheet("الانتقال إلى صفحة",`<form data-form="goto" data-id="${c.b.id}"><div class="stepper"><input id="gp" name="p" type="text" inputmode="numeric" value="${c.p}" aria-label="رقم الصفحة" style="width:7em"><span class="mut">من ${n}</span><button class="btn p">انتقال</button></div><input id="gr" type="range" min="1" max="${n}" value="${c.p}" aria-label="شريط الصفحات"><p class="mut" id="gl">${esc(PL(c.b,c.p-1)||"")} ${esc(chapterOf(c.b,c.p))}</p>${PL(c.b,0)!==undefined&&PL(c.b,Math.min(n,5)-1)?`<label class="chk"><input type="checkbox" name="pr" value="1"> الرقم المكتوب برقم صفحة الكتاب المطبوع</label>`:""}</form>`,
+ ()=>{const sync=v=>{$("#gp").value=v;$("#gr").value=v;$("#gl").textContent=(PL(c.b,v-1)||"")+" "+chapterOf(c.b,v)};$("#gr").oninput=e=>sync(+e.target.value);$("#gp").oninput=e=>{const v=+String(e.target.value).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9]/g,"");if(v){$("#gr").value=Math.min(n,v)}}})}
 function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.favs.includes(b.id);
  openSheet("أدوات القراءة",`${b.pages.length>1?`<form class="stepper" data-form="inbook" data-id="${b.id}"><input name="h" type="search" value="${esc(parse().q.h||"")}" placeholder="بحث داخل ${art?"المقال":"الكتاب"}" aria-label="بحث داخل الكتاب"><button class="btn p">بحث</button></form>`:""}
  <div class="tools-grid">
@@ -2149,11 +2149,12 @@ const NAV=(()=>{const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getI
  openSheet=function(){const r=_os.apply(this,arguments);NAV.mopen();return r};
  closeSheet=function(){const sh=$("#sheet"),was=sh&&!sh.hidden;const r=_cs.apply(this,arguments);if(was)NAV.mclose();return r};
  const d=$("#dlg");if(d)d.addEventListener("close",()=>NAV.mclose())}
-function go(h,replace){const sameBook=(a,b)=>{const m=x=>(String(x).match(/^\/book\/([^/?]+)/)||[])[1];return m(a)&&m(a)===m(b)};
+function go(h,replace){if(history.state&&history.state.m&&NAV.skip){addEventListener("popstate",()=>setTimeout(()=>go(h,replace),0),{once:true});return} // إغلاق نافذة للتو: يُنتظر رجوعها أولًا وإلا أعاد الرجوعُ الصفحةَ السابقة
+ const sameBook=(a,b)=>{const m=x=>(String(x).match(/^\/book\/([^/?]+)/)||[])[1];return m(a)&&m(a)===m(b)};
  // تقليب صفحات الكتاب نفسه لا يضيف خطوات، فالرجوع يعود إلى ما قبل الكتاب لا إلى الصفحة السابقة
  if(sameBook(toPath(h),location.pathname))replace=true;
  if(replace)history.replaceState(null,"",toPath(h));else history.pushState(null,"",toPath(h));route();NAV.ui()}
-window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#/")){history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
+window.addEventListener("hashchange",()=>{if(NAV.skip&&location.hash.startsWith("#/")){const h=location.hash;addEventListener("popstate",()=>setTimeout(()=>go(h),0),{once:true});return}if(location.hash.startsWith("#/")){history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
 window.addEventListener("popstate",()=>{
  if(NAV.skip){NAV.skip=false;NAV.mark();return}
  // زر رجوع الجهاز مع نافذة مفتوحة: تُغلق النافذة؛ فإن كانت الخطوة خطوتها (m) انتهى الأمر، وإلا أُعيد الرابط كما كان
@@ -2247,7 +2248,9 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  else if(k==="struct")saveStruct(f);else if(k==="authedit")saveAuthor(f);else if(k==="bookmeta")saveBookMeta(f);
  else if(k==="ghlogin")ghLogin(f);else if(k==="ghpdf")ghPdf(f);else if(k==="addpost")addPost(f);
  else if(k==="contact"){window.open(waLink(`${fd.get("k")} — من: ${fd.get("n")}\n\n${fd.get("m")}\n\n(مرسلة من مكتبة الدعوة السلفية الرقمية)`),"_blank","noopener")}
- else if(k==="goto"){closeSheet();location.hash=`#/book/${f.dataset.id}/${fd.get("p")}`}
+ else if(k==="goto"){const b=B(f.dataset.id),n=(b&&b.pages&&b.pages.length)||1,raw=String(fd.get("p")||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)),v=parseInt(raw.replace(/[^0-9]/g,""),10);if(!v)return toast("اكتب رقم الصفحة");
+  let t=Math.max(1,Math.min(n,v));if(fd.get("pr")){for(let i=0;i<n;i++){const l=String(PL(b,i)||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9]/g,"");if(l&&+l===v){t=i+1;break}}}
+  closeSheet();if(SCR.io)SCR.io.disconnect();LASTREAD=null;go(`#/book/${f.dataset.id}/${t}`)}
  else if(k==="inbook"){const b=B(f.dataset.id),h=String(fd.get("h")||"").trim();if(h){closeSheet();IBS.open(b,h);return}if(!h)return location.hash=`#/book/${b.id}/${parse().p[2]}`;const w=norm(h).split(/\s+/).filter(Boolean),cur=+parse().p[2]||1;
   closeSheet();for(let j=1;j<=b.pages.length;j++){const x=(cur-1+j)%b.pages.length;const t=norm(plain(b.pages[x]));if(w.every(k2=>t.includes(k2)))return location.hash=`#/book/${b.id}/${x+1}?h=${encodeURIComponent(h)}`}
   // الكتاب متعدد المجلدات (ب3-41): إن لم يوجد في هذا المجلد يُبحث في المجلدات التالية ثم السابقة
