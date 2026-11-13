@@ -1375,3 +1375,19 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .arbtq .arbqa{display:block;font-family:"Amiri Quran",Amiri,serif;font-size:1.45rem;line-height:2.1;margin:6px 0}.arbtq mark{background:color-mix(in srgb,var(--gold,#b88a2e) 30%,transparent);border-radius:4px}
 .arbbig2{font-family:"Amiri Quran",Amiri,serif;font-size:2rem}.arbres.ok{border-color:#2a9d7c}.arbres.no{border-color:#c0392b}
 .arbnext{list-style:none;padding:0;line-height:2}.arbnext li{border-bottom:1px dashed var(--line);padding:2px 0}.arbsci{display:inline-block;min-width:7.5em;font-size:.82rem;font-weight:700;color:var(--gold,#b88a2e)}
+/* الطلائع: أزرار عصرية ثلاثية الأبعاد وأصوات (TSFX) */
+.tsfxb{margin-inline-start:auto;border:0;background:rgba(255,255,255,.9);border-radius:999px;width:34px;height:34px;font-size:1.05rem;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15);transition:transform .12s}.tsfxb:active{transform:translateY(2px)}
+.tala.kids .talah{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tala.kids .tmo,.tala.kids .talaopt{border:0;border-radius:16px;padding:10px 18px;font-weight:700;font-size:1.02rem;color:#fff;background:linear-gradient(180deg,#4cc9f0,#4361ee);box-shadow:0 5px 0 #3a0ca3;transition:transform .1s,box-shadow .1s;cursor:pointer}
+.tala.kids .tmo:nth-child(4n+2),.tala.kids .talaopt:nth-child(4n+2){background:linear-gradient(180deg,#ff8fab,#f72585);box-shadow:0 5px 0 #b5179e}
+.tala.kids .tmo:nth-child(4n+3),.tala.kids .talaopt:nth-child(4n+3){background:linear-gradient(180deg,#ffd166,#f4a261);box-shadow:0 5px 0 #c2410c}
+.tala.kids .tmo:nth-child(4n+4),.tala.kids .talaopt:nth-child(4n+4){background:linear-gradient(180deg,#7ee8c4,#06a77d);box-shadow:0 5px 0 #047857}
+.tala.kids .tmo:hover,.tala.kids .talaopt:hover{transform:translateY(-2px)}.tala.kids .tmo:active,.tala.kids .talaopt:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.tala.kids .tmo.right,.tala.kids .talaopt.right{background:linear-gradient(180deg,#34d399,#059669)!important;box-shadow:0 5px 0 #065f46!important;animation:tppop .4s}
+.tala.kids .tmo.wrong,.tala.kids .talaopt.wrong{background:linear-gradient(180deg,#bdbdbd,#8a8a8a)!important;box-shadow:0 5px 0 #616161!important;animation:tpshake .4s}
+.tala.kids .tmq{border:0;border-radius:20px;box-shadow:0 5px 0 rgba(58,12,163,.1);padding:14px 16px}.tala.kids .tmq .row{gap:10px;flex-wrap:wrap}
+.tala.kids .card{border-radius:20px;transition:transform .15s}.tala.kids .card:hover{transform:translateY(-3px) rotate(-.4deg)}
+.tmans{margin-top:8px;padding:8px 12px;border-radius:12px;background:#ecfdf5;color:#065f46;border-inline-start:4px solid #10b981}.tmans summary{cursor:pointer;font-weight:700}
+.tpcongrats{font-size:1.15rem;font-weight:800;color:#7b2cbf;animation:tppop .6s}
+.tmprog{height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;margin:8px 0}.tmprog i{display:block;height:100%;background:linear-gradient(90deg,#06d6a0,#ffd166,#f72585);transition:width .4s}
+:root[data-theme=dark] .tmans{background:#063b2c;color:#a7f3d0}:root[data-theme=dark] .tsfxb{background:#2a2140;color:#fff}

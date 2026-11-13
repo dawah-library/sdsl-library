@@ -2,6 +2,42 @@
    أكمل الحديث وراوي الحديث (الأربعون النووية ورياض الصالحين من قسم الحديث)، ومن أي سورة؟ (جزء عمّ من مصحف المكتبة)،
    أكمل البيت (تحفة الأطفال من قسم المتون)، وتمارين الأساس والبنيان المعتمدة إجاباتها (data/tala-ex.json + tala-ex-ok.json)،
    ومسابقة اليوم (أسئلة واحدة للجميع كل يوم) وسباق الدقيقة. محرّك أسئلة واحد بخيارات ملونة ونجوم واحتفال. */
+/* أصوات الطلائع (TSFX): فقاعات ونغمات مولَّدة بالمتصفح (WebAudio) بلا ملفات، وعبارات تشجيع إسلامية بحسب الجنس
+   («أحسنتَ» للبنين و«أحسنتِ» للبنات، وتهنئة الإتمام) من assets/clips (tools/voice-clips.py)، وإلا بصوت الجهاز. كتم الصوت محفوظ على الجهاز. */
+const TSFX = (() => {
+  let AC = null, IDX = null; const muted = () => { try { return localStorage.getItem("tsfx_off") === "1"; } catch (e) { return false; } };
+  const ac = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); return AC; } catch (e) { return null; } };
+  const tone = (f0, f1, t0, d, type, vol) => { const c = ac(); if (!c) return; const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+    o.type = type || "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || .18, t + .012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + d + .02); };
+  const bubble = () => { if (muted()) return; for (let i = 0; i < 3; i++) tone(260 + Math.random() * 220, 900 + Math.random() * 500, i * .07, .09, "sine", .14); };
+  const chime = () => { if (muted()) return; [523, 659, 784, 1046].forEach((f, i) => tone(f, f * 1.01, i * .09, .28, "triangle", .12)); };
+  const soft = () => { if (muted()) return; tone(330, 220, 0, .25, "sine", .1); };
+  const fanfare = () => { if (muted()) return; [523, 659, 784, 659, 784, 1046].forEach((f, i) => tone(f, f, i * .13, .32, "triangle", .13)); setTimeout(() => { for (let i = 0; i < 8; i++) tone(300 + Math.random() * 600, 1200, i * .06, .1, "sine", .08); }, 800); };
+  // الجنس: قسم الصفحة (s=g) ثم ملف الطفل الحالي في «ركن الوالدين»
+  const sex = () => { try { const q = (location.hash.split("?")[1] || ""); const m = q.match(/(?:^|&)s=([bg])(?:&|$)/); if (m) return m[1];
+    const T = (typeof S !== "undefined" && S.tala) || {}, k = (T.kids || []).find(x => x.id === T.cur) || (T.kids || [])[0]; return k && k.g === "g" ? "g" : "b"; } catch (e) { return "b"; } };
+  const TXT = { b: { ok: ["أحسنتَ!", "أحسنتَ، بارك الله فيك!", "ما شاء الله، أحسنتَ!", "أحسنتَ يا بطل!", "زادك الله علمًا!", "جزاك الله خيرًا، إجابة صحيحة!"], no: ["حاولْ مرة أخرى، أنت تستطيع!", "لا بأس، راجعِ الدرس وحاولْ من جديد."], done: ["مبارك! أتممتَ التمرين بنجاح، زادك الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتَ المسابقة."] },
+    g: { ok: ["أحسنتِ!", "أحسنتِ، بارك الله فيكِ!", "ما شاء الله، أحسنتِ!", "أحسنتِ يا بطلة!", "زادكِ الله علمًا!", "جزاكِ الله خيرًا، إجابة صحيحة!"], no: ["حاولي مرة أخرى، أنتِ تستطيعين!", "لا بأس، راجعي الدرس وحاولي من جديد."], done: ["مبارك! أتممتِ التمرين بنجاح، زادكِ الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتِ المسابقة."] } };
+  const word = kind => { const L = TXT[sex()][kind]; return { i: Math.floor(Math.random() * L.length), L }; };
+  const loadIdx = () => IDX || (IDX = fetch("assets/clips/index.json").then(r => r.ok ? r.json() : []).catch(() => []));
+  let last = 0;
+  async function say(kind) {
+    if (muted() || Date.now() - last < 900) return; last = Date.now(); const g = sex(), { i, L } = word(kind), id = "tala-" + g + "-" + kind + (i + 1), ix = await loadIdx();
+    if (ix.includes(id)) { try { const a = new Audio("assets/clips/" + id + ".mp3"); a.volume = .9; await a.play(); return; } catch (e) { } }
+    try { if (!window.speechSynthesis) return; const u = new SpeechSynthesisUtterance(L[i]); u.lang = "ar-SA"; u.rate = .95; u.pitch = g === "g" ? 1.25 : 1.05;
+      const v = speechSynthesis.getVoices().filter(x => /^ar/i.test(x.lang)); if (v.length) u.voice = v.find(x => g === "g" ? /female|zariyah|salma|hoda|laila|amira/i.test(x.name) : /male|hamed|shakir|naayf|tarik/i.test(x.name)) || v[0];
+      speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { } }
+  const text = kind => { const { i, L } = word(kind); return L[i]; };
+  const right = () => { bubble(); setTimeout(chime, 120); setTimeout(() => say("ok"), 450); };
+  const wrong = () => { soft(); setTimeout(() => say("no"), 300); };
+  const done = good => { fanfare(); setTimeout(() => say(good === false ? "no" : "done"), 1300); };
+  const toggle = () => { const m = !muted(); try { localStorage.setItem("tsfx_off", m ? "1" : "0"); } catch (e) { } return !m; };
+  const btn = () => `<button class="tsfxb" data-act="tsfx" title="الأصوات" aria-label="تشغيل الأصوات أو كتمها">${muted() ? "🔇" : "🔊"}</button>`;
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act=tsfx]"); if (!el) return; const on = toggle(); document.querySelectorAll(".tsfxb").forEach(b => b.textContent = on ? "🔊" : "🔇"); if (on) bubble(); });
+  return { bubble, chime, right, wrong, done, say, text, sex, btn, muted };
+})();
+
 const TPLAY = (() => {
   const GAMES = [["daily", "مسابقة اليوم", "عشرة أسئلة جديدة كل يوم من كتب المكتبة — الجميع يجيب الأسئلة نفسها", "🎯"],
     ["race", "سباق الدقيقة", "أجب أكبر عدد من الأسئلة في ٦٠ ثانية!", "⏱️"],
@@ -61,9 +97,9 @@ const TPLAY = (() => {
     const E = ((await getj("data/tala-ex.json")) || {}).items || [], OK = ((await getj("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/tala-ex-ok.json?t=" + Math.floor(Date.now() / 300e3))) || {}).ok || {};
     const key = x => x.b + ":" + x.p + ":" + norm(x.q).slice(0, 40), ser = k === "t3" ? "bunyan" : "asas";
     const L = E.filter(x => (x.k === "tf" || x.k === "mcq") && key(x) in OK && (x.s === ser || k === "t4"));
-    return mix(L).slice(0, n).map(x => { const v = OK[key(x)], lk = "#/book/" + x.b + "/" + (x.lp || x.p), sub = "من درس «" + (x.l || "") + "»";
-      if (x.k === "tf") return { q: x.q, o: ["✅ صح", "❌ خطأ"], a: v === true || v === 1 || v === "1" ? 0 : 1, sub, why: x.why || "", link: lk, tag: "📚" };
-      const o = (x.o || []).slice(); return { q: x.q, o, a: +v, sub, why: x.why || "", link: lk, tag: "📚" }; }).filter(x => x.o.length >= 2 && x.a >= 0 && x.a < x.o.length);
+    return mix(L).slice(0, n).map(x => { const v = OK[key(x)], QX = String(x.q || "").replace(/\(\s*(?:[✓✗×]|&nbsp[؛;]?\s*)+\s*\)/g, "").trim(), lk = "#/book/" + x.b + "/" + (x.lp || x.p), sub = "من درس «" + (x.l || "") + "»";
+      if (x.k === "tf") return { q: QX, o: ["✅ صح", "❌ خطأ"], a: v === true || v === 1 || v === "1" ? 0 : 1, sub, why: x.why || "", link: lk, tag: "📚" };
+      const o = (x.o || []).slice(); return { q: QX, o, a: +v, sub, why: x.why || "", link: lk, tag: "📚" }; }).filter(x => x.o.length >= 2 && x.a >= 0 && x.a < x.o.length);
   }
   const fromQZ = (qz, n) => mix(qz || []).slice(0, n).map(([q, a, ...w]) => mk(q, a, w, { sub: "سؤال معرفة:", tag: "🏆" }));
   // ---------- الألعاب اللغوية ----------
@@ -143,17 +179,17 @@ const TPLAY = (() => {
     const x = G.L[G.i], i = +el.dataset.i, ok = i === x.a;
     if (G0) { const h = G0.hq(x); if (!G0.QS.includes(h)) { G0.QS.push(h); if (G0.QS.length > 3000) G0.QS.splice(0, 500); } }
     document.querySelectorAll(".tpbtn").forEach(b => { b.disabled = true; if (+b.dataset.i === x.a) b.classList.add("right"); });
-    if (ok) { G.s++; G.streak++; burst(el); } else { el.classList.add("wrong"); G.streak = 0; }
+    if (ok) { G.s++; G.streak++; burst(el); TSFX.right(); } else { el.classList.add("wrong"); G.streak = 0; TSFX.wrong(); }
     if (G.end) { setTimeout(() => { G.i++; if (G.i >= G.L.length) finish(); else draw(); }, ok ? 350 : 900); return; }
     const fb = document.getElementById("tpfb"); fb.hidden = false; fb.className = "tpfb " + (ok ? "ok" : "no");
-    fb.innerHTML = `<b>${ok ? ["أحسنت! ⭐", "رائع! 🌟", "ممتاز! 🎉", "بارك الله فيك! 💚"][Math.floor(Math.random() * 4)] : "لا بأس، الصحيح مظلل بالأخضر 💪"}</b>${x.why ? `<p>${esc(x.why)}</p>` : ""}<div class="row">${x.link ? `<a class="btn s" href="${x.link}">📖 من المكتبة</a>` : ""}<button class="btn p" data-act="tp-next">التالي ←</button></div>`;
+    fb.innerHTML = `<b>${ok ? TSFX.text("ok") + " " + ["⭐", "🌟", "🎉", "💚"][Math.floor(Math.random() * 4)] : "لا بأس، الصحيح مظلل بالأخضر 💪"}</b>${x.why ? `<p>${esc(x.why)}</p>` : ""}<div class="row">${x.link ? `<a class="btn s" href="${x.link}">📖 من المكتبة</a>` : ""}<button class="btn p" data-act="tp-next">التالي ←</button></div>`;
   }
   function finish() {
     clearInterval(TM); const n = G.end ? G.i : G.L.length, sc = G.s, r = n ? sc / n : 0, stars = G.end ? Math.min(5, Math.floor(sc / 3)) : r >= .9 ? 3 : r >= .6 ? 2 : sc ? 1 : 0;
-    if (stars) CTX.star(stars);
+    if (stars) CTX.star(stars); TSFX.done(stars > 0);
     const T = S.tala = S.tala || { stars: 0, done: {} }; if (G.g === "daily") { T.daily = T.daily || {}; T.daily[G.day + G.k] = sc; }
     T.best = T.best || {}; const bk = G.g + G.k, best = T.best[bk] || 0, nb = sc > best; if (nb) T.best[bk] = sc; saveS();
-    view(CTX.head(name(G.g), true) + `<div class="tpwin"><div class="tpbig">${r >= .9 || (G.end && sc >= 12) ? "🏆" : r >= .6 || (G.end && sc >= 6) ? "🥈" : "🌱"}</div><h2>${G.end ? "انتهى السباق!" : "انتهت الجولة!"}</h2>
+    view(CTX.head(name(G.g), true) + `<div class="tpwin"><div class="tpbig">${r >= .9 || (G.end && sc >= 12) ? "🏆" : r >= .6 || (G.end && sc >= 6) ? "🥈" : "🌱"}</div><h2>${G.end ? "انتهى السباق!" : "انتهت الجولة!"}</h2>${stars ? `<p class="tpcongrats">${esc(TSFX.text("done"))}</p>` : ""}
       <p class="tpscore">${AR(sc)} ${G.end ? "إجابة صحيحة في دقيقة" : "من " + AR(n)}</p><p>${"⭐".repeat(stars) || "حاول مرة أخرى، ستنجح بإذن الله!"}</p>${nb && best ? `<p class="tpfire">🎊 رقم قياسي جديد! (السابق ${AR(best)})</p>` : best && !nb ? `<p class="mut">أفضل نتيجة لك: ${AR(best)}</p>` : ""}
       <div class="row" style="justify-content:center">${G.g !== "daily" ? `<a class="btn p" href="#/talaea/games?g=${G.g}&k=${G.k}&r=${Date.now()}">🔁 مرة أخرى</a>` : ""}<a class="btn" href="#/talaea">🌟 كل الألعاب</a></div></div></div>`);
   }
