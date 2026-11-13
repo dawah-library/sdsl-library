@@ -3,6 +3,12 @@ on:
   workflow_dispatch:
   push:
     paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-rev.py", "tools/hadith-grades.py"]
+  # الكتب المستوردة حديثًا (صحيح ابن خزيمة وابن حبان والمستدرك والمصنفات والمعاجم…) تدخل القسم آليًا بعد استيرادها
+  workflow_run:
+    workflows: ["استيراد كتب التراث من OpenITI", "استيراد كتب التراث المشكولة من الشاملة"]
+    types: [completed]
+  schedule:
+    - cron: "17 5 * * 1"  # أسبوعيًا احتياطًا
 permissions:
   contents: write
 jobs:

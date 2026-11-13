@@ -7,11 +7,19 @@
 وdata/hadith/k/_list.json. يُحمَّل كل كتاب عند طلبه فلا يثقل القسم."""
 import json, os, re, glob
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); OUT = os.path.join(D, "hadith", "k")
-BOOKS = [("bukhari", "صحيح البخاري"), ("muslim", "صحيح مسلم"), ("abudawud", "سنن أبي داود"), ("tirmidhi", "جامع الترمذي"), ("nasai", "سنن النسائي"), ("ibnmajah", "سنن ابن ماجه"), ("muwatta", "موطأ مالك"), ("darimi", "سنن الدارمي")]
+BOOKS = [("bukhari", "صحيح البخاري"), ("muslim", "صحيح مسلم"), ("abudawud", "سنن أبي داود"), ("tirmidhi", "جامع الترمذي"), ("nasai", "سنن النسائي"), ("ibnmajah", "سنن ابن ماجه"), ("muwatta", "موطأ مالك"), ("darimi", "سنن الدارمي"),
+         # كتب السنة المشهورة الأخرى (طلب المدير ١٣ نوفمبر): ما كان نصه في المكتبة يُستخرج الآن، وما يُستورد (tools/turath-list.json) يُستخرج حين يصل
+         ("musnadahmad", "مسند الإمام أحمد"), ("sunankubra", "السنن الكبرى للبيهقي"), ("shuabiman", "شعب الإيمان للبيهقي"), ("adabmufrad", "الأدب المفرد للبخاري"),
+         ("shamail", "الشمائل المحمدية للترمذي"), ("amalyawm", "عمل اليوم والليلة لابن السني"), ("baghawisunna", "شرح السنة للبغوي"),
+         ("ibnkhuzayma", "صحيح ابن خزيمة"), ("ibnhibban", "صحيح ابن حبان"), ("mustadrak", "المستدرك على الصحيحين للحاكم"), ("daraqutni", "سنن الدارقطني"),
+         ("nasaikubra", "السنن الكبرى للنسائي"), ("ibnabishayba", "مصنف ابن أبي شيبة"), ("abdrazzaq", "مصنف عبد الرزاق"), ("tayalisi", "مسند أبي داود الطيالسي"),
+         ("humaydi", "مسند الحميدي"), ("abuyala", "مسند أبي يعلى الموصلي"), ("tabaranikabir", "المعجم الكبير للطبراني"), ("tabaraniawsat", "المعجم الأوسط للطبراني"),
+         ("tabaranisaghir", "المعجم الصغير للطبراني"), ("ibnjarud", "المنتقى لابن الجارود"), ("saidmansur", "سنن سعيد بن منصور"), ("tahawimaani", "شرح معاني الآثار للطحاوي"),
+         ("abuawana", "مستخرج أبي عوانة"), ("bazzar", "مسند البزار"), ("musnadshafii", "مسند الشافعي")]
 DIA = re.compile(r"[ً-ْٰـ]")
 def nz(s): s = DIA.sub("", s or ""); s = re.sub("[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه"); return re.sub(r"\s+", " ", s).strip()
 AR = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
-START = re.compile(r"^\s*#?\s*(?:\(?\s*([\d٠-٩]{1,5})\s*\)?\s*[-–.]?\s*)?(?:و)?(?:حدثنا|حدثني|حدثناه|حدثنيه|أخبرنا|أخبرني|أخبرناه|أنبأنا|أنبأني|ثنا|نا)\b")
+START = re.compile(r"^\s*#?\s*(?:\(?\s*([\d٠-٩]{1,5})\s*\)?\s*[-–.]?\s*)?(?:\(\s*([\d٠-٩]{1,5})\s*\)\s*[-–.]?\s*)?(?:و)?(?:حدثنا|حدثني|حدثناه|حدثنيه|أخبرنا|أخبرني|أخبرناه|أنبأنا|أنبأني|ثنا|نا)\b")
 NUMLINE = re.compile(r"^\s*#?\s*([\d٠-٩]{1,5})\s*[-–]\s*$")
 PROPHET = r"(?:رسول الله|النبي|نبي الله)"
 def sahabi(t):
@@ -46,13 +54,18 @@ def parse(bid):
     def close():
         nonlocal cur
         if cur:
-            t = re.sub(r"\s+", " ", " ".join(cur["l"])).strip(); m = matn(t)
-            if len(nz(m)) >= 12: items.append([cur["n"], cur["v"], cur["p"], kitab, bab, sahabi(t), " ".join(nz(m).split()[:7]), m])
+            t = re.sub(r"\s+", " ", " ".join(cur["l"])).strip(); t0 = DIA.sub("", t); m = matn(t)
+            if re.match(r"^(?:و)?(?:حدثنا|حدثني|أخبرنا|أخبرني|أنبأنا)", DIA.sub("", m)): m = matn(t0)  # النص المشكول: صيغ البحث تعمل على المجرد
+            if len(nz(m)) >= 12: items.append([cur["n"], cur["v"], cur["p"], kitab, bab, sahabi(t0), " ".join(nz(m).split()[:7]), m])
         cur = None
     for vid, p, pg in pages_of(bid):
         for line in re.sub(r"<[^>]+>", "", pg.split("______")[0]).split("\n"):
-            l = line.strip()
-            if not l: continue
+            lv = line.strip()
+            if not lv: continue
+            # نسخ الشاملة المشكولة (١٣ نوفمبر): التشكيل يمنع مطابقة «حدثنا» و«باب» و«كتاب»، فهبط البخاري إلى ٤٤ حديثًا ومسلم والترمذي والنسائي إلى صفر.
+            # فالتعرف على البنية من النص المجرد، والمتن يُحفظ بتشكيله.
+            l = DIA.sub("", lv)
+            if l.startswith("[قال الشيخ") or l in ("صحيح", "حسن", "ضعيف"): continue  # حكم الألباني الملحق بنسخة الشاملة
             mn = NUMLINE.match(l)
             if mn: pend = int(mn.group(1).translate(AR)); continue
             h = l.lstrip("#").strip()
@@ -61,11 +74,12 @@ def parse(bid):
             if re.match(r"^\(?\s*(?:[\d٠-٩]+\s*[-–]?\s*)?باب\b", h) and len(h) < 220: close(); bab = re.sub(r"^\(?\s*[\d٠-٩]+\s*[-–]?\s*|\)\s*$", "", h)[:160]; continue
             m = START.match(l)
             if m:
-                close(); seq += 1; NUMD[0] += 1 if (m.group(1) or pend) else 0; n = int(m.group(1).translate(AR)) if m.group(1) else (pend or seq); pend = None
-                cur = {"n": n, "v": vid, "p": p, "l": [re.sub(r"^\s*#?\s*\(?\s*[\d٠-٩]{1,5}\s*\)?\s*[-–.]?\s*", "", l)]}
+                close(); seq += 1; NUMD[0] += 1 if (m.group(1) or pend) else 0; g1 = m.group(2) or m.group(1)  # «١ - (٨)» في مسلم: الأول تسلسل الكتاب، وما بين القوسين الرقم المعتمد (عبد الباقي)
+                n = int(g1.translate(AR)) if g1 else (pend or seq); pend = None
+                cur = {"n": n, "v": vid, "p": p, "l": [re.sub(r"^\s*#?\s*(?:\(?\s*[\d٠-٩]{1,5}\s*\)?\s*[-–.]?\s*){1,2}", "", lv)]}
             elif cur is not None and not l.startswith("#"):
                 if re.match(r"^قال (?:أبو عيسى|أبو داود|أبو عبد الرحمن|مالك|أبو محمد)", l): close(); continue  # كلام المصنف بعد الحديث
-                cur["l"].append(l)
+                cur["l"].append(lv)
     close()
     return items
 def main():

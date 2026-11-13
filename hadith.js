@@ -74,7 +74,7 @@ const HDS = (() => {
         ${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u({ q: qq, pg: pg - 1 })}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u({ q: qq, pg: pg + 1 })}">التالية</a>` : ""}</div>` : ""}`; }
     return body;
   }
-  // البحث في كتب السنة الثمانية كلها مع المختارات، وكل نتيجة تفتح في موضعها من القسم
+  // البحث في كتب السنة كلها مع المختارات، وكل نتيجة تفتح في موضعها من القسم
   async function kutubSearch(qq) {
     const box = document.createElement("section"); box.id = "hdks"; box.className = "stsec"; box.innerHTML = '<h3>في كتب السنة</h3><p class="mut">جارٍ البحث في الصحيحين والسنن والموطأ…</p>';
     const anchor = $(".pgn") || [...document.querySelectorAll(".hdc")].pop() || $("#hdq"); if (!anchor) return; anchor.after(box);
@@ -112,7 +112,7 @@ const HDS = (() => {
     if (t === "kutub") { side = await kutub(q); L = []; }
     if (t === "fav") { side = HDX.favHtml(q.f); L = []; }
     const showList = qq || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
-    view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة الثمانية (الصحيحان والسنن الأربع والموطأ والدارمي، نحو ٣٩ ألف حديث) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
+    view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة المشهورة (الصحيحان والسنن الأربع والموطأ والدارمي ومسند أحمد وسنن البيهقي الكبرى وشعب الإيمان والأدب المفرد والشمائل وعمل اليوم والليلة وشرح السنة للبغوي، نحو مئة ألف حديث، وتُضاف إليها الكتب الأخرى تباعًا) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
     <div class="row"><button class="btn s" data-act="hdoff">${offState("hadith", "قسم الحديث")}</button></div>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
@@ -189,7 +189,7 @@ const HDS = (() => {
    (data/hadith/links/_rev/<ملف الشرح>.json من tools/hadith-rev.py). */
 const HDREV = (() => { const C = new Map(); let last = "";
   const get = f => C.get(f) || (C.set(f, fetch("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/links/_rev/" + f + ".json").then(r => r.ok ? r.json() : null).catch(() => null)), C.get(f));
-  const NAMES = { bukhari: "صحيح البخاري", muslim: "صحيح مسلم", abudawud: "سنن أبي داود", tirmidhi: "سنن الترمذي", nasai: "سنن النسائي", ibnmajah: "سنن ابن ماجه", muwatta: "الموطأ", darimi: "سنن الدارمي", arbain: "الأربعين النووية", riyad: "رياض الصالحين", bulugh: "بلوغ المرام" };
+  const NAMES = { bukhari: "صحيح البخاري", muslim: "صحيح مسلم", abudawud: "سنن أبي داود", tirmidhi: "سنن الترمذي", nasai: "سنن النسائي", ibnmajah: "سنن ابن ماجه", muwatta: "الموطأ", darimi: "سنن الدارمي", musnadahmad: "مسند أحمد", sunankubra: "السنن الكبرى للبيهقي", shuabiman: "شعب الإيمان", adabmufrad: "الأدب المفرد", shamail: "الشمائل المحمدية", amalyawm: "عمل اليوم والليلة", baghawisunna: "شرح السنة للبغوي", ibnkhuzayma: "صحيح ابن خزيمة", ibnhibban: "صحيح ابن حبان", mustadrak: "المستدرك", daraqutni: "سنن الدارقطني", nasaikubra: "السنن الكبرى للنسائي", ibnabishayba: "مصنف ابن أبي شيبة", abdrazzaq: "مصنف عبد الرزاق", arbain: "الأربعين النووية", riyad: "رياض الصالحين", bulugh: "بلوغ المرام" };
   async function paint() { const m = location.pathname.match(/^\/book\/([^/]+)\/(\d+)/); if (!m) return; const key = m[1] + ":" + m[2]; if (key === last) return; last = key;
     const d = await get(m[1]); const old = document.getElementById("hdrev"); if (old) old.remove(); if (!d || !d[m[2]]) return;
     const host = document.querySelector("#rb") || document.querySelector(".rd"); if (!host) return;
@@ -200,12 +200,12 @@ const HDREV = (() => { const C = new Map(); let last = "";
 })();
 
 /* قسم الحديث — تحسينات مستفادة من تطبيقات الحديث المتخصصة (طلب المدير):
-   نطاق البحث (الصحيحان، السنن الأربع، الكتب الستة، الثمانية) وسجل البحث بتاريخه؛ وفي صفحة الحديث: سطر البيانات (الرقم والكتاب والباب)،
+   نطاق البحث (الصحيحان، السنن الأربع، الكتب الستة، المسانيد والمصنفات، الكل) وسجل البحث بتاريخه؛ وفي صفحة الحديث: سطر البيانات (الرقم والكتاب والباب)،
    وتلوين الإسناد (الرواة بالأزرق والصحابي بالأحمر)، وتبويب ما تحته (تخريج • حكم • رواة • شرح • ملاحظات)، وزر عائم لأدوات الحديث
    (البحث في الكتاب، الفهرس، الانتقال إلى رقم، نسخ التخريج العلمي، المشاركة، الحفظ في مجلد)، ومجلدات المفضلة على الجهاز. */
 const HDX = (() => {
   const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
-  const SCOPES = [["sahihain", "الصحيحان", ["bukhari", "muslim"]], ["sunan", "السنن الأربع", ["abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["sitta", "الكتب الستة", ["bukhari", "muslim", "abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["all", "الكتب الثمانية", null]];
+  const SCOPES = [["sahihain", "الصحيحان", ["bukhari", "muslim"]], ["sunan", "السنن الأربع", ["abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["sitta", "الكتب الستة", ["bukhari", "muslim", "abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["masanid", "المسانيد والمصنفات والسنن الأخرى", ["musnadahmad", "darimi", "sunankubra", "shuabiman", "baghawisunna", "ibnkhuzayma", "ibnhibban", "mustadrak", "daraqutni", "nasaikubra", "ibnabishayba", "abdrazzaq", "tayalisi", "humaydi", "abuyala", "tabaranikabir", "tabaraniawsat", "tabaranisaghir", "ibnjarud", "saidmansur", "tahawimaani", "abuawana", "bazzar", "musnadshafii"]], ["all", "كل كتب السنة", null]];
   const scope = () => { const k = LS("hd_scope") || "all", x = SCOPES.find(s => s[0] === k); return x ? x[2] : null; };
   const remember = q => { if (!q) return; const L = (LS("hd_recent") || []).filter(x => x.q !== q); L.unshift({ q, at: Date.now() }); LS("hd_recent", L.slice(0, 20)); };
   function searchExtras() { const f = document.getElementById("hdq"); if (!f || f.dataset.hdx) return; f.dataset.hdx = 1; const k = LS("hd_scope") || "all", R = LS("hd_recent") || [];

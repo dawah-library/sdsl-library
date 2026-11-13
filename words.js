@@ -275,7 +275,7 @@ async function hadithSheet(sel) {
 // المدخل يخص الكلمة: يبدأ بها، أو يذكر جذرها بين قوسين كما في «النهاية» (طرق)
 const hdHead = (t, w, kk) => { t = String(t || ""); let rs = []; try { rs = roots(w) || []; } catch (e) { } return norm(t.slice(0, 40)).replace(/^\W+/, "").startsWith(kk) || rs.some(r => r && t.slice(0, 200).includes("(" + r + ")")); };
 // أقسام نافذة الحديث: مواضعه في كتب السنة (فهرس البحث)، وغريب كلماته (النهاية والمعاجم)، والشرح الإجمالي والفوائد (المساعد مستندًا إلى شروح المكتبة)
-const HD_SUNNA = /^(bukhari|muslim|abudawud|tirmidhi|nasai|ibnmajah|musnadahmad|muwatta|darimi|sunankubra|riyad|bulugh|umdaahkam|arbain|adabmufrad|shamail|masabih|jamiusul|shuabiman|baghawisunna|talkhishabir)(-v\d+)?$/;
+const HD_SUNNA = /^(bukhari|muslim|abudawud|tirmidhi|nasai|ibnmajah|musnadahmad|muwatta|darimi|sunankubra|riyad|bulugh|umdaahkam|arbain|adabmufrad|shamail|masabih|jamiusul|shuabiman|baghawisunna|talkhishabir|amalyawm|ibnkhuzayma|ibnhibban|mustadrak|daraqutni|nasaikubra|ibnabishayba|abdrazzaq|tayalisi|humaydi|abuyala|tabaranikabir|tabaraniawsat|tabaranisaghir|ibnjarud|saidmansur|tahawimaani|abuawana|bazzar|musnadshafii)(-v\d+)?$/;
 async function hdExtra(st, txt, core) {
   const words = [...new Set(core.split(/\s+/).map(w => w.replace(/[^\u0621-\u064A]/g, "")).filter(w => w.length >= 4))].slice(0, 30);
   // ١- مواضعه في كتب السنة
