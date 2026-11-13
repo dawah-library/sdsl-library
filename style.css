@@ -1505,3 +1505,4 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .hrhit{animation:hrhit 2.4s ease-out}@keyframes hrhit{from{background:color-mix(in srgb,var(--ac) 18%,transparent)}to{background:transparent}}
 .hrtools{flex-wrap:wrap;gap:8px;align-items:center}.hrtools select{max-width:100%;flex:1 1 220px}.hrpg{flex-wrap:wrap;justify-content:center}
 .hrh .hdm{color:inherit}
+.fns.only{margin-top:0;border-top:0}.fns.only .fnt{font-weight:700}

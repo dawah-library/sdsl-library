@@ -327,8 +327,11 @@ def img_part(img):
     return {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(open(img, "rb").read()).decode()}}
 
 
+BOOKHINT = ""  # تعليمات خاصة بالكتاب (ocrHint في الفهرس)، مثل طبقات الشرح والتعليق في كتب الشروح
+
+
 def gemini_page(img, draft=""):
-    t = gemini_call([img_part(img), {"text": PROMPT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
+    t = gemini_call([img_part(img), {"text": PROMPT + BOOKHINT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
     return t.replace("[صفحة بلا نص]", "").strip() if t else None
 
 
@@ -342,7 +345,7 @@ def gemini_batch(imgs, drafts):
         parts += [{"text": "===== صفحة %d =====" % k}, img_part(img)]
         if d.strip(): parts.append({"text": "مسودات الصفحة %d من أدوات تعرّف ضوئي أخرى:\n<<<\n%s\n>>>" % (k, d[:9000])})
     hint = "لكل صفحة صورتها ومسودة أو مسودتان من أدوات تعرّف ضوئي أخرى قد تحتوي أخطاء. اعتمد على الصورة أولًا وقارن بالمسودات (ما اتفقت عليه المسودتان والصورة فهو ثابت)، " if any(d.strip() for d in drafts) else "لكل صفحة صورتها. اقرأ كل صورة بعناية حرفًا حرفًا، "
-    parts.append({"text": PROMPT + "\n\nأمامك %d صفحات متتالية، %sوما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), hint, len(imgs))})
+    parts.append({"text": PROMPT + BOOKHINT + "\n\nأمامك %d صفحات متتالية، %sوما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), hint, len(imgs))})
     t = gemini_call(parts, max_tokens=min(60000, 4000 * len(imgs)))
     if not t: return None
     pieces = SEP.split(t)
@@ -998,7 +1001,7 @@ def plan():
                 try: nbad[b["id"]] = sum(1 for t in json.load(open(os.path.join(DATA, "books", b["id"] + ".json"), encoding="utf-8"))["pages"] if page_bad(t))
                 except Exception: nbad[b["id"]] = 0
             # كل كتاب محوَّل يُدقَّق تلقائيًا دون انتظار طلب الإدارة (طلب المدير ٦ نوفمبر)؛ والطلب المباشر يقدّمه في الترتيب
-            need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"])) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"]) or b["id"] in req) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             # الإنجاز أولًا: الأقرب إلى الاكتمال يُتم قبل غيره ليتأهل للنشر المدقق والتسجيل الصوتي، بدل توزيع الحصة على كل الكتب فلا يكتمل منها شيء
             rem = lambda b: (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) + nbad.get(b["id"], 0)
             need.sort(key=lambda b: (reql.index(b["id"]) if b["id"] in req else len(reql), 0 if (b.get("col") or "dawah") == "dawah" or b.get("upl") else 1, rem(b)))
@@ -1058,11 +1061,14 @@ def rereview(bid):
     uncp = [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev]
     bad = [i for i in range(len(sh["pages"])) if page_bad(sh["pages"][i])]  # الصفحات المشوهة أولًا (كاشف الجودة) ولو لم تكن معلَّمة
     unrev = sorted(set(unrev) | set(bad))
-    order = bad + [i for i in unrev if i not in bad] + uncp + [i for i in lite if i not in unrev and i not in uncp]
+    focus = [i for i in (sh.get("focus") or []) if 0 <= i < len(sh["pages"])]  # صفحات طلب المدير إعادة قراءتها أولًا (مثل امتداد تعليق الشارح)
+    order = focus + [i for i in bad if i not in focus] + [i for i in unrev if i not in bad and i not in focus] + [i for i in uncp if i not in focus] + [i for i in lite if i not in unrev and i not in uncp and i not in focus]
     idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
     pmap = sh.get("pmap") or []  # صفحة النص ← صفحة المصورة (من أداة المطابقة) إن اختلف الترتيب
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
+    global BOOKHINT
+    BOOKHINT = ("\n- تعليمات خاصة بهذا الكتاب: " + b["ocrHint"]) if b and b.get("ocrHint") else ""
     pdf = local_pdf(bid) if idx else None
     if not idx or not pdf: print("لا شيء لتدقيقه في", bid); return
     print("== تدقيق %s: %d صفحة (فاتتها المراجعة %d، خفيفة %d، فيها شك %d)" % (bid, len(idx), len(unrev), len(lite), len(unc0)), flush=True)
@@ -1088,6 +1094,11 @@ def rereview(bid):
         else: lite2.discard(i)
         if k in UNCERTAIN: unc[str(i)] = UNCERTAIN[k]
         else: unc.pop(str(i), None)
+    if sh.get("focus"):  # ما قُرئ من صفحات الأولوية يخرج منها، والباقي للجولة التالية
+        done_ = {i for k, i in enumerate(idx) if k < len(new) and k not in UNREVIEWED}
+        rest_ = [i for i in sh["focus"] if i not in done_]
+        if rest_: sh["focus"] = rest_
+        else: sh.pop("focus", None)
     for key, val in (("unrev", sorted(left)), ("lite", sorted(lite2)), ("unc", unc)):
         if val: sh[key] = val
         else: sh.pop(key, None)
