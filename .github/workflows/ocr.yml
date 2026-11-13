@@ -25,7 +25,6 @@ permissions:
   models: read
   id-token: write
 env:
-  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}  # تنزيل الكتب المرفوعة من صندوق الرفع مباشرة
   OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
 concurrency:
   group: ocr
@@ -159,7 +158,6 @@ jobs:
       - name: المراجعة والحفظ
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
           GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}

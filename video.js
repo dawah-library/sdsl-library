@@ -11,7 +11,7 @@ const VIDX = (() => {
   const fmt = s => toAr(Math.floor(s / 60)) + ":" + toAr(String(s % 60).padStart(2, "0"));
   const may = () => isAdmin() || can("video");
   const OPT = {
-    style: [["summary", "ملخص الكتاب"], ["review", "مراجعة وأسئلة"], ["benefits", "أبرز الفوائد والدروس"], ["story", "سرد قصصي متسلسل"], ["faq", "أسئلة شائعة وأجوبتها"], ["quotes", "مختارات من أقوال المؤلف"], ["intro", "تعريف ترويجي قصير"], ["lesson", "درس تعليمي مبسط"], ["features", "مميزات الكتاب ومنهجه"], ["critique", "قراءة نقدية منصفة"], ["part", "الحديث عن جزء أو باب منه"]],
+    style: [["summary", "ملخص الكتاب"], ["review", "مراجعة وأسئلة"], ["benefits", "أبرز الفوائد والدروس"], ["story", "سرد قصصي متسلسل"], ["faq", "أسئلة شائعة وأجوبتها"], ["quotes", "مختارات من أقوال المؤلف"], ["intro", "تعريف ترويجي قصير"], ["lesson", "درس تعليمي مبسط"]],
     min: [["2", "دقيقتان"], ["4", "٤ دقائق"], ["6", "٦ دقائق"], ["10", "١٠ دقائق"], ["15", "١٥ دقيقة"]],
     aud: [["general", "عموم المسلمين"], ["students", "طلاب العلم"], ["youth", "الشباب"], ["kids", "الأطفال"], ["women", "النساء والفتيات"]],
     tone: [["calm", "هادئ وقور"], ["warm", "دافئ مؤثر"], ["lively", "حيوي معتدل"], ["teach", "تعليمي مبسط"]],
@@ -25,7 +25,7 @@ const VIDX = (() => {
     const adm = may(), [L, DX] = await Promise.all([list(true), adm ? getj("data/video/drafts/_index.json", {}) : {}]), bid = q.b;
     if (q.d && adm) return montage(q.d);
     const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid)).reverse();
-    view(`<div class="cmhero"><div><h2>🎬 مراجعات الكتب بالفيديو</h2><p>استعراض الكتب في فيديوهات تعليمية: ملخصها، ومراجعتها، ومميزاتها ومنهجها، وقراءة نقدية منصفة لها، والحديث عن بعض أبوابها؛ تعدّها إدارة المكتبة ومن تفوّضه، للمشاهدة والتنزيل والمشاركة.</p></div></div>
+    view(`<div class="cmhero"><div><h2>🎬 فيديوهات الكتب</h2><p>ملخص الكتاب أو مراجعته أو فوائده في دقائق: مشاهد بعناوينها ونقاطها، وراوٍ بألفاظ المؤلف، للمشاهدة والتنزيل والمشاركة.</p></div></div>
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
         <label>الكتاب</label><input name="t" list="vidbooks" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب اسم الكتاب ثم اختره" required><datalist id="vidbooks">${lib.books.filter(b => !b.demo && !isArt(b) && !VOL2(b)).slice(0, 3000).map(b => `<option value="${esc(b.setTitle || b.title)}">`).join("")}</datalist>
         <label>نمط الفيديو</label>${radios("style", "summary")}
