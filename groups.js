@@ -6,7 +6,13 @@ const GRP = (() => {
   const sb = () => Auth.sb, need = () => { if (!Auth.user || !sb()) { view(`<div class="note">سجّل الدخول لتشارك. <a href="#/account">الدخول</a></div>`); return true; } return false; };
   const rpc = async (f, a) => { const { data, error } = await sb().rpc(f, a || {}); if (error) throw new Error(error.message); return data; };
   const T = b => b ? (b.setTitle || b.title) : "", D = s => s ? new Date(s).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }) : "";
-  const dayOf = g => Math.floor((Date.now() - new Date(g.start_date + "T00:00:00").getTime()) / 864e5) + 1;
+  // الجدول الأسبوعي (week_days: 0 الأحد … 6 السبت): الوِرد في الأيام المختارة فقط، والمواعيد بتوقيت مكة
+  const WD = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  const wk = g => { const w = (g.week_days || []).filter(x => x >= 0 && x <= 6); return w.length && w.length < 7 ? w : null; };
+  const sessDate = (g, k) => { const w = wk(g), d0 = new Date(g.start_date + "T12:00:00+03:00"); if (!w) return new Date(+d0 + (k - 1) * 864e5); let n = 0; for (let i = 0; i < 3000; i++) { const d = new Date(+d0 + i * 864e5); if (w.includes(d.getUTCDay())) { n++; if (n === k) return d; } } return d0; };
+  const dayOf = g => { const w = wk(g), t = MKT.day(); if (!w) return Math.floor((new Date(t + "T12:00:00+03:00") - new Date(g.start_date + "T12:00:00+03:00")) / 864e5) + 1;
+    let n = 0; for (let k = 1; k <= g.days; k++) { if (MKT.day(sessDate(g, k)) <= t) n = k; else break; } return n; };
+  const isToday = (g, k) => MKT.day(sessDate(g, k)) === MKT.day();
   const range = (g, k) => { const n = g.end_page - g.start_page + 1, per = Math.ceil(n / g.days), a = g.start_page + (k - 1) * per; return [Math.min(a, g.end_page), Math.min(a + per - 1, g.end_page)]; };
   const err = e => toast(e.message || String(e));
   const bookOpts = sel => BOOKS().filter(b => !b.demo && !b.hidden && !VOL2(b)).sort((x, y) => T(x).localeCompare(T(y), "ar")).map(b => `<option value="${b.id}"${b.id === sel ? " selected" : ""}>${esc(T(b))} — ${esc(A(b.authorId).name)}</option>`).join("");
@@ -28,7 +34,7 @@ const GRP = (() => {
     openSheet(req ? "طلب قراءة جماعية من الإدارة" : "قراءة جماعية جديدة", `<form id="grf" data-form="noop" class="grform">
       <label>الكتاب</label><select name="b">${bookOpts(b0 && b0.id)}</select>
       <label>عنوان القراءة</label><input name="t" required maxlength="120" value="${b0 ? esc("قراءة جماعية: " + T(b0)) : ""}">
-      <div class="row"><div><label>تبدأ</label><input type="date" name="s" value="${today()}"></div><div><label>عدد الأيام</label><input type="number" name="d" min="1" max="365" value="14"></div><div><label>الموعد</label><input type="time" name="tm" value="21:00"></div></div>
+      <div class="row"><div><label>تبدأ</label><input type="date" name="s" value="${today()}"></div><div><label>عدد الأوراد (الجلسات)</label><input type="number" name="d" min="1" max="365" value="14"></div><div><label>الموعد (بتوقيت مكة)</label><input type="time" name="tm" value="21:00"></div></div><label>أيام القراءة في الأسبوع</label><div class="chips grwd">${WD.map((n, i) => `<label class="chip"><input type="checkbox" name="wd" value="${i}" checked> ${n}</label>`).join("")}</div><p class="mut" style="font-size:.8rem">ألغِ اختيار الأيام التي لا قراءة فيها، فتُوزَّع الأوراد على الأيام المختارة وحدها، ويُذكَّر المشاركون في موعدها.</p>
       <div class="row"><div><label>من صفحة</label><input type="number" name="f" min="1" value="1"></div><div><label>إلى صفحة</label><input type="number" name="to" min="1" placeholder="آخر الكتاب"></div></div>
       ${req ? "" : `<label>المشاركة</label><select name="v"><option value="public">عامة: يراها الأعضاء وينضمون</option><option value="invite">بالدعوة فقط</option></select>
       <label>ادعُ أعضاء (اكتب جزءًا من الاسم)</label><input id="grinv" autocomplete="off" placeholder="ابحث عن عضو"><div id="grsug" class="chips"></div><div id="grsel" class="chips"></div>`}
@@ -41,6 +47,7 @@ const GRP = (() => {
         $("#grsel").onclick = e => { const x = e.target.closest("[data-x]"); if (!x) return; sel.delete(x.dataset.x); x.remove(); }; }
       f.addEventListener("submit", async e => { e.preventDefault(); const b = B(f.b.value); if (!b) return; const st = $("#grst"); st.textContent = "جارٍ…";
         try { const id = await rpc("gr_create", { p_book: b.id, p_title: f.t.value.trim(), p_note: f.n.value.trim() || null, p_start: f.s.value || today(), p_days: +f.d.value || 14, p_from: +f.f.value || 1, p_to: +f.to.value || b.n || 1, p_time: f.tm.value, p_vis: f.v ? f.v.value : "public", p_invite: [...sel.keys()], p_official: !!req || isAdmin() });
+          const wds = [...f.querySelectorAll("[name=wd]:checked")].map(x => +x.value); if (wds.length && wds.length < 7) { try { await rpc("gr_set_days", { g: id, wd: wds }); } catch (e3) { toast("تعذّر حفظ أيام الأسبوع: " + e3.message); } }
           closeSheet(); toast(req ? "أُرسل الطلب إلى الإدارة" : "بدأت القراءة الجماعية"); location.hash = "#/group/" + id; } catch (e2) { st.textContent = e2.message; } });
     });
   }
@@ -54,13 +61,13 @@ const GRP = (() => {
     const members = (board || []).filter(x => x.status === "joined"), allDays = members.length * g.days, tot = members.reduce((s, x) => s + +x.days_done, 0);
     const days = Array.from({ length: g.days }, (_, i) => i + 1);
     view(`<div class="cmhero"><div><h2>${esc(g.title)}</h2><p>${esc(T(b))} — ${esc(A(b && b.authorId).name || "")}</p></div></div>
-    <p>${g.official ? '<em class="tag">من الإدارة</em> ' : ""}من ${D(g.start_date)} لمدة ${toAr(g.days)} يومًا • الصفحات ${toAr(g.start_page)}–${toAr(g.end_page)} • الورد نحو ${toAr(Math.ceil((g.end_page - g.start_page + 1) / g.days))} صفحة يوميًا • الموعد ${esc(g.read_time || "")}</p>${g.note ? `<p class="note">${esc(g.note)}</p>` : ""}
+    <p>${g.official ? '<em class="tag">من الإدارة</em> ' : ""}من ${D(g.start_date)}${wk(g) ? ` • ${toAr(g.days)} وِردًا في أيام: ${wk(g).map(x => WD[x]).join("، ")} (حتى ${D(MKT.day(sessDate(g, g.days)))})` : ` لمدة ${toAr(g.days)} يومًا`} • الصفحات ${toAr(g.start_page)}–${toAr(g.end_page)} • الورد نحو ${toAr(Math.ceil((g.end_page - g.start_page + 1) / g.days))} صفحة ${wk(g) ? "في كل جلسة" : "يوميًا"} • الموعد ${esc(g.read_time || "")}</p>${g.note ? `<p class="note">${esc(g.note)}</p>` : ""}
     <div class="row">${joined ? `<a class="btn p" href="#/book/${g.book_id}/${range(g, Math.min(Math.max(d, 1), g.days))[0]}">اقرأ ورد اليوم</a><button class="btn" data-act="grleave" data-g="${g.id}">مغادرة</button>` : g.status === "active" ? `<button class="btn p" data-act="grjoin" data-g="${g.id}">انضم إلى القراءة</button>` : ""}
     ${(owner || adm) ? `<button class="btn" data-act="grinvite" data-g="${g.id}">دعوة أعضاء</button>${g.status !== "done" ? `<button class="btn" data-act="grst" data-g="${g.id}" data-s="done">إنهاء</button>` : ""}` : ""}
     ${adm && g.status === "requested" ? `<button class="btn p" data-act="grst" data-g="${g.id}" data-s="active" data-o="1">اعتماد وإعلان من الإدارة</button>` : ""}<button class="btn" data-act="grshare" data-g="${g.id}">مشاركة</button></div>
     <h3>خط الإنجاز المشترك</h3><div class="grbar"><i style="width:${allDays ? Math.round(tot * 100 / allDays) : 0}%"></i></div><p class="mut">${toAr(tot)} وِردًا مسجَّلًا من ${toAr(allDays)} • ${toAr(members.length)} مشاركًا</p>
     <h3>الخط الزمني</h3><div class="grdays">${days.map(k => { const [a, z] = range(g, k), dn = done.get(k), past = k < d, now = k === d;
-      return `<div class="grday${dn ? " ok" : past ? " late" : now ? " now" : ""}"><b>${toAr(k)}</b><span>ص ${toAr(a)}–${toAr(z)}</span>${joined && k <= d + 1 ? `<button class="btn s${dn ? "" : " p"}" data-act="grlog" data-g="${g.id}" data-k="${k}" data-p="${z - a + 1}">${dn ? "✓ قرأته" : "سجّل"}</button>` : ""}</div>`; }).join("")}</div>
+      return `<div class="grday${dn ? " ok" : past ? " late" : now ? " now" : ""}"><b>${toAr(k)}</b>${wk(g) ? `<small>${WD[sessDate(g, k).getUTCDay()]} ${new Date(sessDate(g, k)).toLocaleDateString("ar-EG", { day: "numeric", month: "short" })}</small>` : ""}<span>ص ${toAr(a)}–${toAr(z)}</span>${joined && (k <= d || (k === d + 1 && !wk(g))) ? `<button class="btn s${dn ? "" : " p"}" data-act="grlog" data-g="${g.id}" data-k="${k}" data-p="${z - a + 1}">${dn ? "✓ قرأته" : "سجّل"}</button>` : ""}</div>`; }).join("")}</div>
     <p class="mut">يمكنك تسجيل وِرد يوم فاتك متى قرأته؛ والضغط على «✓ قرأته» يلغي التسجيل.</p>
     <h3>المشاركون</h3><div class="sttab"><table><thead><tr><th>العضو</th><th>الأوراد</th><th>الإنجاز</th><th>آخر تسجيل</th></tr></thead><tbody>${(board || []).map(x => `<tr${x.user_id === Auth.user.id ? ' class="me"' : ""}><td>${esc(x.name || "—")}${x.status === "invited" ? ' <em class="tag">مدعو</em>' : x.status === "left" ? ' <em class="tag">غادر</em>' : ""}</td><td>${toAr(x.days_done)} / ${toAr(g.days)}</td><td><div class="grbar sm"><i style="width:${Math.round(x.days_done * 100 / g.days)}%"></i></div></td><td>${x.last_at ? esc(D(x.last_at)) : ""}</td></tr>`).join("")}</tbody></table></div>`);
   }
@@ -141,7 +148,7 @@ const GRP = (() => {
   }
 
   // ———— صلاحيات التفويض (للمدير) ————
-  const PERMS = [["upload", "رفع الكتب والتفريغات والمقالات والكتب المصورة"], ["edit", "تعديل نصوص الكتب وتصحيحها (المراجعة والتدقيق)"], ["export_text", "تنزيل الكتب نصًا قابلًا للتحرير (Word/نص/Markdown كاملة)"], ["kurrasa", "إعداد الكراسات"], ["convert", "تحويل الكتب والمقالات ومراجعتها"], ["tashjir", "التشجير والخرائط الذهنية"], ["stats", "الاطلاع على سجل قراءة الأعضاء"]];
+  const PERMS = [["upload", "رفع الكتب والتفريغات والمقالات والكتب المصورة"], ["edit", "تعديل نصوص الكتب وتصحيحها (المراجعة والتدقيق)"], ["export_text", "تنزيل الكتب نصًا قابلًا للتحرير (Word/نص/Markdown كاملة)"], ["kurrasa", "إعداد الكراسات"], ["convert", "تحويل الكتب والمقالات ومراجعتها"], ["tashjir", "التشجير والخرائط الذهنية"], ["stats", "الاطلاع على سجل قراءة الأعضاء"], ["audio_upload", "رفع الكتب الصوتية وتسجيلاتها إلى قسم الصوتيات"], ["radio", "إدارة جدول البث الإذاعي وقنواته"], ["ask_vision", "رفع الصور والملفات إلى المساعد العلمي والتقني لتحليلها"], ["ask_web", "المصادر الخارجية (مواقع وروابط) في المساعد العلمي"], ["ask_models", "اختيار نماذج الذكاء الاصطناعي في المساعد العلمي"]];
   async function perms() {
     if (!(Cloud.role === "admin" || GH.token)) { view('<div class="note">هذه الصفحة للمدير. سجّل الدخول بحساب المدير.</div>'); return; }
     view(`<h2>صلاحيات التفويض</h2><p class="mut">امنح عضوًا بعينه صلاحية خدمة محددة دون أن يصير مشرفًا. المدير يملكها كلها.</p><input id="pmq" placeholder="ابحث عن عضو بالاسم" autocomplete="off"><div id="pml" style="margin-top:10px"></div>`);

@@ -821,3 +821,21 @@ create trigger profiles_guard_roles before update or delete on public.profiles f
 
 -- ٧ نوفمبر ٢٠٢٦ (مطبَّق): صندوق inbox يقبل صيغ صوت أخرى لرفع تسجيلات التفريغ من الجهاز (الفيديو والأكبر من ٥٠ م.ب يُرفع أجزاءً إلى المستودع)
 update storage.buckets set allowed_mime_types = (select array_agg(distinct m) from unnest(allowed_mime_types || array['audio/flac','audio/x-flac','audio/opus','audio/amr','audio/3gpp','audio/x-aac','audio/m4a','audio/vnd.wave']) m) where id = 'inbox';
+
+-- ١٣ نوفمبر ٢٠٢٦: صلاحيات مفوَّضة جديدة (profiles.perms): audio_upload رفع الكتب الصوتية وتسجيلاتها، radio جدول البث،
+-- ask_vision رفع الصور والملفات إلى المساعدَين، ask_web المصادر الخارجية للمساعد العلمي، ask_models اختيار النماذج.
+-- صاحب audio_upload يرفع إلى صندوق inbox (التسجيلات) كالمشرفين.
+drop policy if exists "inbox audio insert" on storage.objects;
+create policy "inbox audio insert" on storage.objects for insert to authenticated with check (bucket_id = 'inbox' and public.has_perm('audio_upload'));
+drop policy if exists "inbox audio update" on storage.objects;
+create policy "inbox audio update" on storage.objects for update to authenticated using (bucket_id = 'inbox' and public.has_perm('audio_upload'));
+
+-- ١٣ نوفمبر ٢٠٢٦: جدول أسبوعي مرن للقراءة الجماعية (أيام القراءة في الأسبوع: 0 الأحد … 6 السبت؛ فارغ = كل يوم)
+alter table public.group_reads add column if not exists week_days int[];
+create or replace function public.gr_set_days(g bigint, wd int[]) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.group_reads where id = g and (owner = auth.uid() or public.is_staff())) then raise exception 'غير مسموح'; end if;
+  update public.group_reads set week_days = (select array_agg(distinct x order by x) from unnest(wd) x where x between 0 and 6) where id = g;
+end $$;
+grant execute on function public.gr_set_days(bigint, int[]) to authenticated;
