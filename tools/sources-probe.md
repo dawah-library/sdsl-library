@@ -1,77 +1,225 @@
-# استكشاف المصادر — 2026-10-31 17:56
+# استكشاف المصادر — 2026-11-13 18:10
 
-## https://salafvoice.com/article.aspx?a=23022
+## https://www.islamweb.net/ar/articles/
 - الحالة: 200
-- العنوان: ��� ����� | ������� ��������
+- العنوان: 
+- خلاصات: https://www.islamweb.net/rss.xml (23 عنصر)
+- أقسام محتملة:
+  - https://www.islamweb.net/ar/articles/ | مقالات
+  - https://www.islamweb.net/ar/articles/ | المقالات
+  - https://www.islamweb.net/ar/article/249029/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B7%D8%A7%D9%8A%D8%B3-%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D9%84%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D8%A7%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9-%D9%88%D8%A8%D9%82%D8%A7%D8%A1-%D8%A7%D9%84%D8%A3%D8%AB%D8%B1 | الشيخ طايس الجميلي.. رحيل الداعية وبقاء الأثر
+  - https://www.islamweb.net/ar/article/249029/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B7%D8%A7%D9%8A%D8%B3-%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D9%84%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D8%A7%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9-%D9%88%D8%A8%D9%82%D8%A7%D8%A1-%D8%A7%D9%84%D8%A3%D8%AB%D8%B1 | المزيد
+  - https://www.islamweb.net/ar/article/248645/%D8%A7%D9%84%D8%B4%D8%A8%D8%A7%D8%A8-%D9%88%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D9%8A%D8%A7%D8%AA | الشباب ومواجهة التحديات
+  - https://www.islamweb.net/ar/article/248645/%D8%A7%D9%84%D8%B4%D8%A8%D8%A7%D8%A8-%D9%88%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D9%8A%D8%A7%D8%AA | المزيد
+  - https://www.islamweb.net/ar/article/248473/%D8%A7%D9%84%D8%A5%D9%8A%D8%AB%D8%A7%D8%B1-%D8%AD%D9%8A%D9%86-%D9%8A%D9%87%D8%B2%D9%85-%D8%A7%D9%84%D8%A5%D9%86%D8%B3%D8%A7%D9%86-%D8%B4%D9%8F%D8%AD%D9%91%D9%8E-%D9%86%D9%81%D8%B3%D9%87 | الإيثار.. حين يهزم الإنسان شُحَّ نفسه
+  - https://www.islamweb.net/ar/article/248473/%D8%A7%D9%84%D8%A5%D9%8A%D8%AB%D8%A7%D8%B1-%D8%AD%D9%8A%D9%86-%D9%8A%D9%87%D8%B2%D9%85-%D8%A7%D9%84%D8%A5%D9%86%D8%B3%D8%A7%D9%86-%D8%B4%D9%8F%D8%AD%D9%91%D9%8E-%D9%86%D9%81%D8%B3%D9%87 | المزيد
+  - https://www.islamweb.net/ar/article/248482/%D8%A7%D9%84%D8%A3%D8%A8%D8%B1%D8%B5-%D9%88%D8%A7%D9%84%D8%A3%D9%82%D8%B1%D8%B9-%D9%88%D8%A7%D9%84%D8%A7%D8%A8%D8%AA%D9%84%D8%A7%D8%A1-%D8%A8%D8%A7%D9%84%D9%86%D8%B9%D9%85 | الأبرص والأقرع.. والابتلاء بالنعم
+  - https://www.islamweb.net/ar/article/248482/%D8%A7%D9%84%D8%A3%D8%A8%D8%B1%D8%B5-%D9%88%D8%A7%D9%84%D8%A3%D9%82%D8%B1%D8%B9-%D9%88%D8%A7%D9%84%D8%A7%D8%A8%D8%AA%D9%84%D8%A7%D8%A1-%D8%A8%D8%A7%D9%84%D9%86%D8%B9%D9%85 | المزيد
+  - https://www.islamweb.net/ar/article/247870/%D8%A7%D9%84%D9%85%D8%A4%D9%85%D9%86-%D8%A7%D9%84%D9%82%D9%88%D9%8A-%D8%AE%D9%8A%D8%B1-%D9%88%D8%A3%D8%AD%D8%A8-%D8%A5%D9%84%D9%89-%D8%A7%D9%84%D9%84%D9%87 | المؤمن القوي خير وأحب إلى الله
+  - https://www.islamweb.net/ar/article/247870/%D8%A7%D9%84%D9%85%D8%A4%D9%85%D9%86-%D8%A7%D9%84%D9%82%D9%88%D9%8A-%D8%AE%D9%8A%D8%B1-%D9%88%D8%A3%D8%AD%D8%A8-%D8%A5%D9%84%D9%89-%D8%A7%D9%84%D9%84%D9%87 | المزيد
+  - https://www.islamweb.net/ar/article/247972/%D8%A7%D9%84%D8%B3%D8%AA%D8%B1-%D8%A8%D9%8A%D9%86-%D9%86%D8%AF%D8%A7%D8%A1-%D8%A7%D9%84%D9%81%D8%B7%D8%B1%D8%A9-%D9%88%D8%B6%D8%AC%D9%8A%D8%AC-%D8%A7%D9%84%D8%B9%D8%B5%D8%B1 | الستر بين نداء الفطرة وضجيج العصر
+  - https://www.islamweb.net/ar/article/247972/%D8%A7%D9%84%D8%B3%D8%AA%D8%B1-%D8%A8%D9%8A%D9%86-%D9%86%D8%AF%D8%A7%D8%A1-%D8%A7%D9%84%D9%81%D8%B7%D8%B1%D8%A9-%D9%88%D8%B6%D8%AC%D9%8A%D8%AC-%D8%A7%D9%84%D8%B9%D8%B5%D8%B1 | المزيد
+  - https://www.islamweb.net/ar/articles/209/%D9%81%D9%84%D8%B3%D8%B7%D9%8A%D9%86-%D8%A7%D9%84%D8%AC%D8%B1%D8%AD-%D8%A7%D9%84%D9%86%D8%A7%D8%B2%D9%81 | فلسطين .. الجرح النازف
+  - https://www.islamweb.net/ar/articles/579/%D8%A7%D9%84%D8%B1%D8%AD%D9%85%D8%A9-%D8%A7%D9%84%D9%85%D9%87%D8%AF%D8%A7%D8%A9 | الرحمة المهداة
+  - https://www.islamweb.net/ar/articles/69/%D8%A7%D9%84%D8%A3%D8%B3%D8%B1%D8%A9 | الأسرة
+  - https://www.islamweb.net/ar/articles/34/%D8%AF%D8%B9%D9%88%D8%A9-%D9%88%D8%A5%D8%B9%D9%84%D8%A7%D9%85 | دعوة وإعلام
+  - https://www.islamweb.net/ar/articles/19/%D9%84%D9%84%D8%B4%D8%A8%D8%A7%D8%A8-%D9%81%D9%82%D8%B7 | للشباب فقط
+  - https://www.islamweb.net/ar/articles/18/%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE-%D9%88-%D8%AD%D8%B6%D8%A7%D8%B1%D8%A9 | تاريخ و حضارة
+  - https://www.islamweb.net/ar/articles/46/%D8%A3%D8%AE%D9%84%D8%A7%D9%82-%D9%88%D8%AA%D8%B2%D9%83%D9%8A%D8%A9 | أخلاق وتزكية
+  - https://www.islamweb.net/ar/articles/4/%D8%A7%D9%82%D8%B1%D8%A3-%D9%81%D9%8A-%D8%A5%D8%B3%D9%84%D8%A7%D9%85-%D9%88%D9%8A%D8%A8 | اقرأ في إسلام ويب
+  - https://www.islamweb.net/ar/articles/138/%D8%A7%D9%84%D8%B3%D9%8A%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9 | السيرة النبوية
+  - https://www.islamweb.net/ar/articles/174/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9-%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9 | العقيدة الإسلامية
+  - https://www.islamweb.net/ar/articles/172/%D8%A7%D9%84%D8%AD%D8%AF%D9%8A%D8%AB-%D8%A7%D9%84%D8%B4%D8%B1%D9%8A%D9%81 | الحديث الشريف
+- أنماط الروابط الأكثر:
+  - /ar/article/N/SLUG (35)
+  - /ar/articles/N/SLUG (8)
+  - /ar/ (3)
+  - /ar/index.php?… (3)
+  - /ar/articles/ (2)
+  - /ar/fatwa/ (2)
+  - /ar/consult/ (2)
+  - /ar/deaf/ (2)
+  - /ar/article/N/ (2)
+  - /ver3/ar/ (2)
+- عينة روابط:
+  - https://www.islamweb.net/ar/article/249029/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B7%D8%A7%D9%8A%D8%B3-%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D9%84%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D8%A7%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9-%D9%88%D8%A8%D9%82%D8%A7%D8%A1-%D8%A7%D9%84%D8%A3%D8%AB%D8%B1 | الشيخ طايس الجميلي.. رحيل الداعية وبقاء الأثر
+  - https://www.islamweb.net/ar/article/249029/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B7%D8%A7%D9%8A%D8%B3-%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D9%84%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D8%A7%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9-%D9%88%D8%A8%D9%82%D8%A7%D8%A1-%D8%A7%D9%84%D8%A3%D8%AB%D8%B1 | المزيد
+  - https://www.islamweb.net/ar/article/248645/%D8%A7%D9%84%D8%B4%D8%A8%D8%A7%D8%A8-%D9%88%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D9%8A%D8%A7%D8%AA | الشباب ومواجهة التحديات
+  - https://www.islamweb.net/ar/article/248645/%D8%A7%D9%84%D8%B4%D8%A8%D8%A7%D8%A8-%D9%88%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D9%8A%D8%A7%D8%AA | المزيد
+  - https://www.islamweb.net/ar/article/248473/%D8%A7%D9%84%D8%A5%D9%8A%D8%AB%D8%A7%D8%B1-%D8%AD%D9%8A%D9%86-%D9%8A%D9%87%D8%B2%D9%85-%D8%A7%D9%84%D8%A5%D9%86%D8%B3%D8%A7%D9%86-%D8%B4%D9%8F%D8%AD%D9%91%D9%8E-%D9%86%D9%81%D8%B3%D9%87 | الإيثار.. حين يهزم الإنسان شُحَّ نفسه
+  - https://www.islamweb.net/ar/article/248473/%D8%A7%D9%84%D8%A5%D9%8A%D8%AB%D8%A7%D8%B1-%D8%AD%D9%8A%D9%86-%D9%8A%D9%87%D8%B2%D9%85-%D8%A7%D9%84%D8%A5%D9%86%D8%B3%D8%A7%D9%86-%D8%B4%D9%8F%D8%AD%D9%91%D9%8E-%D9%86%D9%81%D8%B3%D9%87 | المزيد
+  - https://www.islamweb.net/ar/article/248482/%D8%A7%D9%84%D8%A3%D8%A8%D8%B1%D8%B5-%D9%88%D8%A7%D9%84%D8%A3%D9%82%D8%B1%D8%B9-%D9%88%D8%A7%D9%84%D8%A7%D8%A8%D8%AA%D9%84%D8%A7%D8%A1-%D8%A8%D8%A7%D9%84%D9%86%D8%B9%D9%85 | الأبرص والأقرع.. والابتلاء بالنعم
+  - https://www.islamweb.net/ar/article/248482/%D8%A7%D9%84%D8%A3%D8%A8%D8%B1%D8%B5-%D9%88%D8%A7%D9%84%D8%A3%D9%82%D8%B1%D8%B9-%D9%88%D8%A7%D9%84%D8%A7%D8%A8%D8%AA%D9%84%D8%A7%D8%A1-%D8%A8%D8%A7%D9%84%D9%86%D8%B9%D9%85 | المزيد
+
+## https://www.alukah.net/sharia/
+- الحالة: 200
+- العنوان: شبكة الألوكة - موقع آفاق الشريعة
+- خلاصات: /RSS/Rss-Feeds.aspx ، /RSS/Rss-Feeds.aspx?t=Sharia ، /RSS/Rss-Feeds.aspx?t=Culture ، /RSS/Rss-Feeds.aspx?t=Social ، /RSS/Rss-Feeds.aspx?t=Fatawa_Counsels ، /RSS/Rss-Feeds.aspx?t=Literature_Language ، /RSS/Rss-Feeds.aspx?t=World_Muslims ، /RSS/Rss-Feeds.aspx?t=Library ، /RSS/Rss-Feeds.aspx?t=Personal_Pages ، /RSS/Rss-Feeds.aspx?t=Publications_Competitions ، /RSS/Rss-Feeds.aspx?t=Translations ، /RSS/Rss-Feeds.aspx?t=Audio_Books
+- أقسام محتملة:
+  - https://www.alukah.net/sharia/1001/ | مقالات شرعية
+  - https://www.alukah.net/sharia/1002/ | دراسات شرعية
+  - https://www.alukah.net/sharia/0/185985/%D8%B3%D9%84%D8%B3%D9%84%D8%A9-%D8%A7%D9%84%D9%81%D8%AA%D8%A7%D9%88%D9%89-3-%D8%A3%D9%86%D9%88%D8%A7%D8%B9-%D8%A7%D9%84%D9%81%D8%AA%D9%88%D9%89/ | سلسلة الفتاوى (3) أنواع الفتوى
+  - https://www.alukah.net/sharia/1044/ | دراسات في العقيدة والتوحيد
+  - https://www.alukah.net/sharia/0/184852/%D9%85%D8%B3%D9%84%D9%85-%D9%8A%D8%A8%D8%AD%D8%AB-%D8%B9%D9%86-%D8%A7%D9%84%D9%8A%D9%82%D9%8A%D9%86-PDF/ | مسلم يبحث عن اليقين (PDF)
+  - https://www.alukah.net/sharia/1046/ | دراسات في الحديث
+  - https://www.alukah.net/sharia/0/183179/%D9%85%D8%B5%D8%B7%D9%84%D8%AD-%D9%84%D8%A7-%D9%8A%D8%AA%D8%B1%D9%83-%D8%B9%D9%86%D8%AF-%D8%A3%D8%A6%D9%85%D8%A9-%D8%A7%D9%84%D9%86%D9%82%D8%AF-%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9-%D8%A7%D8%B3%D8%AA%D9%82%D8%B1%D8%A7%D8%A6%D9%8A%D8%A9-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%D9%8A%D8%A9-PDF/ | مصطلح لا يترك عند أئمة النقد: دراسة استقرائية تطبي
+  - https://www.alukah.net/sharia/1048/ | دراسات في الفقه وأصوله
+  - https://www.alukah.net/sharia/0/185933/%D8%A3%D8%AD%D9%83%D8%A7%D9%85-%D8%A7%D9%84%D8%AA%D9%85%D9%88%D9%84-%D9%88%D8%A7%D9%84%D8%A7%D9%82%D8%AA%D8%B1%D8%A7%D8%B6-%D8%B9%D9%86-%D8%A7%D9%84%D8%BA%D9%8A%D8%B1-%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9-%D9%81%D9%82%D9%87%D9%8A%D8%A9-%D9%85%D9%82%D8%A7%D8%B1%D9%86%D8%A9-PDF/ | أحكام التمول والاقتراض عن الغير: دراسة فقهية مقارن
+  - https://www.alukah.net/sharia/0/184588/%D8%B6%D8%A7%D8%A8%D8%B7-%D8%A7%D9%84%D9%8A%D8%B3%D9%8A%D8%B1-%D8%B9%D9%86%D8%AF-%D8%A7%D9%84%D9%81%D9%82%D9%87%D8%A7%D8%A1-%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9-%D8%A7%D8%B3%D8%AA%D9%82%D8%B1%D8%A7%D8%A6%D9%8A%D8%A9-%D8%AA%D8%A3%D8%B5%D9%8A%D9%84%D9%8A%D8%A9-WORD/ | ضابط اليسير عند الفقهاء: دراسة استقرائية تأصيلية (
+  - https://www.alukah.net/sharia/1047/ | دراسات في السيرة النبوية
+  - https://www.alukah.net/sharia/0/164630/%D8%AA%D8%AE%D8%B1%D9%8A%D8%AC-%D9%88%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9-%D8%AD%D8%AF%D9%8A%D8%AB-%D8%AB%D9%84%D8%A7%D8%AB%D8%A9-%D9%8A%D8%AF%D8%B9%D9%88%D9%86-%D9%81%D9%84%D8%A7-%D9%8A%D8%B3%D8%AA%D8%AC%D8%A7%D8%A8-%D9%84%D9%87%D9%85-%D9%85%D9%86%D9%87%D9%85-%D8%B1%D8%AC%D9%84-%D8%B9%D9%86%D8%AF%D9%87-%D8%A7%D9%85%D8%B1%D8%A3%D8%A9-%D8%B3%D9%8A%D8%A6%D8%A9-%D8%A7%D9%84%D8%AE%D9%84%D9%82-%D9%81%D9%84%D9%85-%D9%8A%D8%B7%D9%84%D9%82%D9%87%D8%A7/ | تخريج ودراسة حديث: "ثلاثة يدعون فلا يستجاب لهم: من
+  - https://www.alukah.net/world_muslims/0/185973/%D9%86%D8%AF%D9%88%D8%A9-%D8%B9%D9%84%D9%85%D9%8A%D8%A9-%D8%AA%D8%A8%D8%AD%D8%AB-%D8%AA%D8%A3%D8%AB%D9%8A%D8%B1-%D8%A7%D9%84%D8%A5%D8%B9%D9%84%D8%A7%D9%85-%D8%A7%D9%84%D8%B1%D9%82%D9%85%D9%8A-%D9%81%D9%8A-%D8%A7%D9%84%D9%87%D9%88%D9%8A%D8%A9-%D8%A7%D9%84%D8%AF%D9%8A%D9%86%D9%8A%D8%A9-%D9%84%D9%84%D8%B4%D8%A8%D8%A7%D8%A8/ | ندوة علمية تبحث تأثير الإعلام الرقمي في الهوية الد
+- أنماط الروابط الأكثر:
+  - /sharia/N/ (30)
+  - /LinkClick.aspx?… (7)
+  - / (3)
+  - /sharia/0/N/%D8%A7%D9%84%D8%B3%D9%84%D8%B3%D9%84%D8%A9-%D8%A7%D9%84%D8%B0%D9%87%D8%A8%D9%8A%D8%A9-%D9%81%D9%8A-%D8%A7%D9%84%D8%B3%D9%8A%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9-5-%D9%86%D8%B2%D9%88%D9%84-%D8%A7%D9%84%D9%88%D8%AD%D9%8A-%D8%AE%D8%B7%D8%A8%D8%A9/ (2)
+  - /sharia/0/N/%D8%AD%D8%AF%D9%8A%D8%AB-%D8%BA%D8%B3%D9%84-%D8%A7%D9%84%D9%81%D8%B1%D8%AC-%D9%84%D9%84%D8%AC%D9%86%D8%A8%D8%8C-%D9%88%D8%A7%D9%84%D9%88%D8%B6%D9%88%D8%A1-%D8%A5%D8%B0%D8%A7-%D8%A3%D8%B1%D8%A7%D8%AF-%D8%A7%D9%84%D9%86%D9%88%D9%85-%D9%88%D9%83%D8%B3%D9%84-%D8%B9%D9%86-%D8%A7%D9%84%D8%A7%D8%BA%D8%AA%D8%B3%D8%A7%D9%84/ (2)
+  - /Register.aspx (2)
+  - /sitemap.aspx (1)
+  - /pages/RSS.aspx (1)
+  - /Guestbook.aspx (1)
+  - /pages/terms_paper.aspx (1)
+- عينة روابط:
+  - https://www.alukah.net/sharia/1001/ | مقالات شرعية
+  - https://www.alukah.net/sharia/1002/ | دراسات شرعية
+  - https://www.alukah.net/sharia/10331/ | نوازل وشبهات
+  - https://www.alukah.net/sharia/1067/ | منبر الجمعة
+  - https://www.alukah.net/sharia/1051/ | روافد
+  - https://www.alukah.net/sharia/10334/ | من ثمرات المواقع
+  - https://www.alukah.net/sharia/0/186021/%D8%A7%D9%84%D8%B3%D9%84%D8%B3%D9%84%D8%A9-%D8%A7%D9%84%D8%B0%D9%87%D8%A8%D9%8A%D8%A9-%D9%81%D9%8A-%D8%A7%D9%84%D8%B3%D9%8A%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9-5-%D9%86%D8%B2%D9%88%D9%84-%D8%A7%D9%84%D9%88%D8%AD%D9%8A-%D8%AE%D8%B7%D8%A8%D8%A9/ | السلسلة الذهبية في السيرة النبوية (5) نزول الوحي .
+  - https://www.alukah.net/authors/view/sharia/15567/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D9%84%D9%87-%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D8%B7%D9%88%D8%A7%D9%84%D8%A9/ | الشيخ عبدالله محمد الطوالة
+
+## https://www.alukah.net/literature_language/
+- الحالة: 200
+- العنوان: شبكة الألوكة - موقع حضارة الكلمة
+- خلاصات: /RSS/Rss-Feeds.aspx ، /RSS/Rss-Feeds.aspx?t=Sharia ، /RSS/Rss-Feeds.aspx?t=Culture ، /RSS/Rss-Feeds.aspx?t=Social ، /RSS/Rss-Feeds.aspx?t=Fatawa_Counsels ، /RSS/Rss-Feeds.aspx?t=Literature_Language ، /RSS/Rss-Feeds.aspx?t=World_Muslims ، /RSS/Rss-Feeds.aspx?t=Library ، /RSS/Rss-Feeds.aspx?t=Personal_Pages ، /RSS/Rss-Feeds.aspx?t=Publications_Competitions ، /RSS/Rss-Feeds.aspx?t=Translations ، /RSS/Rss-Feeds.aspx?t=Audio_Books
+- أقسام محتملة:
+  - https://www.alukah.net/literature_language/1180/ | فن الكتابة
+  - https://www.alukah.net/literature_language/0/185613/%D8%A7%D8%AE%D8%AA%D9%8A%D8%A7%D8%B1-%D9%85%D9%88%D8%B6%D9%88%D8%B9-%D8%A8%D8%AD%D8%AB/ | اختيار موضوع بحث
+  - https://www.alukah.net/literature_language/1184/ | دراسات ومقالات نقدية وحوارات أدبية
+  - https://www.alukah.net/literature_language/0/169438/%D9%85%D8%AE%D8%AA%D8%A7%D8%B1%D8%A7%D8%AA-%D9%85%D9%86-%D9%83%D8%AA%D8%A7%D8%A8-%D8%A7%D9%84%D9%83%D8%A7%D9%85%D9%84-%D9%81%D9%8A-%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D9%88%D8%A7%D9%84%D8%A3%D8%AF%D8%A8-%D9%84%D9%84%D9%85%D8%A8%D8%B1%D8%AF/ | مختارات من كتاب الكامل في اللغة والأدب للمبرد
+  - https://www.alukah.net/world_muslims/0/185973/%D9%86%D8%AF%D9%88%D8%A9-%D8%B9%D9%84%D9%85%D9%8A%D8%A9-%D8%AA%D8%A8%D8%AD%D8%AB-%D8%AA%D8%A3%D8%AB%D9%8A%D8%B1-%D8%A7%D9%84%D8%A5%D8%B9%D9%84%D8%A7%D9%85-%D8%A7%D9%84%D8%B1%D9%82%D9%85%D9%8A-%D9%81%D9%8A-%D8%A7%D9%84%D9%87%D9%88%D9%8A%D8%A9-%D8%A7%D9%84%D8%AF%D9%8A%D9%86%D9%8A%D8%A9-%D9%84%D9%84%D8%B4%D8%A8%D8%A7%D8%A8/ | ندوة علمية تبحث تأثير الإعلام الرقمي في الهوية الد
+- أنماط الروابط الأكثر:
+  - /literature_language/N/ (24)
+  - /LinkClick.aspx?… (6)
+  - / (3)
+  - /literature_language/0/N/%D8%AA%D8%AC%D9%84%D9%8A%D8%A7%D8%AA-%D8%B8%D8%A7%D9%87%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%AD%D8%AA-%D9%81%D9%8A-%D8%A7%D9%84%D9%84%D9%87%D8%AC%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D9%8A%D8%A9-%D8%A7%D9%84%D9%85%D8%B9%D8%A7%D8%B5%D8%B1%D8%A9-%D8%A7%D9%84%D9%84%D9%87%D8%AC%D8%A9-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D9%86%D9%85%D9%88%D8%B0%D8%AC%D8%A7/ (2)
+  - /Register.aspx (2)
+  - /sitemap.aspx (1)
+  - /pages/RSS.aspx (1)
+  - /Guestbook.aspx (1)
+  - /pages/terms_paper.aspx (1)
+  - /contactus.aspx (1)
+- عينة روابط:
+  - https://www.alukah.net/literature_language/1175/ | اللغة .. والقلم
+  - https://www.alukah.net/literature_language/1176/ | أدبنا
+  - https://www.alukah.net/literature_language/1187/ | من روائع الماضي
+  - https://www.alukah.net/literature_language/12279/ | روافد
+  - https://www.alukah.net/literature_language/0/185996/%D8%A3%D8%B3%D9%84%D9%88%D8%A8-%D8%A7%D9%84%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%AA/ | أسلوب الالتفات
+  - https://www.alukah.net/authors/view/literature_language/16415/%D8%A7%D9%84%D8%AF%D9%83%D8%AA%D9%88%D8%B1-%D8%A3%D8%A8%D9%88-%D8%A7%D9%84%D8%AD%D8%B3%D9%86-%D8%B9%D9%84%D9%8A-%D8%A8%D9%86-%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D9%85%D8%B7%D8%B1%D9%8A/ | الدكتور أبو الحسن علي بن محمد المطري
+  - https://www.alukah.net/literature_language/0/185977/-%D9%83%D9%8A-%D8%A7%D9%84%D9%86%D8%A7%D8%B5%D8%A8%D8%A9/ | (كي) الناصبة
+  - https://www.alukah.net/authors/view/literature_language/8598/%D8%AF.-%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D8%AC%D8%A8%D8%A7%D8%B1-%D9%81%D8%AA%D8%AD%D9%8A-%D8%B2%D9%8A%D8%AF%D8%A7%D9%86/ | د. عبدالجبار فتحي زيدان
+
+## https://www.mdarek.net/
+- الحالة: 200
+- العنوان: مجلة مدارك — مجلة شهرية علمية متخصصة في بيان حقيقة الصوفية
+- sitemap.xml: متاح (225 رابط) — https://www.mdarek.net ، https://www.mdarek.net/issues ، https://www.mdarek.net/browse ، https://www.mdarek.net/writers
 - خلاصات: لا توجد
 - أقسام محتملة:
-  - https://salafvoice.com/article.aspx?a=15217 | 
-  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
-  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
-  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
-  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
-  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
-  - https://salafvoice.com/article.aspx?a=25753 | 2026-10-26 ��� ������� (1)
-  - https://salafvoice.com/article.aspx?a=25754 | 2026-10-26 ��� ������ ������ ����� ����� �� ������
-  - https://salafvoice.com/article.aspx?a=25755 | 2026-10-26 ������� �������� ������� ���� ��� ��� �
-  - https://salafvoice.com/article.aspx?a=25756 | 2026-10-26 ����� ���������� ������ ��� ������� ���
-  - https://salafvoice.com/moshref_article | ���� ������
-  - https://salafvoice.com/article.aspx?a=32 | ������
-  - https://salafvoice.com/article.aspx?a=21032 | 
-  - https://salafvoice.com/article.aspx?a=19714 | 
+  - https://www.mdarek.net/writers | الباحثون
+  - https://www.mdarek.net/articles/241 | اقرأ الافتتاحية كاملة
+  - https://www.mdarek.net/articles/253 | مقالات ماهية التصوف وعقائده الأقوال التي وردت في ت
+  - https://www.mdarek.net/articles/250 | مقالات منزلة الإحسان مقدِّمة إنَّ منازلَ الدِّين ث
+  - https://www.mdarek.net/articles/247 | خزانة الوثائق بين الكرامة وخصائص الربوبية: وقفات م
+  - https://www.mdarek.net/articles/248 | محطات تاريخية من الباقلاني إلى المستشرقين في القرن
+  - https://www.mdarek.net/articles/242 | قاموس المصطلحات الأبدال والأوتاد والنجباء والنقباء
+  - https://www.mdarek.net/articles/243 | شخصيات صوفية موقف المودودي من التَّصَوف يقسِّمُ أب
+  - https://www.mdarek.net/articles/244 | إحصائيات وتحليلات مجمع كفتارو وتوظيف عمائم التصوف 
+  - https://www.mdarek.net/articles/245 | الصوفية حول العالم شيخ الأزهر يفعّل نفوذ الأزهر في
+  - https://www.mdarek.net/articles/246 | شبهات تحت المجهر حكم إحداث عبادات لا دليل عليها كث
+  - https://www.mdarek.net/articles/250 | من نصوص العدد « ﴿يَا أَيُّهَا الَّذِينَ آمَنُوا لِ
+  - https://www.mdarek.net/sections/opening | افتتاحية العدد
+  - https://www.mdarek.net/sections/news | الصوفية حول العالم
+  - https://www.mdarek.net/sections/stats | إحصائيات وتحليلات
+  - https://www.mdarek.net/sections/profiles | شخصيات صوفية
+  - https://www.mdarek.net/sections/glossary | قاموس المصطلحات
+  - https://www.mdarek.net/sections/articles | مقالات
+  - https://www.mdarek.net/sections/library | عصارة الكتب
+  - https://www.mdarek.net/sections/archive | خزانة الوثائق
+  - https://www.mdarek.net/sections/refutations | شبهات تحت المجهر
+  - https://www.mdarek.net/sections/history | محطات تاريخية
+  - https://www.mdarek.net/articles/162 | مقالات التَّصوُّف ومحيي الدِّين ابن عربي يوسف سمري
+  - https://www.mdarek.net/articles/185 | مقالات آداب تسلُّط وتعصُّب! يوسف سمرين · العدد 10 
+  - https://www.mdarek.net/articles/163 | مقالات ذمّ أئمة المذاهب لابن عربي شريف طه · العدد 
 - أنماط الروابط الأكثر:
-  - /class.aspx?… (19)
-  - /article.aspx?… (13)
-  - /Default.aspx (1)
-  - /default.aspx (1)
-  - /www.salafvoice.com (1)
-  - /moshref_article (1)
-  - /ContactUs.aspx?… (1)
-  - /ContactUs.aspx (1)
+  - /articles/N (14)
+  - / (2)
+  - /issues/12 (2)
+  - /browse (2)
+  - /writers (2)
+  - /dossiers (2)
+  - /search (2)
+  - /issues (2)
+  - /contact (2)
+  - /topics (1)
 - عينة روابط:
-  - https://salafvoice.com/article.aspx?a=15217 | 
-  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
-  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
-  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
-  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
-  - https://salafvoice.com/class.aspx?id=181 | ������� ������
-  - https://salafvoice.com/class.aspx?id=183 | �������
-  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
+  - https://www.mdarek.net/articles/241 | اقرأ الافتتاحية كاملة
+  - https://www.mdarek.net/articles/253 | مقالات ماهية التصوف وعقائده الأقوال التي وردت في ت
+  - https://www.mdarek.net/articles/250 | مقالات منزلة الإحسان مقدِّمة إنَّ منازلَ الدِّين ث
+  - https://www.mdarek.net/articles/247 | خزانة الوثائق بين الكرامة وخصائص الربوبية: وقفات م
+  - https://www.mdarek.net/articles/248 | محطات تاريخية من الباقلاني إلى المستشرقين في القرن
+  - https://www.mdarek.net/articles/242 | قاموس المصطلحات الأبدال والأوتاد والنجباء والنقباء
+  - https://www.mdarek.net/articles/243 | شخصيات صوفية موقف المودودي من التَّصَوف يقسِّمُ أب
+  - https://www.mdarek.net/articles/244 | إحصائيات وتحليلات مجمع كفتارو وتوظيف عمائم التصوف 
 
-## https://salafvoice.com/article.aspx?a=43
+## https://rwaqcenter.net/
 - الحالة: 200
-- العنوان: ��� ����� | ��� ��� ������
+- العنوان: مركز رواق
+- sitemap.xml: متاح (16 رابط) — https://rwaqcenter.net ، https://rwaqcenter.net/articles ، https://rwaqcenter.net/category ، https://rwaqcenter.net/author
 - خلاصات: لا توجد
 - أقسام محتملة:
-  - https://salafvoice.com/article.aspx?a=21011 | 
-  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
-  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
-  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
-  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
-  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
-  - https://salafvoice.com/article.aspx?a=25753 | 2026-10-26 ��� ������� (1)
-  - https://salafvoice.com/article.aspx?a=25754 | 2026-10-26 ��� ������ ������ ����� ����� �� ������
-  - https://salafvoice.com/article.aspx?a=25755 | 2026-10-26 ������� �������� ������� ���� ��� ��� �
-  - https://salafvoice.com/article.aspx?a=25756 | 2026-10-26 ����� ���������� ������ ��� ������� ���
-  - https://salafvoice.com/moshref_article | ���� ������
-  - https://salafvoice.com/article.aspx?a=32 | ������
-  - https://salafvoice.com/article.aspx?a=19937 | 
-  - https://salafvoice.com/article.aspx?a=15217 | 
+  - https://rwaqcenter.net/category/%D9%85%D8%B5%D8%B1%D9%8A%D8%A9/ | شئون مصرية
+  - https://rwaqcenter.net/category/%D9%85%D8%AD%D9%84%D9%8A%D8%A9/ | قضايا محلية
+  - https://rwaqcenter.net/category/%D8%AE%D8%A7%D8%B1%D8%AC%D9%8A%D8%A9/ | ملفات خارجية
+  - https://rwaqcenter.net/category/%D8%A8%D8%B1%D9%84%D9%85%D8%A7%D9%86%D9%8A%D8%A9/ | شئون برلمانية
+  - https://rwaqcenter.net/category/%D8%A3%D8%AD%D8%B2%D8%A7%D8%A8/ | أحزاب سياسية
+  - https://rwaqcenter.net/category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A-%D8%AF%D9%88%D9%84%D9%8A/ | شئون إقليمية ودولية
+  - https://rwaqcenter.net/category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A%D8%A9/ | إقليمية
+  - https://rwaqcenter.net/category/%D8%AF%D9%88%D9%84%D9%8A%D8%A9/ | دولية
+  - https://rwaqcenter.net/category/%D8%B4%D8%A6%D9%88%D9%86-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%D9%8A%D8%A9/ | شئون اقتصادية
+  - https://rwaqcenter.net/category/%D9%85%D8%AD%D9%84%D9%8A%D8%A9-%D8%B4%D8%A6%D9%88%D9%86-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%D9%8A%D8%A9/ | محلية
+  - https://rwaqcenter.net/category/%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D8%B4%D8%A6%D9%88%D9%86-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%D9%8A%D8%A9/ | دولية
+  - https://rwaqcenter.net/category/%D8%A2%D8%B1%D8%A7%D8%A1/ | تقارير وآراء
+  - https://rwaqcenter.net/category/%D8%A8%D8%AD%D9%88%D8%AB/ | بحوث ودراسات
+  - https://rwaqcenter.net/category/%D8%A7%D9%84%D8%B1%D8%A3%D9%8A/ | مقالات الرأي
+  - https://rwaqcenter.net/category/%D9%85%D9%81%D8%A7%D9%87%D9%8A%D9%85/ | مفاهيم وأيدلوجيات
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D9%84%D9%88%D8%A8%D9%8A-%D8%A7%D9%84%D8%A5%D8%B3%D8%B1%D8%A7%D8%A6%D9%8A%D9%84%D9%8A-%D9%88%D9%85%D8%B1%D8%A7%D9%83%D8%B2-%D8%B5%D9%86%D8%B9-%D8%A7%D9%84%D9%82%D8%B1%D8%A7%D8%B1-%D9%81%D9%8A-%D9%88%D8%A7%D8%B4%D9%86%D8%B7%D9%86/ | دولية بين التطابق والخلاف.. كيف يسيطر اللوبي الصهي
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%A3%D8%B2%D9%85%D8%A9-%D8%B3%D8%AF-%D8%A7%D9%84%D9%86%D9%87%D8%B6%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%B5%D8%B1%D8%A7%D8%B9-%D8%A7%D9%84%D9%85%D8%A7%D8%A6%D9%8A/ | ملفات خارجية الصين وأزمة مياه النيل.. حدود الدور ا
+  - https://rwaqcenter.net/articles/%D8%AA%D8%AD%D8%A7%D9%84%D9%81-%D9%85%D9%83%D8%A9-%D9%88%D8%A5%D8%B9%D8%A7%D8%AF%D8%A9-%D8%AA%D8%B4%D9%83%D9%8A%D9%84-%D8%A7%D9%84%D8%AA%D8%AD%D8%A7%D9%84%D9%81%D8%A7%D8%AA-%D8%A7%D9%84%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D9%88%D8%AD%D8%AF%D9%88%D8%AF-%D8%AA%D8%A3%D8%AB%D9%8A%D8%B1%D9%87-%D8%A7%D9%84%D8%AC%D9%8A%D9%88-%D8%A5%D8%B3%D8%AA%D8%B1%D8%A7%D8%AA%D9%8A%D8%AC%D9%8A/ | إقليمية التحالفات الدولية الجديدة وإعادة تشكيل الن
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D8%AC%D8%BA%D8%B1%D8%A7%D9%81%D9%8A%D8%A7-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B3%D9%8A%D8%A9-%D9%84%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF-%D8%A7%D9%84%D8%B9%D8%A7%D9%84%D9%85%D9%8A-%D9%88%D8%AA%D9%86%D8%A7%D9%81%D8%B3-%D8%A7%D9%84%D9%82%D9%88%D9%89-%D8%A7%D9%84%D8%B9%D8%B8%D9%85%D9%89/ | دولية (اقتصادية) الجغرافيا السياسية الجديدة للاقتص
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D8%B3%D8%AF%D9%88%D8%AF-%D8%A7%D9%84%D8%A5%D8%AB%D9%8A%D9%88%D8%A8%D9%8A%D8%A9-%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A3%D9%85%D9%86-%D8%A7%D9%84%D9%85%D8%A7%D8%A6%D9%8A-%D9%81%D9%8A-%D9%85%D8%B5%D8%B1-%D9%88%D8%A7%D9%84%D8%B3%D9%88%D8%AF%D8%A7%D9%86/ | ملفات خارجية السدود الإثيوبية على النيل الأزرق وتأ
+  - https://rwaqcenter.net/articles/%D8%BA%D8%B2%D8%A9-%D9%85%D8%A7-%D8%A8%D8%B9%D8%AF-%D8%A7%D9%84%D8%AD%D8%B1%D8%A8-%D9%88%D9%85%D8%B9%D8%A7%D8%AF%D9%84%D8%A9-%D8%A7%D9%84%D8%A5%D8%AF%D8%A7%D8%B1%D8%A9-%D8%A7%D9%84%D8%AE%D8%AF%D9%85%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%B3%D9%8A%D8%B7%D8%B1%D8%A9-%D8%A7%D9%84%D9%85%D9%8A%D8%AF%D8%A7%D9%86%D9%8A%D8%A9/ | 
+  - https://rwaqcenter.net/articles/%D8%BA%D8%B2%D8%A9-%D9%85%D8%A7-%D8%A8%D8%B9%D8%AF-%D8%A7%D9%84%D8%AD%D8%B1%D8%A8-%D9%88%D9%85%D8%B9%D8%A7%D8%AF%D9%84%D8%A9-%D8%A7%D9%84%D8%A5%D8%AF%D8%A7%D8%B1%D8%A9-%D8%A7%D9%84%D8%AE%D8%AF%D9%85%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%B3%D9%8A%D8%B7%D8%B1%D8%A9-%D8%A7%D9%84%D9%85%D9%8A%D8%AF%D8%A7%D9%86%D9%8A%D8%A9/ | غزة ما بعد الحرب بين إدارة خدمية بلا سيادة وتثبيت 
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D8%B4%D8%B1%D8%A7%D9%83%D8%A9-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D8%A7%D9%84%D8%B5%D9%8A%D9%86%D9%8A%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A/ | 
+  - https://rwaqcenter.net/articles/%D8%A7%D9%84%D8%B4%D8%B1%D8%A7%D9%83%D8%A9-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D8%A7%D9%84%D8%B5%D9%8A%D9%86%D9%8A%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A/ | الشراكة الإستراتيجية المصرية الصينية ومستقبلها في 
+  - https://rwaqcenter.net/articles/%D9%82%D9%85%D8%A9-%D8%A7%D9%84%D8%A8%D8%B1%D9%8A%D9%83%D8%B3-2026-%D9%88%D9%85%D8%AB%D9%84%D8%AB-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%A7%D9%84%D9%87%D9%86%D8%AF-%D9%81%D9%8A-%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%B9%D9%82%D9%88%D8%A8%D8%A7%D8%AA-%D8%A7%D9%84%D8%BA%D8%B1%D8%A8%D9%8A%D8%A9/ | 
 - أنماط الروابط الأكثر:
-  - /class.aspx?… (20)
-  - /article.aspx?… (13)
-  - /Default.aspx (1)
-  - /default.aspx (1)
-  - /www.salafvoice.com (1)
-  - /moshref_article (1)
-  - /ContactUs.aspx?… (1)
-  - /ContactUs.aspx (1)
+  - /category/%D9%85%D8%B5%D8%B1%D9%8A%D8%A9/ (3)
+  - /category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A-%D8%AF%D9%88%D9%84%D9%8A/ (3)
+  - /category/%D8%B4%D8%A6%D9%88%D9%86-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%D9%8A%D8%A9/ (3)
+  - /category/%D8%A2%D8%B1%D8%A7%D8%A1/ (3)
+  - /articles/%D8%A7%D9%84%D9%84%D9%88%D8%A8%D9%8A-%D8%A7%D9%84%D8%A5%D8%B3%D8%B1%D8%A7%D8%A6%D9%8A%D9%84%D9%8A-%D9%88%D9%85%D8%B1%D8%A7%D9%83%D8%B2-%D8%B5%D9%86%D8%B9-%D8%A7%D9%84%D9%82%D8%B1%D8%A7%D8%B1-%D9%81%D9%8A-%D9%88%D8%A7%D8%B4%D9%86%D8%B7%D9%86/ (3)
+  - /articles/%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%A3%D8%B2%D9%85%D8%A9-%D8%B3%D8%AF-%D8%A7%D9%84%D9%86%D9%87%D8%B6%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%B5%D8%B1%D8%A7%D8%B9-%D8%A7%D9%84%D9%85%D8%A7%D8%A6%D9%8A/ (3)
+  - /articles/%D8%AA%D8%AD%D8%A7%D9%84%D9%81-%D9%85%D9%83%D8%A9-%D9%88%D8%A5%D8%B9%D8%A7%D8%AF%D8%A9-%D8%AA%D8%B4%D9%83%D9%8A%D9%84-%D8%A7%D9%84%D8%AA%D8%AD%D8%A7%D9%84%D9%81%D8%A7%D8%AA-%D8%A7%D9%84%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D9%88%D8%AD%D8%AF%D9%88%D8%AF-%D8%AA%D8%A3%D8%AB%D9%8A%D8%B1%D9%87-%D8%A7%D9%84%D8%AC%D9%8A%D9%88-%D8%A5%D8%B3%D8%AA%D8%B1%D8%A7%D8%AA%D9%8A%D8%AC%D9%8A/ (3)
+  - /articles/%D8%A7%D9%84%D8%AC%D8%BA%D8%B1%D8%A7%D9%81%D9%8A%D8%A7-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B3%D9%8A%D8%A9-%D9%84%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF-%D8%A7%D9%84%D8%B9%D8%A7%D9%84%D9%85%D9%8A-%D9%88%D8%AA%D9%86%D8%A7%D9%81%D8%B3-%D8%A7%D9%84%D9%82%D9%88%D9%89-%D8%A7%D9%84%D8%B9%D8%B8%D9%85%D9%89/ (3)
+  - /articles/%D8%A7%D9%84%D8%B3%D8%AF%D9%88%D8%AF-%D8%A7%D9%84%D8%A5%D8%AB%D9%8A%D9%88%D8%A8%D9%8A%D8%A9-%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9-%D9%88%D9%85%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A3%D9%85%D9%86-%D8%A7%D9%84%D9%85%D8%A7%D8%A6%D9%8A-%D9%81%D9%8A-%D9%85%D8%B5%D8%B1-%D9%88%D8%A7%D9%84%D8%B3%D9%88%D8%AF%D8%A7%D9%86/ (3)
+  - / (2)
 - عينة روابط:
-  - https://salafvoice.com/article.aspx?a=21011 | 
-  - https://salafvoice.com/article.aspx?a=22854 | ������ ���������... ���� ������
-  - https://salafvoice.com/article.aspx?a=22910 | �� ��� ������ �������
-  - https://salafvoice.com/article.aspx?a=22875 | ������ ��������� �������
-  - https://salafvoice.com/article.aspx?a=22902 | ��� �����
-  - https://salafvoice.com/class.aspx?id=181 | ������� ������
-  - https://salafvoice.com/class.aspx?id=124 | ���� �������
-  - https://salafvoice.com/article.aspx?a=25752 | 2026-10-26 ������� ���� ���.. ����� ��� ��������
+  - https://rwaqcenter.net/articles/%D9%82%D9%85%D8%A9-%D8%A7%D9%84%D8%A8%D8%B1%D9%8A%D9%83%D8%B3-2026-%D9%88%D9%85%D8%AB%D9%84%D8%AB-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%A7%D9%84%D9%87%D9%86%D8%AF-%D9%81%D9%8A-%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%B9%D9%82%D9%88%D8%A8%D8%A7%D8%AA-%D8%A7%D9%84%D8%BA%D8%B1%D8%A8%D9%8A%D8%A9/ | 
+  - https://rwaqcenter.net/articles/%D9%82%D9%85%D8%A9-%D8%A7%D9%84%D8%A8%D8%B1%D9%8A%D9%83%D8%B3-2026-%D9%88%D9%85%D8%AB%D9%84%D8%AB-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%A7%D9%84%D9%87%D9%86%D8%AF-%D9%81%D9%8A-%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%B9%D9%82%D9%88%D8%A8%D8%A7%D8%AA-%D8%A7%D9%84%D8%BA%D8%B1%D8%A8%D9%8A%D8%A9/ | قمة البريكس 2026 ومشهد تنامي العلاقات بين دول التك
+  - https://rwaqcenter.net/articles/%D9%85%D8%B3%D9%84%D9%85%D9%88-%D8%A7%D9%84%D9%87%D9%86%D8%AF-%D8%A8%D9%8A%D9%86-%D8%A3%D8%B2%D9%85%D8%A9-%D8%A7%D9%84%D9%87%D9%88%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%AD%D9%82%D9%88%D9%82-%D9%88%D9%85%D8%AE%D8%A7%D8%B7%D8%B1-%D8%A7%D9%84%D8%A7%D8%B6%D8%B7%D9%87%D8%A7%D8%AF/ | بلا وطن أو هوية.. 200 مليون مسلم في الهند على حافة
+  - https://rwaqcenter.net/category/%D9%85%D8%B5%D8%B1%D9%8A%D8%A9/ | شئون مصرية 103 مقال
+  - https://rwaqcenter.net/category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A-%D8%AF%D9%88%D9%84%D9%8A/ | شئون إقليمية ودولية 679 مقال
+  - https://rwaqcenter.net/category/%D8%B4%D8%A6%D9%88%D9%86-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%D9%8A%D8%A9/ | شئون اقتصادية 133 مقال
+  - https://rwaqcenter.net/category/%D8%A2%D8%B1%D8%A7%D8%A1/ | تقارير وآراء 160 مقال
