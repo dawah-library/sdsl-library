@@ -12,7 +12,7 @@
   "statp_pct": false,
   "import_salafvoice": false,
   "majalla_news": true,
-  "enrich": false,
+  "enrich": true,
   "tashjir": false,
   "study_ai": false,
   "i18n": false,
