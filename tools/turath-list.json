@@ -1824,11 +1824,11 @@
   },
   {
    "id": "ibnhibban",
-   "died": 354,
-   "author": "IbnHibban",
-   "book": "Sahih|Musnad",
-   "title": "صحيح ابن حبان",
-   "authorName": "ابن حبان البستي",
+   "died": 739,
+   "author": "IbnBalban|Balban|CalaDinFarisi",
+   "book": "Ihsan|SahihIbnHibban",
+   "title": "صحيح ابن حبان (الإحسان في تقريب صحيح ابن حبان)",
+   "authorName": "ابن حبان البستي (ترتيب ابن بلبان)",
    "topic": "t3",
    "batch": "hadith-2026-11-13"
   },
