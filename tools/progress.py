@@ -108,6 +108,9 @@ def main():
     inbox = []
     for f in sorted(glob.glob(os.path.join(ROOT, "ocr-inbox", "*.json"))):
         cfg = jl(f, {})
+        base = f[:-5]
+        # رفع غير مكتمل (أجزاء بلا علامة اكتمال): لا يدخل التحويل أبدًا، فلا يُعرض كتابًا ينتظر (كان يظهر مكررًا عند ٣٪)
+        if not any(os.path.exists(base + x) for x in (".pdf", ".ready", ".store", ".url")): continue
         if cfg.get("title"):
             inbox.append({"t": cfg["title"], "f": os.path.basename(f)[:-5], "pct": 3, "next": "ينتظر التحويل إلى نص"})
 

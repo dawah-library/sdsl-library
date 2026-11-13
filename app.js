@@ -1404,7 +1404,7 @@ async function progAdmin(){const el=$("#progadm");if(!el)return;let P=null,runs=
  const bk=Object.entries(P.books||{}).sort((a,b)=>a[1].pct-b[1].pct);
  const avg=bk.length?bk.reduce((s,x)=>s+x[1].pct,0)/bk.length:0;
  el.className="";el.innerHTML=`<p class="mut">نسبة كل كتاب من لحظة رفعه حتى اكتمال تحويله وتدقيقه وفحص آياته وتشكيله وخدماته (الفوائد، وسؤال وجواب، والتشجير، والفهارس، والصوتيات). تُحدَّث آليًا بعد كل مهمة وكل ست ساعات. آخر تحديث: ${esc(P.upd||"")} (بتوقيت غرينتش).</p>
- <div class="card"><b>مكتبة الدعوة إجمالًا: ${toAr(Math.round(avg))}٪</b>${bar(avg)}<small class="mut">${toAr(bk.length)} كتابًا • صفحات تنتظر التدقيق: ${toAr(P.pending_pages||0)}${P.speed?` • سرعة التدقيق: نحو ${toAr(Math.round(P.speed))} صفحة يوميًا`:""}</small></div>
+ <div class="card"><b>مكتبة الدعوة إجمالًا: ${toAr(Math.round(avg))}٪</b>${bar(avg)}<small class="mut">${toAr(bk.length)} كتابًا • صفحات تنتظر التدقيق: ${toAr(P.pending_pages||0)}${P.speed>0?` • سرعة التدقيق: نحو ${toAr(Math.round(P.speed))} صفحة يوميًا`:""}</small></div>
  ${act?`<div class="card"><b>الآن</b><ul style="margin:6px 0 0">${act}</ul></div>`:'<p class="mut">لا مهمة تعمل الآن.</p>'}
  ${(P.inbox||[]).map(x=>`<div class="bk"><b>${esc(x.t)}</b><span>${toAr(x.pct)}٪ • ${esc(x.next)}</span>${bar(x.pct,"#c90")}</div>`).join("")}
  ${bk.map(([id,x])=>`<div class="bk"><b><a href="#/book/${id}/1">${esc(x.t)}</a> — ${toAr(Math.round(x.pct))}٪</b>${bar(x.pct,x.pct>=99?"#2a7":x.pct>=60?"#39c":"#c90")}<span>التالي: ${esc(x.next)} • المتوقع: ${x.pct>=99.5?"اكتمل":days(x.eta)}${x.path?" • ضمن مسار علمي":""}</span>
