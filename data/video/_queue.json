@@ -1,4 +1,27 @@
 {
  "note": "طابور فيديوهات الكتب (video.js ← tools/book-video.py)",
- "items": []
+ "items": [
+  {
+   "id": "p2d64fddf",
+   "style": "summary",
+   "min": "2",
+   "scenes": "10",
+   "aud": "general",
+   "tone": "calm",
+   "topics": [],
+   "ideas": "",
+   "intro": "",
+   "outro": "",
+   "aspect": "16:9",
+   "voice": "gemini:Orus",
+   "theme": "auto",
+   "font": "amiri",
+   "pat": "",
+   "cap": 1,
+   "note": "",
+   "creative": 1,
+   "phase": "",
+   "at": "2026-11-13T18:44:05.426Z"
+  }
+ ]
 }
