@@ -13,8 +13,8 @@
   "import_salafvoice": false,
   "majalla_news": true,
   "enrich": true,
-  "tashjir": false,
-  "study_ai": false,
+  "tashjir": true,
+  "study_ai": true,
   "i18n": false,
   "cards": false,
   "import_sources": false
