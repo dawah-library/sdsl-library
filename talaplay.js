@@ -94,7 +94,7 @@ const TPLAY = (() => {
     return mix(L).slice(0, n).map(v => mk(v[0] + " …", v[1], pick(L, 2, v).map(x => x[1]), { sub: "أكمل البيت من «تحفة الأطفال»:", why: v[0] + " ... " + v[1], link: "#/book/tuhfatatfal", tag: "🎵" }));
   }
   async function genExer(k, n) {
-    const E = ((await getj("data/tala-ex.json")) || {}).items || [], OK = ((await getj("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/tala-ex-ok.json?t=" + Math.floor(Date.now() / 300e3))) || {}).ok || {};
+    const E = ((await getj("data/tala-ex.json")) || {}).items || [], OK = ((await getj("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/tala-ex-ok.json?t=" + Math.floor(Date.now() / 300e3))) || (await getj("data/tala-ex-ok.json")) || {}).ok || {};
     const key = x => x.b + ":" + x.p + ":" + norm(x.q).slice(0, 40), ser = k === "t3" ? "bunyan" : "asas";
     const L = E.filter(x => (x.k === "tf" || x.k === "mcq") && key(x) in OK && (x.s === ser || k === "t4"));
     return mix(L).slice(0, n).map(x => { const v = OK[key(x)], QX = String(x.q || "").replace(/\(\s*(?:[✓✗×]|&nbsp[؛;]?\s*)+\s*\)/g, "").trim(), lk = "#/book/" + x.b + "/" + (x.lp || x.p), sub = "من درس «" + (x.l || "") + "»";

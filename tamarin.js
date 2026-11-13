@@ -5,10 +5,10 @@ const TMR = (() => {
   let EX = null, OK = null;
   const RAW = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/" + p + "?t=" + Math.floor(Date.now() / 300e3);
   const load = async () => { if (!EX) { try { EX = (await (await fetch("data/tala-ex.json")).json()).items || []; } catch (e) { EX = []; } }
-    if (!OK) { try { const r = await fetch(RAW("tala-ex-ok.json")); OK = r.ok ? (await r.json()).ok || {} : {}; } catch (e) { OK = {}; } } };
+    if (!OK) { for (const u of [RAW("tala-ex-ok.json"), "data/tala-ex-ok.json"]) { try { const r = await fetch(u); if (r.ok) { OK = (await r.json()).ok || {}; break; } } catch (e) { } } OK = OK || {}; } };
   const QT = q => String(q || "").replace(/\(\s*(?:[✓✗×]|&nbsp[؛;]?\s*)+\s*\)/g, "").trim(); // علامات الإجابة المطبوعة في الكتاب لا تُظهر للطفل
   const key = x => x.b + ":" + x.p + ":" + norm(x.q).slice(0, 40);
-  const ans = x => { const k = key(x); return k in OK ? OK[k] : undefined; };
+  const ans = x => { const k = key(x); return k in OK ? OK[k] : x.ok === 1 && x.a !== undefined ? x.a : undefined; };
   const SER = { asas: "الأساس (الابتدائية)", bunyan: "البنيان (الإعدادية)" };
   const stars = () => { try { return JSON.parse(localStorage.getItem("tmr_st") || "{}"); } catch (e) { return {}; } };
   // داخل قسم الطلائع، ويُوجَّه الطفل إلى مستواه بعمره (ملف الطفل في «ركن الوالدين»، ما لم يُظهر الوالد المراحل الأخرى)

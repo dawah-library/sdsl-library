@@ -1391,3 +1391,18 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .tpcongrats{font-size:1.15rem;font-weight:800;color:#7b2cbf;animation:tppop .6s}
 .tmprog{height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;margin:8px 0}.tmprog i{display:block;height:100%;background:linear-gradient(90deg,#06d6a0,#ffd166,#f72585);transition:width .4s}
 :root[data-theme=dark] .tmans{background:#063b2c;color:#a7f3d0}:root[data-theme=dark] .tsfxb{background:#2a2140;color:#fff}
+/* لوحة قراءتي ومؤشر الإنجاز في القارئ */
+.rdash{border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:12px 0;background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 9%,var(--sf)),var(--sf))}
+.rdh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.rdh h2{margin:0 0 6px}
+.rdwk{display:flex;gap:6px;align-items:flex-end;height:64px;margin:10px 0 4px}.rdwk i{flex:1;position:relative;height:100%;display:flex;align-items:flex-end}
+.rdwk i::before{content:"";display:block;width:100%;height:max(3px,var(--h));border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--gold,#c9a227),var(--ac))}
+.rdwk em{position:absolute;bottom:-17px;inset-inline:0;text-align:center;font-style:normal;font-size:.7rem;color:var(--mut)}
+.rdl{display:grid;gap:8px;margin-top:22px}.rdb{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:8px 10px;border-radius:14px;background:var(--sf);border:1px solid var(--line);color:inherit;text-decoration:none}
+.rdb:hover{border-color:var(--ac)}.rdb small{display:block;color:var(--mut)}.rdb>span:nth-child(2){min-width:0}.rdb b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rdring{--p:0;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ac) calc(var(--p)*1%),color-mix(in srgb,var(--ac) 14%,transparent) 0)}
+.rdring b{width:38px;height:38px;border-radius:50%;background:var(--sf);display:grid;place-items:center;font-size:.78rem}
+.rdbar{display:block;height:5px;border-radius:9px;background:color-mix(in srgb,var(--ac) 14%,transparent);margin-top:5px;overflow:hidden}.rdbar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--gold,#c9a227))}
+#rpct{position:fixed;bottom:14px;inset-inline-start:14px;z-index:55;display:flex;align-items:center;gap:6px;padding:5px 12px 5px 6px;border-radius:999px;background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.08);font-size:.8rem}
+#rpct svg{width:30px;height:30px;transform:rotate(-90deg)}#rpct circle{fill:none;stroke-width:4}#rpct .bg{stroke:color-mix(in srgb,var(--ac) 16%,transparent)}#rpct .fg{stroke:var(--ac);stroke-linecap:round;transition:stroke-dasharray .4s}
+#rpct b{font-size:.82rem}#rpct span{color:var(--mut)}body:not(.reading) #rpct{display:none}
+@media(max-width:560px){#rpct{bottom:62px}#rpct span{display:none}}

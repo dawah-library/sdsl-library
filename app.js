@@ -30,7 +30,7 @@ const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfName
   this.keys.forEach(k=>{if(p.v[k]!==undefined)S[k]=p.v[k]});if(!p.v.lk2){S.mkq=S.mkh=S.mkt=true;S.lk2=1;this.push()}S.prefsAt=p.at;saveS();applyLook();if(typeof refreshPage==="function")refreshPage()}catch(e){}}};
 const toAr=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
 const fmtDate=d=>{if(!d)return"";const x=new Date(d);return isNaN(x)?esc(d):x.toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"})};
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>(window.MKT?MKT.day():new Date().toISOString().slice(0,10)); // تاريخ اليوم بتوقيت مكة
 
 /* ---------- الخطوط وألوان الصفحة ---------- */
 const FONTS=[["خطوط تراثية",["Amiri","Noto Naskh Arabic","Scheherazade New","Markazi Text","Lateef"]],["خطوط حديثة",["Cairo","Tajawal","Almarai","IBM Plex Sans Arabic","Noto Kufi Arabic","Readex Pro","El Messiri","Changa","Reem Kufi","Harmattan"]]];
@@ -154,7 +154,7 @@ const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q
 const SBRPC=(fn)=>fetch(CFG.supabaseUrl+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:CFG.supabaseAnonKey,Authorization:"Bearer "+CFG.supabaseAnonKey,"Content-Type":"application/json"},body:"{}"}).then(r=>r.ok?r.json():null).catch(()=>null);
 function hitVisit(){if(!CFG.supabaseUrl)return;const d=today();try{if(localStorage.getItem("sdsl_visit")===d)return;localStorage.setItem("sdsl_visit",d)}catch(e){return}SBRPC("hit_visit")}
 let QUOTES=null,QT=null;
-async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
+async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();if(typeof RDASH!=="undefined")RDASH.home($("#rdash"));
  // الأرقام: من الفهرس مباشرة، وأرقام الأعضاء والزيارات من Supabase (تظهر بعد تجاوز حدٍّ معقول)
  const bk=BOOKS().filter(b=>!b.demo&&!b.hidden&&!VOL2(b)),m30=new Date(Date.now()-30*864e5).toISOString().slice(0,10);
  const st=[["books","كتاب",bk.length,"#/library"],["pages","صفحة نصية",bk.reduce((n,b)=>n+(b.n||0),0),"#/library"],["arts","مقال وفتوى",ARTS().length+FATWAS().length,"#/articles"],
@@ -220,7 +220,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  <form class="sbox" data-form="quick"><input name="q" type="search" placeholder="ابحث في الكتب والمقالات والمؤلفين" aria-label="بحث"><button class="btn p">بحث</button></form></section>
  <div data-hs="quote"> <section id="hquote" class="hquote" hidden aria-live="polite"></section></div>
  <div data-hs="study"> <div id="studyhome"></div></div>
- <div data-hs="resume"> ${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p])=>b&&p>1).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}</div>
+ <div data-hs="resume"> <div id="rdash"></div>${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p])=>b&&p>1).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}</div>
  <div data-hs="cols"> <div class="cols"><a class="col" href="#/library?c=dawah"><b>مكتبة الدعوة السلفية</b><span>كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور</span><em>${BOOKS().filter(b=>bc(b)==="dawah").length} كتاب</em></a>
  <a class="col ar" href="#/articles"><b>المقالات</b><span>مقالات صوت السلف، مقسمة بالموضوع والكاتب</span><em>${ARTS().length} مقال</em></a>
  <a class="col fw" href="#/fatawa"><b>الفتاوى</b><span>فتاوى مشايخ الدعوة بتقسيمها الفني وبحسب الشيخ</span><em>${FATWAS().length} فتوى</em></a>
@@ -736,7 +736,7 @@ function spgHtml(b,k,h){const lb=PL(b,k-1),ch=chapterOf(b,k);return`<section cla
 function scrSet(b,k){const sec=$(`.spg[data-p="${k}"]`);if(!sec)return;const old=$("#rb");if(old&&old!==sec.querySelector(".rd"))old.removeAttribute("id");sec.querySelector(".rd").id="rb";
  if(LASTREAD&&LASTREAD.p===k)return;LASTREAD={id:b.id,p:k};S.last={id:b.id,p:k};S.lastBy=Object.assign({},S.lastBy||{});delete S.lastBy[b.id];S.lastBy[b.id]=k;S.maxBy=S.maxBy||{};if(k>(S.maxBy[b.id]||0))S.maxBy[b.id]=k;saveS();
  const n=b.pages.length,pg=$(".pgb b");if(pg)pg.textContent=toAr(k);const pr=$("[data-act=prev]"),nx=$("[data-act=next]");if(pr)pr.disabled=k<=1;if(nx)nx.disabled=k>=n;
- const rc=$(".run span:last-child");if(rc)rc.textContent=chapterOf(b,k);setProg(b,k);paintMark();Mine.touch(b.id,k);if(typeof READLOG!=="undefined")READLOG.track(b,k);if(typeof GRP!=="undefined")GRP.onPage(b,k);
+ const rc=$(".run span:last-child");if(rc)rc.textContent=chapterOf(b,k);setProg(b,k);paintMark();Mine.touch(b.id,k);if(typeof READLOG!=="undefined")READLOG.track(b,k);if(typeof RDASH!=="undefined")RDASH.page(b,k);if(typeof GRP!=="undefined")GRP.onPage(b,k);
  const h=parse().q.h;history.replaceState(null,"","/book/"+b.id+"/"+k+(h?"?h="+encodeURIComponent(h):""))}
 function scrAdd(b,dir){const box=$("#scr");if(!box)return null;const h=parse().q.h,ps=[...box.children].map(x=>+x.dataset.p);
  if(dir>0){const last=Math.max(...ps);if(last>=b.pages.length)return null;let html="";for(let k=last+1;k<=Math.min(b.pages.length,last+3);k++)html+=spgHtml(b,k,h);box.insertAdjacentHTML("beforeend",html);[...box.children].slice(-3).forEach(x=>{SCR.io&&SCR.io.observe(x);paintNotes(x.querySelector(".rd"))});if(Math.max(...[...box.children].map(x=>+x.dataset.p))>=b.pages.length&&$("#scrs")){$("#scrs").hidden=true;const e=$("#scend");if(e)e.hidden=false}return true}
@@ -831,7 +831,7 @@ async function vBook(id,p,h){
  document.body.classList.toggle("reading-full",!!S.full);setProg(b,p);
  if(scroll){scrWire(b);if(p>1&&!same){const s0=$(`.spg[data-p="${p}"]`);if(s0){const y=s0.getBoundingClientRect().top+scrollY-(S.full?8:96);scrollTo(0,y)}}}
  if(pv!=="text")renderPdf(b,p);if(S.tr)renderTr(b,p);
- paintMark();$$(".rd[data-id]").forEach(r=>paintNotes(r));Mine.touch(id,p);if(typeof READLOG!=="undefined")READLOG.track(B(id),p);if(typeof GRP!=="undefined")GRP.onPage(B(id),p);
+ paintMark();$$(".rd[data-id]").forEach(r=>paintNotes(r));Mine.touch(id,p);if(typeof READLOG!=="undefined")READLOG.track(B(id),p);if(typeof RDASH!=="undefined")RDASH.page(B(id),p);if(typeof GRP!=="undefined")GRP.onPage(B(id),p);
  if(TTS.cont){TTS.cont=false;setTimeout(()=>TTS.next(),400)}else if(TTS.on&&!same)TTS.stop();
  if(same){const pp=$("#paper");if(pp){const y=pp.getBoundingClientRect().top+window.scrollY-(S.full?8:110);if(window.scrollY>y)window.scrollTo(0,y)}}
  if(typeof STUDY!=="undefined"&&STUDY.reader)STUDY.reader(b,p,h,{scroll,pv,art});
