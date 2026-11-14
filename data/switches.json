@@ -3,7 +3,7 @@
  "at": "2026-11-13",
  "by": "admin",
  "s": {
-  "translate": true,
+  "translate": false,
   "home_quotes": true,
   "statp_totals": true,
   "statp_opens": true,
@@ -15,7 +15,7 @@
   "enrich": true,
   "tashjir": true,
   "study_ai": true,
-  "i18n": true,
+  "i18n": false,
   "cards": true,
   "import_sources": true
  }

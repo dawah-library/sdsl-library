@@ -12,7 +12,7 @@ const SX = (() => {
   async function search(q, o = {}) {
     const D = await docs(); if (!D) return null;
     const ts = SS.terms(q); if (!ts.length) return [];
-    const ok = id => { const b = B(id); return b && !b.hidden && !b.demo && (!o.col || bc(b) === o.col) && (!o.bookId || b.id === o.bookId) && (!o.authorId || b.authorId === o.authorId) && (!o.type || (o.type === "article") === isArt(b)); };
+    const ok = id => { const b = B(id); return b && !b.hidden && !b.demo && (!o.col || String(o.col).split(",").includes(bc(b))) && (!o.bookId || b.id === o.bookId) && (!o.authorId || b.authorId === o.authorId) && (!o.type || (o.type === "article") === isArt(b)); };
     const N = D.n || 1, score = new Map();
     await Promise.all(ts.map(async (t, j) => {
       const e = (await shard(t)) || (P3.test(t) ? await shard(t.replace(P3, "")) : null); if (!e) return;
@@ -131,7 +131,7 @@ AI.viaServer = async function (o) {
   o.searches = used; return acc || "تعذر إكمال الإجابة، جرّب سؤالًا أضيق.";
 };
 /* البحث المحلي الاحتياطي (عند نفاد حصة الذكاء الاصطناعي): من الفهرس بدل تحميل المكتبة كلها */
-AI.ensure = async function (o) { const ids = new Set(); if (o.bookId) ids.add(o.bookId); const last = (o.turns || []).slice(-1)[0]; if (last) { const r = await SX.search(last.content, { col: o.col, bookId: o.bookId, k: 10 }).catch(() => null); if (r) r.forEach(h => ids.add(h.ref.split(":")[0])); else { const need = lib.books.filter(b => !b.demo && (!o.col || bc(b) === o.col) && (o.bookId ? b.id === o.bookId : !b.big)); return loadMany(need, (i, n) => o.onStatus(`يحمّل نصوص المكتبة للبحث (${toAr(i)} من ${toAr(n)})`)); } } await Promise.all([...ids].map(id => loadBook(id).catch(() => {}))); };
+AI.ensure = async function (o) { const ids = new Set(); if (o.bookId) ids.add(o.bookId); const last = (o.turns || []).slice(-1)[0]; if (last) { const r = await SX.search(last.content, { col: o.col, bookId: o.bookId, k: 10 }).catch(() => null); if (r) r.forEach(h => ids.add(h.ref.split(":")[0])); else { const need = lib.books.filter(b => !b.demo && (!o.col || String(o.col).split(",").includes(bc(b))) && (o.bookId ? b.id === o.bookId : !b.big)); return loadMany(need, (i, n) => o.onStatus(`يحمّل نصوص المكتبة للبحث (${toAr(i)} من ${toAr(n)})`)); } } await Promise.all([...ids].map(id => loadBook(id).catch(() => {}))); };
 
 /* أدوات المساعد العلمي (ASKX): إرفاق الصور والملفات (PDF ونص وصوت)، والسؤال بالصوت، واختيار النموذج والأسلوب
    (نقل/تحليل/استنتاج، صياغة مولدة أو مركبة من النقول)، والمصادر الخارجية (مواقع أو روابط)، وقراءة الإجابة صوتيًّا وتصديرها،
