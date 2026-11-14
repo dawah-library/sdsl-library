@@ -103,6 +103,16 @@ def main():
     if wait and os.environ.get("SHARH_FORCE") != "1" and os.environ.get("SHARH_DRY") != "1":
         st0 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}}); st0["wait"] = wait; st0["skipped"] = skipped; st0["at"] = time.strftime("%Y-%m-%d")
         js(os.path.join(OUT, "_state.json"), st0, 1); print("ينتظر استيراد الشروح:", "، ".join(wait)); return
+    # روابط مواضع الشرح بالشروح المستوردة: إن وُجدت شروح لم تكن عند آخر بناء للروابط أُعيد بناؤها أولًا (tools/hadith-links.py)
+    if os.environ.get("SHARH_DRY") != "1":
+        present = sorted({b for v in SHR.values() for b in v} | set(THEMATIC), key=str)
+        present = [b for b in present if vols_of(b)]
+        st1 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}})
+        if st1.get("links_books") != present:
+            import subprocess
+            print("إعادة بناء روابط مواضع الشرح بالشروح الجديدة…", flush=True)
+            r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "hadith-links.py")], cwd=ROOT)
+            if r.returncode == 0: st1["links_books"] = present; js(os.path.join(OUT, "_state.json"), st1, 1)
     DRY = os.environ.get("SHARH_DRY") == "1"  # تجربة: يُبنى العنقود ونصوصه ويُطبع حجمه بلا طلب ولا حفظ
     if not T.KEYS and not DRY: print("لا مفاتيح Gemini"); return
     cat = jl(os.path.join(D, "catalog.json"), {"books": []})
