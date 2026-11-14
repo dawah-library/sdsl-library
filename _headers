@@ -183,3 +183,6 @@
 
 /api/*
   X-Robots-Tag: noindex
+
+/data/site-study.html
+  X-Robots-Tag: noindex, nofollow

@@ -64,7 +64,7 @@ const DEV = (() => {
   async function ops() {
     if (!(Cloud.role === "admin" || GH.token)) return view('<div class="note">لوحة التشغيل للمدير.</div>');
     view(`<div class="cmhero"><div><h2>لوحة التشغيل</h2><p>حالة المهام الآلية والمفاتيح وطابور الكتب في مكان واحد. تُحدَّث عند فتح الصفحة.</p></div></div>
-      <div class="row"><a class="btn s" href="#/admin">الخدمات والمفاتيح (الإيقاف والتشغيل)</a><a class="btn s" href="https://github.com/${esc(CFG.repo || "dawah-library/sdsl-library")}/actions" target="_blank" rel="noopener">صفحة المهام في GitHub</a><button class="btn s" data-act="opsre">تحديث</button></div>
+      <div class="row"><a class="btn s" href="#/admin">الخدمات والمفاتيح (الإيقاف والتشغيل)</a><a class="btn s" href="https://github.com/${esc(CFG.repo || "dawah-library/sdsl-library")}/actions" target="_blank" rel="noopener">صفحة المهام في GitHub</a><a class="btn s" href="#/sitestudy">دراسة الموقع ومقارنته</a><button class="btn s" data-act="opsre">تحديث</button></div>
       <div class="stgrid" id="opsk"><p class="mut">…</p></div><h3>المهام الآلية</h3><div id="opsw" class="mut">جارٍ التحميل…</div>`);
     const J = u => fetch(u + (u.includes("?") ? "&" : "?") + "fresh=" + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null), repo = CFG.repo || "dawah-library/sdsl-library", ago = t => { const m = Math.round((Date.now() - new Date(t)) / 6e4); return m < 60 ? toAr(m) + " د" : m < 2880 ? toAr(Math.round(m / 60)) + " س" : toAr(Math.round(m / 1440)) + " يوم"; };
     const [K, PR, CU, DB] = await Promise.all([J("data/keys-status.json"), J("data/progress.json"), J("data/cf-usage.json"), J("data/db-backups.json")]);
@@ -91,5 +91,15 @@ const DEV = (() => {
     try { await GH.editJSON("data/run-requests.json", o => { o = o && o.items ? o : { items: [] }; o.items.push({ w, at: new Date().toISOString(), by: (Auth.user && Auth.user.name) || "المدير" }); return o; }, "تشغيل مهمة: " + n); toast("أُرسل الطلب؛ تبدأ المهمة خلال دقيقة تقريبًا"); }
     catch (e) { toast("تعذّر: " + (e.message || e)); } }
   document.addEventListener("click", e => { if (e.target.closest("[data-act=opsre]")) ops(); const r = e.target.closest("[data-act=opsrun]"); if (r) runNow(r.dataset.w, r.dataset.n); });
-  return { view: page, ops, badge };
+  // دراسة الموقع وتحليله ومقارنته بالمواقع الأخرى (#/sitestudy): للمدير ومن يمنحه صلاحية site_study من «صلاحيات التفويض»
+  async function study() {
+    const ok = isAdmin() || can("site_study") || (typeof GRP !== "undefined" && await GRP.can("site_study").catch(() => false));
+    if (!ok) return view('<div class="note">دراسة الموقع وتحليله للمدير ومن تمنحه الإدارة صلاحية «الاطلاع على دراسة الموقع».</div>');
+    view('<p class="mut">جارٍ تحميل الدراسة…</p>');
+    const h = await fetch("data/site-study.html?v=" + Date.now()).then(r => r.ok ? r.text() : null).catch(() => null);
+    if (!/sitestudy/.test(location.hash + location.pathname)) return; // غادر الصفحة قبل اكتمال التحميل
+    view(h || '<div class="note">تعذر تحميل الدراسة. أعد المحاولة.</div>');
+  }
+  document.addEventListener("click", e => { const a = e.target.closest("[data-ss]"); if (!a) return; e.preventDefault(); const t = document.getElementById(a.dataset.ss); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  return { view: page, ops, badge, study };
 })();
