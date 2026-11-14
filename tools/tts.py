@@ -656,7 +656,10 @@ async def main():
         items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not unrev(k) and not any(i["id"] == k for i in items)]
     ONLY = set(jload(os.path.join(AUD, "_settings.json"), {}).get("only") or [])  # قصر التسجيل على كتب بعينها (قرار المدير ٧ نوفمبر: تمام المنة وحده)
     if ONLY:
-        items = [i for i in items if i.get("id") in ONLY or i.get("del")]
+        # ما اختارته الإدارة بنفسها (الطابور أو TTS_ONLY) يُسجَّل دائمًا؛ والقيد يحصر الاختيار التلقائي وحده.
+        # (كان القيد يحذف بصمت كل كتاب يختاره المدير للتحويل الصوتي، ١٤ نوفمبر)
+        chosen = {i.get("id") for i in q.get("items", [])} | set(only)
+        items = [i for i in items if i.get("id") in ONLY or i.get("id") in chosen or i.get("del")]
         cb = {b["id"]: b for b in catalog()["books"]}
         for k in ONLY:  # يُسجَّل بعد اكتمال تدقيق نصه فقط (لا يُسجَّل نص لم يُراجَع على الصور)
             ready = not (cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))

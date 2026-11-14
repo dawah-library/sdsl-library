@@ -31,9 +31,6 @@
   "ubudiyya",
   "uluwhimma"
  ],
- "only": [
-  "p24c16cf5"
- ],
  "omit": {
   "p24c16cf5": {
    "front": 3
