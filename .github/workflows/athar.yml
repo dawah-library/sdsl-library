@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       rebuild: { description: "إعادة استخراج المرشحات من الكتب (1)", required: false, default: "0" }
-      max: { description: "حد المرشحات في الجولة", required: false, default: "1200" }
+      max: { description: "حد المرشحات في الجولة", required: false, default: "2000" }
 permissions:
   contents: write
 concurrency:
@@ -40,7 +40,7 @@ jobs:
       - name: المراجعة والنشر
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          ATHAR_MAX: ${{ github.event.inputs.max || '1200' }}
+          ATHAR_MAX: ${{ github.event.inputs.max || '2000' }}
           ATHAR_MINUTES: "160"
         run: python3 tools/athar-ai.py
       - name: الحفظ
