@@ -1511,3 +1511,8 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .shbox h4{margin:14px 0 6px;color:var(--ac)}.shbox h5{margin:8px 0 4px}.shbox p{line-height:2}.shg{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0}
 .shg dt{font-weight:700;font-family:var(--rf,inherit)}.shg dd{margin:0}.shbox .cite{font-size:.82em;white-space:nowrap}.shn{font-size:.8rem;margin-top:10px}.shr .chip{font-size:.8rem}
 @media (max-width:600px){.shg{grid-template-columns:1fr}.shg dd{margin-bottom:6px}}
+/* موسوعة آثار السلف */
+.athtopics{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.athtopics .card{display:flex;flex-direction:column;gap:4px}
+.athar{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;background:var(--sf)}.athar h4{margin:0 0 6px;color:var(--ac);font-family:Amiri,serif;font-size:1.15rem}
+.athar blockquote{margin:0;padding:6px 14px;border-inline-start:4px solid var(--gold,#b88a2e);font-family:var(--rf,Amiri),serif;font-size:1.22rem;line-height:2;background:color-mix(in srgb,var(--gold,#b88a2e) 6%,transparent);border-radius:8px}
+.athw{margin:8px 0 2px;font-weight:700}.athw a{color:var(--ac);text-decoration:none}.athsrc{margin:2px 0;font-size:.9rem}.athsrc a{color:var(--ac)}.athbtns{gap:6px;flex-wrap:wrap;margin-top:6px}
