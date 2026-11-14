@@ -167,7 +167,7 @@ const HDS = (() => {
     const r = IX.find(x => x[0] === id); if (!r) return view('<p class="note">الحديث غير موجود.</p>');
     const x = F(r), d = (await det(x.b))[id] || {}, b = B(x.b);
     view(`<p><a href="#/hadith?t=topic">← الحديث</a> › <a href="#/hadith?t=topic&g=${encodeURIComponent((BK[x.b] || x.b) + " › " + (x.k && x.k !== x.bab ? x.k + " › " : "") + x.bab)}">${esc(x.bab)}</a></p>
-    <article class="hdone"><p class="hds">${x.sah ? `عن <button class="lnk aln1" data-act="hdalam" data-n="${esc(x.sah)}" title="ترجمته من كتب التراجم في المكتبة">${esc(x.sah)}</button> رضي الله عنه` : ""}</p><p class="hdm">«${esc(d.m || x.tarf)}»</p>
+    <article class="hdone"><p class="hds">${esc(x.sah ? "عن " + x.sah + " رضي الله عنه" : "")}</p><p class="hdm">«${esc(d.m || x.tarf)}»</p>
     ${x.t ? `<p class="hdt"><b>التخريج:</b> ${esc(x.t)}</p>` : ""}${x.h ? `<p class="hdt"><b>الحكم (من كلام المصنف):</b> ${esc(x.h)}</p>` : ""}
     <p class="mut">المصدر: <a href="#/book/${x.b}/${x.p}?h=${encodeURIComponent(x.tarf.split(" ").slice(0, 4).join(" "))}">${esc(BK[x.b] || (b && b.title) || x.b)}، ${esc(b ? PL(b, x.p - 1) || "ص " + toAr(x.p) : "ص " + toAr(x.p))}</a></p>
     ${d.sh ? `<details open><summary><b>شرح موجز من الكتاب</b></summary><p class="hdsh">${esc(d.sh)}</p></details>` : ""}
@@ -212,7 +212,6 @@ const HDS = (() => {
     } catch (e) { el.innerHTML = `<p class="mut">تعذّر الوصول إلى الموسوعة الحديثية الآن. <a href="https://dorar.net/hadith/search?q=${encodeURIComponent(q)}" target="_blank" rel="noopener">ابحث في الدرر السنية ↗</a></p>`; } }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "hddorar") dorar(el.dataset.q);
-    else if (a === "hdalam" && typeof ALAM !== "undefined") ALAM.sheet(el.dataset.n);
     else if (a === "hdrsh") { const box = el.closest(".hrh").querySelector(".hrsh"); if (!box.hidden && box.dataset.f) { box.hidden = true; return; } box.dataset.f = 1; dsharhInto(box, el.dataset.q); }
     if (a === "hdoff") offSave("hadith", async say => { say("جارٍ تجهيز القائمة…"); const L = await klist(), out = ["data/hadith/index.json", "data/hadith/arbain.json", "data/hadith/riyad.json", "data/hadith/bulugh.json", RAWK("_list.json"), RAWT("_index.json")];
       Object.entries(L).forEach(([b, v]) => { out.push(RAWK(b + ".json"), RAWL(b + ".json")); for (let i = 0; i < Math.ceil((v.n || 0) / 500); i++) out.push(RAWK(b + "/m" + i + ".json")); if (["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b)) out.push(RAWK("").replace("/k/", "/grades/") + b + ".json"); });

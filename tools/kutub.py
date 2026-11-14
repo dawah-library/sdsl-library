@@ -19,7 +19,7 @@ BOOKS = [("bukhari", "صحيح البخاري"), ("muslim", "صحيح مسلم")
 DIA = re.compile(r"[ً-ْٰـ]")
 def nz(s): s = DIA.sub("", s or ""); s = re.sub("[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه"); return re.sub(r"\s+", " ", s).strip()
 AR = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
-START = re.compile(r"^\s*#?\s*(?:\(?\s*([\d٠-٩]{1,5})\s*\)?\s*[-–.]?\s*)?(?:\(\s*([\d٠-٩]{1,5})\s*\)\s*[-–.]?\s*)?(?:و)?\(?(?:حدثنا|حدثني|حدثناه|حدثنيه|أخبرنا|أخبرني|أخبرناه|أنبأنا|أنبأني|ثنا|نا)\b\)?|^\s*([\d٠-٩]{1,5})\s*[-–]?\s*عبد الرزاق\s*(?:،|,)?\s*عن\b")  # مصنف عبد الرزاق: «4804 عبد الرزاق عن…»؛ ومسند الشافعي: «(أخبرنا) :»
+START = re.compile(r"^\s*#?\s*(?:\(?\s*([\d٠-٩]{1,5})\s*\)?\s*[-–.]?\s*)?(?:\(\s*([\d٠-٩]{1,5})\s*\)\s*[-–.]?\s*)?(?:و)?(?:حدثنا|حدثني|حدثناه|حدثنيه|أخبرنا|أخبرني|أخبرناه|أنبأنا|أنبأني|ثنا|نا)\b")
 NUMLINE = re.compile(r"^\s*#?\s*([\d٠-٩]{1,5})\s*[-–]\s*$")
 PROPHET = r"(?:رسول الله|النبي|نبي الله)"
 def sahabi(t):
@@ -59,7 +59,6 @@ def parse(bid):
             if len(nz(m)) >= 12: items.append([cur["n"], cur["v"], cur["p"], kitab, bab, sahabi(t0), " ".join(nz(m).split()[:7]), m])
         cur = None
     for vid, p, pg in pages_of(bid):
-        pg = re.sub(r"#\s*(?=[\d٠-٩]{1,5}\s*[-–]\s*(?:\(?\s*)?(?:أخبرنا|حدثنا|حدثني|أخبرني))", "\n", pg)  # صحيح ابن حبان: الحديث ملتصق بالعنوان «…# 802 - أخبرنا»
         for line in re.sub(r"<[^>]+>", "", pg.split("______")[0]).split("\n"):
             lv = line.strip()
             if not lv: continue
@@ -75,7 +74,7 @@ def parse(bid):
             if re.match(r"^\(?\s*(?:[\d٠-٩]+\s*[-–]?\s*)?باب\b", h) and len(h) < 220: close(); bab = re.sub(r"^\(?\s*[\d٠-٩]+\s*[-–]?\s*|\)\s*$", "", h)[:160]; continue
             m = START.match(l)
             if m:
-                close(); seq += 1; NUMD[0] += 1 if (m.group(1) or m.group(3) or pend) else 0; g1 = m.group(2) or m.group(1) or m.group(3)  # «١ - (٨)» في مسلم: الأول تسلسل الكتاب، وما بين القوسين الرقم المعتمد (عبد الباقي)
+                close(); seq += 1; NUMD[0] += 1 if (m.group(1) or pend) else 0; g1 = m.group(2) or m.group(1)  # «١ - (٨)» في مسلم: الأول تسلسل الكتاب، وما بين القوسين الرقم المعتمد (عبد الباقي)
                 n = int(g1.translate(AR)) if g1 else (pend or seq); pend = None
                 cur = {"n": n, "v": vid, "p": p, "l": [re.sub(r"^\s*#?\s*(?:\(?\s*[\d٠-٩]{1,5}\s*\)?\s*[-–.]?\s*){1,2}", "", lv)]}
             elif cur is not None and not l.startswith("#"):
