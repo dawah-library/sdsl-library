@@ -138,7 +138,7 @@ def main():
                 json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1); continue
             json.dump(q, open(QP, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         ex = next((b for b in cat["books"] if b["id"] == it["id"] or b.get("set") == it["id"]), {})
-        env = dict(os.environ, TIO_BOOK=str(it["b"]), TIO_ID=it["id"], TIO_TITLE=ex.get("setTitle") or ex.get("title") or it.get("q0") or it["q"],  # q0: العنوان الكامل إذا اختُصر q للبحث
+        env = dict(os.environ, TIO_BOOK=str(it["b"]), TIO_ID=it["id"], TIO_TITLE=ex.get("setTitle") or ex.get("title") or it["q"],
                    TIO_AUTHOR_ID=ex.get("authorId", "") or it.get("a", ""), TIO_AUTHOR=it.get("an", ""), TIO_TOPIC=ex.get("topicId") or it.get("tp", "t3"),
                    TIO_MINUTES=str(max(5, (DEADLINE - time.time()) / 60 - 15)))
         print("== استيراد «%s» من الشاملة %s" % (it["q"], it["b"]), flush=True)
