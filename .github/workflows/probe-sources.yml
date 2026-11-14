@@ -2,6 +2,7 @@ name: استكشاف المصادر الجديدة
 on:
   workflow_dispatch:
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: [".github/workflows/probe-sources.yml", "tools/probe-sources.js"]
 permissions:
   contents: write

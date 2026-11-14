@@ -6,6 +6,7 @@ on:
     - cron: "15 8 * * *"    # بعد تجدد الحصة اليومية مباشرة
     - cron: "10 11 * * *"   # جولة ثانية (تتسع بتعدد المفاتيح)
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/tashkeel/_queue.json"]
   workflow_dispatch:
     inputs:

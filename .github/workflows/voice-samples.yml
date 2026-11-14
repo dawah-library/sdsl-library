@@ -1,6 +1,7 @@
 name: عينات أصوات الصوتيات
 on:
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/audio/_voices.json"]
   workflow_dispatch:
     inputs:

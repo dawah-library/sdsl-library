@@ -4,6 +4,7 @@ on:
     inputs:
       extra: { description: "مفاتيح QuranEnc إضافية مفصولة بفاصلة", required: false, default: "" }
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/quran-fetch.py"]
 permissions:
   contents: write
