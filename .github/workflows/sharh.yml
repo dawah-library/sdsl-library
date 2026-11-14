@@ -4,7 +4,6 @@ name: رحلة شرح السنة
 on:
   schedule:
     - cron: "23 10 * * *"   # بعد تجدد الحصة اليومية بالمفاتيح المحجوزة لخدمات الكتب
-    - cron: "47 21 * * *"   # جولة ثانية بما بقي من حصة اليوم
   workflow_dispatch:
     inputs:
       max:
@@ -66,7 +65,7 @@ jobs:
           SHARH_MAX: ${{ github.event.inputs.max || '60' }}
           SHARH_ONLY: ${{ github.event.inputs.only }}
           SHARH_MINUTES: "170"
-          TJ_MODEL: "gemini-3.7-flash"   # gemini-2.5-flash أُوقف (404)
+          TJ_MODEL: "gemini-2.5-flash"
         run: python3 tools/sharh-ai.py
       - name: الحفظ
         if: always()

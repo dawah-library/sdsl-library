@@ -50,7 +50,7 @@ async function groqChat(body, ms) {
   const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms || 60000);
   try {
     for (const model of GROQ_MODELS()) {
-      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", signal: ac.signal, headers: { "content-type": "application/json", authorization: "Bearer " + process.env.GROQ_API_KEY, "user-agent": "dawahlibrary-ask/1.0 (+https://dawahlibrary.org)", accept: "application/json" }, body: JSON.stringify(Object.assign({ model }, body)) }).catch(() => null);
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", signal: ac.signal, headers: { "content-type": "application/json", authorization: "Bearer " + process.env.GROQ_API_KEY }, body: JSON.stringify(Object.assign({ model }, body)) }).catch(() => null);
       if (r && r.ok) { const j = await r.json(); return (j.choices || [])[0] || null; }
       if (r) console.error("groq", model, r.status, (await r.text().catch(() => "")).slice(0, 160));
     }

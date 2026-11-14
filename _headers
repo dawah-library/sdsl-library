@@ -151,9 +151,6 @@
 /talaplay.js
   Cache-Control: public, max-age=60, must-revalidate
 
-/talaqasas.js
-  Cache-Control: public, max-age=60, must-revalidate
-
 /tamarin.js
   Cache-Control: public, max-age=60, must-revalidate
 
