@@ -21,7 +21,9 @@
   }
   const label = (b, i) => (b.pl && b.pl[i]) || (b.type === "article" ? "" : "ص " + (i + 1));
   const kind = b => b.type === "article" ? "مقال" : "كتاب";
-  const colName = b => b.col === "turath" ? "تراث" : "مكتبة الدعوة السلفية";
+  const colName = b => b.col === "turath" ? "المكتبة العامة" : b.col === "ithra" ? "المصادر الإثرائية" : "مكتبة الدعوة السلفية";
+  // نطاق المساعد: قسم واحد أو أكثر مفصولة بفواصل (dawah,turath,ithra)، والفارغ كل المكتبة (طلب المدير ١٤ نوفمبر)
+  const inCol = (c, b) => !c || String(c).split(",").includes((b && b.col) || "dawah");
   function excerpt(text, ts, max) {
     const s = strip(plain(text)), n = norm(s); let at = -1;
     for (const t of ts) { const k = n.indexOf(t); if (k >= 0 && (at < 0 || k < at)) at = k; }
@@ -29,7 +31,7 @@
     return (a ? "…" : "") + s.slice(a, a + max).trim() + (a + max < s.length ? "…" : "");
   }
   function pick(lib, o) {
-    return lib.books.filter(b => b.pages && (o.includeDemo || !b.demo) && (!o.col || (b.col || "dawah") === o.col) && (!o.bookId || b.id === o.bookId) && (!o.authorId || b.authorId === o.authorId) && (!o.type || (b.type || "book") === o.type));
+    return lib.books.filter(b => b.pages && (o.includeDemo || !b.demo) && inCol(o.col, b) && (!o.bookId || b.id === o.bookId) && (!o.authorId || b.authorId === o.authorId) && (!o.type || (b.type || "book") === o.type));
   }
   /** opts: {col, bookId, authorId, type, k, max, includeDemo} */
   function search(lib, q, opts) {
@@ -130,7 +132,7 @@
     }
     if (name === "list_books") {
       const tw = input.title ? terms(input.title) : [];
-      const r = catalog(lib).filter(b => (!scope.col || (scope.col === "turath") === (b.collection === "المكتبة العامة")) && (!input.type || (input.type === "article") === (b.kind === "مقال")) && (!input.author_id || (lib.books.find(x => x.id === b.id) || {}).authorId === input.author_id) && tw.every(t => norm(b.title).includes(t)));
+      const r = catalog(lib).filter(b => inCol(scope.col, lib.books.find(x => x.id === b.id)) && (!input.type || (input.type === "article") === (b.kind === "مقال")) && (!input.author_id || (lib.books.find(x => x.id === b.id) || {}).authorId === input.author_id) && tw.every(t => norm(b.title).includes(t)));
       return { total: r.length, items: r.slice(0, 80) };
     }
     throw new Error("أداة غير معروفة");

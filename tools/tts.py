@@ -47,10 +47,23 @@ def left():
     return MAXMIN * 60 - (time.time() - T0)
 
 
+_ARTIDX = {}
+
+
+def article(bid):
+    """المقالات (data/articles/<شهر>.json) ليست في فهرس الكتب: بياناتها من data/articles/index.json."""
+    if not _ARTIDX:
+        for it in jload(os.path.join(ROOT, "data", "articles", "index.json"), {}).get("items", []): _ARTIDX[it["id"]] = it
+    return _ARTIDX.get(bid)
+
+
 def shard(bid):
     for p in (os.path.join(ROOT, "data", "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")):
         if os.path.exists(p):
             return jload(p, None)
+    a = article(bid)
+    if a and a.get("f"):
+        return (jload(os.path.join(ROOT, "data", "articles", a["f"] + ".json"), {}) or {}).get(bid)
     return None
 
 
@@ -258,7 +271,7 @@ def upload(tag, files):
 def commit(msg):
     if os.environ.get("TTS_COMMIT") != "1":
         return
-    subprocess.run(["git", "add", "data/audio"], cwd=ROOT)
+    subprocess.run(["git", "add", "data/audio", "data/review-requests.json", "data/tashkeel/_queue.json"], cwd=ROOT)  # وما أُحيل إلى التدقيق والتشكيل قبل التسجيل
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode == 0:
         return
     subprocess.run(["git", "commit", "-qm", msg], cwd=ROOT, check=True)
@@ -422,6 +435,8 @@ async def tts_book(item, lst):
     sh = shard(bid)
     cat = catalog()
     b = next((x for x in cat["books"] if x["id"] == bid), None)
+    if not b and article(bid):
+        a = article(bid); b = {"id": bid, "title": a.get("t") or bid, "authorId": a.get("a"), "type": "article", "col": "dawah"}
     if not sh or not b:
         REPORT.append("%s: الكتاب غير موجود" % bid)
         return True
@@ -656,13 +671,42 @@ async def main():
         items += [{"id": k, "voice": v.get("v")} for k, v in lst.items() if v.get("n") and not unrev(k) and not any(i["id"] == k for i in items)]
     ONLY = set(jload(os.path.join(AUD, "_settings.json"), {}).get("only") or [])  # قصر التسجيل على كتب بعينها (قرار المدير ٧ نوفمبر: تمام المنة وحده)
     if ONLY:
-        items = [i for i in items if i.get("id") in ONLY or i.get("del")]
+        # ما اختارته الإدارة بنفسها (الطابور أو TTS_ONLY) يُسجَّل دائمًا؛ والقيد يحصر الاختيار التلقائي وحده.
+        # (كان القيد يحذف بصمت كل كتاب يختاره المدير للتحويل الصوتي، ١٤ نوفمبر)
+        chosen = {i.get("id") for i in q.get("items", [])} | set(only)
+        items = [i for i in items if i.get("id") in ONLY or i.get("id") in chosen or i.get("del")]
         cb = {b["id"]: b for b in catalog()["books"]}
         for k in ONLY:  # يُسجَّل بعد اكتمال تدقيق نصه فقط (لا يُسجَّل نص لم يُراجَع على الصور)
             ready = not (cb.get(k, {}).get("ocr") and (cb[k].get("unrev") or cb[k].get("lite")))
             if ready and not any(i.get("id") == k for i in items): items.append({"id": k, "voice": (lst.get(k) or {}).get("v")})
         items = [i for i in items if i.get("del") or i.get("now") or not (cb.get(i["id"], {}).get("ocr") and (cb[i["id"]].get("unrev") or cb[i["id"]].get("lite")))]  # now=1: بطلب المدير دون انتظار التدقيق
-    left_items = []
+    # كل ما يُطلب تحويله صوتيًّا (كتابًا أو مقالًا، من أي قسم) يُجهَّز أولًا: تدقيق النص على الصور، ثم التشكيل، ثم التسجيل (طلب المدير ١٤ نوفمبر)
+    cbk = {b["id"]: b for b in catalog()["books"]}
+    rr_p, tq_p = os.path.join(ROOT, "data", "review-requests.json"), os.path.join(ROOT, "data", "tashkeel", "_queue.json")
+    rr, tq = jload(rr_p, {"items": []}), jload(tq_p, {"items": []})
+    tk_list = jload(os.path.join(ROOT, "data", "tashkeel", "_list.json"), {})
+    waiting = []
+    def prep(it):
+        bid = it.get("id")
+        if not bid or it.get("del") or it.get("rec") or it.get("now") or it.get("pages") or (lst.get(bid) or {}).get("n"): return True
+        b = cbk.get(bid, {})
+        if b.get("ocr") and (b.get("unrev") or b.get("lite")):  # النص لم يكتمل تدقيقه: يُقدَّم في طابور التدقيق
+            if bid not in rr.setdefault("items", []): rr["items"].insert(0, bid)
+            REPORT.append("%s: ينتظر اكتمال تدقيق النص (قُدّم في طابور التدقيق)" % bid); return False
+        sh = shard(bid) or {}; pages = sh.get("pages") or []
+        txt = " ".join(p for p in pages[:40] if isinstance(p, str))
+        letters = len(re.findall(r"[\u0621-\u064A]", txt)); dia = len(re.findall(r"[\u064B-\u0652]", txt))
+        t = tk_list.get(bid) or {}
+        if b and letters and dia / letters < 0.35 and not (t.get("n") and t.get("n", 0) >= t.get("of", 1)):  # يحتاج تشكيلًا قبل التسجيل
+            if not any((x.get("id") if isinstance(x, dict) else x) == bid for x in tq.setdefault("items", [])): tq["items"].insert(0, {"id": bid})
+            REPORT.append("%s: يُشكَّل أولًا ثم يُسجَّل (أُضيف إلى طابور التشكيل)" % bid); return False
+        return True
+    ready_items = []
+    for it in items:
+        (ready_items if prep(it) else waiting).append(it)
+    items = ready_items
+    jsave(rr_p, rr); jsave(tq_p, tq)
+    left_items = list(waiting)
     for it in items:
         if left() < 300:
             left_items.append(it)
