@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "10 4 * * 1"   # أسبوعيًا: يضم الكتب والمقالات الجديدة
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/tala-curate.py", "data/tala.json"]
   workflow_run:
     workflows: ["استيراد كتب التراث من OpenITI", "الاستيراد اليومي لمقالات صوت السلف"]

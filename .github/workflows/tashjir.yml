@@ -4,6 +4,7 @@ on:
     - cron: "23 10 * * *"   # بعد تجدد الحصة اليومية
     - cron: "25 14 * * *"   # يوميًا لما بقي في الطابور
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/tashjir/_queue.json"]
   workflow_dispatch:
     inputs:

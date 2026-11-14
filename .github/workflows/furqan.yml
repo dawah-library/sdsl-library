@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "23 5 * * 3"   # أسبوعيًا: المقالات والكتب الجديدة
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/furqan.json", "tools/furqan.py"]
 permissions:
   contents: write

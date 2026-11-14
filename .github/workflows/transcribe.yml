@@ -2,6 +2,7 @@ name: تفريغ الصوتيات والمرئيات إلى كتب
 on:
   workflow_dispatch:
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/transcribe/_queue.json"]
   schedule:
     - cron: "13 1 * * *"   # يوميًا: استكمال ما بقي

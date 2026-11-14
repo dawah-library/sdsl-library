@@ -1,6 +1,7 @@
 name: عينات أصوات الصوتيات
 on:
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/audio/_voices.json"]
   workflow_dispatch:
     inputs:

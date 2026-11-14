@@ -11,6 +11,7 @@ on:
     - cron: "23 */2 * * *"   # جولة احتياطية كل ساعتين
   workflow_dispatch:
 permissions:
+  id-token: write   # إشعار تيليجرام (tools/notify.py) عبر OIDC
   contents: write
   pull-requests: write
 concurrency:
@@ -47,6 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          DEV_FORCE: ${{ github.event_name != 'schedule' && '1' || '' }}   # الطلب الجديد والتشغيل اليدوي يتجاوزان انتظار تجدد الحصة
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

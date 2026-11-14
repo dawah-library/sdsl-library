@@ -4,6 +4,7 @@ on:
     inputs:
       extra: { description: "مفاتيح QuranEnc إضافية مفصولة بفاصلة", required: false, default: "" }
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/quran-fetch.py"]
 permissions:
   contents: write

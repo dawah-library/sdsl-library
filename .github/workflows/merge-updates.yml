@@ -1,6 +1,7 @@
 name: دمج تحديثات المكتبة
 on:
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["updates/*.json"]
   workflow_dispatch:
 permissions:

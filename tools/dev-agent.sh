@@ -21,19 +21,40 @@ run_claude() {
   env -u GH_TOKEN -u GITHUB_TOKEN timeout 50m claude -p "$(cat .dev-prompt.md)" --dangerously-skip-permissions --max-turns 120 > .dev-log.txt 2>&1; local r=$?
   tail -c 3000 .dev-log.txt; [ $r = 0 ] && ! grep -qiE "usage limit|rate limit|credit balance|invalid api key|authentication" .dev-log.txt
 }
+# Gemini المجاني: لكل نموذج في كل مفتاح حصة يومية مستقلة صغيرة (نحو ٢٠ طلبًا)، وجلسة البرمجة تحتاج عشرات الطلبات.
+# لذلك: (١) فحص سريع بطلب واحد قبل تشغيل الأداة فيُتخطى النافد والمتقاعد فورًا؛ (٢) نماذج كثيرة بحصص مستقلة،
+# الأقوى أولًا؛ (٣) إن انقطعت الجلسة لنفاد الحصة تُستأنف بالمفتاح/النموذج التالي على التعديلات نفسها لا من الصفر؛
+# (٤) إن نفدت الحصص كلها سُجّل موعد تجددها فلا تُهدر الجولات قبله (QUOTA_OUT=1).
+DEV_MODELS_DEFAULT="gemini-pro-latest gemini-3.1-pro-preview gemini-3.7-flash gemini-3.6-flash gemini-3.5-flash gemini-3-flash-preview gemini-flash-latest gemini-3.8-flash gemini-flash-lite-latest gemini-3.5-flash-lite"
+QUOTA_OUT=0
+done_marker() { [ -s .dev-result.md ] || [ -s .dev-need.md ]; }
 run_gemini() {
   [ "$HAS_G" -gt 0 ] || return 1
   command -v gemini >/dev/null || npm i -g -s @google/gemini-cli >/dev/null 2>&1 || return 1
-  for m in ${DEV_GEMINI_MODELS:-gemini-2.5-pro gemini-2.5-flash gemini-flash-latest}; do
-    for i in "" _2 _3 _4 _5 _6 _7 _8 _9 _10 _11 _12 _13 _14 _15 _16 _17 _18 _19 _20; do
-      v="GEMINI_API_KEY$i"; [ -n "${!v:-}" ] || continue
-      GEMINI_CLI_TRUST_WORKSPACE=true GEMINI_API_KEY="${!v}" env -u GH_TOKEN -u GITHUB_TOKEN timeout 40m gemini -m "$m" -y -p "$(cat .dev-prompt.md)" > .dev-log.txt 2>&1; local r=$?
-      tail -c 2000 .dev-log.txt
+  local KEYS m v r ok=0 tries=0 gone=" " base; KEYS=$(python3 tools/dev-agent.py keys)
+  base=$(cat .dev-prompt.md); rm -f .dev-result.md .dev-need.md
+  QUOTA_OUT=1
+  for m in ${DEV_GEMINI_MODELS:-$DEV_MODELS_DEFAULT}; do
+    for v in $KEYS; do
+      [ -n "${!v:-}" ] || continue
+      case "$gone" in *" $m "*) break ;; esac
+      [ "$SECONDS" -gt "${DEV_DEADLINE:-5400}" ] && { echo "انتهى وقت الجولة"; QUOTA_OUT=0; break 2; }
+      r=$(GEMINI_API_KEY="${!v}" python3 tools/dev-agent.py probe "$m")
+      case "$r" in gone) gone+="$m "; echo "$m: غير متاح"; break ;; ok) ;; *) continue ;; esac
+      QUOTA_OUT=0; tries=$((tries+1)); [ "$tries" -gt "${DEV_MAX_TRIES:-10}" ] && break 2
+      if [ "$tries" -gt 1 ] && { ! git diff --quiet HEAD 2>/dev/null || [ -n "$(git ls-files --others --exclude-standard | grep -v '^\.dev-' | head -1)" ]; }; then
+        printf "%s\n\n## استئناف\nهذه استئناف لجلسة سابقة انقطعت (نفاد حصة النموذج). في المستودع تعديلات منها: راجعها بـ git status وgit diff وأكمل من حيث توقفت، ولا تُعد ما أُنجز.\n" "$base" > .dev-prompt.md
+      fi
+      echo "▶ $m ($v)"
+      GEMINI_CLI_TRUST_WORKSPACE=true GEMINI_API_KEY="${!v}" env -u GH_TOKEN -u GITHUB_TOKEN timeout 40m gemini -m "$m" -y -p "$(cat .dev-prompt.md)" > .dev-log.txt 2>&1; r=$?
+      tail -c 1500 .dev-log.txt
       if grep -q "not running in a trusted directory" .dev-log.txt; then echo "::error::Gemini CLI trust"; return 1; fi
-      if [ $r = 0 ] && ! grep -qiE "quota|RESOURCE_EXHAUSTED|429|API key not valid" .dev-log.txt; then echo "gemini:$m" > .dev-eng; return 0; fi
+      if done_marker || { [ $r = 0 ] && ! grep -qiE "RESOURCE_EXHAUSTED|exceeded your current quota|API key not valid" .dev-log.txt; }; then
+        echo "gemini:$m" > .dev-eng; ok=1; break 2; fi
     done
   done
-  return 1
+  printf "%s" "$base" > .dev-prompt.md
+  [ $ok = 1 ]
 }
 engine() {  # يشغّل المحرك المطلوب، ومع «تلقائي» يبدأ بـ Claude ثم Gemini إن تعذر
   rm -f .dev-eng
@@ -99,8 +120,14 @@ run)
   E=$(cat .dev-eng 2>/dev/null || echo "—")
   if [ $ok = 0 ]; then
     meta set "$ID" st=pending eng="${ENG}"
-    meta log "$ID" "تعذر تشغيل محرك البرمجة الآن (المحركات المتاحة: Claude=$HAS_C، مفاتيح Gemini=$HAS_G). يُعاد تلقائيًا في الجولة القادمة."
-    meta status engines="{\"claude\":$HAS_C,\"gemini\":$HAS_G}" "run={\"id\":\"$ID\",\"act\":\"run\",\"ok\":false,\"at\":\"$(date -u +%FT%TZ)\"}"
+    if [ "$QUOTA_OUT" = 1 ] && [ "$HAS_C" = 0 ]; then
+      QU=$(python3 tools/dev-agent.py reset_at)
+      meta log "$ID" "نفدت الحصة اليومية المجانية لـ Gemini في كل المفاتيح والنماذج؛ يُستأنف آليًّا بعد تجددها (نحو الحادية عشرة صباحًا بتوقيت مكة). لتشغيل فوري دائم أضف سر CLAUDE_CODE_OAUTH_TOKEN."
+      meta status engines="{\"claude\":$HAS_C,\"gemini\":$HAS_G}" quota_until="$QU" "run={\"id\":\"$ID\",\"act\":\"run\",\"ok\":false,\"why\":\"quota\",\"at\":\"$(date -u +%FT%TZ)\"}"
+    else
+      meta log "$ID" "تعذر إكمال التنفيذ في هذه الجولة (المحركات المتاحة: Claude=$HAS_C، مفاتيح Gemini=$HAS_G). يُعاد تلقائيًا في الجولة القادمة."
+      meta status engines="{\"claude\":$HAS_C,\"gemini\":$HAS_G}" "run={\"id\":\"$ID\",\"act\":\"run\",\"ok\":false,\"at\":\"$(date -u +%FT%TZ)\"}"
+    fi
     exit 0
   fi
   cp .dev-result.md /tmp/res 2>/dev/null || echo "نُفّذ الطلب." > /tmp/res
@@ -123,7 +150,7 @@ Agent: $E (dev-agent)"
   if [ "$AUTO" = 1 ] && [ -z "$CHK" ]; then
     merge_main && { meta set "$ID" st=done closed=1; meta log "$ID" "اجتاز الفحص، ونُشر مباشرة بإذن المدير (نشر تلقائي)."; }
   fi
-  meta status engines="{\"claude\":$HAS_C,\"gemini\":$HAS_G}" "run={\"id\":\"$ID\",\"act\":\"run\",\"ok\":true,\"eng\":\"$E\",\"at\":\"$(date -u +%FT%TZ)\"}"
+  meta status engines="{\"claude\":$HAS_C,\"gemini\":$HAS_G}" quota_until= "run={\"id\":\"$ID\",\"act\":\"run\",\"ok\":true,\"eng\":\"$E\",\"at\":\"$(date -u +%FT%TZ)\"}"
   ;;
 esac
 exit 0

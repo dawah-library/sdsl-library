@@ -5,6 +5,7 @@ on:
     - cron: "23 5 * * *"   # يوميًا: يضع الجديد في قائمة المراجعة (ومنشورات فيسبوك المفعّل نشرها تلقائيًا تُنشر)
     - cron: "47 16 * * *"  # جولة مسائية لمنشورات فيسبوك وغيرها
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/source-import.js", "data/sources.json"]
 permissions:
   contents: write
