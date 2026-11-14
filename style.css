@@ -892,20 +892,41 @@ body.pfopen{overflow:hidden}
 .kurform select{margin-inline-start:6px}.kurst{border:1px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%}.kurst legend{font-size:.9rem;color:var(--mut);padding:0 4px}
 .kursum{background:#eef6f3;border-radius:12px;padding:8px 14px;margin:8px 0}
 /* الرئيسية: عبارات فضل القراءة والعلم، والمكتبة بالأرقام (٦ نوفمبر) */
-.hquote{position:relative;max-width:760px;margin:6px auto 14px;padding:14px 18px 10px;background:var(--sf);border:1px solid var(--line);border-inline-start:4px solid var(--gold);border-radius:14px;text-align:start}
-.hquote.fade{animation:hqf .6s ease}@keyframes hqf{from{opacity:0;transform:translateY(6px)}}
-.hqk{font-size:.8rem;color:var(--gold);font-weight:600}
-.hqt{font-family:Amiri,serif;font-size:1.25rem;line-height:2;margin:4px 0 6px;color:var(--ink)}
-.hqt .ayref{font-size:.85rem;opacity:.75;white-space:nowrap}
-.hqm{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:space-between;align-items:center;font-size:.82rem}
-.hqm .btn.s{padding:3px 10px;font-size:.8rem}
+/* بطاقة وصايا العلم والقراءة في الواجهة */
+.hquote{position:relative;max-width:780px;margin:8px auto 16px;padding:14px 20px 0;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));border-radius:18px;text-align:center;overflow:hidden;
+ background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--gold) 9%,transparent),transparent 70%),linear-gradient(180deg,var(--sf),color-mix(in srgb,var(--ac) 5%,var(--sf)));box-shadow:0 6px 22px rgba(0,0,0,.05)}
+.hqtop{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.hqtt{font-family:Amiri,serif;font-weight:700;font-size:1.08rem;color:var(--ac)}.hqtt::before{content:"۞ ";color:var(--gold)}
+.hqcs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:100%}.hqcs::-webkit-scrollbar{display:none}
+.hqcs button{font:inherit;font-size:.74rem;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;white-space:nowrap;flex:none}
+.hqcs button[aria-selected=true]{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.hqbody{min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 0 2px}
+.hqbody.fade{animation:hqf .7s ease}@keyframes hqf{from{opacity:0;transform:translateY(8px)}}
+.hqk{font-size:.76rem;color:var(--gold);font-weight:600;padding:1px 10px;border-radius:999px;background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.hqt{font-family:Amiri,serif;font-weight:700;font-size:clamp(1.3rem,1.05rem + 1.1vw,1.7rem);line-height:1.85;margin:6px auto 4px;max-width:34em;color:var(--ink);text-wrap:balance}
+.hqt.lg{font-size:clamp(1.12rem,1rem + .7vw,1.4rem)}
+.hqt.ay{font-family:"Amiri Quran",Amiri,serif;font-weight:400;color:var(--ac)}
+.hqt .ayref{font-family:Amiri,serif;font-weight:400;font-size:.62em;color:var(--mut);white-space:nowrap}
+.hqw{margin:0 0 4px;font-size:.88rem;color:var(--mut)}.hqw::before{content:"— "}
+.hqm{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:space-between;align-items:center;font-size:.78rem;border-top:1px dashed color-mix(in srgb,var(--gold) 35%,var(--line));margin-top:8px;padding:8px 0 10px}
+.hqsrc{color:var(--mut);text-decoration:none;text-align:start}.hqsrc:hover{color:var(--ac);text-decoration:underline}
+.hqbtn{display:inline-flex;align-items:center;gap:4px;margin-inline-start:auto}
+.hqbtn button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--sf);color:var(--ink);cursor:pointer;font-size:1rem;line-height:1;display:inline-grid;place-items:center}
+.hqbtn button:hover{border-color:var(--ac);color:var(--ac)}
+.hqn{font-size:.74rem;color:var(--mut);min-width:3.6em;font-variant-numeric:tabular-nums}
+.hqbar{position:absolute;inset-inline:0;bottom:0;height:3px;background:color-mix(in srgb,var(--gold) 15%,transparent)}
+.hqbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--gold),var(--ac));transform-origin:right;animation:hqp 14s linear forwards}
+html[dir=ltr] .hqbar i{transform-origin:left}
+.hquote:hover .hqbar i,.hquote:focus-within .hqbar i{animation-play-state:paused}
+@keyframes hqp{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (max-width:520px){.hqcs button{padding:2px 8px;font-size:.72rem}.hquote{padding:12px 14px 0}.hqtop{justify-content:center;flex-direction:column;gap:6px}.hqbody{min-height:170px}.hqm{justify-content:center}.hqsrc{text-align:center}.hqbtn{margin-inline-start:0}}
 .hstats h2{margin-bottom:8px}
 .hsg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 16px}
 .hs{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;text-decoration:none;color:var(--ink);background:linear-gradient(160deg,var(--sf),color-mix(in srgb,var(--ac) 7%,var(--sf)));border:1px solid var(--line);transition:transform .2s,box-shadow .2s}
 .hs:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .hs b{font-size:1.6rem;color:var(--ac);font-variant-numeric:tabular-nums;line-height:1.3}
 .hs span{font-size:.82rem;color:var(--mut);text-align:center}
-@media (prefers-reduced-motion:reduce){.hquote.fade{animation:none}.hs{transition:none}}
+@media (prefers-reduced-motion:reduce){.hqbody.fade{animation:none}.hqbar{display:none}.hs{transition:none}}
 /* المؤلفون: البحث بالاسم */
 .asrch{margin-top:14px}.asrch input{width:100%}
 /* الجولة التعريفية */
@@ -1065,7 +1086,7 @@ body.sdopen #side{transform:none}#sidebg{position:fixed;inset:0;z-index:59;backg
 :root{--bg2:color-mix(in srgb,var(--bg) 82%,var(--ac));--g1:color-mix(in srgb,var(--ac) 16%,transparent);--g2:color-mix(in srgb,var(--gold) 14%,transparent)}
 body{background:radial-gradient(1200px 600px at 100% -10%,var(--g1),transparent 60%),radial-gradient(900px 500px at -10% 110%,var(--g2),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2)) fixed}
 .top{background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 70%,#000) 70%,color-mix(in srgb,var(--ac) 60%,var(--gold)))}
-.card,.bk,.hs,.stsec,.tmq,.hdc,.hquote,details.hfold,.skc,.arbl,.msuras a,.grday,.fbi{background:color-mix(in srgb,var(--sf) 72%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
+.card,.bk,.hs,.stsec,.tmq,.hdc,details.hfold,.skc,.arbl,.msuras a,.grday,.fbi{background:color-mix(in srgb,var(--sf) 72%,transparent);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
  border-color:color-mix(in srgb,var(--line) 65%,rgba(255,255,255,.5));box-shadow:0 4px 18px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.45)}
 .btn{background:linear-gradient(180deg,color-mix(in srgb,var(--sf) 88%,transparent),color-mix(in srgb,var(--sf) 66%,transparent));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid color-mix(in srgb,var(--line) 60%,rgba(255,255,255,.6));box-shadow:0 2px 8px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.55);border-radius:14px}
 .btn.p{background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 82%,#fff),var(--ac) 55%,color-mix(in srgb,var(--ac) 75%,#000));color:var(--on);border-color:transparent;box-shadow:0 4px 14px color-mix(in srgb,var(--ac) 35%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
@@ -1170,20 +1191,6 @@ a.card:hover,a.col:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(
 :root[data-theme=dark] .tpqt{color:#fff}:root[data-theme=dark] .tala.kids h2,:root[data-theme=dark] .tala.kids h3{color:#cdb4ff}
 @media(prefers-reduced-motion:reduce){.tala.kids .talac i,.tpbig,.tpload{animation:none}}
 
-/* القبسات وعبارات فضل العلم: رسالة على ورقة قديمة */
-.hquote{background:radial-gradient(ellipse at 50% 45%,rgba(255,250,232,.0) 55%,rgba(150,105,45,.22) 100%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .11 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),linear-gradient(170deg,#f6ebcf,#efdcae 55%,#e9d19c)!important;
- -webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:1px solid #c9a96a!important;border-radius:6px 18px 6px 18px!important;box-shadow:0 1px 0 #fff8 inset,0 10px 24px -12px rgba(90,60,20,.45),0 2px 0 #b8954f!important;
- padding:26px 26px 14px!important;color:#3d2b12;text-align:center!important;max-width:720px}
-.hquote::before,.hquote::after{content:"";position:absolute;inset-inline:10px;height:10px;border-radius:50%;background:linear-gradient(#d9bd80,#c4a05c);opacity:.55}
-.hquote::before{top:-4px}.hquote::after{bottom:-4px}
-.hquote .hqk{display:block;font-family:"Reem Kufi",sans-serif;font-size:.95rem;color:#7a4e14;letter-spacing:.3px}
-.hquote .hqk::after{content:"❦";display:block;font-size:1.1rem;color:#a37a35;margin:2px 0 0;line-height:1}
-.hquote .hqt{font-family:"Amiri",serif;font-weight:700;font-size:1.45rem;line-height:2.05;color:#2e1f0a;text-shadow:0 1px 0 #fff6;margin:8px 4px 10px}
-.hquote .hqm{border-top:1px dashed #b8955566;padding-top:8px;justify-content:center;font-family:"Amiri",serif}
-.hquote .hqm .mut{color:#6b4f25;font-style:italic;font-size:.95rem;width:100%;text-align:center}
-.hquote .btn.s{background:#fff7e3;border:1px solid #c9a96a;color:#6b4318;border-radius:999px}
-:root[data-theme=dark] .hquote{filter:brightness(.82) sepia(.15)}
-@media(max-width:600px){.hquote{padding:22px 16px 12px!important}.hquote .hqt{font-size:1.25rem}}
 
 /* فهرس المصحف القابل للتحكم */
 .mixc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;margin:10px 0}.mixc .chips{margin:0;align-items:center}
