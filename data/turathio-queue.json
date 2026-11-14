@@ -737,7 +737,15 @@
    "a": "ta_tabari",
    "an": "",
    "tp": "t18",
-   "new": 1
+   "new": 1,
+   "cands": [
+    {
+     "b": 9783,
+     "name": "تاريخ الطبري = تاريخ الرسل والملوك، وصلة تاريخ الطبري",
+     "r": 0.666
+    }
+   ],
+   "b": 9783
   },
   {
    "id": "uddatsabirin",
@@ -1042,6 +1050,7 @@
   "ajurrumiyya",
   "qatr",
   "burhanzarkashi",
-  "faydqadir"
+  "faydqadir",
+  "tarikhtabari"
  ]
 }
