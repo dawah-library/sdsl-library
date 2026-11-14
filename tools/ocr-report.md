@@ -1,5 +1,5 @@
-# تقرير آخر تحويل — 2026-11-14 08:29 UTC
+# تقرير آخر تحويل — 2026-11-14 08:35 UTC
 
-## تدقيق تزكية النفوس (p60fd2fc2)
+## تدقيق علم التلاوة (p26b6ca3f)
 - أُعيدت قراءته: 40 صفحة؛ بقي دون مراجعة: 0، بالنموذج الخفيف: 0، مواضع شك: 0
-- أخطاء Gemini: mistral 429 ×7، gemini-flash-latest 503 ×2، gemini-flash-latest 429 (الحصة اليومية) ×2، gemini-3.7-flash 429 (الحصة اليومية) ×2، gemini-3.6-flash 503 ×2، gemini-3.8-flash 429 (الحصة اليومية) ×2
+- أخطاء Gemini: mistral 429 ×7، gemini-flash-latest 429 (الحصة اليومية) ×5، gemini-3.7-flash 429 (الحصة اليومية) ×5، gemini-3-flash-preview 429 (الحصة اليومية) ×5، gemini-3.6-flash 503 ×4، gemini-3.6-flash 429 (الحصة اليومية) ×4
