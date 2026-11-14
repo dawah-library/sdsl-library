@@ -190,6 +190,10 @@ jobs:
           OCR_ONLY: ${{ matrix.book }}
           OCR_NBOOKS: ${{ needs.plan.outputs.nbooks }}
           OCR_PARALLEL: "6"  # يطابق max-parallel أعلاه
+          # جولتا ١٦:٤٠ و٠١:٥٠: تنفد حصة المفاتيح العامة في الجولة الصباحية فكانت الجولتان تراجعان ٠–٤ صفحات؛
+          # فتأخذان أيضًا مفاتيح خدمات الكتب الستة بعد أن أنهت جولاتها الصباحية (tools/gkeys.py: books)
+          OCR_KEY_ROLE: ${{ (github.event.schedule == '40 16 * * *' || github.event.schedule == '50 1 * * *') && 'books' || 'bulk' }}
+          GEMINI_BATCH_LITE: ${{ vars.GEMINI_BATCH_LITE || '8' }}
           GEMINI_KEY_START: ${{ strategy.job-index }}
         run: TESSDATA_PREFIX=$PWD/tessdata python3 tools/ocr-pdf.py
       - name: رفع المصورة وصور الصفحات إلى مخزن R2 (إن ضُبط)

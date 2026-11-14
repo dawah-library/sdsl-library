@@ -872,8 +872,11 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             if LITE_RE.search(getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
             else: LITE.discard(i)
         if (GKEY or GHM_TOKEN) and scan:
-            sc = [i for i in scan if nums[i] not in NOLITE] + [i for i in scan if nums[i] in NOLITE]  # دفعات متجانسة: الخفيفة وحدها
-            groups = [sc[k:k + batch] for k in range(0, len(sc), batch)]
+            # دفعات متجانسة: الخفيفة وحدها. والصفحة الخفيفة لها نص قائم يُتحقق منه على الصورة، فتُجمع منها صفحات أكثر
+            # في الطلب الواحد (الحصة اليومية بعدد الطلبات): ٨ بدل ٤ تضاعف ما يُدقَّق يوميًّا.
+            s1, s2 = [i for i in scan if nums[i] not in NOLITE], [i for i in scan if nums[i] in NOLITE]
+            blite = max(batch, int(os.environ.get("GEMINI_BATCH_LITE", "8") or batch)) if prior else batch
+            groups = [s1[k:k + batch] for k in range(0, len(s1), batch)] + [s2[k:k + blite] for k in range(0, len(s2), blite)]
             GW = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
             HW = int(os.environ.get("GHM_WORKERS", "2")) if GHM_TOKEN else 0
             workers = GW + HW
@@ -892,6 +895,11 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
                 res = gemini_batch(imgs, [drafts_of(i) for i in idx]) if len(idx) > 1 else None
                 if res:
                     for i, g in zip(idx, res): accept(i, g)
+                elif len(idx) > 3 and not (len(KEXH) >= len(GKEYS) or GFAIL[0] >= int(os.environ.get("GEMINI_MAX_FAILS", "25"))):
+                    # اختل تقسيم الدفعة الكبيرة: نصفان (طلبان) بدل طلب لكل صفحة؛ ولا إعادة إن نفدت الحصة
+                    h = len(idx) // 2
+                    for part in (idx[:h], idx[h:]): review((wi, part))
+                    return
                 else:
                     for i, img in zip(idx, imgs):
                         g = gemini_page(img, drafts_of(i))
