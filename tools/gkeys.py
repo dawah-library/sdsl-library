@@ -43,4 +43,6 @@ def keys(role="bulk"):
         return ks
     if role == "study":
         return ks[-r:] + ks[:-r]
+    if role == "books":  # جولات التحويل المسائية والليلية: بعد أن تأخذ خدمات الكتب حاجتها صباحًا، يكمل التدقيق بمفاتيحها أيضًا (العامة أولًا)
+        return ks
     return ks[:-r]
