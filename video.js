@@ -33,7 +33,7 @@ const VIDX = (() => {
     const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid)).reverse();
     view(`<div class="cmhero"><div><h2>🎬 مراجعات الكتب بالفيديو</h2><p>استعراض الكتب في فيديوهات تعليمية: ملخصها، ومراجعتها، ومميزاتها ومنهجها، وقراءة نقدية منصفة لها، والحديث عن بعض أبوابها؛ تعدّها إدارة المكتبة ومن تفوّضه، للمشاهدة والتنزيل والمشاركة.</p></div></div>
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
-        <label>الكتاب</label><input name="t" list="vidbooks" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب اسم الكتاب ثم اختره" required><datalist id="vidbooks">${lib.books.filter(b => !b.demo && !isArt(b) && !VOL2(b)).slice(0, 3000).map(b => `<option value="${esc(b.setTitle || b.title)}">`).join("")}</datalist>
+        <label>الكتاب أو المقال</label><input name="t" autocomplete="off" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب جزءًا من اسم الكتاب أو المقال ثم اختره" required><div id="vidsug" class="vidsug" hidden></div>
         <label>نمط الفيديو <span class="mut">(يمكن الجمع بين أكثر من نمط)</span></label>${checks("style", ["summary"])}
         <label>المدة</label>${radios("min", "6")}<input name="scenes" type="number" min="3" max="30" placeholder="أو عدد المشاهد (اختياري)" style="max-width:220px">
         <label>الجمهور</label>${radios("aud", "general")}<label>أسلوب الإلقاء</label>${radios("tone", "calm")}
@@ -55,12 +55,23 @@ const VIDX = (() => {
     const lb = document.getElementById("vlexgo"); if (lb) lb.onclick = async () => { const st = document.getElementById("vlexst"); st.textContent = "جارٍ الحفظ…";
       try { const words = lexParse(document.getElementById("vlex").value); await GH.editJSON("data/video/_lexicon.json", o => Object.assign(o || {}, { words }), "فيديو: قاموس النطق"); st.textContent = "✓ حُفظ (" + toAr(words.length) + ")"; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
     const f = document.getElementById("vidf"); if (!f) return;
-    const bookOf = () => lib.books.find(x => (x.setTitle || x.title) === f.t.value.trim());
+    // البحث في كل كتب المكتبة ومقالاتها (لا قائمة مقطوعة): يطابق جزء الاسم مع توحيد الهمزات والتشكيل
+    const TT = b => b.setTitle || b.title || "", KIND = b => ({ book: "كتاب", article: "مقال", fatwa: "فتوى", statement: "بيان" })[kindOf(b)] || "";
+    let POOL = null, picked = bid && B(bid) ? B(bid) : null;
+    const pool = () => POOL || (POOL = lib.books.filter(b => !b.demo && !VOL2(b) && TT(b)).map(b => [norm(TT(b)), b]));
+    const bookOf = () => picked && TT(picked) === f.t.value.trim() ? picked : (pool().find(([, b]) => TT(b) === f.t.value.trim()) || [])[1];
+    const sug = document.getElementById("vidsug");
+    f.t.addEventListener("input", () => { const q = norm(f.t.value.trim()).replace(/\s+/g, " "); picked = null;
+      if (q.length < 2) { sug.hidden = true; return; }
+      const r = pool().filter(([n]) => n.includes(q)).sort((a, b) => (b[0].startsWith(q) - a[0].startsWith(q)) || (kindOf(a[1]) === "book" ? -1 : 0) - (kindOf(b[1]) === "book" ? -1 : 0) || a[0].length - b[0].length);
+      sug.innerHTML = r.length ? r.slice(0, 40).map(([, b]) => `<button type="button" data-id="${esc(b.id)}"><b>${esc(TT(b))}</b><span class="mut">${esc(KIND(b))} • ${esc(A(b.authorId).name)}</span></button>`).join("") + (r.length > 40 ? `<p class="mut">و${toAr(r.length - 40)} نتيجة أخرى؛ زد في الاسم لتضييقها</p>` : "") : '<p class="mut">لا كتاب ولا مقال بهذا الاسم في المكتبة</p>';
+      sug.hidden = false; });
+    sug.addEventListener("click", e => { const x = e.target.closest("[data-id]"); if (!x) return; picked = B(x.dataset.id) || pool().find(([, b]) => b.id === x.dataset.id)[1]; f.t.value = TT(picked); sug.hidden = true; toc(); });
     const toc = async () => { const b = bookOf(), el = document.getElementById("vidtoc"); if (!b) return; el.innerHTML = '<span class="mut">جارٍ تحميل الفهرس…</span>';
       let T = []; try { const bb = await loadBook(b.id); T = (bb.toc || []).filter(x => x.t).slice(0, 80); } catch (e) { }
       el.innerHTML = T.length ? T.map(x => { const t = String(x.t).replace(/^#+\s*/, ""); return `<label class="chip"><input type="checkbox" name="topics" value="${esc(t)}"> ${esc(t.slice(0, 60))}</label>`; }).join("") : '<span class="mut">لا فهرس لهذا الكتاب؛ اكتب الموضوعات في الخانة.</span>'; };
     f.t.addEventListener("change", toc); if (bid) toc();
-    f.addEventListener("submit", async e => { e.preventDefault(); const mode = (e.submitter && e.submitter.dataset.mode) || "draft", b = bookOf(), st = document.getElementById("vidst"); if (!b) return st.textContent = "اختر الكتاب من القائمة";
+    f.addEventListener("submit", async e => { e.preventDefault(); const mode = (e.submitter && e.submitter.dataset.mode) || "draft", b = bookOf(), st = document.getElementById("vidst"); if (!b) return st.textContent = "اختر الكتاب أو المقال من نتائج البحث";
       const v = n => (f.querySelector(`[name=${n}]:checked`) || {}).value, topics = [...f.querySelectorAll("[name=topics]:checked")].map(x => x.value).concat(f.topics2.value.split(/[,،]/).map(x => x.trim()).filter(Boolean));
       const it = { id: b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : b.id, style: [...f.querySelectorAll("[name=style]:checked")].map(x => x.value).join("+"), min: v("min"), scenes: f.scenes.value || "", aud: v("aud"), tone: v("tone"), topics, ideas: f.ideas.value.trim(), intro: f.intro.value.trim(), outro: f.outro.value.trim(),
         aspects: [...f.querySelectorAll("[name=aspect]:checked")].map(x => x.value), pages: f.pages.checked ? 1 : 0, sfx: f.sfx.checked ? 1 : 0, voice: v("voice"), theme: mode === "creative" ? "auto" : v("theme"), font: v("font"), pat: mode === "creative" ? "" : v("pat"), cap: f.cap.checked ? 1 : 0, note: f.note.value.trim(), creative: mode === "creative" ? 1 : 0, phase: mode === "draft" ? "script" : "", at: new Date().toISOString() };
