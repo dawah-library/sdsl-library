@@ -1,8 +1,8 @@
 # ربط الكتب بمصورات طبعاتها
 
-## adabmufrad
-- adabmufrad ← https://files.turath.io/pdf/adamfradamfr/adamfr.pdf (10 م.ب)
-## khulafa
-- khulafa ← https://files.turath.io/pdf/shamela/11997/11997.pdf (36 م.ب)
-## fusul
-- fusul ← https://files.turath.io/pdf/shamela/9241/fsoul.pdf (7 م.ب)
+## nasai
+- لم يُربط: عدد الملفات (11) لا يوافق المجلدات (1): 00_106636.pdf، 01_106636.pdf، 01_106636p.pdf|المقدمة، 02_106636.pdf، 03_106637.pdf، 04_106637.pdf، 05_106638.pdf، 06_106638.pdf
+## ibnmajah
+- ibnmajah ← https://files.turath.io/pdf/waq37904/37904.pdf (44 م.ب)
+## musnadahmad
+- لم يُربط: مجلدات المكتبة مقسمة بالحجم لا بأجزاء المطبوع؛ يُعاد استيراده من تراث (TIO) ليُربط جزءًا جزءًا
