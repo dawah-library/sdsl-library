@@ -4,7 +4,15 @@
    يُستدعى من tala.js (#/talaea/qasas) ويتسلم منه أدوات القسم (العنوان والنجوم والمرحلة). التقدم محفوظ على هذا الجهاز. */
 const TQS = (() => {
   let DATA = null, C = null, WHO = null;
-  const load = async () => DATA || (DATA = await fetch("data/tala-qasas.json").then(r => r.ok ? r.json() : null).catch(() => null));
+  const RAW = p => "https://raw.githubusercontent.com/" + ((typeof CFG !== "undefined" && CFG.repo) || "dawah-library/sdsl-library") + "/main/data/" + p + "?t=" + Math.floor(Date.now() / 300e3);
+  const get = async p => { for (const u of [RAW(p), "data/" + p]) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { } } return null; };
+  let GEN = [], OKS = {};
+  const adm = () => (typeof isAdmin === "function" && isAdmin()) || (typeof can === "function" && can("tala"));
+  // القصص المصوغة من كتب الباشا وسلاسل الشيخ مصطفى دياب (tools/tala-qasas-gen.py) لا تظهر حتى يعتمدها المدير
+  const load = async f => { if (DATA && !f) return DATA; const base = await fetch("data/tala-qasas.json").then(r => r.ok ? r.json() : null).catch(() => null); if (!base) return null;
+    const [g, ok] = await Promise.all([get("tala-qasas-gen.json"), get("tala-qasas-ok.json")]); GEN = (g && g.items) || []; OKS = (ok && ok.ok) || {};
+    const appr = GEN.filter(x => OKS[x.id] === 1 && !x.dup); return (DATA = Object.assign({}, base, { items: base.items.concat(appr) })); };
+  const pending = () => GEN.filter(x => !OKS[x.id] && !x.dup);
   const mix = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
   const sfx = (f, ...a) => { try { if (typeof TSFX !== "undefined") TSFX[f](...a); } catch (e) { } };
   const lv = k => k === "t4" ? "t3" : (k || "t1"); // الناشئة يقرؤون نص المرحلة الثالثة مع النقاش والفوائد
@@ -17,7 +25,8 @@ const TQS = (() => {
     C = ctx; const D = await load();
     if (!D) return C.view_(C.head("", true) + '<p class="note">القصص غير متاحة الآن، حاول لاحقًا.</p></div>');
     if (q.g === "who") return who(D, q);
-    const f = D.items.find(x => x.id === q.id);
+    if (q.g === "rev" && adm()) return review(D);
+    const f = D.items.find(x => x.id === q.id) || (adm() && GEN.find(x => x.id === q.id));
     if (f) return story(D, f, q.k && /^t[1-4]$/.test(q.k) ? C.own(q.k) : ((C.kid() || {}).track || "t1"));
     return hub(D, q.c);
   }
@@ -33,6 +42,8 @@ const TQS = (() => {
       <nav class="chips"><a class="chip${cur ? "" : " x"}" href="#/talaea/qasas">الكل</a>${cats.map(c => `<a class="chip${cur && cur[0] === c[0] ? " x" : ""}" href="#/talaea/qasas?c=${c[0]}">${c[2]} ${esc(c[1])}</a>`).join("")}</nav>
       ${cats.filter(c => !cur || c === cur).map(c => { const fs = list.filter(f => f.c === c[0]); return fs.length ? `<h3>${c[2]} ${esc(c[1])}</h3><p class="mut">${esc(c[3])}</p>
         <div class="talag tgames">${fs.map(f => `<a class="talac tqsc${nDone(f.id) ? " on" : ""}" href="#/talaea/qasas?id=${f.id}"><i aria-hidden="true">${f.ic}</i><b>${esc(f.n)}${nDone(f.id) ? " ✅" : ""}</b><span>${esc(f.lq)}</span></a>`).join("")}</div>` : ""; }).join("")}
+      ${adm() && pending().length ? `<p><a class="btn s p" href="#/talaea/qasas?g=rev">🛡️ قصص مقترحة من كتب الباشا ومصطفى دياب بانتظار المراجعة (${toAr(pending().length)})</a></p>` : ""}
+      <p class="mut">ومن مصادر هذه القصص: «صور من حياة الصحابة» و«صور من حياة الصحابيات» لعبد الرحمن رأفت الباشا، وسلاسل الشيخ مصطفى دياب القصصية.</p>
       <p class="note">إلى الوالدين: القصص مقتصرة على الثابت في القرآن والسنة وكتب السير المعتمدة، بلا إسرائيليات ولا صور للأنبياء والصحابة. والمصدر مذكور تحت كل قصة.</p></div></div>`);
   }
 
@@ -53,7 +64,8 @@ const TQS = (() => {
       <h3>🎯 نشاط عملي</h3><div class="mjacts"><span>${esc(f.act[L])}</span></div>
       ${k === "t4" ? `<div class="card"><h3>🗣️ للنقاش مع المربي أو الأصدقاء</h3><p>${esc(f.nq)}</p></div>` : ""}
       <p><button class="btn p tqfin${isDone(f.id, k) ? " on" : ""}" data-act="tqfin">${isDone(f.id, k) ? "✅ أتممت هذه القصة" : "أتممت القصة والنشاط ⭐"}</button></p>
-      <p class="mut">المصدر: ${esc(f.src)}</p>
+      <p class="mut">المصدر: ${esc(f.src)}${f.b ? ` — <a href="#/book/${esc(f.b)}/${f.p || 1}">📖 اقرأ الأصل في المكتبة</a>` : ""}${MORE[f.id] ? ` — <a href="#/book/${MORE[f.id][0]}/${MORE[f.id][1]}">📖 قصته في «صور من حياة ${MORE[f.id][0].startsWith("tio14542") ? "الصحابيات" : "الصحابة"}» للباشا</a>` : ""}</p>
+      ${adm() && f.rev === 0 ? `<div class="card tqrev"><b>🛡️ مراجعة المدير:</b> ${OKS[f.id] === 1 ? "معتمدة ✓" : OKS[f.id] === -1 ? "مرفوضة" : "لم تُعتمد بعد"} <button class="btn s p" data-tqok="${f.id}" data-v="1">اعتماد</button> <button class="btn s" data-tqok="${f.id}" data-v="-1">رفض</button></div>` : ""}
       <p><a class="btn" href="#/talaea/qasas?c=${f.c}">← ${esc(cat[1] || "القصص")}</a> <a class="btn" href="#/talaea/qasas?id=${nx.id}&k=${k}">القصة التالية: ${esc(nx.n)} ←</a></p></div></div>`);
   }
 
@@ -98,5 +110,18 @@ const TQS = (() => {
     if (act.act === "tqmore") { const h = box.querySelector(".tqcl li[hidden]"); if (h) { h.hidden = false; box.dataset.c = +box.dataset.c + 1; sfx("bubble"); } if (!box.querySelector(".tqcl li[hidden]")) e.target.closest("button").disabled = true; return; }
     if (act.act === "tqwnext") { WHO.i++; return view({ g: "who" }, C); }
   });
+  // روابط شخصيات القصص الأساسية إلى فصولها في كتب الباشا
+  const MORE = { anas: ["tio30089-v01", 8], ibnabbas: ["tio30089-v01", 168], bilal: ["tio30089-v01", 298], uthman: ["tio30089-v01", 530], fatima: ["tio14542-v01", 30], asma: ["tio14542-v01", 42], umsulaym: ["tio14542-v01", 87], umsalama: ["tio14542-v01", 100] };
+  function review(D) {
+    const P = pending(), cats = Object.fromEntries(D.cats.map(c => [c[0], c[1]]));
+    C.view_(C.head("مراجعة القصص", true) + `<div class="tqs"><h2 class="talat">🛡️ قصص مقترحة بانتظار المراجعة</h2>
+      <p class="mut">صاغها الذكاء الاصطناعي من كتب الباشا وسلاسل الشيخ مصطفى دياب. افتح القصة، وراجع نصها ومراحلها وأسئلتها على الأصل، ثم اعتمدها لتظهر للطلائع أو ارفضها. والمعتمد يظهر للجميع فورًا.</p>
+      ${P.length ? `<ol>${P.map(f => `<li><a href="#/talaea/qasas?id=${f.id}">${f.ic} ${esc(f.n)}</a> <span class="mut">— ${esc(cats[f.c] || "")} • ${esc(f.src)}</span> <button class="btn s p" data-tqok="${f.id}" data-v="1">اعتماد</button> <button class="btn s" data-tqok="${f.id}" data-v="-1">رفض</button></li>`).join("")}</ol>` : '<p class="note">لا قصص بانتظار المراجعة الآن. تُصاغ قصص جديدة تلقائيًّا كل أسبوع.</p>'}
+      <p class="mut">المعتمد: ${toAr(GEN.filter(x => OKS[x.id] === 1).length)} • المرفوض: ${toAr(GEN.filter(x => OKS[x.id] === -1).length)} • المكرر مع القصص الأساسية (لا يُعرض): ${toAr(GEN.filter(x => x.dup).length)}</p></div></div>`);
+  }
+  document.addEventListener("click", async e => { const b = e.target.closest("[data-tqok]"); if (!b || !adm()) return; e.preventDefault(); const id = b.dataset.tqok, v = +b.dataset.v; b.disabled = true;
+    try { await GH.editJSON("data/tala-qasas-ok.json", o => { o = o || { ok: {} }; o.ok = o.ok || {}; o.ok[id] = v; return o; }, "قصص الطلائع: " + (v === 1 ? "اعتماد" : "رفض") + " قصة " + id);
+      OKS[id] = v; DATA = null; await load(); toast(v === 1 ? "اعتُمدت القصة وتظهر الآن للطلائع" : "رُفضت القصة"); const li = b.closest("li"); if (li) li.remove(); else b.closest(".tqrev").querySelector("b").nextSibling.textContent = v === 1 ? " معتمدة ✓ " : " مرفوضة ";
+    } catch (err) { b.disabled = false; toast("تعذّر الحفظ: " + (err.message || err)); } });
   return { view };
 })();
