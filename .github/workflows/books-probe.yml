@@ -3,6 +3,7 @@ name: استكشاف مصادر الكتب النصية
 on:
   workflow_dispatch:
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/books-probe.js", "tools/books-probe2.js", "tools/books-probe3.js", "tools/books-probe4.js", "tools/books-probe5.js"]
 permissions:
   contents: write

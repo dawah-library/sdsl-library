@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "23 5 * * 3"   # أسبوعيًا: المقالات والكتب الجديدة
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/furqan.json", "tools/furqan.py"]
 permissions:
   contents: write

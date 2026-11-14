@@ -271,6 +271,9 @@ def upload(tag, files):
 def commit(msg):
     if os.environ.get("TTS_COMMIT") != "1":
         return
+    ref = os.environ.get("GITHUB_REF", "")  # مثل git-save.sh: تشغيل على فرع غير main كان يرفع إيداعات الفرع نفسها إلى main
+    if ref and ref != "refs/heads/main" and os.environ.get("GIT_SAVE_ANY_BRANCH") != "1":
+        print("تشغيل على %s: لا يُحفظ في main" % ref); return
     subprocess.run(["git", "add", "data/audio", "data/review-requests.json", "data/tashkeel/_queue.json"], cwd=ROOT)  # وما أُحيل إلى التدقيق والتشكيل قبل التسجيل
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode == 0:
         return
