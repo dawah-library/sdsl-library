@@ -10,6 +10,10 @@
     {
      "book": "p24c16cf5",
      "by": "الشيخ محمد إسماعيل المقدم"
+    },
+    {
+     "book": "p842b98c1",
+     "by": "رضا ثابت ⁩"
     }
    ],
    "quran": {
@@ -27,7 +31,9 @@
      "Husary_128kbps",
      "mahmoud_ali_al_banna_32kbps"
     ],
-    "epoch": "2026-11-14"
+    "epoch": "2026-11-14",
+    "mode": "fixed",
+    "gap": 15
    },
    "adhan": {
     "city": "القاهرة",
