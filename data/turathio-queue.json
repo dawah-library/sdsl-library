@@ -597,7 +597,15 @@
   {
    "id": "qatr",
    "q": "قطر الندى",
-   "death": 761
+   "death": 761,
+   "cands": [
+    {
+     "b": 11376,
+     "name": "متن قطر الندى وبل الصدى",
+     "r": 0.207
+    }
+   ],
+   "b": 11376
   },
   {
    "id": "alfiyya",
@@ -954,6 +962,7 @@
   "fathrabbani",
   "tarhtathrib",
   "waraqat",
-  "ajurrumiyya"
+  "ajurrumiyya",
+  "qatr"
  ]
 }
