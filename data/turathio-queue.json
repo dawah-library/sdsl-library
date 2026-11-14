@@ -474,22 +474,48 @@
   {
    "id": "lumca",
    "q": "لمعة الاعتقاد",
-   "death": 620
+   "death": 620,
+   "cands": [
+    {
+     "b": 30855,
+     "name": "لمعة الاعتقاد",
+     "r": 0.048
+    }
+   ],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "tawhid",
    "q": "كتاب التوحيد",
-   "death": 1206
+   "death": 1206,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "umda",
    "q": "عمدة الفقه",
-   "death": 620
+   "death": 620,
+   "cands": [
+    {
+     "b": 11315,
+     "name": "عمدة الفقه",
+     "r": 0.0
+    }
+   ],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "waraqat",
    "q": "الورقات",
-   "death": 478
+   "death": 478,
+   "cands": [
+    {
+     "b": 6297,
+     "name": "الورقات",
+     "r": 0.385
+    }
+   ],
+   "b": 6297
   },
   {
    "id": "ajurrumiyya",
@@ -847,6 +873,14 @@
   "adabmufrad",
   "adhkar",
   "jamiulum",
-  "wasitiyya"
+  "wasitiyya",
+  "mufhim",
+  "tahdhibsunan",
+  "suyutinasai",
+  "sindinasai",
+  "sindiibnmajah",
+  "fathrabbani",
+  "tarhtathrib",
+  "waraqat"
  ]
 }
