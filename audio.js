@@ -590,7 +590,7 @@ const RSTATION = (() => {
     const ks = Object.keys(byT); for (let r = 0; out.length < rest.length; r++) ks.forEach(k => { if (byT[k][r]) out.push(byT[k][r]); });
     return man.concat(out.map(id => ({ book: id, auto: 1, by: (A(B(id).authorId) || {}).name || "" }))); }
   const dayQ = C => (((C.quran || {}).mode === "prayer" ? ((C.quran || {}).after || [1, 2, 3, 4, 5]) : (C.quran || {}).slots) || []).length * (+(C.quran || {}).minutes || 30) * 60;
-  async function build(C, L, now) {  // تنبيه: لا تسمِّ متغيرًا محليًّا items هنا (يحجب الدالة items فتختفي الإذاعة والتلاوات)
+  async function build(C, L, now) {
     const cl = await clips(), tz = (C.adhan || {}).tz || "Africa/Cairo", ep = midnight(Date.parse(((C.quran || {}).epoch || "2026-11-14") + "T12:00:00Z"), tz);
     const W0 = now - 30 * 6e4, W1 = now + 8 * 36e5, out = []; let t = W0;
     const books = items(C, L).map(x => ({ x, b: x.book })), P = books.map(({ b }) => (L[b].ds || []).map((d, k) => ({ bid: b, p: k + 1, d, f: AUDIO.page(k + 1) })).filter(z => z.d > 0));
