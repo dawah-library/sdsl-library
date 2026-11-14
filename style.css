@@ -1375,9 +1375,6 @@ body.mfull .mfbar:hover,body.mfull .mfbar:focus-within{opacity:1}
 .arbtq .arbqa{display:block;font-family:"Amiri Quran",Amiri,serif;font-size:1.45rem;line-height:2.1;margin:6px 0}.arbtq mark{background:color-mix(in srgb,var(--gold,#b88a2e) 30%,transparent);border-radius:4px}
 .arbbig2{font-family:"Amiri Quran",Amiri,serif;font-size:2rem}.arbres.ok{border-color:#2a9d7c}.arbres.no{border-color:#c0392b}
 .arbnext{list-style:none;padding:0;line-height:2}.arbnext li{border-bottom:1px dashed var(--line);padding:2px 0}.arbsci{display:inline-block;min-width:7.5em;font-size:.82rem;font-weight:700;color:var(--gold,#b88a2e)}
-/* أسماء رواة الإسناد (ISNAD في alam.js) */
-.rd .aln{cursor:pointer;text-decoration:underline dotted color-mix(in srgb,var(--ac) 55%,transparent);text-underline-offset:5px}.rd .aln:hover{color:var(--ac)}
-.aln1{font:inherit;color:var(--ac);text-decoration:underline dotted;text-underline-offset:4px;background:none;border:0;padding:0;cursor:pointer}
 /* الطلائع: أزرار عصرية ثلاثية الأبعاد وأصوات (TSFX) */
 .tsfxb{margin-inline-start:auto;border:0;background:rgba(255,255,255,.9);border-radius:999px;width:34px;height:34px;font-size:1.05rem;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15);transition:transform .12s}.tsfxb:active{transform:translateY(2px)}
 .tala.kids .talah{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1509,3 +1506,4 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .hrtools{flex-wrap:wrap;gap:8px;align-items:center}.hrtools select{max-width:100%;flex:1 1 220px}.hrpg{flex-wrap:wrap;justify-content:center}
 .hrh .hdm{color:inherit}
 .fns.only{margin-top:0;border-top:0}.fns.only .fnt{font-weight:700}
+.vfix{margin-top:8px;border-top:1px dashed var(--line,#ccc);padding-top:6px}.vfix summary{cursor:pointer;font-weight:600}.vfix textarea{width:100%}
