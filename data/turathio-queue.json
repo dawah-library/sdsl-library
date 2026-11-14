@@ -331,7 +331,9 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "tahdhibsunan",
@@ -342,7 +344,15 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [
+    {
+     "b": 201,
+     "name": "تهذيب سنن أبي داود - ط عطاءات العلم",
+     "r": 0.042
+    }
+   ],
+   "b": 201
   },
   {
    "id": "aridatahwadhi",
@@ -856,6 +866,7 @@
   "adhkar",
   "jamiulum",
   "wasitiyya",
-  "mufhim"
+  "mufhim",
+  "tahdhibsunan"
  ]
 }
