@@ -312,7 +312,15 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [
+    {
+     "b": 132524,
+     "name": "المفهم لما أشكل من تلخيص كتاب مسلم",
+     "r": 0.19
+    }
+   ],
+   "b": 132524
   },
   {
    "id": "maalimsunan",
@@ -847,6 +855,7 @@
   "adabmufrad",
   "adhkar",
   "jamiulum",
-  "wasitiyya"
+  "wasitiyya",
+  "mufhim"
  ]
 }
