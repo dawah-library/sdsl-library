@@ -1,0 +1,5 @@
+{
+ "_": "التقديرات اليدوية لمحاور دراسة الموقع التي لا تُقاس آليًّا (من ١٠)، وأعلام يحددها المدير. يقرؤها tools/site-study.py.",
+ "scores": {"tools": 9.0, "security": 8.5, "reader": 8.2, "auto": 8.0, "design": 7.2, "community": 6.5, "search": 6.0, "arch": 5.2},
+ "flags": {"search_console": false}
+}
