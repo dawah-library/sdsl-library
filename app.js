@@ -359,6 +359,7 @@ async function vFurqan(i,q){view('<p class="mut">جارٍ التحميل…</p>'
 /* ---------- تحويل الصوتيات والمرئيات إلى نصوص ثم كتب (البند ٣٨): نموذج الإدارة لطابور tools/transcribe.py ---------- */
 function trForm(){return can("convert")?`<details class="hfold"><summary>🎙️ تفريغ تسجيل صوتي أو مرئي إلى كتاب (للإدارة)</summary><form id="trf" data-form="noop" style="padding-bottom:12px"><label>عنوان الدرس أو السلسلة</label><input name="t" required maxlength="160">
  <label>الشيخ</label><select name="a">${lib.authors.filter(a=>(a.col||"dawah")==="dawah").map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select>
+ <label>الكتاب المشروح أو موضوع الدرس (اختياري، يحسّن دقة التفريغ)</label><input name="ctx" maxlength="160" placeholder="مثل: فقه السنة للسيد سابق">
  <label>ملفات التسجيلات من جهازك (صوت أو فيديو؛ يمكن اختيار عدة ملفات، وتُرتَّب المجالس بأسماء الملفات)</label><input type="file" name="f" multiple accept="audio/*,video/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.webm,.flac,.amr,.3gp,.mp4,.mov,.mkv,.avi,.wmv,.mpeg,.mpg">
  <p class="mut" style="font-size:.8rem">حتى ${toAr(TR_MAXMB)} ميجابايت للملف. الصوت حتى ٥٠ ميجابايت يُرفع دفعة واحدة، والأكبر منه والفيديو يُرفع أجزاءً (قد يستغرق دقائق؛ لا تغلق الصفحة).</p>
  <details><summary>أو روابط تسجيلات (اختياري)</summary><label>رابط في كل سطر بترتيب المجالس: يوتيوب أو فيسبوك أو رابط ملف مباشر</label><textarea name="u" rows="3" dir="ltr"></textarea></details>
@@ -378,7 +379,7 @@ document.addEventListener("submit",async e=>{const f=e.target.closest("#trf");if
  if(files.length&&!GH.on)return st.textContent="رفع الملفات يحتاج تسجيل الدخول بحساب الإدارة.";
  const btn=f.querySelector("button.p");btn.disabled=true;const id="tr"+Date.now().toString(36),src=[],fn=[];
  try{for(let i=0;i<files.length;i++){src.push(await trUpload(files[i],"au"+Date.now().toString(36)+i,t=>st.textContent=(files.length>1?`(${toAr(i+1)}/${toAr(files.length)}) `:"")+t));fn.push(files[i].name)}
-  src.push(...urls);const it={id,t:f.t.value.trim(),a:f.a.value,src,at:today()};if(fn.length)it.fn=fn;st.textContent="جارٍ الإضافة إلى الطابور…";
+  src.push(...urls);const it={id,t:f.t.value.trim(),a:f.a.value,src,at:today()};if(f.ctx&&f.ctx.value.trim())it.ctx=f.ctx.value.trim();if(fn.length)it.fn=fn;st.textContent="جارٍ الإضافة إلى الطابور…";
   await GH.editJSON("data/transcribe/_queue.json",o=>{o=o||{items:[]};o.items=(o.items||[]).concat([it]);return o},"تفريغ: «"+it.t+"» ("+src.length+" تسجيل)");st.textContent="✓ رُفع وأُضيف؛ يبدأ التفريغ خلال دقائق ويظهر الكتاب في «الإدارة ← إدارة المواد» (مخفيًا) للمراجعة";f.reset()}
  catch(x){st.textContent="تعذّر: "+(x.message||x)}finally{btn.disabled=false}},true);
 function vTafrighat(){const l=lib.books.filter(b=>!b.demo&&isTranscript(b)&&!VOL2(b));

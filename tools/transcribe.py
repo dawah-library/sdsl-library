@@ -15,9 +15,11 @@
 import shutil, json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); Q = os.path.join(D, "transcribe", "_queue.json")
 from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
-KEYS = _gkeys("bulk")
-MODELS = [m for m in os.environ.get("TR_MODELS", "gemini-flash-latest,gemini-3.5-flash").split(",") if m]
-SEG = int(os.environ.get("TR_SEG_MIN", "20")) * 60
+KEYS = _gkeys("study")  # التفريغ خدمة كتب: يبدأ بالمفاتيح المحجوزة
+MODELS = [m for m in os.environ.get("TR_MODELS", "gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3.8-flash,gemini-flash-latest").split(",") if m]
+SEG = int(os.environ.get("TR_SEG_MIN", "10")) * 60  # مقاطع أقصر أدق (كانت ٢٠ دقيقة)
+WAIT_DAYS = float(os.environ.get("TR_WAIT_DAYS", "3"))  # لا يُلجأ إلى Whisper إلا إذا تعذّر Gemini هذه المدة
+class Defer(Exception): pass  # تعذّر Gemini اليوم: يُستكمل في التشغيل القادم بدل التفريغ الضعيف
 DEADLINE = time.time() + 60 * float(os.environ.get("TR_MINUTES", "300"))
 PROMPT = ("فرّغ هذا التسجيل الصوتي لدرس شرعي تفريغًا حرفيًا أمينًا بالعربية: اكتب كلام المتكلم بلفظه كما قاله، "
           "واضبط الآيات بين ﴿ ﴾ والأحاديث بين « »، وقسّم الكلام فقرات بحسب المعنى، واحذف التكرار اللفظي العارض وأصوات التردد فقط. "
@@ -112,7 +114,63 @@ def fetch_audio(url, tmp, n):
         if os.path.exists(p) and os.path.getsize(p) > 2000: parts.append(p)
     return parts, dur
 
-def gemini_audio(path):
+def context(it, cat):
+    """سياق الدرس للنموذج: العنوان والشيخ والكتاب المشروح، فيُضبط ما يشتبه سماعه من الأسماء والمصطلحات."""
+    a = next((x for x in cat.get("authors", []) if x.get("id") == it.get("a")), {})
+    t = it.get("t") or ""; bk = it.get("ctx") or (re.sub(r"^شرح\s+", "", t) if t.startswith("شرح") else "")
+    return "سياق التسجيل: درس بعنوان «%s»%s%s. استعن بهذا السياق في ضبط أسماء الأعلام والكتب والمصطلحات الشرعية." % (
+        t, (" للشيخ " + re.sub(r"^الشيخ\s+", "", a["name"])) if a.get("name") else "", ("، وهو شرح لكتاب «%s»" % bk) if bk else "")
+
+
+DEAD = set()  # (مفتاح، نموذج) نفدت حصته اليومية
+
+
+def gemini_call(parts, timeout=900):
+    err = None
+    for m in MODELS:
+        for k in KEYS:
+            if (k, m) in DEAD: continue
+            try:
+                body = json.dumps({"contents": [{"parts": parts}], "generationConfig": {"temperature": 0.1}}).encode()
+                req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % m, data=body, headers={"content-type": "application/json", "x-goog-api-key": k})
+                j = json.load(urllib.request.urlopen(req, timeout=timeout))
+                return "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought")).strip()
+            except urllib.error.HTTPError as e:
+                msg = e.read()[:600].decode("utf-8", "ignore"); err = "HTTP %d %s" % (e.code, msg[:80])
+                if e.code in (400, 403, 404) or (e.code == 429 and re.search(r"PerDay|per day|exceeded your current quota", msg, re.I)): DEAD.add((k, m))
+                continue
+            except Exception as e: err = str(e)[:120]; continue
+    raise Defer("Gemini: %s" % err)
+
+
+def gemini_audio(path, ctx="", prev=""):
+    data = base64.b64encode(open(path, "rb").read()).decode()
+    note = ctx + ("\nآخر ما قيل قبل هذا المقطع (للاتصال فقط، لا تكرره): «%s»" % prev[-300:] if prev else "")
+    return gemini_call([{"text": PROMPT + "\n" + note}, {"inline_data": {"mime_type": "audio/ogg", "data": data}}])
+
+
+CORRECT = ("أمامك تفريغ آلي لدرس شرعي فيه أخطاء سماع. صحّحه تصحيحًا محافظًا: أصلح الكلمات التي أخطأ فيها التفريغ بما يقتضيه السياق "
+           "(الأعلام والكتب والمصطلحات الشرعية، وألفاظ الآيات والأحاديث والأدعية المشهورة)، وضع علامات الترقيم، واجمع الأسطر المتقطعة جملًا وفقرات بحسب المعنى، "
+           "واضبط الآيات بين ﴿ ﴾ بلفظ المصحف والأحاديث بين « ». لا تلخّص ولا تحذف ولا تضف شرحًا، ولا تغيّر عبارة المتكلم إذا كانت صحيحة ولو كانت عامية. "
+           "ما لم تتبين صوابه فاتركه كما هو. أخرج النص المصحَّح وحده.")
+
+
+def correct(text, ctx):
+    """جولة تصحيح نصية بعد التفريغ؛ تُرفض نتيجتها إن اختلف طولها كثيرًا (حذف أو زيادة)."""
+    out, chunks, cur = [], [], ""
+    for para in re.split(r"\n\s*\n", text):
+        if len(cur) + len(para) > 6000 and cur: chunks.append(cur); cur = ""
+        cur += para + "\n\n"
+    if cur.strip(): chunks.append(cur)
+    for c in chunks:
+        try: r = gemini_call([{"text": CORRECT + "\n" + ctx + "\n\nالنص:\n" + c}], timeout=300)
+        except Defer: return None
+        r = (r or "").strip()
+        out.append(r if r and 0.75 * len(c) <= len(r) <= 1.3 * len(c) else c.strip())
+    return "\n\n".join(out)
+
+
+def gemini_audio_old(path):
     data = base64.b64encode(open(path, "rb").read()).decode()
     body = json.dumps({"contents": [{"parts": [{"text": PROMPT}, {"inline_data": {"mime_type": "audio/ogg", "data": data}}]}], "generationConfig": {"temperature": 0.1}}).encode()
     err = None
@@ -130,9 +188,18 @@ def whisper(path):
     from faster_whisper import WhisperModel
     global WM
     try: WM
-    except NameError: WM = WhisperModel(os.environ.get("TR_WHISPER", "small"), device="cpu", compute_type="int8")
-    segs, _ = WM.transcribe(path, language="ar", vad_filter=True)
-    return "\n".join(s.text.strip() for s in segs)
+    except NameError: WM = WhisperModel(os.environ.get("TR_WHISPER", "large-v3-turbo"), device="cpu", compute_type="int8")
+    segs, _ = WM.transcribe(path, language="ar", vad_filter=True, beam_size=5, condition_on_previous_text=True,
+                            initial_prompt="درس علمي شرعي باللغة العربية الفصحى: بسم الله الرحمن الرحيم، الحمد لله، قال الله تعالى، قال رسول الله صلى الله عليه وسلم، رضي الله عنه، رحمه الله.")
+    # المقاطع جمل قصيرة متقطعة: تُجمع فقرات عند الوقفات الطويلة (أكثر من ثانيتين) أو كل نحو ٦٠٠ حرف
+    paras, cur, last = [], "", 0.0
+    for sg in segs:
+        t = sg.text.strip()
+        if not t: continue
+        if cur and (sg.start - last > 2.0 or len(cur) > 600): paras.append(cur.strip()); cur = ""
+        cur += " " + t; last = sg.end
+    if cur.strip(): paras.append(cur.strip())
+    return "\n\n".join(paras)
 
 def paginate(chunks):
     pages = []
@@ -150,24 +217,37 @@ def main():
         if time.time() > DEADLINE: break
         bid = it["id"]; work = os.path.join(D, "transcribe", "_work", bid + ".json"); W = jl(work, {"parts": {}})
         print("تفريغ:", it.get("t"), flush=True)
+        ctx = context(it, cat); W.setdefault("since", time.time())
+        # Whisper لا يُلجأ إليه إلا إذا تعذّر Gemini أيامًا (TR_WAIT_DAYS)، ثم بالنموذج الكبير وجولة التصحيح
+        allow_whisper = not KEYS or (time.time() - W["since"]) > WAIT_DAYS * 86400
         with tempfile.TemporaryDirectory() as tmp:
             for n, url in enumerate(it.get("src") or []):
                 if str(n) in W["parts"]: continue
                 try:
-                    parts, dur = fetch_audio(url, tmp, n); texts = []
+                    parts, dur = fetch_audio(url, tmp, n); texts = []; eng = "gemini"
                     for p in parts:
                         if time.time() > DEADLINE: raise TimeoutError()
-                        try: texts.append(gemini_audio(p) if KEYS else whisper(p))
-                        except Exception as e:
-                            print("  Gemini:", e, "← faster-whisper", flush=True); texts.append(whisper(p))
-                    W["parts"][str(n)] = {"u": url, "d": round(dur), "t": "\n\n".join(texts)}; js(work, W)
-                    print("  الجزء %d: %d دقيقة" % (n + 1, dur // 60), flush=True)
+                        try: texts.append(gemini_audio(p, ctx, texts[-1] if texts else "") if KEYS else whisper(p))
+                        except Defer as e:
+                            if not allow_whisper: raise
+                            print("  Gemini:", e, "← faster-whisper (large)", flush=True); texts.append(whisper(p)); eng = "whisper"
+                    W["parts"][str(n)] = {"u": url, "d": round(dur), "t": "\n\n".join(texts), "e": eng}; js(work, W)
+                    print("  الجزء %d: %d دقيقة (%s)" % (n + 1, dur // 60, eng), flush=True)
                 except TimeoutError:
                     break
+                except Defer as e:
+                    print("  تعذّر Gemini اليوم؛ يُستكمل في التشغيل القادم:", e, flush=True); W.setdefault("err", {})[str(n)] = str(e)[:300]; js(work, W); break
                 except Exception as e:
                     print("  تعذّر الجزء", n + 1, e, flush=True); W.setdefault("err", {})[str(n)] = str(e)[:300]; js(work, W)
+            # جولة التصحيح النصية لكل جزء لم يُصحَّح بعد
+            for n, P in sorted(W["parts"].items()):
+                if P.get("fix") or time.time() > DEADLINE: continue
+                r = correct(P["t"], ctx)
+                if r is None: print("  التصحيح: تعذّر Gemini؛ يُستكمل لاحقًا", flush=True); break
+                P["raw"] = P["t"]; P["t"] = r; P["fix"] = 1; js(work, W); print("  صُحّح الجزء", int(n) + 1, flush=True)
         srcs = it.get("src") or []
         if not all(str(n) in W["parts"] for n in range(len(srcs))): continue  # يُستكمل في الجولة القادمة
+        if not all(W["parts"][str(n)].get("fix") for n in range(len(srcs))) and (time.time() - W["since"]) < WAIT_DAYS * 86400: continue  # ينتظر التصحيح
         multi = len(srcs) > 1
         pages = paginate([(("المجلس %d" % (n + 1)) if multi else "", W["parts"][str(n)]["t"]) for n in range(len(srcs))])
         toc = []; acc = 0
@@ -175,10 +255,18 @@ def main():
             for i, p in enumerate(pages):
                 m = re.match(r"# (المجلس \d+)", p)
                 if m: toc.append({"t": m.group(1), "p": i + 1, "l": 1})
+        # الآيات بلفظ المصحف (أداة فحص الآيات نفسها)
+        try:
+            import importlib.util
+            spq = importlib.util.spec_from_file_location("qc", os.path.join(ROOT, "tools", "quran-check.py")); qc = importlib.util.module_from_spec(spq); spq.loader.exec_module(qc)
+            QQ = qc.load_quran(); IXQ = qc.Index(QQ, qc.load_tash(QQ)); fx = []
+            pages = [qc.fix_page(pg, IXQ, i, fx) for i, pg in enumerate(pages)]
+            if fx: print("  ضُبطت %d آية بلفظ المصحف" % len(fx), flush=True)
+        except Exception as e: print("  فحص الآيات:", str(e)[:120], flush=True)
         js(os.path.join(D, "books", bid + ".json"), {"id": bid, "pages": pages, "toc": toc})
         meta = {"id": bid, "title": it.get("t") or bid, "authorId": it.get("a") or "", "topicId": it.get("tp") or "", "col": "dawah", "type": "book", "n": len(pages),
                 "added": str(datetime.date.today()), "size": sum(len(p) for p in pages), "tags": ["tafrigh"], "source": "تفريغ آلي لدروس صوتية: " + (" ، ".join((it.get("fn") or [])[:3]) or " ، ".join(x for x in srcs[:3] if x.startswith("http"))) + (" …" if len(srcs) > 3 else ""),
-                "hidden": True, "unrev": len(pages), "tfauto": 1}
+                "hidden": True, "unrev": len(pages), "tfauto": 1, "trsrc": srcs, "treng": sorted({W["parts"][str(n)].get("e", "gemini") for n in range(len(srcs))})}
         web = [x for x in srcs if x.startswith("http")]
         if web: meta["audio"] = web[0]
         cat["books"] = [b for b in cat["books"] if b["id"] != bid] + [meta]; cat["version"] = int(time.time() * 1000)

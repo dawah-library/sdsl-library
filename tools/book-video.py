@@ -308,12 +308,14 @@ async def make(it, cat, L):
     m = material(bid, cat, it.get("topics"))
     if not m: print("لا مادة:", bid); return False
     title, au, src = m; style = it.get("style") or "summary"; n = int(it["scenes"]) if str(it.get("scenes") or "").isdigit() else (max(3, round(float(it["min"]) * 1.6)) if it.get("min") else N.get(it.get("len") or "medium", 9))
-    extra = [REVIEW if style in ("review", "faq") else "", ("- ركّز على هذه الموضوعات وحدها: " + "، ".join(it["topics"])) if it.get("topics") else "",
+    sts = [x for x in style.split("+") if x in KIND] or ["summary"]  # يجوز الجمع بين عدة أنماط
+    kind = KIND[sts[0]] if len(sts) == 1 else "يجمع بين: " + "، و".join(KIND[x] for x in sts) + " — وزّع المشاهد على هذه الأنماط كلها في سياق واحد متصل"
+    extra = [REVIEW if set(sts) & {"review", "faq"} else "", ("- ركّز على هذه الموضوعات وحدها: " + "، ".join(it["topics"])) if it.get("topics") else "",
              ("- أفكار يجب أن يتضمنها الفيديو: " + str(it["ideas"])[:1500]) if it.get("ideas") else "", ("- افتتح بهذا المعنى: " + str(it["intro"])[:400]) if it.get("intro") else "",
              ("- اختم بهذا المعنى: " + str(it["outro"])[:400]) if it.get("outro") else "", ("- متطلبات المدير: " + str(it["note"])[:800]) if it.get("note") else ""]
     lex = lexicon()
     if lex: extra.append("- انطق هذه الأسماء والكلمات هكذا في say: " + "، ".join("%s ← %s" % (a, b) for a, b in lex[:60]))
-    j = T.gemini(PROMPT.format(kind=KIND.get(style, "ملخص"), aud=AUD.get(it.get("aud"), "عموم المسلمين"), tone=TONE.get(it.get("tone"), "هادئ وقور"), title=title, author=au, n=n, src=src,
+    j = T.gemini(PROMPT.format(kind=kind, aud=AUD.get(it.get("aud"), "عموم المسلمين"), tone=TONE.get(it.get("tone"), "هادئ وقور"), title=title, author=au, n=n, src=src,
                                theme_hint=CREATIVE if it.get("creative") or it.get("theme") == "auto" else "", extra="\n".join(x for x in extra if x)))
     if not j or not j.get("scenes"): print("تعذر النص:", bid); return False
     sc = [s for s in j["scenes"] if s.get("say")][:n + 2]
@@ -375,7 +377,7 @@ async def render_video(it, D, aspect, L, did, replace):
                         "-c:v", "libx264", "-preset", "veryfast", "-r", str(FPS), "-c:a", "aac", "-b:a", "96k", "-ar", "24000", "-t", "%.2f" % d, v], check=True)
         segs.append(v)
     lst = os.path.join(tmp, "l.txt"); open(lst, "w").write("".join("file '%s'\n" % x for x in segs))
-    stamp = datetime.datetime.now().strftime("%m%d%H%M"); fn = "%s-%s-%s-%s.mp4" % (bid, style, aspect.replace(":", "x"), stamp); outp = os.path.join(tmp, fn)
+    stamp = datetime.datetime.now().strftime("%m%d%H%M"); fn = "%s-%s-%s-%s.mp4" % (bid, style.replace("+", "_"), aspect.replace(":", "x"), stamp); outp = os.path.join(tmp, fn)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", outp], check=True)
     subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", outp], check=True)
     rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,

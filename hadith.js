@@ -42,17 +42,14 @@ const HDS = (() => {
     const riw = (c.riw || []).map(([b2, n2]) => `<a class="chip" href="#/hadith/k/${b2}/${encodeURIComponent(n2)}">${esc(bname(b2))} (${toAr(n2)})</a>`).join("");
     const parts = [
       (S_.gharib || []).length ? `<h4>غريب الحديث</h4><dl class="shg">${S_.gharib.map(g => `<dt>${esc(g.w || "")}</dt><dd>${sx(g.m)}</dd>`).join("")}</dl>` : "",
-      S_.murad ? `<h4>معنى ألفاظه وجمله</h4><p>${sx(S_.murad)}</p>` : "",
-      (S_.mubhamat || []).length ? `<h4>المبهمات</h4><ul>${li(S_.mubhamat)}</ul>` : "",
-      S_.usul ? `<h4>المنسوخ والمجمل والعام والخاص</h4><p>${sx(S_.usul)}</p>` : "",
+      S_.ijmali || S_.murad ? `<h4>الشرح الإجمالي</h4><p>${sx([S_.murad, S_.ijmali, S_.usul].filter(Boolean).join("\n"))}</p>${(S_.mubhamat || []).length ? `<ul>${li(S_.mubhamat)}</ul>` : ""}` : "",
       S_.riwayat ? `<h4>ما تزيده الروايات الأخرى</h4><p>${sx(S_.riwayat)}</p>` : "",
-      S_.ijmali ? `<h4>المعنى الإجمالي</h4><p>${sx(S_.ijmali)}</p>` : "",
-      FW.some(([k]) => (S_.fawaid || {})[k] && S_.fawaid[k].length) ? `<h4>فوائد الحديث</h4>${FW.map(([k, n]) => ((S_.fawaid || {})[k] || []).length ? `<h5>${n}</h5><ul>${li(S_.fawaid[k])}</ul>` : "").join("")}` : ""];
-    return `<div class="shbox">${full ? parts.join("") : parts.slice(0, 2).concat(parts.slice(5)).join("")}
+      FW.some(([k]) => (S_.fawaid || {})[k] && S_.fawaid[k].length) ? `<h4>الفوائد المستنبطة</h4>${FW.map(([k, n]) => ((S_.fawaid || {})[k] || []).length ? `<h5>${n}</h5><ul>${li(S_.fawaid[k])}</ul>` : "").join("")}` : ""];
+    return `<div class="shbox">${full ? parts.join("") : [parts[0], parts[1], parts[3]].join("")}
       ${riw ? `<p class="mut shr"><b>الروايات المشروحة معه:</b> ${riw}</p>` : ""}
       <p class="mut shn">شرح مجموع من الشروح المعتمدة في المكتبة بعزو كل نقطة إلى موضعها، أُعدّ آليًّا (${esc(c.at || "")}) وهو قيد المراجعة العلمية.</p></div>`;
   }
-  const NOSH = '<p class="mut">لم يُشرح هذا الحديث بعد. يجري الشرح يوميًّا: صحيح البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ؛ ويُشرح الحديث مع رواياته كلها مرة واحدة.</p>';
+  const NOSH = '<p class="mut">لم يُشرح هذا الحديث بعد. يبدأ شرح السنة بعد استيراد الشروح المعتمدة كلها إلى المكتبة، ثم يجري يوميًّا: صحيح البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ؛ ويُشرح الحديث مع رواياته كلها مرة واحدة.</p>';
   const canEdit = () => typeof isAdmin === "function" && isAdmin() && typeof GH !== "undefined" && GH.on;
   async function sharhInto(el, b, n, full) { if (!el) return; el.hidden = false; el.innerHTML = '<p class="mut">جارٍ تحميل الشرح…</p>';
     const c = await sharhOf(b, n);
@@ -62,7 +59,7 @@ const HDS = (() => {
   /* ===== تنزيل الشرح: النطاق (حديث، باب، أرقام، الكتاب كاملًا)، والمحتوى، والصيغة والقالب.
      كل حديث «صفحة» بتنسيق نصوص المكتبة، والعزو [[المرجع]] حاشية مرقمة تحته («(١) فتح الباري، ج١، ص ٤٩٩»)، وفي آخر الملف «المراجع».
      فتُبنى الصيغ كلها بأدوات التصدير القائمة: Word بحواشٍ حقيقية (DOCX)، وPDF وHTML وEPUB (EXT)، ونص. ===== */
-  const SHPART = [["matn", "نص الحديث", 1], ["ijmali", "المعنى الإجمالي", 1], ["gharib", "غريب الكلمات", 1], ["murad", "معنى الألفاظ والجمل", 0], ["mub", "المبهمات والمنسوخ والعام والخاص", 0], ["riwayat", "ما تزيده الروايات", 0], ["fawaid", "الفوائد المستنبطة", 1], ["riw", "مواضع الروايات", 0]];
+  const SHPART = [["matn", "نص الحديث", 1], ["ijmali", "الشرح الإجمالي", 1], ["gharib", "غريب الكلمات", 1], ["riwayat", "ما تزيده الروايات", 0], ["fawaid", "الفوائد المستنبطة", 1], ["riw", "مواضع الروايات", 0]];
   async function sharhExport(b, n) {
     const D = await kidx(b), it = D.items || [], k = it.findIndex(x => String(x[0]) === String(n)), x = it[k] || [];
     const P = typeof EXF !== "undefined" ? EXF.presets : {};
@@ -99,10 +96,8 @@ const HDS = (() => {
       seen.set(e[0], y[0]);
       if (parts.has("matn")) { let mt = String(MM[String(y[0])] || y[6] || ""); const cut = mt.search(/\s\[[\d٠-٩،,\s]+\]/); if (cut > 20) mt = mt.slice(0, cut);  // بيان المحقق ومواضع التكرار بعد المتن
         mt = mt.trim().replace(/^\((.+)\)\.?$/s, "$1"); out.push((y[5] ? "عن " + y[5] + ": " : "") + "«" + mt + "»"); }
-      if (parts.has("ijmali") && S_.ijmali) out.push("## المعنى الإجمالي", mark(S_.ijmali));
       if (parts.has("gharib") && (S_.gharib || []).length) out.push("## غريب الكلمات", ...S_.gharib.map(g => (g.w || "") + ": " + mark(g.m)));
-      if (parts.has("murad") && S_.murad) out.push("## معنى الألفاظ والجمل", ...mark(S_.murad).split("\n"));
-      if (parts.has("mub")) { if ((S_.mubhamat || []).length) out.push("## المبهمات", ...S_.mubhamat.map(mark)); if (S_.usul) out.push("## المنسوخ والمجمل والعام والخاص", mark(S_.usul)); }
+      { const ij = [S_.murad, S_.ijmali, S_.usul].filter(Boolean).concat(S_.mubhamat || []).join("\n"); if (ij) out.push("## الشرح الإجمالي", ...mark(ij).split("\n").filter(Boolean)); }
       if (parts.has("riwayat") && S_.riwayat) out.push("## ما تزيده الروايات الأخرى", mark(S_.riwayat));
       if (parts.has("fawaid")) FW.forEach(([k2, l2]) => { const a = (S_.fawaid || {})[k2] || []; if (a.length) out.push("## " + l2, ...a.map((v, i) => toAr(i + 1) + ". " + mark(v))); });
       if (parts.has("riw") && (c.riw || []).length > 1) out.push("## مواضع الروايات", c.riw.map(([b2, n2]) => bname(b2) + " (" + toAr(n2) + ")").join("، "));
@@ -145,16 +140,15 @@ const HDS = (() => {
     openSheet(c ? "تعديل شرح الحديث" : "إضافة شرح للحديث", `<form id="shf" data-form="noop" data-b="${b}" data-n="${esc(String(n))}">
       <p class="mut">العزو إلى موضع في المكتبة بالصيغة [[المعرف:الصفحة]] مثل [[fathbari-v01:499]]، فيظهر رابطًا وحاشية في الملفات المنزّلة. ${c ? "التعديل يشمل الروايات المشروحة معه كلها." : "يُضاف الشرح لهذه الرواية؛ وتربطه المهمة اليومية برواياته الأخرى."}</p>
       ${ta("gharib", "غريب الحديث (سطر لكل كلمة: الكلمة: معناها)", (S_.gharib || []).map(g => (g.w || "") + ": " + (g.m || "")).join("\n"), 4)}
-      ${ta("murad", "معنى ألفاظه وجمله", S_.murad, 5)}${ta("mubhamat", "المبهمات (سطر لكل مبهم)", lines(S_.mubhamat))}
-      ${ta("usul", "المنسوخ والمجمل والعام والخاص", S_.usul)}${ta("riwayat", "ما تزيده الروايات الأخرى", S_.riwayat)}
-      ${ta("ijmali", "المعنى الإجمالي", S_.ijmali, 4)}
+      ${ta("ijmali", "الشرح الإجمالي (جمع الشروح بترتيب جمل الحديث، ويدخل فيه المبهم والنسخ والتخصيص إن وردت في الشروح)", [S_.murad, S_.ijmali, S_.usul].filter(Boolean).concat(S_.mubhamat || []).join("\n"), 8)}
+      ${ta("riwayat", "ما تزيده الروايات الأخرى", S_.riwayat)}
       ${FW.map(([k, l]) => ta("f_" + k, l + " (سطر لكل فائدة)", lines(F_[k]))).join("")}
       <div class="savebar"><button class="btn p">حفظ الشرح</button> <span id="shst" class="mut" role="status"></span></div></form>`);
     $("#shf").onsubmit = async e => { e.preventDefault(); const f = e.target, st = $("#shst"), fd = new FormData(f);
       const sv = { gharib: unlines(fd.get("gharib")).map(l => { const i = l.indexOf(":"); return i > 0 ? { w: l.slice(0, i).trim(), m: l.slice(i + 1).trim() } : { w: l, m: "" }; }),
-        murad: String(fd.get("murad") || "").trim(), mubhamat: unlines(fd.get("mubhamat")), usul: String(fd.get("usul") || "").trim(), riwayat: String(fd.get("riwayat") || "").trim(),
+        riwayat: String(fd.get("riwayat") || "").trim(),
         ijmali: String(fd.get("ijmali") || "").trim(), fawaid: Object.fromEntries(FW.map(([k]) => [k, unlines(fd.get("f_" + k))])) };
-      if (!sv.ijmali) { st.textContent = "المعنى الإجمالي مطلوب."; return; }
+      if (!sv.ijmali) { st.textContent = "الشرح الإجمالي مطلوب."; return; }
       st.textContent = "جارٍ الحفظ…"; const who = (Auth.user && Auth.user.name) || "الإدارة";
       try {
         let cid = c && c.id, fn = c && c._f;
