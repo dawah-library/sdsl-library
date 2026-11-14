@@ -1,7 +1,6 @@
 name: دمج تحديثات المكتبة
 on:
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["updates/*.json"]
   workflow_dispatch:
 permissions:

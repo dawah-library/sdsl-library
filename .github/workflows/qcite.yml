@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: "41 5 * * 4"   # أسبوعيًا: الكتب والمقالات الجديدة
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/quran-cite.py"]
 permissions:
   contents: write

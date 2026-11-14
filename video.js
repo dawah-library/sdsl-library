@@ -11,7 +11,6 @@ const VIDX = (() => {
   const fmt = s => toAr(Math.floor(s / 60)) + ":" + toAr(String(s % 60).padStart(2, "0"));
   const may = () => isAdmin() || can("video");
   const OPT = {
-    subj: [["book", "📘 كتاب"], ["author", "👤 مؤلف وكتبه"], ["books", "📚 عدة كتب لمؤلف"], ["topic", "🗂 كتب في موضوع"], ["article", "📰 مقال"], ["articles", "🗞 عدة مقالات"]],
     style: [["summary", "ملخص الكتاب"], ["review", "مراجعة وأسئلة"], ["benefits", "أبرز الفوائد والدروس"], ["story", "سرد قصصي متسلسل"], ["faq", "أسئلة شائعة وأجوبتها"], ["quotes", "مختارات من أقوال المؤلف"], ["intro", "تعريف ترويجي قصير"], ["lesson", "درس تعليمي مبسط"], ["features", "مميزات الكتاب ومنهجه"], ["critique", "قراءة نقدية منصفة"], ["part", "الحديث عن جزء أو باب منه"]],
     min: [["2", "دقيقتان"], ["4", "٤ دقائق"], ["6", "٦ دقائق"], ["10", "١٠ دقائق"], ["15", "١٥ دقيقة"]],
     aud: [["general", "عموم المسلمين"], ["students", "طلاب العلم"], ["youth", "الشباب"], ["kids", "الأطفال"], ["women", "النساء والفتيات"]],
@@ -26,41 +25,17 @@ const VIDX = (() => {
   const checks = (n, d) => `<div class="vchips">${OPT[n].map(([v, t]) => `<label class="chip"><input type="checkbox" name="${n}" value="${v}"${d.includes(v) ? " checked" : ""}> ${t}</label>`).join("")}</div>`;
   const ASPL = a => ({ "16:9": "أفقي", "9:16": "ستوري", "4:5": "طولي", "1:1": "مربع" })[a] || a;
   const radios = (n, d) => `<div class="vchips">${OPT[n].map(([v, t]) => `<label class="chip"><input type="radio" name="${n}" value="${v}"${v === d ? " checked" : ""}> ${t}</label>`).join("")}</div>`;
-  // التفريغ النصي للفيديو (كلام الراوي مشهدًا مشهدًا): للإدارة ومن مُنح صلاحية video أو video_script
-  const canScript = () => may() || can("video_script");
-  const SKN = { author: "مؤلف", books: "كتب لمؤلف", topic: "موضوع", article: "مقال", articles: "مقالات" };
-  const subjName = v => { const sj = v.subj || {}; return sj.k && sj.k !== "book" ? (SKN[sj.k] || "") + ": " + (sj.t || "") : ((B(v.id) || {}).title || ""); };
-  const subjLink = v => { const sj = v.subj || {}, ids = v.ids || [v.id];
-    if (sj.k === "author" || sj.k === "books") return `<a class="btn s" href="#/author/${esc(sj.aid || "")}">👤 المؤلف</a>` + ids.slice(0, 4).map(id => B(id) ? `<a class="btn s" href="#/book/${esc(id)}/1">📖 ${esc((B(id).setTitle || B(id).title).slice(0, 28))}</a>` : "").join("");
-    if (sj.k && sj.k !== "book") return ids.slice(0, 5).map(id => B(id) ? `<a class="btn s" href="#/book/${esc(id)}/1">${isArt(B(id)) ? "📰" : "📖"} ${esc(B(id).title.slice(0, 28))}</a>` : "").join("");
-    return `<a class="btn s" href="#/book/${esc(v.id)}/1">📖 الكتاب</a>`; };
-  const scriptBox = v => `<details class="vfix vscript" data-vs="${esc(v.draft || "")}" data-i="${esc(v.id)}" data-k="${v.k}"><summary>📝 التفريغ النصي للفيديو</summary><div class="vsb mut">يُحمَّل عند الفتح…</div></details>`;
-  document.addEventListener("toggle", async e => { const d = e.target; if (!d.matches || !d.matches(".vscript") || !d.open || d.dataset.ld) return; d.dataset.ld = 1;
-    const box = d.querySelector(".vsb"), v = ((LIST || {})[d.dataset.i] || [])[+d.dataset.k] || {}, D = d.dataset.vs ? await getj("data/video/drafts/" + d.dataset.vs + ".json", null) : null;
-    const sc = D && D.scenes ? D.scenes : (v.scenes || []).map(h => ({ h }));
-    if (!sc.length) { box.textContent = "لا تفريغ محفوظ لهذا الفيديو."; return; }
-    const txt = (D ? D.title : v.t || "") + "\n\n" + sc.map((s, i) => `${i + 1}. ${s.h || ""}\n${s.say || ""}`).join("\n\n");
-    box.classList.remove("mut");
-    box.innerHTML = `${D ? "" : '<p class="mut">لهذا الفيديو القديم عناوين المشاهد وحدها.</p>'}<ol class="vstx">${sc.map(s => `<li><b>${esc(s.h || "")}</b>${s.say ? `<p>${esc(s.say)}</p>` : ""}</li>`).join("")}</ol>
-      <div class="row"><button type="button" class="btn s" data-vtx="copy">نسخ التفريغ</button><button type="button" class="btn s" data-vtx="dl">⬇ تنزيل نصًّا</button></div>`;
-    box.querySelector('[data-vtx="copy"]').onclick = () => { navigator.clipboard.writeText(txt); toast("نُسخ التفريغ"); };
-    box.querySelector('[data-vtx="dl"]').onclick = () => dl(((D && D.title) || v.t || "video").replace(/[\\/:*?"<>|]/g, "_").slice(0, 70) + " - تفريغ.txt", txt, "text/plain"); }, true);
   async function page(q) {
     const adm = may(), [L, DX] = await Promise.all([list(true), adm ? getj("data/video/drafts/_index.json", {}) : {}]), bid = q.b;
     if (q.d && adm) return montage(q.d, q.r);
-    const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid || (v.ids || []).includes(bid))).reverse();
+    const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid)).reverse();
     view(`<div class="cmhero"><div><h2>🎬 مراجعات الكتب بالفيديو</h2><p>استعراض الكتب في فيديوهات تعليمية: ملخصها، ومراجعتها، ومميزاتها ومنهجها، وقراءة نقدية منصفة لها، والحديث عن بعض أبوابها؛ تعدّها إدارة المكتبة ومن تفوّضه، للمشاهدة والتنزيل والمشاركة.</p></div></div>
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
-        <label>موضوع الفيديو</label>${radios("subj", "book")}
-        <div data-sk="author books"><label>المؤلف</label><input name="au" list="vidauthors" placeholder="اكتب اسم المؤلف ثم اختره"><datalist id="vidauthors">${lib.authors.map(a => `<option value="${esc(a.name)}">`).join("")}</datalist></div>
-        <div data-sk="topic"><label>الموضوع</label><input name="tp" list="vidtopics" placeholder="اكتب الموضوع ثم اختره"><datalist id="vidtopics">${lib.topics.map(t => `<option value="${esc(t.name)}">`).join("")}</datalist></div>
-        <div data-sk="author books topic"><label>الكتب <span class="mut" id="vidpkn"></span></label><div id="vidpick" class="vchips"><span class="mut">اختر المؤلف أو الموضوع أولًا</span></div></div>
-        <div data-sk="article articles"><label>المقال <span class="mut">(اكتب كلمة من العنوان ثم اختر${""})</span></label><input name="ar" list="vidarts" placeholder="ابحث في عناوين المقالات والفتاوى" autocomplete="off"><datalist id="vidarts"></datalist><div id="vidartl" class="vchips"></div></div>
-        <div data-sk="book"><label>الكتاب</label><input name="t" list="vidbooks" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب اسم الكتاب ثم اختره" required><datalist id="vidbooks">${lib.books.filter(b => !b.demo && !isArt(b) && !VOL2(b)).slice(0, 3000).map(b => `<option value="${esc(b.setTitle || b.title)}">`).join("")}</datalist></div>
+        <label>الكتاب</label><input name="t" list="vidbooks" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب اسم الكتاب ثم اختره" required><datalist id="vidbooks">${lib.books.filter(b => !b.demo && !isArt(b) && !VOL2(b)).slice(0, 3000).map(b => `<option value="${esc(b.setTitle || b.title)}">`).join("")}</datalist>
         <label>نمط الفيديو</label>${radios("style", "summary")}
         <label>المدة</label>${radios("min", "6")}<input name="scenes" type="number" min="3" max="30" placeholder="أو عدد المشاهد (اختياري)" style="max-width:220px">
         <label>الجمهور</label>${radios("aud", "general")}<label>أسلوب الإلقاء</label>${radios("tone", "calm")}
-        <div data-sk="book"><label>الموضوعات والأبواب (اختر من فهرس الكتاب، أو اتركها للكتاب كله)</label><div id="vidtoc" class="vchips"><span class="mut">اختر الكتاب أولًا</span></div><input name="topics2" placeholder="أو اكتب موضوعات أخرى مفصولة بفواصل"></div>
+        <label>الموضوعات والأبواب (اختر من فهرس الكتاب، أو اتركها للكتاب كله)</label><div id="vidtoc" class="vchips"><span class="mut">اختر الكتاب أولًا</span></div><input name="topics2" placeholder="أو اكتب موضوعات أخرى مفصولة بفواصل">
         <label>الأفكار التي تريدها في الفيديو</label><textarea name="ideas" rows="3" placeholder="مثال: بيان حجية السنة، والرد على شبهة الاكتفاء بالقرآن، ونماذج من الواقع"></textarea>
         <div class="row"><div style="flex:1"><label>الافتتاح (اختياري)</label><input name="intro" placeholder="معنى يبدأ به الراوي"></div><div style="flex:1"><label>الختام (اختياري)</label><input name="outro" placeholder="معنى يختم به"></div></div>
         <label>مقاس الفيديو (اختر مقاسًا أو أكثر)</label>${checks("aspect", ["16:9"])}
@@ -73,8 +48,8 @@ const VIDX = (() => {
       ${adm ? await lexBox() : ""}
       ${adm && Object.keys(DX).filter(k => !DX[k].made).length ? `<div class="card"><h3>📝 مسودات بانتظار المونتاج</h3>${Object.entries(DX).filter(([, x]) => !x.made).reverse().slice(0, 20).map(([id, x]) => `<a class="bk" href="#/video?d=${encodeURIComponent(id)}"><b>${esc(x.t)}</b><span>${toAr(x.n)} مشهدًا • ${esc(x.at)}</span></a>`).join("")}</div>` : ""}
       ${bid ? `<p><a href="#/video">← كل الفيديوهات</a> <b>${esc((B(bid) || {}).title || bid)}</b></p>` : ""}
-      <div class="vidgrid">${vids.map(v => `<div class="card vidc"><video controls preload="metadata" playsinline src="${esc(url(v.id, v.f))}"${v.aspect === "9:16" ? ' class="tall"' : v.aspect === "1:1" ? ' class="sq"' : ""}></video><b>${esc(v.t)}</b><span class="mut">${esc((OPT.style.find(x => x[0] === v.style) || ["", "ملخص"])[1])} • ${esc(ASPL(v.aspect || "16:9"))} • ${fmt(v.d || 0)} • ${esc(subjName(v))}${v.rev ? ` • <em class="tag">مصحَّح ${toAr(v.rev)}</em>` : ""}</span>
-        <div class="row">${subjLink(v)}<a class="btn s" href="${esc(url(v.id, v.f))}" download>⬇ تنزيل</a><button class="btn s" data-act="vidshare" data-u="${esc(url(v.id, v.f))}" data-t="${esc(v.t)}">⤴ مشاركة</button>${adm ? `<button class="btn s ${v.ok ? "" : "p"}" data-act="vidok" data-b="${esc(v.id)}" data-k="${v.k}">${v.ok ? "إلغاء النشر" : "اعتماد ونشر"}</button>${v.draft ? `<a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}">✂ تعديل وإعادة الإخراج</a>` : ""}` : ""}${v.ok ? "" : ' <em class="tag">بانتظار الاعتماد</em>'}</div>${canScript() ? scriptBox(v) : ""}${adm && !v.ok && v.draft ? fixBox(v) : ""}</div>`).join("") || '<p class="note">لا فيديوهات منشورة بعد.</p>'}</div>`);
+      <div class="vidgrid">${vids.map(v => `<div class="card vidc"><video controls preload="metadata" playsinline src="${esc(url(v.id, v.f))}"${v.aspect === "9:16" ? ' class="tall"' : v.aspect === "1:1" ? ' class="sq"' : ""}></video><b>${esc(v.t)}</b><span class="mut">${esc((OPT.style.find(x => x[0] === v.style) || ["", "ملخص"])[1])} • ${esc(ASPL(v.aspect || "16:9"))} • ${fmt(v.d || 0)} • ${esc((B(v.id) || {}).title || "")}${v.rev ? ` • <em class="tag">مصحَّح ${toAr(v.rev)}</em>` : ""}</span>
+        <div class="row"><a class="btn s" href="#/book/${esc(v.id)}/1">📖 الكتاب</a><a class="btn s" href="${esc(url(v.id, v.f))}" download>⬇ تنزيل</a><button class="btn s" data-act="vidshare" data-u="${esc(url(v.id, v.f))}" data-t="${esc(v.t)}">⤴ مشاركة</button>${adm ? `<button class="btn s ${v.ok ? "" : "p"}" data-act="vidok" data-b="${esc(v.id)}" data-k="${v.k}">${v.ok ? "إلغاء النشر" : "اعتماد ونشر"}</button>${v.draft ? `<a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}">✂ تعديل وإعادة الإخراج</a>` : ""}` : ""}${v.ok ? "" : ' <em class="tag">بانتظار الاعتماد</em>'}</div>${adm && !v.ok && v.draft ? fixBox(v) : ""}</div>`).join("") || '<p class="note">لا فيديوهات منشورة بعد.</p>'}</div>`);
     const lb = document.getElementById("vlexgo"); if (lb) lb.onclick = async () => { const st = document.getElementById("vlexst"); st.textContent = "جارٍ الحفظ…";
       try { const words = lexParse(document.getElementById("vlex").value); await GH.editJSON("data/video/_lexicon.json", o => Object.assign(o || {}, { words }), "فيديو: قاموس النطق"); st.textContent = "✓ حُفظ (" + toAr(words.length) + ")"; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
     const f = document.getElementById("vidf"); if (!f) return;
@@ -83,35 +58,12 @@ const VIDX = (() => {
       let T = []; try { const bb = await loadBook(b.id); T = (bb.toc || []).filter(x => x.t).slice(0, 80); } catch (e) { }
       el.innerHTML = T.length ? T.map(x => { const t = String(x.t).replace(/^#+\s*/, ""); return `<label class="chip"><input type="checkbox" name="topics" value="${esc(t)}"> ${esc(t.slice(0, 60))}</label>`; }).join("") : '<span class="mut">لا فهرس لهذا الكتاب؛ اكتب الموضوعات في الخانة.</span>'; };
     f.t.addEventListener("change", toc); if (bid) toc();
-    const sk = () => (f.querySelector("[name=subj]:checked") || {}).value || "book", show = () => { const k = sk(); f.querySelectorAll("[data-sk]").forEach(x => { x.hidden = !x.dataset.sk.split(" ").includes(k); }); f.t.required = k === "book"; pick(); };
-    const authOf = () => lib.authors.find(a => a.name === f.au.value.trim()), topOf = () => lib.topics.find(t => t.name === f.tp.value.trim());
-    const pick = () => { const k = sk(), el = document.getElementById("vidpick"); let L = [];
-      if (k === "author" || k === "books") { const a = authOf(); if (a) L = lib.books.filter(b => b.authorId === a.id && !isArt(b) && !b.demo && !VOL2(b)); }
-      if (k === "topic") { const t = topOf(); if (t) L = lib.books.filter(b => b.topicId === t.id && !isArt(b) && !b.demo && !VOL2(b)); }
-      L.sort((x, y) => (y.size || 0) - (x.size || 0));
-      document.getElementById("vidpkn").textContent = L.length ? `(${toAr(L.length)} — اختر حتى ١٠${k === "author" ? "، أو اتركها لأبرزها" : ""})` : "";
-      el.innerHTML = L.length ? L.slice(0, 120).map((b, i) => `<label class="chip"><input type="checkbox" name="pk" value="${esc(b.id)}"${k === "topic" && i < 5 ? " checked" : ""}> ${esc((b.setTitle || b.title).slice(0, 50))}</label>`).join("") : '<span class="mut">اختر المؤلف أو الموضوع أولًا</span>'; };
-    f.querySelectorAll("[name=subj]").forEach(x => x.addEventListener("change", show)); f.au.addEventListener("change", pick); f.tp.addEventListener("change", pick); show();
-    const arts = new Map(), artl = document.getElementById("vidartl");
-    f.ar.addEventListener("input", () => { const s = f.ar.value.trim(); if (s.length < 2) return; document.getElementById("vidarts").innerHTML = lib.books.filter(b => isArt(b) && b.title.includes(s)).slice(0, 30).map(b => `<option value="${esc(b.title)}">`).join(""); });
-    f.ar.addEventListener("change", () => { const b = lib.books.find(x => isArt(x) && x.title === f.ar.value.trim()); if (!b) return; if (sk() === "article") arts.clear(); if (arts.size < 10) arts.set(b.id, b.title); f.ar.value = "";
-      artl.innerHTML = [...arts].map(([id, t]) => `<span class="chip">${esc(t.slice(0, 50))} <button type="button" data-rm="${esc(id)}" aria-label="إزالة">✕</button></span>`).join(""); });
-    artl.addEventListener("click", e => { const r = e.target.closest("[data-rm]"); if (r) { arts.delete(r.dataset.rm); r.parentNode.remove(); } });
-    // معرّف الفيديو (وإصداره) وموضوعه بحسب النوع
-    const subjOf = () => { const k = sk(), ids = [...f.querySelectorAll("[name=pk]:checked")].map(x => x.value).slice(0, 10);
-      if (k === "book") { const b = bookOf(); return b ? { id: b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : b.id, t: b.setTitle || b.title } : { err: "اختر الكتاب من القائمة" }; }
-      if (k === "author" || k === "books") { const a = authOf(); if (!a) return { err: "اختر المؤلف من القائمة" }; if (k === "books" && ids.length < 2) return { err: "اختر كتابين على الأقل" };
-        return { id: "a-" + a.id, t: a.name, subj: { k, aid: a.id, t: a.name, ids } }; }
-      if (k === "topic") { const t = topOf(); if (!t) return { err: "اختر الموضوع من القائمة" }; if (!ids.length) return { err: "اختر كتابًا واحدًا على الأقل" }; return { id: "t-" + t.id, t: t.name, subj: { k, tid: t.id, t: t.name, ids } }; }
-      const A2 = [...arts.keys()]; if (!A2.length) return { err: "اختر مقالًا" + (k === "articles" ? " أو أكثر" : "") };
-      if (k === "article") return { id: A2[0], t: arts.get(A2[0]), subj: { k, t: arts.get(A2[0]), ids: A2.slice(0, 1) } };
-      return { id: "m-" + Date.now().toString(36), t: arts.get(A2[0]) + (A2.length > 1 ? " وغيره" : ""), subj: { k, t: "مقالات مختارة: " + arts.get(A2[0]) + (A2.length > 1 ? " و" + toAr(A2.length - 1) + " غيره" : ""), ids: A2 } }; };
-    f.addEventListener("submit", async e => { e.preventDefault(); const mode = (e.submitter && e.submitter.dataset.mode) || "draft", sj = subjOf(), st = document.getElementById("vidst"); if (sj.err) return st.textContent = sj.err;
-      const v = n => (f.querySelector(`[name=${n}]:checked`) || {}).value, topics = [...f.querySelectorAll("[name=topics]:checked")].map(x => x.value).concat(f.topics2.value.split(/[,،]/).map(x => x.trim()).filter(Boolean)).filter(() => sk() === "book");
-      const it = { id: sj.id, subj: sj.subj, style: v("style"), min: v("min"), scenes: f.scenes.value || "", aud: v("aud"), tone: v("tone"), topics, ideas: f.ideas.value.trim(), intro: f.intro.value.trim(), outro: f.outro.value.trim(),
+    f.addEventListener("submit", async e => { e.preventDefault(); const mode = (e.submitter && e.submitter.dataset.mode) || "draft", b = bookOf(), st = document.getElementById("vidst"); if (!b) return st.textContent = "اختر الكتاب من القائمة";
+      const v = n => (f.querySelector(`[name=${n}]:checked`) || {}).value, topics = [...f.querySelectorAll("[name=topics]:checked")].map(x => x.value).concat(f.topics2.value.split(/[,،]/).map(x => x.trim()).filter(Boolean));
+      const it = { id: b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : b.id, style: v("style"), min: v("min"), scenes: f.scenes.value || "", aud: v("aud"), tone: v("tone"), topics, ideas: f.ideas.value.trim(), intro: f.intro.value.trim(), outro: f.outro.value.trim(),
         aspects: [...f.querySelectorAll("[name=aspect]:checked")].map(x => x.value), pages: f.pages.checked ? 1 : 0, sfx: f.sfx.checked ? 1 : 0, voice: v("voice"), theme: mode === "creative" ? "auto" : v("theme"), font: v("font"), pat: mode === "creative" ? "" : v("pat"), cap: f.cap.checked ? 1 : 0, note: f.note.value.trim(), creative: mode === "creative" ? 1 : 0, phase: mode === "draft" ? "script" : "", at: new Date().toISOString() };
       if (!it.aspects.length) return st.textContent = "اختر مقاسًا واحدًا على الأقل";
-      st.textContent = "جارٍ الإرسال…"; try { await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).push(it); return o; }, "فيديو: «" + sj.t + "»");
+      st.textContent = "جارٍ الإرسال…"; try { await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).push(it); return o; }, "فيديو: «" + f.t.value.trim() + "»");
         st.textContent = mode === "draft" ? "✓ يُعَدّ النص خلال دقائق ويظهر في «مسودات بانتظار المونتاج» لتعدّله ثم تخرجه." : "✓ أُضيف؛ يجهز الفيديو خلال دقائق ويظهر هنا بانتظار اعتمادك."; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } });
   }
   // تصحيح الفيديو قبل اعتماده: ملاحظات وتصحيحات نطق تُطبَّق على نص الفيديو نفسه ثم يُعاد إخراجه مكانه (لا فيديو جديد من الكتاب)
@@ -164,6 +116,6 @@ const VIDX = (() => {
     else if (el.dataset.act === "vidok") { const b = el.dataset.b, k = +el.dataset.k; await GH.editJSON("data/video/_list.json", o => { if (o[b] && o[b][k]) o[b][k].ok = o[b][k].ok ? 0 : 1; return o; }, "فيديو: اعتماد"); LIST = null; route(); } });
   // رابط في «خدمات الكتاب»
   new MutationObserver(async () => { const nav = document.querySelector(".bkhub nav:not([data-vid])"); if (!nav) return; nav.dataset.vid = 1; const m = location.pathname.match(/book\/([^/]+)/); if (!m) return; const L = await list(), b = B(m[1]), id = b && b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : m[1];
-    const l = Object.entries(L).flatMap(([k, x]) => x.filter(v => k === id || (v.ids || []).includes(id))).filter(v => v.ok || may()); if (l.length || may()) nav.insertAdjacentHTML("beforeend", `<a href="#/video?b=${encodeURIComponent(id)}">🎬 ${l.length ? "فيديو الملخص" : "إعداد فيديو"}</a>`); }).observe(document.documentElement, { childList: true, subtree: true });
+    const l = (L[id] || []).filter(v => v.ok || may()); if (l.length || may()) nav.insertAdjacentHTML("beforeend", `<a href="#/video?b=${encodeURIComponent(id)}">🎬 ${l.length ? "فيديو الملخص" : "إعداد فيديو"}</a>`); }).observe(document.documentElement, { childList: true, subtree: true });
   return { view: page };
 })();
