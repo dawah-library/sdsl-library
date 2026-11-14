@@ -44,13 +44,13 @@ def jw(p, o):
     os.makedirs(os.path.dirname(p), exist_ok=True); json.dump(o, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
 
-PROMPT = """أعدّ نص فيديو ({kind}) لكتاب «{title}» لـ{author}، في {n} مشاهد تقريبًا، للعرض على الشاشة مع راوٍ. الجمهور: {aud}. أسلوب الإلقاء: {tone}.
-أخرج JSON حرفيًا: {{"title": "عنوان الفيديو", "scenes": [{{"h": "عنوان المشهد", "pts": ["نقطة قصيرة على الشاشة (٣–٤ نقاط، أقل من ١٢ كلمة لكل نقطة)"], "say": "ما يقوله الراوي في المشهد (٤٠–٩٠ كلمة) بعربية فصيحة سليمة مشكولة ما يُلتبس", "pg": رقم الصفحة التي أُخذ منها المشهد من علامات [ص …], "q": "عبارة قصيرة (٥–١٢ كلمة) منقولة بلفظها من تلك الصفحة هي أصل المشهد"}}]{theme_hint}}}
-- المشهد الأول تعريف بالكتاب ومؤلفه وموضوعه، والأخير خلاصة جامعة ودعوة لقراءة الكتاب في المكتبة.
-- التزم مضمون الكتاب وألفاظ مؤلفه وترتيب أفكاره، ولا تضف رأيًا ولا معلومة من خارجه، وانقل الآيات والأحاديث بلفظها إن ذكرتها.
+PROMPT = """أعدّ نص فيديو ({kind}) {subject}، في {n} مشاهد تقريبًا، للعرض على الشاشة مع راوٍ. الجمهور: {aud}. أسلوب الإلقاء: {tone}.
+أخرج JSON حرفيًا: {{"title": "عنوان الفيديو", "scenes": [{{"h": "عنوان المشهد", "pts": ["نقطة قصيرة على الشاشة (٣–٤ نقاط، أقل من ١٢ كلمة لكل نقطة)"], "say": "ما يقوله الراوي في المشهد (٤٠–٩٠ كلمة) بعربية فصيحة سليمة مشكولة ما يُلتبس", "bk": رقم الكتاب في علامة [ك N …] إن تعددت الكتب, "pg": رقم الصفحة التي أُخذ منها المشهد من علامات [ص …], "q": "عبارة قصيرة (٥–١٢ كلمة) منقولة بلفظها من تلك الصفحة هي أصل المشهد"}}]{theme_hint}}}
+- المشهد الأول تعريف {first}، والأخير خلاصة جامعة ودعوة لقراءة {last} في المكتبة.
+- التزم مضمون المادة وألفاظ مؤلفيها وترتيب أفكارها، وانسب كل فكرة إلى كتابها إن تعددت الكتب، ولا تضف رأيًا ولا معلومة من خارجه، وانقل الآيات والأحاديث بلفظها إن ذكرتها.
 - اضبط بالشكل أسماء الأعلام والكلمات التي يُخطأ في نطقها في نص الراوي (say).
 {extra}
-المادة (علامات [ص N] أرقام صفحات الكتاب):
+المادة (علامات [ص N] أرقام الصفحات، و[ك N ص M] الكتاب رقم N):
 {src}"""
 REVIEW = "- اجعل المشاهد بعد الأول أسئلة مراجعة: h = السؤال، وpts = عناصر الجواب، وsay = طرح السؤال ثم جوابه الموجز."
 CREATIVE = ', "theme": {"bg": "#rrggbb", "c1": "#rrggbb لون النص", "acc": "#rrggbb لون التمييز", "c2": "#rrggbb لون ثانوي", "pat": "stars|lines|arch|none"}'
@@ -68,12 +68,12 @@ FIX = """هذه مشاهد فيديو عن كتاب «{title}» (JSON). طبّق
 
 
 # ———— المادة ————
-def material(bid, cat, topics=None):
+def material(bid, cat, topics=None, tag=""):
     s = jl(os.path.join(ROOT, "data", "summ", bid + ".json"), None)
     if s and s.get("chs"):
         chs = [c for c in s["chs"] if not topics or any(t and (t in (c.get("t") or "") or (c.get("t") or "") in t) for t in topics)] or s["chs"]
         def rng(c):
-            try: a = json.loads(c.get("p") or "[]"); return " [ص %s–%s]" % (a[0], a[-1]) if a else ""
+            try: a = json.loads(c.get("p") or "[]"); return " [%sص %s–%s]" % (tag, a[0], a[-1]) if a else ""
             except Exception: return ""
         return s["t"], s.get("a", ""), "\n\n".join("## %s%s\n%s" % (c.get("t", ""), rng(c), c.get("r25") or c.get("r10") or "") for c in chs)[:60000]
     src = T.source(bid, cat)
@@ -85,10 +85,44 @@ def material(bid, cat, topics=None):
         for i, x in enumerate(toc):
             if any(t in (x.get("t") or "") for t in topics): keep |= set(range(x["p"] - 1, (toc[i + 1]["p"] - 1) if i + 1 < len(toc) else len(pages)))
         if keep: idx = [i for i in sorted(keep) if i < len(pages)]
-    txt = "\n".join("[ص %d] %s" % (i + 1, re.sub(r"\n_{4,}[\s\S]*", "", pages[i] or "")) for i in idx)
+    txt = "\n".join("[%sص %d] %s" % (tag, i + 1, re.sub(r"\n_{4,}[\s\S]*", "", pages[i] or "")) for i in idx)
     if len(txt) > 90000:  # عينة متوزعة على الكتاب
         k = len(txt) // 90000 + 1; parts = [txt[i:i + 90000 // k] for i in range(0, len(txt), len(txt) // k)]; txt = "\n…\n".join(parts)
     return title, au, txt[:90000]
+
+
+# ———— موضوع الفيديو: كتاب، أو مؤلف وكتبه، أو عدة كتب لمؤلف، أو كتب في موضوع، أو مقال، أو عدة مقالات ————
+SUBJ = {"author": "تعريف بالمؤلف وجهوده العلمية ومنهجه وأبرز كتبه", "books": "عرض مجموعة من كتب المؤلف", "topic": "عرض كتب في موضوع واحد ومقارنة مناهجها",
+        "articles": "عرض مجموعة مقالات", "article": "عرض مقال"}
+
+
+def subject(it, cat):
+    """(نص الموضوع للتكليف، عنوانه، المادة، الأول، الأخير، كتب المادة) أو None. it["subj"]: {k, t, aid, tid, ids}."""
+    sj = it.get("subj") or {}; k = sj.get("k") or "book"
+    if k == "book" or not sj:
+        m = material(it["id"], cat, it.get("topics"))
+        return m and ("لكتاب «%s» لـ%s" % (m[0], m[1]), m[0], m[2], "بالكتاب ومؤلفه وموضوعه", "الكتاب", [it["id"]])
+    au = {a["id"]: a for a in cat.get("authors") or []}; ids = [x for x in sj.get("ids") or [] if isinstance(x, str)][:10]
+    if k == "author" and not ids:  # أبرز كتب المؤلف (الأكبر) إن لم تُختر
+        ids = [b["id"] for b in sorted([b for b in cat["books"] if b.get("authorId") == sj.get("aid") and b.get("type") != "article" and not b.get("demo")], key=lambda b: -(b.get("size") or 0))][:5]
+    if not ids and k not in ("author",): return None
+    per = max(8000, 80000 // max(1, len(ids))); parts = []; heads = []
+    for i, bid in enumerate(ids):
+        tag = ("ك%d " % (i + 1)) if len(ids) > 1 else ""
+        m = material(bid, cat, None, tag)
+        if not m: continue
+        heads.append("%d. «%s» لـ%s" % (i + 1, m[0], m[1])); parts.append("### الكتاب %d: «%s» لـ%s\n%s" % (i + 1, m[0], m[1], m[2][:per]))
+    src = "\n\n".join(parts)
+    if k == "author":
+        a = au.get(sj.get("aid")) or {}; mine = [b for b in cat["books"] if b.get("authorId") == sj.get("aid") and not b.get("demo")]
+        bio = "## المؤلف: %s%s\n%s\n\n## مؤلفاته في المكتبة (%d):\n%s" % (a.get("name", ""), (" (ت %s)" % a["died"]) if a.get("died") not in (None, "None", "") else "", a.get("bio") or "",
+              len(mine), "\n".join("- %s%s" % (b.get("setTitle") or b["title"], (": " + (b.get("card") or {}).get("summary", "")[:220]) if (b.get("card") or {}).get("summary") else "") for b in mine[:60]))
+        src = bio + "\n\n" + src
+        return ("للتعريف بالمؤلف «%s» (%s)" % (a.get("name", ""), SUBJ["author"]), sj.get("t") or a.get("name", ""), src[:95000], "بالمؤلف وسيرته", "كتبه", ids)
+    if not parts: return None
+    what = {"books": "عن مجموعة من كتب «%s»" % ((au.get(sj.get("aid")) or {}).get("name", "")), "topic": "عن كتب في موضوع «%s»" % (sj.get("t") or ""),
+            "articles": "عن مجموعة مقالات", "article": "عن مقال"}.get(k, "")
+    return ("%s:\n%s" % (what, "\n".join(heads)), sj.get("t") or heads[0], src[:95000], "بالموضوع والكتب أو المقالات المعروضة" if len(ids) > 1 else "بالمقال وكاتبه", "هذه المواد" if len(ids) > 1 else "المقال كاملًا", ids)
 
 
 # ———— مطابقة العبارة بالصفحة وسطور المصورة ————
@@ -182,16 +216,22 @@ def mark_text(text, q):
     return "".join(sents)
 
 
-def prepare_pages(bid, cat, sc, tmp):
-    """لكل مشهد: page = {img|text, boxes, n} إن عُرفت صفحته."""
-    b = next((x for x in cat["books"] if x["id"] == bid), None); src = T.source(bid, cat)
-    if not b or not src: return
-    pages, sh = src[2], src[3]
+def prepare_pages(ids, cat, sc, tmp):
+    """لكل مشهد: page = {img|text, boxes, n} إن عُرفت صفحته؛ وفي تعدد الكتب كتابُه من bk."""
+    SRC = {}
     for i, s in enumerate(sc):
+        try: k = int(s.get("bk") or 1)
+        except Exception: k = 1
+        bid = ids[k - 1] if 0 < k <= len(ids) else ids[0]
+        if bid not in SRC: SRC[bid] = (next((x for x in cat["books"] if x["id"] == bid), None) or {}, T.source(bid, cat))
+        b, src = SRC[bid]
+        if not src: continue
+        pages, sh = src[2], src[3]
         if s.get("pgoff") or not pages: s.pop("page", None); continue
         p = locate(s, pages)
         if not p: continue
         s["pg"] = p; q = s.get("q") or s.get("h") or ""; pg = {"n": p, "label": (sh.get("pl") or [None] * p)[p - 1] if isinstance(sh.get("pl"), list) and p <= len(sh["pl"]) else p}
+        if len(ids) > 1: pg["book"] = src[0]
         if b.get("img"):
             n = pdf_page(b, sh, p)
             if 0 < n <= int(b.get("imgN") or 10 ** 6):
@@ -305,15 +345,15 @@ async def make(it, cat, L):
         D["opts"] = {k: v for k, v in opts.items() if k not in ("phase",)}
         ok = await render_all(opts, D, L, it["draft"], it.get("replace"))
         draft_save(it["draft"], D); return ok
-    m = material(bid, cat, it.get("topics"))
+    m = subject(it, cat)
     if not m: print("لا مادة:", bid); return False
-    title, au, src = m; style = it.get("style") or "summary"; n = int(it["scenes"]) if str(it.get("scenes") or "").isdigit() else (max(3, round(float(it["min"]) * 1.6)) if it.get("min") else N.get(it.get("len") or "medium", 9))
+    subj, title, src, first, last, ids = m; style = it.get("style") or "summary"; n = int(it["scenes"]) if str(it.get("scenes") or "").isdigit() else (max(3, round(float(it["min"]) * 1.6)) if it.get("min") else N.get(it.get("len") or "medium", 9))
     extra = [REVIEW if style in ("review", "faq") else "", ("- ركّز على هذه الموضوعات وحدها: " + "، ".join(it["topics"])) if it.get("topics") else "",
              ("- أفكار يجب أن يتضمنها الفيديو: " + str(it["ideas"])[:1500]) if it.get("ideas") else "", ("- افتتح بهذا المعنى: " + str(it["intro"])[:400]) if it.get("intro") else "",
              ("- اختم بهذا المعنى: " + str(it["outro"])[:400]) if it.get("outro") else "", ("- متطلبات المدير: " + str(it["note"])[:800]) if it.get("note") else ""]
     lex = lexicon()
     if lex: extra.append("- انطق هذه الأسماء والكلمات هكذا في say: " + "، ".join("%s ← %s" % (a, b) for a, b in lex[:60]))
-    j = T.gemini(PROMPT.format(kind=KIND.get(style, "ملخص"), aud=AUD.get(it.get("aud"), "عموم المسلمين"), tone=TONE.get(it.get("tone"), "هادئ وقور"), title=title, author=au, n=n, src=src,
+    j = T.gemini(PROMPT.format(kind=KIND.get(style, "ملخص"), aud=AUD.get(it.get("aud"), "عموم المسلمين"), tone=TONE.get(it.get("tone"), "هادئ وقور"), subject=subj, first=first, last=last, n=n, src=src,
                                theme_hint=CREATIVE if it.get("creative") or it.get("theme") == "auto" else "", extra="\n".join(x for x in extra if x)))
     if not j or not j.get("scenes"): print("تعذر النص:", bid); return False
     sc = [s for s in j["scenes"] if s.get("say")][:n + 2]
@@ -321,7 +361,7 @@ async def make(it, cat, L):
     if isinstance(j.get("theme"), dict): th.update({k: v for k, v in j["theme"].items() if isinstance(v, str) and (re.fullmatch(r"#[0-9a-fA-F]{6}", v) or k == "pat")})
     if it.get("pat"): th["pat"] = it["pat"]
     did = "%s-%s" % (bid, datetime.datetime.now().strftime("%m%d%H%M%S"))
-    D = {"id": did, "book": bid, "title": j.get("title") or title, "theme": th, "opts": {k: v for k, v in it.items() if k not in ("phase", "err")}, "scenes": sc, "at": str(datetime.date.today())}
+    D = {"id": did, "book": bid, "ids": ids, "subj": it.get("subj") or {"k": "book"}, "title": j.get("title") or title, "theme": th, "opts": {k: v for k, v in it.items() if k not in ("phase", "err")}, "scenes": sc, "at": str(datetime.date.today())}
     if it.get("phase") == "script":  # إعداد النص أولًا: مسودة يراجعها المدير ويعدّلها ثم يأمر بالإخراج
         draft_save(did, D); print("✓ مسودة", did); return True
     ok = await render_all(it, D, L, did, None); draft_save(did, D); return ok
@@ -346,7 +386,7 @@ async def render_video(it, D, aspect, L, did, replace):
     tag = "video-" + bid; ensure_release(tag, title)
     tmp = tempfile.mkdtemp(); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
     pages = bool(it.get("pages"))
-    if pages: prepare_pages(bid, cat, sc, tmp)
+    if pages: prepare_pages(D.get("ids") or [bid], cat, sc, tmp)
     render(sc, th, aspect, title, tmp, pages)
     lex = lexicon(); want_sfx = bool(it.get("sfx") and pages)
     segs = []
@@ -378,7 +418,7 @@ async def render_video(it, D, aspect, L, did, replace):
     stamp = datetime.datetime.now().strftime("%m%d%H%M"); fn = "%s-%s-%s-%s.mp4" % (bid, style, aspect.replace(":", "x"), stamp); outp = os.path.join(tmp, fn)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", outp], check=True)
     subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", outp], check=True)
-    rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
+    rec = {"f": fn, "t": title, "subj": D.get("subj") or {"k": "book"}, "ids": D.get("ids") or [bid], "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
            "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0}
     lst_ = L.setdefault(bid, [])
     old = next((k for k, v in enumerate(lst_) if replace and v.get("f") == replace and not v.get("ok")), None)
