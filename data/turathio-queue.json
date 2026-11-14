@@ -414,7 +414,15 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [
+    {
+     "b": 9810,
+     "name": "حاشية السندي على سنن ابن ماجه",
+     "r": 0.833
+    }
+   ],
+   "b": 9810
   },
   {
    "id": "sindimusnad",
@@ -887,6 +895,7 @@
   "mufhim",
   "tahdhibsunan",
   "suyutinasai",
-  "sindinasai"
+  "sindinasai",
+  "sindiibnmajah"
  ]
 }
