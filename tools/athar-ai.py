@@ -39,7 +39,7 @@ def call(prompt):
         body = json.dumps({"model": m, "messages": [{"role": "user", "content": prompt}], "temperature": 0, "max_tokens": 4000, "response_format": {"type": "json_object"}}).encode()
         for attempt in range(3):
             try:
-                req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + KEY})
+                req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=body, headers={"content-type": "application/json", "authorization": "Bearer " + KEY, "user-agent": "dawahlibrary-athar/1.0 (+https://dawahlibrary.org)", "accept": "application/json"})
                 j = json.load(urllib.request.urlopen(req, timeout=120))
                 t = j["choices"][0]["message"]["content"]
                 t = re.sub(r"<think>[\s\S]*?</think>", "", t).strip()
