@@ -43,6 +43,9 @@
 /askx.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/athar.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /audio.js
   Cache-Control: public, max-age=60, must-revalidate
 

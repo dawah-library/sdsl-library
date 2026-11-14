@@ -312,15 +312,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 132524,
-     "name": "المفهم لما أشكل من تلخيص كتاب مسلم",
-     "r": 0.19
-    }
-   ],
-   "b": 132524
+   "sharh": 1
   },
   {
    "id": "maalimsunan",
@@ -331,9 +323,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [],
-   "skip": "لا نسخة مشكولة كافية"
+   "sharh": 1
   },
   {
    "id": "tahdhibsunan",
@@ -344,15 +334,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 201,
-     "name": "تهذيب سنن أبي داود - ط عطاءات العلم",
-     "r": 0.042
-    }
-   ],
-   "b": 201
+   "sharh": 1
   },
   {
    "id": "aridatahwadhi",
@@ -363,9 +345,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [],
-   "skip": "لا نسخة مشكولة كافية"
+   "sharh": 1
   },
   {
    "id": "suyutinasai",
@@ -376,15 +356,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 360,
-     "name": "حاشية السيوطي على سنن النسائي",
-     "r": 0.664
-    }
-   ],
-   "b": 360
+   "sharh": 1
   },
   {
    "id": "sindinasai",
@@ -395,15 +367,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 522,
-     "name": "حاشية السندي على سنن النسائي",
-     "r": 0.429
-    }
-   ],
-   "b": 522
+   "sharh": 1
   },
   {
    "id": "sindiibnmajah",
@@ -414,15 +378,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 9810,
-     "name": "حاشية السندي على سنن ابن ماجه",
-     "r": 0.833
-    }
-   ],
-   "b": 9810
+   "sharh": 1
   },
   {
    "id": "sindimusnad",
@@ -433,9 +389,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [],
-   "skip": "لا نسخة مشكولة كافية"
+   "sharh": 1
   },
   {
    "id": "faydqadir",
@@ -446,9 +400,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [],
-   "skip": "لا نسخة مشكولة كافية"
+   "sharh": 1
   },
   {
    "id": "fathrabbani",
@@ -459,15 +411,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 124910,
-     "name": "الفتح الرباني لترتيب مسند الإمام أحمد بن حنبل الشيباني",
-     "r": 0.0
-    }
-   ],
-   "b": 124910
+   "sharh": 1
   },
   {
    "id": "tarhtathrib",
@@ -478,15 +422,7 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1,
-   "cands": [
-    {
-     "b": 11036,
-     "name": "طرح التثريب في شرح التقريب",
-     "r": 0.841
-    }
-   ],
-   "b": 11036
+   "sharh": 1
   },
   {
    "id": "muwatta",
@@ -911,13 +847,6 @@
   "adabmufrad",
   "adhkar",
   "jamiulum",
-  "wasitiyya",
-  "mufhim",
-  "tahdhibsunan",
-  "suyutinasai",
-  "sindinasai",
-  "sindiibnmajah",
-  "fathrabbani",
-  "tarhtathrib"
+  "wasitiyya"
  ]
 }
