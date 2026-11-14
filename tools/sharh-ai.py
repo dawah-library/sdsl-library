@@ -98,8 +98,8 @@ def main():
     # وما تعذّر استيراده (skip) يُسجَّل للإدارة ولا يوقفها إلى الأبد؛ وSHARH_FORCE=1 يتجاوز الانتظار.
     tq = jl(os.path.join(D, "turathio-queue.json"), {"items": [], "done": []}); tdone = set(tq.get("done") or [])
     need = [x for x in tq.get("items") or [] if x.get("sharh")]
-    wait = [x["q"] for x in need if x["id"] not in tdone and not x.get("skip")]
-    skipped = [x["q"] + " (" + str(x.get("skip")) + ")" for x in need if x.get("skip") and x["id"] not in tdone]
+    wait = [x.get("q0") or x["q"] for x in need if x["id"] not in tdone and not x.get("skip")]
+    skipped = [(x.get("q0") or x["q"]) + " (" + str(x.get("skip")) + ")" for x in need if x.get("skip") and x["id"] not in tdone]
     if wait and os.environ.get("SHARH_FORCE") != "1" and os.environ.get("SHARH_DRY") != "1":
         st0 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}}); st0["wait"] = wait; st0["skipped"] = skipped; st0["at"] = time.strftime("%Y-%m-%d")
         js(os.path.join(OUT, "_state.json"), st0, 1); print("ينتظر استيراد الشروح:", "، ".join(wait)); return
