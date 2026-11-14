@@ -17,12 +17,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: الأدوات
         run: |
-          pip install -q "edge-tts>=7"
+          pip install -q "edge-tts>=7" boto3 pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ara >/dev/null  # سطور العبارة في الصفحة المصورة (قلم التحديد)
           npm i -s --no-save playwright@1.48.2 >/dev/null 2>&1 && npx -y playwright@1.48.2 install --with-deps chromium >/dev/null 2>&1
-          which ffprobe || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+          which ffprobe || sudo apt-get install -y -qq ffmpeg
       - name: التسجيل
         env:
           GH_TOKEN: ${{ github.token }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
