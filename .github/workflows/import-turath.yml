@@ -11,7 +11,6 @@ on:
         required: false
         default: ""
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/turath-list.json", "data/retry.json"]
 permissions:
   contents: write

@@ -4,7 +4,6 @@ on:
     - cron: "23 10 * * *"   # بعد تجدد الحصة اليومية
     - cron: "25 14 * * *"   # يوميًا لما بقي في الطابور
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/tashjir/_queue.json"]
   workflow_dispatch:
     inputs:

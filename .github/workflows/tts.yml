@@ -7,7 +7,6 @@ on:
     - cron: "33 0 * * *"   # يوميًا
     - cron: "33 12 * * *"  # جولة ثانية
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/audio/_queue.json", "data/audio/_auto.json"]
   workflow_dispatch:
     inputs:

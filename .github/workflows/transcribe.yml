@@ -2,7 +2,6 @@ name: تفريغ الصوتيات والمرئيات إلى كتب
 on:
   workflow_dispatch:
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["data/transcribe/_queue.json"]
   schedule:
     - cron: "13 1 * * *"   # يوميًا: استكمال ما بقي

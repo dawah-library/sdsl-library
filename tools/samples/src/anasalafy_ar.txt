@@ -34,7 +34,7 @@
 <link rel="icon" type="image/png" href="https://anasalafy.com/images/logo.png">
 
 
-<meta name="csrf-token" content="VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF">
+<meta name="csrf-token" content="Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo">
 
 <!-- toast (YallaToast) styling lives in global.css below (scss/_yalla-toast.scss) -->
 <link media="all" type="text/css" rel="stylesheet" href="https://anasalafy.com/themes/frontend/default/assets/global/css/global.css?v=1792695849">
@@ -53,7 +53,7 @@
 
 <script>
     // Laravel token
-    var __token = 'VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF';
+    var __token = 'Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo';
     const yalla = {
         config: {
             apiUrl: "https://anasalafy.com",
@@ -127,7 +127,7 @@
                     خروج
                 </a>
                 <form id="admin-logout-form" action="https://anasalafy.com/ar/logout" method="POST" style="display: none;">
-                    <input type="hidden" name="_token" value="VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF" autocomplete="off">
+                    <input type="hidden" name="_token" value="Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo" autocomplete="off">
                 </form>
             </li>
             </ul>
@@ -153,7 +153,7 @@
         </div>
         <div class="language-box">
             <div class="date">
-                <span>الأحد، ١٤ جُمادى الأولى ١٤٤٨ هـ، ٢٥ أكتوبر ٢٠٢٦</span>
+                <span>الجمعة، ٣ جُمادى الآخرة ١٤٤٨ هـ، ١٣ نوفمبر ٢٠٢٦</span>
             </div>
 
             <form class="form-inline" action="https://anasalafy.com/ar/search" method="get">
@@ -332,7 +332,7 @@
                     خروج
                 </a>
                 <form id="logout-form" action="https://anasalafy.com/ar/customers/logout" method="POST" style="display: none;">
-                    <input type="hidden" name="_token" value="VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF" autocomplete="off">
+                    <input type="hidden" name="_token" value="Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo" autocomplete="off">
                 </form>
             </div>
             <h3 class="nav01"> <i class="fa-solid fa-xmark"></i></h3>
@@ -385,7 +385,7 @@
                     خروج
                 </a>
                 <form id="logout-form" action="https://anasalafy.com/ar/customers/logout" method="POST" style="display: none;">
-                    <input type="hidden" name="_token" value="VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF" autocomplete="off">
+                    <input type="hidden" name="_token" value="Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo" autocomplete="off">
                 </form>
             </div>
             <h3 class="nav01"> <i class="fa-solid fa-xmark"></i></h3>
@@ -1088,20 +1088,20 @@
 </nav>
 </header>
         <ul class="webticker" id="right-to-left-webticker" dir="ltr">
-                            <li data-update="item119558">
-                    <a href="https://anasalafy.com/ar/119558-بين-الأسد-والغزالة-مقطع-الشيخ-مصطفى-دياب" style="color: #fff">بين الأسد والغزالة! (مقطع). الشيخ/ مصطفى دياب</a>
+                            <li data-update="item119771">
+                    <a href="https://anasalafy.com/ar/119771-001-الآيات-1-8-سورة-طه-تفسير-القرطبي-د-ياسر-برهامي" style="color: #fff">001- الآيات (1- 8) (سورة طه- تفسير القرطبي). د/ ياسر برهامي</a>
                 </li>
-                            <li data-update="item119557">
-                    <a href="https://anasalafy.com/ar/119557-014-اليقين-من-الإيمان-بمنزلة-الروح-للجسد-الشك-واليقين-د-محمد-إسماعيل-المقدم" style="color: #fff">014- اليقين من الإيمان بمنزلة الروح للجسد (الشك واليقين). د/ محمد إسماعيل المقدم</a>
+                            <li data-update="item119770">
+                    <a href="https://anasalafy.com/ar/119770-556-تابع-الآية-187-سورة-البقرة-ابن-كثير-د-ياسر-برهامي" style="color: #fff">556- تابع الآية (187) (سورة البقرة- ابن كثير). د/ ياسر برهامي</a>
                 </li>
-                            <li data-update="item119556">
-                    <a href="https://anasalafy.com/ar/119556-013-أقوال-السلف-في-اليقين-الشك-واليقين-د-محمد-إسماعيل-المقدم" style="color: #fff">013- أقوال السلف في اليقين (الشك واليقين). د/ محمد إسماعيل المقدم</a>
+                            <li data-update="item119769">
+                    <a href="https://anasalafy.com/ar/119769-048-ليلة-القدر-عمدة-الأحكام-الشيخ-سعيد-محمود" style="color: #fff">048- ليلة القدر (عمدة الأحكام). الشيخ/ سعيد محمود</a>
                 </li>
-                            <li data-update="item119555">
-                    <a href="https://anasalafy.com/ar/119555-012-اليقين-علم-تام-يوجب-العمل-الشك-واليقين-د-محمد-إسماعيل-المقدم" style="color: #fff">012- اليقين علم تام يوجب العمل (الشك واليقين). د/ محمد إسماعيل المقدم</a>
+                            <li data-update="item119768">
+                    <a href="https://anasalafy.com/ar/119768-005-إثم-من-ظلم-شيئا-من-الأرض-كتاب-المظالم-مختصر-صحيح-البخاري-الشيخ-سعيد-محمود" style="color: #fff">005- إثم من ظلم شيئا من الأرض (كتاب المظالم- مختصر صحيح البخاري). الشيخ/ سعيد محمود</a>
                 </li>
-                            <li data-update="item119554">
-                    <a href="https://anasalafy.com/ar/119554-152-تابع-باب-رواية-النبي-ﷺ-قول-الله-عز-وجل-في-الوعد-والوعيد-الأسماء-والصفات-للبيهقي-د-ياسر-برهامي" style="color: #fff">152- تابع باب رواية النبي ﷺ قول الله عز وجل في الوعد والوعيد... (الأسماء والصفات للبيهقي). د/ ياسر برهامي</a>
+                            <li data-update="item119767">
+                    <a href="https://anasalafy.com/ar/119767-013-الآيات-247-256-من-سورة-البقرة-الدخيل-د-محمود-عبد-المنعم" style="color: #fff">013- الآيات (247- 256) من سورة البقرة (الدخيل). د/ محمود عبد المنعم</a>
                 </li>
                     </ul>
     
@@ -1795,6 +1795,38 @@
                     <div class="carousel-inner">
                                                     <div class="carousel-item active ">
                                 <div class="c-content">
+                                                                            <img class="lazyload d-block w-100" data-src="https://anasalafy.com/files/thumbnails/big/core_1640165440_2304.webp" alt="تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه."/>
+                                                                        <div class="carousel-caption d-md-block">
+                                        <div>
+                                            <h1>
+                                                <a href="https://anasalafy.com/ar/119751-تطبيق-د-أحمد-حطيبة-لأندرويد-وآيفون-وآيباد-بالرئيسية-توصلك-بسهولة-لكل-اللي-تحتاجه">تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه.</a>
+                                            </h1>
+                                            <p>تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه. 4 مصاحف مصورة بطبعتي الشمرلي والمدينة المنورة، ...</p>
+                                            <a class="btn" href="https://anasalafy.com/ar/119751-تطبيق-د-أحمد-حطيبة-لأندرويد-وآيفون-وآيباد-بالرئيسية-توصلك-بسهولة-لكل-اللي-تحتاجه">اقرأ المزيد</a>
+                                            <div class="clear"></div>
+                                        </div>
+                                        <div class="overlay"></div>
+                                    </div>
+                                </div>
+                            </div>
+                                                    <div class="carousel-item ">
+                                <div class="c-content">
+                                                                            <img class="lazyload d-block w-100" data-src="https://anasalafy.com/files/thumbnails/big/topics_1792931955_1146.webp" alt="بيان من &quot;الدعوة السلفية بمصر&quot; حول الممارسات الإجرامية للكيان الصهيوني في الضفة الغربية"/>
+                                                                        <div class="carousel-caption d-md-block">
+                                        <div>
+                                            <h1>
+                                                <a href="https://anasalafy.com/ar/119573-بيان-من-الدعوة-السلفية-بمصر-حول-الممارسات-الإجرامية-للكيان-الصهيوني-في-الضفة-الغربية">بيان من &quot;الدعوة السلفية بمصر&quot; حول الممارسات الإجرامية للكيان الصهيوني في الضفة الغربية</a>
+                                            </h1>
+                                            <p>بيان من &quot;الدعوة السلفية بمصر&quot; حول الممارسات الإجرامية للكيان الصهيوني في الضفة الغربية الحمد لله، والصلاة والسلام على رسول الله، ...</p>
+                                            <a class="btn" href="https://anasalafy.com/ar/119573-بيان-من-الدعوة-السلفية-بمصر-حول-الممارسات-الإجرامية-للكيان-الصهيوني-في-الضفة-الغربية">اقرأ المزيد</a>
+                                            <div class="clear"></div>
+                                        </div>
+                                        <div class="overlay"></div>
+                                    </div>
+                                </div>
+                            </div>
+                                                    <div class="carousel-item ">
+                                <div class="c-content">
                                                                             <img class="lazyload d-block w-100" data-src="https://anasalafy.com/files/thumbnails/big/topics_1791613963_8614.webp" alt="حزب النور يدين الهجمات الحوثية على مطاري أبها والملك خالد ويؤكد تضامنه مع المملكة العربية السعودية"/>
                                                                         <div class="carousel-caption d-md-block">
                                         <div>
@@ -2001,38 +2033,6 @@
                                     </div>
                                 </div>
                             </div>
-                                                    <div class="carousel-item ">
-                                <div class="c-content">
-                                                                            <img class="lazyload d-block w-100" data-src="https://anasalafy.com/files/thumbnails/big/core_1640164142_5552.webp" alt="تعزية &quot;الدعوة السلفية بمصر&quot; في مقتل محمد السنوار وحذيفة الكحلوت &quot;أبو عبيدة&quot; ورفاقهما من قيادات المقاومة الفلسطينية -رحمهم الله-"/>
-                                                                        <div class="carousel-caption d-md-block">
-                                        <div>
-                                            <h1>
-                                                <a href="https://anasalafy.com/ar/116546-تعزية-الدعوة-السلفية-بمصر-في-مقتل-محمد">تعزية &quot;الدعوة السلفية بمصر&quot; في مقتل محمد السنوار وحذيفة الكحلوت &quot;أبو عبيدة&quot; ورفاقهما من قيادات المقاومة الفلسطينية -رحمهم الله-</a>
-                                            </h1>
-                                            <p>تعزية "الدعوة السلفية بمصر" في مقتل محمد السنوار وحذيفة الكحلوت "أبو عبيدة" ورفاقهما من قيادات المقاومة الفلسطينية -رحمهم الله-الحمد لله، ...</p>
-                                            <a class="btn" href="https://anasalafy.com/ar/116546-تعزية-الدعوة-السلفية-بمصر-في-مقتل-محمد">اقرأ المزيد</a>
-                                            <div class="clear"></div>
-                                        </div>
-                                        <div class="overlay"></div>
-                                    </div>
-                                </div>
-                            </div>
-                                                    <div class="carousel-item ">
-                                <div class="c-content">
-                                                                            <img class="lazyload d-block w-100" data-src="https://anasalafy.com/files/thumbnails/big/core_1725272308_7120.webp" alt="الطعن في العلماء.. فتنة العصر (مقطع). د/ محمد إسماعيل المقدم"/>
-                                                                        <div class="carousel-caption d-md-block">
-                                        <div>
-                                            <h1>
-                                                <a href="https://anasalafy.com/ar/116388-الطعن-في-العلماء-فتنة-العصر-مقطع-د">الطعن في العلماء.. فتنة العصر (مقطع). د/ محمد إسماعيل المقدم</a>
-                                            </h1>
-                                            <p>مقطع من مادة بعنوان: خطر الطعن في العلماء ...</p>
-                                            <a class="btn" href="https://anasalafy.com/ar/116388-الطعن-في-العلماء-فتنة-العصر-مقطع-د">اقرأ المزيد</a>
-                                            <div class="clear"></div>
-                                        </div>
-                                        <div class="overlay"></div>
-                                    </div>
-                                </div>
-                            </div>
                                             </div>
                     <a class="carousel-control-prev" href="#items" role="button" data-slide="prev">
                         <i class="fas fa-chevron-left"></i>
@@ -2098,6 +2098,93 @@
                         role="tabpanel"
                         aria-labelledby="pills-0-tab">
                         <div class="row">
+                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="أعن تُعن وتبلغ فوق ما تريد. الشيخ/ العربي السعدني" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119593-أعن-تعن-وتبلغ-فوق-ما-تريد-الشيخ-العربي-السعدني">
+            <h3>أعن تُعن وتبلغ فوق ما تريد. الشيخ/ العربي السعدني</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/736-العربي-السعدني">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٢٧ أكتوبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119593-أعن-تعن-وتبلغ-فوق-ما-تريد-الشيخ-العربي-السعدني" data-number="1" title="أعن تُعن وتبلغ فوق ما تريد. الشيخ/ العربي السعدني"></a>
+
+</article>
+                                </div>
+                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1759758634_9972.webp" alt="تأملات في سورة الانفطار. الشيخ/ محمد الشريف" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119590-تأملات-في-سورة-الانفطار-الشيخ-محمد-الشريف">
+            <h3>تأملات في سورة الانفطار. الشيخ/ محمد الشريف</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/1857-محمد-الشريف">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٢٧ أكتوبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119590-تأملات-في-سورة-الانفطار-الشيخ-محمد-الشريف" data-number="1" title="تأملات في سورة الانفطار. الشيخ/ محمد الشريف"></a>
+
+</article>
+                                </div>
+                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640164884_9924.webp" alt="111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119553-111-الأخيرة-التابعي-أبو-حنيفة-النعمان-5-صور-من-حياة-التابعين-الشيخ-مصطفى-دياب">
+            <h3>111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/759-مصطفى-دياب">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٢٤ أكتوبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119553-111-الأخيرة-التابعي-أبو-حنيفة-النعمان-5-صور-من-حياة-التابعين-الشيخ-مصطفى-دياب" data-number="1" title="111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب"></a>
+
+</article>
+                                </div>
                                                             <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
                                     <article class="item">
     <div class="img-box">
@@ -2243,93 +2330,6 @@
 
 </article>
                                 </div>
-                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165446_9736.webp" alt="هل رأوها؟.. الجنة. الشيخ/ إيهاب الشريف" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/119127-هل-رأوها-الجنة-الشيخ-إيهاب-الشريف">
-            <h3>هل رأوها؟.. الجنة. الشيخ/ إيهاب الشريف</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/720-إيهاب-الشريف">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ١٦ سبتمبر ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119127-هل-رأوها-الجنة-الشيخ-إيهاب-الشريف" data-number="1" title="هل رأوها؟.. الجنة. الشيخ/ إيهاب الشريف"></a>
-
-</article>
-                                </div>
-                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="المحبة الحقيقية للنبي ﷺ. الشيخ/ العربي السعدني" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/118933-المحبة-الحقيقية-للنبي-ﷺ-الشيخ-العربي-السعدني">
-            <h3>المحبة الحقيقية للنبي ﷺ. الشيخ/ العربي السعدني</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/736-العربي-السعدني">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٩ أغسطس ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118933-المحبة-الحقيقية-للنبي-ﷺ-الشيخ-العربي-السعدني" data-number="1" title="المحبة الحقيقية للنبي ﷺ. الشيخ/ العربي السعدني"></a>
-
-</article>
-                                </div>
-                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1712673901_5420.webp" alt="الفضائل والتشريفات للمصطفى ﷺ. الشيخ/ عصام حسنين" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/118895-الفضائل-والتشريفات-للمصطفى-ﷺ-الشيخ-عصام-حسنين">
-            <h3>الفضائل والتشريفات للمصطفى ﷺ. الشيخ/ عصام حسنين</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/792-عصام-حسنين">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٥ أغسطس ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118895-الفضائل-والتشريفات-للمصطفى-ﷺ-الشيخ-عصام-حسنين" data-number="1" title="الفضائل والتشريفات للمصطفى ﷺ. الشيخ/ عصام حسنين"></a>
-
-</article>
-                                </div>
                                                     </div>
                     </div>
                                                                 <div
@@ -2338,6 +2338,36 @@
                         role="tabpanel"
                         aria-labelledby="pills-1-tab">
                         <div class="row item-row">
+                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164510_2647.webp" alt="خطورة الرواسب القديمة بعد الالتزام (مقطع). الشيخ/ عادل نصر"/>
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119465-خطورة-الرواسب-القديمة-بعد-الالتزام-مقطع-الشيخ-عادل-نصر">
+                <h3>خطورة الرواسب القديمة بعد الالتزام (مقطع). الشيخ/ عادل نصر</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/787-عادل-نصر">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ١٥ أكتوبر ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119465-خطورة-الرواسب-القديمة-بعد-الالتزام-مقطع-الشيخ-عادل-نصر"></a>
+    </article>
+                                </div>
                                                             <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
                                     <article class="item">
         
@@ -2396,6 +2426,36 @@
         </div>
     </div>
     <a class="global-link" href="https://anasalafy.com/ar/119236-قصة-طيار-ملحد-مقطع-الشيخ-عبد-المنعم-الشحات"></a>
+    </article>
+                                </div>
+                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1725272308_7120.webp" alt="الحكمة من بقاء أهل الكتاب (مقطع). د/ محمد إسماعيل المقدم"/>
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119189-الحكمة-من-بقاء-أهل-الكتاب-مقطع-د-محمد-إسماعيل-المقدم">
+                <h3>الحكمة من بقاء أهل الكتاب (مقطع). د/ محمد إسماعيل المقدم</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/718-محمد-إسماعيل-المقدم">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ٢١ سبتمبر ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119189-الحكمة-من-بقاء-أهل-الكتاب-مقطع-د-محمد-إسماعيل-المقدم"></a>
     </article>
                                 </div>
                                                             <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
@@ -2518,66 +2578,6 @@
     <a class="global-link" href="https://anasalafy.com/ar/118793-حكم-حج-الوالد-بمال-يبذله-الابن-مقطع-د-محمد-إسماعيل-المقدم"></a>
     </article>
                                 </div>
-                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1713290710_8177.webp" alt="كيف تنجو من الخواطر السيئة؟ (مقطع). د/ ياسر برهامي"/>
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/118320-كيف-تنجو-من-الخواطر-السيئة-مقطع-د-ياسر-برهامي">
-                <h3>كيف تنجو من الخواطر السيئة؟ (مقطع). د/ ياسر برهامي</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/715-ياسر-برهامي">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ٠٢ يوليو ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118320-كيف-تنجو-من-الخواطر-السيئة-مقطع-د-ياسر-برهامي"></a>
-    </article>
-                                </div>
-                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1725272308_7120.webp" alt="هل الرؤى المنامية تغير الأحكام الشرعية؟ (مقطع). د/ محمد إسماعيل المقدم"/>
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/118193-هل-الرؤى-المنامية-تغير-الأحكام-الشرعية-مقطع-د-محمد-إسماعيل-المقدم">
-                <h3>هل الرؤى المنامية تغير الأحكام الشرعية؟ (مقطع). د/ محمد إسماعيل المقدم</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/718-محمد-إسماعيل-المقدم">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ٢١ يونيو ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118193-هل-الرؤى-المنامية-تغير-الأحكام-الشرعية-مقطع-د-محمد-إسماعيل-المقدم"></a>
-    </article>
-                                </div>
                                                     </div>
                     </div>
                                                                 <div
@@ -2586,6 +2586,64 @@
                         role="tabpanel"
                         aria-labelledby="pills-2-tab">
                         <div class="row">
+                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425453_4804.webp" alt="فشل التجربة الاشتراكية في مصر (2-2)" />
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119506-فشل-التجربة-الاشتراكية-في-مصر-2-2">
+            <h3>فشل التجربة الاشتراكية في مصر (2-2)</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/820-علاء-بكر">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٩ أكتوبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119506-فشل-التجربة-الاشتراكية-في-مصر-2-2" data-number="1" title="فشل التجربة الاشتراكية في مصر (2-2)"></a>
+
+</article>
+                                </div>
+                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425174_3033.webp" alt="الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)" />
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119504-الهشاشة-النفسية-حين-يتحول-الألم-إلى-يأس-2">
+            <h3>الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/1855-محمد-بكر">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٩ أكتوبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119504-الهشاشة-النفسية-حين-يتحول-الألم-إلى-يأس-2" data-number="1" title="الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)"></a>
+
+</article>
+                                </div>
                                                             <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
                                     <article class="item">
     <div class="img-box">
@@ -2760,64 +2818,6 @@
 
 </article>
                                 </div>
-                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1788158494_3491.webp" alt="بيان صادر عن حزب النور بشأن حرائق الجزائر الأليمة" />
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/118953-بيان-صادر-عن-حزب-النور-بشأن-حرائق-الجزائر-الأليمة">
-            <h3>بيان صادر عن حزب النور بشأن حرائق الجزائر الأليمة</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/936-حزب-النور">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٣١ أغسطس ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118953-بيان-صادر-عن-حزب-النور-بشأن-حرائق-الجزائر-الأليمة" data-number="1" title="بيان صادر عن حزب النور بشأن حرائق الجزائر الأليمة"></a>
-
-</article>
-                                </div>
-                                                            <div class="col-grid col-xs-6 col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1787553929_2463.webp" alt="آداب الحوار وقواعد الاختلاف (1)" />
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/118876-آداب-الحوار-وقواعد-الاختلاف-1">
-            <h3>آداب الحوار وقواعد الاختلاف (1)</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/808-جمال-فتح-الله">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٤ أغسطس ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118876-آداب-الحوار-وقواعد-الاختلاف-1" data-number="1" title="آداب الحوار وقواعد الاختلاف (1)"></a>
-
-</article>
-                                </div>
                                                     </div>
                     </div>
                                                                 <div
@@ -2826,36 +2826,6 @@
                         role="tabpanel"
                         aria-labelledby="pills-3-tab">
                         <div class="row item-row">
-                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
-                                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1780999079_3209.webp" alt="الأعمال الفنية بين المخالفة الشرعية والطعن في ثوابت الدين. الشيخ/ عبد المنعم الشحات"/>
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/118046-الأعمال-الفنية-بين-المخالفة-الشرعية-والطعن-في-ثوابت-الدين-الشيخ-عبد-المنعم-الشحات">
-                <h3>الأعمال الفنية بين المخالفة الشرعية والطعن في ثوابت الدين. الشيخ/ عبد المنعم الشحات</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/716-عبد-المنعم-الشحات">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ٠٩ يونيو ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118046-الأعمال-الفنية-بين-المخالفة-الشرعية-والطعن-في-ثوابت-الدين-الشيخ-عبد-المنعم-الشحات"></a>
-    </article>
-                                </div>
                                                             <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
                                     <article class="item">
         
@@ -3064,6 +3034,36 @@
         </div>
     </div>
     <a class="global-link" href="https://anasalafy.com/ar/117709-لا-وجود-لحرية-مطلقة-الشيخ-محمود-عبد-الحميد"></a>
+    </article>
+                                </div>
+                                                            <div class="col-grid col-sm-6 col-lg-4 col-xl-3">
+                                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1776339331_3960.webp" alt="صلاح الأمة بشعيرة الحسبة. الشيخ/ محمود عبد الحميد"/>
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/117556-صلاح-الأمة-بشعيرة-الحسبة-الشيخ-محمود-عبد-الحميد">
+                <h3>صلاح الأمة بشعيرة الحسبة. الشيخ/ محمود عبد الحميد</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/762-محمود-عبد-الحميد">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ١٦ أبريل ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/117556-صلاح-الأمة-بشعيرة-الحسبة-الشيخ-محمود-عبد-الحميد"></a>
     </article>
                                 </div>
                                                     </div>
@@ -3329,101 +3329,14 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1725272308_7120.webp" alt="014- اليقين من الإيمان بمنزلة الروح للجسد (الشك واليقين). د/ محمد إسماعيل المقدم" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1713290710_8177.webp" alt="001- الآيات (1- 8) (سورة طه- تفسير القرطبي). د/ ياسر برهامي" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119557-014-اليقين-من-الإيمان-بمنزلة-الروح-للجسد-الشك-واليقين-د-محمد-إسماعيل-المقدم">
-            <h3>014- اليقين من الإيمان بمنزلة الروح للجسد (الشك واليقين). د/ محمد إسماعيل المقدم</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/718-محمد-إسماعيل-المقدم">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119557-014-اليقين-من-الإيمان-بمنزلة-الروح-للجسد-الشك-واليقين-د-محمد-إسماعيل-المقدم" data-number="1" title="014- اليقين من الإيمان بمنزلة الروح للجسد (الشك واليقين). د/ محمد إسماعيل المقدم"></a>
-
-</article>
-            </div>
-                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
-                <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1725272308_7120.webp" alt="013- أقوال السلف في اليقين (الشك واليقين). د/ محمد إسماعيل المقدم" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/119556-013-أقوال-السلف-في-اليقين-الشك-واليقين-د-محمد-إسماعيل-المقدم">
-            <h3>013- أقوال السلف في اليقين (الشك واليقين). د/ محمد إسماعيل المقدم</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/718-محمد-إسماعيل-المقدم">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119556-013-أقوال-السلف-في-اليقين-الشك-واليقين-د-محمد-إسماعيل-المقدم" data-number="1" title="013- أقوال السلف في اليقين (الشك واليقين). د/ محمد إسماعيل المقدم"></a>
-
-</article>
-            </div>
-                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
-                <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1725272308_7120.webp" alt="012- اليقين علم تام يوجب العمل (الشك واليقين). د/ محمد إسماعيل المقدم" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/119555-012-اليقين-علم-تام-يوجب-العمل-الشك-واليقين-د-محمد-إسماعيل-المقدم">
-            <h3>012- اليقين علم تام يوجب العمل (الشك واليقين). د/ محمد إسماعيل المقدم</h3>
-        </a>
-    </div>
-    <div class="action">
-                    <div class="writer">
-            <a href="https://anasalafy.com/ar/author/718-محمد-إسماعيل-المقدم">
-            <strong></strong>
-        </a>
-    </div>
-                <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
-        </span>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119555-012-اليقين-علم-تام-يوجب-العمل-الشك-واليقين-د-محمد-إسماعيل-المقدم" data-number="1" title="012- اليقين علم تام يوجب العمل (الشك واليقين). د/ محمد إسماعيل المقدم"></a>
-
-</article>
-            </div>
-                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
-                <article class="item">
-    <div class="img-box">
-                
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1713290710_8177.webp" alt="152- تابع باب رواية النبي ﷺ قول الله عز وجل في الوعد والوعيد... (الأسماء والصفات للبيهقي). د/ ياسر برهامي" />
-                <span>
-            <i class="fas fa-video"></i>
-        </span>
-            </div>
-    <div class="info">
-        <a href="https://anasalafy.com/ar/119554-152-تابع-باب-رواية-النبي-ﷺ-قول-الله-عز-وجل-في-الوعد-والوعيد-الأسماء-والصفات-للبيهقي-د-ياسر-برهامي">
-            <h3>152- تابع باب رواية النبي ﷺ قول الله عز وجل في الوعد والوعيد... (الأسماء والصفات للبيهقي). د/ ياسر برهامي</h3>
+        <a href="https://anasalafy.com/ar/119771-001-الآيات-1-8-سورة-طه-تفسير-القرطبي-د-ياسر-برهامي">
+            <h3>001- الآيات (1- 8) (سورة طه- تفسير القرطبي). د/ ياسر برهامي</h3>
         </a>
     </div>
     <div class="action">
@@ -3434,10 +3347,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119554-152-تابع-باب-رواية-النبي-ﷺ-قول-الله-عز-وجل-في-الوعد-والوعيد-الأسماء-والصفات-للبيهقي-د-ياسر-برهامي" data-number="1" title="152- تابع باب رواية النبي ﷺ قول الله عز وجل في الوعد والوعيد... (الأسماء والصفات للبيهقي). د/ ياسر برهامي"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119771-001-الآيات-1-8-سورة-طه-تفسير-القرطبي-د-ياسر-برهامي" data-number="1" title="001- الآيات (1- 8) (سورة طه- تفسير القرطبي). د/ ياسر برهامي"></a>
 
 </article>
             </div>
@@ -3445,28 +3358,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640164884_9924.webp" alt="111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1713290710_8177.webp" alt="556- تابع الآية (187) (سورة البقرة- ابن كثير). د/ ياسر برهامي" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119553-111-الأخيرة-التابعي-أبو-حنيفة-النعمان-5-صور-من-حياة-التابعين-الشيخ-مصطفى-دياب">
-            <h3>111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب</h3>
+        <a href="https://anasalafy.com/ar/119770-556-تابع-الآية-187-سورة-البقرة-ابن-كثير-د-ياسر-برهامي">
+            <h3>556- تابع الآية (187) (سورة البقرة- ابن كثير). د/ ياسر برهامي</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/759-مصطفى-دياب">
+            <a href="https://anasalafy.com/ar/author/715-ياسر-برهامي">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119553-111-الأخيرة-التابعي-أبو-حنيفة-النعمان-5-صور-من-حياة-التابعين-الشيخ-مصطفى-دياب" data-number="1" title="111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119770-556-تابع-الآية-187-سورة-البقرة-ابن-كثير-د-ياسر-برهامي" data-number="1" title="556- تابع الآية (187) (سورة البقرة- ابن كثير). د/ ياسر برهامي"></a>
 
 </article>
             </div>
@@ -3474,28 +3387,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640164510_2647.webp" alt="030- إناطة الحكم بإقبال الحيضة وإدبارها (القواعد الفقهية- 2). الشيخ/ عادل نصر" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1696940254_2896.webp" alt="048- ليلة القدر (عمدة الأحكام). الشيخ/ سعيد محمود" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119552-030-إناطة-الحكم-بإقبال-الحيضة-وإدبارها-القواعد-الفقهية-2-الشيخ-عادل-نصر">
-            <h3>030- إناطة الحكم بإقبال الحيضة وإدبارها (القواعد الفقهية- 2). الشيخ/ عادل نصر</h3>
+        <a href="https://anasalafy.com/ar/119769-048-ليلة-القدر-عمدة-الأحكام-الشيخ-سعيد-محمود">
+            <h3>048- ليلة القدر (عمدة الأحكام). الشيخ/ سعيد محمود</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/787-عادل-نصر">
+            <a href="https://anasalafy.com/ar/author/779-سعيد-محمود">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119552-030-إناطة-الحكم-بإقبال-الحيضة-وإدبارها-القواعد-الفقهية-2-الشيخ-عادل-نصر" data-number="1" title="030- إناطة الحكم بإقبال الحيضة وإدبارها (القواعد الفقهية- 2). الشيخ/ عادل نصر"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119769-048-ليلة-القدر-عمدة-الأحكام-الشيخ-سعيد-محمود" data-number="1" title="048- ليلة القدر (عمدة الأحكام). الشيخ/ سعيد محمود"></a>
 
 </article>
             </div>
@@ -3503,28 +3416,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1669209884_1556.webp" alt="079- أبواب سترة المصلي- سترة الإمام سترة من خلفه (كتاب الصلاة- المنهل الروي). الشيخ/ أحمد نصر" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1696940254_2896.webp" alt="005- إثم من ظلم شيئا من الأرض (كتاب المظالم- مختصر صحيح البخاري). الشيخ/ سعيد محمود" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119551-079-أبواب-سترة-المصلي-سترة-الإمام-سترة-من-خلفه-كتاب-الصلاة-المنهل-الروي-الشيخ-أحمد-نصر">
-            <h3>079- أبواب سترة المصلي- سترة الإمام سترة من خلفه (كتاب الصلاة- المنهل الروي). الشيخ/ أحمد نصر</h3>
+        <a href="https://anasalafy.com/ar/119768-005-إثم-من-ظلم-شيئا-من-الأرض-كتاب-المظالم-مختصر-صحيح-البخاري-الشيخ-سعيد-محمود">
+            <h3>005- إثم من ظلم شيئا من الأرض (كتاب المظالم- مختصر صحيح البخاري). الشيخ/ سعيد محمود</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/732-أحمد-نصر">
+            <a href="https://anasalafy.com/ar/author/779-سعيد-محمود">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119551-079-أبواب-سترة-المصلي-سترة-الإمام-سترة-من-خلفه-كتاب-الصلاة-المنهل-الروي-الشيخ-أحمد-نصر" data-number="1" title="079- أبواب سترة المصلي- سترة الإمام سترة من خلفه (كتاب الصلاة- المنهل الروي). الشيخ/ أحمد نصر"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119768-005-إثم-من-ظلم-شيئا-من-الأرض-كتاب-المظالم-مختصر-صحيح-البخاري-الشيخ-سعيد-محمود" data-number="1" title="005- إثم من ظلم شيئا من الأرض (كتاب المظالم- مختصر صحيح البخاري). الشيخ/ سعيد محمود"></a>
 
 </article>
             </div>
@@ -3532,14 +3445,43 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="052- من باب بأي اليدين يتمضمض إلى باب المبالغة في الاستنشاق (كتاب الطهارة- ذخيرة العقبى). الشيخ/ العربي السعدني" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1646743935_5222.webp" alt="013- الآيات (247- 256) من سورة البقرة (الدخيل). د/ محمود عبد المنعم" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119550-052-من-باب-بأي-اليدين-يتمضمض-إلى-باب-المبالغة-في-الاستنشاق-كتاب-الطهارة-ذخيرة-العقبى-الشيخ-العربي-السعدني">
-            <h3>052- من باب بأي اليدين يتمضمض إلى باب المبالغة في الاستنشاق (كتاب الطهارة- ذخيرة العقبى). الشيخ/ العربي السعدني</h3>
+        <a href="https://anasalafy.com/ar/119767-013-الآيات-247-256-من-سورة-البقرة-الدخيل-د-محمود-عبد-المنعم">
+            <h3>013- الآيات (247- 256) من سورة البقرة (الدخيل). د/ محمود عبد المنعم</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/761-محمود-عبد-المنعم">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٢ نوفمبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119767-013-الآيات-247-256-من-سورة-البقرة-الدخيل-د-محمود-عبد-المنعم" data-number="1" title="013- الآيات (247- 256) من سورة البقرة (الدخيل). د/ محمود عبد المنعم"></a>
+
+</article>
+            </div>
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="008- باب في النهي عن استقبال القبلة بغائط أو بول (أبواب الطهارة- إتحاف الطالب). الشيخ/ العربي السعدني" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119766-008-باب-في-النهي-عن-استقبال-القبلة-بغائط-أو-بول-أبواب-الطهارة-إتحاف-الطالب-الشيخ-العربي-السعدني">
+            <h3>008- باب في النهي عن استقبال القبلة بغائط أو بول (أبواب الطهارة- إتحاف الطالب). الشيخ/ العربي السعدني</h3>
         </a>
     </div>
     <div class="action">
@@ -3550,10 +3492,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119550-052-من-باب-بأي-اليدين-يتمضمض-إلى-باب-المبالغة-في-الاستنشاق-كتاب-الطهارة-ذخيرة-العقبى-الشيخ-العربي-السعدني" data-number="1" title="052- من باب بأي اليدين يتمضمض إلى باب المبالغة في الاستنشاق (كتاب الطهارة- ذخيرة العقبى). الشيخ/ العربي السعدني"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119766-008-باب-في-النهي-عن-استقبال-القبلة-بغائط-أو-بول-أبواب-الطهارة-إتحاف-الطالب-الشيخ-العربي-السعدني" data-number="1" title="008- باب في النهي عن استقبال القبلة بغائط أو بول (أبواب الطهارة- إتحاف الطالب). الشيخ/ العربي السعدني"></a>
 
 </article>
             </div>
@@ -3561,14 +3503,14 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="077- تابع باب بيان فضل صلاة الجماعة والتشديد في التخلف عنها وأنها فريضة (كتاب المساجد- البحر المحيط). الشيخ/ العربي السعدني" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1787391936_4048.webp" alt="005- باب من أين يبدأ بالقصر إذا خرج من وطنه؟ (صلاة المسافرين- البحر المحيط). الشيخ/ العربي السعدني" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119549-077-تابع-باب-بيان-فضل-صلاة-الجماعة-والتشديد-في-التخلف-عنها-وأنها-فريضة-كتاب-المساجد-البحر-المحيط-الشيخ-العربي-السعدني">
-            <h3>077- تابع باب بيان فضل صلاة الجماعة والتشديد في التخلف عنها وأنها فريضة (كتاب المساجد- البحر المحيط). الشيخ/ العربي السعدني</h3>
+        <a href="https://anasalafy.com/ar/119765-005-باب-من-أين-يبدأ-بالقصر-إذا-خرج-من-وطنه-صلاة-المسافرين-البحر-المحيط-الشيخ-العربي-السعدني">
+            <h3>005- باب من أين يبدأ بالقصر إذا خرج من وطنه؟ (صلاة المسافرين- البحر المحيط). الشيخ/ العربي السعدني</h3>
         </a>
     </div>
     <div class="action">
@@ -3579,10 +3521,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119549-077-تابع-باب-بيان-فضل-صلاة-الجماعة-والتشديد-في-التخلف-عنها-وأنها-فريضة-كتاب-المساجد-البحر-المحيط-الشيخ-العربي-السعدني" data-number="1" title="077- تابع باب بيان فضل صلاة الجماعة والتشديد في التخلف عنها وأنها فريضة (كتاب المساجد- البحر المحيط). الشيخ/ العربي السعدني"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119765-005-باب-من-أين-يبدأ-بالقصر-إذا-خرج-من-وطنه-صلاة-المسافرين-البحر-المحيط-الشيخ-العربي-السعدني" data-number="1" title="005- باب من أين يبدأ بالقصر إذا خرج من وطنه؟ (صلاة المسافرين- البحر المحيط). الشيخ/ العربي السعدني"></a>
 
 </article>
             </div>
@@ -3590,14 +3532,72 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165446_9736.webp" alt="009- قصة أصحاب الكهف. الشيخ/ إيهاب الشريف" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165498_7568.webp" alt="173- باب المجاهدة- الحديث السابع عشر (1) (رياض الصالحين). الشيخ/ وائل سرحان" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119548-009-قصة-أصحاب-الكهف-الشيخ-إيهاب-الشريف">
-            <h3>009- قصة أصحاب الكهف. الشيخ/ إيهاب الشريف</h3>
+        <a href="https://anasalafy.com/ar/119764-173-باب-المجاهدة-الحديث-السابع-عشر-1-رياض-الصالحين-الشيخ-وائل-سرحان">
+            <h3>173- باب المجاهدة- الحديث السابع عشر (1) (رياض الصالحين). الشيخ/ وائل سرحان</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/719-وائل-سرحان">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٢ نوفمبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119764-173-باب-المجاهدة-الحديث-السابع-عشر-1-رياض-الصالحين-الشيخ-وائل-سرحان" data-number="1" title="173- باب المجاهدة- الحديث السابع عشر (1) (رياض الصالحين). الشيخ/ وائل سرحان"></a>
+
+</article>
+            </div>
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165498_7568.webp" alt="172- باب المجاهدة- الحديث السادس عشر (رياض الصالحين). الشيخ/ وائل سرحان" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119763-172-باب-المجاهدة-الحديث-السادس-عشر-رياض-الصالحين-الشيخ-وائل-سرحان">
+            <h3>172- باب المجاهدة- الحديث السادس عشر (رياض الصالحين). الشيخ/ وائل سرحان</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/719-وائل-سرحان">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٢ نوفمبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119763-172-باب-المجاهدة-الحديث-السادس-عشر-رياض-الصالحين-الشيخ-وائل-سرحان" data-number="1" title="172- باب المجاهدة- الحديث السادس عشر (رياض الصالحين). الشيخ/ وائل سرحان"></a>
+
+</article>
+            </div>
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165446_9736.webp" alt="046- الترهيب من اليمين الكاذبة الغموس (3) (كتاب البيوع- الترغيب والترهيب). الشيخ/ إيهاب الشريف" />
+                <span>
+            <i class="fas fa-video"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119762-046-الترهيب-من-اليمين-الكاذبة-الغموس-3-كتاب-البيوع-الترغيب-والترهيب-الشيخ-إيهاب-الشريف">
+            <h3>046- الترهيب من اليمين الكاذبة الغموس (3) (كتاب البيوع- الترغيب والترهيب). الشيخ/ إيهاب الشريف</h3>
         </a>
     </div>
     <div class="action">
@@ -3608,10 +3608,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119548-009-قصة-أصحاب-الكهف-الشيخ-إيهاب-الشريف" data-number="1" title="009- قصة أصحاب الكهف. الشيخ/ إيهاب الشريف"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119762-046-الترهيب-من-اليمين-الكاذبة-الغموس-3-كتاب-البيوع-الترغيب-والترهيب-الشيخ-إيهاب-الشريف" data-number="1" title="046- الترهيب من اليمين الكاذبة الغموس (3) (كتاب البيوع- الترغيب والترهيب). الشيخ/ إيهاب الشريف"></a>
 
 </article>
             </div>
@@ -3619,28 +3619,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165446_9736.webp" alt="009- بر الوالدين (5) (الأخلاق). الشيخ/ إيهاب الشريف" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1647361346_3476.webp" alt="الصبر في الزمن الصعب (2). د/ أبو بكر القاضي" />
                 <span>
-            <i class="fas fa-video"></i>
+            <i class="fas fa-microphone-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119547-009-بر-الوالدين-5-الأخلاق-الشيخ-إيهاب-الشريف">
-            <h3>009- بر الوالدين (5) (الأخلاق). الشيخ/ إيهاب الشريف</h3>
+        <a href="https://anasalafy.com/ar/119761-الصبر-في-الزمن-الصعب-2-د-أبو-بكر-القاضي">
+            <h3>الصبر في الزمن الصعب (2). د/ أبو بكر القاضي</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/720-إيهاب-الشريف">
+            <a href="https://anasalafy.com/ar/author/724-أبو-بكر-القاضي">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119547-009-بر-الوالدين-5-الأخلاق-الشيخ-إيهاب-الشريف" data-number="1" title="009- بر الوالدين (5) (الأخلاق). الشيخ/ إيهاب الشريف"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119761-الصبر-في-الزمن-الصعب-2-د-أبو-بكر-القاضي" data-number="1" title="الصبر في الزمن الصعب (2). د/ أبو بكر القاضي"></a>
 
 </article>
             </div>
@@ -3648,28 +3648,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1718184539_6073.webp" alt="011- سورة العلق (البنيان). الشيخ/ وائل عبد المولى" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1713290710_8177.webp" alt="006- تابع باب وجوب الجهاد وفضل الغدوة والروحة (كتاب الجهاد- رياض الصالحين). د/ ياسر برهامي" />
                 <span>
             <i class="fas fa-video"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119546-011-سورة-العلق-البنيان-الشيخ-وائل-عبد-المولى">
-            <h3>011- سورة العلق (البنيان). الشيخ/ وائل عبد المولى</h3>
+        <a href="https://anasalafy.com/ar/119758-006-تابع-باب-وجوب-الجهاد-وفضل-الغدوة-والروحة-كتاب-الجهاد-رياض-الصالحين-د-ياسر-برهامي">
+            <h3>006- تابع باب وجوب الجهاد وفضل الغدوة والروحة (كتاب الجهاد- رياض الصالحين). د/ ياسر برهامي</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/1692-وائل-عبد-المولى">
+            <a href="https://anasalafy.com/ar/author/715-ياسر-برهامي">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٤ أكتوبر ٢٠٢٦
+            ١١ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119546-011-سورة-العلق-البنيان-الشيخ-وائل-عبد-المولى" data-number="1" title="011- سورة العلق (البنيان). الشيخ/ وائل عبد المولى"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119758-006-تابع-باب-وجوب-الجهاد-وفضل-الغدوة-والروحة-كتاب-الجهاد-رياض-الصالحين-د-ياسر-برهامي" data-number="1" title="006- تابع باب وجوب الجهاد وفضل الغدوة والروحة (كتاب الجهاد- رياض الصالحين). د/ ياسر برهامي"></a>
 
 </article>
             </div>
@@ -3685,15 +3685,15 @@
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164884_9924.webp" alt="بين الأسد والغزالة! (مقطع). الشيخ/ مصطفى دياب"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164884_9924.webp" alt="ثق بنفسك (مقطع). الشيخ/ مصطفى دياب"/>
                 <span>
             <i class="fas fa-video"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119558-بين-الأسد-والغزالة-مقطع-الشيخ-مصطفى-دياب">
-                <h3>بين الأسد والغزالة! (مقطع). الشيخ/ مصطفى دياب</h3>
+            <a href="https://anasalafy.com/ar/119701-ثق-بنفسك-مقطع-الشيخ-مصطفى-دياب">
+                <h3>ثق بنفسك (مقطع). الشيخ/ مصطفى دياب</h3>
             </a>
         </div>
         <div class="action">
@@ -3704,24 +3704,24 @@
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ٢٤ أكتوبر ٢٠٢٦
+                ٠٥ نوفمبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119558-بين-الأسد-والغزالة-مقطع-الشيخ-مصطفى-دياب"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119701-ثق-بنفسك-مقطع-الشيخ-مصطفى-دياب"></a>
     </article>
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1713290710_8177.webp" alt="تلبيس إبليس بالخوارق الشيطانية وكيفية إبطالها (مقطع). د/ ياسر برهامي"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1713290710_8177.webp" alt="الفرق بين كرامات الأولياء وأحوال أهل الضلال (مقطع). د/ ياسر برهامي"/>
                 <span>
             <i class="fas fa-video"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119502-تلبيس-إبليس-بالخوارق-الشيطانية-وكيفية-إبطالها-مقطع-د-ياسر-برهامي">
-                <h3>تلبيس إبليس بالخوارق الشيطانية وكيفية إبطالها (مقطع). د/ ياسر برهامي</h3>
+            <a href="https://anasalafy.com/ar/119650-الفرق-بين-كرامات-الأولياء-وأحوال-أهل-الضلال-مقطع-د-ياسر-برهامي">
+                <h3>الفرق بين كرامات الأولياء وأحوال أهل الضلال (مقطع). د/ ياسر برهامي</h3>
             </a>
         </div>
         <div class="action">
@@ -3732,24 +3732,24 @@
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ١٩ أكتوبر ٢٠٢٦
+                ٠١ نوفمبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119502-تلبيس-إبليس-بالخوارق-الشيطانية-وكيفية-إبطالها-مقطع-د-ياسر-برهامي"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119650-الفرق-بين-كرامات-الأولياء-وأحوال-أهل-الضلال-مقطع-د-ياسر-برهامي"></a>
     </article>
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164510_2647.webp" alt="خطورة الرواسب القديمة بعد الالتزام (مقطع). الشيخ/ عادل نصر"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164510_2647.webp" alt="لماذا قطع عمر بن الخطاب رضي الله عنه الشجرة؟ (مقطع). الشيخ/ عادل نصر"/>
                 <span>
             <i class="fas fa-video"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119465-خطورة-الرواسب-القديمة-بعد-الالتزام-مقطع-الشيخ-عادل-نصر">
-                <h3>خطورة الرواسب القديمة بعد الالتزام (مقطع). الشيخ/ عادل نصر</h3>
+            <a href="https://anasalafy.com/ar/119625-لماذا-قطع-عمر-بن-الخطاب-رضي-الله-عنه-الشجرة-مقطع-الشيخ-عادل-نصر">
+                <h3>لماذا قطع عمر بن الخطاب رضي الله عنه الشجرة؟ (مقطع). الشيخ/ عادل نصر</h3>
             </a>
         </div>
         <div class="action">
@@ -3760,11 +3760,11 @@
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ١٥ أكتوبر ٢٠٢٦
+                ٢٩ أكتوبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119465-خطورة-الرواسب-القديمة-بعد-الالتزام-مقطع-الشيخ-عادل-نصر"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119625-لماذا-قطع-عمر-بن-الخطاب-رضي-الله-عنه-الشجرة-مقطع-الشيخ-عادل-نصر"></a>
     </article>
             </div>
 </section>
@@ -3778,15 +3778,15 @@
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1647361346_3476.webp" alt="بين مرحلة الفرار من الدعوة ومرحلة الفتح المبين. د/ أبو بكر القاضي"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1647361346_3476.webp" alt="الصبر في الزمن الصعب (2). د/ أبو بكر القاضي"/>
                 <span>
             <i class="fas fa-microphone-alt"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119534-بين-مرحلة-الفرار-من-الدعوة-ومرحلة-الفتح-المبين-د-أبو-بكر-القاضي">
-                <h3>بين مرحلة الفرار من الدعوة ومرحلة الفتح المبين. د/ أبو بكر القاضي</h3>
+            <a href="https://anasalafy.com/ar/119761-الصبر-في-الزمن-الصعب-2-د-أبو-بكر-القاضي">
+                <h3>الصبر في الزمن الصعب (2). د/ أبو بكر القاضي</h3>
             </a>
         </div>
         <div class="action">
@@ -3797,52 +3797,52 @@
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ٢٢ أكتوبر ٢٠٢٦
+                ١٢ نوفمبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119534-بين-مرحلة-الفرار-من-الدعوة-ومرحلة-الفتح-المبين-د-أبو-بكر-القاضي"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119761-الصبر-في-الزمن-الصعب-2-د-أبو-بكر-القاضي"></a>
     </article>
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1713290710_8177.webp" alt="قضايا الإيمان والكفر. د/ ياسر برهامي"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164616_7811.webp" alt="حديث عظيم الشأن. الشيخ/ سعيد صابر"/>
                 <span>
             <i class="fas fa-video"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119533-قضايا-الإيمان-والكفر-د-ياسر-برهامي">
-                <h3>قضايا الإيمان والكفر. د/ ياسر برهامي</h3>
+            <a href="https://anasalafy.com/ar/119752-حديث-عظيم-الشأن-الشيخ-سعيد-صابر">
+                <h3>حديث عظيم الشأن. الشيخ/ سعيد صابر</h3>
             </a>
         </div>
         <div class="action">
                             <div class="writer">
-            <a href="https://anasalafy.com/ar/author/715-ياسر-برهامي">
+            <a href="https://anasalafy.com/ar/author/777-سعيد-صابر">
             <strong></strong>
         </a>
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ٢١ أكتوبر ٢٠٢٦
+                ١١ نوفمبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119533-قضايا-الإيمان-والكفر-د-ياسر-برهامي"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119752-حديث-عظيم-الشأن-الشيخ-سعيد-صابر"></a>
     </article>
                     <article class="item">
         
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1712673901_5420.webp" alt="مقتضى محبته اتباعه ﷺ. الشيخ/ عصام حسنين"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1712673901_5420.webp" alt="وجاء دور الصوفية. الشيخ/ عصام حسنين"/>
                 <span>
             <i class="fas fa-video"></i>
         </span>
     </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119456-مقتضى-محبته-اتباعه-ﷺ-الشيخ-عصام-حسنين">
-                <h3>مقتضى محبته اتباعه ﷺ. الشيخ/ عصام حسنين</h3>
+            <a href="https://anasalafy.com/ar/119745-وجاء-دور-الصوفية-الشيخ-عصام-حسنين">
+                <h3>وجاء دور الصوفية. الشيخ/ عصام حسنين</h3>
             </a>
         </div>
         <div class="action">
@@ -3853,11 +3853,11 @@
     </div>
                         <span>
                 <i class="fas fa-calendar-alt"></i>
-                ١٥ أكتوبر ٢٠٢٦
+                ١٠ نوفمبر ٢٠٢٦
             </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119456-مقتضى-محبته-اتباعه-ﷺ-الشيخ-عصام-حسنين"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119745-وجاء-دور-الصوفية-الشيخ-عصام-حسنين"></a>
     </article>
             </div>
 </section>
@@ -3872,14 +3872,14 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792567137_5402.webp" alt="الوقفات الإيمانية مع الأسماء والصفات الإلهية (36) اسم الله (الخَبِير) (موعظة الأسبوع)" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794471553_6892.webp" alt="الوقفات الإيمانية مع الأسماء والصفات الإلهية (38) اسم الله (الرَّحِيم) (موعظة الأسبوع)" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119521-الوقفات-الإيمانية-مع-الأسماء-والصفات-الإلهية-36-اسم-الله-الخبير-موعظة-الأسبوع">
-            <h3>الوقفات الإيمانية مع الأسماء والصفات الإلهية (36) اسم الله (الخَبِير) (موعظة الأسبوع)</h3>
+        <a href="https://anasalafy.com/ar/119759-الوقفات-الإيمانية-مع-الأسماء-والصفات-الإلهية-38-اسم-الله-الرحيم-موعظة-الأسبوع">
+            <h3>الوقفات الإيمانية مع الأسماء والصفات الإلهية (38) اسم الله (الرَّحِيم) (موعظة الأسبوع)</h3>
         </a>
     </div>
     <div class="action">
@@ -3890,10 +3890,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢١ أكتوبر ٢٠٢٦
+            ١٢ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119521-الوقفات-الإيمانية-مع-الأسماء-والصفات-الإلهية-36-اسم-الله-الخبير-موعظة-الأسبوع" data-number="1" title="الوقفات الإيمانية مع الأسماء والصفات الإلهية (36) اسم الله (الخَبِير) (موعظة الأسبوع)"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119759-الوقفات-الإيمانية-مع-الأسماء-والصفات-الإلهية-38-اسم-الله-الرحيم-موعظة-الأسبوع" data-number="1" title="الوقفات الإيمانية مع الأسماء والصفات الإلهية (38) اسم الله (الرَّحِيم) (موعظة الأسبوع)"></a>
 
 </article>
             </div>
@@ -3901,14 +3901,14 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425789_3455.webp" alt="الدين الإبراهيمي الجديد بين الحقيقة والضلال (278) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (18)" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794300951_2613.webp" alt="الدين الإبراهيمي الجديد بين الحقيقة والضلال (281) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (21)" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119508-الدين-الإبراهيمي-الجديد-بين-الحقيقة-والضلال-278-حجج-إبراهيم-صلى-الله-عليه-وسلم-في-دعوته-لقومه-وإنجاء-الله-له-من-النار-ومجادلته-في-قوم-لوط-18">
-            <h3>الدين الإبراهيمي الجديد بين الحقيقة والضلال (278) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (18)</h3>
+        <a href="https://anasalafy.com/ar/119736-الدين-الإبراهيمي-الجديد-بين-الحقيقة-والضلال-281-حجج-إبراهيم-صلى-الله-عليه-وسلم-في-دعوته-لقومه-وإنجاء-الله-له-من-النار-ومجادلته-في-قوم-لوط-21">
+            <h3>الدين الإبراهيمي الجديد بين الحقيقة والضلال (281) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (21)</h3>
         </a>
     </div>
     <div class="action">
@@ -3919,10 +3919,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ أكتوبر ٢٠٢٦
+            ١٠ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119508-الدين-الإبراهيمي-الجديد-بين-الحقيقة-والضلال-278-حجج-إبراهيم-صلى-الله-عليه-وسلم-في-دعوته-لقومه-وإنجاء-الله-له-من-النار-ومجادلته-في-قوم-لوط-18" data-number="1" title="الدين الإبراهيمي الجديد بين الحقيقة والضلال (278) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (18)"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119736-الدين-الإبراهيمي-الجديد-بين-الحقيقة-والضلال-281-حجج-إبراهيم-صلى-الله-عليه-وسلم-في-دعوته-لقومه-وإنجاء-الله-له-من-النار-ومجادلته-في-قوم-لوط-21" data-number="1" title="الدين الإبراهيمي الجديد بين الحقيقة والضلال (281) حجج إبراهيم -صلى الله عليه وسلم- في دعوته لقومه وإنجاء الله له من النار ومجادلته في قوم لوط (21)"></a>
 
 </article>
             </div>
@@ -3930,14 +3930,14 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425581_3686.webp" alt="من مواقف الأنبياء (من تراث الدعوة)" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794300610_4446.webp" alt="حكم سبِّ الصحابة -رضي الله عنهم- (من تراث الدعوة)" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119507-من-مواقف-الأنبياء-من-تراث-الدعوة">
-            <h3>من مواقف الأنبياء (من تراث الدعوة)</h3>
+        <a href="https://anasalafy.com/ar/119735-حكم-سب-الصحابة-رضي-الله-عنهم-من-تراث-الدعوة">
+            <h3>حكم سبِّ الصحابة -رضي الله عنهم- (من تراث الدعوة)</h3>
         </a>
     </div>
     <div class="action">
@@ -3948,10 +3948,10 @@
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ أكتوبر ٢٠٢٦
+            ١٠ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119507-من-مواقف-الأنبياء-من-تراث-الدعوة" data-number="1" title="من مواقف الأنبياء (من تراث الدعوة)"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119735-حكم-سب-الصحابة-رضي-الله-عنهم-من-تراث-الدعوة" data-number="1" title="حكم سبِّ الصحابة -رضي الله عنهم- (من تراث الدعوة)"></a>
 
 </article>
             </div>
@@ -3959,28 +3959,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425453_4804.webp" alt="فشل التجربة الاشتراكية في مصر (2-2)" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794300010_5008.webp" alt="حقيقة المعارضة وموقف حزب النور منها" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119506-فشل-التجربة-الاشتراكية-في-مصر-2-2">
-            <h3>فشل التجربة الاشتراكية في مصر (2-2)</h3>
+        <a href="https://anasalafy.com/ar/119734-حقيقة-المعارضة-وموقف-حزب-النور-منها">
+            <h3>حقيقة المعارضة وموقف حزب النور منها</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/820-علاء-بكر">
+            <a href="https://anasalafy.com/ar/author/896-عبد-العزيز-خير-الدين">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ أكتوبر ٢٠٢٦
+            ١٠ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119506-فشل-التجربة-الاشتراكية-في-مصر-2-2" data-number="1" title="فشل التجربة الاشتراكية في مصر (2-2)"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119734-حقيقة-المعارضة-وموقف-حزب-النور-منها" data-number="1" title="حقيقة المعارضة وموقف حزب النور منها"></a>
 
 </article>
             </div>
@@ -3988,28 +3988,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425320_4395.webp" alt="أصول تدرُّ ربحًا" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794299878_9518.webp" alt="الاستغفار بوابة الفرج العظمى" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119505-أصول-تدر-ربحا">
-            <h3>أصول تدرُّ ربحًا</h3>
+        <a href="https://anasalafy.com/ar/119733-الاستغفار-بوابة-الفرج-العظمى">
+            <h3>الاستغفار بوابة الفرج العظمى</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/1856-محمد-صادق">
+            <a href="https://anasalafy.com/ar/author/857-محمد-خلف">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ أكتوبر ٢٠٢٦
+            ١٠ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119505-أصول-تدر-ربحا" data-number="1" title="أصول تدرُّ ربحًا"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119733-الاستغفار-بوابة-الفرج-العظمى" data-number="1" title="الاستغفار بوابة الفرج العظمى"></a>
 
 </article>
             </div>
@@ -4017,28 +4017,28 @@
                 <article class="item">
     <div class="img-box">
                 
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1792425174_3033.webp" alt="الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)" />
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1794299418_2549.webp" alt="احذر.. إنَّ قلبك في الميزان (5)" />
                 <span>
             <i class="fas fa-file-alt"></i>
         </span>
             </div>
     <div class="info">
-        <a href="https://anasalafy.com/ar/119504-الهشاشة-النفسية-حين-يتحول-الألم-إلى-يأس-2">
-            <h3>الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)</h3>
+        <a href="https://anasalafy.com/ar/119732-احذر-إن-قلبك-في-الميزان-5">
+            <h3>احذر.. إنَّ قلبك في الميزان (5)</h3>
         </a>
     </div>
     <div class="action">
                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/1855-محمد-بكر">
+            <a href="https://anasalafy.com/ar/author/1859-أشرف-فراج">
             <strong></strong>
         </a>
     </div>
                 <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ أكتوبر ٢٠٢٦
+            ١٠ نوفمبر ٢٠٢٦
         </span>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119504-الهشاشة-النفسية-حين-يتحول-الألم-إلى-يأس-2" data-number="1" title="الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119732-احذر-إن-قلبك-في-الميزان-5" data-number="1" title="احذر.. إنَّ قلبك في الميزان (5)"></a>
 
 </article>
             </div>
@@ -4051,6 +4051,62 @@
                 <h3>بطاقات دعوية</h3>
             </a>
         </div>
+                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1794309947_2080.webp" alt="حفظ المنهج نجاة من الفتن. الشيخ/ مصطفى دياب"/>
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119737-حفظ-المنهج-نجاة-من-الفتن-الشيخ-مصطفى-دياب">
+                <h3>حفظ المنهج نجاة من الفتن. الشيخ/ مصطفى دياب</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/759-مصطفى-دياب">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ١٠ نوفمبر ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119737-حفظ-المنهج-نجاة-من-الفتن-الشيخ-مصطفى-دياب"></a>
+    </article>
+                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1793093060_4898.webp" alt="للتلمذة صورة صحية وصور مرضية. الشيخ/ عبد المنعم الشحات"/>
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119603-للتلمذة-صورة-صحية-وصور-مرضية-الشيخ-عبد-المنعم-الشحات">
+                <h3>للتلمذة صورة صحية وصور مرضية. الشيخ/ عبد المنعم الشحات</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/716-عبد-المنعم-الشحات">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ٢٧ أكتوبر ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119603-للتلمذة-صورة-صحية-وصور-مرضية-الشيخ-عبد-المنعم-الشحات"></a>
+    </article>
                     <article class="item">
         
     <div class="img-box">
@@ -4079,62 +4135,6 @@
     </div>
     <a class="global-link" href="https://anasalafy.com/ar/119439-الرجل-والمرأة-في-ميزان-التكليف-د-علاء-بكر"></a>
     </article>
-                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1780999079_3209.webp" alt="الأعمال الفنية بين المخالفة الشرعية والطعن في ثوابت الدين. الشيخ/ عبد المنعم الشحات"/>
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/118046-الأعمال-الفنية-بين-المخالفة-الشرعية-والطعن-في-ثوابت-الدين-الشيخ-عبد-المنعم-الشحات">
-                <h3>الأعمال الفنية بين المخالفة الشرعية والطعن في ثوابت الدين. الشيخ/ عبد المنعم الشحات</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/716-عبد-المنعم-الشحات">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ٠٩ يونيو ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118046-الأعمال-الفنية-بين-المخالفة-الشرعية-والطعن-في-ثوابت-الدين-الشيخ-عبد-المنعم-الشحات"></a>
-    </article>
-                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1778924678_7082.webp" alt="أثر القرب من القرآن. د/ أحمد فريد"/>
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/117874-أثر-القرب-من-القرآن-د-أحمد-فريد">
-                <h3>أثر القرب من القرآن. د/ أحمد فريد</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/717-أحمد-فريد">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ٢٤ مايو ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/117874-أثر-القرب-من-القرآن-د-أحمد-فريد"></a>
-    </article>
             </div>
 </section>
                                                                                                                                                             <section class="mb-30 col-grid pr-0 col-sm-12 col-md-6 col-lg-6">
@@ -4144,6 +4144,34 @@
                 <h3>أضواء على الواقع</h3>
             </a>
         </div>
+                    <article class="item">
+        
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1793090865_7745.webp" alt="كيف يستفيد الإمام وطالب العلم من الذكاء الاصطناعي دون التفريط في الأمانة العلمية؟"/>
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+    </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119588-كيف-يستفيد-الإمام-وطالب-العلم-من-الذكاء-الاصطناعي-دون-التفريط-في-الأمانة-العلمية">
+                <h3>كيف يستفيد الإمام وطالب العلم من الذكاء الاصطناعي دون التفريط في الأمانة العلمية؟</h3>
+            </a>
+        </div>
+        <div class="action">
+                            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/1866-علاء-السعداوي">
+            <strong></strong>
+        </a>
+    </div>
+                        <span>
+                <i class="fas fa-calendar-alt"></i>
+                ٢٦ أكتوبر ٢٠٢٦
+            </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119588-كيف-يستفيد-الإمام-وطالب-العلم-من-الذكاء-الاصطناعي-دون-التفريط-في-الأمانة-العلمية"></a>
+    </article>
                     <article class="item">
         
     <div class="img-box">
@@ -4199,34 +4227,6 @@
         </div>
     </div>
     <a class="global-link" href="https://anasalafy.com/ar/119313-بيان-من-الدعوة-السلفية-بمصر-بشأن-استهداف-محطة-كهرباء-المسجد-النبوي-في-المدينة-المنورة"></a>
-    </article>
-                    <article class="item">
-        
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1789657615_6292.webp" alt="بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها"/>
-                <span>
-            <i class="fas fa-file-alt"></i>
-        </span>
-    </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها">
-                <h3>بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها</h3>
-            </a>
-        </div>
-        <div class="action">
-                            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/806-الدعوة-السلفية">
-            <strong></strong>
-        </a>
-    </div>
-                        <span>
-                <i class="fas fa-calendar-alt"></i>
-                ١٧ سبتمبر ٢٠٢٦
-            </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها"></a>
     </article>
             </div>
 </section>
@@ -4326,6 +4326,102 @@
             </div>
             </div>
 </section>
+                                                                                                                                                            <section class="part ">
+    <div class="head">
+        <a href="https://anasalafy.com/ar/category/صفحة-الأخبار-1-1-1">
+            <h3>صفحة الأخبار</h3>
+        </a>
+    </div>
+    <div class="row">
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165440_2304.webp" alt="تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه." />
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/119751-تطبيق-د-أحمد-حطيبة-لأندرويد-وآيفون-وآيباد-بالرئيسية-توصلك-بسهولة-لكل-اللي-تحتاجه">
+            <h3>تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه.</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/721-أحمد-حطيبة">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١١ نوفمبر ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119751-تطبيق-د-أحمد-حطيبة-لأندرويد-وآيفون-وآيباد-بالرئيسية-توصلك-بسهولة-لكل-اللي-تحتاجه" data-number="1" title="تطبيق د. أحمد حطيبة لأندرويد وآيفون وآيباد، بالرئيسية توصّلك بسهولة لكل اللي تحتاجه."></a>
+
+</article>
+            </div>
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640165440_2304.webp" alt="فريق موقع أنا السلفي يدعو الله بالشفاء العاجل لفضيلة الشيخ الدكتور أحمد حطيبة" />
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/118142-فريق-موقع-أنا-السلفي-يدعو-الله-بالشفاء-العاجل-لفضيلة-الشيخ-الدكتور-أحمد-حطيبة">
+            <h3>فريق موقع أنا السلفي يدعو الله بالشفاء العاجل لفضيلة الشيخ الدكتور أحمد حطيبة</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/721-أحمد-حطيبة">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٧ يونيو ٢٠٢٦
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/118142-فريق-موقع-أنا-السلفي-يدعو-الله-بالشفاء-العاجل-لفضيلة-الشيخ-الدكتور-أحمد-حطيبة" data-number="1" title="فريق موقع أنا السلفي يدعو الله بالشفاء العاجل لفضيلة الشيخ الدكتور أحمد حطيبة"></a>
+
+</article>
+            </div>
+                    <div class="col-grid col-xs-6 col-sm-6 col-lg-4">
+                <article class="item">
+    <div class="img-box">
+                
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1643200130_7846.webp" alt="تنبيه هام: تغيير طريقة مشاهدة المواد المرئية على موقع أنا السلفي" />
+                <span>
+            <i class="fas fa-file-alt"></i>
+        </span>
+            </div>
+    <div class="info">
+        <a href="https://anasalafy.com/ar/116170-تنبيه-هام-تغيير-طريقة-مشاهدة-المواد-المرئية">
+            <h3>تنبيه هام: تغيير طريقة مشاهدة المواد المرئية على موقع أنا السلفي</h3>
+        </a>
+    </div>
+    <div class="action">
+                    <div class="writer">
+            <a href="https://anasalafy.com/ar/author/1-إدارة-الموقع">
+            <strong></strong>
+        </a>
+    </div>
+                <span>
+            <i class="fas fa-calendar-alt"></i>
+            ١٩ نوفمبر ٢٠٢٥
+        </span>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/116170-تنبيه-هام-تغيير-طريقة-مشاهدة-المواد-المرئية" data-number="1" title="تنبيه هام: تغيير طريقة مشاهدة المواد المرئية على موقع أنا السلفي"></a>
+
+</article>
+            </div>
+            </div>
+</section>
                                                                                                                                     </div>
                             </div>
 
@@ -4344,75 +4440,27 @@
                     <div>
                                                     <div class="item big-item">
                                 <div class="img-box">
-                                                                            <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1785748185_1157.webp" alt="الإجازة الصيفية بين التضييع والتعمير. د/ ياسر برهامي- الشيخ/ محمود عبد الحميد- الشيخ/ رجب أبو بسيسة"/>
+                                                                            <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1789657615_6292.webp" alt="بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها"/>
                                                                     </div>
                                 <div class="info">
-                                    <a href="https://anasalafy.com/ar/118662-الإجازة-الصيفية-بين-التضييع-والتعمير-د-ياسر-برهامي-الشيخ-محمود-عبد-الحميد-الشيخ-رجب-أبو-بسيسة">
-                                        <h3>الإجازة الصيفية بين التضييع والتعمير. د/ ياسر برهامي- الشيخ/ محمود عبد الحميد- الشيخ/ رجب أبو بسيسة</h3>
+                                    <a href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها">
+                                        <h3>بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها</h3>
                                     </a>
                                 </div>
                                 <div class="action">
                                     <div class="writer">
-            <a href="https://anasalafy.com/ar/author/875-ندوات-ومؤتمرات">
-            <strong>ندوات ومؤتمرات</strong>
-        </a>
-    </div>
-                                    <span>
-                                        <i class="fas fa-calendar-alt"></i>
-                                        ٠٣ أغسطس ٢٠٢٦
-                                    </span>
-                                </div>
-                                <a class="global-link" href="https://anasalafy.com/ar/118662-الإجازة-الصيفية-بين-التضييع-والتعمير-د-ياسر-برهامي-الشيخ-محمود-عبد-الحميد-الشيخ-رجب-أبو-بسيسة" data-number="1" title="الإجازة الصيفية بين التضييع والتعمير. د/ ياسر برهامي- الشيخ/ محمود عبد الحميد- الشيخ/ رجب أبو بسيسة"></a>
-                            </div>
-                                                <div class="item-row">
-                                                            <article class="item">
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1789657615_6292.webp" alt="بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها"/>
-            </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها">
-                <h3>بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها</h3>
-            </a>
-        </div>
-        <div class="action">
-            <div class="writer">
             <a href="https://anasalafy.com/ar/author/806-الدعوة-السلفية">
             <strong>الدعوة السلفية</strong>
         </a>
     </div>
-        <span>
-            <i class="fas fa-calendar-alt"></i>
-            ١٧ سبتمبر ٢٠٢٦
-        </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها" data-number="1" title="بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها"></a>
-</article>
-                                                            <article class="item">
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1645173126_6705.webp" alt="001- أحكام الأسرة المسلمة بين التشريعات الربانية والتخبطات البشرية. الشيخ/ رضا ثابت"/>
-            </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/118590-001-أحكام-الأسرة-المسلمة-بين-التشريعات-الربانية-والتخبطات-البشرية-الشيخ-رضا-ثابت">
-                <h3>001- أحكام الأسرة المسلمة بين التشريعات الربانية والتخبطات البشرية. الشيخ/ رضا ثابت</h3>
-            </a>
-        </div>
-        <div class="action">
-            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/750-رضا-ثابت">
-            <strong>رضا ثابت</strong>
-        </a>
-    </div>
-        <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٢٨ يوليو ٢٠٢٦
-        </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/118590-001-أحكام-الأسرة-المسلمة-بين-التشريعات-الربانية-والتخبطات-البشرية-الشيخ-رضا-ثابت" data-number="1" title="001- أحكام الأسرة المسلمة بين التشريعات الربانية والتخبطات البشرية. الشيخ/ رضا ثابت"></a>
-</article>
+                                    <span>
+                                        <i class="fas fa-calendar-alt"></i>
+                                        ١٧ سبتمبر ٢٠٢٦
+                                    </span>
+                                </div>
+                                <a class="global-link" href="https://anasalafy.com/ar/119149-بيان-من-الدعوة-السلفية-بمصر-حول-استهداف-مكة-المكرمة-وترويع-الآمنين-فيها" data-number="1" title="بيان من &quot;الدعوة السلفية بمصر&quot; حول استهداف مكة المكرمة وترويع الآمنين فيها"></a>
+                            </div>
+                                                <div class="item-row">
                                                             <article class="item">
     <div class="img-box">
                     <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1789369809_6046.webp" alt="ما تيسر من الآيات (41- 51) من سورة الحج. الشيخ/ محمد سيد عامر"/>
@@ -4461,6 +4509,54 @@
     </div>
     <a class="global-link" href="https://anasalafy.com/ar/119225-ردود-العلماء-على-شذوذ-الدكتور" data-number="1" title="ردود العلماء على شذوذ الدكتور"></a>
 </article>
+                                                            <article class="item">
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1787553929_2463.webp" alt="آداب الحوار وقواعد الاختلاف (1)"/>
+            </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/118876-آداب-الحوار-وقواعد-الاختلاف-1">
+                <h3>آداب الحوار وقواعد الاختلاف (1)</h3>
+            </a>
+        </div>
+        <div class="action">
+            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/808-جمال-فتح-الله">
+            <strong>جمال فتح الله عبد الهادي</strong>
+        </a>
+    </div>
+        <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٢٤ أغسطس ٢٠٢٦
+        </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/118876-آداب-الحوار-وقواعد-الاختلاف-1" data-number="1" title="آداب الحوار وقواعد الاختلاف (1)"></a>
+</article>
+                                                            <article class="item">
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1791095260_3775.webp" alt="بيان من &quot;الدعوة السلفية بمصر&quot; بشأن استهداف محطة كهرباء المسجد النبوي في المدينة المنورة"/>
+            </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/119313-بيان-من-الدعوة-السلفية-بمصر-بشأن-استهداف-محطة-كهرباء-المسجد-النبوي-في-المدينة-المنورة">
+                <h3>بيان من &quot;الدعوة السلفية بمصر&quot; بشأن استهداف محطة كهرباء المسجد النبوي في المدينة المنورة</h3>
+            </a>
+        </div>
+        <div class="action">
+            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/1-إدارة-الموقع">
+            <strong>إدارة الموقع</strong>
+        </a>
+    </div>
+        <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٠٤ أكتوبر ٢٠٢٦
+        </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/119313-بيان-من-الدعوة-السلفية-بمصر-بشأن-استهداف-محطة-كهرباء-المسجد-النبوي-في-المدينة-المنورة" data-number="1" title="بيان من &quot;الدعوة السلفية بمصر&quot; بشأن استهداف محطة كهرباء المسجد النبوي في المدينة المنورة"></a>
+</article>
                                                     </div>
                     </div>
                 </div>
@@ -4474,108 +4570,132 @@
                 <div>
                                             <div class="item big-item">
                             <div class="img-box">
-                                                                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/topics_1791267864_9769.webp" alt="آداب الحوار وقواعد الاختلاف (2)"/>
+                                                                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/medium/core_1640164616_7811.webp" alt="الصدق طوق النجاة. الشيخ/ سعيد صابر"/>
                                                             </div>
                             <div class="info">
-                                <a href="https://anasalafy.com/ar/119340-آداب-الحوار-وقواعد-الاختلاف-2">
-                                    <h3>آداب الحوار وقواعد الاختلاف (2)</h3>
+                                <a href="https://anasalafy.com/ar/119606-الصدق-طوق-النجاة-الشيخ-سعيد-صابر">
+                                    <h3>الصدق طوق النجاة. الشيخ/ سعيد صابر</h3>
                                 </a>
                             </div>
                             <div class="action">
                                 <div class="writer">
-            <a href="https://anasalafy.com/ar/author/808-جمال-فتح-الله">
-            <strong>جمال فتح الله عبد الهادي</strong>
+            <a href="https://anasalafy.com/ar/author/777-سعيد-صابر">
+            <strong>سعيد صابر</strong>
         </a>
     </div>
 
                                 <span>
                                       <i class="fas fa-calendar-alt"></i>
-                                      ٠٦ أكتوبر ٢٠٢٦
+                                      ٢٨ أكتوبر ٢٠٢٦
                                     </span>
                             </div>
-                            <a class="global-link" href="https://anasalafy.com/ar/119340-آداب-الحوار-وقواعد-الاختلاف-2" data-number="1" title="آداب الحوار وقواعد الاختلاف (2)"></a>
+                            <a class="global-link" href="https://anasalafy.com/ar/119606-الصدق-طوق-النجاة-الشيخ-سعيد-صابر" data-number="1" title="الصدق طوق النجاة. الشيخ/ سعيد صابر"></a>
                         </div>
                                         <div class="item-row">
                                                     <article class="item">
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/topics_1791267713_5417.webp" alt="اعمل في صمت.. فالنجاح الحقيقي لا يحتاج إلى ضجيج"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1759758634_9972.webp" alt="تأملات في سورة الانفطار. الشيخ/ محمد الشريف"/>
             </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/119339-اعمل-في-صمت-فالنجاح-الحقيقي-لا-يحتاج-إلى-ضجيج">
-                <h3>اعمل في صمت.. فالنجاح الحقيقي لا يحتاج إلى ضجيج</h3>
+            <a href="https://anasalafy.com/ar/119590-تأملات-في-سورة-الانفطار-الشيخ-محمد-الشريف">
+                <h3>تأملات في سورة الانفطار. الشيخ/ محمد الشريف</h3>
             </a>
         </div>
         <div class="action">
             <div class="writer">
-            <a href="https://anasalafy.com/ar/author/1863-مستور-عياد">
-            <strong>مستور عياد</strong>
+            <a href="https://anasalafy.com/ar/author/1857-محمد-الشريف">
+            <strong>محمد الشريف</strong>
         </a>
     </div>
         <span>
             <i class="fas fa-calendar-alt"></i>
-            ٠٦ أكتوبر ٢٠٢٦
+            ٢٧ أكتوبر ٢٠٢٦
         </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/119339-اعمل-في-صمت-فالنجاح-الحقيقي-لا-يحتاج-إلى-ضجيج" data-number="1" title="اعمل في صمت.. فالنجاح الحقيقي لا يحتاج إلى ضجيج"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/119590-تأملات-في-سورة-الانفطار-الشيخ-محمد-الشريف" data-number="1" title="تأملات في سورة الانفطار. الشيخ/ محمد الشريف"></a>
 </article>
                                                     <article class="item">
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1749732974_9629.webp" alt="خلق التواضع. د/ طارق فهيم"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640164713_4846.webp" alt="حامل المسك ونافخ الكير. الشيخ/ محمد أبو زيد"/>
             </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/115691-خلق-التواضع-د-طارق-فهيم">
-                <h3>خلق التواضع. د/ طارق فهيم</h3>
+            <a href="https://anasalafy.com/ar/92571-حامل-المسك-ونافخ-الكير-الشيخ-محمد-أبو">
+                <h3>حامل المسك ونافخ الكير. الشيخ/ محمد أبو زيد</h3>
             </a>
         </div>
         <div class="action">
             <div class="writer">
-            <a href="https://anasalafy.com/ar/author/786-طارق-فهيم">
-            <strong>طارق فهيم</strong>
+            <a href="https://anasalafy.com/ar/author/768-محمد-أبو-زيد">
+            <strong>محمد أبو زيد</strong>
         </a>
     </div>
         <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٨ سبتمبر ٢٠٢٥
+            ٢٦ فبراير ٢٠٢١
         </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/115691-خلق-التواضع-د-طارق-فهيم" data-number="1" title="خلق التواضع. د/ طارق فهيم"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/92571-حامل-المسك-ونافخ-الكير-الشيخ-محمد-أبو" data-number="1" title="حامل المسك ونافخ الكير. الشيخ/ محمد أبو زيد"></a>
 </article>
                                                     <article class="item">
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640165127_1967.webp" alt="فقه الإمامة في الصلاة. د/ باسم عبد رب الرسول"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1645200085_1152.webp" alt="حسن الصحبة. الشيخ/ أسامة الأباصيري"/>
             </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/81223-فقه-الإمامة-في-الصلاة-د-باسم-عبد">
-                <h3>فقه الإمامة في الصلاة. د/ باسم عبد رب الرسول</h3>
+            <a href="https://anasalafy.com/ar/80997-حسن-الصحبة-الشيخ-أسامة-الأباصيري">
+                <h3>حسن الصحبة. الشيخ/ أسامة الأباصيري</h3>
             </a>
         </div>
         <div class="action">
             <div class="writer">
-            <a href="https://anasalafy.com/ar/author/740-باسم-عبد-رب-الرسول">
-            <strong>باسم عبد رب الرسول</strong>
+            <a href="https://anasalafy.com/ar/author/932-أسامة-الأباصيري">
+            <strong>أسامة الأباصيري</strong>
         </a>
     </div>
         <span>
             <i class="fas fa-calendar-alt"></i>
-            ٢٩ أبريل ٢٠١٩
+            ٠٤ أبريل ٢٠١٩
         </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/81223-فقه-الإمامة-في-الصلاة-د-باسم-عبد" data-number="1" title="فقه الإمامة في الصلاة. د/ باسم عبد رب الرسول"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/80997-حسن-الصحبة-الشيخ-أسامة-الأباصيري" data-number="1" title="حسن الصحبة. الشيخ/ أسامة الأباصيري"></a>
 </article>
                                                     <article class="item">
     <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640165446_9736.webp" alt="نسيت قلبي . الشيخ/ إيهاب الشريف"/>
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640165004_8357.webp" alt="أنين الجدران. الشيخ/ رجب أبو بسيسة"/>
             </div>
     <div>
         <div class="info">
-            <a href="https://anasalafy.com/ar/45204-نسيت-قلبي-ندوة-بمسجد-الصديق-بالعماروة-الشيخ">
-                <h3>نسيت قلبي . الشيخ/ إيهاب الشريف</h3>
+            <a href="https://anasalafy.com/ar/76351-أنين-الجدران-الشيخ-رجب-أبو-بسيسة">
+                <h3>أنين الجدران. الشيخ/ رجب أبو بسيسة</h3>
+            </a>
+        </div>
+        <div class="action">
+            <div class="writer">
+            <a href="https://anasalafy.com/ar/author/749-رجب-أبو-بسيسة">
+            <strong>رجب أبو بسيسة</strong>
+        </a>
+    </div>
+        <span>
+            <i class="fas fa-calendar-alt"></i>
+            ٣٠ أكتوبر ٢٠١٧
+        </span>
+        </div>
+    </div>
+    <a class="global-link" href="https://anasalafy.com/ar/76351-أنين-الجدران-الشيخ-رجب-أبو-بسيسة" data-number="1" title="أنين الجدران. الشيخ/ رجب أبو بسيسة"></a>
+</article>
+                                                    <article class="item">
+    <div class="img-box">
+                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640165446_9736.webp" alt="وقفات مع موسم الشتاء. الشيخ/ إيهاب الشريف"/>
+            </div>
+    <div>
+        <div class="info">
+            <a href="https://anasalafy.com/ar/61843-وقفات-مع-موسم-الشتاء-الشيخ-إيهاب-الشريف">
+                <h3>وقفات مع موسم الشتاء. الشيخ/ إيهاب الشريف</h3>
             </a>
         </div>
         <div class="action">
@@ -4586,35 +4706,11 @@
     </div>
         <span>
             <i class="fas fa-calendar-alt"></i>
-            ١٩ ديسمبر ٢٠١٣
+            ١٢ ديسمبر ٢٠١٥
         </span>
         </div>
     </div>
-    <a class="global-link" href="https://anasalafy.com/ar/45204-نسيت-قلبي-ندوة-بمسجد-الصديق-بالعماروة-الشيخ" data-number="1" title="نسيت قلبي . الشيخ/ إيهاب الشريف"></a>
-</article>
-                                                    <article class="item">
-    <div class="img-box">
-                    <img class="lazyload" data-src="https://anasalafy.com/files/thumbnails/mini/core_1640165440_2304.webp" alt="آداب يشترك فيها العالم والمتعلم وآداب المفتي والمستفتي. د/ أحمد حطيبة"/>
-            </div>
-    <div>
-        <div class="info">
-            <a href="https://anasalafy.com/ar/37632-آداب-يشترك-فيها-العالم-والمتعلم-وآداب-المفتى">
-                <h3>آداب يشترك فيها العالم والمتعلم وآداب المفتي والمستفتي. د/ أحمد حطيبة</h3>
-            </a>
-        </div>
-        <div class="action">
-            <div class="writer">
-            <a href="https://anasalafy.com/ar/author/721-أحمد-حطيبة">
-            <strong>أحمد حطيبة</strong>
-        </a>
-    </div>
-        <span>
-            <i class="fas fa-calendar-alt"></i>
-            ٠٣ يناير ٢٠١٣
-        </span>
-        </div>
-    </div>
-    <a class="global-link" href="https://anasalafy.com/ar/37632-آداب-يشترك-فيها-العالم-والمتعلم-وآداب-المفتى" data-number="1" title="آداب يشترك فيها العالم والمتعلم وآداب المفتي والمستفتي. د/ أحمد حطيبة"></a>
+    <a class="global-link" href="https://anasalafy.com/ar/61843-وقفات-مع-موسم-الشتاء-الشيخ-إيهاب-الشريف" data-number="1" title="وقفات مع موسم الشتاء. الشيخ/ إيهاب الشريف"></a>
 </article>
                                             </div>
                 </div>
@@ -4691,7 +4787,7 @@
 	<div class="mail-box">
 		<h3>يمكنك متابعة كل جديد بالموقع بالاشتراك في القائمة البريدية</h3>
 				<form class="form-inline" action="https://anasalafy.com/ar/newsletter/subscribe" method="post">
-			<input type="hidden" name="_token" value="VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF" autocomplete="off">			<div class="d-flex">
+			<input type="hidden" name="_token" value="Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo" autocomplete="off">			<div class="d-flex">
 				<div class="form-group">
 					<input class="form-control" type="email" name="email" id="email" placeholder="أدخل عنوان بريدك الإلكتروني" aria-label="Search" required/>
 				</div>
@@ -4813,33 +4909,33 @@
                     <div class="links">
                         <ul>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119395-طمأنينة-القلب-وعلاج-الهشاشة-النفسية-مقطع-الشيخ-مصطفى-دياب">
+                                    <a href="https://anasalafy.com/ar/119593-أعن-تعن-وتبلغ-فوق-ما-تريد-الشيخ-العربي-السعدني">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>طمأنينة القلب وعلاج الهشاشة النفسية (مقطع). الشيخ/ مصطفى دياب</span>
+                                        <span>أعن تُعن وتبلغ فوق ما تريد. الشيخ/ العربي السعدني</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119371-من-جوامع-الأدعية-الشيخ-سعيد-صابر">
+                                    <a href="https://anasalafy.com/ar/119590-تأملات-في-سورة-الانفطار-الشيخ-محمد-الشريف">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>من جوامع الأدعية. الشيخ/ سعيد صابر</span>
+                                        <span>تأملات في سورة الانفطار. الشيخ/ محمد الشريف</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119339-اعمل-في-صمت-فالنجاح-الحقيقي-لا-يحتاج-إلى-ضجيج">
+                                    <a href="https://anasalafy.com/ar/119553-111-الأخيرة-التابعي-أبو-حنيفة-النعمان-5-صور-من-حياة-التابعين-الشيخ-مصطفى-دياب">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>اعمل في صمت.. فالنجاح الحقيقي لا يحتاج إلى ضجيج</span>
+                                        <span>111- الأخيرة- التابعي أبو حنيفة النعمان (5) (صور من حياة التابعين). الشيخ/ مصطفى دياب</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119332-العناد-ووخيم-أثره-الشيخ-العربي-السعدني">
+                                    <a href="https://anasalafy.com/ar/119506-فشل-التجربة-الاشتراكية-في-مصر-2-2">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>العناد ووخيم أثره. الشيخ/ العربي السعدني</span>
+                                        <span>فشل التجربة الاشتراكية في مصر (2-2)</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119236-قصة-طيار-ملحد-مقطع-الشيخ-عبد-المنعم-الشحات">
+                                    <a href="https://anasalafy.com/ar/119504-الهشاشة-النفسية-حين-يتحول-الألم-إلى-يأس-2">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>قصة طيار ملحد (مقطع). الشيخ/ عبد المنعم الشحات</span>
+                                        <span>الهشاشة النفسية.. حين يتحول الألم إلى يأس (2)</span>
                                     </a>
                                 </li>
                                                     </ul>
@@ -4849,33 +4945,33 @@
                     <div class="links">
                         <ul>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119558-بين-الأسد-والغزالة-مقطع-الشيخ-مصطفى-دياب">
+                                    <a href="https://anasalafy.com/ar/119771-001-الآيات-1-8-سورة-طه-تفسير-القرطبي-د-ياسر-برهامي">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>بين الأسد والغزالة! (مقطع). الشيخ/ مصطفى دياب</span>
+                                        <span>001- الآيات (1- 8) (سورة طه- تفسير القرطبي). د/ ياسر برهامي</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119557-014-اليقين-من-الإيمان-بمنزلة-الروح-للجسد-الشك-واليقين-د-محمد-إسماعيل-المقدم">
+                                    <a href="https://anasalafy.com/ar/119770-556-تابع-الآية-187-سورة-البقرة-ابن-كثير-د-ياسر-برهامي">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>014- اليقين من الإيمان بمنزلة الروح للجسد (الشك واليقين). د/ محمد إسماعيل المقدم</span>
+                                        <span>556- تابع الآية (187) (سورة البقرة- ابن كثير). د/ ياسر برهامي</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119556-013-أقوال-السلف-في-اليقين-الشك-واليقين-د-محمد-إسماعيل-المقدم">
+                                    <a href="https://anasalafy.com/ar/119769-048-ليلة-القدر-عمدة-الأحكام-الشيخ-سعيد-محمود">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>013- أقوال السلف في اليقين (الشك واليقين). د/ محمد إسماعيل المقدم</span>
+                                        <span>048- ليلة القدر (عمدة الأحكام). الشيخ/ سعيد محمود</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119555-012-اليقين-علم-تام-يوجب-العمل-الشك-واليقين-د-محمد-إسماعيل-المقدم">
+                                    <a href="https://anasalafy.com/ar/119768-005-إثم-من-ظلم-شيئا-من-الأرض-كتاب-المظالم-مختصر-صحيح-البخاري-الشيخ-سعيد-محمود">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>012- اليقين علم تام يوجب العمل (الشك واليقين). د/ محمد إسماعيل المقدم</span>
+                                        <span>005- إثم من ظلم شيئا من الأرض (كتاب المظالم- مختصر صحيح البخاري). الشيخ/ سعيد محمود</span>
                                     </a>
                                 </li>
                                                             <li>
-                                    <a href="https://anasalafy.com/ar/119554-152-تابع-باب-رواية-النبي-ﷺ-قول-الله-عز-وجل-في-الوعد-والوعيد-الأسماء-والصفات-للبيهقي-د-ياسر-برهامي">
+                                    <a href="https://anasalafy.com/ar/119767-013-الآيات-247-256-من-سورة-البقرة-الدخيل-د-محمود-عبد-المنعم">
                                         <i class="fas fa-angle-double-right"></i>
-                                        <span>152- تابع باب رواية النبي ﷺ قول الله عز وجل في الوعد والوعيد... (الأسماء والصفات للبيهقي). د/ ياسر برهامي</span>
+                                        <span>013- الآيات (247- 256) من سورة البقرة (الدخيل). د/ محمود عبد المنعم</span>
                                     </a>
                                 </li>
                                                     </ul>
@@ -5210,7 +5306,7 @@
                 type: "POST",
                 url: form_action,
                 data: {
-                    _token:'VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF',
+                    _token:'Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo',
                     _method:'post',
                     item_id:itemID,
                     moduleName:'topics',
@@ -5240,7 +5336,7 @@
                 type: "POST",
                 url: form_action,
                 data: {
-                    _token:'VMeXl71gazyxDlBOiGyQdaiOBwj09HRYDmeeLCqF',
+                    _token:'Qmy4XjrnkAX0zkdVXsUm2OpkqIePQ1hicyFTyLEo',
                     _method:'delete',
                     moduleName:'topics',
                 },

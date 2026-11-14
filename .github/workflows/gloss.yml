@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: "30 3 * * 0"   # أسبوعيًا: يضم الكتب المستوردة حديثًا
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/gloss.py"]
 permissions:
   contents: write

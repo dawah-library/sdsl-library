@@ -2,7 +2,6 @@ name: كتب السنة في قسم الحديث
 on:
   workflow_dispatch:
   push:
-    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-rev.py", "tools/hadith-grades.py"]
   # الكتب المستوردة حديثًا (صحيح ابن خزيمة وابن حبان والمستدرك والمصنفات والمعاجم…) تدخل القسم آليًا بعد استيرادها
   workflow_run:
