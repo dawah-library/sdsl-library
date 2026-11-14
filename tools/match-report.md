@@ -1,16 +1,4 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-14 10:56
+# مطابقة النسخ المصورة بالنصية — 2026-11-14 12:58
 
-## صحيح البخاري
-- تعذر: max() iterable argument is empty
-
-## رياض الصالحين
-- تعذر: max() iterable argument is empty
-
-## بلوغ المرام من أدلة الأحكام
-- تعذر: max() iterable argument is empty
-
-## ألفية ابن مالك
-- تعذر: max() iterable argument is empty
-
-## الأدب المفرد
+## سنن ابن ماجه
 - تعذر: max() iterable argument is empty
