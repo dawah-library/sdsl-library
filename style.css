@@ -1512,3 +1512,9 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .shg dt{font-weight:700;font-family:var(--rf,inherit)}.shg dd{margin:0}.shbox .cite{font-size:.82em;white-space:nowrap}.shn{font-size:.8rem;margin-top:10px}.shr .chip{font-size:.8rem}
 @media (max-width:600px){.shg{grid-template-columns:1fr}.shg dd{margin-bottom:6px}}
 .shbar{margin-top:10px;gap:8px}
+/* قصص الطلائع (talaqasas.js) */
+.tqbig{font-size:2.4rem;vertical-align:middle}.tqstory p{line-height:2;margin:.5em 0}.tqstory.big p{font-size:1.2rem;line-height:2.2}
+.tqord{display:flex;flex-direction:column;gap:8px;margin:8px 0}.tqev{text-align:right;white-space:normal}.tqev.right{background:#2e7d32;color:#fff}
+.tqev.shake{animation:tqshake .4s}@keyframes tqshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tqcl li{font-size:1.15rem;line-height:2;margin:4px 0}.tqwho .row{flex-wrap:wrap;gap:8px}.tqsc.on{outline:3px solid #ffd166}
+@media(prefers-reduced-motion:reduce){.tqev.shake{animation:none}}
