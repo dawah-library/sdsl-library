@@ -218,11 +218,28 @@ const TOUR=(()=>{const STEPS=[[null,"مرحبًا بك في مكتبة الدع�
   if(!location.hash||location.hash==="#/"){go(0)}else{location.hash="#/";setTimeout(()=>go(0),600)}}}})();
 /* ---------- ترتيب الرئيسية وإظهار أقسامها (البندان ٣٠ و٣٧): data/layout.json يحرره المدير من الرئيسية نفسها ----------
    home: [{k, show, fold}] — fold يطوي القسم تحت عنوان فتبقى الواجهة مختصرة لا تربك الزائر. */
-const HLAY={D:null,NAMES:{quote:"عبارات فضل العلم",study:"هدف اليوم",resume:"أكمل القراءة",cols:"المكتبات الرئيسة",stats:"المكتبة بالأرقام",ask:"اسأل المكتبة",newsec:"أقسام جديدة",services:"كل الأقسام والخدمات",sugg:"مختارات اليوم",news:"جديد المكتبة",topics:"أقسام الكتب بالموضوع"},
- DEF:[["quote",1,0],["resume",1,0],["study",1,0],["cols",1,0],["stats",1,0],["ask",1,0],["news",1,0],["services",1,1],["newsec",1,1],["sugg",1,1],["topics",1,1]],
+/* توثيق المرجع بالصيغ المعيارية (APA، شيكاغو، التوثيق العربي، BibTeX، RIS) للكتاب والصفحة الحالية — من توصيات دراسة الموقع */
+const CITE={
+ data(b,p){const a=A(b.authorId)||{},e=b.edInfo||{},yr=(String(e.ed||"").match(/(\d{4}|[٠-٩]{4})\s*م/)||[])[1]||"",pl=(b.pl&&b.pl[p-1])||String(p),
+  url="https://dawahlibrary.org/book/"+b.id+"/"+p,t=b.set?b.setTitle||b.title:b.title,acc=new Date().toISOString().slice(0,10);
+  const pg=/ص/.test(pl)?pl:"ص "+pl;
+  return {pg,a:(a.name||"").replace(/^(الشيخ|الدكتور|د\.|العلامة|الإمام)\s+/,""),t,pub:e.pub||"",ed:e.ed||"",muh:e.muh||"",yr:yr.replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)),pl,url,acc,id:b.id}},
+ fmts(d){const w=d.yr||"د.ت";return [
+  ["التوثيق العربي",`${d.a}، ${d.t}${d.muh?"، تحقيق: "+d.muh:""}${d.ed?"، ط "+d.ed:""}${d.pub?"، "+d.pub:""}، ${toAr(d.pg)}. مكتبة الدعوة السلفية الرقمية: ${d.url}`],
+  ["APA",`${d.a}. (${w}). ${d.t}${d.ed?" (ط "+d.ed+")":""}${d.pub?". "+d.pub:""}. مكتبة الدعوة السلفية الرقمية. ${d.url}`],
+  ["Chicago",`${d.a}. ${d.t}.${d.muh?" تحقيق "+d.muh+".":""}${d.pub?" "+d.pub+",":""} ${w}، ${d.pg}. ${d.url} (تاريخ الاطلاع ${d.acc}).`],
+  ["BibTeX",`@book{${d.id.replace(/[^A-Za-z0-9]/g,"")},\n  author = {${d.a}},\n  title = {${d.t}},${d.muh?`\n  editor = {${d.muh}},`:""}${d.pub?`\n  publisher = {${d.pub}},`:""}${d.ed?`\n  edition = {${d.ed}},`:""}${d.yr?`\n  year = {${d.yr}},`:""}\n  pages = {${d.pl}},\n  url = {${d.url}},\n  urldate = {${d.acc}}\n}`],
+  ["RIS",`TY  - BOOK\nAU  - ${d.a}\nTI  - ${d.t}${d.muh?"\nED  - "+d.muh:""}${d.pub?"\nPB  - "+d.pub:""}${d.ed?"\nET  - "+d.ed:""}${d.yr?"\nPY  - "+d.yr:""}\nSP  - ${d.pl}\nUR  - ${d.url}\nY2  - ${d.acc}\nER  - `]]},
+ open(b,p){if(!b)return;const F=this.fmts(this.data(b,p));
+  openSheet("توثيق المرجع",`<p class="mut">صيغ جاهزة للنسخ إلى البحوث وبرامج إدارة المراجع (Zotero وEndNote وMendeley) للصفحة الحالية.${b.edInfo?"":" بيانات الطبعة غير مكتملة لهذا الكتاب، فراجعها قبل الاعتماد."}</p>
+   ${F.map(([n,v],i)=>`<div class="citef"><div class="row"><b>${n}</b><button class="btn s" data-cite="${i}">نسخ</button></div><pre dir="${/BibTeX|RIS/.test(n)?"ltr":"rtl"}">${esc(v)}</pre></div>`).join("")}`,
+   ()=>{$("#sheetB").onclick=async e=>{const x=e.target.closest("[data-cite]");if(!x)return;try{await navigator.clipboard.writeText(F[+x.dataset.cite][1]);x.textContent="✓ نُسخ"}catch(err){x.textContent="تعذر النسخ"}}})}
+};
+const HLAY={D:null,NAMES:{start:"ابدأ من هنا",quote:"عبارات فضل العلم",study:"هدف اليوم",resume:"أكمل القراءة",cols:"المكتبات الرئيسة",stats:"المكتبة بالأرقام",ask:"اسأل المكتبة",newsec:"أقسام جديدة",services:"كل الأقسام والخدمات",sugg:"مختارات اليوم",news:"جديد المكتبة",topics:"أقسام الكتب بالموضوع"},
+ DEF:[["start",1,0],["quote",1,0],["resume",1,0],["study",1,0],["cols",1,0],["stats",1,0],["ask",1,0],["news",1,0],["services",1,1],["newsec",1,1],["sugg",1,1],["topics",1,1]],
  async load(){if(this.D)return this.D;try{const r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/data/layout.json?t="+Math.floor(Date.now()/300e3));this.D=r.ok?await r.json():null}catch(e){}
   if(!this.D){try{const r=await fetch("data/layout.json");this.D=r.ok?await r.json():{}}catch(e){this.D={}}}return this.D},
- list(){const h=(this.D&&this.D.home)||[],seen=new Set(h.map(x=>x.k));return h.concat(this.DEF.filter(x=>!seen.has(x[0])).map(([k,show,fold])=>({k,show:!!show,fold:!!fold})))},
+ list(){const h=(this.D&&this.D.home)||[],seen=new Set(h.map(x=>x.k)),m=this.DEF.filter(x=>!seen.has(x[0])).map(([k,show,fold])=>({k,show:!!show,fold:!!fold}));return m.filter(x=>x.k==="start").concat(h,m.filter(x=>x.k!=="start"))}, // «ابدأ من هنا» الجديد يتصدر حتى لو سبقه ترتيب محفوظ
  async apply(){await this.load();const app=$("#app"),hero=app&&app.querySelector(".hero");if(!hero)return;let at=hero;
   this.list().forEach(x=>{const el=app.querySelector(`[data-hs="${x.k}"]`);if(!el)return;el.hidden=!x.show;
    if(x.fold&&!el.closest("details")){const d=document.createElement("details");d.className="hfold";d.innerHTML=`<summary>${esc(this.NAMES[x.k]||x.k)}</summary>`;el.replaceWith(d);d.appendChild(el);d.hidden=!x.show;at.after(d);at=d}else{at.after(el);at=el}});
@@ -237,6 +254,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1 class="callig" aria-label="مكتبة الدعوة السلفية الرقمية">مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةُ</h1>
  <p class="ayah" lang="ar">﴿قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ <span style="white-space:nowrap">ٱلْمُشْرِكِينَ﴾ <span class="ayref">[يوسف: ١٠٨]</span></span></p>
  <form class="sbox" data-form="quick"><input name="q" type="search" placeholder="ابحث في الكتب والمقالات والمؤلفين" aria-label="بحث"><button class="btn p">بحث</button></form></section>
+ <div data-hs="start"> <nav class="doors" aria-label="ابدأ من هنا"><a href="#/library?c=dawah"><b>أقرأ</b><span>كتب مشايخ الدعوة بالنص والمصورة، والتراث المعتمد</span></a><a href="#/search"><b>أبحث في مسألة</b><span>في نصوص الكتب والمقالات والفتاوى، أو اسأل المكتبة</span></a><a href="#/paths"><b>أتعلم بمسار</b><span>مسارات علمية متدرجة، واختبارات، وحفظ المتون</span></a></nav></div>
  <div data-hs="quote"> <section id="hquote" class="hquote" hidden aria-live="polite"></section></div>
  <div data-hs="study"> <div id="studyhome"></div></div>
  <div data-hs="resume"> <div id="rdash"></div>${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p])=>b&&p>1).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}</div>
@@ -810,6 +828,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
   <button data-act="qhint">صمّم الاقتباس</button>
   ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
   <button data-act="share">مشاركة الرابط</button>
+  <button data-act="citefmt">توثيق المرجع (APA، شيكاغو، BibTeX)</button>
   ${isAdmin()||can("edit")?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button><button data-act="eds">طبعات الكتاب</button><button data-act="edup">＋ إضافة طبعة جديدة (مصورة أو نصية)</button><a class="btn" href="#/admin?t=vols${b.set?"&s="+encodeURIComponent(b.set):""}" data-act="closeSheet">${b.set?"مجلدات الكتاب وترتيبها":"إضافة مجلد (تحويله إلى عمل متعدد المجلدات)"}</a>':""}
  </div>
  <p class="mut" style="margin-top:12px">${esc(b.title)} — ${esc(A(b.authorId).name)}${b.source?"<br>"+esc(b.source):""}${b.license?"<br>"+esc(b.license):""}</p>`)}
@@ -2224,6 +2243,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="pdfoffsave"){const c=cur();if(c)savePdfOffset(c.b,el)}
  else if(a==="card")cardSheet();
  else if(a==="qhint"){closeSheet();alert("حدّد بإصبعك أو بالماوس العبارة التي تريدها من الصفحة، ثم اضغط زر «اجعل المحدد قبسة».")}
+ else if(a==="citefmt"){closeSheet();const c=cur();CITE.open(c.b,c.p)}
  else if(a==="share"){const c=cur(),u=siteLink(`#/book/${c.b.id}/${c.p}`)||location.href;try{if(navigator.share)await navigator.share({title:c.b.title,url:u});else{await navigator.clipboard.writeText(u);el.textContent="نُسخ الرابط"}}catch(x){}}
  else if(a==="fwhide"||a==="fwedit"){if(!GH.on)return toast("فعّل الإدارة المباشرة أولًا.");const x=(POSTS||[]).find(p=>p.fw&&p.fw.id===el.dataset.id);let nt=null;if(a==="fwedit"){nt=prompt("نص الفائدة (من الكتاب نفسه؛ احذف الزائد أو أكمل الناقص):",x?x.text:"");if(nt===null)return}else if(!confirm("إخفاء هذه الفائدة من منشورات المشايخ؟"))return;
   try{await GH.editJSON("data/fawaid.json",o=>{(o.items||[]).forEach(it=>{if(it.id===el.dataset.id){if(a==="fwhide")it.hide=1;else{it.text=nt.trim();it.edited=1}}});return o},"منشورات المشايخ: "+(a==="fwhide"?"إخفاء فائدة":"تعديل فائدة"),true);closeSheet();toast("حُفظ؛ يظهر التعديل خلال دقائق");POSTS=null}catch(x2){toast(x2.message)}}

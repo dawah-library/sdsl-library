@@ -1531,3 +1531,15 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .athar blockquote{margin:0;padding:6px 14px;border-inline-start:4px solid var(--gold,#b88a2e);font-family:var(--rf,Amiri),serif;font-size:1.22rem;line-height:2;background:color-mix(in srgb,var(--gold,#b88a2e) 6%,transparent);border-radius:8px}
 .athw{margin:8px 0 2px;font-weight:700}.athw a{color:var(--ac);text-decoration:none}.athsrc{margin:2px 0;font-size:.9rem}.athsrc a{color:var(--ac)}.athbtns{gap:6px;flex-wrap:wrap;margin-top:6px}
 .vidsug{border:1px solid var(--line);border-radius:10px;background:var(--sf);max-height:320px;overflow:auto;margin:4px 0 8px}.vidsug button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:start;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;cursor:pointer;color:inherit;font:inherit}.vidsug button:hover{background:var(--bg)}.vidsug p{margin:8px 12px}
+/* ابدأ من هنا: ثلاثة أبواب في الرئيسية (دراسة الموقع) */
+.doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.doors a{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--sf);color:var(--ink);text-decoration:none}
+.doors a:hover,.doors a:focus-visible{border-color:var(--ac)}
+.doors b{font-size:1.15em;color:var(--ac)}.doors span{font-size:.9em;color:var(--mut)}
+@media (max-width:640px){.doors{grid-template-columns:1fr}}
+.citef{margin:10px 0}.citef .row{justify-content:space-between;align-items:center}
+.citef pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin:6px 0 0;font-size:.88em;max-width:100%;overflow-x:auto}
+.lplan{border:1px solid var(--line);border-radius:12px;background:var(--sf);padding:12px 16px;margin:14px 0}
+.lplan table{width:100%;border-collapse:collapse;font-size:.92em}.lplan td,.lplan th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.lplan .st{white-space:nowrap;font-weight:600}.lplan .done{color:#2e8b57}.lplan .doing{color:#c4861a}.lplan .todo{color:var(--mut)}
+.lplan .lpw{overflow-x:auto}

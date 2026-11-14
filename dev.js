@@ -99,6 +99,21 @@ const DEV = (() => {
     const h = await fetch("data/site-study.html?v=" + Date.now()).then(r => r.ok ? r.text() : null).catch(() => null);
     if (!/sitestudy/.test(location.hash + location.pathname)) return; // غادر الصفحة قبل اكتمال التحميل
     view(h || '<div class="note">تعذر تحميل الدراسة. أعد المحاولة.</div>');
+    plan();
+  }
+  // متابعة خطة التدشين (data/launch-plan.json): تظهر أعلى الدراسة، والمدير يغيّر حالة كل بند فيُحفظ في المستودع
+  const LPS = { todo: "لم يبدأ", doing: "جارٍ", done: "منجز" };
+  async function plan() {
+    const box = document.createElement("section"); box.className = "lplan"; box.id = "lplan";
+    const at = $(".sstudy header.hero"); if (!at) return; at.after(box);
+    const P = await fetch("data/launch-plan.json?v=" + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!P) { box.innerHTML = '<p class="mut">تعذر تحميل خطة التدشين.</p>'; return; }
+    const it = P.items || [], n = s => it.filter(x => x.st === s).length, ed = isAdmin();
+    box.innerHTML = `<h3 style="margin-top:0">متابعة خطة التدشين</h3><p class="mut">منجز ${toAr(n("done"))} · جارٍ ${toAr(n("doing"))} · لم يبدأ ${toAr(n("todo"))} من ${toAr(it.length)} بندًا${ed ? " — غيّر حالة البند فيُحفظ للجميع" : ""}.</p>
+      <div class="lpw"><table><thead><tr><th>الأسابيع</th><th>البند</th><th>الحالة</th></tr></thead><tbody>${it.map(x => `<tr><td>${esc(x.ph)}</td><td>${esc(x.t)}${x.note ? `<br><small class="mut">${esc(x.note)}</small>` : ""}</td><td class="st ${esc(x.st)}">${ed ? `<select data-lp="${esc(x.id)}" aria-label="حالة البند">${Object.entries(LPS).map(([k, v]) => `<option value="${k}"${k === x.st ? " selected" : ""}>${v}</option>`).join("")}</select>` : esc(LPS[x.st] || x.st)}</td></tr>`).join("")}</tbody></table></div>`;
+    if (ed) box.onchange = async e => { const sl = e.target.closest("[data-lp]"); if (!sl) return; sl.disabled = true;
+      try { await GH.editJSON("data/launch-plan.json", o => { const y = (o.items || []).find(z => z.id === sl.dataset.lp); if (y) y.st = sl.value; o.upd = today(); return o; }, "خطة التدشين: " + sl.value); sl.parentElement.className = "st " + sl.value; toast("حُفظت الحالة"); }
+      catch (x) { toast("تعذر الحفظ: " + x.message); } sl.disabled = false; };
   }
   document.addEventListener("click", e => { const a = e.target.closest("[data-ss]"); if (!a) return; e.preventDefault(); const t = document.getElementById(a.dataset.ss); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
   return { view: page, ops, badge, study };
