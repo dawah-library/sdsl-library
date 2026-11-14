@@ -3,14 +3,13 @@ name: رحلة شرح السنة
 # البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ. مفتاح الإيقاف: sharh_ai.
 on:
   schedule:
-    - cron: "23 10 * * *"   # بعد تجدد الحصة اليومية بالمفاتيح المحجوزة لخدمات الكتب
-    - cron: "47 21 * * *"   # جولة ثانية بما بقي من حصة اليوم
+    - cron: "47 21 * * *"   # مرة يوميًّا آخر اليوم، بعد أن تأخذ خدمات تجهيز الكتب حاجتها من حصة المفاتيح (أمر المدير: قليل غير مستعجل)
   workflow_dispatch:
     inputs:
       max:
         description: "عدد الأحاديث (العناقيد) في هذا التشغيل"
         required: false
-        default: "60"
+        default: "12"
       only:
         description: "حديث بعينه، مثل bukhari:1 (اختياري)"
         required: false
@@ -63,9 +62,9 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
-          SHARH_MAX: ${{ github.event.inputs.max || '60' }}
+          SHARH_MAX: ${{ github.event.inputs.max || '12' }}
           SHARH_ONLY: ${{ github.event.inputs.only }}
-          SHARH_MINUTES: "170"
+          SHARH_MINUTES: "60"
           TJ_MODEL: "gemini-3.7-flash"   # gemini-2.5-flash أُوقف (404)
         run: python3 tools/sharh-ai.py
       - name: الحفظ

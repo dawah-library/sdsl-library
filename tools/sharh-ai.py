@@ -15,7 +15,8 @@
 
 المخرجات: data/sharh/c/<ملف>.json (العناقيد)، وdata/sharh/map/<كتاب>.json ({رقم: [معرّف العنقود، الملف]})،
 وdata/sharh/_state.json (التقدم)، وtools/sharh-report.md. مفتاح الإيقاف: sharh_ai.
-المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ٦٠)، SHARH_MINUTES (١٥٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
+خدمة يومية قليلة غير مستعجلة (أمر المدير): ١٢ حديثًا بعناقيدها مرة يوميًّا آخر اليوم، وتتنحى عند أول نفاد حصة.
+المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ١٢)، SHARH_MINUTES (٦٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
 """
 import glob, json, os, re, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +30,7 @@ SHR = {"bukhari": ["fathbari", "fathbarirajab"], "muslim": ["nawawimuslim", "muf
        "tirmidhi": ["aridatahwadhi", "tuhfaahwadhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"],
        "musnadahmad": ["sindimusnad", "fathrabbani"], "muwatta": ["istidhkar", "tamhid"], "darimi": []}
 THEMATIC = ["naylawtar", "sayljarrar", "subulsalam", "faydqadir", "tarhtathrib", "fathrabbani", "jamiulum"]
-MAX = int(os.environ.get("SHARH_MAX", "60")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
+MAX = int(os.environ.get("SHARH_MAX", "12")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
 AR2EN = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
 
@@ -195,7 +196,8 @@ def main():
     rep, made = [], 0
     for b, n in todo:
         if made >= MAX or time.time() > T.DEADLINE[0]: break
-        if T.KEYS and len(T.EXH) >= len(T.KEYS): rep.append("- نفدت حصة اليوم في كل المفاتيح؛ يُستكمل في التشغيل القادم"); break
+        # خدمة غير مستعجلة: تتنحى عند أول علامة على ضيق الحصة (نفاد حصة يومية لأي مفتاح أو نموذج)، فلا تزاحم تجهيز الكتب وسائر الخدمات
+        if T.EXH: rep.append("- ضاقت حصة المفاتيح اليوم؛ تتنحى الخدمة ويُستكمل غدًا"); break
         if covered(b, n): continue
         seed = (b, n)
         mem = [seed] + sorted((x for x in set(NB.get(seed, ())) | set(variants(seed)) if not covered(*x) and x != seed), key=lambda x: (ORDER.index(x[0]), float(x[1]) if re.match(r"^[\d.]+$", x[1]) else 0))[:40]
@@ -226,6 +228,7 @@ def main():
         if DRY:
             print("%s:%s روايات=%d (%s) نصوص=%d %s حجم=%d" % (seed[0], seed[1], len(mem), " ".join(x[0] + ":" + x[1] for x in mem[:8]), len(refs), " ".join(refs[:6]), len(prompt)), flush=True); made += 1; continue
         out = T.gemini(prompt)
+        if out is None: rep.append("- تعذّر الوصول إلى النموذج (حصة أو عطل)؛ تتنحى الخدمة ويُستكمل غدًا"); break
         if not isinstance(out, dict) or not out.get("ijmali"):
             rep.append("- %s:%s تعذّر الشرح (رد غير صالح)" % seed); continue
         ok = set(refs)
