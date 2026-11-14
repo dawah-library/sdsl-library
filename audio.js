@@ -592,14 +592,14 @@ const RSTATION = (() => {
   const dayQ = C => (((C.quran || {}).mode === "prayer" ? ((C.quran || {}).after || [1, 2, 3, 4, 5]) : (C.quran || {}).slots) || []).length * (+(C.quran || {}).minutes || 30) * 60;
   async function build(C, L, now) {
     const cl = await clips(), tz = (C.adhan || {}).tz || "Africa/Cairo", ep = midnight(Date.parse(((C.quran || {}).epoch || "2026-11-14") + "T12:00:00Z"), tz);
-    const W0 = now - 30 * 6e4, W1 = now + 8 * 36e5, out = []; let t = W0;
+    const W0 = now - 30 * 6e4, W1 = now + 8 * 36e5, items = []; let t = W0;
     const books = items(C, L).map(x => ({ x, b: x.book })), P = books.map(({ b }) => (L[b].ds || []).map((d, k) => ({ bid: b, p: k + 1, d, f: AUDIO.page(k + 1) })).filter(z => z.d > 0));
     const totB = P.reduce((s, l) => s + l.reduce((a, z) => a + z.d, 0), 0);
     // ثوانٍ مضت من الكتب ومن التلاوة منذ بداية الإذاعة حتى لحظة ما
     const consumed = until => { let days = Math.floor((until - ep) / 864e5), q = 0, sp = 0; if (days < 0) return { q: 0, b: 0 };
       const m = ep + days * 864e5, SP = specials(C, m + 6 * 36e5); SP.forEach(x => { const e = Math.min(x.b, until); if (e > x.a && x.a >= m) { sp += (e - x.a) / 1e3; if (x.k === "quran") q += (e - x.a) / 1e3; } });
       const perDaySp = specials(C, ep + 6 * 36e5).reduce((s, x) => s + (x.b - x.a) / 1e3, 0); return { q: days * dayQ(C) + q, b: (until - ep) / 1e3 - days * perDaySp - sp }; };
-    const clip = (id, d, title) => cl.has(id) ? { u: clipU(id), d, title, bid: "_clip", p: 1 } : null, push = x => { if (x && x.d > 0) { out.push(x); t += x.d * 1e3; } };
+    const clip = (id, d, title) => cl.has(id) ? { u: clipU(id), d, title, bid: "_clip", p: 1 } : null, push = x => { if (x && x.d > 0) { items.push(x); t += x.d * 1e3; } };
     // التلاوة: مؤشر الختمة بالثواني ← القارئ والآية
     const Q = await qlist(), R = ((C.quran || {}).reciters || ["Minshawy_Murattal_128kbps"]), kl = r => Q.reduce((s, z) => s + adur(r, z[2]), 0) + 113 * 3;
     const qAt = sec => { let k = 0; for (;;) { const r = R[k % R.length], len = kl(r); if (sec < len || k > 50) return { r, sec, k }; sec -= len; k++; } };
@@ -620,7 +620,7 @@ const RSTATION = (() => {
     for (const x of SP) { if (x.a > t) fillBooks(t, x.a); if (x.b <= t) continue;
       if (x.k === "quran") fillQuran(Math.max(t, x.a), x.b); else { push(clip("radio-adhan-" + x.p, 6, "أذان " + x.pn + " بتوقيت القاهرة")); if (C.adhan.url) push({ u: C.adhan.url, d: Math.max(1, (x.b - t) / 1e3), title: "الأذان", bid: "_clip", p: 1 }); if (t < x.b) t = x.b; } }
     if (t < W1) fillBooks(t, W1);
-    window.__rsched = SP; return { id: "st-" + C.id, n: "📻 " + C.n, d: C.d || "", station: C.id, ids: books.map(y => y.b), items: out, T: out.reduce((a, x) => a + x.d, 0) + 1e6, start: W0 };
+    window.__rsched = SP; return { id: "st-" + C.id, n: "📻 " + C.n, d: C.d || "", station: C.id, ids: books.map(y => y.b), items, T: items.reduce((a, x) => a + x.d, 0) + 1e6, start: W0 };
   }
   async function channels(L) { const c = await cfg(), out = []; for (const C of c.channels || []) { try { const ch = await build(C, L, Date.now()); if (ch.items.length) out.push(ch); } catch (e) { console.warn(e); } } return out; }
   async function refresh(ap) { const L = await AUDIO.load(), C = ((await cfg()).channels || []).find(x => "st-" + x.id === ap.ch.id); if (!C) return; const ch = await build(C, L, Date.now()); ap.ch = ch; ap.q = ch.items; const { i, off } = radioPos(ch); ap.load(i, off, true); }
