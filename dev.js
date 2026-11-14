@@ -100,6 +100,7 @@ const DEV = (() => {
     if (!/sitestudy/.test(location.hash + location.pathname)) return; // غادر الصفحة قبل اكتمال التحميل
     view(h || '<div class="note">تعذر تحميل الدراسة. أعد المحاولة.</div>');
     plan();
+    const top = $(".sstudy .row"); if (top && isAdmin()) top.insertAdjacentHTML("beforeend", '<button class="btn s p" data-act="opsrun" data-w="site-study.yml" data-n="تحديث دراسة الموقع">حدّث الدراسة الآن</button>');
   }
   // متابعة خطة التدشين (data/launch-plan.json): تظهر أعلى الدراسة، والمدير يغيّر حالة كل بند فيُحفظ في المستودع
   const LPS = { todo: "لم يبدأ", doing: "جارٍ", done: "منجز" };

@@ -1,0 +1,23 @@
+name: تحديث دراسة الموقع آليًّا
+# يعيد قياس حالة الموقع ويحدّث أرقام الدراسة وتقييمها وما تغيّر ومؤشرات المتابعة (tools/site-study.py ← data/site-study.html)،
+# ويعلّم بنود خطة التدشين التي رُصد إنجازها. يعمل يوميًّا، وعند تغيير الواجهة أو الخطة أو التقديرات، وبزر «حدّث الدراسة الآن» في #/sitestudy.
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  push:
+    branches: [main]
+    paths: ["*.js", "index.html", "robots.txt", "opensearch.xml", "data/launch-plan.json", "data/site-study-base.json", "tools/site-study.py"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: site-study
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/site-study.py
+      - run: bash tools/git-save.sh "تحديث دراسة الموقع آليًّا" data/site-study.html data/site-study-history.json data/launch-plan.json
