@@ -25,9 +25,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.
 ORDER = ["bukhari", "muslim", "abudawud", "nasai", "tirmidhi", "ibnmajah", "musnadahmad", "muwatta", "darimi"]
 NINE = set(ORDER)
 # شروح كل كتاب بترتيب الاعتماد (ما لم يُستورد بعد يُتجاوز)
-SHR = {"bukhari": ["fathbari", "fathbarirajab"], "muslim": ["nawawimuslim", "mufhim"], "abudawud": ["maalimsunan", "tahdhibsunan", "awnmabud"],
-       "tirmidhi": ["aridatahwadhi", "tuhfaahwadhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"],
-       "musnadahmad": ["sindimusnad", "fathrabbani"], "muwatta": ["istidhkar", "tamhid"], "darimi": []}
+SHR = {"bukhari": ["fathbari", "fathbarirajab", "alamhadith"], "muslim": ["nawawimuslim", "mufhim"], "abudawud": ["maalimsunan", "tahdhibsunan", "awnmabud", "fathwadud"],
+       "tirmidhi": ["aridatahwadhi", "tuhfaahwadhi", "sinditirmidhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"],
+       "musnadahmad": ["sindimusnad", "fathrabbani"], "muwatta": ["istidhkar", "tamhid", "qabas", "masalik"], "darimi": []}
 THEMATIC = ["naylawtar", "sayljarrar", "subulsalam", "faydqadir", "tarhtathrib", "fathrabbani", "jamiulum"]
 MAX = int(os.environ.get("SHARH_MAX", "60")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
 AR2EN = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")

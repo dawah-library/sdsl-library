@@ -8,9 +8,9 @@
 المخرج: data/hadith/links/<الكتاب>.json = {رقم الحديث أو معرّفه: {"sh": [[ملف المجلد، صفحة]…], "t": [[كتاب، رقم]…]}}"""
 import json, os, re, glob, collections
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); H = os.path.join(ROOT, "data", "hadith"); OUT = os.path.join(H, "links")
-SH = {"bukhari": ["fathbari", "fathbarirajab"], "muslim": ["nawawimuslim", "mufhim"], "abudawud": ["awnmabud", "maalimsunan", "tahdhibsunan"],
-      "tirmidhi": ["tuhfaahwadhi", "aridatahwadhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"], "musnadahmad": ["sindimusnad"],
-      "muwatta": ["istidhkar"], "bulugh": ["subulsalam"], "arbain": ["jamiulum"]}  # الشروح التي لم تُستورد بعد تُتجاوز (data/turathio-queue.json)
+SH = {"bukhari": ["fathbari", "fathbarirajab", "alamhadith"], "muslim": ["nawawimuslim", "mufhim"], "abudawud": ["awnmabud", "maalimsunan", "tahdhibsunan", "fathwadud"],
+      "tirmidhi": ["tuhfaahwadhi", "aridatahwadhi", "sinditirmidhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"], "musnadahmad": ["sindimusnad"],
+      "muwatta": ["istidhkar", "qabas", "masalik"], "bulugh": ["subulsalam"], "arbain": ["jamiulum"]}  # الشروح التي لم تُستورد بعد تُتجاوز (data/turathio-queue.json)
 DIA = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
 STOPW = set("صلى الله عليه وسلم رسول النبي قال قالت عن في من على أن إن ان ما لا يا ثم أو او".split())
 def words(s):
