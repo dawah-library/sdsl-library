@@ -1,0 +1,75 @@
+name: رحلة شرح السنة
+# شرح موجز شامل لكل حديث برواياته في الكتب التسعة من الشروح المعتمدة في المكتبة (tools/sharh-ai.py)، يوميًّا آليًّا:
+# البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ. مفتاح الإيقاف: sharh_ai.
+on:
+  schedule:
+    - cron: "23 10 * * *"   # بعد تجدد الحصة اليومية بالمفاتيح المحجوزة لخدمات الكتب
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "عدد الأحاديث (العناقيد) في هذا التشغيل"
+        required: false
+        default: "60"
+      only:
+        description: "حديث بعينه، مثل bukhari:1 (اختياري)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: sharh-ai
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" sharh_ai)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح sharh_ai: $on"
+  sharh:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+      - name: الشرح
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          SHARH_MAX: ${{ github.event.inputs.max || '60' }}
+          SHARH_ONLY: ${{ github.event.inputs.only }}
+          SHARH_MINUTES: "170"
+          TJ_MODEL: "gemini-2.5-flash"
+        run: python3 tools/sharh-ai.py
+      - name: الحفظ
+        if: always()
+        run: bash tools/git-save.sh "رحلة شرح السنة" data/sharh tools/sharh-report.md
+      - name: إشعار
+        if: always()
+        run: '[ -s .sharh-report.txt ] && python3 tools/notify.py "$(cat .sharh-report.txt)" || true'

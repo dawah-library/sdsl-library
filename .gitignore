@@ -10,3 +10,4 @@ node_modules/
 .dev-*
 .qref-report.txt
 package-lock.json
+.sharh-report.txt

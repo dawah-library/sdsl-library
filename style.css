@@ -1507,6 +1507,10 @@ body.trm-only:not(.tr-showar) #paper>.trv{border-top:0;margin-top:0;padding-top:
 .hrh .hdm{color:inherit}
 .fns.only{margin-top:0;border-top:0}.fns.only .fnt{font-weight:700}
 .vfix{margin-top:8px;border-top:1px dashed var(--line,#ccc);padding-top:6px}.vfix summary{cursor:pointer;font-weight:600}.vfix textarea{width:100%}
+/* رحلة شرح السنة (hadith.js ← data/sharh) */
+.shbox h4{margin:14px 0 6px;color:var(--ac)}.shbox h5{margin:8px 0 4px}.shbox p{line-height:2}.shg{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0}
+.shg dt{font-weight:700;font-family:var(--rf,inherit)}.shg dd{margin:0}.shbox .cite{font-size:.82em;white-space:nowrap}.shn{font-size:.8rem;margin-top:10px}.shr .chip{font-size:.8rem}
+@media (max-width:600px){.shg{grid-template-columns:1fr}.shg dd{margin-bottom:6px}}
 /* قصص الطلائع (talaqasas.js) */
 .tqbig{font-size:2.4rem;vertical-align:middle}.tqstory p{line-height:2;margin:.5em 0}.tqstory.big p{font-size:1.2rem;line-height:2.2}
 .tqord{display:flex;flex-direction:column;gap:8px;margin:8px 0}.tqev{text-align:right;white-space:normal}.tqev.right{background:#2e7d32;color:#fff}
