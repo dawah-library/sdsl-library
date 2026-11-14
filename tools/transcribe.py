@@ -15,7 +15,7 @@
 import shutil, json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); Q = os.path.join(D, "transcribe", "_queue.json")
 from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
-KEYS = _gkeys("bulk")
+KEYS = _gkeys("study")  # التفريغ خدمة كتب: يبدأ بالمفاتيح المحجوزة
 MODELS = [m for m in os.environ.get("TR_MODELS", "gemini-flash-latest,gemini-3.5-flash").split(",") if m]
 SEG = int(os.environ.get("TR_SEG_MIN", "20")) * 60
 DEADLINE = time.time() + 60 * float(os.environ.get("TR_MINUTES", "300"))
@@ -130,8 +130,8 @@ def whisper(path):
     from faster_whisper import WhisperModel
     global WM
     try: WM
-    except NameError: WM = WhisperModel(os.environ.get("TR_WHISPER", "small"), device="cpu", compute_type="int8")
-    segs, _ = WM.transcribe(path, language="ar", vad_filter=True)
+    except NameError: WM = WhisperModel(os.environ.get("TR_WHISPER", "large-v3-turbo"), device="cpu", compute_type="int8")
+    segs, _ = WM.transcribe(path, language="ar", vad_filter=True, beam_size=5, initial_prompt="درس علمي شرعي باللغة العربية: قال الله تعالى، قال رسول الله صلى الله عليه وسلم.")
     return "\n".join(s.text.strip() for s in segs)
 
 def paginate(chunks):
