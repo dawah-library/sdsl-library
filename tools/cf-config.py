@@ -16,7 +16,7 @@ for f in ("favicon.ico", "manifest.webmanifest", "404.html"):
 for f in root:
     if f.endswith((".js", ".css")) and f != "sw.js":
         out += [f"/{f}", f"  Cache-Control: {cc('/:file([^/]+\\.(?:js|css))')}", ""]
-out += ["/sw.js", "  Cache-Control: no-cache", "", "/api/*", "  X-Robots-Tag: noindex", ""]
+out += ["/sw.js", "  Cache-Control: no-cache", "", "/api/*", "  X-Robots-Tag: noindex", "", "/data/site-study.html", "  X-Robots-Tag: noindex, nofollow", ""]
 (R / "_headers").write_text("\n".join(out), encoding="utf-8")
 dirs = sorted(p.name for p in R.iterdir() if p.is_dir() and not p.name.startswith((".", "_")) and p.name not in ("api", "functions", "lib", "node_modules", "tools", "supabase"))
 ex = ["/", "/index.html"] + [f"/{d}/*" for d in dirs] + [f"/{f}" for f in root]  # robots.txt ملف ثابت
