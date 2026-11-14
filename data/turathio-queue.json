@@ -363,7 +363,9 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "suyutinasai",
@@ -374,7 +376,15 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [
+    {
+     "b": 360,
+     "name": "حاشية السيوطي على سنن النسائي",
+     "r": 0.664
+    }
+   ],
+   "b": 360
   },
   {
    "id": "sindinasai",
@@ -867,6 +877,7 @@
   "jamiulum",
   "wasitiyya",
   "mufhim",
-  "tahdhibsunan"
+  "tahdhibsunan",
+  "suyutinasai"
  ]
 }
