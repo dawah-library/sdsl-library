@@ -88,3 +88,43 @@ const ALAM = (() => {
   document.addEventListener("submit", e => { const f = e.target; if (f.dataset && f.dataset.form === "almq") { e.preventDefault(); e.stopImmediatePropagation(); go("#/alam?q=" + encodeURIComponent(f.q.value.trim())); } }, true);
   return { lookup, sheet, candidates, view: page, norm, SRC };
 })();
+
+/* أسماء رواة الإسناد في كتب الحديث (طلب المدير): في القارئ تُعلَّم الأسماء الواقعة بعد «حدثنا، أخبرنا، أنبأنا، سمعت، عن…»
+   في كتب الحديث وعلومه وشروحه، وبالضغط على الاسم تُفتح ترجمته وأقوال أئمة الجرح والتعديل فيه من كتب المكتبة (ALAM.sheet).
+   التعليم في العرض وحده، ولا يُغيَّر نص الكتاب. */
+const ISNAD = (() => {
+  const strip = w => String(w || "").replace(/[\u064B-\u065F\u0670\u0640]/g, "").replace(/[أإآٱ]/g, "ا");
+  const bare = w => strip(w).replace(/[^\u0621-\u064A]/g, "");
+  const VERB = /^[وف]?(حدثنا|حدثني|حدثناه|اخبرنا|اخبرني|اخبرناه|انبانا|انباني|سمعت|سمعنا|ثنا|انا|حدثه|حدثهم|اخبره|يحدث|يخبر|اخبرهم)$/;
+  const SEP = /^[وف]?(عن|عنه)$/, SAY = /^[وف]?(قال|قالا|قالوا|قالت)$/;
+  const STOP = /^(النبي|رسول|ﷺ|رضي|انه|انها|ان|انهم|يقول|يرفعه|مرفوعا|بمعناه|بهذا|نحوه|مثله|قالت|بنحوه|في|علي|الي|من|ما|لا|كان|كنا)$/;
+  const HADITH_TOPICS = new Set(["t3", "t13"]);
+  const DONE = new WeakMap(); let G = 0;
+  function mark(rd) {
+    const b = typeof B === "function" && rd.dataset.id ? B(rd.dataset.id) : null; if (!b || !HADITH_TOPICS.has(b.topicId)) return;
+    if (DONE.get(rd) === rd.firstChild) return; DONE.set(rd, rd.firstChild);
+    rd.querySelectorAll("p,li,div.rdp").forEach(par => {
+      if (par.closest(".fnb,.fns")) return;
+      const ws = [...par.querySelectorAll(".w")].filter(w => w.closest("p,li,div.rdp") === par); let chain = false, cur = [], afterSay = false, prevComma = false, lastComma = false;
+      const close = () => { if (cur.length && cur.length <= 8) { const g = "g" + (++G); cur.forEach(w => { w.classList.add("aln"); w.dataset.g = g; }); } cur = []; };
+      for (const w of ws) {
+        const t = w.textContent, k = bare(t), endP = /[،,.:؛]\s*$/.test(t); prevComma = lastComma; lastComma = endP;
+        if (VERB.test(k)) { close(); chain = true; afterSay = false; continue; }
+        if (!chain) continue;
+        if (SEP.test(k)) { close(); afterSay = false; continue; }
+        if (SAY.test(k)) { close(); afterSay = true; continue; }
+        if (afterSay || STOP.test(k) || /[«"“]/.test(t) || !k) { close(); chain = false; continue; }  // بداية المتن
+        if (!cur.length && prevComma && /^[وف]/.test(k) && k.length > 3) w.dataset.wa = 1; else delete w.dataset.wa;  // «وهناد بن السري»: واو العطف بين اسمين
+        cur.push(w); if (endP) close();
+      }
+      close();
+    });
+  }
+  const name = g => [...document.querySelectorAll('.aln[data-g="' + g + '"]')].map((w, i) => { let t = w.textContent.replace(/[،,.:؛]/g, "").replace(/ً?ا\s*$/, m => /ً/.test(m) ? "" : m).replace(/اً\s*$/, ""); t = strip(t); return i === 0 && w.dataset.wa ? t.replace(/^[وف]/, "") : t; }).join(" ").trim();
+  new MutationObserver(() => { clearTimeout(ISNAD._t); ISNAD._t = setTimeout(() => document.querySelectorAll(".rd[data-id]").forEach(r => { try { mark(r); } catch (e) { } }), 120); })
+    .observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("click", e => { const w = e.target.closest(".rd .aln"); if (!w || String(getSelection()).trim() || typeof ALAM === "undefined") return;
+    e.preventDefault(); e.stopPropagation(); ALAM.sheet(name(w.dataset.g)); }, true);
+  return { mark, name };
+})();
+
