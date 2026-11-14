@@ -186,6 +186,7 @@ def main():
     rep, made = [], 0
     for b, n in todo:
         if made >= MAX or time.time() > T.DEADLINE[0]: break
+        if T.KEYS and len(T.EXH) >= len(T.KEYS): rep.append("- نفدت حصة اليوم في كل المفاتيح؛ يُستكمل في التشغيل القادم"); break
         if covered(b, n): continue
         seed = (b, n)
         mem = [seed] + sorted((x for x in set(NB.get(seed, ())) | set(variants(seed)) if not covered(*x) and x != seed), key=lambda x: (ORDER.index(x[0]), float(x[1]) if re.match(r"^[\d.]+$", x[1]) else 0))[:40]
