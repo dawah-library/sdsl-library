@@ -1,8 +1,8 @@
 {
  "tts": {
-  "gemini-3.8-flash-tts": "ok:376360",
-  "gemini-3.1-flash-tts-preview": "ok:212480",
-  "gemini-2.5-flash-preview-tts": "ok:179904"
+  "gemini-3.8-flash-tts": "ok:373800",
+  "gemini-3.1-flash-tts-preview": "ok:217600",
+  "gemini-2.5-flash-preview-tts": "ok:197824"
  },
  "models": [
   "gemini-2.5-flash",
@@ -56,7 +56,7 @@
   "gemini-3.5-live-translate-preview",
   "gemini-decision-1"
  ],
- "at": "2026-11-13T14:29Z",
+ "at": "2026-11-14T13:24Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
