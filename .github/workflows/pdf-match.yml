@@ -7,6 +7,7 @@ on:
   schedule:
     - cron: "41 3 * * *"   # يوميًّا: المطابقة الكاملة للكتب الجديدة أو المتغيرة (المطابَقة تُتخطى)
   push:
+    branches: [main]  # فرع وكيل لا يشغّل مهام الحفظ (كانت تدفع إيداعات الفرع إلى main)
     paths: ["tools/pdf-match.py"]
 permissions:
   contents: write
