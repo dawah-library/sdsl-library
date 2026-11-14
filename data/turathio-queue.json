@@ -433,7 +433,9 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "faydqadir",
@@ -444,7 +446,9 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "fathrabbani",
@@ -455,7 +459,15 @@
    "tp": "t3",
    "new": 1,
    "mintash": 0,
-   "sharh": 1
+   "sharh": 1,
+   "cands": [
+    {
+     "b": 124910,
+     "name": "الفتح الرباني لترتيب مسند الإمام أحمد بن حنبل الشيباني",
+     "r": 0.0
+    }
+   ],
+   "b": 124910
   },
   {
    "id": "tarhtathrib",
@@ -896,6 +908,7 @@
   "tahdhibsunan",
   "suyutinasai",
   "sindinasai",
-  "sindiibnmajah"
+  "sindiibnmajah",
+  "fathrabbani"
  ]
 }
