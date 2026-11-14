@@ -15,7 +15,8 @@
 
 المخرجات: data/sharh/c/<ملف>.json (العناقيد)، وdata/sharh/map/<كتاب>.json ({رقم: [معرّف العنقود، الملف]})،
 وdata/sharh/_state.json (التقدم)، وtools/sharh-report.md. مفتاح الإيقاف: sharh_ai.
-المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ٦٠)، SHARH_MINUTES (١٥٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
+خدمة يومية قليلة غير مستعجلة (أمر المدير): ١٢ حديثًا بعناقيدها مرة يوميًّا آخر اليوم، وتتنحى عند أول نفاد حصة.
+المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ١٢)، SHARH_MINUTES (٦٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
 """
 import glob, json, os, re, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +30,7 @@ SHR = {"bukhari": ["fathbari", "fathbarirajab"], "muslim": ["nawawimuslim", "muf
        "tirmidhi": ["aridatahwadhi", "tuhfaahwadhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"],
        "musnadahmad": ["sindimusnad", "fathrabbani"], "muwatta": ["istidhkar", "tamhid"], "darimi": []}
 THEMATIC = ["naylawtar", "sayljarrar", "subulsalam", "faydqadir", "tarhtathrib", "fathrabbani", "jamiulum"]
-MAX = int(os.environ.get("SHARH_MAX", "60")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
+MAX = int(os.environ.get("SHARH_MAX", "12")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
 AR2EN = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
 
@@ -93,6 +94,15 @@ def title_of(cat, vol):
 def main():
     sw = (jl(os.path.join(D, "switches.json"), {}) or {}).get("s") or {}
     if sw.get("all_jobs") is False or sw.get("sharh_ai") is False: print("موقوف من المفاتيح"); return
+    # لا يبدأ الشرح قبل استيراد الشروح المعتمدة كلها (أمر المدير، ١٤ نوفمبر): ما في طابور الاستيراد بعلامة sharh ولم يُستورد بعد يُوقف المهمة،
+    # وما تعذّر استيراده (skip) يُسجَّل للإدارة ولا يوقفها إلى الأبد؛ وSHARH_FORCE=1 يتجاوز الانتظار.
+    tq = jl(os.path.join(D, "turathio-queue.json"), {"items": [], "done": []}); tdone = set(tq.get("done") or [])
+    need = [x for x in tq.get("items") or [] if x.get("sharh")]
+    wait = [x["q"] for x in need if x["id"] not in tdone and not x.get("skip")]
+    skipped = [x["q"] + " (" + str(x.get("skip")) + ")" for x in need if x.get("skip") and x["id"] not in tdone]
+    if wait and os.environ.get("SHARH_FORCE") != "1" and os.environ.get("SHARH_DRY") != "1":
+        st0 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}}); st0["wait"] = wait; st0["skipped"] = skipped; st0["at"] = time.strftime("%Y-%m-%d")
+        js(os.path.join(OUT, "_state.json"), st0, 1); print("ينتظر استيراد الشروح:", "، ".join(wait)); return
     DRY = os.environ.get("SHARH_DRY") == "1"  # تجربة: يُبنى العنقود ونصوصه ويُطبع حجمه بلا طلب ولا حفظ
     if not T.KEYS and not DRY: print("لا مفاتيح Gemini"); return
     cat = jl(os.path.join(D, "catalog.json"), {"books": []})
@@ -186,7 +196,8 @@ def main():
     rep, made = [], 0
     for b, n in todo:
         if made >= MAX or time.time() > T.DEADLINE[0]: break
-        if T.KEYS and len(T.EXH) >= len(T.KEYS): rep.append("- نفدت حصة اليوم في كل المفاتيح؛ يُستكمل في التشغيل القادم"); break
+        # خدمة غير مستعجلة: تتنحى عند أول علامة على ضيق الحصة (نفاد حصة يومية لأي مفتاح أو نموذج)، فلا تزاحم تجهيز الكتب وسائر الخدمات
+        if T.EXH: rep.append("- ضاقت حصة المفاتيح اليوم؛ تتنحى الخدمة ويُستكمل غدًا"); break
         if covered(b, n): continue
         seed = (b, n)
         mem = [seed] + sorted((x for x in set(NB.get(seed, ())) | set(variants(seed)) if not covered(*x) and x != seed), key=lambda x: (ORDER.index(x[0]), float(x[1]) if re.match(r"^[\d.]+$", x[1]) else 0))[:40]
@@ -217,7 +228,8 @@ def main():
         if DRY:
             print("%s:%s روايات=%d (%s) نصوص=%d %s حجم=%d" % (seed[0], seed[1], len(mem), " ".join(x[0] + ":" + x[1] for x in mem[:8]), len(refs), " ".join(refs[:6]), len(prompt)), flush=True); made += 1; continue
         out = T.gemini(prompt)
-        if not isinstance(out, dict) or not (out.get("ijmali") and (out.get("gharib") or out.get("murad"))):
+        if out is None: rep.append("- تعذّر الوصول إلى النموذج (حصة أو عطل)؛ تتنحى الخدمة ويُستكمل غدًا"); break
+        if not isinstance(out, dict) or not out.get("ijmali"):
             rep.append("- %s:%s تعذّر الشرح (رد غير صالح)" % seed); continue
         ok = set(refs)
         def clean(v):  # لا يبقى إلا العزو إلى نصوص أُرسلت فعلًا
@@ -247,7 +259,7 @@ def main():
     print("شُرح", made)
 
 
-PROMPT = """أنت شارح للحديث النبوي على منهج أهل السنة، تكتب شرحًا موجزًا وافيًا لحديث برواياته، مستخلصًا من نصوص الشروح المعتمدة المرسلة إليك وحدها.
+PROMPT = """أنت شارح للحديث النبوي على منهج أهل السنة، تجمع شرحًا موجزًا لحديث برواياته من نصوص الشروح المعتمدة المرسلة إليك وحدها.
 
 روايات الحديث في الكتب التسعة:
 {riw}
@@ -255,22 +267,19 @@ PROMPT = """أنت شارح للحديث النبوي على منهج أهل ا�
 نصوص الشروح من المكتبة (كل نص مسبوق بمرجعه [[...]]):
 {ex}
 
-اكتب شرحًا جامعًا للحديث برواياته كلها في موضع واحد، على مقصدين:
-الأول: غريب الحديث ومعاني مفرداته، والمراد بجمله وعباراته بترتيب ألفاظه، وبيان المبهمات في متنه (من هو الرجل أو المرأة…)، وما فيه من المنسوخ والمجمل والمبيَّن والعام والخاص إن وُجد.
-الثاني: أهم ما يُستنبط منه من مسائل فقهية وعقدية وأدبية وعلمية.
-الشروط:
-- موجز وافٍ لكل ألفاظ الحديث وسياقه ورواياته؛ لا توسع في الخلاف ولا الاعتراضات، بل الراجح أو المشهور بإيجاز.
-- كل ما تكتبه من النصوص المرسلة وحدها؛ لا تضف من عندك قولًا ولا حكمًا على حديث ولا اسمًا. وأتبع كل نقطة بعزوها [[المرجع]] كما في النصوص.
-- اذكر ما تزيده الروايات الأخرى من ألفاظ أو فوائد منسوبة إلى كتابها.
-- عربية فصيحة سليمة بلا حشو.
-أخرج JSON وحده بهذه الصيغة:
+المطلوب:
+١) غريب الحديث: معاني المفردات الغريبة وحدها كما في الشروح.
+٢) الشرح الإجمالي، وهو أهم المطلوب: دمجٌ وجمعٌ بين كل الشروح المرسلة في نص واحد متصل، يذكر ما قيل في الحديث وفي كل جملة منه بترتيب ألفاظه والتفسير الوارد فيها،
+   ويختار أشهر ما قيل دون تفاصيل الخلاف والاعتراضات. ويدخل فيه — إن وُجد في الشروح وحدها — بيان المبهم، والنسخ، والتخصيص والتقييد، والمجمل والمبيَّن؛
+   ولا تذكر شيئًا من ذلك إن لم يرد في الشروح (فليس لكل حديث ناسخ أو مخصص).
+٣) ما تزيده الروايات الأخرى من ألفاظ ومعانٍ، منسوبًا إلى كتابها، إن وُجد.
+٤) أهم الفوائد المستنبطة: فقهية وعقدية وتربوية وعلمية، موجزة.
+الشروط: كل ما تكتبه من النصوص المرسلة وحدها، لا تضف من عندك قولًا ولا حكمًا على حديث ولا اسمًا؛ وأتبع كل جملة مأخوذة من شرح بعزوها [[المرجع]] كما في النصوص؛ عربية فصيحة بلا حشو.
+أخرج JSON وحده:
 {{"gharib": [{{"w": "الكلمة", "m": "معناها [[مرجع]]"}}],
- "murad": "شرح جمل الحديث وعباراته بترتيبها، فقرةً لكل جملة، مع العزو",
- "mubhamat": ["بيان مبهم [[مرجع]]"],
- "usul": "المنسوخ والمجمل والمبيَّن والعام والخاص إن وُجد فيه، وإلا فارغ",
- "riwayat": "ما تزيده الروايات الأخرى من ألفاظ ومعانٍ، منسوبًا إلى كتبها",
- "ijmali": "المعنى الإجمالي للحديث في فقرة",
- "fawaid": {{"fiqh": ["فائدة فقهية [[مرجع]]"], "aqida": [], "adab": [], "ilm": []}}}}
+ "ijmali": "الشرح الإجمالي الجامع: فقرات متصلة بترتيب جمل الحديث، بعزو كل جملة",
+ "riwayat": "ما تزيده الروايات الأخرى، أو فارغ",
+ "fawaid": {{"fiqh": ["فائدة [[مرجع]]"], "aqida": [], "adab": [], "ilm": []}}}}
 """
 
 if __name__ == "__main__":
