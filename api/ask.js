@@ -216,10 +216,10 @@ module.exports = async (req, res) => {
   const lim = (cfg.limits || {})[STAFF(prof.role) ? "staff" : (prof.perms || []).some(x => /^ask_/.test(x)) ? "perm" : "member"];
   if (limited(user.id, !body.round, lim)) return res.status(429).json({ error: "بلغت حد الأسئلة في الساعة، حاول بعد قليل." });
   const ENG = cfg.engines || {}, engine = allowed(cfg, "models", prof, "ask_models") && ["claude", "gemini", "groq"].includes(body.engine) && ENG[body.engine] !== false ? body.engine : (ENG[cfg.defaultEngine] !== false && cfg.defaultEngine !== "auto" ? cfg.defaultEngine : "auto");
-  const mode = S.MODES[body.mode] ? body.mode : "ask", col = String(body.col || "").split(",").filter(c => ["dawah", "turath", "ithra"].includes(c)).join(","), bookId = typeof body.bookId === "string" ? body.bookId.slice(0, 80) : "";
+  const mode = S.MODES[body.mode] ? body.mode : "ask", col = ["dawah", "turath"].includes(body.col) ? body.col : "", bookId = typeof body.bookId === "string" ? body.bookId.slice(0, 80) : "";
   const deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(mode);
   let system = S.SYSTEM + "\n\nالمهمة: " + S.MODES[mode] +
-    (col ? "\nنطاق البحث: " + col.split(",").map(c => ({ dawah: "مكتبة الدعوة السلفية كاملة (كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وفتاواهم)", turath: "المكتبة العامة", ithra: "المصادر الإثرائية" })[c]).join("، و") + " فقط." : "") +
+    (col ? "\nنطاق البحث: " + (col === "turath" ? "المكتبة العامة فقط." : "كتب مشايخ الدعوة السلفية بمصر ومقالاتهم وفتاواهم فقط.") : "") +
     (bookId ? "\nنطاق البحث: كتاب واحد معرفه " + bookId + "." : "") +
     "\nاليوم: " + new Date().toISOString().slice(0, 10) + ".";
   const st = body.style || {}; if (STYLE[st.basis]) system += "\nأسلوب الجواب: " + STYLE[st.basis]; if (FORM[st.form]) system += "\n" + FORM[st.form];

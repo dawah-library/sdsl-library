@@ -188,8 +188,6 @@ const MG = (() => {
     let o; try { o = JSON.parse((await GH.get(SW)).text) || {}; } catch (e) { o = {}; }
     const s = o.s || {};
     box.innerHTML = `<p class="mut">أوقف أي خدمة أو مهمة آلية مؤقتًا وأعد تشغيلها متى شئت. يسري التغيير خلال دقائق دون إعادة نشر. المهمة الموقوفة تُتخطى في كل تشغيل (المجدول واليدوي) حتى تعيد تفعيلها هنا. ${o.at ? "آخر تعديل: " + new Date(o.at).toLocaleString("ar-EG") : ""}</p>
-     ${(() => { const on = s.translate !== false || s.i18n !== false; /* زر واحد لخدمة الترجمة كلها (طلب المدير ١٤ نوفمبر: موقوفة مؤقتًا حتى تكتمل أقسام الموقع) */
-       return `<div class="card trsw"><b>🌐 خدمة الترجمة</b> <em class="tag ${on ? "on" : "off"}">${on ? "تعمل" : "موقوفة"}</em><p class="mut">الترجمة السياقية وترجمة الصفحات والأسماء والعناوين. تستهلك من حصة Gemini التي يحتاجها تدقيق الكتب.</p><button type="button" class="btn ${on ? "" : "p"}" data-act="mgtrsw" data-on="${on ? 0 : 1}">${on ? "إيقاف خدمة الترجمة" : "تفعيل خدمة الترجمة"}</button></div>`; })()}
      <form data-form="mgsw">${SWITCHES.map(([g, l]) => `<h3>${g}</h3>${l.map(([k, n]) => `<label class="swrow"><input type="checkbox" name="${k}"${s[k] === false ? "" : " checked"}> <span>${esc(n)}</span> <em class="tag ${s[k] === false ? "off" : "on"}">${s[k] === false ? "موقوفة" : "تعمل"}</em></label>`).join("")}`).join("")}
      <div class="savebar"><button class="btn p">حفظ المفاتيح</button> <span id="swst" class="mut" role="status"></span></div></form>`;
   }
@@ -594,7 +592,6 @@ const MG = (() => {
   // ===== الأفعال =====
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=mg]"); if (!el) return; const a = el.dataset.act;
-    if (a === "mgtrsw") { const f = $('[data-form="mgsw"]'); if (!f) return; const on = el.dataset.on === "1"; ["translate", "i18n"].forEach(k => { if (f[k]) f[k].checked = on; }); swSave(f); return; }
     if (a === "mgedit") { e.preventDefault(); closeSheet(); editDlg([el.dataset.id]); }
     else if (a === "mgselpage") { $$("[data-mgid]").forEach(c => { c.checked = true; sel.add(c.dataset.mgid); }); count(); }
     else if (a === "mgselall") { filtered().forEach(b => sel.add(b.id)); $$("[data-mgid]").forEach(c => c.checked = true); count(); }
