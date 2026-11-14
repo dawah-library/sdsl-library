@@ -10,6 +10,7 @@ on:
       topic: { description: "التصنيف (مثل t4)", required: false, default: "t4" }
       dry: { description: "تجربة دون حفظ (1/0)", required: false, default: "0" }
 permissions:
+  id-token: write   # إشعار تيليجرام (tools/notify.py) عبر OIDC
   contents: write
 concurrency:
   group: import-ketab

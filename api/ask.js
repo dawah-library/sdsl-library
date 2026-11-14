@@ -190,6 +190,18 @@ async function webContext(q, web, cfg) {
 const STYLE = { naql: "اعتمد على النقل: أكثر من النصوص المنقولة بألفاظها من الكتب مع الإحالة، وأقلّ من كلامك.", tahlil: "اعتمد على التحليل: انقل الشواهد الأساسية ثم حلّلها وبيّن وجه الدلالة.", istintaj: "اعتمد على الاستنتاج: استخلص النتائج والفوائد من النصوص بعد إيرادها، مع بيان أنها استنتاج.", mix: "وازن بين النقل والتحليل والاستنتاج." };
 const FORM = { generated: "صُغ الجواب بأسلوبك العلمي الفصيح المتصل، مع الإحالات.", composed: "ركّب الجواب من النقول نفسها منسقةً بين عناوين وروابط قصيرة منك تربط بينها، دون إعادة صياغتها." };
 
+// نماذج المساعد ومفاتيحه: GEMINI_MODEL أولًا ثم بدائل بحصص يومية مستقلة؛ والمفاتيح: GEMINI_API_KEY ثم GEMINI_ASK_KEYS
+// (مفصولة بفواصل) أو GEMINI_API_KEY_2… إن ضُبطت في الاستضافة. DEAD يتذكر النافد (١٥ دقيقة) والمتقاعد (٦ ساعات) في العامل نفسه.
+const DEAD = new Map();
+const ASK_MODELS = () => [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+const ASK_KEYS = () => [process.env.GEMINI_API_KEY, ...String(process.env.GEMINI_ASK_KEYS || "").split(","), ...Array.from({ length: 19 }, (_, i) => process.env["GEMINI_API_KEY_" + (i + 2)])].map(x => String(x || "").trim()).filter((x, i, a) => x && a.indexOf(x) === i);
+function askTries() {
+  const now = Date.now(), out = [], ks = ASK_KEYS();
+  for (const [k, t] of DEAD) if (t < now) DEAD.delete(k);
+  for (const m of ASK_MODELS()) { if (DEAD.has(m)) continue; for (const k of ks) if (!DEAD.has(m + "|" + k)) out.push([m, k]); }
+  return out.slice(0, 12);
+}
+
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("ask", res, "المساعد العلمي")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
@@ -227,7 +239,8 @@ module.exports = async (req, res) => {
   if (contents.some(c => c.parts.some(p => p.inlineData))) system += "\nفي المحادثة مرفقات (صور أو ملفات أو صوت) من العضو: اقرأها وحلّلها بحسب سؤاله، وإن كانت نصًّا مصوّرًا فانقل نصه بدقة قبل التعليق عليه.";
   if (!body.round) { const lastQ = (contents[contents.length - 1].parts.find(x => x.text) || {}).text; system += await expand(lastQ);
     if (body.web && allowed(cfg, "web", prof, "ask_web")) system += await webContext(lastQ, body.web, cfg); }
-  const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+  // لكل نموذج في كل مفتاح حصة يومية مستقلة: نجرّب نماذج كثيرة (والمفاتيح الإضافية إن ضُبطت) ونتذكر النافد مؤقتًا فلا يُعاد
+  const tries = askTries();
   res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" });
   const send = o => res.write(JSON.stringify(o) + "\n");
   if (dropped) send({ t: "status", v: "تحليل المرفقات غير مفعّل لحسابك؛ أُرسل السؤال بلا مرفقات." });
@@ -239,17 +252,19 @@ module.exports = async (req, res) => {
   }
   // Gemini لا يعرف أجزاء Claude المعتمة: تُحذف، ويبقى ما يقابلها من نص وطلبات أدوات
   const gcontents = contents.map(c => ({ role: c.role, parts: c.parts.filter(p => !p.cl) })).filter(c => c.parts.length);
-  for (let k = 0; k < models.length; k++) {
-    let r;
+  if (!tries.length) tries.push([ASK_MODELS()[0], process.env.GEMINI_API_KEY]);
+  for (let k = 0; k < tries.length; k++) {
+    let r; const [mdl, gk] = tries[k];
     try {
-      r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[k]) + ":streamGenerateContent?alt=sse", {
-        method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+      r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(mdl) + ":streamGenerateContent?alt=sse", {
+        method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": gk },
         body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gcontents, tools: body.last ? undefined : TOOLS(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
       });
     } catch (e) { r = null; }
     if (!r || !r.ok || !r.body) {
       const st = r ? r.status : 0, t = r ? await r.text().catch(() => "") : "";
-      if (k < models.length - 1 && (st === 429 || st >= 500 || st === 404 || !r)) { send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); continue; }
+      if (st === 429) DEAD.set(mdl + "|" + gk, Date.now() + 15 * 60e3); else if (st === 404) DEAD.set(mdl, Date.now() + 6 * 3600e3);
+      if (k < tries.length - 1 && (st === 429 || st >= 500 || st === 404 || !r)) { if (k < 2) send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); continue; }
       if (process.env.GROQ_API_KEY && await require("../lib/switch").on("ask_groq")) { send({ t: "status", v: "يجرّب نموذجًا بديلًا…" }); if (await viaGroq(system, contents, body, deep, send)) return res.end(); }
       let gm = ""; try { const e = JSON.parse(t).error || {}; gm = (e.status || "") + " " + String(e.message || "").slice(0, 160); } catch (x) { gm = String(t).slice(0, 160); }
       send({ t: "error", code: st === 429 ? "quota" : "server", detail: "Gemini " + st + " " + gm.trim(), v: st === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل." : "تعذر الاتصال بنموذج الذكاء الاصطناعي." });

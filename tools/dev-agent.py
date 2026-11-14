@@ -15,8 +15,11 @@
   set <id> k=v ...     يحدّث حقول الطلب (القيم JSON إن أمكن، وإلا نص)
   log <id> <نص>        يضيف سطرًا إلى سجل الطلب (h)
   status k=v ...       يحدّث data/dev-agent.json (حالة المحركات وآخر التشغيلات)
+  keys                 أسماء متغيرات مفاتيح Gemini بترتيب الوكيل (المحجوزة له في tools/gkeys.py أولًا)
+  probe <model>        يفحص بطلب واحد صغير أن للمفتاح GEMINI_API_KEY حصة في النموذج: ok|quota|gone|bad (رمز الخروج 0 مع ok)
+  reset_at             موعد تجدد الحصة اليومية المجانية (منتصف الليل بتوقيت المحيط الهادئ) بصيغة ISO
 """
-import json, os, sys, time
+import json, os, sys, time, urllib.request, urllib.error
 
 P = "data/dev-requests.json"
 S = "data/dev-agent.json"
@@ -62,6 +65,11 @@ def pick():
         for x in L:
             if x.get("st") == st and (act == "merge" or x.get("br")) and not x.get("closed"):
                 return out(act=act, id=x["id"], branch=x.get("br") or "agent/dev/" + x["id"], eng=x.get("eng") or "auto", auto=x.get("auto") or 0)
+    # نفدت حصة Gemini المجانية في كل المفاتيح والنماذج: لا تشغيل حتى تتجدد (إلا مع محرك Claude)، فلا تُهدر الجولات
+    qu = (load(S) if os.path.exists(S) else {}).get("quota_until") or ""
+    if qu and qu > now() and not (os.environ.get("CLAUDE_CODE_OAUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY")) and os.environ.get("DEV_FORCE") != "1":
+        print(f"حصة Gemini نافدة حتى {qu}")
+        return out(act="none", id="", branch="", eng="", auto=0)
     pend = sorted([x for x in L if x.get("st") == "pending" and x.get("eng") != "session"], key=lambda x: (sum("تعذر تشغيل محرك" in (h.get("m") or "") for h in (x.get("h") or [])), x.get("p") or 2, x.get("at") or ""))  # المتعثر يتأخر فلا يحجز الطابور
     if pend:
         x = pend[0]
@@ -111,8 +119,13 @@ def log(i, m):
     x = find(o, i)
     if m.startswith("@"):
         m = open(m[1:], encoding="utf-8").read().strip()
-    x.setdefault("h", []).append({"at": now(), "by": "agent", "m": m[:4000]})
-    x["h"] = x["h"][-40:]
+    h = x.setdefault("h", [])
+    if h and h[-1].get("by") == "agent" and h[-1].get("m") == m[:4000]:  # تكرار الرسالة نفسها (تعثر متتابع) لا يملأ السجل
+        h[-1]["n"] = (h[-1].get("n") or 1) + 1
+        h[-1]["at"] = now()
+    else:
+        h.append({"at": now(), "by": "agent", "m": m[:4000]})
+    x["h"] = h[-40:]
     save(o)
 
 
@@ -129,10 +142,52 @@ def status(kv):
     save(s, S)
 
 
+def keynames():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import gkeys
+    names = [n for n, _ in gkeys._all()]
+    d = gkeys._dev_n(len(names))
+    # المحجوزة للوكيل أولًا، ثم البقية من الآخر (أقلها استهلاكًا من التحويل)؛ والمفتاح الأول GEMINI_API_KEY آخرًا
+    # لأنه مفتاح الموقع نفسه (المساعد العلمي والترجمة والتحرير في الدوال) فلا يستنفد الوكيل حصته
+    order = names[:d] + names[d:][::-1]
+    return [n for n in order if n != "GEMINI_API_KEY"] + [n for n in order if n == "GEMINI_API_KEY"]
+
+
+def probe(model):
+    k = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not k:
+        print("bad"); return 1
+    body = json.dumps({"contents": [{"parts": [{"text": "ok"}]}], "generationConfig": {"maxOutputTokens": 4}}).encode()
+    rq = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", data=body,
+                                headers={"content-type": "application/json", "x-goog-api-key": k})
+    try:
+        urllib.request.urlopen(rq, timeout=30).read()
+        r = "ok"
+    except urllib.error.HTTPError as e:
+        t = e.read().decode("utf-8", "ignore")[:400]
+        r = "quota" if e.code == 429 else "gone" if e.code == 404 else "bad" if e.code in (400, 401, 403) and "API key" in t else "quota" if e.code >= 500 else "bad"
+    except Exception:
+        r = "quota"  # عطل شبكة عابر: يُعامل كغير متاح الآن
+    print(r)
+    return 0 if r == "ok" else 1
+
+
+def reset_at():
+    # منتصف الليل بتوقيت المحيط الهادئ ≈ 08:00 UTC (07:00 صيفًا)؛ نأخذ 08:05 احتياطًا
+    t = time.time()
+    base = int(t - (t % 86400)) + 8 * 3600 + 300
+    if base <= t:
+        base += 86400
+    print(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base)))
+
+
 def notify(path):
     L = [x for x in load(path).get("items", []) if x.get("u", "") > time.strftime("%Y-%m-%dT%H:%M", time.gmtime(time.time() - 3600))]
     M = {"review": "🔍 بانتظار اعتمادك", "done": "✅ نُفّذ", "need": "❓ يحتاج توضيحًا", "pending": "⏳ يُعاد"}
     for x in L:
+        h = (x.get("h") or [{}])[-1]
+        if x.get("st") == "pending" and h.get("by") == "agent" and (h.get("n") or 1) > 1:
+            continue  # تعثر متكرر نفسه: أُبلغ المدير به أول مرة
         if x.get("st") in M:
             print(f"🛠️ المساعد التقني — {M[x['st']]}: {x.get('t', '')[:80]}\n#/dev")
 
@@ -151,5 +206,11 @@ if __name__ == "__main__":
         notify(sys.argv[2])
     elif c == "status":
         status(sys.argv[2:])
+    elif c == "keys":
+        print(" ".join(keynames()))
+    elif c == "probe":
+        sys.exit(probe(sys.argv[2]))
+    elif c == "reset_at":
+        reset_at()
     else:
         print(__doc__)

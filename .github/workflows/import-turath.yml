@@ -11,6 +11,7 @@ on:
         required: false
         default: ""
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/turath-list.json", "data/retry.json"]
 permissions:
   contents: write

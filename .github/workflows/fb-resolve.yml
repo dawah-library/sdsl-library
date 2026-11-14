@@ -2,6 +2,7 @@ name: فتح روابط مشاركة فيسبوك (معرفة الصفحات)
 on:
   workflow_dispatch:
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/fb-links.json"]
 permissions:
   contents: write

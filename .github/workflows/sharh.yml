@@ -16,6 +16,7 @@ on:
         required: false
         default: ""
 permissions:
+  id-token: write   # إشعار تيليجرام (tools/notify.py) عبر OIDC
   contents: write
 concurrency:
   group: sharh-ai

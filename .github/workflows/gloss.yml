@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "30 3 * * 0"   # أسبوعيًا: يضم الكتب المستوردة حديثًا
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/gloss.py"]
 permissions:
   contents: write

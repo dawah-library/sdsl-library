@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "41 5 * * 4"   # أسبوعيًا: الكتب والمقالات الجديدة
   push:
+    branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/quran-cite.py"]
 permissions:
   contents: write
