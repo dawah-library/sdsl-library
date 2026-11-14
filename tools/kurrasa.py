@@ -253,7 +253,7 @@ def build(bid, cat, item=None):
             work[key] = None; continue
         r = T.gemini(SEC_PROMPT.format(title=title, author=au, a=a, b=z, chap=(" — " + "، ".join(chap)) if chap else "", text=text[:80000],
                                        depth=depth, bmin=bmin + ((z - a + 1) if R == 2 else 0), bmax=bmax + (2 * (z - a + 1) if R == 2 else 0),
-                                       allowed="، ".join(x for x in allowed.split("، ") if not (R == 1 and x.startswith("para"))), must=must))
+                                       allowed="، ".join(x for x in allowed.split("، ") if not (R == 1 and x.startswith("para"))), must=must) + ("\n\nمتطلبات المدير لهذه الكراسة (التزمها ما لم تخالف أمانة النقل عن الكتاب):\n" + str(item.get("req"))[:1500] if isinstance(item, dict) and item.get("req") else ""))
         if not r:
             return None  # تعذّر مقطع: لا يُحفظ ناقصًا، ويُستأنف من حيث توقف في الجولة القادمة (المنجز محفوظ في _work)
         bl = [x for x in (clean_block(b, pages, a, z) for b in r.get("blocks") or []) if x and x["k"] in ST and not (R == 1 and x["k"] == "para")]
@@ -278,7 +278,7 @@ def build(bid, cat, item=None):
         print("  قسم ص%d-%d: %d كتلة" % (a, z, len(bl)), flush=True)
     if not out or len(out) < sum(1 for k, v in work.items() if k != "_o" and v):
         return None
-    top = T.gemini(BOOK_PROMPT.format(title=title, author=au, secs="\n".join("%d. %s — %s" % (i + 1, s["t"], s["lead"]) for i, s in enumerate(out)))) or {}
+    top = T.gemini(BOOK_PROMPT.format(title=title, author=au, secs="\n".join("%d. %s — %s" % (i + 1, s["t"], s["lead"]) for i, s in enumerate(out))) + ("\nمتطلبات المدير: " + str(item.get("req"))[:1500] if isinstance(item, dict) and item.get("req") else "")) or {}
     k = {"id": bid, "t": title, "a": au, "n": n, "s": str(top.get("s") or "").strip(), "goals": [str(x) for x in top.get("goals") or []][:6],
          "qs": [x for x in top.get("qs") or [] if isinstance(x, dict) and x.get("q") and x.get("a")][:8],
          "secs": out, "r": R, "st": ST, "built": str(datetime.date.today()), "model": T.MODEL}

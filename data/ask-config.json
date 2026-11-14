@@ -1,0 +1,11 @@
+{
+ "note": "إعدادات المساعد العلمي والتقني (لوحة «إعدادات المساعد» في صفحة المساعد للمدير). القيم: all للجميع، perm لمن فوّضه المدير (profiles.perms)، staff للإدارة، off موقوف.",
+ "features": { "vision": "perm", "files": "perm", "voice": "all", "stt": "all", "tts": "all", "web": "perm", "models": "perm", "export": "all" },
+ "engines": { "auto": true, "claude": true, "gemini": true, "groq": true },
+ "defaultEngine": "auto",
+ "webDomains": ["dorar.net", "islamweb.net", "islamqa.info", "shamela.ws", "almaany.com", "salafvoice.com", "anasalafy.com"],
+ "webAnyDomain": false,
+ "styles": { "naql": true, "tahlil": true, "istintaj": true },
+ "limits": { "member": 20, "perm": 60, "staff": 200 },
+ "extra": ""
+}

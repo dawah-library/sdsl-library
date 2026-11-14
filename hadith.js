@@ -34,7 +34,8 @@ const HDS = (() => {
   async function linksBox(b, n) { const el = $("#hdlk"); if (!el) return; await klist(); const e = (await lget(b + ".json"))[String(n)] || {};
     const sh = (e.sh || []).map(([v, p]) => { const bk = B(v); return `<a class="chip" href="#/book/${esc(v)}/${p}">📖 ${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? " • ج" + toAr(bk.vol) : ""} • ص ${toAr(p)}</a>`; }).join("");
     const tk = (e.t || []).map(([b2, n2]) => `<a class="chip" href="${hurl(b2, n2)}">${esc(bname(b2))}${CUR.test(b2) ? "" : " (" + toAr(n2) + ")"}</a>`).join("");
-    el.innerHTML = `<h3>شرح الحديث</h3>${sh ? `<div class="row"><button class="btn p" data-act="hdbrief" data-b="${b}" data-n="${esc(String(n))}">📝 شرح موجز من الشروح المشهورة</button></div><p class="mut">موضع شرحه في المكتبة:</p><div class="chips">${sh}</div>` : '<p class="mut">لم يُحدَّد موضع شرحه في شروح المكتبة بعد.</p>'}
+    const sh2 = !sh ? (e.sh2 || []).map(([v, p, b2, n2]) => { const bk = B(v); return `<a class="chip" href="#/book/${esc(v)}/${p}">📖 ${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? " • ج" + toAr(bk.vol) : ""} • ص ${toAr(p)} <small>(روايته في ${esc(bname(b2))})</small></a>`; }).join("") : "";
+    el.innerHTML = `<h3>شرح الحديث</h3>${!sh && sh2 ? `<p class="mut">شرح الحديث نفسه في رواية أخرى منه:</p><div class="chips">${sh2}</div>` : ""}${sh ? `<div class="row"><button class="btn p" data-act="hdbrief" data-b="${b}" data-n="${esc(String(n))}">📝 شرح موجز من الشروح المشهورة</button></div><p class="mut">موضع شرحه في المكتبة:</p><div class="chips">${sh}</div>` : (sh2 ? "" : '<p class="mut">لم يُحدَّد موضع شرحه في شروح المكتبة بعد.</p>')}
       <h3>تخريجه في كتب السنة بالمكتبة</h3>${tk ? `<div class="chips">${tk}</div>` : '<p class="mut">لم يُعثر على رواية أخرى له في كتب السنة بالمكتبة؛ انظر أحكام المحدثين وتخريجهم أدناه.</p>'}`; }
   async function brief(b, n) { openSheet("شرح موجز", '<p class="mut">جارٍ إعداد الشرح الموجز من الشرح المعتمد…</p>');
     try { const r = await fetch("api/translate?sharh=" + encodeURIComponent(b) + "&n=" + encodeURIComponent(n)), j = await r.json(); if (!r.ok) throw new Error(j.message || "");
@@ -64,37 +65,71 @@ const HDS = (() => {
   async function kutub(q) {
     const L = await klist(), b = q.kb, qq = (q.q || "").trim(), pg = Math.max(1, +q.pg || 1), u = o => "#/hadith?" + new URLSearchParams(Object.assign({ t: "kutub" }, b ? { kb: b } : {}, o)).toString();
     let body = "";
-    if (!b) body = `<div class="grid">${Object.entries(L).map(([k, v]) => `<a class="card" href="#/hadith?t=kutub&kb=${k}"><b>${esc(v.t)}</b><span>${toAr(v.n)} حديثًا</span></a>`).join("") || '<p class="mut">جارٍ التحميل…</p>'}</div>`;
+    if (!b) body = `<div class="hshelf">${Object.entries(L).map(([k, v], i) => `<a class="hbook hb${i % 9}" href="#/hadith?t=kutub&kb=${k}"><b>${esc(v.t.replace(/^(صحيح|سنن|جامع|موطأ|مسند)\s+/, m => m.trim() + "\n"))}</b><span>${esc(v.t)} • ${toAr(v.n)} حديثًا</span></a>`).join("") || '<p class="mut">جارٍ التحميل…</p>'}</div>`;
+    else if (!qq) body = await kread(b, q);
     else { const D = await kidx(b); let it = D.items || [];
-      if (qq) { const w = norm(qq).split(/\s+/).filter(Boolean); it = it.filter(x => { const t = norm(x[6] + " " + x[5] + " " + x[4] + " " + x[3]); return w.every(k => t.includes(k)); }); }
+      { const w = norm(qq).split(/\s+/).filter(Boolean); it = it.filter(x => { const t = norm(x[6] + " " + x[5] + " " + x[4] + " " + x[3]); return w.every(k => t.includes(k)); }); }
       const np = Math.max(1, Math.ceil(it.length / PER));
-      body = `<p><a href="#/hadith?t=kutub">← كتب السنة</a> <b>${esc(D.t || b)}</b></p><form class="sbox" data-form="noop" id="hkq"><input name="q" value="${esc(qq)}" placeholder="ابحث في ${esc(D.t || "")}: طرف الحديث أو الصحابي أو الباب"><button class="btn p">بحث</button></form><p class="mut">${toAr(it.length)} حديثًا</p>
+      body = `<p><a href="#/hadith?t=kutub">← كتب السنة</a> › <a href="#/hadith?t=kutub&kb=${b}">${esc(D.t || b)}</a></p><form class="sbox" data-form="noop" id="hkq"><input name="q" value="${esc(qq)}" placeholder="ابحث في ${esc(D.t || "")}: طرف الحديث أو الصحابي أو الباب"><button class="btn p">بحث</button></form><p class="mut">${toAr(it.length)} حديثًا</p>
         ${it.slice((pg - 1) * PER, pg * PER).map(x => `<a class="hdc" href="#/hadith/k/${b}/${x[0]}"><span class="hds">${x[5] ? "عن " + esc(x[5]) : ""}</span><b>${esc(x[6])}…</b><span class="mut">${esc(D.t)} • رقم ${toAr(x[0])}${x[4] ? " • " + esc(x[4].slice(0, 70)) : ""}</span></a>`).join("")}
         ${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u({ q: qq, pg: pg - 1 })}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u({ q: qq, pg: pg + 1 })}">التالية</a>` : ""}</div>` : ""}`; }
     return body;
   }
-  // البحث في كتب السنة الثمانية كلها مع المختارات، وكل نتيجة تفتح في موضعها من القسم
+  // قراءة كتاب السنة كاملًا كما في المكتبة: الأحاديث متتابعة بمتونها تحت كتبها وأبوابها، صفحةً صفحة،
+  // مع فهرس الكتب والانتقال إلى صفحة أو رقم حديث، وتحت كل حديث خدماته (الشرح من الدرر السنية، التخريج والأحكام، النسخ).
+  const RPER = 20;
+  async function kread(b, q) {
+    const D = await kidx(b), it = D.items || [], np = Math.max(1, Math.ceil(it.length / RPER));
+    if (!it.length) return `<p><a href="#/hadith?t=kutub">← كتب السنة</a></p><p class="note">تعذّر تحميل الكتاب.</p>`;
+    let pg = Math.min(np, Math.max(1, +q.pg || 1)); if (q.at) { const k = it.findIndex(x => String(x[0]) === String(q.at)); if (k >= 0) pg = Math.floor(k / RPER) + 1; }
+    const k0 = (pg - 1) * RPER, sl = it.slice(k0, k0 + RPER), MM = {};
+    for (const c of [...new Set(sl.map((x, j) => Math.floor((k0 + j) / 500)))]) Object.assign(MM, await kmatn(b, c));
+    const u = p => "#/hadith?" + new URLSearchParams({ t: "kutub", kb: b, pg: p }).toString();
+    const toc = []; it.forEach((x, i) => { if (x[3] && (!toc.length || toc[toc.length - 1][0] !== x[3])) toc.push([x[3], Math.floor(i / RPER) + 1, x[0]]); });
+    let lk = null, lb = null;  // أول كل صفحة: كتابها وبابها
+    const rows = sl.map(x => { let h = ""; if (x[3] && x[3] !== lk) { h += `<h3 class="hrk">${esc(x[3])}</h3>`; lb = null; } if (x[4] && x[4] !== lb) h += `<h4 class="hrb">${esc(x[4])}</h4>`; lk = x[3]; lb = x[4];
+      const m = MM[String(x[0])] || x[6], cite = (x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")";
+      return h + `<article class="hrh" id="hr${esc(String(x[0]))}"><a class="hrn" href="#/hadith/k/${b}/${x[0]}" title="خدمات الحديث">${toAr(x[0])}</a>${x[5] ? `<p class="hds">عن ${esc(x[5])}</p>` : ""}<p class="hdm">${esc(m)}</p>
+        <div class="hra"><a class="btn s" href="#/hadith/k/${b}/${x[0]}">خدمات الحديث</a><button class="btn s" data-act="hdrsh" data-q="${esc(m.slice(0, 300))}">📖 شرحه (الدرر السنية)</button><a class="btn s" href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(String(x[6]).split(" ").slice(0, 4).join(" "))}" title="بإسناده في الكتاب">📚 بإسناده</a><button class="btn s" data-act="hkcopy" data-t="${esc(cite)}">نسخ</button></div><div class="hrsh" hidden></div></article>`; }).join("");
+    const nav = top => `<div class="pgn hrpg">${pg > 1 ? `<a class="btn s" href="${u(1)}" title="أول الكتاب">«</a><a class="btn s" href="${u(pg - 1)}">› السابقة</a>` : ""}<span class="mut">صفحة ${toAr(pg)} من ${toAr(np)} • الأحاديث ${toAr(sl[0][0])}–${toAr(sl[sl.length - 1][0])}</span>${pg < np ? `<a class="btn s" href="${u(pg + 1)}">التالية ‹</a><a class="btn s" href="${u(np)}" title="آخر الكتاب">»</a>` : ""}</div>`;
+    return `<p><a href="#/hadith?t=kutub">← كتب السنة</a> <b>${esc(D.t || b)}</b> <span class="mut">${toAr(it.length)} حديثًا</span></p>
+      <form class="sbox" data-form="noop" id="hkq"><input name="q" placeholder="ابحث في ${esc(D.t || "")}: طرف الحديث أو الصحابي أو الباب"><button class="btn p">بحث</button></form>
+      <div class="row hrtools">${toc.length > 1 ? `<select id="hrtoc" aria-label="فهرس الكتاب"><option value="">📑 فهرس الكتاب…</option>${toc.map(([t, p, n]) => `<option value="${p}"${p === pg ? " selected" : ""}>${esc(t.slice(0, 70))} (${toAr(n)})</option>`).join("")}</select>` : ""}
+        <form id="hrgo" data-form="noop" class="row"><input name="n" inputmode="numeric" placeholder="رقم الحديث" aria-label="انتقل إلى رقم حديث" data-novoice style="width:7.5em"><button class="btn s">انتقل</button></form>
+        <form id="hrpgf" data-form="noop" class="row"><input name="p" inputmode="numeric" placeholder="الصفحة" aria-label="انتقل إلى صفحة" data-novoice style="width:5.5em"><button class="btn s">صفحة</button></form></div>
+      ${nav(1)}<div class="hread" data-kb="${b}">${rows}</div>${nav(0)}`;
+  }
+  // شرح الحديث من «الموسوعة الحديثية» في الدرر السنية (عبر api/translate?dsharh=)
+  const DSC = {};
+  async function dsharh(q) { const k = String(q).slice(0, 160); if (!DSC[k]) DSC[k] = fetch("api/translate?dsharh=" + encodeURIComponent(k)).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.message || "تعذّر جلب الشرح"); return j; }); return DSC[k].catch(e => { delete DSC[k]; throw e; }); }
+  const dsharhHtml = (j, q) => j && j.text ? `<div class="hdbrief">${esc(j.text).replace(/\n+/g, "</p><p>").replace(/^/, "<p>")}</p></div><p class="mut">المصدر: شروح الأحاديث — الموسوعة الحديثية، الدرر السنية${j.url ? ` • <a href="${esc(j.url)}" target="_blank" rel="noopener">الشرح في موضعه ↗</a>` : ""}</p>`
+    : `<p class="mut">لم يُعثر على شرح لهذا الحديث في الدرر السنية. <a href="https://dorar.net/hadith/search?q=${encodeURIComponent(String(q).split(/\s+/).slice(0, 8).join(" "))}" target="_blank" rel="noopener">ابحث فيها ↗</a></p>`;
+  async function dsharhInto(el, q) { if (!el) return; el.hidden = false; el.innerHTML = '<p class="mut">جارٍ جلب الشرح من الدرر السنية…</p>';
+    try { el.innerHTML = dsharhHtml(await dsharh(q), q); } catch (e) { el.innerHTML = `<p class="mut">${esc(e.message)} — <a href="https://dorar.net/hadith/search?q=${encodeURIComponent(String(q).split(/\s+/).slice(0, 8).join(" "))}" target="_blank" rel="noopener">ابحث في الدرر السنية ↗</a></p>`; } }
+  // البحث في كتب السنة كلها مع المختارات، وكل نتيجة تفتح في موضعها من القسم
   async function kutubSearch(qq) {
     const box = document.createElement("section"); box.id = "hdks"; box.className = "stsec"; box.innerHTML = '<h3>في كتب السنة</h3><p class="mut">جارٍ البحث في الصحيحين والسنن والموطأ…</p>';
     const anchor = $(".pgn") || [...document.querySelectorAll(".hdc")].pop() || $("#hdq"); if (!anchor) return; anchor.after(box);
     const L = await klist(), w = norm(qq).split(/\s+/).filter(Boolean); let html = "", tot = 0;
-    await Promise.all(Object.keys(L).map(async b => { const D = await kidx(b), it = (D.items || []).filter(x => { const t = norm(x[6] + " " + x[5] + " " + x[4] + " " + x[3]); return w.every(k => t.includes(k)); }); L[b]._hits = it; }));
-    Object.entries(L).forEach(([b, v]) => { const it = v._hits || []; if (!it.length) return; tot += it.length;
+    const SC = typeof HDX !== "undefined" ? HDX.scope() : null; if (typeof HDX !== "undefined") HDX.remember(qq);
+    await Promise.all(Object.keys(L).filter(b => !SC || SC.includes(b)).map(async b => { const D = await kidx(b), it = (D.items || []).filter(x => { const t = norm(x[6] + " " + x[5] + " " + x[4] + " " + x[3]); return w.every(k => t.includes(k)); }); L[b]._hits = it; }));
+    Object.entries(L).forEach(([b, v]) => { const it = (!SC || SC.includes(b)) ? v._hits || [] : []; if (!it.length) return; tot += it.length;
       html += `<details class="hfold"${tot <= 30 ? " open" : ""}><summary>${esc(v.t)} <span class="mut">(${toAr(it.length)})</span></summary>${it.slice(0, 8).map(x => `<a class="hdc" href="#/hadith/k/${b}/${x[0]}"><span class="hds">${x[5] ? "عن " + esc(x[5]) : ""}</span><b>${esc(x[6])}…</b><span class="mut">${esc(v.t)} • ${toAr(x[0])}${x[4] ? " • " + esc(x[4].slice(0, 60)) : ""}</span></a>`).join("")}${it.length > 8 ? `<a class="all" href="#/hadith?t=kutub&kb=${b}&q=${encodeURIComponent(qq)}">كل النتائج في ${esc(v.t)} (${toAr(it.length)}) ←</a>` : ""}</details>`; });
     box.innerHTML = `<h3>في كتب السنة <span class="mut">(${toAr(tot)})</span></h3>` + (html || '<p class="mut">لا نتائج في كتب السنة.</p>');
   }
   async function kone(b, n) {
     const D = await kidx(b), k = (D.items || []).findIndex(x => String(x[0]) === String(n)); if (k < 0) return view('<p class="note">الحديث غير موجود.</p>');
     await klist(); const x = D.items[k], M = await kmatn(b, Math.floor(k / 500)), m = M[String(x[0])] || x[6], prev = D.items[k - 1], next = D.items[k + 1];
-    view(`<p><a href="#/hadith?t=kutub&kb=${b}">← ${esc(D.t)}</a>${x[3] ? " › " + esc(x[3]) : ""}</p>
+    view(`<p><a href="#/hadith?t=kutub&kb=${b}&at=${encodeURIComponent(x[0])}">← ${esc(D.t)} (موضعه في الكتاب)</a>${x[3] ? " › " + esc(x[3]) : ""}</p>
     <article class="hdone"><p class="hds">${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">«${esc(m)}»</p><p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
     <p class="mut"><a href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(x[6].split(" ").slice(0, 4).join(" "))}">اقرأ الحديث بإسناده في موضعه من الكتاب ←</a></p></article>
     ${["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b) ? '<section class="stsec" id="hdgr"><p class="mut">…</p></section>' : ""}
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
+    <section class="stsec"><h3>شرح الحديث من الدرر السنية</h3><div id="hdds" data-q="${esc(m.slice(0, 300))}"><p class="mut">…</p></div></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه</h3><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc(m.split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين من الموسوعة الحديثية</button></div></section>
     <div class="row">${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
     <div class="mnav mnb">${next ? `<a class="btn s" href="#/hadith/k/${b}/${next[0]}">‹ التالي</a>` : "<span></span>"}${prev ? `<a class="btn s" href="#/hadith/k/${b}/${prev[0]}">السابق ›</a>` : ""}</div>`);
-    linksBox(b, x[0]); gradesBox(b, x[0]);
+    linksBox(b, x[0]); gradesBox(b, x[0]); dsharhInto($("#hdds"), m.slice(0, 300));
   }
   async function page(q, id) {
     if (id && String(id).startsWith("k:")) { const [, b, n] = id.split(":"); return kone(b, n); }
@@ -108,18 +143,24 @@ const HDS = (() => {
     else if (t === "sahabi") { const c = {}; L.forEach(x => { const k = x.sah.replace(/^(أمير المؤمنين|أبي|أبى)\s+/, m => m).trim(); if (k) (c[k] = c[k] || []).push(x); });
       if (q.s) L = c[q.s] || []; else side = `<div class="hdgl">${Object.entries(c).sort((a, b) => b[1].length - a[1].length).slice(0, 300).map(([k, l]) => `<a href="${u({ s: k })}">${esc(k)} <span class="mut">${toAr(l.length)}</span></a>`).join("")}</div>`; }
     if (t === "kutub") { side = await kutub(q); L = []; }
+    if (t === "fav") { side = HDX.favHtml(q.f); L = []; }
     const showList = qq || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
-    view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة الثمانية (الصحيحان والسنن الأربع والموطأ والدارمي، نحو ٣٩ ألف حديث) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
+    view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة المشهورة (الصحيحان والسنن الأربع والموطأ والدارمي ومسند أحمد وسنن البيهقي الكبرى وشعب الإيمان والأدب المفرد والشمائل وعمل اليوم والليلة وشرح السنة للبغوي، نحو مئة ألف حديث، وتُضاف إليها الكتب الأخرى تباعًا) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
     <div class="row"><button class="btn s" data-act="hdoff">${offState("hadith", "قسم الحديث")}</button></div>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
-    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>
+    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"], ["fav", "⭐ مجلداتي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>
     ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
     ${side}${showList ? `<p class="mut">${toAr(L.length)} حديثًا</p>${L.slice((pg - 1) * PER, pg * PER).map(card).join("")}${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg - 1 }))}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg + 1 }))}">التالية</a>` : ""}</div>` : ""}` : ""}`);
     $("#hdq").addEventListener("submit", e => { e.preventDefault(); location.hash = u({ q: e.target.q.value.trim() }); });
     if (qq && t !== "kutub") kutubSearch(qq);
     $("#hddq").addEventListener("submit", e => { e.preventDefault(); dorar(e.target.q.value.trim()); });
     const hk = $("#hkq"); if (hk) hk.addEventListener("submit", e => { e.preventDefault(); location.hash = "#/hadith?" + new URLSearchParams({ t: "kutub", kb: q.kb, q: e.target.q.value.trim() }).toString(); });
+    const AN = v => String(v || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim(), kr = n => "#/hadith?" + new URLSearchParams(Object.assign({ t: "kutub", kb: q.kb }, n)).toString();
+    const toc = $("#hrtoc"); if (toc) toc.onchange = () => toc.value && (location.hash = kr({ pg: toc.value }));
+    const hg = $("#hrgo"); if (hg) hg.addEventListener("submit", e => { e.preventDefault(); const n = AN(e.target.n.value); if (n) location.hash = kr({ at: n }); });
+    const hp = $("#hrpgf"); if (hp) hp.addEventListener("submit", e => { e.preventDefault(); const n = parseInt(AN(e.target.p.value)); if (n > 0) location.hash = kr({ pg: n }); });
+    if (q.at) setTimeout(() => { const el = document.getElementById("hr" + q.at); if (el) { el.scrollIntoView({ block: "start" }); el.classList.add("hrhit"); } }, 60);
   }
   const card = x => `<a class="hdc" href="#/hadith/x/${x.id}"><span class="hds">${esc(x.sah ? "عن " + x.sah : "")}</span><b>${esc(x.tarf)}…</b><span class="mut">${esc(x.t)}${x.h ? " • " + esc(x.h) : ""} • ${esc(BK[x.b] || x.b)}</span></a>`;
   async function one(id) {
@@ -132,9 +173,10 @@ const HDS = (() => {
     ${d.sh ? `<details open><summary><b>شرح موجز من الكتاب</b></summary><p class="hdsh">${esc(d.sh)}</p></details>` : ""}
     <details><summary><b>النص كما في الكتاب</b></summary><p class="hdsh">${esc(d.full || "")}</p></details></article>
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
-    <section class="stsec"><h3>أحكام المحدثين وتخريجه في كتب السنة</h3><p class="mut">من «الموسوعة الحديثية» في الدرر السنية: روايات الحديث في المصادر، وحكم كل محدث عليه من المتقدمين والمعاصرين.</p><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc((d.m || x.tarf).split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين</button> <a class="btn s" target="_blank" rel="noopener" href="https://dorar.net/hadith/search?q=${encodeURIComponent((d.m || x.tarf).split(/\s+/).slice(0, 7).join(" "))}">شرح الحديث وفوائده في الدرر السنية ↗</a></div></section>
+    <section class="stsec"><h3>شرح الحديث من الدرر السنية</h3><div id="hdds"><p class="mut">…</p></div></section>
+    <section class="stsec"><h3>أحكام المحدثين وتخريجه في كتب السنة</h3><p class="mut">من «الموسوعة الحديثية» في الدرر السنية: روايات الحديث في المصادر، وحكم كل محدث عليه من المتقدمين والمعاصرين.</p><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc((d.m || x.tarf).split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين</button></div></section>
     <div class="row"><button class="btn p" data-act="hdexp" data-id="${id}">تصدير بقالب</button><button class="btn" data-act="hdcopy" data-id="${id}">نسخ</button>${typeof hadithSheet === "function" ? `<button class="btn" data-act="hdsharh" data-id="${id}">شروح الحديث في المكتبة</button>` : ""}<a class="btn" href="#/ask?q=${encodeURIComponent("أعرب الحديث: «" + (d.m || x.tarf).slice(0, 300) + "» إعرابًا مفصلًا، واذكر أهم ما يستفاد منه من شروح الحديث في المكتبة مع الإحالة")}">الإعراب وما يستفاد منه (المساعد)</a></div>`);
-    linksBox(x.b, id);
+    linksBox(x.b, id); dsharhInto($("#hdds"), String(d.m || x.tarf).slice(0, 300));
   }
   async function exp(id) {
     const r = IX.find(x => x[0] === id), x = F(r), d = (await det(x.b))[id] || {};
@@ -171,6 +213,7 @@ const HDS = (() => {
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "hddorar") dorar(el.dataset.q);
     else if (a === "hdalam" && typeof ALAM !== "undefined") ALAM.sheet(el.dataset.n);
+    else if (a === "hdrsh") { const box = el.closest(".hrh").querySelector(".hrsh"); if (!box.hidden && box.dataset.f) { box.hidden = true; return; } box.dataset.f = 1; dsharhInto(box, el.dataset.q); }
     if (a === "hdoff") offSave("hadith", async say => { say("جارٍ تجهيز القائمة…"); const L = await klist(), out = ["data/hadith/index.json", "data/hadith/arbain.json", "data/hadith/riyad.json", "data/hadith/bulugh.json", RAWK("_list.json"), RAWT("_index.json")];
       Object.entries(L).forEach(([b, v]) => { out.push(RAWK(b + ".json"), RAWL(b + ".json")); for (let i = 0; i < Math.ceil((v.n || 0) / 500); i++) out.push(RAWK(b + "/m" + i + ".json")); if (["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b)) out.push(RAWK("").replace("/k/", "/grades/") + b + ".json"); });
       ["arbain", "riyad", "bulugh"].forEach(b => out.push(RAWL(b + ".json"))); for (let i = 0; i < 27; i++) out.push(RAWT(i + ".json")); return out; }, el, "قسم الحديث");
@@ -181,4 +224,78 @@ const HDS = (() => {
     else if (a === "hdcopy") { const r = IX.find(x => x[0] === el.dataset.id), x = F(r); det(x.b).then(D => navigator.clipboard.writeText(`عن ${x.sah} رضي الله عنه: «${(D[x.id] || {}).m || x.tarf}» ${x.t}${x.h ? " — " + x.h : ""}\n${BK[x.b] || x.b}`).then(() => toast("نُسخ"))); }
     else if (a === "hdsharh") { const r = IX.find(x => x[0] === el.dataset.id), x = F(r); det(x.b).then(D => hadithSheet((D[x.id] || {}).m || x.tarf)); } });
   return { view: page };
+})();
+
+/* من الشرح إلى الحديث: في صفحة من كتب الشروح (فتح الباري، المنهاج، عون المعبود…) يظهر أعلاها «هذا الموضع شرح حديث …» برابطه في قسم الحديث
+   (data/hadith/links/_rev/<ملف الشرح>.json من tools/hadith-rev.py). */
+const HDREV = (() => { const C = new Map(); let last = "";
+  const get = f => C.get(f) || (C.set(f, fetch("https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/links/_rev/" + f + ".json").then(r => r.ok ? r.json() : null).catch(() => null)), C.get(f));
+  const NAMES = { bukhari: "صحيح البخاري", muslim: "صحيح مسلم", abudawud: "سنن أبي داود", tirmidhi: "سنن الترمذي", nasai: "سنن النسائي", ibnmajah: "سنن ابن ماجه", muwatta: "الموطأ", darimi: "سنن الدارمي", musnadahmad: "مسند أحمد", sunankubra: "السنن الكبرى للبيهقي", shuabiman: "شعب الإيمان", adabmufrad: "الأدب المفرد", shamail: "الشمائل المحمدية", amalyawm: "عمل اليوم والليلة", baghawisunna: "شرح السنة للبغوي", ibnkhuzayma: "صحيح ابن خزيمة", ibnhibban: "صحيح ابن حبان", mustadrak: "المستدرك", daraqutni: "سنن الدارقطني", nasaikubra: "السنن الكبرى للنسائي", ibnabishayba: "مصنف ابن أبي شيبة", abdrazzaq: "مصنف عبد الرزاق", arbain: "الأربعين النووية", riyad: "رياض الصالحين", bulugh: "بلوغ المرام" };
+  async function paint() { const m = location.pathname.match(/^\/book\/([^/]+)\/(\d+)/); if (!m) return; const key = m[1] + ":" + m[2]; if (key === last) return; last = key;
+    const d = await get(m[1]); const old = document.getElementById("hdrev"); if (old) old.remove(); if (!d || !d[m[2]]) return;
+    const host = document.querySelector("#rb") || document.querySelector(".rd"); if (!host) return;
+    host.insertAdjacentHTML("beforebegin", `<div id="hdrev" class="hdrev">📜 هذا الموضع شرحُ ${d[m[2]].map(([b, n]) => `<a href="${/^(arbain|riyad|bulugh)/.test(b) ? "#/hadith/x/" + n : "#/hadith/k/" + b + "/" + n}">الحديث ${/^(arbain|riyad|bulugh)/.test(b) ? toAr(String(n).split("-").pop()) : toAr(n)} من ${NAMES[b] || b}</a>`).join("، ")} — اعرض نصه وتخريجه وشروحه الأخرى.</div>`); }
+  addEventListener("popstate", () => setTimeout(paint, 300)); addEventListener("hashchange", () => setTimeout(paint, 300));
+  new MutationObserver(() => { if (document.querySelector("#rb") && !document.getElementById("hdrev")) { last = ""; paint(); } }).observe(document.documentElement, { childList: true, subtree: true });
+  return { paint };
+})();
+
+/* قسم الحديث — تحسينات مستفادة من تطبيقات الحديث المتخصصة (طلب المدير):
+   نطاق البحث (الصحيحان، السنن الأربع، الكتب الستة، المسانيد والمصنفات، الكل) وسجل البحث بتاريخه؛ وفي صفحة الحديث: سطر البيانات (الرقم والكتاب والباب)،
+   وتلوين الإسناد (الرواة بالأزرق والصحابي بالأحمر)، وتبويب ما تحته (تخريج • حكم • رواة • شرح • ملاحظات)، وزر عائم لأدوات الحديث
+   (البحث في الكتاب، الفهرس، الانتقال إلى رقم، نسخ التخريج العلمي، المشاركة، الحفظ في مجلد)، ومجلدات المفضلة على الجهاز. */
+const HDX = (() => {
+  const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+  const SCOPES = [["sahihain", "الصحيحان", ["bukhari", "muslim"]], ["sunan", "السنن الأربع", ["abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["sitta", "الكتب الستة", ["bukhari", "muslim", "abudawud", "tirmidhi", "nasai", "ibnmajah"]], ["masanid", "المسانيد والمصنفات والسنن الأخرى", ["musnadahmad", "darimi", "sunankubra", "shuabiman", "baghawisunna", "ibnkhuzayma", "ibnhibban", "mustadrak", "daraqutni", "nasaikubra", "ibnabishayba", "abdrazzaq", "tayalisi", "humaydi", "abuyala", "tabaranikabir", "tabaraniawsat", "tabaranisaghir", "ibnjarud", "saidmansur", "tahawimaani", "abuawana", "bazzar", "musnadshafii"]], ["all", "كل كتب السنة", null]];
+  const scope = () => { const k = LS("hd_scope") || "all", x = SCOPES.find(s => s[0] === k); return x ? x[2] : null; };
+  const remember = q => { if (!q) return; const L = (LS("hd_recent") || []).filter(x => x.q !== q); L.unshift({ q, at: Date.now() }); LS("hd_recent", L.slice(0, 20)); };
+  function searchExtras() { const f = document.getElementById("hdq"); if (!f || f.dataset.hdx) return; f.dataset.hdx = 1; const k = LS("hd_scope") || "all", R = LS("hd_recent") || [];
+    f.insertAdjacentHTML("afterend", `<div class="hdscope"><span class="mut">نطاق البحث في كتب السنة:</span>${SCOPES.map(([v, n]) => `<label class="chip${v === k ? " on" : ""}"><input type="radio" name="hdsc" value="${v}"${v === k ? " checked" : ""} hidden> ${n}</label>`).join("")}</div>
+      ${R.length ? `<details class="hdrecent"><summary>🕘 آخر ما بحثت عنه</summary><div>${R.slice(0, 8).map(x => `<a href="#/hadith?q=${encodeURIComponent(x.q)}"><b>${esc(x.q)}</b><small>${new Date(x.at).toLocaleString("ar-EG", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</small></a>`).join("")}<button class="btn s" data-act="hdxclr">مسح السجل</button></div></details>` : ""}`);
+    document.querySelectorAll("[name=hdsc]").forEach(r => r.onchange = () => { LS("hd_scope", r.value); document.querySelectorAll(".hdscope .chip").forEach(c => c.classList.toggle("on", c.contains(r))); }); }
+  // تلوين الإسناد: ما بعد صيغ التحديث إلى الفاصلة اسم راوٍ، والصحابي باسمه
+  const RAWI = /((?:حدثنا|حدثني|أخبرنا|أخبرني|أنبأنا|سمعت|عن)\s+)((?:(?!حدثنا|أخبرنا|حدثني|عن\s|قال)[^\s،,:«»"؛.]+\s?){1,5}?)(?=\s*[،,:]|\s+(?:قال|عن|أن|أنه|حدثنا|حدثني|أخبرنا|يقول|يحدث|رضي))/g, BADN = /(^|\s)(فإنه|كان|يحب|ثم|إذا|لا|ما|من|في|على|إلى|الذي|قد|لم|هو|هي|إن|أن)(\s|$)/;
+  function colorize(art) { const hds = art.querySelector(".hds"), m = art.querySelector(".hdm"); if (hds && !hds.dataset.c) { hds.dataset.c = 1; hds.innerHTML = hds.innerHTML.replace(/^(عن\s+)(.+?)(\s+رضي الله عنه.*)?$/, (x, a, b, c) => a + `<span class="hsah">${b}</span>` + (c || "")); }
+    if (m && !m.dataset.c) { m.dataset.c = 1; m.innerHTML = m.innerHTML.replace(RAWI, (x, a, b) => /رسول الله|النبي|صلى الله|^الله/.test(b) || BADN.test(b.trim()) ? x : a + `<span class="hrawi">${b.trim()}</span> `); } }
+  // تبويب ما تحت الحديث
+  function tabify() { const art = document.querySelector("article.hdone"); if (!art || art.dataset.tabs) return; art.dataset.tabs = 1; colorize(art);
+    const secs = { tkh: document.getElementById("hdlk"), hukm: [document.getElementById("hdgr"), document.getElementById("hddr") && document.getElementById("hddr").closest("section")].filter(Boolean) };
+    const names = [...new Set([...(art.querySelectorAll(".hsah,.hrawi"))].map(e => e.textContent.trim()))];
+    const key = "hd_note:" + location.pathname, note = LS(key) || "";
+    const bar = document.createElement("div"); bar.className = "hdtabs"; bar.innerHTML = `<div class="tabs" role="tablist">${[["tkh", "تخريج"], ["hukm", "حكم"], ["ruwat", "رواة"], ["sharh", "شرح"], ["notes", "ملاحظات"]].map(([k, n], i) => `<a role="tab" href="#" data-hdt="${k}" aria-selected="${!i}">${n}</a>`).join("")}</div>
+      <div class="hdpane" data-p="ruwat" hidden>${names.length ? names.map(n => `<a class="chip" href="#/alam?q=${encodeURIComponent(n)}">👤 ${esc(n)}</a>`).join("") + '<p class="mut">اضغط الاسم لترجمته وأقوال أئمة الجرح والتعديل فيه من كتب التراجم بالمكتبة.</p>' : '<p class="mut">لم يُذكر إسناد في هذا النص؛ اقرأه بإسناده في موضعه من الكتاب.</p>'}</div>
+      <div class="hdpane" data-p="sharh" hidden><p class="mut">مواضع شرحه في شروح المكتبة وتلخيصها:</p><div id="hdsh2"></div></div>
+      <div class="hdpane" data-p="notes" hidden><textarea id="hdnote" rows="4" placeholder="ملاحظاتك على هذا الحديث (تُحفظ على جهازك)">${esc(note)}</textarea></div>`;
+    const first = secs.tkh || secs.hukm[0]; if (!first) return; first.before(bar);
+    const pane = (k, els) => els.forEach(e => { if (e) { e.classList.add("hdpane"); e.dataset.p = k; } }); pane("tkh", [secs.tkh]); pane("hukm", secs.hukm);
+    const sh = () => { const lk = document.getElementById("hdlk"); const dst = document.getElementById("hdsh2"); if (lk && dst && !dst.dataset.f) { const h3 = [...lk.querySelectorAll("h3")].find(h => /شرح/.test(h.textContent)); if (h3) { dst.dataset.f = 1; let n = h3.nextElementSibling; const mv = []; while (n && n.tagName !== "H3") { mv.push(n); n = n.nextElementSibling; } mv.forEach(x => dst.appendChild(x)); h3.remove(); } } };
+    const show = k => { sh(); document.querySelectorAll(".hdpane").forEach(e => e.hidden = e.dataset.p !== k); bar.querySelectorAll("[data-hdt]").forEach(a => a.setAttribute("aria-selected", a.dataset.hdt === k)); };
+    bar.addEventListener("click", e => { const a = e.target.closest("[data-hdt]"); if (!a) return; e.preventDefault(); show(a.dataset.hdt); });
+    bar.addEventListener("input", e => { if (e.target.id === "hdnote") LS(key, e.target.value); });
+    setTimeout(() => show("tkh"), 400); fab(art); }
+  // الزر العائم لأدوات الحديث
+  function fab(art) { if (document.getElementById("hdfab")) return; document.body.insertAdjacentHTML("beforeend", '<button id="hdfab" class="hdfab" data-act="hdxmenu" aria-label="أدوات الحديث">▦</button>'); }
+  const curInfo = () => { const art = document.querySelector("article.hdone"); if (!art) return null; const t = (art.querySelector(".hdt") || {}).textContent || "", m = (art.querySelector(".hdm") || {}).textContent || "", sah = (art.querySelector(".hds") || {}).textContent || "", bab = [...document.querySelectorAll("#app > p a, #app > p")].map(x => x.textContent).join(" ").replace(/←/g, "").trim();
+    return { url: location.pathname, t, m, sah, bab, title: m.slice(0, 80) }; };
+  function menu() { const c = curInfo(); if (!c) return; const F = LS("hd_folders") || { "غير مصنف": [] };
+    openSheet("أدوات الحديث", `<div class="hdmenu"><button data-act="hdxdo" data-k="find">🔎 البحث في الكتاب</button><button data-act="hdxdo" data-k="index">📑 فهرس الكتاب</button><button data-act="hdxdo" data-k="jump">#️⃣ التنقل بين أرقام الأحاديث</button><button data-act="hdxdo" data-k="cite">🔗 نسخ التخريج العلمي</button><button data-act="hdxdo" data-k="share">⤴ مشاركة الحديث</button>
+      <h4>احفظ في مجلد</h4>${Object.keys(F).map(n => `<button class="hdfold" data-act="hdxsave" data-f="${esc(n)}">📁 ${esc(n)} <small>${toAr(F[n].length)}</small> ${F[n].some(x => x.url === c.url) ? "✓" : "＋"}</button>`).join("")}<button data-act="hdxnewf">📂 إنشاء مجلد جديد</button></div>`); }
+  async function act(k) { const c = curInfo(); if (!c) return; const m = location.pathname.match(/hadith\/k\/([^/]+)\/([^/]+)/);
+    if (k === "find" || k === "index") { closeSheet(); location.hash = m ? "#/hadith?t=kutub&kb=" + m[1] : "#/hadith"; if (k === "find") setTimeout(() => { const i = document.querySelector("#hkq input,#hdq input"); if (i) i.focus(); }, 900); }
+    else if (k === "jump") { const n = prompt("رقم الحديث:"); if (n && m) { closeSheet(); location.hash = "#/hadith/k/" + m[1] + "/" + String(n).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim(); } }
+    else if (k === "cite") { const txt = `${c.sah ? c.sah + ": " : ""}${c.m.trim()}\n${c.t.trim()}${c.bab ? "\n" + c.bab : ""}\n${location.origin + c.url}`; try { await navigator.clipboard.writeText(txt); toast("نُسخ التخريج العلمي"); } catch (e) { } }
+    else if (k === "share") { const d = { title: "حديث نبوي", text: c.m.trim().slice(0, 600) + "\n" + c.t.trim(), url: location.origin + c.url }; if (navigator.share) navigator.share(d).catch(() => { }); else { navigator.clipboard.writeText(d.text + "\n" + d.url); toast("نُسخ الرابط"); } } }
+  function save(f) { const c = curInfo(); if (!c) return; const F = LS("hd_folders") || { "غير مصنف": [] }; F[f] = F[f] || []; const i = F[f].findIndex(x => x.url === c.url); if (i >= 0) F[f].splice(i, 1); else F[f].unshift({ url: c.url, title: c.title, t: c.t.trim(), at: Date.now() }); LS("hd_folders", F); toast(i >= 0 ? "أُزيل من «" + f + "»" : "حُفظ في «" + f + "»"); menu(); }
+  function favHtml(f) { const F = LS("hd_folders") || {}; const ks = Object.keys(F).filter(k => F[k].length || k !== "غير مصنف");
+    if (!ks.length) return '<p class="note">لا أحاديث محفوظة بعد. افتح أي حديث ثم اضغط زر الأدوات ▦ ← «احفظ في مجلد».</p>';
+    if (f && F[f]) return `<p><a href="#/hadith?t=fav">← المجلدات</a> <b>📁 ${esc(f)}</b> <button class="btn s" data-act="hdxdelf" data-f="${esc(f)}">حذف المجلد</button></p>${F[f].map(x => `<a class="hdc" href="${esc(x.url)}"><b>${esc(x.title)}…</b><span class="mut">${esc(x.t)}</span></a>`).join("") || '<p class="mut">المجلد فارغ.</p>'}`;
+    return `<div class="grid">${ks.map(k => `<a class="card" href="#/hadith?t=fav&f=${encodeURIComponent(k)}"><b>📁 ${esc(k)}</b><span>${toAr(F[k].length)} حديثًا</span></a>`).join("")}</div>`; }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act^=hdx]"); if (!el) return; e.preventDefault(); const a = el.dataset.act;
+    if (a === "hdxmenu") menu(); else if (a === "hdxdo") act(el.dataset.k); else if (a === "hdxsave") save(el.dataset.f);
+    else if (a === "hdxnewf") { const n = (prompt("اسم المجلد الجديد:") || "").trim().slice(0, 40); if (!n) return; const F = LS("hd_folders") || { "غير مصنف": [] }; F[n] = F[n] || []; LS("hd_folders", F); save(n); }
+    else if (a === "hdxdelf") { if (!confirm("حذف المجلد وما فيه؟")) return; const F = LS("hd_folders") || {}; delete F[el.dataset.f]; LS("hd_folders", F); location.hash = "#/hadith?t=fav"; }
+    else if (a === "hdxclr") { LS("hd_recent", []); el.closest("details").remove(); } });
+  new MutationObserver(() => { searchExtras(); if (document.querySelector("article.hdone")) tabify(); else { const f = document.getElementById("hdfab"); if (f) f.remove(); }
+    if (document.querySelector(".hshelf") && !document.getElementById("rqfont")) document.head.insertAdjacentHTML("beforeend", '<link id="rqfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap">'); }).observe(document.documentElement, { childList: true, subtree: true });
+  return { scope, remember, favHtml };
 })();

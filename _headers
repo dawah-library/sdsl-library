@@ -160,6 +160,15 @@
 /team.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/tr.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/video.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/voice.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /words.js
   Cache-Control: public, max-age=60, must-revalidate
 

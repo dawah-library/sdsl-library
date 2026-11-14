@@ -9,7 +9,7 @@ const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/au
 // المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
 const ROLE_AR = w => (w.role === "admin" ? "مشرف" : w.role === "delegate" ? "مفوَّض" : "محرر") + " #" + String(w.id || "").slice(0, 6);
 // صلاحيات التفويض (profiles.perms): العضو المفوَّض يكتب في مسارات خدمته فقط
-const PERM_PATHS = { upload: /^(data\/books\/|data\/articles\/|ocr-inbox\/|pdf\/|data\/catalog\.json$)/, edit: /^(data\/books\/|data\/articles\/|vols\/|data\/catalog\.json$|data\/tashkeel\/)/, kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$|data\/transcribe\/in\/)/ };
+const PERM_PATHS = { translate: /^data\/tr\/(?!_queue)/, translate_admin: /^data\/(tr\/|tr-config\.json$)/, video: /^data\/video\/(_queue|_list)\.json$|^data\/video\/drafts\//, tala: /^data\/(tala[\w-]*\.json|tala\/)/, majalla: /^data\/(majalla\.json|majalla\/)/, ask_cfg: /^data\/ask-config\.json$/, kutub_review: /^data\/(proof\/|review-requests\.json$)/, audio_upload: /^data\/audio\/(_queue|_lexicon)\.json$/, radio: /^data\/radio\.json$/, upload: /^(data\/books\/|data\/articles\/|ocr-inbox\/|pdf\/|data\/catalog\.json$)/, edit: /^(data\/books\/|data\/articles\/|vols\/|data\/catalog\.json$|data\/tashkeel\/)/, kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$|data\/transcribe\/in\/)/ };
 const delegateOk = (who, p) => who.role !== "delegate" || who.perms.some(k => PERM_PATHS[k] && PERM_PATHS[k].test(String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "")));
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
@@ -21,11 +21,27 @@ async function staffOf(req) {
   const p = await fetch(url + "/rest/v1/profiles?select=role,perms&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } });
   const rows = p.ok ? await p.json() : [];
   const role = rows[0] && rows[0].role === "partner" ? "admin" : rows[0] && rows[0].role;
-  if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role };
+  if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role, partner: rows[0].role === "partner" };
   const perms = ((rows[0] && rows[0].perms) || []).filter(k => PERM_PATHS[k]);
   return perms.length ? { id: user.id, email: user.email, role: "delegate", perms } : null;
 }
 
+
+// شريك المدير: كل صلاحيات الإدارة، عدا حذف الملفات، وحذف مصادر الموقع (data/sources.json) أو المواقع والخدمات التشغيلية المتصلة به،
+// وتعطيل الموقع أو مهامه الآلية كلها (مفاتيح all_jobs وsite)، وطلبات حذف المدير الأصلي تُمنع في قاعدة البيانات (guard_roles).
+const PROTECT = /^(data\/sources\.json|data\/switches\.json|data\/ask-config\.json|data\/offline\.json|wrangler\.toml|vercel\.json)$/;
+async function partnerGuard(who, p, text) {
+  if (!who.partner) return null; p = String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "");
+  if (!PROTECT.test(p) || typeof text !== "string") return null;
+  let nw; try { nw = JSON.parse(text); } catch (e) { return null; }
+  let old = null; try { const r = await fetch("https://raw.githubusercontent.com/" + REPO + "/main/" + p); if (r.ok) old = await r.json(); } catch (e) { }
+  if (!old) return null;
+  if (p === "data/sources.json") { const ids = x => new Set(((x && x.sources) || []).map(y => y.id || y.url)); const a = ids(old), b = ids(nw); for (const k of a) if (!b.has(k)) return "شريك المدير لا يحذف مصادر الموقع؛ يمكنه إيقاف المصدر أو تعديله."; }
+  if (p === "data/switches.json") { const o = (old.s || {}), n = (nw.s || {}); for (const k of ["all_jobs", "site", "ask", "track"]) if (n[k] === false && o[k] !== false) return "تعطيل الموقع أو مهامه الأساسية للمدير الأصلي وحده."; }
+  if (p === "data/ask-config.json" || p === "data/offline.json") { const ks = x => Object.keys(x || {}); if (ks(old).some(k => !(k in nw))) return "لا يحذف الشريك إعدادات الخدمات التشغيلية."; }
+  return null;
+}
+const b64t = s => { try { return Buffer.from(String(s || ""), "base64").toString("utf8"); } catch (e) { return ""; } };
 const GHH = () => ({ Authorization: "Bearer " + process.env.GITHUB_WRITE_TOKEN, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "sdsl-library" });
 async function gh(path, method, body) {
   const r = await fetch("https://api.github.com/repos/" + REPO + path, { method: method || "GET", headers: GHH(), body: body ? JSON.stringify(body) : undefined });
@@ -43,6 +59,7 @@ async function batch(req, res, who) {
     if (p === "data/dev-requests.json" && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!ALLOWED.test("/contents/" + p) || !delegateOk(who, p) || /(^|\/)\.\.(\/|$)/.test(p) || (typeof f.text !== "string" && typeof f.b64 !== "string"))
       return res.status(400).json({ message: "مسار غير مسموح: " + p });
+    const pg = await partnerGuard(who, p, typeof f.text === "string" ? f.text : b64t(f.b64)); if (pg) return res.status(403).json({ message: pg });
   }
   const branch = String(b.branch || "main").replace(/[^\w.-]/g, "");
   const message = String(b.message || "حفظ دفعة من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
@@ -81,10 +98,11 @@ module.exports = async (req, res) => {
     // طلبات المساعد التقني (الوكيل البرمجي) يكتبها المدير وشركاؤه وحدهم
     if (req.method !== "GET" && /^\/contents\/data\/dev-requests\.json/.test(path) && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!["GET", "PUT", "DELETE"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
-    if (req.method === "DELETE" && who.role !== "admin") return res.status(403).json({ message: "الحذف النهائي للمدير وحده." });
+    if (req.method === "DELETE" && (who.role !== "admin" || who.partner)) return res.status(403).json({ message: "الحذف النهائي للمدير الأصلي وحده." });
     let body;
     if (req.method === "PUT" || req.method === "DELETE") {
       const b = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+      if (req.method === "PUT") { const pg = await partnerGuard(who, path, b64t(b.content)); if (pg) return res.status(403).json({ message: pg }); }
       b.message = String(b.message || "تعديل من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
       body = JSON.stringify(b);
     }

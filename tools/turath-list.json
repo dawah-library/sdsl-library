@@ -1811,6 +1811,196 @@
     "madh:hanafi"
    ],
    "batch": "hanafi"
+  },
+  {
+   "id": "ibnkhuzayma",
+   "died": 311,
+   "author": "IbnKhuzayma",
+   "book": "Sahih",
+   "title": "صحيح ابن خزيمة",
+   "authorName": "ابن خزيمة",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "ibnhibban",
+   "died": 739,
+   "author": "IbnBalban|Balban|CalaDinFarisi",
+   "book": "Ihsan|SahihIbnHibban",
+   "title": "صحيح ابن حبان (الإحسان في تقريب صحيح ابن حبان)",
+   "authorName": "ابن حبان البستي (ترتيب ابن بلبان)",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "mustadrak",
+   "died": 405,
+   "author": "HakimNaysaburi|HakimNisaburi|Hakim",
+   "book": "Mustadrak",
+   "title": "المستدرك على الصحيحين",
+   "authorName": "الحاكم النيسابوري",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "daraqutni",
+   "died": 385,
+   "author": "Daraqutni",
+   "book": "Sunan",
+   "title": "سنن الدارقطني",
+   "authorName": "الدارقطني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "nasaikubra",
+   "died": 303,
+   "author": "Nasai",
+   "book": "SunanKubra|Kubra",
+   "title": "السنن الكبرى للنسائي",
+   "authorName": "النسائي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "ibnabishayba",
+   "died": 235,
+   "author": "IbnAbiShayba",
+   "book": "Musannaf",
+   "title": "مصنف ابن أبي شيبة",
+   "authorName": "ابن أبي شيبة",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "abdrazzaq",
+   "died": 211,
+   "author": "CabdRazzaq|AbdRazzaq|Sancani",
+   "book": "Musannaf",
+   "title": "مصنف عبد الرزاق",
+   "authorName": "عبد الرزاق الصنعاني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "tayalisi",
+   "died": 204,
+   "author": "Tayalisi",
+   "book": "Musnad",
+   "title": "مسند أبي داود الطيالسي",
+   "authorName": "أبو داود الطيالسي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "musnadshafii",
+   "died": 204,
+   "author": "Shafici",
+   "book": "Musnad",
+   "title": "مسند الشافعي",
+   "authorName": "الإمام الشافعي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "humaydi",
+   "died": 219,
+   "author": "Humaydi",
+   "book": "Musnad",
+   "title": "مسند الحميدي",
+   "authorName": "الحميدي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "saidmansur",
+   "died": 227,
+   "author": "SacidIbnMansur|IbnMansur",
+   "book": "Sunan",
+   "title": "سنن سعيد بن منصور",
+   "authorName": "سعيد بن منصور",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "bazzar",
+   "died": 292,
+   "author": "Bazzar",
+   "book": "Musnad|Bahr",
+   "title": "مسند البزار (البحر الزخار)",
+   "authorName": "البزار",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "abuyala",
+   "died": 307,
+   "author": "AbuYacla|Mawsili",
+   "book": "Musnad",
+   "title": "مسند أبي يعلى الموصلي",
+   "authorName": "أبو يعلى الموصلي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "ibnjarud",
+   "died": 307,
+   "author": "IbnJarud",
+   "book": "Muntaqa",
+   "title": "المنتقى من السنن المسندة",
+   "authorName": "ابن الجارود",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "abuawana",
+   "died": 316,
+   "author": "AbuCawana",
+   "book": "Mustakhraj|Musnad",
+   "title": "مستخرج أبي عوانة",
+   "authorName": "أبو عوانة الإسفراييني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "tahawimaani",
+   "died": 321,
+   "author": "Tahawi",
+   "book": "SharhMacani|MacaniAthar",
+   "title": "شرح معاني الآثار",
+   "authorName": "الطحاوي",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "tabaranikabir",
+   "died": 360,
+   "author": "Tabarani",
+   "book": "MucjamKabir|Kabir",
+   "title": "المعجم الكبير",
+   "authorName": "الطبراني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "tabaraniawsat",
+   "died": 360,
+   "author": "Tabarani",
+   "book": "MucjamAwsat|Awsat",
+   "title": "المعجم الأوسط",
+   "authorName": "الطبراني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "tabaranisaghir",
+   "died": 360,
+   "author": "Tabarani",
+   "book": "MucjamSaghir|Saghir",
+   "title": "المعجم الصغير",
+   "authorName": "الطبراني",
+   "topic": "t3",
+   "batch": "hadith-2026-11-13"
   }
  ]
 }

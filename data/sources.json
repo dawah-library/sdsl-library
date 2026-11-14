@@ -129,12 +129,28 @@
      "119700",
      "119699",
      "119698",
-     "119697"
+     "119697",
+     "119771",
+     "119770",
+     "119769",
+     "119768",
+     "119767",
+     "119759",
+     "119736",
+     "119735",
+     "119734",
+     "119733",
+     "119732",
+     "119606",
+     "92571",
+     "80997",
+     "76351",
+     "61843"
     ],
-    "lastRun": "2026-11-07T08:08:12.213Z",
+    "lastRun": "2026-11-13T22:13:37.137Z",
     "last": {
-     "added": 0,
-     "skipped": 0,
+     "added": 5,
+     "skipped": 11,
      "errs": 0
     },
     "mode": "html"
@@ -154,7 +170,7 @@
    "note": "يرفض الطلبات الآلية (403) حتى من خوادم GitHub (استكشاف ٣١ أكتوبر)؛ الحل: إذن من الجريدة بإدراج خوادمنا، أو خلاصة RSS، أو إرسال المقالات يدويًّا",
    "state": {
     "seen": [],
-    "lastRun": "2026-11-07T08:08:14.857Z",
+    "lastRun": "2026-11-13T22:13:39.735Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -223,11 +239,12 @@
      "1297",
      "1274",
      "1272",
-     "974"
+     "974",
+     "1727"
     ],
-    "lastRun": "2026-11-07T08:08:19.375Z",
+    "lastRun": "2026-11-13T22:13:45.778Z",
     "last": {
-     "added": 0,
+     "added": 1,
      "skipped": 0,
      "errs": 0
     }
@@ -288,7 +305,7 @@
      "wp9996",
      "wp10932"
     ],
-    "lastRun": "2026-11-07T08:08:21.107Z",
+    "lastRun": "2026-11-13T22:13:47.557Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -395,12 +412,29 @@
      "6e24c65fb5",
      "eea02e518a",
      "041b6f43c4",
-     "6bee9b807d"
+     "6bee9b807d",
+     "6c418e64ae",
+     "ab50377f05",
+     "1330",
+     "a33802a837",
+     "760b861660",
+     "9e8fcc20b9",
+     "0666f43694",
+     "98fa91b3e5",
+     "d58de38ccf",
+     "9f186b58a1",
+     "c146744144",
+     "04caf06565",
+     "b73d5e9f48",
+     "33f002582f",
+     "9c8aa66726",
+     "3633427544",
+     "4fe21a05b0"
     ],
-    "lastRun": "2026-11-07T08:08:30.011Z",
+    "lastRun": "2026-11-13T22:14:44.212Z",
     "last": {
-     "added": 0,
-     "skipped": 0,
+     "added": 11,
+     "skipped": 6,
      "errs": 0
     }
    },
@@ -565,12 +599,25 @@
      "119699",
      "119698",
      "119697",
-     "115784"
+     "115784",
+     "119771",
+     "119770",
+     "119769",
+     "119768",
+     "119767",
+     "119747",
+     "119737",
+     "119606",
+     "92571",
+     "80997",
+     "76351",
+     "61843",
+     "115805"
     ],
-    "lastRun": "2026-11-07T08:09:48.311Z",
+    "lastRun": "2026-11-13T22:17:10.937Z",
     "last": {
      "added": 0,
-     "skipped": 0,
+     "skipped": 13,
      "errs": 0
     }
    }
@@ -623,7 +670,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.311Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -651,7 +698,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -680,7 +727,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -738,7 +785,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1053,7 +1100,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1079,7 +1126,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1161,7 +1208,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1187,7 +1234,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1216,7 +1263,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1242,7 +1289,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1270,7 +1317,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1299,7 +1346,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1326,7 +1373,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1353,7 +1400,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1409,7 +1456,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1493,7 +1540,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1519,7 +1566,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1547,7 +1594,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1575,7 +1622,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1602,7 +1649,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1628,7 +1675,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1657,7 +1704,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.312Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1685,7 +1732,250 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-07T08:09:48.313Z",
+    "lastRun": "2026-11-13T22:17:10.938Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
+  },
+  {
+   "id": "islamweb",
+   "name": "إسلام ويب — المقالات",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.islamweb.net",
+   "lists": [
+    "https://www.islamweb.net/ar/articles/",
+    "https://www.islamweb.net/ar/articles/174/%D8%A7%D9%84%D8%B9%D9%82%D9%8A%D8%AF%D8%A9-%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/172/%D8%A7%D9%84%D8%AD%D8%AF%D9%8A%D8%AB-%D8%A7%D9%84%D8%B4%D8%B1%D9%8A%D9%81",
+    "https://www.islamweb.net/ar/articles/46/%D8%A3%D8%AE%D9%84%D8%A7%D9%82-%D9%88%D8%AA%D8%B2%D9%83%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/138/%D8%A7%D9%84%D8%B3%D9%8A%D8%B1%D8%A9-%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9",
+    "https://www.islamweb.net/ar/articles/69/%D8%A7%D9%84%D8%A3%D8%B3%D8%B1%D8%A9",
+    "https://www.islamweb.net/ar/articles/34/%D8%AF%D8%B9%D9%88%D8%A9-%D9%88%D8%A5%D8%B9%D9%84%D8%A7%D9%85"
+   ],
+   "linkRx": "(?:https://www\\.islamweb\\.net)?/ar/article/\\d{3,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "إسلام ويب|islamweb",
+   "skipRx": "\\((?:مرئي|صوتي|فيديو)\\)",
+   "minChars": 800,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: مقالات إسلام ويب الشرعية (العقيدة، الحديث، الأخلاق والتزكية، السيرة، الأسرة، الدعوة) — حُددت الأقسام بالاستكشاف",
+   "state": {
+    "mode": "html",
+    "seen": [
+     "249029",
+     "248645",
+     "248473",
+     "248482",
+     "247870",
+     "247972",
+     "248551",
+     "248479",
+     "248548",
+     "248488",
+     "238153",
+     "248293",
+     "247699",
+     "243301",
+     "248053",
+     "248176",
+     "247942",
+     "247999",
+     "243361",
+     "247909",
+     "247879",
+     "236200",
+     "224323",
+     "246787",
+     "248533",
+     "226930",
+     "226933",
+     "13341",
+     "244255",
+     "248038"
+    ],
+    "lastRun": "2026-11-13T22:18:57.338Z",
+    "last": {
+     "added": 30,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
+  },
+  {
+   "id": "alukah-sharia",
+   "name": "شبكة الألوكة — آفاق الشريعة",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.alukah.net",
+   "lists": [
+    "https://www.alukah.net/sharia/1001/",
+    "https://www.alukah.net/sharia/1002/",
+    "https://www.alukah.net/sharia/1044/",
+    "https://www.alukah.net/sharia/1046/",
+    "https://www.alukah.net/sharia/1048/",
+    "https://www.alukah.net/sharia/1047/"
+   ],
+   "linkRx": "(?:https://www\\.alukah\\.net)?/sharia/0/\\d{4,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "شبكة الألوكة|الألوكة",
+   "skipRx": "\\((?:PDF|WORD|كتاب صوتي|مرئي|صوتي)\\)|^ملخص بحث",
+   "minChars": 800,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: المقالات والدراسات الشرعية (العقيدة، الحديث، الفقه وأصوله، السيرة)",
+   "state": {
+    "seen": [],
+    "lastRun": "2026-11-13T22:19:13.191Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
+  },
+  {
+   "id": "alukah-adab",
+   "name": "شبكة الألوكة — حضارة الكلمة (الأدب واللغة)",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.alukah.net",
+   "lists": [
+    "https://www.alukah.net/literature_language/1175/",
+    "https://www.alukah.net/literature_language/1176/",
+    "https://www.alukah.net/literature_language/1184/",
+    "https://www.alukah.net/literature_language/1187/",
+    "https://www.alukah.net/literature_language/1180/"
+   ],
+   "linkRx": "(?:https://www\\.alukah\\.net)?/literature_language/0/\\d{4,}/[^\"'\\s<>#?]*",
+   "siteSuffix": "شبكة الألوكة|الألوكة",
+   "skipRx": "\\((?:PDF|WORD|كتاب صوتي|مرئي|صوتي)\\)",
+   "minChars": 600,
+   "perRun": 30,
+   "delayMs": 2500,
+   "note": "طلب المدير ١٣ نوفمبر: المقالات الأدبية واللغوية (اللغة والقلم، أدبنا، الدراسات النقدية، من روائع الماضي، فن الكتابة)",
+   "state": {
+    "seen": [],
+    "lastRun": "2026-11-13T22:19:26.272Z",
+    "last": {
+     "added": 0,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
+  },
+  {
+   "id": "mdarek",
+   "name": "مجلة مدارك",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://www.mdarek.net",
+   "lists": [
+    "https://www.mdarek.net/sections/articles",
+    "https://www.mdarek.net/sections/refutations",
+    "https://www.mdarek.net/sections/history",
+    "https://www.mdarek.net/sections/profiles",
+    "https://www.mdarek.net/sections/library",
+    "https://www.mdarek.net/sections/opening",
+    "https://www.mdarek.net/sections/glossary",
+    "https://www.mdarek.net/"
+   ],
+   "linkRx": "(?:https://www\\.mdarek\\.net)?/articles/\\d+",
+   "siteSuffix": "مدارك|مجلة مدارك",
+   "minChars": 700,
+   "perRun": 40,
+   "delayMs": 2000,
+   "note": "طلب المدير dmwb1xru8: مجلة علمية في بيان حقيقة التصوف (مقالات، شبهات، محطات تاريخية، شخصيات، قاموس المصطلحات)",
+   "state": {
+    "mode": "html",
+    "seen": [
+     "250",
+     "251",
+     "252",
+     "253",
+     "254",
+     "255",
+     "256",
+     "257",
+     "258",
+     "259",
+     "260",
+     "261",
+     "262",
+     "232",
+     "233",
+     "234",
+     "235",
+     "236",
+     "237",
+     "238",
+     "239",
+     "240",
+     "184",
+     "185",
+     "188",
+     "189",
+     "190",
+     "191",
+     "192",
+     "193",
+     "194",
+     "158",
+     "159",
+     "160",
+     "161",
+     "162",
+     "163",
+     "164",
+     "165",
+     "166"
+    ],
+    "lastRun": "2026-11-13T22:21:52.235Z",
+    "last": {
+     "added": 40,
+     "skipped": 0,
+     "errs": 0
+    }
+   }
+  },
+  {
+   "id": "rwaq",
+   "name": "مركز رواق للأبحاث والرؤى والدراسات",
+   "col": "ithra",
+   "lic": "",
+   "on": true,
+   "auto": true,
+   "mode": "html",
+   "base": "https://rwaqcenter.net",
+   "key": "url",
+   "lists": [
+    "https://rwaqcenter.net/articles",
+    "https://rwaqcenter.net/category/%D8%A2%D8%B1%D8%A7%D8%A1/",
+    "https://rwaqcenter.net/category/%D9%85%D8%B5%D8%B1%D9%8A%D8%A9/",
+    "https://rwaqcenter.net/category/%D8%A5%D9%82%D9%84%D9%8A%D9%85%D9%8A-%D8%AF%D9%88%D9%84%D9%8A/"
+   ],
+   "linkRx": "(?:https://rwaqcenter\\.net)?/articles/%[^\"'\\s<>#?]{20,}",
+   "siteSuffix": "مركز رواق|رواق",
+   "minChars": 900,
+   "perRun": 30,
+   "delayMs": 2000,
+   "note": "طلب المدير dmwb1xru8: الدراسات والرؤى والتقارير",
+   "state": {
+    "seen": [],
+    "lastRun": "2026-11-13T22:22:00.718Z",
     "last": {
      "added": 0,
      "skipped": 0,

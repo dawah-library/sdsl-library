@@ -1,21 +1,65 @@
-// دالة خادم Vercel: ترجمة صفحة من كتاب بالذكاء الاصطناعي (Gemini) لعرضها داخل صفحة القراءة.
-// الطلب: GET /api/translate?id=<كتاب>&p=<رقم الصفحة>&l=<رمز اللغة>
-// النتيجة تُخزَّن في شبكة Vercel سنة كاملة، فكل صفحة تُترجم إلى كل لغة مرة واحدة فقط للجميع (تكلفة شبه معدومة).
+// دالة الترجمة: ترجمة صفحات الكتب والمقالات والفتاوى بالذكاء الاصطناعي لعرضها داخل صفحة القراءة (نظام الترجمة #/translate).
+// الطلب: GET /api/translate?id=<كتاب>&p=<رقم الصفحة>&l=<رمز اللغة>&f=2  ← ترجمة منظَّمة (lib/trcore.js): متن وحواشٍ،
+//   والآيات والأحاديث بنصها العربي الأصلي مع ترجمة معانيها. وPOST ?op=fb: بلاغ عضو عن خطأ في ترجمة (data/tr/_feedback.json).
+// النتيجة تُخزَّن في شبكة التوزيع سنة، والترجمات المعتمدة والمسبقة محفوظة في المستودع data/tr/<اللغة>/<الكتاب>.json.
 const fs = require("../lib/fs"), path = require("path");
+const TRC = require("../lib/trcore");
 const ROOT = process.cwd();
-const LANGS = { en: "English", fr: "French", es: "Spanish", tr: "Turkish", de: "German", "zh-CN": "Simplified Chinese", ru: "Russian", ur: "Urdu", id: "Indonesian", ms: "Malay", bn: "Bengali", fa: "Persian", sw: "Swahili", ha: "Hausa" };
+const LANGS0 = { en: "English", fr: "French", es: "Spanish", tr: "Turkish", de: "German", "zh-CN": "Simplified Chinese", ru: "Russian", ur: "Urdu", hi: "Hindi", id: "Indonesian", ms: "Malay", bn: "Bengali", fa: "Persian", sw: "Swahili", ha: "Hausa" };
 const MODELS = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+async function trCfg() {
+  const c = await require("../lib/switch").json("data/tr-config.json", null);
+  if (c && Array.isArray(c.langs) && c.langs.length) return c;
+  return { langs: Object.entries(LANGS0).map(([k, llm]) => ({ k, llm, n: llm, on: true })), glossary: {} };
+}
+let AIDX = null;
 let CAT = null;
 
 async function pageText(id, p, origin) {
   if (!CAT) CAT = JSON.parse(fs.readFileSync(path.join(ROOT, "data/catalog.json"), "utf8"));
-  const b = CAT.books.find(x => x.id === id);
-  if (!b) return null;
-  let sh = null;
-  if (!b.vf) { try { sh = JSON.parse(fs.readFileSync(path.join(ROOT, "data/books", id + ".json"), "utf8")); } catch (e) { } }
-  if (!sh) { try { const r = await fetch((b.vf ? "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/vols/" : origin + "/data/books/") + encodeURIComponent(id) + ".json"); if (r.ok) sh = await r.json(); } catch (e) { } }
+  let b = CAT.books.find(x => x.id === id), sh = null;
+  // المقالات والفتاوى والبيانات: نصها في مجموعات data/articles/<f>.json بحسب فهرسها
+  if (!b || b.type === "article") {
+    try { if (!AIDX) AIDX = (await (await fetch(origin + "/data/articles/index.json")).json()).items || []; } catch (e) { AIDX = null; }
+    const x = (AIDX || []).find(y => y.id === id);
+    if (!x) return null;
+    b = b || { id, title: x.t, authorId: x.a, type: "article", size: 0 }; b.fa = b.fa || x.fa; b.c = b.c || x.c;
+    try { const g = await (await fetch(origin + "/data/articles/" + encodeURIComponent(x.f) + ".json")).json(); sh = g[id]; } catch (e) { }
+  } else {
+    if (!b.vf) { try { sh = JSON.parse(fs.readFileSync(path.join(ROOT, "data/books", id + ".json"), "utf8")); } catch (e) { } }
+    if (!sh) { try { const r = await fetch((b.vf ? "https://raw.githubusercontent.com/" + (process.env.GITHUB_REPO || "dawah-library/sdsl-library") + "/main/vols/" : origin + "/data/books/") + encodeURIComponent(id) + ".json"); if (r.ok) sh = await r.json(); } catch (e) { } }
+  }
   const t = sh && sh.pages && sh.pages[p - 1];
   return t == null ? null : { b, text: String(t) };
+}
+const kindOf = b => b.sharh ? "sharh" : b.type !== "article" ? "book" : (b.fa || /^(أسئلة|الاستفتاء|من فقه الواقع)/.test(b.c || "")) ? "fatwa" : /بيان/.test(b.c || b.title || "") ? "statement" : "article";
+const authorName = id => { try { return ((CAT.authors || []).find(a => a.id === id) || {}).name || ""; } catch (e) { return ""; } };
+
+// بلاغ عضو عن خطأ في الترجمة: يُلحق بـ data/tr/_feedback.json (يراجعه فريق الترجمة في #/translate)
+async function feedback(req, res) {
+  res.setHeader("content-type", "application/json; charset=utf-8"); res.setHeader("cache-control", "no-store");
+  if (req.method !== "POST") return res.status(405).json({ message: "POST فقط" });
+  const b = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
+  const id = String(b.id || "").slice(0, 80), l = String(b.l || "").slice(0, 8), p = parseInt(b.p, 10) || 0, msg = String(b.msg || "").trim().slice(0, 1500), sug = String(b.sug || "").trim().slice(0, 3000);
+  if (!/^[\w.-]+$/.test(id) || !/^[a-zA-Z-]{2,8}$/.test(l) || !(p > 0) || msg.length < 3) return res.status(400).json({ message: "اكتب وصف الخطأ" });
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY, tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  let uid = "";
+  try { if (url && key && tok) { const r = await fetch(url + "/auth/v1/user", { headers: { apikey: key, Authorization: "Bearer " + tok } }); if (r.ok) uid = ((await r.json()) || {}).id || ""; } } catch (e) { }
+  if (!uid) return res.status(401).json({ message: "سجّل الدخول لإرسال البلاغ" });
+  const { limited } = require("../lib/rate");
+  if (limited(req, "trfb", 10, 60 * 60e3)) return res.status(429).json({ message: "بلاغات كثيرة، حاول لاحقًا" });
+  const tokGh = process.env.GITHUB_WRITE_TOKEN, REPO = process.env.GITHUB_REPO || "dawah-library/sdsl-library";
+  if (!tokGh) return res.status(503).json({ message: "الخدمة غير متاحة الآن" });
+  const H = { Authorization: "Bearer " + tokGh, Accept: "application/vnd.github+json", "Content-Type": "application/json", "User-Agent": "sdsl-library" }, P = "https://api.github.com/repos/" + REPO + "/contents/data/tr/_feedback.json";
+  for (let t = 0; t < 3; t++) {
+    let sha = null, o = { v: 1, items: [] };
+    const g = await fetch(P, { headers: H }); if (g.ok) { const j = await g.json(); sha = j.sha; try { o = JSON.parse(Buffer.from(j.content, "base64").toString("utf8")); } catch (e) { } }
+    o.items = (o.items || []).concat([{ id, l, p, msg, sug, u: uid.slice(0, 8), at: new Date().toISOString().slice(0, 16), st: "new" }]).slice(-500);
+    const r = await fetch(P, { method: "PUT", headers: H, body: JSON.stringify({ message: "بلاغ ترجمة: " + id + " ص " + p + " (" + l + ")", content: Buffer.from(JSON.stringify(o, null, 1)).toString("base64"), sha: sha || undefined }) });
+    if (r.ok) return res.status(200).json({ ok: true });
+    if (r.status !== 409 && r.status !== 422) break;
+  }
+  return res.status(502).json({ message: "تعذّر حفظ البلاغ الآن" });
 }
 
 async function gemini(prompt) {
@@ -52,6 +96,34 @@ async function dorar(req, res, q) {
     res.setHeader("Cache-Control", "public, s-maxage=604800, stale-while-revalidate=86400");
     return res.status(200).json({ src: "الموسوعة الحديثية — الدرر السنية (dorar.net)", items });
   } catch (e) { return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
+}
+
+// شرح الحديث من «شروح الأحاديث» في الموسوعة الحديثية بالدرر السنية: ?dsharh=<متن الحديث أو طرفه>
+// يُبحث بالمتن في الموسوعة، ويؤخذ أول حديث له شرح (معرّف الشرح xplain أو رابط /hadith/sharh/<n>)، ثم يُستخرج نص الشرح من صفحته. يُخزَّن شهرًا.
+async function dsharh(req, res, q) {
+  res.setHeader("content-type", "application/json; charset=utf-8");
+  const clean = s => String(s || "").replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "").replace(/[^ء-ي\s]/g, " ").replace(/\s+/g, " ").trim();
+  const words = clean(q).split(" ").filter(w => w.length > 1); if (words.length < 3) return res.status(400).json({ message: "اكتب جزءًا من متن الحديث" });
+  const UA = { "User-Agent": "Mozilla/5.0 (compatible; dawahlibrary.org)", "accept-language": "ar" };
+  const plain = x => String(x).replace(/<br\s*\/?>|<\/p>|<\/div>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).split("\n").map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
+  const get = async u => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 15000); try { const r = await fetch(u, { headers: UA, signal: ac.signal }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.text(); } finally { clearTimeout(t); } };
+  try {
+    let id = "";
+    for (const n of [10, 6]) { const term = words.slice(0, n).join(" ");
+      for (const u of ["https://dorar.net/hadith/search?q=" + encodeURIComponent(term) + "&st=a", "https://dorar.net/dorar_api.json?skey=" + encodeURIComponent(term)]) {
+        try { let h = await get(u); if (/^\s*\{/.test(h)) { try { h = String((JSON.parse(h).ahadith || {}).result || ""); } catch (e) { } }
+          const m = h.match(/xplain=["']?(\d+)/) || h.match(/\/hadith\/sharh\/(\d+)/); if (m) { id = m[1]; break; } } catch (e) { } }
+      if (id) break; }
+    if (!id) { res.setHeader("cache-control", "public, s-maxage=604800"); return res.status(200).json({ text: "", url: "" }); }
+    const url = "https://dorar.net/hadith/sharh/" + id, h = await get(url);
+    // نص الشرح: ما بعد عنوان «الشرح» في المقالة، وإلا أكثف كتلة عربية في الصفحة
+    let body = (h.match(/<article[\s\S]*?<\/article>/i) || [h])[0].replace(/<(script|style|nav|footer|aside)[\s\S]*?<\/\1>/gi, " ");
+    let t = plain(body); const i = t.search(/(^|\n)\s*الشرح\s*[:：]?\s*(\n|$)/); if (i >= 0) t = t.slice(i).replace(/^\s*الشرح\s*[:：]?\s*/, "");
+    t = t.split("\n").filter(l => (l.match(/[ء-ي]/g) || []).length > 20 && !/الدرر السنية|جميع الحقوق|شارك|تحميل|طباعة/.test(l)).join("\n").replace(/\n?(في الحديث|وفي الحديث)\s*[:：]/g, "\n$1:");
+    if (t.length < 150) { const blocks = plain(h.replace(/<(script|style|nav|footer|aside|header)[\s\S]*?<\/\1>/gi, " ")).split("\n").filter(l => (l.match(/[ء-ي]/g) || []).length > 60); t = blocks.sort((a, b) => b.length - a.length).slice(0, 6).join("\n"); }
+    res.setHeader("cache-control", "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000");
+    return res.status(200).json({ text: t.slice(0, 9000), url, src: "شروح الأحاديث — الدرر السنية" });
+  } catch (e) { res.setHeader("cache-control", "no-store"); return res.status(502).json({ message: "تعذّر الوصول إلى الدرر السنية الآن" }); }
 }
 
 // الشرح الموجز للحديث على طريقة «الموسوعة الحديثية»: يُلخَّص من نص شرحه المشهور في المكتبة وحده (فتح الباري، المنهاج للنووي، عون المعبود…)
@@ -95,10 +167,13 @@ ${src.replace(/<[^>]+>/g, "").slice(0, 12000)}`;
 module.exports = async (req, res) => {
   if (req.query && req.query.dorar) return dorar(req, res, req.query.dorar);
   if (req.query && req.query.sharh) return sharh(req, res, req.query.sharh, req.query.n);
+  if (req.query && req.query.op === "fb") return feedback(req, res);
+  if (req.query && req.query.dsharh) return dsharh(req, res, req.query.dsharh);
   const u = new URL(req.url, "https://" + (req.headers.host || "dawahlibrary.org"));
   const id = (u.searchParams.get("id") || "").slice(0, 80), p = parseInt(u.searchParams.get("p") || "0", 10), l = u.searchParams.get("l") || "";
   res.setHeader("content-type", "application/json; charset=utf-8");
-  if (!u.searchParams.get("w") && (!id || !(p > 0)) || !LANGS[l]) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
+  const CFG = await trCfg(), LG = (CFG.langs || []).find(x => x.k === l && x.on !== false), LANGS = { [l]: LG && (LG.llm || LG.n) };
+  if (!u.searchParams.get("w") && (!id || !(p > 0)) || !LG) { res.statusCode = 400; return res.end(JSON.stringify({ error: "bad request" })); }
   if (await require("../lib/switch").stopped("translate", res, "الترجمة")) return;
   if (!process.env.GEMINI_API_KEY) { res.statusCode = 503; return res.end(JSON.stringify({ error: "no key" })); }
   const { limited } = require("../lib/rate");
@@ -120,6 +195,15 @@ No other text.`;
   const v = u.searchParams.get("v");  // رقم الإصدار يجب أن يطابق الكتاب (لا يُتلاعب به لتجاوز التخزين واستنزاف الحصة)
   if (pg && v && String(pg.b.size || 0) !== v) { res.statusCode = 400; return res.end(JSON.stringify({ error: "stale" })); }
   if (!pg) { res.statusCode = 404; return res.end(JSON.stringify({ error: "not found" })); }
+  // الترجمة المنظَّمة (f=2): متن وحواشٍ، والآيات والأحاديث بنصها الأصلي، والمسرد، ونوع المادة (كتاب/شرح/فتوى/مقال)
+  if (u.searchParams.get("f") === "2") {
+    try {
+      const out = await TRC.translatePage({ text: pg.text, lang: l, title: pg.b.title, author: authorName(pg.b.authorId), kind: kindOf(pg.b) }, CFG, process.env.GEMINI_API_KEY, process.env.GEMINI_MODEL);
+      out.s = "m"; out.at = new Date().toISOString().slice(0, 10);
+      res.setHeader("cache-control", "public, max-age=86400, s-maxage=31536000, stale-while-revalidate=31536000");
+      return res.end(JSON.stringify(out));
+    } catch (e) { res.statusCode = 502; res.setHeader("cache-control", "no-store"); return res.end(JSON.stringify({ error: "busy" })); }
+  }
   const src = pg.text.replace(/^#+ /gm, "").replace(/[ً-ْ]/g, "").trim();
   if (!src) { res.setHeader("cache-control", "public, s-maxage=31536000"); return res.end(JSON.stringify({ text: "" })); }
   const prompt = `Translate the following page from an Arabic Islamic book into ${LANGS[l]}.

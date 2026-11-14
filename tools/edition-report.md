@@ -1,8 +1,8 @@
 # ربط الكتب بمصورات طبعاتها
 
-## alfiyya
-- alfiyya ← https://files.turath.io/pdf/%D8%A7%D9%84%D9%86%D8%AD%D9%88%20%D9%88%D8%A7%D9%84%D8%B5%D8%B1%D9%81/%D8%A3%D9%84%D9%81%D9%8A%D8%A9%20%D8%A7%D8%A8%D9%86%20%D9%85%D8%A7%D9%84%D9%83%20%D9%81%D9%8A%20%D8%A7%D9%84%D9%86%D8%AD%D9%88%20%D9%88%D8%A7%D9%84%D8%B5%D8%B1%D9%81%20-%20%D8%B7%20%D8%AF%D8%A7%D8%B1%20%D8%A7%D9%84%D8%AA%D8%B9%D8%A7%D9%88%D9%86/21729.pdf (2 م.ب)
-## mukhtar
-- لم يُربط: لا مصوّرة في تراث للكتاب 23193
-## adabdunya
-- لم يُربط: لا مصوّرة في تراث للكتاب 765
+## adabmufrad
+- adabmufrad ← https://files.turath.io/pdf/adamfradamfr/adamfr.pdf (10 م.ب)
+## khulafa
+- khulafa ← https://files.turath.io/pdf/shamela/11997/11997.pdf (36 م.ب)
+## fusul
+- fusul ← https://files.turath.io/pdf/shamela/9241/fsoul.pdf (7 م.ب)

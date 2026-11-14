@@ -12,7 +12,7 @@
     موسومة «tafrigh» وروابط الأصل، ثم يُضاف إلى طابور «النسخة المحررة» (data/tfedit/_queue.json) فتُبنى منه نسخة مرتبة
     بعناوين وفقرات (وبأسلوب كتابي عند الطلب) — على منهج دليل معايير التحرير (#/standards).
 لا يُنشر للأعضاء إلا بعد مراجعة الإدارة (hidden حتى الاعتماد)."""
-import json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
+import shutil, json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); Q = os.path.join(D, "transcribe", "_queue.json")
 from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
 KEYS = _gkeys("bulk")
@@ -31,11 +31,50 @@ def sh(*a, **k): return subprocess.run(list(a), capture_output=True, text=True, 
 INB = os.path.join(D, "transcribe", "in")
 
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from storeurl import direct_url  # noqa: E402
+
+
 def oidc_url(name):
+    d = direct_url(name)
+    if d: return d
     tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library",
                      headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
     site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
-    return json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + name, headers={"Authorization": "Bearer " + tok}), timeout=30).read())["url"]
+    try: return json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + name, headers=dict(UA, Authorization="Bearer " + tok)), timeout=30).read())["url"]
+    except urllib.error.HTTPError as e: raise RuntimeError("الموقع رفض طلب الرابط: %s %s" % (e.code, e.read()[:200]))
+
+
+UA = {"User-Agent": "dawahlibrary-transcribe/1.0"}
+SB_URL = os.environ.get("SUPABASE_URL", "https://nqxkkdexpodjjwfdkxoq.supabase.co").rstrip("/")
+
+
+def _http_err(e):
+    return "%s %s" % (getattr(e, "code", ""), (e.read()[:200].decode("utf-8", "ignore") if hasattr(e, "read") else e))
+
+
+def store_get(name, dest):
+    """تنزيل ملف من صندوق الرفع الخاص: رابط مؤقت من الموقع (OIDC)، وإن تعذّر فمباشرة من Supabase Storage بالمفتاح السري للمهمة.
+    (١٣ نوفمبر: ظل «شرح فقه السنة» عالقًا منذ ١٠ نوفمبر بخطأ 403 لا يُعرف مصدره، فصار الخطأ يُسجَّل بتفصيله وتُجرَّب الطريق الثانية.)"""
+    errs = []
+    try:
+        u = oidc_url(name)
+        with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=900) as r, open(dest, "wb") as o: shutil.copyfileobj(r, o, 1 << 20)
+        return
+    except Exception as e:
+        errs.append("الرابط المؤقت: " + _http_err(e))
+    key = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
+    if key:
+        for auth in (False, True):
+            h = dict(UA, apikey=key)
+            if auth or not key.startswith("sb_"): h["Authorization"] = "Bearer " + key
+            try:
+                with urllib.request.urlopen(urllib.request.Request(SB_URL + "/storage/v1/object/inbox/" + name, headers=h), timeout=900) as r, open(dest, "wb") as o:
+                    shutil.copyfileobj(r, o, 1 << 20)
+                print("  نُزّل مباشرة من Supabase Storage:", name, flush=True); return
+            except Exception as e:
+                errs.append("Supabase مباشرة: " + _http_err(e))
+    raise RuntimeError(" | ".join(errs))
 
 
 def part_files(src):
@@ -47,7 +86,7 @@ def fetch_audio(url, tmp, n):
     out = os.path.join(tmp, "src%d" % n)
     if url.startswith("store:"):  # ملف رفعه المشرف من جهازه إلى صندوق الرفع الخاص
         src = out + os.path.splitext(url)[1]
-        with urllib.request.urlopen(oidc_url(url[6:]), timeout=900) as r, open(src, "wb") as o: o.write(r.read())
+        store_get(url[6:], src)
     elif url.startswith("parts:"):  # ملف كبير أو فيديو رُفع أجزاءً إلى المستودع
         _, base, cnt, ext = url.split(":"); ps = part_files(url)
         if len(ps) != int(cnt): raise RuntimeError("أجزاء ناقصة %d من %s" % (len(ps), cnt))

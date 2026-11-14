@@ -2,7 +2,13 @@ name: كتب السنة في قسم الحديث
 on:
   workflow_dispatch:
   push:
-    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-grades.py"]
+    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-rev.py", "tools/hadith-grades.py"]
+  # الكتب المستوردة حديثًا (صحيح ابن خزيمة وابن حبان والمستدرك والمصنفات والمعاجم…) تدخل القسم آليًا بعد استيرادها
+  workflow_run:
+    workflows: ["استيراد كتب التراث من OpenITI", "استيراد كتب التراث المشكولة من الشاملة"]
+    types: [completed]
+  schedule:
+    - cron: "17 5 * * 1"  # أسبوعيًا احتياطًا
 permissions:
   contents: write
 jobs:
@@ -11,6 +17,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py && python3 tools/hadith-grades.py
+      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py && python3 tools/hadith-rev.py && python3 tools/hadith-grades.py
       - run: |
           bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k data/hadith/topics data/hadith/links data/hadith/grades

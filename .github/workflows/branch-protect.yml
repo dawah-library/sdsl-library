@@ -1,0 +1,32 @@
+name: حماية فرع main
+# يدوي: قاعدة (Ruleset) على main: التعديل بطلب دمج ينجح فيه فحص agent-ci (check)، ومنع الدفع القسري والحذف.
+# يتجاوزها: مديرو المستودع (حفظ الإدارة من الموقع ودمج طلبات الوكلاء) ومهام GitHub Actions (حفظ نتائج المهام الآلية في main).
+# يلزم سر GH_WRITE_TOKEN بصلاحية إدارة المستودع (Administration: write).
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  protect:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: إنشاء القاعدة أو تحديثها
+        env:
+          TOKEN: ${{ secrets.GH_WRITE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          cat > /tmp/r.json <<'JSON'
+          {"name": "حماية main", "target": "branch", "enforcement": "active",
+           "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+           "bypass_actors": [{"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"}, {"actor_id": 15368, "actor_type": "Integration", "bypass_mode": "always"}],
+           "rules": [{"type": "deletion"}, {"type": "non_fast_forward"},
+             {"type": "pull_request", "parameters": {"required_approving_review_count": 0, "dismiss_stale_reviews_on_push": false, "require_code_owner_review": false, "require_last_push_approval": false, "required_review_thread_resolution": false}},
+             {"type": "required_status_checks", "parameters": {"strict_required_status_checks_policy": false, "required_status_checks": [{"context": "check"}]}}]}
+          JSON
+          H=(-H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+          id=$(curl -sS "${H[@]}" "https://api.github.com/repos/$REPO/rulesets" | python3 -c "import json,sys;l=json.load(sys.stdin);print(next((str(x['id']) for x in l if isinstance(l,list) and x.get('name')=='حماية main'),''))" 2>/dev/null || true)
+          if [ -n "$id" ]; then m=PUT; u="https://api.github.com/repos/$REPO/rulesets/$id"; else m=POST; u="https://api.github.com/repos/$REPO/rulesets"; fi
+          code=$(curl -sS -o /tmp/o.json -w "%{http_code}" -X $m "${H[@]}" "$u" --data @/tmp/r.json)
+          head -c 1500 /tmp/o.json; echo; echo "HTTP $code"; [ "$code" -lt 300 ]

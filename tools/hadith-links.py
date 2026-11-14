@@ -13,7 +13,10 @@ SH = {"bukhari": ["fathbari", "fathbarirajab"], "muslim": ["nawawimuslim"], "abu
 DIA = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
 STOPW = set("صلى الله عليه وسلم رسول النبي قال قالت عن في من على أن إن ان ما لا يا ثم أو او".split())
 def words(s):
-    s = DIA.sub("", s or ""); s = re.sub("[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه").replace("ؤ", "و").replace("ئ", "ي")
+    s = DIA.sub("", s or "")
+    # «ﷺ» و«﵁» في نسخ الشاملة المشكولة مقابل «صلى الله عليه وسلم» و«رضي الله عنه» في الشروح: تُحذف الصيغتان معًا لتتطابق المقاطع
+    s = re.sub(r"صلى الله عليه(?: وعلى آله| وآله)?(?: وسلم)?|رضي الله عن(?:ه|ها|هما|هم)|[\uFDFA\uFD40-\uFD4F\uFDFB]", " ", s)
+    s = re.sub("[أإآٱ]", "ا", s).replace("ى", "ي").replace("ة", "ه").replace("ؤ", "و").replace("ئ", "ي")
     return [w for w in re.sub(r"[^ء-ي ]", " ", s).split() if len(w) > 1]
 def sh(ws, k=4): return {hash(" ".join(ws[i:i + k])) for i in range(len(ws) - k + 1) if not all(w in STOPW for w in ws[i:i + k])}
 def matns():
@@ -33,8 +36,11 @@ def vols(bid): return sorted(glob.glob(os.path.join(ROOT, "vols", bid + "-v*.jso
 def main():
     M = matns(); print("متون:", len(M))
     S = {k: sh(words(t)[:60]) for k, t in M.items()}
-    df = collections.Counter(x for v in S.values() for x in v)
-    S = {k: {x for x in v if df[x] <= 40} for k, v in S.items()}  # المقاطع الشائعة لا تميّز
+    # المقاطع الشائعة لا تميّز. وتكرار المقطع في كتب كثيرة هو التخريج نفسه لا الشيوع (بعد إضافة المسند والسنن الكبرى وغيرها،
+    # ١٣ نوفمبر، هبطت مواضع شرح الترمذي من ٢٣٥٤ إلى ٧٠٥ بالمقياس القديم: أكثر من ٤٠ موضعًا في الكل)؛ فالشائع ما تكرر كثيرًا في كتاب واحد.
+    dfb = collections.Counter((x, k[0]) for k, v in S.items() for x in v)
+    common = {x for (x, b), c in dfb.items() if c > int(os.environ.get("HL_BOOK_DF", "12"))}
+    S = {k: {x for x in v if x not in common} for k, v in S.items()}
     res = collections.defaultdict(dict)
     # ١) مواضع الشرح
     for b, sbooks in SH.items():

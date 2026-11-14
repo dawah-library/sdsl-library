@@ -7,7 +7,8 @@ const SIDE = (() => {
     ["الدراسة والأدوات", [["#/search", "البحث المتقدم", "search"], ["#/ask", "اسأل المكتبة", "bot"], ["#/paths", "المسارات العلمية", "route"], ["#/hifz", "حفظ المتون", "brain"], ["#/quizzes", "اختبارات الكتب", "clipboard-check"], ["#/summary", "اختصار الكتب", "list-collapse"], ["#/qa", "سؤال وجواب", "messages-square"], ["#/tashjir", "تشجير الكتب", "network"], ["#/kurrasat", "كراسات المكتبة", "notebook-pen"], ["#/lexicon", "معجم المصطلحات", "book-a"], ["#/compare", "قارن بين كتابين", "columns-2"], ["#/timeline", "الخط الزمني", "history"], ["#/tahrir", "التنسيق وإعادة الصياغة", "pen-line"], ["#/qabasat", "قبسات", "quote"], ["#/arabic", "العربية لغير الناطقين", "languages"]]],
     ["القراءة معًا", [["#/groups", "القراءة الجماعية", "users-round"], ["#/challenges", "تحدي القراءة", "trophy"], ["#/stats", "إحصاءات المكتبة", "chart-bar"], ["#/community", "مجتمع المكتبة", "users"]]],
     ["استمع", [["#/audio", "صوتيات المكتبة", "headphones"], ["#/radio", "راديو المكتبة", "radio"], ["#/talaea", "الطلائع (للأطفال)", "baby"]]],
-    ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"]]],
+    ["مراجعات الكتب", [["#/video", "مراجعات الكتب بالفيديو", "clapperboard"]]],
+    ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"], ["#/offline", "المكتبة دون إنترنت والتطبيق", "download"]]],
     ["عن المكتبة", [["#/about", "من نحن", "info"], ["#/dawah", "التعريف بالدعوة", "flag"], ["#/history", "تاريخ الدعوة", "scroll-text"], ["#/standards", "معايير التحرير", "ruler"], ["#/contact", "تواصل معنا", "mail"]]],
   ];
   const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"]];

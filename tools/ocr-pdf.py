@@ -91,9 +91,12 @@ GHM_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "").strip() if os.environ.get(
 GHM_MODELS = [m for m in os.environ.get("GHM_MODELS", "openai/gpt-4.1,openai/gpt-4.1-mini").split(",") if m.strip()]
 GHM_EXH = set()
 NBOOKS = max(1, int(os.environ.get("OCR_NBOOKS", "1") or 1))
-KW = max(1, len(GKEYS) // min(NBOOKS, max(1, len(GKEYS)))) if GKEYS else 1  # خيوط هذا الجهاز (مفتاح لكل خيط)
+# الأجهزة التي تعمل معًا فعلًا (max-parallel في ocr.yml) لا عدد الكتب كلها: كانت ١٤ مفتاحًا ÷ ١٠ كتب = خيط واحد لكل جهاز،
+# مع أن ٣ أجهزة فقط تعمل معًا، فلا يعمل إلا ٣ مفاتيح من ١٤ (١٣ نوفمبر).
+PAR = max(1, min(NBOOKS, int(os.environ.get("OCR_PARALLEL", "0") or 0) or NBOOKS))
+KW = max(1, len(GKEYS) // min(PAR, max(1, len(GKEYS)))) if GKEYS else 1  # خيوط هذا الجهاز (مفتاح لكل خيط)
 if GKEYS:  # في التحويل المتوازي يبدأ كل جهاز بمفاتيح مختلفة، فلا يتزاحم جهازان على مفتاح واحد
-    _k = int(os.environ.get("GEMINI_KEY_START", "0") or 0) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
+    _k = (int(os.environ.get("GEMINI_KEY_START", "0") or 0) % PAR) * KW % len(GKEYS); GKEYS = GKEYS[_k:] + GKEYS[:_k]
 GKEY = GKEYS[0] if GKEYS else ""
 KI = [0]
 def _load_quality():
@@ -108,6 +111,13 @@ page_bad = _load_quality()
 GMODELS = [m for m in [os.environ.get("GEMINI_OCR_MODEL"), "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3-flash-preview",
                         "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"] if m]  # لكل نموذج حصة يومية مستقلة: تجهيز الكتب المصورة أولًا ثم بقية الخدمات  # الأولوية لتجهيز الكتب المصورة: تأخذ حصص نماذج التشجير والاختبارات قبل النموذج الخفيف
 GDELAY = 60.0 / float(os.environ.get("GEMINI_RPM", "8"))
+# إعادة قراءة صفحة قرأها النموذج الخفيف بنموذج خفيف آخر جهد ضائع: تبقى «خفيفة» ويُستهلك من الحصة بلا تقدم
+# (ظل طابور التدقيق ثابتًا ١٢٩٩٣ صفحة من ٧ إلى ١٣ نوفمبر لهذا). فهذه الصفحات لا تُقرأ إلا بالنماذج الأساسية،
+# وإن ازدحمت كلها بقيت الصفحة كما هي لجولة لاحقة.
+# تنبيه: «mini» وحدها تطابق «gemini» نفسها، فكانت كل صفحة يقرؤها أي نموذج Gemini تُعلَّم خفيفة إلى الأبد (١٣ نوفمبر)
+LITE_RE = re.compile(r"lite|-mini\b|-mini-")
+GMODELS_FULL = [m for m in GMODELS if not LITE_RE.search(m)]
+NOLITE = set()  # أرقام صفحات المصورة التي لا تُقبل قراءتها إلا بنموذج أساسي
 PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع نسخًا حرفيًا دقيقًا.
 - حافظ على الكلمات والتشكيل وعلامات الترقيم وأقواس الآيات ﴿ ﴾ والأحاديث كما هي تمامًا، ولا تصحح ولا تشرح ولا تلخص.
 - تجاهل ترويسة الصفحة المتكررة أعلاها (اسم الكتاب أو الباب) ورقم الصفحة والزخارف.
@@ -119,6 +129,10 @@ PROMPT = """انسخ نص هذه الصفحة من كتاب عربي مطبوع 
 - الأحاديث والآثار: انقلها كما في الصورة بين علامات التنصيص « » إن وُجدت، بتشكيلها، ولا تختصرها.
 - المحاذاة: السطر الذي يتوسط الصفحة في الصورة (البسملة، والعناوين المفردة، والأبيات، والعبارة المفردة في الوسط) ابدأه بـ «@@ »، والسطر المنحاز إلى اليسار (كالتوقيع والتاريخ في آخر المقدمة) ابدأه بـ «<< »، وما سوى ذلك فقرات عادية.
 - الحواشي أسفل الصفحة: إن وُجدت فاكتب بعد المتن سطرًا فيه ______ ثم كل حاشية تبدأ برقمها كما في الكتاب في أول سطرها، وإن امتدت الحاشية فقرات فاكتبها كلها بعد السطر (لا تترك شيئًا من الحواشي أو التعليقات المرقمة في المتن)، وتتمة حاشية من الصفحة السابقة تُكتب في أول الحواشي بلا رقم.
+- طبقات النص: فرّق بين متن الكتاب (كلام المؤلف) والحاشية والتعليق والتحقيق. كل ما تحت خط الفصل أسفل الصفحة، أو كان بخط أصغر من خط المتن، أو كان تعليقًا للمحقق أو الشارح على كلمة مرقمة، فهو حاشية تُكتب بعد سطر ______ ولا يُدمج في المتن ولا يُنسب إلى المؤلف.
+- الحاشية الممتدة: إذا امتدت الحاشية فملأت الصفحة كلها أو أكثرها (بخطها الأصغر) دون متن ظاهر، فاكتب أول الصفحة سطر ______ مباشرة ثم نص الحاشية؛ ولا تجعلها متنًا ولو خلت الصفحة من المتن.
+- في كتب الشروح: إذا كان المتن المشروح مميزًا (بخط أغلظ أو بين قوسين أو في أعلى الصفحة) فانقله بتمييزه كما هو (بين قوسين أو « »)، وكلام الشارح بعده فقرات عادية.
+- العناصر المتكررة أعلى الصفحة أو أسفلها (اسم الكتاب أو المؤلف أو الباب أو الفصل ورقم الصفحة) ترويسة لا تُنسخ، وإن جاءت بصيغة عنوان.
 - الجداول: اكتبها جدولًا بصيغة Markdown (| خانة | خانة |) بالترتيب نفسه من اليمين.
 - الرسوم والمشجّرات والخرائط والصور داخل الصفحة: لا تحاول نسخها، بل اكتب في موضعها سطرًا: [رسم: وصف قصير لمحتواه]، وانسخ ما فيها من كلمات مهمة داخل الوصف.
 - إن كانت الصفحة مكتوبة بخط اليد (مخطوط) فاجعل أول سطر بعد رقم الصفحة: [مخطوط] ثم انسخها بأدق ما تستطيع، وضع كل كلمة غير متيقنة بين ⟪ ⟫.
@@ -201,6 +215,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
         return None
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens}}).encode()
+    if models is None and getattr(TL, "nolite", False) and GMODELS_FULL: models = GMODELS_FULL
     models = list(models or GMODELS); models_all = list(models)
     attempt, spins = 0, 0
     while attempt < 9 and spins < 4 * len(GKEYS) * len(models_all) + 20:  # نفاد حصة نموذج لا يُحسب محاولة: ننتقل إلى غيره
@@ -251,7 +266,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
                 if nk is not None and getattr(TL, "k", None) is not None: TL.k = nk
                 time.sleep(min(60, 10 * (attempt + 1))); continue
             if e.code in (401, 403): fail[0] = 99; return None
-            if e.code in (500, 503) and len(models) > 1 and attempt >= 3: models.pop(0)  # بعد عدة محاولات جرّب النموذج البديل
+            if e.code in (500, 503) and len(models) > 1 and attempt >= 2: models.append(models.pop(0))  # الازدحام: جرّب النموذج البديل (ويبقى الأول في آخر الدور)
             time.sleep(min(90, 8 * 2 ** min(attempt, 3)))  # صبر متزايد على الازدحام المؤقت
         except Exception as e:
             ERRS["خطأ اتصال"] += 1
@@ -312,8 +327,11 @@ def img_part(img):
     return {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(open(img, "rb").read()).decode()}}
 
 
+BOOKHINT = ""  # تعليمات خاصة بالكتاب (ocrHint في الفهرس)، مثل طبقات الشرح والتعليق في كتب الشروح
+
+
 def gemini_page(img, draft=""):
-    t = gemini_call([img_part(img), {"text": PROMPT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
+    t = gemini_call([img_part(img), {"text": PROMPT + BOOKHINT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
     return t.replace("[صفحة بلا نص]", "").strip() if t else None
 
 
@@ -327,7 +345,7 @@ def gemini_batch(imgs, drafts):
         parts += [{"text": "===== صفحة %d =====" % k}, img_part(img)]
         if d.strip(): parts.append({"text": "مسودات الصفحة %d من أدوات تعرّف ضوئي أخرى:\n<<<\n%s\n>>>" % (k, d[:9000])})
     hint = "لكل صفحة صورتها ومسودة أو مسودتان من أدوات تعرّف ضوئي أخرى قد تحتوي أخطاء. اعتمد على الصورة أولًا وقارن بالمسودات (ما اتفقت عليه المسودتان والصورة فهو ثابت)، " if any(d.strip() for d in drafts) else "لكل صفحة صورتها. اقرأ كل صورة بعناية حرفًا حرفًا، "
-    parts.append({"text": PROMPT + "\n\nأمامك %d صفحات متتالية، %sوما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), hint, len(imgs))})
+    parts.append({"text": PROMPT + BOOKHINT + "\n\nأمامك %d صفحات متتالية، %sوما بقي فيه شك فضعه بين ⟪ ⟫. اكتب نص كل صفحة مسبوقًا بسطر مستقل بالصيغة:\n===== صفحة 1 =====\nثم نصها، وهكذا حتى الصفحة %d، دون أي شيء آخر." % (len(imgs), hint, len(imgs))})
     t = gemini_call(parts, max_tokens=min(60000, 4000 * len(imgs)))
     if not t: return None
     pieces = SEP.split(t)
@@ -851,10 +869,11 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
             if words: UNCERTAIN[i] = words[:40]
             elif i in HAND: UNCERTAIN[i] = ["(صفحة مخطوطة)"]
             pages[i] = gemini_clean(UNC.sub(r"\1", g)); reviewed[i] = True
-            if re.search(r"lite|mini", getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
+            if LITE_RE.search(getattr(TL, "model", "") or ""): LITE.add(i)  # النماذج الخفيفة تُعاد مراجعتها لاحقًا بالأقوى
             else: LITE.discard(i)
         if (GKEY or GHM_TOKEN) and scan:
-            groups = [scan[k:k + batch] for k in range(0, len(scan), batch)]
+            sc = [i for i in scan if nums[i] not in NOLITE] + [i for i in scan if nums[i] in NOLITE]  # دفعات متجانسة: الخفيفة وحدها
+            groups = [sc[k:k + batch] for k in range(0, len(sc), batch)]
             GW = KW * int(os.environ.get("GEMINI_PER_KEY", "1"))
             HW = int(os.environ.get("GHM_WORKERS", "2")) if GHM_TOKEN else 0
             workers = GW + HW
@@ -868,6 +887,7 @@ def ocr(pdf, first=1, last=None, only=None, prior=None):
                 if getattr(TL, "provider", "") == "ghm" and len(idx) > 2:  # حد الخطة المجانية لحجم الطلب: صفحتان في الطلب
                     for k2 in range(0, len(idx), 2): review((wi, idx[k2:k2 + 2]))
                     return
+                TL.nolite = bool(NOLITE) and all(nums[i] in NOLITE for i in idx)
                 imgs = [os.path.join(td, f"p{nums[i]}.jpg") for i in idx]
                 res = gemini_batch(imgs, [drafts_of(i) for i in idx]) if len(idx) > 1 else None
                 if res:
@@ -922,6 +942,11 @@ def assemble():
             st = os.path.join(INBOX, base + ".store")
             if os.path.exists(st):  # رُفع الملف إلى صندوق الرفع الخاص: نطلب رابطًا مؤقتًا من الموقع برمز OIDC
                 try:
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from storeurl import direct_url
+                    url = direct_url(base + ".pdf")
+                    if url:
+                        with urllib.request.urlopen(url, timeout=600) as r, open(os.path.join(INBOX, base + ".pdf"), "wb") as out: shutil.copyfileobj(r, out, 1 << 20)
+                        os.remove(st); os.remove(os.path.join(INBOX, f)); print("نُزّل من صندوق الرفع:", base); continue
                     tok = json.loads(urllib.request.urlopen(urllib.request.Request(os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library", headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}), timeout=20).read())["value"]
                     site = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
                     url = json.loads(urllib.request.urlopen(urllib.request.Request(site + "/api/r2put?f=" + base + ".pdf", headers={"Authorization": "Bearer " + tok}), timeout=30).read())["url"]
@@ -981,7 +1006,7 @@ def plan():
                 try: nbad[b["id"]] = sum(1 for t in json.load(open(os.path.join(DATA, "books", b["id"] + ".json"), encoding="utf-8"))["pages"] if page_bad(t))
                 except Exception: nbad[b["id"]] = 0
             # كل كتاب محوَّل يُدقَّق تلقائيًا دون انتظار طلب الإدارة (طلب المدير ٦ نوفمبر)؛ والطلب المباشر يقدّمه في الترتيب
-            need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"])) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
+            need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"]) or b["id"] in req) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             # الإنجاز أولًا: الأقرب إلى الاكتمال يُتم قبل غيره ليتأهل للنشر المدقق والتسجيل الصوتي، بدل توزيع الحصة على كل الكتب فلا يكتمل منها شيء
             rem = lambda b: (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) + nbad.get(b["id"], 0)
             need.sort(key=lambda b: (reql.index(b["id"]) if b["id"] in req else len(reql), 0 if (b.get("col") or "dawah") == "dawah" or b.get("upl") else 1, rem(b)))
@@ -1041,17 +1066,22 @@ def rereview(bid):
     uncp = [int(k) for k in sorted(unc0, key=lambda k: -len(unc0[k])) if int(k) not in unrev]
     bad = [i for i in range(len(sh["pages"])) if page_bad(sh["pages"][i])]  # الصفحات المشوهة أولًا (كاشف الجودة) ولو لم تكن معلَّمة
     unrev = sorted(set(unrev) | set(bad))
-    order = bad + [i for i in unrev if i not in bad] + uncp + [i for i in lite if i not in unrev and i not in uncp]
+    focus = [i for i in (sh.get("focus") or []) if 0 <= i < len(sh["pages"])]  # صفحات طلب المدير إعادة قراءتها أولًا (مثل امتداد تعليق الشارح)
+    order = focus + [i for i in bad if i not in focus] + [i for i in unrev if i not in bad and i not in focus] + [i for i in uncp if i not in focus] + [i for i in lite if i not in unrev and i not in uncp and i not in focus]
     idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
     pmap = sh.get("pmap") or []  # صفحة النص ← صفحة المصورة (من أداة المطابقة) إن اختلف الترتيب
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
+    global BOOKHINT
+    BOOKHINT = ("\n- تعليمات خاصة بهذا الكتاب: " + b["ocrHint"]) if b and b.get("ocrHint") else ""
     pdf = local_pdf(bid) if idx else None
     if not idx or not pdf: print("لا شيء لتدقيقه في", bid); return
     print("== تدقيق %s: %d صفحة (فاتتها المراجعة %d، خفيفة %d، فيها شك %d)" % (bid, len(idx), len(unrev), len(lite), len(unc0)), flush=True)
     # النص الحالي مسودةً يستعين بها Gemini مع الصورة
     os.environ["OCR_DRAFTS"] = ""
     pn = lambda i: (pmap[i] if i < len(pmap) and pmap[i] else i + 1)
+    # كل صفحة خفيفة (ولو فيها مواضع شك) لا تخرج من الطابور إلا بقراءة أساسية؛ وما فاتته المراجعة يقبل الخفيف (أفضل من Tesseract)
+    NOLITE.clear(); NOLITE.update(pn(i) for i in idx if i in set(lite) and i not in set(unrev))
     new = ocr(pdf, only=[pn(i) for i in idx], prior={pn(i): sh["pages"][i] for i in idx})
     left, lite2, unc = set(unrev), set(lite), dict(unc0)
     fixed = 0
@@ -1069,6 +1099,11 @@ def rereview(bid):
         else: lite2.discard(i)
         if k in UNCERTAIN: unc[str(i)] = UNCERTAIN[k]
         else: unc.pop(str(i), None)
+    if sh.get("focus"):  # ما قُرئ من صفحات الأولوية يخرج منها، والباقي للجولة التالية
+        done_ = {i for k, i in enumerate(idx) if k < len(new) and k not in UNREVIEWED}
+        rest_ = [i for i in sh["focus"] if i not in done_]
+        if rest_: sh["focus"] = rest_
+        else: sh.pop("focus", None)
     for key, val in (("unrev", sorted(left)), ("lite", sorted(lite2)), ("unc", unc)):
         if val: sh[key] = val
         else: sh.pop(key, None)

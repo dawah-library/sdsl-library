@@ -8,6 +8,14 @@
    "rows": 1101,
    "tables": 36,
    "errors": {}
+  },
+  {
+   "d": "2026-11-13",
+   "key": "backups/db/2026-11-13.json.gz",
+   "kb": 100.8,
+   "rows": 1688,
+   "tables": 36,
+   "errors": {}
   }
  ]
 }

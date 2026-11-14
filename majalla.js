@@ -117,7 +117,11 @@ const MAJ = (() => {
     { const hd = document.querySelector("body > header, header"); if (hd && getComputedStyle(hd).position !== "static") document.documentElement.style.setProperty("--hdr", hd.offsetHeight + "px"); }
     document.querySelectorAll("[data-majpdf]").forEach(el => fetch(el.getAttribute("href"), { method: "HEAD" }).then(r => { if (r.ok) el.hidden = false; }).catch(() => { }));
     const jobs = [];
-    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => { const L = typeof MJP !== "undefined" ? MJP.issueNews(x, N) : N.items; lv.innerHTML = (typeof MJP !== "undefined" ? MJP.newsHTML(L, { per: 4, abs: true }) : newsHtml(L, 5)) + `<p class="mjn-more">${x.news && x.news.at ? `<span class="mut">أخبار العدد كما كانت عند صدوره (${esc(fmtDate(x.news.at))}).</span> ` : ""}<a class="btn s" href="#/majalla/c/news">آخر الأخبار المحدَّثة ←</a></p>`; });
+    const lv = document.querySelector('[data-mjlive="news"]'); if (lv) loadNews().then(N => {
+      // أحدث عدد منشور: ركنه الإخباري حي يتجدد يوميًّا بآخر الأخبار؛ والأعداد السابقة تبقى على لقطتها عند صدورها
+      const pubs = (D.issues || []).filter(y => y.date && (y.status || "published") === "published").sort((a, b) => a.date.localeCompare(b.date)), live = pubs.length && pubs[pubs.length - 1].id === x.id && (N.items || []).length;
+      const L = live ? N.items.filter(z => !z.date || Date.now() - Date.parse(z.date) < 8 * 864e5) : typeof MJP !== "undefined" ? MJP.issueNews(x, N) : N.items;
+      lv.innerHTML = (typeof MJP !== "undefined" ? MJP.newsHTML(L, { per: 4, abs: !live }) : newsHtml(L, 5)) + `<p class="mjn-more">${live ? `<span class="mut">أخبار اليوم — تتجدد آليًّا كل يوم${N.updated ? " (آخر تحديث: " + esc(new Date(N.updated).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" })) + ")" : ""}.</span> ` : x.news && x.news.at ? `<span class="mut">أخبار العدد كما كانت عند صدوره (${esc(fmtDate(x.news.at))}).</span> ` : ""}<a class="btn s" href="#/majalla/c/news">آخر الأخبار المحدَّثة ←</a></p>`; });
     secs.forEach((s, si) => s.items.forEach((it, ii) => { const el = document.querySelector(`[data-mt="${si}-${ii}"]`);
       if (styOf(it) === "quiz") { if (el) el.innerHTML = (it.text ? html(it.text) : "") + quizHtml(it.qs); return; }
       jobs.push(itemText(it).then(t => { if (el) el.innerHTML = html(t, styOf(it)) || '<p class="mut">لا نص.</p>'; }).catch(e => { if (el) el.innerHTML = `<p class="mut">تعذر تحميل النص (${esc(e.message)}).</p>`; })); }));

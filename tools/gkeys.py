@@ -23,10 +23,21 @@ def _reserved_n(total):
     return max(0, min(n, total - 1)) if total > 1 else 0  # يبقى للمهام الكبيرة مفتاح واحد على الأقل
 
 
+def _dev_n(total):
+    """أول DEV_KEYS مفتاحًا (الافتراضي ٢) محجوزة للمساعد التقني (الوكيل البرمجي): لا تمسها المهام الكبيرة ولا خدمات الكتب،
+    فلا يتعطل الوكيل لنفاد الحصة اليومية التي تستنفدها المهام الأخرى."""
+    try: n = int(os.environ.get("DEV_KEYS", "2") or 0)
+    except ValueError: n = 2
+    return max(0, min(n, total - 2)) if total > 3 else 0
+
+
 def keys(role="bulk"):
     """role="bulk": التحويل والتشكيل ونحوهما — بلا المفاتيح المحجوزة.
     role="study": خدمات الكتب — المحجوزة أولًا ثم البقية."""
     ks = [v for _, v in _all()]
+    d = _dev_n(len(ks))
+    if role == "dev": return ks[:d] + ks[d:]
+    ks = ks[d:]
     r = _reserved_n(len(ks))
     if not r:
         return ks

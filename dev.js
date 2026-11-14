@@ -3,6 +3,7 @@
    فتنفّذها في المستودع وخدمات التشغيل (GitHub وVercel وSupabase) وفق قواعد HANDOFF.md، ثم تكتب ما فعلته في الطلب نفسه.
    لا يُنفَّذ الحذف ولا ما يمس حسابات الأعضاء إلا بإذن صريح في نص الطلب. */
 const DEV = (() => {
+  const PASTED = [];  // صور لُصقت في مربع الطلب
   const P = "data/dev-requests.json", ST = { pending: ["⏳", "بانتظار التنفيذ"], doing: ["⚙️", "قيد التنفيذ"], done: ["✅", "نُفِّذ"], need: ["❓", "يحتاج توضيحًا"], rejected: ["⛔", "لم يُنفَّذ"], review: ["🔍", "نُفّذ وينتظر اعتمادك"], approved: ["🚀", "معتمد، جارٍ النشر"] };
   const ENG = { auto: "تلقائي (Claude ثم Gemini)", claude: "Claude", gemini: "Gemini", session: "جلسة Claude المجدولة" };
   const get = async () => { try { return JSON.parse((await GH.get(P)).text) || { items: [] }; } catch (e) { return { items: [] }; } };
@@ -27,6 +28,7 @@ const DEV = (() => {
     <form id="devf" data-form="noop" class="card"><label>الطلب</label><textarea name="t" rows="5" required maxlength="4000" placeholder="مثال: أضف في صفحة المؤلف زرًا لتنزيل قائمة كتبه بصيغة Excel"></textarea>
      <div class="row"><div><label>النوع</label><select name="k"><option value="feature">تطوير أو إضافة</option><option value="fix">إصلاح خلل</option><option value="content">محتوى وبيانات</option><option value="ops">مهمة تشغيلية (مفاتيح، مهام آلية، نشر)</option></select></div><div><label>الأولوية</label><select name="p"><option value="2">عادية</option><option value="1">عاجلة</option><option value="3">لاحقًا</option></select></div><div><label>المنفّذ</label><select name="e">${Object.entries(ENG).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></div></div>
      <label>الصفحة المعنية (اختياري)</label><input name="u" dir="ltr" value="${esc(lastPage())}" placeholder="#/book/…">
+     <label>صور توضيحية (لقطات شاشة أو تصميمات؛ اختياري، ويمكن اللصق في مربع الطلب)</label><input type="file" name="img" multiple accept="image/*"><div id="devimgs" class="axatt"></div>
      <label class="inl"><input type="checkbox" name="auto"> انشر مباشرة إن اجتاز الفحص الآلي (للتعديلات الصغيرة فقط)</label><br>
      <label class="inl"><input type="checkbox" name="del"> أأذن بالحذف أو ما يمس حسابات الأعضاء إن لزم لهذا الطلب</label><br><button class="btn p">أرسل الطلب</button> <span id="devst" class="mut"></span></form>
     <details class="card" id="devbr"><summary><b>تقارير جولات المساعد</b></summary><div class="mut">…</div></details>
@@ -35,9 +37,14 @@ const DEV = (() => {
       el.innerHTML = `<p class="note">محركات الوكيل: Claude ${e.claude ? "✓" : "✗ (يلزم سر CLAUDE_CODE_OAUTH_TOKEN)"} • Gemini ${e.gemini ? "✓ " + toAr(e.gemini) + " مفتاحًا" : "✗"}${L ? " • آخر تشغيل: " + esc(new Date(L.at).toLocaleString("ar-EG")) + (L.ok ? " ✓" : " ✗") : ""}</p>`; }).catch(() => { });
     fetch("data/dev-brief.json?fresh=" + Date.now()).then(r => r.ok ? r.json() : null).then(o => { const el = $("#devbr div"); if (!el) return; const L = ((o && (o.items || o)) || []); const A = Array.isArray(L) ? L.slice(-10).reverse() : [];
       el.innerHTML = A.length ? A.map(x => `<p><b>${esc(x.at || "")}</b><br>${(x.done || []).map(esc).join("<br>")}${(x.issues || []).length ? `<br><span class="mut">ملاحظات: ${(x.issues || []).map(esc).join("، ")}</span>` : ""}</p>`).join("") : "لم تُكتب تقارير بعد؛ تُكتب بعد كل جولة."; }).catch(() => { });
+    $("#devf [name=t]").addEventListener("paste", e => { const fs = [...((e.clipboardData || {}).files || [])].filter(x => /^image\//.test(x.type)); if (!fs.length) return; e.preventDefault(); PASTED.push(...fs); $("#devimgs").innerHTML = PASTED.map(x => `<span class="axchip">🖼 ${esc(x.name || "صورة")}</span>`).join(""); });
     $("#devf").addEventListener("submit", async e => { e.preventDefault(); const f = e.target, st = $("#devst"); st.textContent = "جارٍ الحفظ…";
       const it = { id: "d" + Date.now().toString(36), t: f.t.value.trim() + (f.u.value.trim() ? "\n\nالصفحة: " + f.u.value.trim() : ""), k: f.k.value, p: +f.p.value, del: f.del.checked ? 1 : 0, st: "pending", at: new Date().toISOString(), eng: f.e.value, auto: f.auto.checked ? 1 : 0, by: "admin", h: [{ at: new Date().toISOString(), by: "admin", m: f.t.value.trim() }] };
-      try { await GH.editJSON(P, o => { o = o && o.items ? o : { items: [] }; o.items.push(it); return o; }, "طلب للمساعد التقني: " + it.t.slice(0, 60)); st.textContent = "✓ أُرسل، ويبدأ تنفيذه خلال دقائق"; f.reset(); list(); } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } });
+      try { const imgs = [...(f.img.files || [])].concat(PASTED.splice(0)).slice(0, 6);
+        for (let i = 0; i < imgs.length; i++) { st.textContent = "يرفع الصورة " + toAr(i + 1) + "…"; const ext = (imgs[i].type.split("/")[1] || "png").replace("jpeg", "jpg"), path = "data/dev-att/" + it.id + "-" + (i + 1) + "." + ext;
+          await GH.put(path, new Uint8Array(await imgs[i].arrayBuffer()), "المساعد التقني: صورة مرفقة", null); (it.img = it.img || []).push(path); }
+        if (it.img) it.t += "\n\nصور مرفقة من المدير (اقرأها وحلّلها قبل التنفيذ): " + it.img.join("، ");
+        await GH.editJSON(P, o => { o = o && o.items ? o : { items: [] }; o.items.push(it); return o; }, "طلب للمساعد التقني: " + it.t.slice(0, 60)); $("#devimgs").innerHTML = ""; st.textContent = "✓ أُرسل، ويبدأ تنفيذه خلال دقائق"; f.reset(); list(); } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } });
     list();
   }
   async function list() {

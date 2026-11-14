@@ -13,7 +13,7 @@ const TALA = (() => {
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
   const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["adhkar", "أذكار المسلم", "اختر الذكر المناسب لكل موقف من يومك", "🤲"], ["quiz", "مسابقة المعرفة", "أسئلة في العقيدة والسيرة والقرآن تناسب مرحلتك", "🏆"], ["ws", "البحث عن الكلمات", "ابحث عن كلمات مخبأة في شبكة الحروف", "🔍"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
-  const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span></div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
+  const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span>${(typeof TSFX !== "undefined") ? TSFX.btn() : ""}</div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
   // التوجيه بالعمر: إذا اختير ملف طفل لا يظهر له إلا مستواه في المسارات التعليمية والتربوية، إلا إن فتح الوالد كل المستويات من «ركن الوالدين»
   const locked = () => !!(kid() && !st().allst);
   const vis = () => locked() ? D.tracks.filter(t => t[0] === kid().track) : D.tracks;
@@ -43,7 +43,7 @@ const TALA = (() => {
       <h3>مكتبة الطلائع</h3><p class="mut">${vis().map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks(locked() ? kid().track : "").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
       <p class="note">إلى الوالدين: هذا القسم بلا إعلانات ولا روابط خارجية ولا تعليقات أو مراسلة، ونجوم الطفل تُحفظ على هذا الجهاز وحده. نص القرآن الكريم في الألعاب من مصحف المكتبة دون تغيير.</p></div>`);
   }
-  const view_ = h => view(h);
+  const view_ = h => { view(h); if (/class="talawin"/.test(h) && (typeof TSFX !== "undefined")) TSFX.done(); };
   function track(k) {
     const t = D.tracks.find(x => x[0] === k) || D.tracks[0], bs = kidBooks(t[0]), sg = sx(), sq = sg ? "&s=" + sg : "";
     view_(head(t[1] + " — " + t[2] + (sg ? " — " + GEN[sg].n : ""), true) + `<nav class="chips">${[["", "المشترك"], ...Object.entries(GEN).map(([k, x]) => [k, x.ic + " " + x.n])].map(([k, l]) => `<a class="chip${sg === k ? " x" : ""}" href="#/talaea/track?k=${t[0]}${k ? "&s=" + k : ""}">${l}</a>`).join("")}</nav><h2 class="talat">${esc(t[1])}${sg ? " — " + GEN[sg].n : ""}</h2><p class="mut">${esc(t[2])}. ويمكن اختيار المستوى الأنسب لمهارة الطفل لا لعمره وحده.</p>
@@ -194,7 +194,7 @@ const TALA = (() => {
     ["دخول الخلاء", "اللهم إني أعوذ بك من الخبث والخبائث", "متفق عليه"], ["الخروج من الخلاء", "غفرانك", "أبو داود والترمذي"], ["الخروج من المنزل", "بسم الله توكلت على الله، ولا حول ولا قوة إلا بالله", "أبو داود والترمذي"], ["دخول المسجد", "اللهم افتح لي أبواب رحمتك", "مسلم"],
     ["الخروج من المسجد", "اللهم إني أسألك من فضلك", "مسلم"], ["عند العطاس", "الحمد لله", "البخاري"], ["بعد الوضوء", "أشهد أن لا إله إلا الله وحده لا شريك له، وأشهد أن محمدًا عبده ورسوله", "مسلم"], ["عند الغضب", "أعوذ بالله من الشيطان الرجيم", "متفق عليه"]];
   function adhkar(k) {
-    if (G.i >= G.list.length) { star(G.s >= G.list.length - 1 ? 3 : 1); return view_(head("أذكار المسلم", true) + `<div class="talawin"><h2>أحسنت! 🎉</h2><p>عرفت ${toAr(G.s)} من ${toAr(G.list.length)} أذكار.</p><a class="btn p" href="#/talaea/games?g=adhkar&k=${k || ""}&r=${Date.now()}">جولة جديدة</a></div></div>`); }
+    if (G.i >= G.list.length) { star(G.s >= G.list.length - 1 ? 3 : 1); return view_(head("أذكار المسلم", true) + `<div class="talawin"><h2>${(typeof TSFX !== "undefined") ? esc(TSFX.text("done")) : "أحسنت!"} 🎉</h2><p>عرفت ${toAr(G.s)} من ${toAr(G.list.length)} أذكار.</p><a class="btn p" href="#/talaea/games?g=adhkar&k=${k || ""}&r=${Date.now()}">جولة جديدة</a></div></div>`); }
     const q = G.list[G.i], opts = shuffle([q, ...shuffle(ADH.filter(x => x !== q)).slice(0, G.n - 1)]);
     view_(head("أذكار المسلم", true) + `<p class="mut">السؤال ${toAr(G.i + 1)} من ${toAr(G.list.length)}</p><p class="talaq">ماذا نقول <b>${esc(q[0])}</b>؟</p><div class="talao col">${opts.map(o => `<button class="btn talaopt" data-act="tala-ad" data-ok="${o === q ? 1 : 0}">${esc(o[1])}</button>`).join("")}</div><div id="tfb" class="talafb" hidden></div></div>`);
   }
@@ -235,7 +235,7 @@ const TALA = (() => {
   function ayahRound(s, i, sc) {
     const cand = s.ayat.map((a, j) => [j, a]).filter(([, a]) => a.split(" ").length >= 3);
     if (!G || G.s !== s.n || i === 0) G = { s: s.n, list: shuffle(cand).slice(0, Math.min(6, cand.length)), sc: 0 };
-    if (i >= G.list.length) { star(G.sc); return view_(head("أكمل الآية", true) + `<div class="talawin"><h2>أحسنت! 🎉</h2><p>أجبت ${toAr(G.sc)} من ${toAr(G.list.length)} في سورة ${sname(s)}، وحصلت على ${toAr(G.sc)} نجوم.</p><a class="btn p" href="#/talaea/games?g=ayah&s=${s.n}&r=${Date.now()}">العب مرة أخرى</a> <a class="btn" href="#/talaea/games?g=ayah">سورة أخرى</a></div></div>`); }
+    if (i >= G.list.length) { star(G.sc); return view_(head("أكمل الآية", true) + `<div class="talawin"><h2>${(typeof TSFX !== "undefined") ? esc(TSFX.text("done")) : "أحسنت!"} 🎉</h2><p>أجبت ${toAr(G.sc)} من ${toAr(G.list.length)} في سورة ${sname(s)}، وحصلت على ${toAr(G.sc)} نجوم.</p><a class="btn p" href="#/talaea/games?g=ayah&s=${s.n}&r=${Date.now()}">العب مرة أخرى</a> <a class="btn" href="#/talaea/games?g=ayah">سورة أخرى</a></div></div>`); }
     const [j, a] = G.list[i], ws = a.split(" "), last = ws.pop(), ends = [...new Set(s.ayat.map(x => x.split(" ").pop()).filter(w => w !== last))];
     const opts = shuffle([last, ...shuffle(ends).slice(0, 2)]);
     view_(head("أكمل الآية — سورة " + sname(s), true) + `<p class="mut">السؤال ${toAr(i + 1)} من ${toAr(G.list.length)}</p><p class="talaq quran">${esc(ws.join(" "))} <span class="blank">……</span></p>
@@ -273,7 +273,7 @@ const TALA = (() => {
     view_(head("ركّب الكلمة", true) + `<p class="mut">الكلمة ${toAr(G.i + 1)} من ${toAr(G.ws.length)} — من سور جزء عمّ</p><p class="talaq quran">${esc(full)}</p><p>اضغط الحروف بالترتيب لتكتب الكلمة:</p>
       <p class="talaq" id="wpick">…</p><div class="talao">${shuffle([...bare].map((c, k) => [c, k])).map(([c, k]) => `<button class="btn talaopt big" data-act="tala-wd" data-c="${c}">${c}</button>`).join("")}</div><div id="tfb" hidden></div></div>`);
   }
-  const fb = (ok, html) => { const el = $("#tfb"); el.hidden = false; el.className = "talafb " + (ok ? "ok" : "no"); el.innerHTML = html; };
+  const fb = (ok, html) => { if ((typeof TSFX !== "undefined")) { if (ok) TSFX.right(); else TSFX.wrong(); html = html.replace(/أحسنت!/g, TSFX.text("ok")); } const el = $("#tfb"); el.hidden = false; el.className = "talafb " + (ok ? "ok" : "no"); el.innerHTML = html; };
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=tala-]"); if (!el) return; e.preventDefault(); e.stopImmediatePropagation(); const a = el.dataset.act;
     if (a === "tala-ay") {
@@ -283,7 +283,7 @@ const TALA = (() => {
     } else if (a === "tala-next") { quran().then(Qs => ayahRound(Qs.find(x => x.n === +el.dataset.s), +el.dataset.i, 0)); }
     else if (a === "tala-or") {
       const k = +el.dataset.k, want = G.pick.length;
-      if (k === want) { G.pick.push(k); el.disabled = true; el.classList.add("right"); $("#tord").insertAdjacentHTML("beforeend", `<li>${esc(G.seg[k].t)}</li>`);
+      if (k === want) { G.pick.push(k); el.disabled = true; el.classList.add("right"); if ((typeof TSFX !== "undefined") && G.pick.length < G.seg.length) TSFX.bubble(); $("#tord").insertAdjacentHTML("beforeend", `<li>${esc(G.seg[k].t)}</li>`);
         if (G.pick.length === G.seg.length) { star(2); fb(true, `ممتاز! رتّبت الآيات ترتيبًا صحيحًا ⭐⭐<br><a class="btn p" href="#/talaea/games?g=order&s=${G.s.n}&r=${Date.now()}">آيات أخرى</a> <a class="btn" href="#/talaea/games?g=order">سورة أخرى</a>`); } }
       else { el.classList.add("wrong"); setTimeout(() => el.classList.remove("wrong"), 600); }
     } else if (a === "tala-tf") {
@@ -295,7 +295,7 @@ const TALA = (() => {
       fb(ok, `${ok ? "أحسنت! ⭐" : "ليست هذه؛ انظر إلى الحركة فوق الحرف أو تحته."}<button class="btn p" data-act="tala-hkn">التالي</button>`); }
     else if (a === "tala-hkn") { G.i++; harakat(); }
     else if (a === "tala-wd") { const c = el.dataset.c, need = G.bare[G.pick.length];
-      if (c === need) { G.pick += c; el.disabled = true; el.classList.add("right"); $("#wpick").textContent = G.pick;
+      if (c === need) { G.pick += c; el.disabled = true; el.classList.add("right"); if ((typeof TSFX !== "undefined") && G.pick.length < G.bare.length) TSFX.bubble(); $("#wpick").textContent = G.pick;
         if (G.pick === G.bare) { G.s++; star(1); fb(true, `أحسنت! ⭐ <button class="btn p" data-act="tala-wdn">التالي</button>`); } }
       else { el.classList.add("wrong"); setTimeout(() => el.classList.remove("wrong"), 500); } }
     else if (a === "tala-wdn") { G.i++; wordRound(); }
@@ -528,7 +528,7 @@ const TALA = (() => {
       <p><a class="btn" href="#/talaea/ladder?k=${k}">📚 ثم سُلّم القراءة من بقية المكتبة</a> <a class="btn" href="#/talaea/track?k=${k}">🎮 الألعاب والأنشطة</a></p></div>`);
   }
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjq]"); if (!b || b.disabled) return; const box = b.closest(".tmq"), ok = b.dataset.mjq === "1";
-    b.classList.add(ok ? "right" : "wrong"); box.querySelectorAll("[data-mjq]").forEach(x => { if (x.dataset.mjq === "1") x.classList.add("right"); x.disabled = true; }); if (ok) star(1); });
+    b.classList.add(ok ? "right" : "wrong"); if ((typeof TSFX !== "undefined")) { if (ok) TSFX.right(); else TSFX.wrong(); } box.querySelectorAll("[data-mjq]").forEach(x => { if (x.dataset.mjq === "1") x.classList.add("right"); x.disabled = true; }); if (ok) star(1); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjd]"); if (!b) return; e.preventDefault(); const d = (st().ml = st().ml || {}), id = b.dataset.mjd; if (d[id]) delete d[id]; else { d[id] = 1; star(1); } saveS(); b.classList.toggle("on", !!d[id]); b.setAttribute("aria-pressed", !!d[id]); b.textContent = d[id] ? "✓ أتممته" : "أتممت الدرس ⭐"; });
   return { view: show, admin, autoTala };
 })();
