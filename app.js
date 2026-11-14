@@ -153,7 +153,7 @@ const qCard=(q,i)=>`<div class="q"><p>${esc(q.t)}</p><span class="mut">${esc(A(q
 /* ---------- الرئيسية: المكتبة بالأرقام، وعبارات فضل القراءة والعلم ---------- */
 const SBRPC=(fn)=>fetch(CFG.supabaseUrl+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:CFG.supabaseAnonKey,Authorization:"Bearer "+CFG.supabaseAnonKey,"Content-Type":"application/json"},body:"{}"}).then(r=>r.ok?r.json():null).catch(()=>null);
 function hitVisit(){if(!CFG.supabaseUrl)return;const d=today();try{if(localStorage.getItem("sdsl_visit")===d)return;localStorage.setItem("sdsl_visit",d)}catch(e){return}SBRPC("hit_visit")}
-let QUOTES=null,QT=null;
+let QUOTES=null;
 async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();if(typeof RDASH!=="undefined")RDASH.home($("#rdash"));
  // الأرقام: من الفهرس مباشرة، وأرقام الأعضاء والزيارات من Supabase (تظهر بعد تجاوز حدٍّ معقول)
  const bk=BOOKS().filter(b=>!b.demo&&!b.hidden&&!VOL2(b)),m30=new Date(Date.now()-30*864e5).toISOString().slice(0,10);
@@ -168,13 +168,32 @@ async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
   if(ex.length)draw(ex)});
  if(!on("home_quotes"))return;
  if(!QUOTES){try{const r=await fetch("data/quotes.json");QUOTES=r.ok?(await r.json()).items||[]:[]}catch(e){QUOTES=[]}}
- const el=$("#hquote");if(!el||!QUOTES.length)return;let i=(+today().replace(/-/g,""))%QUOTES.length;
- const show=()=>{const q=QUOTES[i%QUOTES.length],w=q.k==="آية"?`﴿${q.t}﴾`:q.k==="قول"?q.t:`«${q.t}»`;
-  el.innerHTML=`<span class="hqk">${esc(q.k==="آية"?"قال الله تعالى":q.who?(q.k==="حديث"?"قال "+q.who:q.who):"من أقوال أهل العلم")}</span><p class="hqt">${esc(w)}${q.ref?` <span class="ayref">${esc(q.ref)}</span>`:""}</p>
-  <div class="hqm"><span class="mut">${esc(q.title)}${q.author?" — "+esc(q.author):""}، ص ${toAr(q.p)}</span><span><button class="btn s" data-hq="copy">نسخ</button> <a class="btn s" href="#/book/${q.b}/${q.p}?h=${encodeURIComponent(q.t.slice(0,40))}">موضعها في المكتبة</a> <button class="btn s" data-hq="next" aria-label="العبارة التالية">التالية ›</button></span></div>`;el.hidden=false;el.classList.remove("fade");void el.offsetWidth;el.classList.add("fade")};
- show();clearInterval(QT);QT=setInterval(()=>{if(!document.body.contains(el)){clearInterval(QT);return}if(el.matches(":hover,:focus-within"))return;i++;show()},12000);
- el.onclick=e=>{const b=e.target.closest("[data-hq]");if(!b)return;const q=QUOTES[i%QUOTES.length];
-  if(b.dataset.hq==="next"){i++;show()}else{const w=q.k==="آية"?`﴿${q.t}﴾ ${q.ref||""}`:`«${q.t}»${q.ref?" "+q.ref:""}`;navigator.clipboard&&navigator.clipboard.writeText(`${w.trim()}\n— ${q.title}${q.author?"، "+q.author:""}، ص ${q.p}\n${location.origin}/#/book/${q.b}/${q.p}`).then(()=>{b.textContent="نُسخت ✓";setTimeout(()=>b.textContent="نسخ",1500)})}}}
+ const el=$("#hquote");if(!el||!QUOTES.length)return;
+ /* بطاقة «من وصايا العلم والقراءة»: تصنيف، ونص بخط أميري، وقائله، ومصدره من كتب المكتبة؛ تتقلب آليًا مع شريط تقدّم (يتوقف عند المرور) */
+ const CATS=[["","الكل"],["ilm","فضل العلم"],["qiraa","القراءة والكتب"],["adab","آداب الطالب"],["wasaya","وصايا"]],CI={ilm:"✦",qiraa:"📖",adab:"🌿",wasaya:"💡"};
+ const seed=+today().replace(/-/g,""),ord=QUOTES.map((q,k)=>[q,(k*2654435761+seed)%4294967296]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
+ let cat=(()=>{try{return localStorage.getItem("hqcat")||""}catch(e){return""}})(),L=[],i=0;
+ const pick=()=>{L=ord.filter(q=>!cat||q.c===cat);if(!L.length){cat="";L=ord}i=0};
+ const head=q=>q.k==="آية"?"قال الله تعالى":q.who?(q.k==="حديث"?"قال "+q.who:q.who):"";
+ const txt=q=>q.k==="آية"?`﴿${q.t}﴾`:q.k==="حديث"||q.k==="أثر"?`«${q.t}»`:q.t;
+ el.innerHTML=`<div class="hqtop"><span class="hqtt">من وصايا العلم والقراءة</span><span class="hqcs" role="tablist">${CATS.map(([k,l])=>`<button type="button" role="tab" data-hqc="${k}">${l}</button>`).join("")}</span></div><div class="hqbody"></div><div class="hqbar" aria-hidden="true"><i></i></div>`;
+ const body=el.querySelector(".hqbody"),bar=el.querySelector(".hqbar i");
+ const show=()=>{const q=L[i%L.length],h=head(q);el.querySelectorAll("[data-hqc]").forEach(b=>b.setAttribute("aria-selected",b.dataset.hqc===cat));
+  body.innerHTML=`<span class="hqk">${CI[q.c]||"✦"} ${esc((CATS.find(x=>x[0]===q.c)||["","من أقوال أهل العلم"])[1])}</span>
+  <blockquote class="hqt${q.k==="آية"?" ay":""}${q.t.length>110?" lg":""}">${esc(txt(q))}${q.ref?` <span class="ayref">${esc(q.ref)}</span>`:""}</blockquote>
+  ${h?`<p class="hqw">${esc(h)}</p>`:""}
+  <div class="hqm"><a class="hqsrc" href="#/book/${q.b}/${q.p}?h=${encodeURIComponent(q.t.slice(0,40))}" title="موضعها في المكتبة">📚 ${esc(q.title)}${q.author?" — "+esc(q.author):""}، ص ${toAr(q.p)}</a>
+  <span class="hqbtn"><button type="button" data-hq="prev" aria-label="السابقة">‹</button><span class="hqn">${toAr(i%L.length+1)} / ${toAr(L.length)}</span><button type="button" data-hq="next" aria-label="التالية">›</button><button type="button" data-hq="copy" aria-label="نسخ" title="نسخ">⧉</button>${navigator.share?`<button type="button" data-hq="share" aria-label="مشاركة" title="مشاركة">⤴</button>`:""}</span></div>`;
+  el.hidden=false;body.classList.remove("fade");void body.offsetWidth;body.classList.add("fade");
+  bar.style.animation="none";void bar.offsetWidth;bar.style.animation=""};
+ pick();show();
+ bar.onanimationend=()=>{if(document.body.contains(el)){i++;show()}};
+ const line=q=>`${txt(q)}${q.ref?" "+q.ref:""}${head(q)&&q.k!=="آية"?"\n— "+head(q).replace(/^قال /,""):""}\n[${q.title}${q.author?"، "+q.author:""}، ص ${q.p}]\n${location.origin}/#/book/${q.b}/${q.p}`;
+ el.onclick=e=>{const c=e.target.closest("[data-hqc]");if(c){cat=c.dataset.hqc;try{localStorage.setItem("hqcat",cat)}catch(x){}pick();show();return}
+  const b=e.target.closest("[data-hq]");if(!b)return;const q=L[i%L.length],a=b.dataset.hq;
+  if(a==="next"){i++;show()}else if(a==="prev"){i=(i-1+L.length)%L.length;show()}
+  else if(a==="share")navigator.share({text:line(q)}).catch(()=>{});
+  else navigator.clipboard&&navigator.clipboard.writeText(line(q)).then(()=>{b.textContent="✓";setTimeout(()=>b.textContent="⧉",1500)})}}
 const fmtN=n=>toAr(Number(n).toLocaleString("en-US")).replace(/,/g,"٬");
 function countUp(root){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;root.querySelectorAll("b[data-n]").forEach(b=>{const n=+b.dataset.n;if(n<20)return;const t0=performance.now(),D=1100;
  const f=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);b.textContent=fmtN(Math.round(n*e));if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}

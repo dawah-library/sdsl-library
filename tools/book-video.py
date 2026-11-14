@@ -374,14 +374,14 @@ async def render_video(it, D, aspect, L, did, replace):
             amix += ";[%d:a]apad[fl];[%d:a]adelay=700:all=1,apad[pn]" % (ai + 1, ai + 2); mixn += ["[fl]", "[pn]"]
         amix += ";%samix=inputs=%d:duration=first:normalize=0[a]" % ("".join(mixn), len(mixn)) if len(mixn) > 1 else ";[n]anull[a]"
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error"] + vin + ain + ["-filter_complex", vf + ";" + amix, "-map", "[v]", "-map", "[a]",
-                        "-c:v", "libx264", "-preset", "veryfast", "-r", str(FPS), "-c:a", "aac", "-b:a", "96k", "-ar", "24000", "-t", "%.2f" % d, v], check=True)
+                        "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "4.1", "-r", str(FPS), "-c:a", "aac", "-b:a", "96k", "-ar", "24000", "-t", "%.2f" % d, v], check=True)
         segs.append(v)
     lst = os.path.join(tmp, "l.txt"); open(lst, "w").write("".join("file '%s'\n" % x for x in segs))
     stamp = datetime.datetime.now().strftime("%m%d%H%M"); fn = "%s-%s-%s-%s.mp4" % (bid, style.replace("+", "_"), aspect.replace(":", "x"), stamp); outp = os.path.join(tmp, fn)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", outp], check=True)
     subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", outp], check=True)
     rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
-           "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0}
+           "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0, "v420": 1}
     lst_ = L.setdefault(bid, [])
     old = next((k for k, v in enumerate(lst_) if replace and v.get("f") == replace and not v.get("ok")), None)
     if old is not None:  # التصحيح يحل محل الفيديو غير المعتمد (ويُحذف ملفه القديم من الإصدار)
@@ -393,8 +393,29 @@ async def render_video(it, D, aspect, L, did, replace):
     print("✓ فيديو", title, fn); return True
 
 
+def fix_old(L):
+    """إصلاح لمرة واحدة: الفيديوهات الأولى خرجت بترميز yuv444p (High 4:4:4) الذي لا يشغّله iPhone ولا أكثر المتصفحات؛
+    تُنزَّل وتُعاد ترميزًا إلى yuv420p ثم تُرفع مكانها بالاسم نفسه. تُعلَّم بـ v420 فلا تُعاد."""
+    for bid, l in L.items():
+        for v in l:
+            if v.get("v420"): continue
+            tmp = tempfile.mkdtemp(); src = os.path.join(tmp, v["f"]); out = os.path.join(tmp, "o.mp4")
+            try:
+                subprocess.run(["gh", "release", "download", "video-" + bid, "-R", REPO, "-p", v["f"], "-D", tmp, "--clobber"], check=True)
+                pf = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", src], capture_output=True, text=True).stdout.strip()
+                if pf != "yuv420p":
+                    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-profile:v", "high",
+                                    "-level", "4.1", "-c:a", "copy", "-movflags", "+faststart", out], check=True)
+                    os.replace(out, src); subprocess.run(["gh", "release", "upload", "video-" + bid, "-R", REPO, "--clobber", src], check=True)
+                    print("✓ أُعيد ترميز", v["f"], "من", pf)
+                v["v420"] = 1
+            except Exception as e: print("✗ إعادة الترميز:", v.get("f"), str(e)[:200])
+            finally: shutil.rmtree(tmp, ignore_errors=True)
+
+
 async def main():
     Q = jl(QP, {"items": []}); L = jl(LP, {}); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
+    fix_old(L); jw(LP, L)
     left = []
     for it in Q.get("items") or []:
         try: ok = await make(it, cat, L)
