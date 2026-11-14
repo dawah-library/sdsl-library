@@ -4,10 +4,9 @@
 const ATH = (() => {
   const D = "data/athar/", TIER = { s: "الصحابة", t: "التابعون", a: "أتباع التابعين", b: "من بعدهم إلى نهاية القرن الثالث" }, TIER1 = { s: "صحابي", t: "تابعي", a: "من أتباع التابعين", b: "" };
   let IX = null; const TC = {};
-  const RAWD = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/" + D + p + "?t=" + Math.floor(Date.now() / 300e3);
-  const getJ = async p => { for (const u of [RAWD(p), D + p + "?v=" + Math.floor(Date.now() / 300e3)]) { try { const r = await fetch(u, { cache: "no-cache" }); if (r.ok) return await r.json(); } catch (e) { } } throw new Error("تعذر التحميل"); };
-  const index = async () => IX || (IX = await getJ("_index.json"));
-  const topic = async k => TC[k] || (TC[k] = (await getJ(k + ".json")).items);
+  const getJ = async u => { const r = await fetch(u + "?v=" + (IX ? IX.count : Date.now())); if (!r.ok) throw new Error("تعذر التحميل"); return r.json(); };
+  const index = async () => IX || (IX = await fetch(D + "_index.json", { cache: "no-cache" }).then(r => r.json()));
+  const topic = async k => TC[k] || (TC[k] = (await getJ(D + k + ".json")).items);
   const all = async () => { await index(); const seen = new Set(), out = []; for (const t of IX.topics) if (t.c) for (const it of await topic(t.k)) if (!seen.has(it.id)) { seen.add(it.id); out.push(it); } return out; };
   const per = n => (IX.people || []).find(p => p.n === n) || {};
   const BK = id => (typeof B === "function" ? B(id) : null) || {};
