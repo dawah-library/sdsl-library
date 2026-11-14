@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>مكتبة الدعوة</ShortName>
+  <Description>البحث في كتب مكتبة الدعوة السلفية الرقمية ومقالاتها وفتاواها</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Language>ar</Language>
+  <Image width="64" height="64" type="image/png">https://dawahlibrary.org/assets/favicon-64.png</Image>
+  <Url type="text/html" method="get" template="https://dawahlibrary.org/#/search?q={searchTerms}"/>
+</OpenSearchDescription>
