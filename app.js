@@ -174,21 +174,22 @@ async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
  const seed=+today().replace(/-/g,""),ord=QUOTES.map((q,k)=>[q,(k*2654435761+seed)%4294967296]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
  let cat=(()=>{try{return localStorage.getItem("hqcat")||""}catch(e){return""}})(),L=[],i=0;
  const pick=()=>{L=ord.filter(q=>!cat||q.c===cat);if(!L.length){cat="";L=ord}i=0};
- const head=q=>q.k==="آية"?"قال الله تعالى":q.who?(q.k==="حديث"?"قال "+q.who:q.who):"";
+ // القائل في الأعلى (أمر المدير): الآية «قال الله تعالى»، والحديث «قال رسول الله ﷺ»، والأثر والقول «قال فلان»؛ وما لم يُسمَّ قائله «ذكر <مؤلف الكتاب>» (قد ينقله عن غيره)
+ const head=q=>q.k==="آية"?"قال الله تعالى:":q.k==="حديث"?"قال رسول الله ﷺ:":q.who?(/^(سُ?ئِ?ل|سئل|رُ?وي|روي|عن )/.test(q.who)?q.who+":":"قال "+q.who+":"):q.author?"ذكر "+q.author+":":"";
  const txt=q=>q.k==="آية"?`﴿${q.t}﴾`:q.k==="حديث"||q.k==="أثر"?`«${q.t}»`:q.t;
  el.innerHTML=`<div class="hqtop"><span class="hqtt">من وصايا العلم والقراءة</span><span class="hqcs" role="tablist">${CATS.map(([k,l])=>`<button type="button" role="tab" data-hqc="${k}">${l}</button>`).join("")}</span></div><div class="hqbody"></div><div class="hqbar" aria-hidden="true"><i></i></div>`;
  const body=el.querySelector(".hqbody"),bar=el.querySelector(".hqbar i");
  const show=()=>{const q=L[i%L.length],h=head(q);el.querySelectorAll("[data-hqc]").forEach(b=>b.setAttribute("aria-selected",b.dataset.hqc===cat));
-  body.innerHTML=`<span class="hqk">${CI[q.c]||"✦"} ${esc((CATS.find(x=>x[0]===q.c)||["","من أقوال أهل العلم"])[1])}</span>
-  <blockquote class="hqt${q.k==="آية"?" ay":""}${q.t.length>110?" lg":""}">${esc(txt(q))}${q.ref?` <span class="ayref">${esc(q.ref)}</span>`:""}</blockquote>
-  ${h?`<p class="hqw">${esc(h)}</p>`:""}
+  body.innerHTML=`${h?`<p class="hqw">${esc(h)}</p>`:""}
+  <blockquote class="hqt${q.k==="آية"?" ay":""}${q.t.length>110?" lg":""}">${esc(txt(q))}</blockquote>
+  ${q.ref?`<p class="hqref">${esc(q.ref)}</p>`:""}
   <div class="hqm"><a class="hqsrc" href="#/book/${q.b}/${q.p}?h=${encodeURIComponent(q.t.slice(0,40))}" title="موضعها في المكتبة">📚 ${esc(q.title)}${q.author?" — "+esc(q.author):""}، ص ${toAr(q.p)}</a>
   <span class="hqbtn"><button type="button" data-hq="prev" aria-label="السابقة">‹</button><span class="hqn">${toAr(i%L.length+1)} / ${toAr(L.length)}</span><button type="button" data-hq="next" aria-label="التالية">›</button><button type="button" data-hq="copy" aria-label="نسخ" title="نسخ">⧉</button>${navigator.share?`<button type="button" data-hq="share" aria-label="مشاركة" title="مشاركة">⤴</button>`:""}</span></div>`;
   el.hidden=false;body.classList.remove("fade");void body.offsetWidth;body.classList.add("fade");
   bar.style.animation="none";void bar.offsetWidth;bar.style.animation=""};
  pick();show();
  bar.onanimationend=()=>{if(document.body.contains(el)){i++;show()}};
- const line=q=>`${txt(q)}${q.ref?" "+q.ref:""}${head(q)&&q.k!=="آية"?"\n— "+head(q).replace(/^قال /,""):""}\n[${q.title}${q.author?"، "+q.author:""}، ص ${q.p}]\n${location.origin}/#/book/${q.b}/${q.p}`;
+ const line=q=>`${head(q)?head(q)+"\n":""}${txt(q)}${q.ref?"\n"+q.ref:""}\n[${q.title}${q.author?"، "+q.author:""}، ص ${q.p}]\n${location.origin}/#/book/${q.b}/${q.p}`;
  el.onclick=e=>{const c=e.target.closest("[data-hqc]");if(c){cat=c.dataset.hqc;try{localStorage.setItem("hqcat",cat)}catch(x){}pick();show();return}
   const b=e.target.closest("[data-hq]");if(!b)return;const q=L[i%L.length],a=b.dataset.hq;
   if(a==="next"){i++;show()}else if(a==="prev"){i=(i-1+L.length)%L.length;show()}
