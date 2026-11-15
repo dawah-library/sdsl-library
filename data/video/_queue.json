@@ -2,16 +2,56 @@
  "note": "طابور فيديوهات الكتب (video.js ← tools/book-video.py)",
  "items": [
   {
-   "del": 1,
    "id": "pc490e52b",
-   "f": "pc490e52b-intro-16x9-11140317.mp4",
-   "at": "2026-11-15T05:17:49.750Z"
+   "style": "summary+benefits",
+   "min": "2",
+   "scenes": "",
+   "aud": "general",
+   "tone": "calm",
+   "topics": [],
+   "ideas": "",
+   "intro": "",
+   "outro": "",
+   "aspects": [
+    "9:16"
+   ],
+   "pages": 1,
+   "sfx": 1,
+   "voice": "gemini:Charon",
+   "theme": "green",
+   "font": "amiri",
+   "pat": "stars",
+   "cap": 1,
+   "note": "",
+   "creative": 0,
+   "phase": "script",
+   "at": "2026-11-15T05:19:32.031Z"
   },
   {
-   "del": 1,
    "id": "pc490e52b",
-   "f": "pc490e52b-intro-16x9-11140317.mp4",
-   "at": "2026-11-15T05:17:49.750Z"
+   "style": "summary+benefits",
+   "min": "2",
+   "scenes": "",
+   "aud": "general",
+   "tone": "calm",
+   "topics": [],
+   "ideas": "",
+   "intro": "",
+   "outro": "",
+   "aspects": [
+    "9:16"
+   ],
+   "pages": 1,
+   "sfx": 1,
+   "voice": "gemini:Charon",
+   "theme": "green",
+   "font": "amiri",
+   "pat": "stars",
+   "cap": 1,
+   "note": "",
+   "creative": 0,
+   "phase": "script",
+   "at": "2026-11-15T05:19:32.031Z"
   },
   {
    "id": "pc490e52b",
