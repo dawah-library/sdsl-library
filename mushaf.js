@@ -125,7 +125,7 @@ const MUS = (() => {
     box.style.fontSize = "20px"; let mx = 0; lines.forEach(l => { let w = 0; for (const c of l.children) w += c.getBoundingClientRect().width; mx = Math.max(mx, w); });
     const fs = Math.min(46, Math.max(11, 20 * W * 0.97 / Math.max(1, mx))); box.style.fontSize = fs.toFixed(2) + "px"; }
   async function qcfPage(n) {
-    const D = await fetch("data/quran/qcf/" + n + ".json").then(r => r.ok ? r.json() : null).catch(() => null); if (!D) return null;
+    const D = await fetch("data/quran/qcf/" + n + ".json").then(r => r.ok ? r.json() : null).catch(() => null); if (!D) return null; QD[n] = D;
     const fonts = new Set([D.f]); D.l.forEach(l => l.forEach(w => { const x = w.find(v => typeof v === "string" && v.startsWith("@")); if (x) fonts.add(x.slice(1)); }));
     const ok = await Promise.all([...fonts].map(qfont)); if (ok.some(x => !x)) return null;
     const centered = n <= 2, html = D.l.map(l => { const t0 = l[0] && l[0][0], cls = t0 === "h" ? " qh" : t0 === "b" ? " qb" : ""; const c = centered || cls ? " qc" : "";
@@ -135,6 +135,25 @@ const MUS = (() => {
         return `<span class="qg" style="font-family:'${f}'">${w[1]}</span>`; }).join("")}</div>`; }).join("");
     return `<div class="qpage" dir="rtl">${html}</div>`;
   }
+  // «تفسير الصفحة» (طلب المدير، ١٥ نوفمبر): آيات الصفحة بخط المصحف ومع كل آية تفسيرها المختار، أو غريب كلماتها من «السراج»
+  const QD = {}, PTF = [["", "بلا تفسير"], ["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["siraj", "غريب القرآن (السراج)"]];
+  const ptk = () => { try { const v = localStorage.getItem("mus_ptf") || ""; return PTF.some(x => x[0] === v) ? v : ""; } catch (e) { return ""; } };
+  // كلمات الآية من بيانات أسطر الصفحة نفسها (بخطوطها المحمَّلة)، وإلا فالنص العثماني بخط المصحف
+  const qcfAyah = (n, s, a) => { const D = QD[n]; if (!D) return ""; const k = s + ":" + a, out = [];
+    D.l.forEach(l => l.forEach(w => { if (w[2] !== k || (w[0] !== "w" && w[0] !== "e")) return; const f = (w.find(v => typeof v === "string" && v.startsWith("@")) || "@" + D.f).slice(1);
+      out.push(w[0] === "w" ? `<span class="qg" style="font-family:'${f}'" data-act="musw" data-s="${s}" data-a="${a}" data-k="${k}" data-t="${esc(w[3] || "")}">${w[1]}</span>` : `<span class="qg qe" style="font-family:'${f}'" data-act="musay" data-s="${s}" data-a="${a}" data-k="${k}">${w[1]}</span>`); }));
+    return out.join(""); };
+  const tfBody = t => esc(String(t || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").trim()).replace(/\{\s*([^{}]{1,400}?)\s*\}/g, '<span class="ptq">﴿$1﴾</span>').replace(/\n+/g, "<br>");
+  async function ptfHtml(n, k, q4) { if (!k) return ""; const L = PG[n] || [], T = {}; for (const s of new Set(L.map(x => x[0]))) T[s] = await tf(k, s);
+    const name = (PTF.find(x => x[0] === k) || [, ""])[1];
+    return `<h3 class="pth">${k === "siraj" ? "غريب كلمات الصفحة" : "تفسير الصفحة"} <small>${esc(name)} • الصفحة ${AR(n)}</small></h3>` + L.map(([s, a]) => {
+      const g = q4 && qcfAyah(n, s, a), v = T[s] && T[s][a];
+      const ay = g ? `<div class="pta qcf" dir="rtl">${g}</div>` : `<div class="pta">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}">${AR(a)}</button></div>`;
+      const body = k === "siraj" ? (Array.isArray(v) && v.length ? `<dl class="qgr ptg">${v.map(([w, m]) => `<dt>﴿${esc(w)}﴾</dt><dd>${esc(m)}</dd>`).join("")}</dl>` : `<p class="mut ptn">لا غريب في هذه الآية في «السراج».</p>`)
+        : (v ? `<p class="ptt">${tfBody(v)}</p>` : `<p class="mut ptn">غير متاح لهذه الآية بعد.</p>`);
+      return `${a === 1 ? `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>` : ""}<div class="pti"><div class="ptr">${esc(nmP(s))}: ${AR(a)}</div>${ay}${body}</div>`; }).join(""); }
+  async function ptfShow(n) { const box = $("#mptfb"), k = ptk(), q4 = !!$(".qpage"); if (!box) return; document.querySelector(".mpin") && document.querySelector(".mpin").classList.toggle("on", !!k);
+    if (!k) { box.innerHTML = ""; return; } box.innerHTML = '<p class="mut">…</p>'; const h = await ptfHtml(n, k, q4); if (curPage() === n && ptk() === k) box.innerHTML = h; }
   async function mpage(n) {
     await load(); if (!PG) return sura(1, {});
     n = Math.max(1, Math.min(604, +n || 1)); const L = PG[n] || [], m0 = META[L[0][0]][L[0][1] - 1], suras = [...new Set(L.map(x => x[0]))];
@@ -143,14 +162,16 @@ const MUS = (() => {
     L.forEach(([s, a]) => { if (a === 1) body += `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${s !== 1 && s !== 9 ? `<p class="mbasm">${BASMT}</p>` : ""}`;
       const sj = META[s][a - 1][3]; body += `<span class="may" id="ay${s}_${a}">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}" aria-label="الآية ${a}">${AR(a)}</button>${sj ? '<span class="msj" title="موضع سجدة">۩</span>' : ""}</span> `; });
     const Q4 = qmode() === "qcf" ? await qcfPage(n) : null;
-    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><button class="btn s" data-act="musfull" title="ملء الشاشة لقراءة صفحات المصحف">⛶ تكبير</button><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>${playerHtml()}
+    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><button class="btn s" data-act="musfull" title="ملء الشاشة لقراءة صفحات المصحف">⛶ تكبير</button><select id="mptf" aria-label="التفسير مع الصفحة" title="تفسير الصفحة أو غريب كلماتها">${PTF.map(([k, t]) => `<option value="${k}"${k === ptk() ? " selected" : ""}>${k ? "📚 " + t : "📚 تفسير الصفحة: لا"}</option>`).join("")}</select><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>${playerHtml()}
     <div class="mfbar"><button data-act="musfull" aria-label="خروج من ملء الشاشة">✕</button><button data-act="muszoom" data-d="-1" aria-label="تصغير">－</button><button data-act="muszoom" data-d="1" aria-label="تكبير">＋</button>${n > 1 ? `<a href="#/mushaf/p/${n - 1}" aria-label="الصفحة السابقة">›</a>` : ""}<span>${AR(n)}</span>${n < 604 ? `<a href="#/mushaf/p/${n + 1}" aria-label="الصفحة التالية">‹</a>` : ""}<button data-act="musplay" data-n="${n}" aria-label="تلاوة">▶</button></div>
-    <div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
+    <div class="mpwrap"><div class="mpin${ptk() ? " on" : ""}"><div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
     ${!Q4 && qmode() === "qcf" ? `<p class="note mqerr">تعذّر تحميل خط المصحف على هذا الجهاز الآن، فعُرض النص العثماني. <button class="btn s p" data-act="musretry">إعادة المحاولة</button>${QERR.length ? `<small class="mut" dir="ltr">${esc(QERR.slice(-2).join(" | ").slice(0, 160))}</small>` : ""}</p>` : ""}
-    ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf"><span>${AR(n)}</span></div></div>
+    ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf"><span>${AR(n)}</span></div></div><aside id="mptfb" class="mptf" aria-live="polite"></aside></div></div>
     <div class="mnav mnb">${n > 1 ? `<a class="btn" href="#/mushaf/p/${n - 1}" rel="prev">الصفحة ${AR(n - 1)} ›</a>` : "<span></span>"}${n < 604 ? `<a class="btn" href="#/mushaf/p/${n + 1}" rel="next">‹ الصفحة ${AR(n + 1)}</a>` : "<span></span>"}</div>`);  /* كاتجاه المصحف: السابقة يمينًا والتالية يسارًا */
     $("#mpj").addEventListener("submit", e => { e.preventDefault(); location.hash = "#/mushaf/p/" + e.target.p.value; });
     if (Q4) { fit(); window.onresize = fit; }
+    $("#mptf").onchange = e => { try { localStorage.setItem("mus_ptf", e.target.value); } catch (x) { } ptfShow(n).then(fit); };
+    ptfShow(n).then(() => Q4 && fit());
     $("#mrec").onchange = e => { try { localStorage.setItem("mus_rec", e.target.value); } catch (x) { } };
     if (window.__musAuto === n) { window.__musAuto = 0; setTimeout(() => $("#mplay") && $("#mplay").click(), 400); }
     if (window.__musCont && window.__musCont.n === n) { const c = window.__musCont; window.__musCont = null; setTimeout(() => playList(c.L, c.i, c.onEnd, 0, c.loop), 300); }
