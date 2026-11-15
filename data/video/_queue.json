@@ -1,31 +1,4 @@
 {
  "note": "طابور فيديوهات الكتب (video.js ← tools/book-video.py)",
- "items": [
-  {
-   "id": "pc490e52b",
-   "style": "summary+benefits",
-   "min": "2",
-   "scenes": "",
-   "aud": "general",
-   "tone": "calm",
-   "topics": [],
-   "ideas": "",
-   "intro": "",
-   "outro": "",
-   "aspects": [
-    "9:16"
-   ],
-   "pages": 1,
-   "sfx": 1,
-   "voice": "gemini:Charon",
-   "theme": "auto",
-   "font": "amiri",
-   "pat": "",
-   "cap": 1,
-   "note": "",
-   "creative": 1,
-   "phase": "",
-   "at": "2026-11-15T05:27:59.736Z"
-  }
- ]
+ "items": []
 }
