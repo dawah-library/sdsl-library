@@ -1,7 +1,0 @@
-{
- "parts": {},
- "since": 1794682870.4891539,
- "err": {
-  "0": "Gemini: HTTP 429 {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota,"
- }
-}
