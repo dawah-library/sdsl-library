@@ -44,7 +44,7 @@ const VIDX = (() => {
         <label>الأفكار التي تريدها في الفيديو</label><textarea name="ideas" rows="3" placeholder="مثال: بيان حجية السنة، والرد على شبهة الاكتفاء بالقرآن، ونماذج من الواقع"></textarea>
         <div class="row"><div style="flex:1"><label>الافتتاح (اختياري)</label><input name="intro" placeholder="معنى يبدأ به الراوي"></div><div style="flex:1"><label>الختام (اختياري)</label><input name="outro" placeholder="معنى يختم به"></div></div>
         <label>مقاس الفيديو (اختر مقاسًا أو أكثر)</label>${checks("aspect", ["16:9"])}
-        <label class="chk"><input type="checkbox" name="pages" checked> 📖 إظهار صفحات الكتاب أثناء العرض: تنقلب الصفحة التي أُخذ منها المشهد (المصورة إن وُجدت) ويمر قلم التحديد على العبارة المقصودة</label>
+        <label class="chk"><input type="checkbox" name="pages" checked> 📖 إظهار صفحات الكتاب أثناء العرض داخل الشريحة نفسها (بجوار النقاط، أو تحتها في الطولي): تنقلب الصفحة التي أُخذ منها المشهد (المصورة إن وُجدت) ويمر قلم التحديد على العبارة المقصودة</label>
         <label class="chk"><input type="checkbox" name="sfx" checked> 🔊 صوت قلم التحديد وتقليب الصفحات</label>
         <details><summary>المظهر والصوت</summary><label>الصوت</label>${radios("voice", "gemini:Charon")}<label>السمة</label>${radios("theme", "green")}<label>خط العناوين</label>${radios("font", "amiri")}<label>الزخرفة</label>${radios("pat", "stars")}
           <label class="chk"><input type="checkbox" name="cap" checked> إظهار نص الراوي على الشاشة (ترجمة نصية)</label></details>

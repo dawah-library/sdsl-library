@@ -359,11 +359,11 @@ async def render_video(it, D, aspect, L, did, replace):
             nf = len([x for x in os.listdir(pclip) if x.endswith(".png")]); P = nf / FPS
         lead = 0.5 if P else 0.0  # يبدأ الراوي بعد انقلاب الصفحة
         d = max(secs(a) + 0.8 + lead, float(s.get("min") or 0), P + 1.5); v = os.path.join(tmp, "s%02d.mp4" % i)
-        img = os.path.join(tmp, "f%02d.png" % i); rest = d - P + (0.4 if P else 0)
+        img = os.path.join(tmp, "f%02d.png" % i); rest = max(0.1, d - P)
         vin = ["-loop", "1", "-t", "%.2f" % rest, "-framerate", str(FPS), "-i", img]
-        if P:  # مقطع الصفحة ثم شريحة المشهد بانتقال ناعم
+        if P:  # الصفحة تنقلب ويُحدَّد سطرها داخل الشريحة نفسها، ثم تثبت الشريحة (آخر إطار) حتى نهاية الكلام
             vin = ["-framerate", str(FPS), "-i", os.path.join(pclip, "%04d.png")] + vin
-            vf = "[0:v]format=yuv420p,setsar=1,fps=%d[pv];[1:v]format=yuv420p,setsar=1,fps=%d[sv];[pv][sv]xfade=transition=fade:duration=0.4:offset=%.2f,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, FPS, max(0.1, P - 0.4), max(0, d - 0.8))
+            vf = "[0:v]format=yuv420p,setsar=1,fps=%d[pv];[1:v]format=yuv420p,setsar=1,fps=%d[sv];[pv][sv]concat=n=2:v=1:a=0,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, FPS, max(0, d - 0.4))
             ai = 2
         else:
             vf = "[0:v]format=yuv420p,setsar=1,fps=%d,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, max(0, d - 0.4)); ai = 1
