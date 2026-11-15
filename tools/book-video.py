@@ -413,12 +413,27 @@ def fix_old(L):
             finally: shutil.rmtree(tmp, ignore_errors=True)
 
 
+def delete_video(it, L):
+    """حذف فيديو غير معتمد بطلب من الموقع: ملفه من إصدار video-<كتاب>، والإصدار نفسه إن فرغ؛ ويُزال من القائمة إن بقي فيها."""
+    bid, f, tag = it["id"], it["f"], "video-" + it["id"]
+    if any(v.get("f") == f and v.get("ok") for v in L.get(bid, [])): print("لا يُحذف فيديو معتمد:", f); return True
+    a = assets(tag)
+    if a is not None and f in a:
+        subprocess.run(["gh", "release", "delete-asset", tag, f, "-R", REPO, "-y"], check=True); a.discard(f); print("🗑 حُذف", f)
+    if a is not None and not a:
+        subprocess.run(["gh", "release", "delete", tag, "-R", REPO, "-y", "--cleanup-tag"], check=True); ASSETS.pop(tag, None)
+    if bid in L:
+        L[bid] = [v for v in L[bid] if v.get("f") != f]
+        if not L[bid]: del L[bid]
+    return True
+
+
 async def main():
     Q = jl(QP, {"items": []}); L = jl(LP, {}); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
     fix_old(L); jw(LP, L)
     left = []
     for it in Q.get("items") or []:
-        try: ok = await make(it, cat, L)
+        try: ok = delete_video(it, L) if it.get("del") else await make(it, cat, L)
         except Exception as e: print("✗", it.get("id"), str(e)[:200]); ok = False
         if not ok:
             it["err"] = (it.get("err") or 0) + 1
