@@ -6,6 +6,7 @@
 const VIDX = (() => {
   const RAW = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/" + p;
   const getj = async (p, d) => { try { const r = await fetch(RAW(p) + "?t=" + Math.floor(Date.now() / 60e3)); return r.ok ? await r.json() : d; } catch (e) { return d; } };
+  const GONE = new Set();  // ما حُذف في هذه الجلسة لا يعود بسبب تأخر نسخة raw المخزنة
   let LIST = null; const list = async f => (LIST && !f) ? LIST : (LIST = await getj("data/video/_list.json", {}));
   // على نطاق الموقع يُقدَّم الفيديو عبر الممر /au/v/ (functions/au) بنوع video/mp4؛ لأن رابط GitHub المباشر يُرسَل كمرفق فلا يعمل على iPhone
   const PROXY = () => /dawahlibrary\.org$|\.pages\.dev$/.test(location.hostname);
@@ -33,7 +34,7 @@ const VIDX = (() => {
   async function page(q) {
     const adm = may(), [L, DX] = await Promise.all([list(true), adm ? getj("data/video/drafts/_index.json", {}) : {}]), bid = q.b;
     if (q.d && adm) return montage(q.d, q.r);
-    const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid)).reverse();
+    const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid) && !GONE.has(v.f)).reverse();
     view(`<div class="cmhero"><div><h2>🎬 مراجعات الكتب بالفيديو</h2><p>استعراض الكتب في فيديوهات تعليمية: ملخصها، ومراجعتها، ومميزاتها ومنهجها، وقراءة نقدية منصفة لها، والحديث عن بعض أبوابها؛ تعدّها إدارة المكتبة ومن تفوّضه، للمشاهدة والتنزيل والمشاركة.</p></div></div>
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
         <label>الكتاب أو المقال</label><input name="t" autocomplete="off" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب جزءًا من اسم الكتاب أو المقال ثم اختره" required><div id="vidsug" class="vidsug" hidden></div>
@@ -44,7 +45,7 @@ const VIDX = (() => {
         <label>الأفكار التي تريدها في الفيديو</label><textarea name="ideas" rows="3" placeholder="مثال: بيان حجية السنة، والرد على شبهة الاكتفاء بالقرآن، ونماذج من الواقع"></textarea>
         <div class="row"><div style="flex:1"><label>الافتتاح (اختياري)</label><input name="intro" placeholder="معنى يبدأ به الراوي"></div><div style="flex:1"><label>الختام (اختياري)</label><input name="outro" placeholder="معنى يختم به"></div></div>
         <label>مقاس الفيديو (اختر مقاسًا أو أكثر)</label>${checks("aspect", ["16:9"])}
-        <label class="chk"><input type="checkbox" name="pages" checked> 📖 إظهار صفحات الكتاب أثناء العرض: تنقلب الصفحة التي أُخذ منها المشهد (المصورة إن وُجدت) ويمر قلم التحديد على العبارة المقصودة</label>
+        <label class="chk"><input type="checkbox" name="pages" checked> 📖 إظهار صفحات الكتاب أثناء العرض داخل الشريحة نفسها (بجوار النقاط، أو تحتها في الطولي): تنقلب الصفحة التي أُخذ منها المشهد (المصورة إن وُجدت) ويمر قلم التحديد على العبارة المقصودة</label>
         <label class="chk"><input type="checkbox" name="sfx" checked> 🔊 صوت قلم التحديد وتقليب الصفحات</label>
         <details><summary>المظهر والصوت</summary><label>الصوت</label>${radios("voice", "gemini:Charon")}<label>السمة</label>${radios("theme", "green")}<label>خط العناوين</label>${radios("font", "amiri")}<label>الزخرفة</label>${radios("pat", "stars")}
           <label class="chk"><input type="checkbox" name="cap" checked> إظهار نص الراوي على الشاشة (ترجمة نصية)</label></details>
@@ -54,7 +55,7 @@ const VIDX = (() => {
       ${adm && Object.keys(DX).filter(k => !DX[k].made).length ? `<div class="card"><h3>📝 مسودات بانتظار المونتاج</h3>${Object.entries(DX).filter(([, x]) => !x.made).reverse().slice(0, 20).map(([id, x]) => `<a class="bk" href="#/video?d=${encodeURIComponent(id)}"><b>${esc(x.t)}</b><span>${toAr(x.n)} مشهدًا • ${esc(x.at)}</span></a>`).join("")}</div>` : ""}
       ${bid ? `<p><a href="#/video">← كل الفيديوهات</a> <b>${esc((B(bid) || {}).title || bid)}</b></p>` : ""}
       <div class="vidgrid">${vids.map(v => `<div class="card vidc"><video controls preload="metadata" playsinline src="${esc(url(v.id, v.f))}"${v.aspect === "9:16" ? ' class="tall"' : v.aspect === "1:1" ? ' class="sq"' : ""}></video><b>${esc(v.t)}</b><span class="mut">${esc(styleName(v.style))} • ${esc(ASPL(v.aspect || "16:9"))} • ${fmt(v.d || 0)} • ${esc((B(v.id) || {}).title || "")}${v.rev ? ` • <em class="tag">مصحَّح ${toAr(v.rev)}</em>` : ""}</span>
-        <div class="row"><a class="btn s" href="#/book/${esc(v.id)}/1">📖 الكتاب</a><a class="btn s" href="${esc(dl(v.id, v.f))}" download="${esc(v.f)}">⬇ تنزيل</a><button class="btn s" data-act="vidshare" data-u="${esc(url(v.id, v.f))}" data-t="${esc(v.t)}">⤴ مشاركة</button>${adm ? `<button class="btn s ${v.ok ? "" : "p"}" data-act="vidok" data-b="${esc(v.id)}" data-k="${v.k}">${v.ok ? "إلغاء النشر" : "اعتماد ونشر"}</button>${v.draft ? `<a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}">✂ تعديل وإعادة الإخراج</a>` : ""}` : ""}${v.ok ? "" : ' <em class="tag">بانتظار الاعتماد</em>'}</div>${adm && !v.ok && v.draft ? fixBox(v) : ""}</div>`).join("") || '<p class="note">لا فيديوهات منشورة بعد.</p>'}</div>`);
+        <div class="row"><a class="btn s" href="#/book/${esc(v.id)}/1">📖 الكتاب</a><a class="btn s" href="${esc(dl(v.id, v.f))}" download="${esc(v.f)}">⬇ تنزيل</a><button class="btn s" data-act="vidshare" data-u="${esc(url(v.id, v.f))}" data-t="${esc(v.t)}">⤴ مشاركة</button>${adm ? `<button class="btn s ${v.ok ? "" : "p"}" data-act="vidok" data-b="${esc(v.id)}" data-k="${v.k}">${v.ok ? "إلغاء النشر" : "اعتماد ونشر"}</button>${v.ok ? "" : `<button class="btn s danger" data-act="viddel" data-b="${esc(v.id)}" data-f="${esc(v.f)}">🗑 حذف</button>`}${v.draft ? `<a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}">✂ تعديل وإعادة الإخراج</a>` : ""}` : ""}${v.ok ? "" : ' <em class="tag">بانتظار الاعتماد</em>'}</div>${adm && !v.ok && v.draft ? fixBox(v) : ""}</div>`).join("") || '<p class="note">لا فيديوهات منشورة بعد.</p>'}</div>`);
     const lb = document.getElementById("vlexgo"); if (lb) lb.onclick = async () => { const st = document.getElementById("vlexst"); st.textContent = "جارٍ الحفظ…";
       try { const words = lexParse(document.getElementById("vlex").value); await GH.editJSON("data/video/_lexicon.json", o => Object.assign(o || {}, { words }), "فيديو: قاموس النطق"); st.textContent = "✓ حُفظ (" + toAr(words.length) + ")"; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
     const f = document.getElementById("vidf"); if (!f) return;
@@ -130,7 +131,13 @@ const VIDX = (() => {
   }
   document.addEventListener("click", async e => { const el = e.target.closest("[data-act^=vid]"); if (!el) return; e.preventDefault();
     if (el.dataset.act === "vidshare") { const d = { title: el.dataset.t, text: el.dataset.t + " — فيديو من المكتبة الرقمية للدعوة السلفية", url: el.dataset.u }; if (navigator.share) navigator.share(d).catch(() => { }); else { navigator.clipboard.writeText(d.url); toast("نُسخ رابط الفيديو"); } }
-    else if (el.dataset.act === "vidok") { const b = el.dataset.b, k = +el.dataset.k; await GH.editJSON("data/video/_list.json", o => { if (o[b] && o[b][k]) o[b][k].ok = o[b][k].ok ? 0 : 1; return o; }, "فيديو: اعتماد"); LIST = null; route(); } });
+    else if (el.dataset.act === "vidok") { const b = el.dataset.b, k = +el.dataset.k; await GH.editJSON("data/video/_list.json", o => { if (o[b] && o[b][k]) o[b][k].ok = o[b][k].ok ? 0 : 1; return o; }, "فيديو: اعتماد"); LIST = null; route(); }
+    // حذف فيديو غير معتمد: يُزال من القائمة فورًا، ويُحذف ملفه من إصدار GitHub في المهمة (طلب del في الطابور)
+    else if (el.dataset.act === "viddel") { const b = el.dataset.b, f = el.dataset.f; if (!confirm("حذف هذا الفيديو نهائيًّا؟ لا يمكن استرجاعه، ويبقى نص مسودته للمونتاج إن أردت إخراجه من جديد.")) return;
+      el.disabled = true; el.textContent = "جارٍ الحذف…";
+      try { await GH.editJSON("data/video/_list.json", o => { if (o[b]) { o[b] = o[b].filter(v => v.f !== f || v.ok); if (!o[b].length) delete o[b]; } return o; }, "فيديو: حذف " + f);
+        await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).push({ del: 1, id: b, f, at: new Date().toISOString() }); return o; }, "فيديو: حذف الملف " + f);
+        GONE.add(f); toast("✓ حُذف الفيديو"); LIST = null; route(); } catch (x) { el.disabled = false; el.textContent = "🗑 حذف"; toast("تعذّر الحذف: " + (x.message || x)); } } });
   // رابط في «خدمات الكتاب»
   new MutationObserver(async () => { const nav = document.querySelector(".bkhub nav:not([data-vid])"); if (!nav) return; nav.dataset.vid = 1; const m = location.pathname.match(/book\/([^/]+)/); if (!m) return; const L = await list(), b = B(m[1]), id = b && b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : m[1];
     const l = (L[id] || []).filter(v => v.ok || may()); if (l.length || may()) nav.insertAdjacentHTML("beforeend", `<a href="#/video?b=${encodeURIComponent(id)}">🎬 ${l.length ? "فيديو الملخص" : "إعداد فيديو"}</a>`); }).observe(document.documentElement, { childList: true, subtree: true });

@@ -359,11 +359,11 @@ async def render_video(it, D, aspect, L, did, replace):
             nf = len([x for x in os.listdir(pclip) if x.endswith(".png")]); P = nf / FPS
         lead = 0.5 if P else 0.0  # يبدأ الراوي بعد انقلاب الصفحة
         d = max(secs(a) + 0.8 + lead, float(s.get("min") or 0), P + 1.5); v = os.path.join(tmp, "s%02d.mp4" % i)
-        img = os.path.join(tmp, "f%02d.png" % i); rest = d - P + (0.4 if P else 0)
+        img = os.path.join(tmp, "f%02d.png" % i); rest = max(0.1, d - P)
         vin = ["-loop", "1", "-t", "%.2f" % rest, "-framerate", str(FPS), "-i", img]
-        if P:  # مقطع الصفحة ثم شريحة المشهد بانتقال ناعم
+        if P:  # الصفحة تنقلب ويُحدَّد سطرها داخل الشريحة نفسها، ثم تثبت الشريحة (آخر إطار) حتى نهاية الكلام
             vin = ["-framerate", str(FPS), "-i", os.path.join(pclip, "%04d.png")] + vin
-            vf = "[0:v]format=yuv420p,setsar=1,fps=%d[pv];[1:v]format=yuv420p,setsar=1,fps=%d[sv];[pv][sv]xfade=transition=fade:duration=0.4:offset=%.2f,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, FPS, max(0.1, P - 0.4), max(0, d - 0.8))
+            vf = "[0:v]format=yuv420p,setsar=1,fps=%d[pv];[1:v]format=yuv420p,setsar=1,fps=%d[sv];[pv][sv]concat=n=2:v=1:a=0,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, FPS, max(0, d - 0.4))
             ai = 2
         else:
             vf = "[0:v]format=yuv420p,setsar=1,fps=%d,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, max(0, d - 0.4)); ai = 1
@@ -413,12 +413,27 @@ def fix_old(L):
             finally: shutil.rmtree(tmp, ignore_errors=True)
 
 
+def delete_video(it, L):
+    """حذف فيديو غير معتمد بطلب من الموقع: ملفه من إصدار video-<كتاب>، والإصدار نفسه إن فرغ؛ ويُزال من القائمة إن بقي فيها."""
+    bid, f, tag = it["id"], it["f"], "video-" + it["id"]
+    if any(v.get("f") == f and v.get("ok") for v in L.get(bid, [])): print("لا يُحذف فيديو معتمد:", f); return True
+    a = assets(tag)
+    if a is not None and f in a:
+        subprocess.run(["gh", "release", "delete-asset", tag, f, "-R", REPO, "-y"], check=True); a.discard(f); print("🗑 حُذف", f)
+    if a is not None and not a:
+        subprocess.run(["gh", "release", "delete", tag, "-R", REPO, "-y", "--cleanup-tag"], check=True); ASSETS.pop(tag, None)
+    if bid in L:
+        L[bid] = [v for v in L[bid] if v.get("f") != f]
+        if not L[bid]: del L[bid]
+    return True
+
+
 async def main():
     Q = jl(QP, {"items": []}); L = jl(LP, {}); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
     fix_old(L); jw(LP, L)
     left = []
     for it in Q.get("items") or []:
-        try: ok = await make(it, cat, L)
+        try: ok = delete_video(it, L) if it.get("del") else await make(it, cat, L)
         except Exception as e: print("✗", it.get("id"), str(e)[:200]); ok = False
         if not ok:
             it["err"] = (it.get("err") or 0) + 1
