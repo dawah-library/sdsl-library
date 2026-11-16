@@ -1,9 +1,17 @@
 {
 "note": "يولّده tools/covers.py (covers.yml)",
 "ids": [
+"adabmufrad",
+"alfiyya",
 "arbain",
+"barbahari",
+"bayquniyya",
 "bukhari",
 "bulugh",
+"fusul",
+"ibnmajah",
+"ibnsalah",
+"khulafa",
 "muqusul",
 "p032b9da4",
 "p0793f40c",
@@ -59,11 +67,25 @@
 "pdbfbb888",
 "peb296fa1",
 "pf2a3a079",
-"riyad"
+"riyad",
+"tawhid",
+"umda",
+"waraqat",
+"wasitiyya"
 ],
 "page": {},
 "skip": [],
-"bw": [],
+"bw": [
+"alfiyya",
+"barbahari",
+"ibnmajah",
+"ibnsalah",
+"khulafa",
+"tawhid",
+"umda",
+"waraqat",
+"wasitiyya"
+],
 "manual": [],
 "v": {
 "p1f08a935": "6aed86f8",
@@ -124,6 +146,18 @@
 "bulugh": "6af1c373",
 "p1145b3d4": "6af1c375",
 "pc490e52b": "6af1c377",
-"p0793f40c": "6af1c379"
+"p0793f40c": "6af1c379",
+"ibnsalah": "6afafc0b",
+"bayquniyya": "6afafc0d",
+"umda": "6afafc0e",
+"waraqat": "6afafc10",
+"wasitiyya": "6afafc11",
+"barbahari": "6afafc13",
+"tawhid": "6afafc14",
+"alfiyya": "6afafc15",
+"adabmufrad": "6afafc16",
+"khulafa": "6afafc17",
+"fusul": "6afafc19",
+"ibnmajah": "6afafc1b"
 }
 }
