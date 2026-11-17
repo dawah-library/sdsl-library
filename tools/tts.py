@@ -656,7 +656,7 @@ async def main():
     items = q.get("items", [])
     if only:
         items = [{"id": x} for x in only] + [i for i in items if i["id"] not in only]
-    if os.environ.get("TTS_AUTO") == "1" and not only:  # التحويل التلقائي (قرار المدير ٣١ أكتوبر): كتب مكتبة الدعوة أولًا، الأقصر فالأطول، ثم المختار من المكتبة العامة
+    if False:  # بطلب المدير (١٧ نوفمبر ٢٠٢٦): إيقاف الإضافة التلقائية (كانت تعمل بـ TTS_AUTO=1)
         cat = catalog(); have = {i["id"] for i in items}
         pick = set(jload(os.path.join(AUD, "_auto.json"), {}).get("turath") or [])
         skip = set(jload(os.path.join(AUD, "_settings.json"), {}).get("skip") or [])
