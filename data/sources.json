@@ -184,12 +184,17 @@
      "119813",
      "119812",
      "119811",
-     "119810"
+     "119810",
+     "119827",
+     "119826",
+     "119825",
+     "119824",
+     "119823"
     ],
-    "lastRun": "2026-11-17T14:38:38.573Z",
+    "lastRun": "2026-11-17T23:41:05.378Z",
     "last": {
      "added": 0,
-     "skipped": 10,
+     "skipped": 5,
      "errs": 0
     },
     "mode": "html"
@@ -209,7 +214,7 @@
    "note": "يرفض الطلبات الآلية (403) حتى من خوادم GitHub (استكشاف ٣١ أكتوبر)؛ الحل: إذن من الجريدة بإدراج خوادمنا، أو خلاصة RSS، أو إرسال المقالات يدويًّا",
    "state": {
     "seen": [],
-    "lastRun": "2026-11-17T14:38:41.935Z",
+    "lastRun": "2026-11-17T23:41:08.038Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -281,7 +286,7 @@
      "974",
      "1727"
     ],
-    "lastRun": "2026-11-17T14:38:45.145Z",
+    "lastRun": "2026-11-17T23:41:11.300Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -345,7 +350,7 @@
      "wp10932",
      "wp10945"
     ],
-    "lastRun": "2026-11-17T14:38:47.165Z",
+    "lastRun": "2026-11-17T23:41:13.600Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -489,10 +494,10 @@
      "a5955217b7",
      "11efc9b7cd"
     ],
-    "lastRun": "2026-11-17T14:39:48.930Z",
+    "lastRun": "2026-11-17T23:41:24.043Z",
     "last": {
-     "added": 9,
-     "skipped": 9,
+     "added": 0,
+     "skipped": 0,
      "errs": 0
     }
    },
@@ -704,12 +709,18 @@
      "119820",
      "119819",
      "119818",
-     "119817"
+     "119817",
+     "119827",
+     "119826",
+     "119825",
+     "119824",
+     "119823",
+     "115817"
     ],
-    "lastRun": "2026-11-17T14:42:40.840Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
-     "skipped": 5,
+     "skipped": 6,
      "errs": 0
     }
    }
@@ -762,7 +773,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -790,7 +801,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -819,7 +830,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -877,7 +888,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1192,7 +1203,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1218,7 +1229,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1300,7 +1311,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1326,7 +1337,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1355,7 +1366,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1381,7 +1392,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.439Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1409,7 +1420,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1438,7 +1449,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1465,7 +1476,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1492,7 +1503,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1548,7 +1559,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1632,7 +1643,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1658,7 +1669,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1686,7 +1697,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1714,7 +1725,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1741,7 +1752,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1767,7 +1778,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1796,7 +1807,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1824,7 +1835,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-17T14:42:40.841Z",
+    "lastRun": "2026-11-17T23:43:16.440Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1897,9 +1908,9 @@
      "247807",
      "248296"
     ],
-    "lastRun": "2026-11-17T14:43:15.193Z",
+    "lastRun": "2026-11-17T23:43:37.473Z",
     "last": {
-     "added": 5,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -1931,7 +1942,7 @@
    "note": "طلب المدير ١٣ نوفمبر: المقالات والدراسات الشرعية (العقيدة، الحديث، الفقه وأصوله، السيرة)",
    "state": {
     "seen": [],
-    "lastRun": "2026-11-17T14:43:30.883Z",
+    "lastRun": "2026-11-17T23:43:52.864Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1964,7 +1975,7 @@
    "note": "طلب المدير ١٣ نوفمبر: المقالات الأدبية واللغوية (اللغة والقلم، أدبنا، الدراسات النقدية، من روائع الماضي، فن الكتابة)",
    "state": {
     "seen": [],
-    "lastRun": "2026-11-17T14:43:43.801Z",
+    "lastRun": "2026-11-17T23:44:05.659Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -2042,9 +2053,9 @@
      "166",
      "263"
     ],
-    "lastRun": "2026-11-17T14:44:12.536Z",
+    "lastRun": "2026-11-17T23:44:32.456Z",
     "last": {
-     "added": 1,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -2074,7 +2085,7 @@
    "note": "طلب المدير dmwb1xru8: الدراسات والرؤى والتقارير",
    "state": {
     "seen": [],
-    "lastRun": "2026-11-17T14:44:21.913Z",
+    "lastRun": "2026-11-17T23:44:41.631Z",
     "last": {
      "added": 0,
      "skipped": 0,
