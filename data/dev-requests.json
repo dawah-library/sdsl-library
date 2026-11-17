@@ -666,9 +666,9 @@
    "k": "feature",
    "p": 1,
    "del": 0,
-   "st": "doing",
+   "st": "review",
    "at": "2026-11-17T12:18:06.466Z",
-   "eng": "auto",
+   "eng": "gemini:gemini-flash-lite-latest",
    "auto": 0,
    "by": "admin",
    "h": [
@@ -681,7 +681,11 @@
    "t0": "2026-11-17T12:19:24Z",
    "br": "agent/dev/dmwknrkzl",
    "run": "https://github.com/dawah-library/sdsl-library/actions/runs/44081861201",
-   "u": "2026-11-17T12:19:25Z"
+   "u": "2026-11-17T12:31:10Z",
+   "r": "تم بحمد الله إيقاف وتفريغ طوابير الإنشاء والتوليد التلقائي للأقسام الأربعة المحددة (الصوتيات، الكراسات، التشجير، واختصار الكتب / المختصرات)، مع تفريغ الطوابير المعلقة باستثناء كتاب «الجامع لأحكام الصيام» في طابور الصوتيات ريثما يتم إتمام العمل عليه. كما تم قصر الإضافة والتفعيل على الاختيار اليدوي من لوحة الإدارة. تمت إعادة توجيه الموارد والمفاتيح التشغيلية للتركيز على معالجة الكتب المصورة وتدقيقها، تحسين الكتب وتنسيقها في المكتبة العامة، تفعيل استيراد المصادر الإثرائية، وركن الأخبار، مع الحفاظ الكامل على كافة البيانات والمخرجات السابقة.",
+   "diff": "https://github.com/dawah-library/sdsl-library/compare/main...agent/dev/dmwknrkzl",
+   "files": "data/audio/_queue.json data/kurrasa/_queue.json data/study-queue.json data/tashjir/_queue.json tools/enrich-new.py tools/tts.py ",
+   "chk": 1
   }
  ]
 }
