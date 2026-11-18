@@ -4,9 +4,9 @@
  "fatwaAuthor": "a2",
  "maxMisses": 60,
  "delayMs": 900,
- "latestHint": 25776,
- "imported": 15003,
- "lastRun": "2026-11-18T10:10:33.343Z",
+ "latestHint": 25778,
+ "imported": 15004,
+ "lastRun": "2026-11-18T17:25:23.579Z",
  "newAuthors": [
   "سعيد السواح",
   "محمد الباز",
@@ -216,7 +216,7 @@
  ],
  "lastSeen": 241,
  "backNext": 10233,
- "headNext": 25777,
+ "headNext": 25779,
  "skipped": [
   "sv24172",
   "sv24173",
