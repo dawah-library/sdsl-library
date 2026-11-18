@@ -1,5 +1,5 @@
 {
-"updated": "2026-11-18T11:38:15Z",
+"updated": "2026-11-18T17:36:36Z",
 "sources": [
 {
 "name": "آخر الأنباء",
@@ -15,6 +15,37 @@
 }
 ],
 "items": [
+{
+"title": "مصر تؤكد رفضها وإدانتها للاعتداءات على الكويت: تهدد أمن واستقرار المنطقة",
+"url": "https://fath-news.com/ar/581518-%D9%85%D8%B5%D8%B1-%D8%AA%D8%A4%D9%83%D8%AF-%D8%B1%D9%81%D8%B6%D9%87%D8%A7-%D9%88%D8%A5%D8%AF%D8%A7%D9%86%D8%AA%D9%87%D8%A7-%D9%84%D9%84%D8%A7%D8%B9%D8%AA%D8%AF%D8%A7%D8%A1%D8%A7%D8%AA-%D8%B9%D9%84%D9%89-%D8%A7%D9%84%D9%83%D9%88%D9%8A%D8%AA-%D8%AA%D9%87%D8%AF%D8%AF-%D8%A3%D9%85%D9%86-%D9%88%D8%A7%D8%B3%D8%AA%D9%82%D8%B1%D8%A7%D8%B1-%D8%A7%D9%84%D9%85%D9%86%D8%B7%D9%82%D8%A9-1",
+"date": "2026-11-18T17:08:18Z",
+"sum": "",
+"src": "بوابة الفتح",
+"sid": "fath",
+"cat": "region",
+"nosum": 1,
+"top": 1
+},
+{
+"title": "البطالة في مصر ترتفع إلى 6% خلال الربع الثالث من 2026",
+"url": "https://fath-news.com/ar/581496-%D8%A7%D9%84%D8%A8%D8%B7%D8%A7%D9%84%D8%A9-%D9%81%D9%8A-%D9%85%D8%B5%D8%B1-%D8%AA%D8%B1%D8%AA%D9%81%D8%B9-%D8%A5%D9%84%D9%89-6-%D8%AE%D9%84%D8%A7%D9%84-%D8%A7%D9%84%D8%B1%D8%A8%D8%B9-%D8%A7%D9%84%D8%AB%D8%A7%D9%84%D8%AB-%D9%85%D9%86-2026-1",
+"date": "2026-11-18T15:01:57Z",
+"sum": "",
+"src": "بوابة الفتح",
+"sid": "fath",
+"cat": "egypt",
+"nosum": 1
+},
+{
+"title": "الأزهر يعلن جداول امتحانات الفصل الدراسى الأول 2026-2027 لصفوف النقل والشهادات",
+"url": "https://fath-news.com/ar/581490-%D8%A7%D9%84%D8%A3%D8%B2%D9%87%D8%B1-%D9%8A%D8%B9%D9%84%D9%86-%D8%AC%D8%AF%D8%A7%D9%88%D9%84-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86%D8%A7%D8%AA-%D8%A7%D9%84%D9%81%D8%B5%D9%84-%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D9%89-%D8%A7%D9%84%D8%A3%D9%88%D9%84-2026-2027-%D9%84%D8%B5%D9%81%D9%88%D9%81-%D8%A7%D9%84%D9%86%D9%82%D9%84-%D9%88%D8%A7%D9%84%D8%B4%D9%87%D8%A7%D8%AF%D8%A7%D8%AA-1",
+"date": "2026-11-18T13:19:49Z",
+"sum": "",
+"src": "بوابة الفتح",
+"sid": "fath",
+"cat": "egypt",
+"nosum": 1
+},
 {
 "title": "لمرضى اضطرابات التجلط.. تحذير جديد من هيئة الدواء بشأن حقن إبيكافيت",
 "url": "https://fath-news.com/ar/581481-%D9%84%D9%85%D8%B1%D8%B6%D9%89-%D8%A7%D8%B6%D8%B7%D8%B1%D8%A7%D8%A8%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D8%AC%D9%84%D8%B7-%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D8%AC%D8%AF%D9%8A%D8%AF-%D9%85%D9%86-%D9%87%D9%8A%D8%A6%D8%A9-%D8%A7%D9%84%D8%AF%D9%88%D8%A7%D8%A1-%D8%A8%D8%B4%D8%A3%D9%86-%D8%AD%D9%82%D9%86-%D8%A5%D8%A8%D9%8A%D9%83%D8%A7%D9%81%D9%8A%D8%AA-1",
@@ -114,8 +145,7 @@
 "src": "بوابة الفتح",
 "sid": "fath",
 "cat": "region",
-"nosum": 1,
-"top": 1
+"nosum": 1
 },
 {
 "title": "استقرار سعر الدولار أمام الجنيه المصري في البنوك.. تعرف على أسعار الشراء والبيع",
@@ -438,7 +468,8 @@
 "src": "بوابة الفتح",
 "sid": "fath",
 "cat": "egypt",
-"also": []
+"also": [],
+"nosum": 1
 },
 {
 "title": "الحرس الثوري: ناقلتا نفط اصطدمتا بألغام في مضيق هرمز",
@@ -467,7 +498,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt"
+"cat": "egypt",
+"nosum": 1
 },
 {
 "title": "مجلس الأمن يعقد جلسة بشأن سوريا لبحث تطورات المرحلة الانتقالية",
@@ -476,7 +508,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "إعلام إيراني: تفعيل الدفاعات الجوية في جزيرة قشم جنوب غربي البلاد",
@@ -485,7 +518,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "دعاوى قضائية ضد المتطاول \"أحمد ماهر\" بتهمة ازدراء الإسلام.. الأزهر: الطعن في الصحابة نشر للفتنة والتطرف واستهداف لهوية الشباب.. و\"الدعوة السلفية\": جريمة نكراء",
@@ -510,12 +544,13 @@
 },
 {
 "title": "قوات الاحتلال تستهدف بالرشاشات الثقيلة أطراف وادي الرقاد بريف درعا الغربي",
-"url": "https://news.google.com/rss/articles/CBMizARBVV95cUxQM1UyVUZhU2l0clpVeUk0SkdWZUkxRTZ1S25TX2FZbFFpY3piS3JlLTYzNW1PaXZjZ1BfOGVzSU02M0NtTHFaaS1hNVZoeGZQR1RHMnJQWk1iTVlSN19yTXFMTW1QTnpvSGd3X3RtaUUzeTZpamhYNGRVNkc4SUw4R0JwZW1aaERyU0IzUS1UX2VpSkZUTlJ1WkNPYzRfNjQtd2h5OGJmQjR6OEQySldReFVCWlZOVzFTYUhDQXYxdFJ2aDJZdkxrb3NCWWdiazA4b29wd0ZfNUFfYzY5anRGQXVwUDhpSnlRS0NWRFgxb09JWVhBNXhoQWxGd1RrSEp1QVhCb09NSmd3RzJWal9ld1dMYUpzWXJmWU5Bdl91M1RGUkdIQ2VfTXNBQlIyMWFtdWFMZ1YwbTQ1N3Iydkh4VTJ0N0VsM1M4WFE2SzF2YnRqQTgzeE55UmMxZ2dvNWU5WkF2U2hjRjZyel93eVZTRzFERzR1MFYzcmpHbXJYNEFPeXl1NE5ESWhKZUtDekhQMFlLb1NIcGk1SVQtT1lZUC1la0NxeURERjNmcl9CemRJSzd0WkVIVGRFaDktZnRQNDdWVHpYdEVOR2R5aGNXeTVvckhoVjlyOXJPcEppUi1xbzRWTHQxUmgyeHpfWlFOdkdjZHRuTEJlZi1pVV9NaXBIdU5JU0dSLXh2eE9aamNFZkgwRW9LMS1vQlN6X213RjdyQ2ctYkpVNE5peDh1UjVGZGI3a3p5R1dXUTl5RW9taWotblhTeEhDclI?oc=5",
+"url": "https://fath-news.com/ar/581221-%D9%82%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%84%D8%A7%D9%84-%D8%AA%D8%B3%D8%AA%D9%87%D8%AF%D9%81-%D8%A8%D8%A7%D9%84%D8%B1%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D8%A7%D9%84%D8%AB%D9%82%D9%8A%D9%84%D8%A9-%D8%A3%D8%B7%D8%B1%D8%A7%D9%81-%D9%88%D8%A7%D8%AF%D9%8A-%D8%A7%D9%84%D8%B1%D9%82%D8%A7%D8%AF-%D8%A8%D8%B1%D9%8A%D9%81-%D8%AF%D8%B1%D8%B9%D8%A7-%D8%A7%D9%84%D8%BA%D8%B1%D8%A8%D9%8A",
 "date": "2026-11-15T15:30:00Z",
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "تصعيد متسارع وفرض وقائع تهويدية في القدس والضفة الغربية",
@@ -544,7 +579,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt"
+"cat": "egypt",
+"nosum": 1
 },
 {
 "title": "تراجع بأسعار النفط مع اتجاه ترامب مواصلة التهدئة مع إيران آبار جديدة للغاز والبترول في مصر.. و \"برنت\" يتكبد أكبر خسارة منذ جائحة كورونا",
@@ -583,7 +619,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "ميليشيا الحوثي تواصل هجماتها على السعودية رغم الهدوء بين طهران وواشنطن",
@@ -639,30 +676,33 @@
 },
 {
 "title": "لعنة المطارات تتواصل في أمريكا.. اصطدام طائرتي شحن وركاب على ممرات مطار ميامي الدولي",
-"url": "https://news.google.com/rss/articles/CBMigwVBVV95cUxQTndWRjZmZ2tOYkxnQXFhMXdRVVpTR05hekVudFQweGtwcnJ4RmY5alAtcGFhWWNhV09nV2JsNGtiSS1uTjh2Q1l1WE1KTTlaTFYzRC14djZNd0JUdWJCa0FySHBGR1lhMnJtaTZudU1nS0l2Sm5JOFJvcU5uS2UtZ21nM2RyZkdJY3VDUlJlaGxhWVpQOFJQekVXQVZqSXRzOUs5eHNhaUx4eTdYZTJ6eFdCOEtQMEM4TkFkYnpaTUVLUWhDWGEzOUFCMUJwZHZIU0Ryak9EeGVQMksxT2xXYlVkNEJfSGgzV2oxM1I2UGtKTDBuMzBEUFpQbkdmMV9hNTZ3b01ESnVKWlRlNHFIN0RNWlVrVEJXZi1maWlZT19aTzFMQ2Y5aGVUVXFXWGtJRmxTLU9tM2JTR0hUR3FiTjJXSEdZclpENzlQclFaZ3lRWm1VVDBTRHFnOU1MODk3MVdNWXBMdENYVk5VMEJiWXRMT2NjUEx3bEpjRjhNU0UwcVNRZlVvdGlaQnRyOGJGcnlfWEM4TWxjcTV3bXRNT1ZIc3ZYVjJROTgydHdybWp5S1c5R1BSOTBUZ2xHWFUtX1Q3akpjRXpQbHZqSld1ZFhXc1dzMmItTmlDemJlQnM1YUhfTlYxdlpzUnRSVGQxT1M0N3hpSVJLWENPNElVcmhDajRPRTF0V3QxV2ExdnhnR1dMeVdSRFVrQ3BmOFVpTFpTYmEwM2NLX28zQUEwaXdlTGhRbVF3QlF1UU90MkFzdGFuRFU5cnFGYXItaGtGSjBIWk11MnVIMkhGNkUtQThOWlQxOXJPUEotVjR0NkZZTDJhSEJrUFBNdDdWaWZkbFlN?oc=5",
+"url": "https://fath-news.com/ar/581158-%D9%84%D8%B9%D9%86%D8%A9-%D8%A7%D9%84%D9%85%D8%B7%D8%A7%D8%B1%D8%A7%D8%AA-%D8%AA%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D9%81%D9%8A-%D8%A3%D9%85%D8%B1%D9%8A%D9%83%D8%A7-%D8%A7%D8%B5%D8%B7%D8%AF%D8%A7%D9%85-%D8%B7%D8%A7%D8%A6%D8%B1%D8%AA%D9%8A-%D8%B4%D8%AD%D9%86-%D9%88%D8%B1%D9%83%D8%A7%D8%A8-%D8%B9%D9%84%D9%89-%D9%85%D9%85%D8%B1%D8%A7%D8%AA-%D9%85%D8%B7%D8%A7%D8%B1-%D9%85%D9%8A%D8%A7%D9%85%D9%8A-%D8%A7%D9%84%D8%AF%D9%88%D9%84%D9%8A-1",
 "date": "2026-11-15T06:26:02Z",
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "world"
+"cat": "world",
+"nosum": 1
 },
 {
 "title": "إعلام إيراني: الحرس الثوري يستهدف رادارًا أمريكيًا في قاعدة للطائرات المروحية بالبحرين",
-"url": "https://news.google.com/rss/articles/CBMilgVBVV95cUxQb2lkOFpTNEswNjhXdHltdGNfVFVBTHExQ2lSR3g4TWw3bkhjdUh6bkJ5RUs2Mnh3RFBpQlN2VTVnWWpSTW40U0ZoSkltaDA1ZkVxYU9HZ3BpT0ZKTS1mZDdxV0pNWG9UbXF3WVd0bEtaYmV2alFGempBSW1paHZFOTRWYk0xSnpLNC1UbTdWNUpZVDJhMXlKVXFsazhWTWZwOU5kby1mUndQYjA1T2RCWFRhYmpZOHlGaWJaNE9Zb0htdTdlLU9COXotNnNVT0dRSERrYlEtbVhLNXpUN2plWGRhT09UN3ljRHg5eWVkQ1RaSTY1YUdtbVhXaWtKV3UyQlZ6WUFadkFSdy1MWmVRczhYeEtlSy16VHJOTDhaY2JkN1dvcEtVV3M2QmVrVXlXdV9NUHFFa3pUbEhEaURmNGtXa2VNX2xKTWZtVnVWRG9uNzJ3czB3WUY5TTgwTzhPZGkwRGYtYnFpODVkeE1pT2dBU1hnOHIwQzREblFGX0tGdS1MaHlhR2FHTy1PbUNsdnpYVVJiZEE0MFFWNE9kU1VoTnJjSEh1Z3NTODFNa1YycXl0dEM3dXF0anQyQzJsNGRMSDlwOXhDWlBrd0VtckdiWExZMU92X01RZlV1Y04zOUdpMDhxeEhlOEVpc2JfWE1yb1VtYURiVTltakJDYTVsTFk4bzBYY1paNno5LWJEMVVla0xCT1JucS0yUTNxaXJOcGVxWWtaNzRNTzkyNlA3alhuODN4OHJWSzdZMUJyS05sQXA1SVNUZGQ4SFNBM3NXdHQzN1o5LUV2bmlmTlZVRTNkekc5M3pNbmlKVk1EamJDcWxSbHdHU3VTdktlQmVZaEdXNXdTV2hnZlpxYThrM05UZw?oc=5",
+"url": "https://fath-news.com/ar/581155-%D8%A5%D8%B9%D9%84%D8%A7%D9%85-%D8%A5%D9%8A%D8%B1%D8%A7%D9%86%D9%8A-%D8%A7%D9%84%D8%AD%D8%B1%D8%B3-%D8%A7%D9%84%D8%AB%D9%88%D8%B1%D9%8A-%D9%8A%D8%B3%D8%AA%D9%87%D8%AF%D9%81-%D8%B1%D8%A7%D8%AF%D8%A7%D8%B1%D8%A7-%D8%A3%D9%85%D8%B1%D9%8A%D9%83%D9%8A%D8%A7-%D9%81%D9%8A-%D9%82%D8%A7%D8%B9%D8%AF%D8%A9-%D9%84%D9%84%D8%B7%D8%A7%D8%A6%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D8%B1%D9%88%D8%AD%D9%8A%D8%A9-%D8%A8%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D9%86",
 "date": "2026-11-15T06:18:58Z",
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "الكرملين: بوتين وشي وترامب يعقدون قمة ثلاثية في مدينة شنتشن الصينية 19 نوفمبر",
-"url": "https://news.google.com/rss/articles/CBMiygRBVV95cUxQQWV5V290YzI0bjdoUUdwaHdwQmRlbkFKcXZuaFpVUGtaY1ZadXJJVV9hYkg5X0V1MEJ6eWFVbUwweW1IZE9PQTlyVElSa2U5SjVEdFVYSEI4QmY2YnNZcG9tbEZwZTZDNHBkQkV4SnNZZFRMVkt6Ynh6ZU91TW80aHdnMHhkZTQxOVFzWGk3N3BGbFhMOV9ITlFNVFNVeEZ0MFNHVk1uSERfaVRTWENZTm9heU5CZWNzSy1jWUNjQ2RORjktR21DNEUyeXpRRm5hdTdUaUpGN3pxRzNTZUwtbDNyQVY0X0liSnRMNDRiZm52b1NoWVA4NWpUVU5XblRVWjFUVDNFN0dELXlIR05ycWhibmRqMFVVOW53LTFWR1VOQ29PMXU3VVl1ZU52Tk5rQmc5bTcxS3VYcEd1d09tNTc1QW5JZ19EM0hvZFFlN1R1OU94OWRZMmhLamZqbjRkQmp5MXJIWG4xaDVkT0hPVWVLMnpYbWhZUjZQN1FWRlRCcWU2YjM3OTZ6QjRuQjBnTUZNa2dKTEVzOEx2Z01XU1ZHTm9pSUlGOEZLZWtNckRxZHFuZTRCYmZPNmZCbFc0QkVzNDhEYk9rV2huX0xQR1pVeXNiNTRDTEZJUUw1UW9Ha3NNeFRrREtyeG5nZndQMDljREFSZS0tQmYzM2ExcWRzV1FobGgzdlEtYWdDT2RHTDktNkRKVTNDU09YTXJlVTBzUWw2dXFreHJmTTNXcjZMN3hXN25WbFpRVlg5Y2VjQi1mUW1mX0FB?oc=5",
+"url": "https://fath-news.com/ar/581154-%D8%A7%D9%84%D9%83%D8%B1%D9%85%D9%84%D9%8A%D9%86-%D8%A8%D9%88%D8%AA%D9%8A%D9%86-%D9%88%D8%B4%D9%8A-%D9%88%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%8A%D8%B9%D9%82%D8%AF%D9%88%D9%86-%D9%82%D9%85%D8%A9-%D8%AB%D9%84%D8%A7%D8%AB%D9%8A%D8%A9-%D9%81%D9%8A-%D9%85%D8%AF%D9%8A%D9%86%D8%A9-%D8%B4%D9%86%D8%AA%D8%B4%D9%86-%D8%A7%D9%84%D8%B5%D9%8A%D9%86%D9%8A%D8%A9-19-%D9%86%D9%88%D9%81%D9%85%D8%A8%D8%B1",
 "date": "2026-11-15T06:15:59Z",
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "world"
+"cat": "world",
+"nosum": 1
 },
 {
 "title": "سعر الذهب اليوم السبت مساءً في مصر.. عيار 21 يستقر دون 6 آلاف جنيه",
@@ -681,16 +721,18 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "18 دولة عربية وإسلامية تدين قصف مجمع ناصر.. وتطالب بفتح ممرات المساعدات إلى غزة",
-"url": "https://news.google.com/rss/articles/CBMizgRBVV95cUxQek1TQjhhX3ctNWc1TEY4bTN1R2Q0SnMxWExfNmVwN0RMV1BhZXFYYl9aMl8ybmRPUFVFMnI1dy13eE43bzFWaV9WUGhFSS1OLS1VZjhRbjZJWHJiR2taS1pjNGwwVmI3V2lfQVBQWlJ1TmhzSGNwbUo4NFBuc05SSzR2eTM2Rm9OYU8wU0FrYlJPNlNyX2NHUGY3V29ib3Y4WkN3MWtOT0UwX3ozSk8yckEwUXZoUzdhYXFkMTNtdU5nTzdYVnZvR09mYmdFTTMwWDAyYzd6cV94SkN2aWdSaUFNS3pPM1I5Wjh4OEZfWEFjdXRVbTNGWWJsYm56b0R6ZEZqbjh6VU05OWJzOElCRWJKd3haN3ljd3JBcUlDdjJsRmdJVEhpMGtEU1lNSmozaHVYWk9zOHNRQTVSUGhVWkhrT1ZhZjVYN2lpQ0VWWjN1ZWNnR21VQnQwWGc2dHlkQ282UGdKUndBQ0FlUnhhcnhtbWxSU2Q4Tm1WV3pMRkJpYjRpM1h5SDBGM0VzQ3Y0MkQzN1lZNTVYc2U0cGZsTHNoSjF1Vm1ObXFKTklkVUFMWVA2el95eFVfYVlJQU9YRl9FbmJfYzdxMkpuY0Fjc3M4ME9Uak9Fel8wcFRONDM4a1R6WE1YS2Z2UGRPYkpMdmg1ZmRCcVFmZk0xMlFodW5tWXZpNzRBUzUtSFotb2xIZGtfMUZIVHFacFY5Y3hJeVFsY19vbUx4VHUtMXRUbzROei0wcjJpSEZmVE1tU05oNzZfRVRybkt5aDhFZw?oc=5",
+"url": "https://fath-news.com/ar/581131-18-%D8%AF%D9%88%D9%84%D8%A9-%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-%D9%88%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9-%D8%AA%D8%AF%D9%8A%D9%86-%D9%82%D8%B5%D9%81-%D9%85%D8%AC%D9%85%D8%B9-%D9%86%D8%A7%D8%B5%D8%B1-%D9%88%D8%AA%D8%B7%D8%A7%D9%84%D8%A8-%D8%A8%D9%81%D8%AA%D8%AD-%D9%85%D9%85%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A7%D8%AA-%D8%A5%D9%84%D9%89-%D8%BA%D8%B2%D8%A9-1",
 "date": "2026-11-14T18:00:00Z",
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "muslims"
+"cat": "muslims",
+"nosum": 1
 },
 {
 "title": "حزب النور يقدم خالص التعازي لأسرة المهندس عادل الغنيمي",
@@ -2072,6 +2114,15 @@
 "nosum": 1
 },
 {
+"title": "الهلال الأحمر المصري يدفع بالخيام لتوفير مأوى بديل للأسر النازحة في غزة",
+"url": "https://akheralanbaa.com/ar/507931-%D8%A7%D9%84%D9%87%D9%84%D8%A7%D9%84-%D8%A7%D9%84%D8%A3%D8%AD%D9%85%D8%B1-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A-%D9%8A%D8%AF%D9%81%D8%B9-%D8%A8%D8%A7%D9%84%D8%AE%D9%8A%D8%A7%D9%85-%D9%84%D8%AA%D9%88%D9%81%D9%8A%D8%B1-%D9%85%D8%A3%D9%88%D9%89-%D8%A8%D8%AF%D9%8A%D9%84-%D9%84%D9%84%D8%A3%D8%B3%D8%B1-%D8%A7%D9%84%D9%86%D8%A7%D8%B2%D8%AD%D8%A9-%D9%81%D9%8A-%D8%BA%D8%B2%D8%A9",
+"date": "2026-11-09T15:47:18Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
+"cat": "muslims"
+},
+{
 "title": "أمين \"النور\" بالإسكندرية: أطفال غزة يواجهون برد الشتاء داخل خيام غمرتها الأمطار.. وتبديل قيادات الاحتلال لا يغير واقع الفلسطينيين",
 "url": "https://fath-news.com/ar/580679-%D8%A3%D9%85%D9%8A%D9%86-%D8%A7%D9%84%D9%86%D9%88%D8%B1-%D8%A8%D8%A7%D9%84%D8%A5%D8%B3%D9%83%D9%86%D8%AF%D8%B1%D9%8A%D8%A9-%D8%A3%D8%B7%D9%81%D8%A7%D9%84-%D8%BA%D8%B2%D8%A9-%D9%8A%D9%88%D8%A7%D8%AC%D9%87%D9%88%D9%86-%D8%A8%D8%B1%D8%AF-%D8%A7%D9%84%D8%B4%D8%AA%D8%A7%D8%A1-%D8%AF%D8%A7%D8%AE%D9%84-%D8%AE%D9%8A%D8%A7%D9%85-%D8%BA%D9%85%D8%B1%D8%AA%D9%87%D8%A7-%D8%A7%D9%84%D8%A3%D9%85%D8%B7%D8%A7%D8%B1-%D9%88%D8%AA%D8%A8%D8%AF%D9%8A%D9%84-%D9%82%D9%8A%D8%A7%D8%AF%D8%A7%D8%AA-%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%84%D8%A7%D9%84-%D9%84%D8%A7-%D9%8A%D8%BA%D9%8A%D8%B1-%D9%88%D8%A7%D9%82%D8%B9-%D8%A7%D9%84%D9%81%D9%84%D8%B3%D8%B7%D9%8A%D9%86%D9%8A%D9%8A%D9%86",
 "date": "2026-11-09T15:17:23Z",
@@ -2495,6 +2546,15 @@
 "sid": "akher",
 "cat": "region",
 "nosum": 1
+},
+{
+"title": "مأساة جديدة في غزة.. انهيار جرف رملي على خيام النازحين في دير البلح وسط قطاع غزة",
+"url": "https://akheralanbaa.com/ar/507902-%D9%85%D8%A3%D8%B3%D8%A7%D8%A9-%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9-%D9%81%D9%8A-%D8%BA%D8%B2%D8%A9-%D8%A7%D9%86%D9%87%D9%8A%D8%A7%D8%B1-%D8%AC%D8%B1%D9%81-%D8%B1%D9%85%D9%84%D9%8A-%D8%B9%D9%84%D9%89-%D8%AE%D9%8A%D8%A7%D9%85-%D8%A7%D9%84%D9%86%D8%A7%D8%B2%D8%AD%D9%8A%D9%86-%D9%81%D9%8A-%D8%AF%D9%8A%D8%B1-%D8%A7%D9%84%D8%A8%D9%84%D8%AD-%D9%88%D8%B3%D8%B7-%D9%82%D8%B7%D8%A7%D8%B9-%D8%BA%D8%B2%D8%A9",
+"date": "2026-11-08T21:51:40Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
+"cat": "muslims"
 },
 {
 "title": "\"متحدث صحة غزة\": غرق أكثر من 100 ألف خيمة بمياه الأمطار",
@@ -2952,56 +3012,6 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "الرئيس السيسى يشهد الجلسة الافتتاحية للمؤتمر الطبى الثالث لطب القوات المسلحة",
-"url": "https://akheralanbaa.com/ar/507870-%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3-%D8%A7%D9%84%D8%B3%D9%8A%D8%B3%D9%89-%D9%8A%D8%B4%D9%87%D8%AF-%D8%A7%D9%84%D8%AC%D9%84%D8%B3%D8%A9-%D8%A7%D9%84%D8%A7%D9%81%D8%AA%D8%AA%D8%A7%D8%AD%D9%8A%D8%A9-%D9%84%D9%84%D9%85%D8%A4%D8%AA%D9%85%D8%B1-%D8%A7%D9%84%D8%B7%D8%A8%D9%89-%D8%A7%D9%84%D8%AB%D8%A7%D9%84%D8%AB-%D9%84%D8%B7%D8%A8-%D8%A7%D9%84%D9%82%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D8%B3%D9%84%D8%AD%D8%A9",
-"date": "2026-11-08T12:56:34Z",
-"sum": "",
-"src": "آخر الأنباء",
-"sid": "akher",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "بدءًا من يناير المقبل.. رئيس مياه كفر الشيخ يحدد مستهدفات جديدة ويؤكد: المواطن خط أحمر",
-"url": "https://fath-news.com/ar/580619-%D8%A8%D8%AF%D8%A1%D8%A7-%D9%85%D9%86-%D9%8A%D9%86%D8%A7%D9%8A%D8%B1-%D8%A7%D9%84%D9%85%D9%82%D8%A8%D9%84-%D8%B1%D8%A6%D9%8A%D8%B3-%D9%85%D9%8A%D8%A7%D9%87-%D9%83%D9%81%D8%B1-%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D9%8A%D8%AD%D8%AF%D8%AF-%D9%85%D8%B3%D8%AA%D9%87%D8%AF%D9%81%D8%A7%D8%AA-%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9-%D9%88%D9%8A%D8%A4%D9%83%D8%AF-%D8%A7%D9%84%D9%85%D9%88%D8%A7%D8%B7%D9%86-%D8%AE%D8%B7-%D8%A3%D8%AD%D9%85%D8%B1-1",
-"date": "2026-11-08T12:08:58Z",
-"sum": "",
-"src": "بوابة الفتح",
-"sid": "fath",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "اللجنة المصرية بغزة: معاناة الأطفال جراء المنخفض الجوي تستدعي تحركًا دوليًا لإدخال المساعدات",
-"url": "https://fath-news.com/ar/580608-%D8%A7%D9%84%D9%84%D8%AC%D9%86%D8%A9-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D8%A8%D8%BA%D8%B2%D8%A9-%D9%85%D8%B9%D8%A7%D9%86%D8%A7%D8%A9-%D8%A7%D9%84%D8%A3%D8%B7%D9%81%D8%A7%D9%84-%D8%AC%D8%B1%D8%A7%D8%A1-%D8%A7%D9%84%D9%85%D9%86%D8%AE%D9%81%D8%B6-%D8%A7%D9%84%D8%AC%D9%88%D9%8A-%D8%AA%D8%B3%D8%AA%D8%AF%D8%B9%D9%8A-%D8%AA%D8%AD%D8%B1%D9%83%D8%A7-%D8%AF%D9%88%D9%84%D9%8A%D8%A7-%D9%84%D8%A5%D8%AF%D8%AE%D8%A7%D9%84-%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A7%D8%AA",
-"date": "2026-11-08T12:06:58Z",
-"sum": "",
-"src": "بوابة الفتح",
-"sid": "fath",
-"cat": "muslims",
-"nosum": 1
-},
-{
-"title": "هبوط اضطراري لطائرة وسط السيارات على طريق مزدحم في فلوريدا بسبب عطل ميكانيكي",
-"url": "https://akheralanbaa.com/ar/507865-%D9%87%D8%A8%D9%88%D8%B7-%D8%A7%D8%B6%D8%B7%D8%B1%D8%A7%D8%B1%D9%8A-%D9%84%D8%B7%D8%A7%D8%A6%D8%B1%D8%A9-%D9%88%D8%B3%D8%B7-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA-%D8%B9%D9%84%D9%89-%D8%B7%D8%B1%D9%8A%D9%82-%D9%85%D8%B2%D8%AF%D8%AD%D9%85-%D9%81%D9%8A-%D9%81%D9%84%D9%88%D8%B1%D9%8A%D8%AF%D8%A7-%D8%A8%D8%B3%D8%A8%D8%A8-%D8%B9%D8%B7%D9%84-%D9%85%D9%8A%D9%83%D8%A7%D9%86%D9%8A%D9%83%D9%8A",
-"date": "2026-11-08T11:44:20Z",
-"sum": "",
-"src": "آخر الأنباء",
-"sid": "akher",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "معهد ناصر للبحوث والعلاج يستقبل وفداً صينياً رفيع المستوى للاطلاع على الإمكانات الطبية والتكنولوجية وبحث آفاق التعاون المشترك",
-"url": "https://akheralanbaa.com/ar/507863-%D9%85%D8%B9%D9%87%D8%AF-%D9%86%D8%A7%D8%B5%D8%B1-%D9%84%D9%84%D8%A8%D8%AD%D9%88%D8%AB-%D9%88%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D8%AC-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D9%88%D9%81%D8%AF%D8%A7-%D8%B5%D9%8A%D9%86%D9%8A%D8%A7-%D8%B1%D9%81%D9%8A%D8%B9-%D8%A7%D9%84%D9%85%D8%B3%D8%AA%D9%88%D9%89-%D9%84%D9%84%D8%A7%D8%B7%D9%84%D8%A7%D8%B9-%D8%B9%D9%84%D9%89-%D8%A7%D9%84%D8%A5%D9%85%D9%83%D8%A7%D9%86%D8%A7%D8%AA-%D8%A7%D9%84%D8%B7%D8%A8%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A9-%D9%88%D8%A8%D8%AD%D8%AB-%D8%A2%D9%81%D8%A7%D9%82-%D8%A7%D9%84%D8%AA%D8%B9%D8%A7%D9%88%D9%86-%D8%A7%D9%84%D9%85%D8%B4%D8%AA%D8%B1%D9%83",
-"date": "2026-11-08T11:44:20Z",
-"sum": "",
-"src": "آخر الأنباء",
-"sid": "akher",
 "cat": "egypt",
 "nosum": 1
 }
