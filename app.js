@@ -112,7 +112,7 @@ async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;le
  const w=async()=>{while(q.length){const b=q.shift();try{await loadBook(b.id)}catch(e){}onP&&onP(++i,n)}};await Promise.all([w(),w(),w()])}
 
 /* ---------- عرض عام ---------- */
-const view=(h,keep)=>{$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered();tjLinks();const sh=$("#studyhome");if(sh&&typeof STUDY!=="undefined")STUDY.home(sh)};
+const view=(h,keep)=>{document.body.classList.remove("phome");$("#app").innerHTML=h;if(!keep)window.scrollTo(0,0);Pager.entered();tjLinks();const sh=$("#studyhome");if(sh&&typeof STUDY!=="undefined")STUDY.home(sh)};
 // رابط «التشجير» في رأس الكتاب متى نُشر تشجيره (أو للإدارة قبل النشر)
 function tjLinks(){const els=document.querySelectorAll(".tjlink[data-tj]");if(!els.length||typeof TSJ==="undefined")return;TSJ.index().then(L=>els.forEach(el=>{const k=el.dataset.tj,x=L[k];if(x&&(x.ok||isAdmin()))el.innerHTML=` • <a href="#/tashjir/${esc(k)}">🌳 تشجير الكتاب</a>`}))}
 /* صورة المؤلف المصغرة: صورته إن أُضيفت، وإلا الحرف الأول بلون مميز */

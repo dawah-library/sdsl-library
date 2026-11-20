@@ -1640,3 +1640,14 @@ details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:
 .elsls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 16px;margin:8px 0}.elsl{display:flex;flex-direction:column;font-size:.9em}.elsl output{font-weight:700;color:var(--accent,#0f5c4d)}
 /* صانع الفيديو: النص الكامل في خانة واحدة (المرحلة ٦) */
 .vscript{width:100%;min-height:50vh;line-height:2;font-size:1.02rem;font-family:Amiri,"Traditional Arabic",serif}
+/* المرحلة ٧ (إكمال): الشاشة الأولى لا يظهر فيها إلا الاسم والشعار والدخول واللغة والرئيسية والبطاقات */
+body.phome #ticker,body.phome .top .hsearch,body.phome .top .megab,body.phome .top a[href="#/favs"],body.phome .top .hq,body.phome .top .shareb,body.phome .top [data-act=theme],body.phome #side{display:none!important}
+body.phome .top .backb{display:none!important}
+.popts{display:flex;justify-content:center;gap:6px;margin-top:8px}.popts .btn{min-width:auto}
+/* مكتبة الدعوة السلفية الأبرز: أكبر وبإطار ذهبي */
+.pt-dawah{min-height:360px;box-shadow:0 22px 50px -14px rgba(8,40,32,.6),0 0 0 2px rgba(212,175,55,.55),inset 0 1px 0 rgba(255,255,255,.45)}
+@media (min-width:1100px){.ptile.pt-dawah{flex-basis:340px;transform:translateY(-10px)}}
+/* تأثير العمق الكروي الاختياري: البطاقات تدور حول محور رأسي بحسب بعدها عن الوسط */
+.ptrack.p3d{perspective:1100px}.ptrack.p3d .ptile{transform:rotateY(calc(var(--off,0) * -28deg)) scale(calc(1 - (var(--off,0) * var(--off,0)) * .06));transform-style:preserve-3d;will-change:transform}
+@media (min-width:1100px){.ptrack.p3d .ptile{transform:none}}
+@media (prefers-reduced-motion:reduce){.ptrack.p3d .ptile{transform:none!important}}

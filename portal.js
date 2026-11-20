@@ -26,19 +26,30 @@ const PORTAL = (() => {
         ["#/releases", "جديد الإصدارات", "badge-plus", "جديد الكتب ودور النشر"], ["#/stats", "إحصاءات المكتبة", "chart-bar", "المكتبة بالأرقام"], ["#/talaea", "الطلائع", "baby", "عالم الأطفال"]] }
   ];
   const H = k => HUBS.find(h => h.k === k);
+  // المرحلة ٧: مؤثر صوتي هادئ عند التقليب (يُولَّد بـWeb Audio فلا ملفات تُحمَّل، ويُكتم من الزر)، وتأثير عمق كروي اختياري؛ وكلاهما يحترم تقليل الحركة
+  const pref = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v === "1"; } catch (e) { return d; } }, setp = (k, v) => { try { localStorage.setItem(k, v ? "1" : "0"); } catch (e) { } };
+  const RM = () => matchMedia("(prefers-reduced-motion: reduce)").matches, snd = () => pref("portal_snd", true), d3 = () => pref("portal_3d", !RM());
+  let AC = null;
+  function tick() { if (!snd()) return; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume();
+    const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter(); o.type = "sine"; o.frequency.setValueAtTime(660, t); o.frequency.exponentialRampToValueAtTime(440, t + 0.18);
+    f.type = "lowpass"; f.frequency.value = 1200; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o.connect(f); f.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.3); } catch (e) { } }
   const full = () => { try { return localStorage.getItem("home_full") === "1"; } catch (e) { return false; } };
   const tile = (h, i) => `<a class="ptile pt-${h.k}" href="#/hub/${h.k}" data-i="${i}" aria-label="${esc(h.t + " — " + h.s)}"><span class="pglass"></span><span class="pic">${ic(h.ic, 44)}</span><b>${esc(h.t)}</b><em>${esc(h.s)}</em><small>${h.l.slice(0, 4).map(x => esc(x[1])).join(" • ")}${h.l.length > 4 ? " …" : ""}</small></a>`;
   // بطاقات الواجهة الأولى (تُدرج بعد الترويسة في الرئيسية)
   function home() {
     return `<section class="portal" aria-label="الأقسام الرئيسية"><div class="ptrack" id="ptrack" role="list" tabindex="0" data-noswipe>${HUBS.map(tile).join("")}</div>
       <div class="pdots" role="tablist" aria-label="الأقسام">${HUBS.map((h, i) => `<button role="tab" data-act="pdot" data-i="${i}" aria-label="${esc(h.t)}"${i ? "" : ' class="on"'}></button>`).join("")}</div>
+      <div class="popts"><button class="btn s" data-act="psnd" aria-pressed="${snd()}" title="مؤثرات التقليب الصوتية">${snd() ? "🔊" : "🔇"}</button><button class="btn s" data-act="p3d" aria-pressed="${d3()}" title="تأثير العمق">${d3() ? "◉ عمق" : "○ عمق"}</button></div>
       <button class="btn s pmore" data-act="hfull" aria-expanded="${full()}">${full() ? "طيّ بقية الرئيسية ▲" : "عرض بقية الرئيسية ▼"}</button></section>`;
   }
   // بعد العرض: النقطة الحالية تتبع السحب، والرئيسية مختصرة أو موسعة
   function wire() {
-    const app = $("#app"), tr = $("#ptrack"); if (!app || !tr) return; app.classList.toggle("hmin", !full());
+    const app = $("#app"), tr = $("#ptrack"); if (!app || !tr) return; app.classList.toggle("hmin", !full()); document.body.classList.toggle("phome", !full()); tr.classList.toggle("p3d", d3() && !RM());
+    // البطاقة الأبرز (مكتبة الدعوة) في الوسط عند الفتح على الجوال
+    if (innerWidth < 1100) { const dw = tr.querySelector(".pt-dawah"); if (dw) requestAnimationFrame(() => { tr.scrollLeft = dw.offsetLeft - (tr.clientWidth - dw.clientWidth) / 2; }); }
     const dots = [...document.querySelectorAll(".pdots button")];
-    const upd = () => { const r = tr.getBoundingClientRect(), c = r.left + r.width / 2; let best = 0, bd = 1e9; [...tr.children].forEach((el, i) => { const b = el.getBoundingClientRect(), d = Math.abs(b.left + b.width / 2 - c); if (d < bd) { bd = d; best = i; } el.classList.toggle("cur", false); }); tr.children[best].classList.add("cur"); dots.forEach((d, i) => d.classList.toggle("on", i === best)); };
+    const upd = () => { const r = tr.getBoundingClientRect(), c = r.left + r.width / 2; let best = 0, bd = 1e9; [...tr.children].forEach((el, i) => { const b = el.getBoundingClientRect(), d = Math.abs(b.left + b.width / 2 - c); if (d < bd) { bd = d; best = i; } el.classList.toggle("cur", false); el.style.setProperty("--off", Math.max(-1.5, Math.min(1.5, (b.left + b.width / 2 - c) / (b.width || 1))).toFixed(3)); }); tr.children[best].classList.add("cur"); dots.forEach((d, i) => d.classList.toggle("on", i === best)); if (tr.__cur !== undefined && tr.__cur !== best) tick(); tr.__cur = best; };
     tr.addEventListener("scroll", () => requestAnimationFrame(upd), { passive: true }); upd();
     // السهام على لوحة المفاتيح
     tr.addEventListener("keydown", e => { if (!/Arrow(Left|Right)/.test(e.key)) return; const i = dots.findIndex(d => d.classList.contains("on")) + (e.key === "ArrowLeft" ? 1 : -1); go(Math.max(0, Math.min(HUBS.length - 1, i))); });
@@ -53,7 +64,9 @@ const PORTAL = (() => {
       <nav class="hubo" aria-label="الأقسام الرئيسية الأخرى">${HUBS.filter(x => x.k !== k).map(x => `<a href="#/hub/${x.k}">${ic(x.ic, 18)} ${esc(x.t)} <small>${esc(x.s)}</small></a>`).join("")}<a href="#/">${ic("house", 18)} الرئيسية</a></nav></section>`);
   }
   document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return;
+    if (b.dataset.act === "psnd") { setp("portal_snd", !snd()); b.textContent = snd() ? "🔊" : "🔇"; b.setAttribute("aria-pressed", snd()); if (snd()) tick(); return; }
+    if (b.dataset.act === "p3d") { setp("portal_3d", !d3()); const tr = $("#ptrack"); if (tr) tr.classList.toggle("p3d", d3() && !RM()); b.textContent = d3() ? "◉ عمق" : "○ عمق"; b.setAttribute("aria-pressed", d3()); return; }
     if (b.dataset.act === "pdot") go(+b.dataset.i);
-    else if (b.dataset.act === "hfull") { const f = !full(); try { localStorage.setItem("home_full", f ? "1" : "0"); } catch (x) { } const app = $("#app"); if (app) app.classList.toggle("hmin", !f); b.setAttribute("aria-expanded", f); b.textContent = f ? "طيّ بقية الرئيسية ▲" : "عرض بقية الرئيسية ▼"; } });
+    else if (b.dataset.act === "hfull") { const f = !full(); try { localStorage.setItem("home_full", f ? "1" : "0"); } catch (x) { } const app = $("#app"); if (app) app.classList.toggle("hmin", !f); document.body.classList.toggle("phome", !f); b.setAttribute("aria-expanded", f); b.textContent = f ? "طيّ بقية الرئيسية ▲" : "عرض بقية الرئيسية ▼"; } });
   return { HUBS, home, wire, view: hub };
 })();
