@@ -377,8 +377,9 @@ def main():
         books = [b for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book"
                  and not b.get("hidden") and not b.get("demo") and 20 <= (b.get("n") or 0) <= 500 and not (b.get("ocr") and b.get("unrev"))]  # بعد مراجعة كل صفحاته (ولو بالنموذج الخفيف؛ إعادة قراءتها بالأساسي تصحيحات صغيرة لا تغيّر المضمون)
         books.sort(key=lambda b: b.get("n") or 999)
+        auto_do = [d for d in os.environ.get("ST_AUTO_DO", "quiz").split(",") if d in do_all]  # الاختصارات لا تُولَّد تلقائيًا (قرار المدير ٢٠ نوفمبر): بطلب الإدارة فقط
         for b in books:
-            need = [d for d in do_all if (d == "quiz" and b["id"] not in have_q) or (d == "summ" and b["id"] not in sl)]
+            need = [d for d in auto_do if (d == "quiz" and b["id"] not in have_q) or (d == "summ" and b["id"] not in sl)]
             if need and all(t[0] != b["id"] for t in todo):
                 todo.append((b["id"], need))
     lst = jload(os.path.join(SD, "_list.json"), {})
