@@ -258,7 +258,7 @@ function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date
  <div data-hs="start"> <nav class="doors" aria-label="ابدأ من هنا"><a href="#/library?c=dawah"><b>أقرأ</b><span>كتب مشايخ الدعوة بالنص والمصورة، والتراث المعتمد</span></a><a href="#/search"><b>أبحث في مسألة</b><span>في نصوص الكتب والمقالات والفتاوى، أو اسأل المكتبة</span></a><a href="#/paths"><b>أتعلم بمسار</b><span>مسارات علمية متدرجة، واختبارات، وحفظ المتون</span></a></nav></div>
  <div data-hs="quote"> <section id="hquote" class="hquote" hidden aria-live="polite"></section></div>
  <div data-hs="study"> <div id="studyhome"></div></div>
- <div data-hs="resume"> <div id="rdash"></div>${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p])=>b&&p>1).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}</div>
+ <div data-hs="resume"> <div id="rdash"></div>${(()=>{const r=Object.entries(S.lastBy||{}).reverse().map(([id,p])=>[B(id),p]).filter(([b,p],i,a)=>b&&p>1&&a.findIndex(([c])=>c&&(c.set||c.id)===(b.set||b.id))===i).slice(0,4);return r.length?`<section class="resume"><h2>أكمل القراءة</h2><div class="resl">${r.map(([b,p])=>`<a class="bk" href="#/book/${b.id}/${p}"><b>${esc(b.setTitle?b.title:b.title)}</b><span>${esc(A(b.authorId).name)} • ${isArt(b)?"":"صفحة "+toAr(p)+(b.n?" من "+toAr(b.n):"")}</span>${b.n>1?`<i class="prog" style="--w:${Math.round(p/b.n*100)}%"></i>`:""}</a>`).join("")}</div></section>`:""})()}</div>
  <div data-hs="cols"> <div class="cols"><a class="col" href="#/library?c=dawah"><b>مكتبة الدعوة السلفية</b><span>كتب مشايخ الدعوة السلفية بمصر وكتب حزب النور</span><em>${BOOKS().filter(b=>bc(b)==="dawah").length} كتاب</em></a>
  <a class="col ar" href="#/articles"><b>المقالات</b><span>مقالات صوت السلف، مقسمة بالموضوع والكاتب</span><em>${ARTS().length} مقال</em></a>
  <a class="col fw" href="#/fatawa"><b>الفتاوى</b><span>فتاوى مشايخ الدعوة بتقسيمها الفني وبحسب الشيخ</span><em>${FATWAS().length} فتوى</em></a>
@@ -472,20 +472,22 @@ function vFavs(){const l=lib.books.filter(b=>S.favs.includes(b.id)),mj=S.favs.so
 
 /* ---------- البحث ---------- */
 async function vSearch(q){
- const f={q:q.q||"",mode:q.mode||"all",scope:q.scope||"all",a:q.a||"",t:q.t||"",ex:q.ex||"",big:q.big||"",c:q.c||"",k:q.k||""};
+ const f={q:q.q||"",mode:q.mode||"all",scope:q.scope||"all",a:q.a||"",t:q.t||"",ex:q.ex||"",big:q.big||"",c:q.c||"",k:q.k||"",mo:q.mo||"",cy:q.cy||""};
  const opt=(arr,v,all)=>`<option value="">${all}</option>`+arr.map(x=>`<option value="${x.id}"${x.id===v?" selected":""}>${esc(x.name)}</option>`).join("");
  const so=(v,l,c)=>`<option value="${v}"${c===v?" selected":""}>${l}</option>`;
  view(`<h2>البحث</h2><form data-form="search"><input name="q" type="search" value="${esc(f.q)}" placeholder="اكتب كلمة أو عبارة" aria-label="كلمات البحث">
  <div class="row"><div><label>نوع البحث</label><select name="mode">${so("all","كل الكلمات",f.mode)}${so("any","أي كلمة",f.mode)}${so("phrase","عبارة كاملة",f.mode)}</select></div>
  <div><label>النطاق</label><select name="scope">${so("all","العناوين والنصوص",f.scope)}${so("meta","العناوين والمؤلفون فقط",f.scope)}${so("author","اسم المؤلف",f.scope)}${so("text","النصوص فقط",f.scope)}</select></div>
+ <div><label>الصيغة</label><select name="mo">${so("","الكلمة كما هي",f.mo)}${so("stem","الكلمة ومشتقاتها",f.mo)}${so("root","الجذر",f.mo)}</select></div>
  <div><label>النوع</label><select name="k">${so("","كتب ومقالات",f.k)}${so("book","كتب فقط",f.k)}${so("article","مقالات فقط",f.k)}</select></div></div>
- <div class="row"><div><label>القسم</label><select name="c">${so("","الكل",f.c)}${so("dawah",COL.dawah,f.c)}${so("turath",COL.turath,f.c)}${so("ithra",COL.ithra,f.c)}</select></div><div><label>المؤلف</label><select name="a">${opt(lib.authors,f.a,"كل المؤلفين")}</select></div><div><label>الموضوع</label><select name="t">${opt(lib.topics,f.t,"كل الموضوعات")}</select></div></div>
+ <div class="row"><div><label>القسم</label><select name="c">${so("","الكل",f.c)}${so("dawah",COL.dawah,f.c)}${so("turath",COL.turath,f.c)}${so("ithra",COL.ithra,f.c)}</select></div><div><label>المؤلف</label><select name="a">${opt(lib.authors,f.a,"كل المؤلفين")}</select></div><div><label>الموضوع</label><select name="t">${opt(lib.topics,f.t,"كل الموضوعات")}</select></div><div><label>القرن (هجري)</label><select name="cy">${so("","كل القرون",f.cy)}${[...Array(15)].map((_,i)=>so(String(i+1),i===14?"المعاصرون (١٥)":"القرن "+toAr(i+1),f.cy)).join("")}</select></div></div>
  <label class="inl"><input type="checkbox" name="ex" value="1"${f.ex==="1"?" checked":""}> مطابقة التشكيل والهمزات حرفيًا</label><br>${lib.books.some(b=>b.big)?`<label class="inl"><input type="checkbox" name="big" value="1"${f.big==="1"?" checked":""}> البحث في الموسوعات الكبيرة متعددة المجلدات أيضًا (أبطأ؛ أو اختر المؤلف)</label><br>`:""}
  <button class="btn p" style="margin-top:10px">ابحث</button></form><div id="sres"></div>`,true);
  if(!f.q.trim())return;
  const out=$("#sres"),n=f.ex==="1"?f.q.trim():norm(f.q).trim(),w=n.split(/\s+/).filter(Boolean),P=f.ex==="1"?(s=>s):(s=>norm(s));
- const m=t=>{const x=P(t);return f.mode==="phrase"?x.includes(n):f.mode==="any"?w.some(k=>x.includes(k)):w.every(k=>x.includes(k))};
- const books=lib.books.filter(b=>(!f.c||bc(b)===f.c)&&(!f.a||b.authorId===f.a)&&(!f.t||inTopic(b,f.t))&&(!f.k||(b.type||"book")===f.k)&&(!b.big||f.a||f.big==="1"));
+ const MM=f.mo&&typeof ARMORPH!=="undefined"&&f.mode!=="phrase"?ARMORPH.matcher(f.q,f.mo=="root"?"root":"stem"):null;
+ const m=t=>{const x=P(t);if(MM){const h=MM(x,f.mode!=="any");return!!h}return f.mode==="phrase"?x.includes(n):f.mode==="any"?w.some(k=>x.includes(k)):w.every(k=>x.includes(k))};
+ const books=lib.books.filter(b=>(!f.c||bc(b)===f.c)&&(!f.a||b.authorId===f.a)&&(!f.t||inTopic(b,f.t))&&(!f.k||(b.type||"book")===f.k)&&(!b.big||f.a||f.big==="1")&&(!f.cy||typeof ARMORPH==="undefined"||ARMORPH.century(A(b.authorId).died)===+f.cy));
  const an=a=>norm((a.name||"")+" "+(a.aliases||[]).join(" ")),wa=norm(f.q).trim().split(/\s+/).filter(Boolean);
  const aus=f.scope==="text"?[]:lib.authors.filter(a=>wa.length&&wa.every(k=>an(a).includes(k))&&(!f.c||(a.col||"dawah")===f.c)&&lib.books.some(b=>b.authorId===a.id&&!b.demo)).slice(0,24);
  const auHtml=aus.length?`<h3>المؤلفون (${toAr(aus.length)})</h3><div class="grid">${aus.map(a=>`<a class="card acard" href="#/author/${a.id}" data-author="${a.id}">${avatar(a)}<div><b>${esc(a.name)}</b><span>${a.died?`ت ${a.died}هـ • `:""}${countLine(a.id)}</span></div></a>`).join("")}</div>`:"";
@@ -493,12 +495,12 @@ async function vSearch(q){
  const meta=f.scope==="text"?[]:books.filter(b=>m(b.title+" "+A(b.authorId).name+" "+T(b.topicId).name));
  const hits=[];
  if(f.scope!=="meta"){await loadMany(books,(i,k)=>progress(out,i,k,"جارٍ تحميل نصوص الكتب للبحث"));
-  books.forEach(b=>b.pages&&b.pages.forEach((p,i)=>{if(hits.length<5000&&m(plain(p)))hits.push({b,i,p})}))}
- const mark=t=>{const ws=norm(f.q).split(/\s+/).filter(Boolean);return esc(t).split(/(\s+)/).map(x=>ws.some(k=>k&&norm(x).includes(k))?`<mark>${x}</mark>`:x).join("")};
- const snip=(p)=>{const t=strip(plain(p)),i=Math.max(0,norm(t).indexOf(w[0]||""));const a=Math.max(0,i-60);return(a?"…":"")+t.slice(a,a+180)+"…"};
+  books.forEach(b=>b.pages&&b.pages.forEach((p,i)=>{if(hits.length<5000){const t=plain(p);if(MM){const h=MM(t,f.mode!=="any");if(h)hits.push({b,i,p,hw:h})}else if(m(t))hits.push({b,i,p})}}))}
+ const mark=(t,hw)=>{const ws=norm(f.q).split(/\s+/).filter(Boolean),hn=x=>ARMORPH.norm(x).replace(/[^ء-ي]/g,"");return esc(t).split(/(\s+)/).map(x=>(hw?hw.has(hn(x)):ws.some(k=>k&&norm(x).includes(k)))?`<mark>${x}</mark>`:x).join("")};
+ const snip=(p,hw)=>{const t=strip(plain(p)),nt=norm(t);let i=nt.indexOf(w[0]||"");if(hw)for(const x of hw){const j=nt.indexOf(x);if(j>=0&&(i<0||j<i))i=j}i=Math.max(0,i);const a=Math.max(0,i-90);return(a?"…":"")+t.slice(a,a+260)+"…"};/* السياق المحيط: نحو ٩٠ حرفًا قبل أول موضع و١٧٠ بعده */
  out.innerHTML=`<p class="mut">${aus.length?toAr(aus.length)+" مؤلفًا • ":""}${meta.length} عنوانًا • ${hits.length>=5000?"أكثر من 5000":hits.length} موضعًا</p>${auHtml}${meta.length&&aus.length?"<h3>العناوين</h3>":""}${meta.slice(0,40).map(anyCard).join("")}
  ${hits.length?`<p class="note">تريد خلاصة موثقة بدل قائمة نتائج؟ <a href="#/ask?q=${encodeURIComponent(f.q)}">اسأل المكتبة عن «${esc(f.q)}»</a></p>`:""}
- ${hits.slice(0,150).map(h=>`<a class="bk${isArt(h.b)?" ar":bc(h.b)==="turath"?" tr":""}" href="#/book/${h.b.id}/${h.i+1}?h=${encodeURIComponent(f.q)}"><b>${esc(h.b.title)}</b><span>${esc(A(h.b.authorId).name)}${PL(h.b,h.i)?" — "+esc(PL(h.b,h.i)):""}</span><p>${mark(snip(h.p))}</p></a>`).join("")}
+ ${hits.slice(0,150).map(h=>`<a class="bk${isArt(h.b)?" ar":bc(h.b)==="turath"?" tr":""}" href="#/book/${h.b.id}/${h.i+1}?h=${encodeURIComponent(f.q)}"><b>${esc(h.b.title)}</b><span>${esc(A(h.b.authorId).name)}${PL(h.b,h.i)?" — "+esc(PL(h.b,h.i)):""}</span><p>${mark(snip(h.p,h.hw),h.hw)}</p></a>`).join("")}
  ${hits.length>150?'<p class="mut">عُرضت أول 150 نتيجة، ضيّق البحث بالقسم أو المؤلف.</p>':""}${!meta.length&&!hits.length&&!aus.length?'<div class="note">لا توجد نتائج. جرّب «أي كلمة» أو أزل التصفية.</div>':""}`}
 
 /* ---------- القارئ الورقي ---------- */
@@ -858,7 +860,7 @@ async function vBook(id,p,h){
   ${scroll?`${p>1?`<button class="btn s scrup" id="scrup" data-act="scrup">↑ الصفحة السابقة</button>`:""}<div id="scr">${(()=>{let x="";for(let k=p;k<=Math.min(n,p+2);k++)x+=spgHtml(b,k,h);return x})().replace('class="rd"','class="rd" id="rb"')}</div><div id="scrs" class="mut scrs"${p+2>=n?" hidden":""}>جارٍ تحميل الصفحات التالية…</div>`:pv==="text"?`<div class="rd" id="rb" data-id="${id}" data-p="${p}">${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="trv" id="trv" hidden></div>`:`<div class="pbody ${pv}"><div class="rd" id="rb" data-id="${id}" data-p="${p}"${pv==="pdf"?" hidden":""}>${pageHtml(b.pages[p-1],h,uncOf(b,p-1),b)}</div><div class="pdfv" id="pdfv"></div></div><div class="trv" id="trv" hidden></div>`}
   ${b.ocr&&pv!=="pdf"&&!scroll&&pgBad(b.pages[p-1])?`<p class="note pgbad">⚠️ نص هذه الصفحة لم يكتمل تدقيقه على صورتها بعد، وفيه تشويه من القراءة الآلية، وهو في طابور إعادة القراءة. ${Auth.user?'<button class="lnk" data-act="pv" data-pv="pdf">اقرأها من المصورة</button>':'سجّل الدخول لقراءتها من المصورة.'}</p>`:""}
   ${b.ocr&&!["rev","ok"].includes(lvlOf(b))?`<p class="mut ocrn">هذا النص محوَّل آليًا من النسخة المصورة${lvlOf(b)==="chk"?" وقد دُقِّق آليًا على صورها":""} وقد يحتوي أخطاء؛ قارنه بالمصورة عند النقل. <a href="#/standards">مستوى الاعتماد: ${LVL[lvlOf(b)][0]}</a></p>`:""}
-  ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?" في المطبوع":""}</small>`:""}</div>`:""}
+  ${scroll?`<div class="foot" id="scend"${p+2>=n?"":" hidden"}>— تمّ الكتاب —</div>`:n>1||!art?`<div class="foot">— ${toAr(p)} —${label?`<small>${esc(label)}${b.pl?(b.refEd&&b.refEd.ok?" في الطبعة المرجعية"+(b.refEd.ed?" ("+esc(b.refEd.ed)+")":""):" في المطبوع"):""}</small>`:""}</div>`:""}
  </article></div>
  <p class="mut hint">${scroll?"مرّر لأسفل لتتابع الصفحات • ":n>1?"اسحب الصفحة للتقليب • ":""}اضغط أي كلمة لمعناها • حدّد نصًا لتجعله قبسة</p>
  <nav class="rbar2" id="rbar" aria-label="أدوات القراءة">
