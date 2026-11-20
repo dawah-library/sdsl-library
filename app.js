@@ -105,7 +105,8 @@ async function loadBook(id){const b=B(id);if(!b)throw new Error("غير موجو
   const gg=await g;if(!gg[id])throw new Error("المقال غير موجود في ملفه");sh={id,pages:gg[id].pages,toc:[],qadd:gg[id].qadd}}
  if(!sh){const q=encodeURIComponent(id)+".json"+(b.size?"?v="+b.size:"");let r=null;
   // مجلدات التراث الكبيرة تُحفظ في المستودع وتُقرأ من GitHub مباشرة (مخزن النصوص)، والاحتياط نسخة الموقع
-  if(b.vf){try{r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/vols/"+q)}catch(e){r=null}if(!r||!r.ok)r=await fetch("vols/"+q).catch(()=>null)}
+  if(b.vf){/* تخزين المجلدات الكبيرة على الجهاز (Cache Storage) بمفتاح حجمها: لا تُجلب ثانية إلا إن تغيّرت */let C=null;const ck=location.origin+"/__vol/"+q;try{C=await caches.open("sdsl-vols-v1");r=await C.match(ck)}catch(e){r=null}
+   if(!r){try{r=await fetch("https://raw.githubusercontent.com/"+(CFG.repo||"dawah-library/sdsl-library")+"/main/vols/"+q)}catch(e){r=null}if(!r||!r.ok)r=await fetch("vols/"+q).catch(()=>null);if(r&&r.ok&&C)C.put(ck,r.clone()).then(()=>C.keys()).then(ks=>{for(const k of ks.slice(0,Math.max(0,ks.length-40)))C.delete(k)}).catch(()=>{})}}
   else r=await fetch("data/books/"+q);if(!r||!r.ok)throw new Error("تعذر تحميل النص");sh=await r.json()}
  SH.set(id,sh);attach(b,sh);return b}
 async function loadMany(list,onP){const q=list.filter(b=>!b.pages),n=q.length;let i=0;if(!n)return;
