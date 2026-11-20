@@ -22,7 +22,7 @@ import datetime, hashlib, json, math, os, re, sys, time, urllib.request, collect
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); SHP = os.path.join(D, "shp")
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 DI = re.compile(r"[ً-ْٰـ]")
-LEM = re.compile(r"^\s*(?:#+\s*)?(?:\(?\d+\)?\s*[-–.]?\s*)?(قوله|وقوله|قال المصنف|قال المؤلف|قال الناظم|قال الماتن|قال الشيخ|قال الطحاوي|قال رحمه الله|قال -رحمه الله-)\s*[:،]?\s*(.*)$")
+LEM = re.compile(r"^\s*(?:#+\s*)?(?:\(?\d+\)?\s*[-–.]?\s*)?(قوله|وقوله|قال المصنف|قال المؤلف|قال الناظم|قال الماتن|قال الشيخ|قال الطحاوي|قال رحمه الله|قال -رحمه الله-)(?:\s*(?:ﷺ|صلى الله عليه وسلم|-صلى الله عليه وسلم-|تعالى|رحمه الله|-رحمه الله-))?\s*[:،]?\s*(.*)$")
 REPORT = []
 
 
@@ -74,7 +74,9 @@ def paras_of(pages):
 
 
 def lemma_of(t):
-    m = LEM.match(t)
+    if t.startswith("%% "):  # سطر متن في التفريغات والشروح المصفوفة (series.py: المتن المقروء يبدأ بـ «%% »)
+        s = " ".join(t[3:].split()[:14]); return s if len(norm(s)) >= 2 else None
+    m = LEM.match(DI.sub("", t))  # الشروح المشكولة: «قَوْلُهُ ﷺ: (…)»
     if not m: return None
     s = m.group(2).strip()
     q = re.match(r'^["«“\(](.+?)["»”\)]', s)
@@ -112,6 +114,23 @@ def tfidf(docs):
         v = {k: (1 + math.log(n)) * math.log(N / (1 + df[k])) for k, n in c.items()}
         s = math.sqrt(sum(x * x for x in v.values())) or 1; vecs.append({k: x / s for k, x in v.items()})
     return vecs
+
+
+def inverted(V):
+    inv = collections.defaultdict(list)
+    for i, v in enumerate(V):
+        for k, w in v.items(): inv[k].append((i, w))
+    return inv
+
+
+def topk(q, inv, k, terms=40):
+    """استرجاع سريع بالفهرس المقلوب (لا مقارنة شاملة): يكفي للمتون الكبيرة كالصحيحين."""
+    acc = collections.defaultdict(float)
+    for t, w in sorted(q.items(), key=lambda x: -x[1])[:terms]:
+        post = inv.get(t)
+        if not post or len(post) > 6000: continue  # كلمة شائعة جدًّا لا تميّز
+        for i, x in post: acc[i] += w * x
+    return sorted(((v, i) for i, v in acc.items()), reverse=True)[:k]
 
 
 def cos(a, b):
@@ -194,27 +213,43 @@ def align(matn_units, segs, paras):
     """matn_units: [(vol, uid, text)] بترتيب الأصل. يعيد لكل مقطع: m, u, c, st, alt."""
     seg_txt = [" ".join(t for _, t in paras[s["a"]:s["z"] + 1]) for s in segs]
     utxt = [t for _, _, t in matn_units]; nu = [" ".join(norm(t)) for t in utxt]
-    emb = embed(utxt + [x[:2000] for x in seg_txt])
+    emb = embed(utxt + [x[:2000] for x in seg_txt]) if len(utxt) <= 4000 else None  # المتون الكبيرة: تشابه معجمي بفهرس مقلوب (حفظًا للحصة والوقت)
     if emb: U, S = emb[:len(utxt)], emb[len(utxt):]
     else: V = tfidf(utxt + seg_txt); U, S = V[:len(utxt)], V[len(utxt):]
     V0 = tfidf(utxt + [(s["lem"] or seg_txt[j][:300]) for j, s in enumerate(segs)]); U0, S0 = V0[:len(utxt)], V0[len(utxt):]  # مرشحو اللفظ المقتبس
     nus = [u.replace(" ", "") for u in nu]; nws = [set(u.split()) for u in nu]
+    INV0 = inverted(U0); INV = inverted(U) if not emb else None
+    wix = collections.defaultdict(set)
+    for i, ws_ in enumerate(nws):
+        for w in ws_: wix[w].add(i)
     cand = []
+    big = len(utxt) > 4000; WIN = None  # المتن الكبير: نافذة التغطية من قرائن اللفظ المقتبس، والتشابه المعجمي يُعاير
     for j, s in enumerate(segs):
         sc = []
         lem = " ".join(norm(s["lem"])) if s["lem"] else ""
         if lem:  # اللفظ المقتبس: أقوى قرينة — مطابقة تقريبية تتحمل فروق النسخ («شي/شيء»، «بعدما/بعد ما»)، وببادئة اللفظ إن طال بكلام الشارح
             lw = lem.split(); hits = []
-            pool = [i for i in range(len(nu)) if sum(1 for w in set(lw[:5]) if w in nws[i]) >= min(2, len(set(lw[:5])))] or sorted(range(len(nu)), key=lambda i: -cos(S0[j], U0[i]))[:25]
+            cnt = collections.Counter(i for w in set(lw[:5]) for i in (wix.get(w) or ()) if len(wix.get(w) or ()) < 8000)
+            pool = [i for i, c in cnt.most_common(60) if c >= min(2, len(set(lw[:5])))] or [i for _, i in topk(S0[j], INV0, 25)]
             for k in [len(lw)] + [x for x in (10, 7, 5, 3) if x < len(lw)]:
                 L0 = "".join(lw[:k]); hits = [(i, pratio(L0, nus[i])) for i in pool]; hits = [(i, r) for i, r in hits if r >= 0.86]
                 if hits: break
             top = max((r for _, r in hits), default=0); hits = [(i, r) for i, r in hits if r >= top - 0.02]
-            for i, r in hits: sc.append((i, (1.0 if r >= 0.92 and k >= 3 else 0.9) if len(hits) == 1 else 0.86))
-        sims = sorted(((cos(S[j], U[i]), i) for i in range(len(U))), reverse=True)[:5]
+            hits = [(i, r) for i, r in hits if not utxt[i].startswith("(^")]  # حواشي المحقق ليست من المتن
+            for i, r in hits: sc.append((i, (1.0 if r >= 0.92 and k >= 3 else 0.9) if len(hits) == 1 else 0.74))  # لفظ يتكرر في مواضع (كالأسانيد): يحسمه الترتيب لا اللفظ
+        sims = [(v, i) for v, i in topk(S[j], INV, 300) if WIN is None or WIN[0] <= i <= WIN[1]][:5] if INV is not None else sorted(((cos(S[j], U[i]), i) for i in range(len(U))), reverse=True)[:5]
         for v, i in sims:
-            if not any(i == x for x, _ in sc): sc.append((i, max(0.0, min(0.85, v))))
+            if not any(i == x for x, _ in sc): sc.append((i, max(0.0, min(0.85, v * (2.2 if INV is not None else 1)))))
         cand.append(sorted(sc, key=lambda x: -x[1])[:6])
+        if big and WIN is None and j == len(segs) - 1: pass
+    if big:  # جولة ثانية بالنافذة: ما بين أول قرينة لفظية وآخرها (بهامش) — الشرح يغطي جزءًا من المتن الكبير غالبًا
+        hit = sorted(i for cs in cand for i, v in cs if v >= 0.86)
+        if len(hit) >= 3:
+            lo, hi = hit[max(0, len(hit) // 20)], hit[min(len(hit) - 1, len(hit) - 1 - len(hit) // 20)]; WIN = (max(0, lo - 150), hi + 300)
+            for j, s in enumerate(segs):
+                keep = [(i, v) for i, v in cand[j] if v >= 0.74]
+                extra = [(i, max(0.0, min(0.85, v * 2.2))) for v, i in topk(S[j], INV, 300) if WIN[0] <= i <= WIN[1]][:5]
+                cand[j] = sorted(keep + [x for x in extra if not any(x[0] == y for y, _ in keep)], key=lambda x: -x[1])[:6]
     # ترتيب رتيب: برمجة ديناميكية على المرشحين؛ الرجوع إلى الوراء يُعاقب ولا يُمنع (الشارح قد يقدّم ويؤخّر)
     best = [{} for _ in segs]
     for j, cs in enumerate(cand):
@@ -231,7 +266,7 @@ def align(matn_units, segs, paras):
     for j, s in enumerate(segs):
         i = path[j]; cs = cand[j]; v = dict(cs).get(i, 0.15 if i == -1 else 0)
         top = cs[0][1] if cs else 0; second = cs[1][1] if len(cs) > 1 else 0
-        c = v if s["lem"] and v >= 0.9 else (min(0.8, v + 0.25 * (top - second)) if i == i and i != -1 else 0.3)
+        c = v if s["lem"] and v >= 0.9 else (min(0.78, v + 0.25 * (top - second)) if i is not None and i != -1 else 0.3)
         if c < 0.8 and cs:  # موضع متردد: ترجيح النموذج اللغوي
             r = llm_pick(seg_txt[j], [utxt[x] for x, _ in cs])
             if r:
@@ -242,7 +277,18 @@ def align(matn_units, segs, paras):
                "alt": [[matn_units[x][0], matn_units[x][1], round(y, 2)] for x, y in cs[:4]]}
         if i is None or i == -1: rec.update({"m": None, "u": None, "st": "none" if j == 0 or c >= 0.6 else "review"})
         else: rec.update({"m": matn_units[i][0], "u": matn_units[i][1], "st": "auto" if c >= 0.8 else "review"})
-        out.append(rec)
+        rec["_i"] = i; out.append(rec)
+    # الاتساق المحلي: موضع متردد يقع بين جاريه الموثوقين في ترتيب المتن (وقريبًا منهما) يُرفع إلى «مقترح بثقة»؛ وموضع موثوق يشذ بعيدًا عنهما يُنزل للمراجعة
+    good = [k for k, r in enumerate(out) if r["_i"] not in (None, -1) and r["c"] >= 0.9]
+    for k, r in enumerate(out):
+        i = r["_i"]
+        if i in (None, -1): continue
+        pv = next((out[g]["_i"] for g in reversed(good) if g < k), None); nx = next((out[g]["_i"] for g in good if g > k), None)
+        if pv is None or nx is None: continue
+        inside = pv - 3 <= i <= nx + 3 and nx - pv <= 600
+        if inside and 0.6 <= r["c"] < 0.8: r["c"] = 0.82; r["st"] = "auto"
+        elif not inside and r["st"] == "auto" and nx - pv <= 600 and r["c"] < 1.0: r["c"] = 0.65; r["st"] = "review"
+    for r in out: r.pop("_i", None)
     return out
 
 
