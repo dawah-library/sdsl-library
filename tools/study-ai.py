@@ -90,7 +90,7 @@ def toc_title(sh, a):
 # ---------------------------------------------------------------- الاختبارات
 QUIZ_PROMPT = """أنت معلّم شرعي متقن تُعدّ أسئلة اختبار لفهم كتاب «{title}» لـ{author}، من الصفحة {a} إلى {b}{chap}.
 النص مقسّم بعلامات [ص N]. أخرج JSON بهذا الشكل حرفيًا:
-{{"qs": [ {{"lvl": "easy|mid|hard", "type": "mcq|tf|cloze", "q": "نص السؤال", "opts": ["أربعة بدائل للاختيار من متعدد فقط"], "a": "الجواب", "e": "تعليل موجز من كلام الكتاب", "p": رقم_الصفحة, "src": "عبارة من ٥ إلى ٢٠ كلمة منقولة حرفيًا من النص يقوم عليها السؤال"}} ]}}
+{{"qs": [ {{"lvl": "easy|mid|hard", "type": "mcq|tf|cloze", "q": "نص السؤال", "opts": ["أربعة بدائل للاختيار من متعدد فقط"], "a": "الجواب", "e": "تعليل موجز من كلام الكتاب", "p": رقم_الصفحة, "src": "عبارة من ٥ إلى ٢٠ كلمة منقولة حرفيًا من النص يقوم عليها السؤال", "h": "تلميح للسهل والمتوسط فقط"}} ]}}
 المطلوب: {ne} أسئلة سهلة، و{nm} متوسطة، و{nh} متقدمة.
 المستويات:
 - السهل: معلومة صريحة واضحة (تعريف، حكم ظاهر، قائل قول مشهور، مقصد الباب).
@@ -107,6 +107,7 @@ QUIZ_PROMPT = """أنت معلّم شرعي متقن تُعدّ أسئلة اخ�
 - لا تسأل عن أرقام الصفحات ولا ترتيب الفصول ولا بيانات الطبعة والنشر ولا عن ألفاظ لا يتعلق بها فهم.
 - النصوص الشرعية بلفظها؛ ولا يكون الخطأ في «صح أم خطأ» تحريفًا للفظ آية أو حديث، بل في نسبة الحكم أو الفهم.
 - لا تكرر سؤالًا بصيغة أخرى، ونوّع الموضوعات على صفحات المقطع كلها.
+- لكل سؤال سهل أو متوسط تلميح h: جملة قصيرة تعين على الجواب (تذكّر بالباب أو القاعدة أو المعنى أو تستبعد خطأً شائعًا) دون أن تذكر الجواب أو لفظه؛ ولا تلميح للمتقدم.
 
 النص:
 {text}"""
@@ -241,7 +242,7 @@ def quiz_book(bid, cat):
             if v.get("ok"):
                 q["rev"] = 1; out.append(q)
             elif isinstance(v.get("fix"), dict):
-                n = dict(q); n.update({kk: vv for kk, vv in v["fix"].items() if kk in ("q", "opts", "a", "e") and vv})
+                n = dict(q); n.update({kk: vv for kk, vv in v["fix"].items() if kk in ("q", "opts", "a", "e", "h") and vv})
                 if valid(n):
                     n["rev"] = 2; out.append(n)
     # إزالة المكرر
@@ -373,13 +374,13 @@ def main():
         todo.append((x["id"], [d for d in (x.get("do") or do_all) if d in do_all]))
     if only:
         todo = [(b, do_all) for b in only]
-    elif os.environ.get("ST_AUTO", "1") == "1":  # كتب مكتبة الدعوة (والمرفوعة للعامة) الأقصر فالأطول
+    elif os.environ.get("ST_AUTO", "0") == "1":  # موقوف (قرار المدير ٢٠ نوفمبر): الاختبارات والاختصارات بطلب الإدارة يدويًّا فقط  # كتب مكتبة الدعوة (والمرفوعة للعامة) الأقصر فالأطول
         sl = jload(os.path.join(SD, "_list.json"), {})
         have_q = {x["b"] for x in jload(os.path.join(QD, "index.json"), {"items": []}).get("items", []) if x.get("ai")}
         books = [b for b in cat["books"] if (b.get("col", "dawah") == "dawah" or b.get("upl")) and b.get("type", "book") == "book"
                  and not b.get("hidden") and not b.get("demo") and 20 <= (b.get("n") or 0) <= 500 and not (b.get("ocr") and b.get("unrev"))]  # بعد مراجعة كل صفحاته (ولو بالنموذج الخفيف؛ إعادة قراءتها بالأساسي تصحيحات صغيرة لا تغيّر المضمون)
         books.sort(key=lambda b: b.get("n") or 999)
-        auto_do = [d for d in os.environ.get("ST_AUTO_DO", "quiz").split(",") if d in do_all]  # الاختصارات لا تُولَّد تلقائيًا (قرار المدير ٢٠ نوفمبر): بطلب الإدارة فقط
+        auto_do = [d for d in os.environ.get("ST_AUTO_DO", "").split(",") if d in do_all]  # الاختصارات لا تُولَّد تلقائيًا (قرار المدير ٢٠ نوفمبر): بطلب الإدارة فقط
         for b in books:
             need = [d for d in auto_do if (d == "quiz" and b["id"] not in have_q) or (d == "summ" and b["id"] not in sl)]
             if need and all(t[0] != b["id"] for t in todo):

@@ -95,9 +95,7 @@ def main():
             for v in vs: v["tags"] = sorted(set(v.get("tags") or []) | {"tala:t3", "tala:t4"})
             changed = True; did.append("سلّم قراءة الطلائع الكبار")
         scan = any(v.get("ocr") or v.get("pdf") or v.get("img") for v in vs)  # كتاب مصوّر: تُفعَّل خدماته كلها أيًّا كان موضوعه
-        # الخرائط الذهنية والمختصرات والكراسات والصوتيات لا تُضاف تلقائيًا (قرار المدير ٢٠ نوفمبر): تختار الإدارة الكتب يدويًّا
-        if (col == "dawah" and tp in TJ_TOPICS) or scan:
-            if addq(os.path.join(D, "study-queue.json"), {"id": vs[0]["id"], "do": ["quiz"]}): did.append("الاختبارات")
+        # الخرائط الذهنية والمختصرات والاختبارات والكراسات والصوتيات لا تُضاف تلقائيًا (قرار المدير ٢٠ نوفمبر): تختار الإدارة الكتب يدويًّا
         if col == "turath":
             if addq(os.path.join(D, "proof", "_queue.json"), {"id": vs[0]["id"]}): did.append("التدقيق")
             did.append("ربط مصورة الطبعة (يوميًّا)")

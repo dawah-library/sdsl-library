@@ -580,18 +580,33 @@ const MG = (() => {
   // ===== الضغط المطول/الزر الأيمن على أي عنصر من المحتوى (طلب المدير ٢٠ نوفمبر) =====
   // كتاب أو مجلد أو مقال أو فتوى أو كراسة أو تشجير أو كتاب مسموع: إخفاء، وإعادة التدقيق والتنسيق والتشكيل والتوليد، وحذف بتأكيد مكتوب.
   // للمدير ولمن يمنحه صلاحية «manage» (#/perms)؛ والخادم (api/gh) يقصر كتابة المفوَّض وحذفه على ملفات هذه الخدمة.
-  const CARD = "a.bk, a.acard2";
+  const CARD = "a.bk, a.acard2, a.majcard, a.card[href^='#/paths/'], .qacard";
   let lpT = 0, lpFired = false;
   const target = a => {
     const h = a.getAttribute("href") || ""; let m;
     if ((m = h.match(/^#\/book\/([^/?]+)/))) { const id = decodeURIComponent(m[1]); return { kind: kindOfId(id), id }; }
     if ((m = h.match(/^#\/(kurrasat|tashjir|audio)\/([^/?]+)/))) return { kind: { kurrasat: "kurrasa", tashjir: "tashjir", audio: "audio" }[m[1]], id: decodeURIComponent(m[2]) };
+    if ((m = h.match(/^#\/majalla\/([^/?]+)$/))) return { kind: "issue", id: decodeURIComponent(m[1]) };
+    if ((m = h.match(/^#\/paths\/([^/?]+)$/)) && m[1] !== "new") return { kind: "path", id: decodeURIComponent(m[1]) };
+    if (a.classList.contains("qacard") && a.dataset.id) return { kind: "qa", id: a.dataset.id, b: a.dataset.b };
     return null;
   };
   const C = () => typeof Cloud !== "undefined" ? Cloud : {};
   const mgr = () => !!GH.token || C().realRole === "admin" || (C().perms || []).includes("manage");  // الحذف وكل إجراءات القائمة
   const staff = () => mgr() || !!(C().staff && C().staff());  // التعديل والإخفاء (الفريق)
-  const KN = { book: "كتاب", article: "مقال", kurrasa: "كراسة", tashjir: "تشجير", audio: "كتاب مسموع" };
+  const KN = { book: "كتاب", article: "مقال", kurrasa: "كراسة", tashjir: "تشجير", audio: "كتاب مسموع", issue: "عدد المجلة", path: "مسار علمي", qa: "سؤال وجواب" };
+  // المواد المشتقة من الكتاب أو المقال في كل الصيغ: تُعرض في قائمته ويُحذف كل منها وحده
+  const DERIV = { summ: "الاختصار", quiz: "الاختبار", kurrasa: "الكراسة", tashjir: "التشجير", audio: "الكتاب المسموع", video: "الفيديوهات", tashkeel: "التشكيل المحفوظ", tr: "الترجمات", qa: "أسئلة «سؤال وجواب»" };
+  async function derived(id) {
+    const [su, ku, tj, au, vi, tk, tr] = await Promise.all(["data/summ/_list.json", "data/kurrasa/_list.json", "data/tashjir/_list.json", "data/audio/_list.json", "data/video/_list.json", "data/tashkeel/_list.json", "data/tr/index.json"].map(getJ));
+    const out = [], has = (o, k) => o && Object.prototype.hasOwnProperty.call(o, k);
+    if (has(su, id)) out.push("summ"); if (await GH.sha("data/quizzes/" + id + ".json").catch(() => null)) out.push("quiz");
+    if (has(ku, id)) out.push("kurrasa"); if (has(tj, id)) out.push("tashjir"); if (has(au, id)) out.push("audio");
+    if (vi && Array.isArray(vi[id]) && vi[id].length) out.push("video"); if (has(tk, id)) out.push("tashkeel");
+    if (tr && tr.l && Object.values(tr.l).some(x => has(x, id))) out.push("tr");
+    if (await GH.sha("data/qa/" + id + ".json").catch(() => null)) out.push("qa");
+    return out;
+  }
   const getJ = async p => { try { return JSON.parse((await GH.get(p)).text); } catch (e) { return null; } };
   async function menu(t) {
     const { kind, id } = t, b = kind === "book" || kind === "article" ? raw().find(x => x.id === id) : (lib.books || []).find(x => x.id === id);
@@ -604,16 +619,23 @@ const MG = (() => {
       else if (M && kind === "book") h += btn("mgre", "🔍 إعادة التدقيق والتصحيح", ' data-do="proof"');
       if (M) h += btn("mgre", "✍ إعادة التشكيل", ' data-do="tash"');
       h += `<a href="#/book/${encodeURIComponent(id)}/1">فتح</a><a href="#/admin?t=items&q=${encodeURIComponent(it.title.slice(0, 30))}">في «إدارة المواد»</a>`;
+    } else if (kind === "issue" && M) {
+      const D = await getJ("data/majalla.json"), x = ((D || {}).issues || []).find(i => i.id === id) || {};
+      h += btn("mgissue", x.status === "published" ? "⊘ إخفاء العدد (إلغاء النشر)" : "↺ نشر العدد", ` data-v="${x.status === "published" ? 0 : 1}"`) + `<a href="#/majalla/${encodeURIComponent(id)}">فتح</a>`;
+    } else if ((kind === "path" || kind === "qa") && M) {
+      h += kind === "qa" ? `<a href="#/book/${encodeURIComponent(t.b || "")}/1">الكتاب</a>` : `<a href="#/paths/${encodeURIComponent(id)}">فتح</a>`;
     } else if (M) {
       const L = kind === "audio" ? await getJ("data/audio/_list.json") : await getJ("data/" + kind + "/_list.json"), x = (L || {})[id] || {};
       h += btn("mgok", x.ok ? "⊘ إخفاء (إلغاء النشر)" : "↺ نشر للأعضاء", ` data-v="${x.ok ? 0 : 1}"`);
       h += btn("mgre", kind === "audio" ? "♻ حذف التسجيل وإعادة تسجيله" : "♻ إعادة التوليد من جديد", ' data-do="regen"');
       h += `<a href="#/${kind === "kurrasa" ? "kurrasat" : kind}/${encodeURIComponent(id)}">فتح</a>`;
     } else return;
-    if (M) h += btn("mgdel", "🗑 حذف نهائي…", ' class="warn"');
-    openSheet(KN[kind] + ": " + title, `<div class="tools-grid">${h}</div>${M ? '<p class="mut">الحذف يطلب تأكيدًا مكتوبًا، ويبقى المحذوف قابلًا للاسترجاع من سجل المستودع.</p>' : ""}`);
+    if (M) h += btn("mgdel", "🗑 حذف نهائي…", ` class="warn"${t.b ? ` data-b="${esc(t.b)}"` : ""}`);
+    const isDoc = kind === "book" || kind === "article";
+    openSheet(KN[kind] + ": " + (kind === "qa" ? "حذف السؤال" : title), `<div class="tools-grid">${h}</div>${M && isDoc ? '<div id="mgderiv" class="mut">جارٍ البحث عن المواد المرتبطة به…</div>' : ""}${M ? '<p class="mut">الحذف يطلب تأكيدًا مكتوبًا، ويبقى المحذوف قابلًا للاسترجاع من سجل المستودع.</p>' : ""}`);
+    if (M && isDoc) derived(id).then(L => { const el = $("#mgderiv"); if (!el) return; el.innerHTML = L.length ? `<b>المواد المرتبطة به (حذف كل منها وحده):</b><div class="tools-grid">${L.map(w => `<button data-act="mgdd" data-what="${w}" data-id="${esc(id)}" class="warn">🗑 ${DERIV[w]}</button>`).join("")}</div>` : "لا مواد مرتبطة به (اختصار أو اختبار أو كراسة أو تشجير أو صوت أو فيديو أو تشكيل أو ترجمة أو أسئلة)."; }).catch(() => { const el = $("#mgderiv"); if (el) el.textContent = ""; });
   }
-  document.addEventListener("pointerdown", e => { const a = e.target.closest(CARD); if (!a || !staff() || e.button) return; lpFired = false; clearTimeout(lpT);
+  document.addEventListener("pointerdown", e => { const a = e.target.closest(CARD); if (!a || !staff() || e.button || (a.classList.contains("qacard") && !mgr())) return; lpFired = false; clearTimeout(lpT);
     lpT = setTimeout(() => { const t = target(a); if (t) { lpFired = true; menu(t); } }, 550); });
   ["pointerup", "pointercancel", "pointermove"].forEach(ev => document.addEventListener(ev, e => { if (ev === "pointermove" && Math.abs(e.movementX) + Math.abs(e.movementY) < 4) return; clearTimeout(lpT); }, { passive: true }));
   document.addEventListener("click", e => { if (lpFired && e.target.closest(CARD)) { e.preventDefault(); e.stopImmediatePropagation(); lpFired = false; } }, true);
@@ -643,9 +665,42 @@ const MG = (() => {
       await log({ op: "mark", kind, ids: [id], note: (on ? "نشر " : "إخفاء ") + KN[kind] + ": " + nameOf(kind, id) }); toast(on ? "نُشر." : "أُخفي عن الأعضاء."); route();
     } catch (e) { alert(e.message); }
   }
+  const sure = (what, t) => prompt(`سيُحذف نهائيًّا: ${what}\n«${t}»\n\nيبقى قابلًا للاسترجاع من سجل المستودع. للتأكيد اكتب: حذف`) === "حذف";
+  // حذف مادة مشتقة من الكتاب (أي صيغة): الاختصار، الاختبار، الكراسة، التشجير، المسموع، الفيديو، التشكيل، الترجمات، الأسئلة
+  async function delDeriv(what, id) {
+    if (what === "kurrasa" || what === "tashjir" || what === "audio") return delOne(what, id);
+    const t = nameOf("book", id); if (!sure(DERIV[what] + " المرتبط بالكتاب", t)) return;
+    const rm = (p, msg) => GH.del(p, msg);  // غير الموجود يُتخطى (del يعيد false)، وأي رفض آخر يظهر للمدير
+    const files = async dir => { try { const r = await GH.api("/contents/" + encodeURI(dir)); return r.ok ? (await r.json()).filter(x => x.type === "file").map(x => x.path) : []; } catch (e) { return []; } };
+    try {
+      if (what === "summ") { await rm("data/summ/" + id + ".json", "حذف الاختصار: " + t); await GH.editJSON("data/summ/_list.json", o => { if (o) delete o[id]; return o; }, "حذف الاختصار: " + t); }
+      else if (what === "quiz") await rm("data/quizzes/" + id + ".json", "حذف الاختبار: " + t);
+      else if (what === "video") await GH.editJSON("data/video/_list.json", o => { if (o) delete o[id]; return o; }, "حذف فيديوهات: " + t);
+      else if (what === "tashkeel") { for (const f of await files("data/tashkeel/" + id)) await rm(f, "حذف التشكيل: " + t); await GH.editJSON("data/tashkeel/_list.json", o => { if (o) delete o[id]; return o; }, "حذف التشكيل: " + t); }
+      else if (what === "tr") { const ix = await getJ("data/tr/index.json"); for (const l of Object.keys((ix && ix.l) || {})) if (ix.l[l][id]) await rm("data/tr/" + l + "/" + id + ".json", "حذف الترجمة (" + l + "): " + t); await GH.editJSON("data/tr/index.json", o => { Object.values((o && o.l) || {}).forEach(x => delete x[id]); return o; }, "حذف الترجمات: " + t); }
+      else if (what === "qa") { await rm("data/qa/" + id + ".json", "حذف أسئلة الكتاب: " + t); await GH.editJSON("data/qa/_index.json", o => { if (o && o.items) { o.items = o.items.filter(r => r[2] !== id); o.n = o.items.length; } return o; }, "حذف أسئلة الكتاب من الفهرس: " + t, true); }
+      await log({ op: "mark", kind: "book", ids: [id], note: "حذف " + DERIV[what] + ": " + t }); toast("حُذف " + DERIV[what] + "."); closeSheet();
+    } catch (e) { alert("تعذّر الحذف: " + (e.message || e)); }
+  }
+  // عدد المجلة، والمسار العلمي، والسؤال الواحد
+  async function delMisc(kind, id, b) {
+    const qel = kind === "qa" && document.querySelector(`.qacard[data-id="${id}"] .qaq b`), D = kind === "issue" ? await getJ("data/majalla.json") : kind === "path" ? await getJ("data/paths.json") : null;
+    const t = kind === "qa" ? (qel ? qel.textContent : id) : kind === "issue" ? (((D || {}).issues || []).find(x => x.id === id) || {}).title || id : (((D || {}).paths || []).find(x => x.id === id) || {}).t || id;
+    if (!sure(kind === "qa" ? "السؤال وجوابه" : KN[kind], t)) return;
+    try {
+      if (kind === "issue") await GH.editJSON("data/majalla.json", o => { o.issues = (o.issues || []).filter(x => x.id !== id); return o; }, "حذف عدد المجلة: " + id);
+      else if (kind === "path") await GH.editJSON("data/paths.json", o => { o.paths = (o.paths || []).filter(x => x.id !== id); return o; }, "حذف مسار علمي: " + id);
+      else { await GH.editJSON("data/qa/" + b + ".json", o => { if (o && o.items) o.items = o.items.filter(x => x.id !== id); return o; }, "حذف سؤال: " + id); await GH.editJSON("data/qa/_index.json", o => { if (o && o.items) { o.items = o.items.filter(r => r[0] !== id); o.n = o.items.length; } return o; }, "حذف سؤال من الفهرس: " + id, true); const el = document.querySelector(`.qacard[data-id="${id}"]`); if (el) el.remove(); }
+      await log({ op: "mark", kind, ids: [id], note: "حذف نهائي (" + KN[kind] + "): " + id }); toast("حُذف نهائيًّا."); if (kind !== "qa") route();
+    } catch (e) { alert("تعذّر الحذف: " + (e.message || e)); }
+  }
+  async function setIssue(id, on) {
+    try { await GH.editJSON("data/majalla.json", o => { const x = (o.issues || []).find(i => i.id === id); if (x) x.status = on ? "published" : "draft"; return o; }, (on ? "نشر" : "إخفاء") + " عدد المجلة: " + id); await log({ op: "mark", kind: "issue", ids: [id], note: (on ? "نشر" : "إخفاء") + " عدد المجلة: " + id }); toast(on ? "نُشر العدد." : "أُخفي العدد."); route(); } catch (e) { alert(e.message); }
+  }
   // الحذف النهائي بتأكيد مكتوب
-  async function delOne(kind, id) {
+  async function delOne(kind, id, b) {
     if (kind === "book") return purge([id]);
+    if (kind === "issue" || kind === "path" || kind === "qa") return delMisc(kind, id, b);
     const t = nameOf(kind, id), what = { article: "المقال من فهرس المقالات (ويختفي من الموقع والبحث)", kurrasa: "الكراسة وملفها", tashjir: "التشجير وملفه", audio: "التسجيل الصوتي كله واستبعاد الكتاب من التسجيل التلقائي" }[kind];
     if (prompt(`سيُحذف نهائيًّا: ${what}\n«${t}»\n\nيبقى قابلًا للاسترجاع من سجل المستودع. للتأكيد اكتب: حذف`) !== "حذف") return;
     try {
@@ -656,7 +711,7 @@ const MG = (() => {
       } else if (kind === "audio") {
         await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(i => i.id !== id || i.rec); o.items.unshift({ id, del: 1, redo: 0 }); return o; }, "صوتيات: حذف «" + t + "»");
       } else {
-        await GH.del("data/" + kind + "/" + id + ".json", "حذف نهائي: " + KN[kind] + " «" + t + "»").catch(() => null);
+        await GH.del("data/" + kind + "/" + id + ".json", "حذف نهائي: " + KN[kind] + " «" + t + "»");
         await GH.editJSON("data/" + kind + "/_list.json", o => { if (o) delete o[id]; return o; }, "حذف " + KN[kind] + ": " + t);
         await GH.editJSON("data/" + kind + "/_queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = o.items.filter(y => (y.id || y) !== id); return o; }, "حذف " + KN[kind] + " من الطابور: " + t);
         if (kind === "tashjir" && typeof TSJ !== "undefined") TSJ.list = null;
@@ -680,7 +735,9 @@ const MG = (() => {
     else if (a === "mghide1") { closeSheet(); hide([el.dataset.id], el.dataset.v === "1"); }
     else if (a === "mgre") { closeSheet(); redo(el.dataset.kind, el.dataset.id, el.dataset.do); }
     else if (a === "mgok") { closeSheet(); setOk(el.dataset.kind, el.dataset.id, el.dataset.v === "1"); }
-    else if (a === "mgdel") { closeSheet(); delOne(el.dataset.kind, el.dataset.id); }
+    else if (a === "mgdel") { closeSheet(); delOne(el.dataset.kind, el.dataset.id, el.dataset.b); }
+    else if (a === "mgdd") delDeriv(el.dataset.what, el.dataset.id);
+    else if (a === "mgissue") { closeSheet(); setIssue(el.dataset.id, el.dataset.v === "1"); }
     else if (a === "mgundo") undo(el.dataset.id);
     else if (a === "mgamerge") mergeAuthor(el.dataset.keep, el.dataset.drop, el.dataset.same === "1");
     else if (a === "mgdistinct") { if (!confirm("تعليمهما شخصين مختلفين فلا يُقترح دمجهما مرة أخرى؟")) return; GH.editJSON(DISTINCT, o => { o = o && o.pairs ? o : { v: 1, pairs: [] }; if (!o.pairs.includes(el.dataset.key)) o.pairs.push(el.dataset.key); return o; }, "تكرار المؤلفين: شخصان مختلفان", true).then(() => { (distinct || (distinct = new Set())).add(el.dataset.key); dupsBody(); }).catch(err => alert(err.message)); }
