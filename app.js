@@ -397,7 +397,7 @@ async function vFurqan(i,q){view('<p class="mut">جارٍ التحميل…</p>'
 /* ---------- تحويل الصوتيات والمرئيات إلى نصوص ثم كتب (البند ٣٨): نموذج الإدارة لطابور tools/transcribe.py ---------- */
 /* شروح الكتب: الكتاب المشروح (sharh معرّف في المكتبة، أو matn اسمه) وتمييز المتن من الشرح (سطر «%% » في النص)،
    وسلاسل الشروح والتفريغات التي تُكمَّل بدروس لاحقة (set/vol) — طلب المدير ٢٠ نوفمبر ٢٠٢٦ */
-function sharhNote(b){const m=b.sharh&&B(b.sharh);if(!m&&!b.matn)return"";return`<p class="shnote">📖 شرح لكتاب ${m?`<a href="#/book/${esc(b.sharh)}">«${esc(m.setTitle||m.title)}»</a>`:`«${esc(b.matn)}»${b.matnA?" لـ"+esc(b.matnA):""}`}. <span class="mut">المتن المشروح في إطار بعنوان «المتن»، وما بعده كلام الشارح، والحواشي للتخريج والتعريفات مع بيان قائلها.</span></p>`}
+function sharhNote(b){const m=b.sharh&&B(b.sharh);if(!m&&!b.matn)return"";return`<p class="shnote">📖 شرح لكتاب ${m?`<a href="#/book/${esc(b.sharh)}">«${esc(m.setTitle||m.title)}»</a>`:`«${esc(b.matn)}»${b.matnA?" لـ"+esc(b.matnA):""}`}. <span class="mut">${S.shm==="fn"?"المتن في الصفحة، والشرح تحته بأرقامه.":"المتن بالخط الغامق، وما سواه كلام الشارح."}</span> <span class="shmode">عرض الشرح: <button class="linkbtn" data-act="shm" data-v="mix" aria-pressed="${S.shm!=="fn"}">ممزوجًا بالمتن</button> | <button class="linkbtn" data-act="shm" data-v="fn" aria-pressed="${S.shm==="fn"}">في الحاشية</button></span></p>`}
 function serList(){const m=new Map();(CAT.books||lib.books||[]).filter(b=>(b.tags||[]).includes("tafrigh")||b.sharh||b.matn).forEach(b=>{const k=b.set||b.id;if(!m.has(k))m.set(k,{k,t:b.setTitle||b.title,a:b.authorId,n:0});const x=m.get(k);x.n=Math.max(x.n,b.vol||1)});return[...m.values()].sort((x,y)=>x.t.localeCompare(y.t,"ar"))}
 function serOpts(){return`<option value="">— جديد (ليس تكملة) —</option>`+serList().map(s=>`<option value="${esc(s.k)}">${esc(s.t)}${s.a&&A(s.a)?" — "+esc(A(s.a).name):""} (${toAr(s.n)})</option>`).join("")}
 function serCont(c,key,e){const g=c.books.filter(b=>b.set===key||(b.id===key&&!b.set));if(!g.length)return;const base=g[0];if(!base.set)Object.assign(base,{set:base.id,setTitle:base.title,vol:1});
@@ -567,7 +567,15 @@ function lineMarks(l){const sp=[],t=String(l);let m;
  const words=t.trim().split(/\s+/).length,p=words>=8&&cov("qt")>=.8?"pq":words>=4&&cov("qv")>=.85?"pv":"";
  return{sp,lead,p}}
 function markOf(mk,a,b){if(mk.lead&&a<mk.lead)return"ld";const x=mk.sp.find(x=>a<x.e&&b>x.s);return x?x.k:""}
-function pageHtml(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tk=S.tash&&bk?TK.get(bk,text):null;const tx0=S.tash?(tk||text):strip(text);
+/* الشرح «في الحاشية» (اختيار القارئ S.shm="fn" في كتب الشروح): يبقى المتن (أسطر «%% ») والعناوين في الصفحة بأرقام،
+   وكلام الشارح بعده تحت المتن مرقّمًا بأرقامه (وما قبل أول متن تتمة شرح الصفحة السابقة)؛ والافتراضي ممزوج: المتن غامق والشرح بعده */
+function pageHtml(text,h,uw,bk){const t0=String(text||"");if(S.shm!=="fn"||!/^%% /m.test(t0))return pageHtml0(text,h,uw,bk);
+ const ci=t0.search(/^\s*_{4,}\s*$/m),body=ci>=0?t0.slice(0,ci):t0,fnp=ci>=0?t0.slice(ci):"",main=[],G=[[]];let n=0;
+ body.split("\n").forEach(l=>{if(/^%% /.test(l)){n++;G[n]=[];main.push(l+" ⁅"+n+"⁆")}else if(/^#{1,2} /.test(l))main.push(l);else if(l.trim())G[n].push(l)});
+ const blk=G.map((g,i)=>g.length?`<div class="shg">${pageHtml0(g.join("\n"),h,uw,bk).replace(/<p([^>]*)>/,`<p$1><b class="shn">${i?"("+toAr(i)+")":"(تتمة)"}</b> `)}</div>`:"").join("");
+ let out=pageHtml0(main.join("\n")+(fnp?"\n"+fnp:""),h,uw,bk).replace(/<span class="w[^"]*">⁅(\d+)⁆<\/span>/g,(m,k)=>`<sup class="shr">(${toAr(+k)})</sup>`);
+ if(!blk)return out;const sb=`<div class="shfn"><p class="shh">الشرح</p>${blk}</div>`,fi=out.indexOf('<div class="fns');return fi>=0?out.slice(0,fi)+sb+out.slice(fi):out+sb}
+function pageHtml0(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mut emptyp">هذه الصفحة بلا نص في الكتاب (غلاف أو صفحة فارغة)، ويمكنك رؤيتها في النسخة المصورة.</p>`;const hs=norm(h||"").split(/\s+/).filter(Boolean),us=(uw||[]).map(x=>norm(x)).filter(Boolean);const tk=S.tash&&bk?TK.get(bk,text):null;const tx0=S.tash?(tk||text):strip(text);
  // الحواشي: ما بعد سطر الشرطات ____ يُعرض حواشي أسفل الصفحة (ظاهرة أو مطوية بحسب اختيار القارئ)
  const cut=tx0.search(/^\s*_{4,}\s*$/m),tx=cut>=0?tx0.slice(0,cut).trimEnd():tx0,fnt=cut>=0?tx0.slice(cut).replace(/^\s*_{4,}\s*\n?/,"").trim():"";
  // صفحة كلها تتمة حاشية (تعليق ممتد للشارح أو المعلّق) تُعرض مفتوحة لأنها مضمون الصفحة كله، وبتسمية الحاشية في الكتاب (fnLabel) إن وُجدت
@@ -2232,6 +2240,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(/^p(like|save|comm|copy|share|imgq|more|menu|delc|link|native|del|react)$/.test(a)||a==="rxwho")postAct(a,el);
  else if(a==="feedMore")feedMore();
  else if(a==="fntoggle"){el.closest(".fns").classList.toggle("fold")}
+ else if(a==="shm"){S.shm=el.dataset.v==="fn"?"fn":"mix";saveS();route()}
  else if(a==="tts"){closeSheet();TTS.start()}else if(a==="ttsp")TTS.toggle();else if(a==="ttss")TTS.stop();
  else if(a==="selprint"||a==="selcopy"||a==="selshare"){const s0=String(getSelection()).trim(),rb=selRd()||$("#rb");if(!s0||!rb)return;const b=B(rb.dataset.id),i=+rb.dataset.p-1,src=`${b.setTitle||b.title} — ${A(b.authorId).name}${PL(b,i)?"، "+PL(b,i):""}`,link=siteLink(`#/book/${b.id}/${i+1}`);
   if(a==="selshare"){const txt=s0+"\n— "+src;if(navigator.share){try{await navigator.share({title:src,text:txt,url:link})}catch(x){}return}try{await navigator.clipboard.writeText(txt+"\n"+link);toast("المشاركة غير متاحة في هذا المتصفح؛ نُسخ النص مع مصدره ورابطه")}catch(x){toast("تعذر النسخ؛ انسخ النص يدويًا")}return}

@@ -23,7 +23,7 @@ const EXT = {
   pageHtml(t, opt) {
     t = String(t || ""); const cut = t.search(/^\s*_{4,}\s*$/m), body = cut >= 0 ? t.slice(0, cut) : t, fn = cut >= 0 ? t.slice(cut).replace(/^\s*_{4,}\s*\n?/, "").trim() : "";
     const lines = (typeof joinLines === "function" ? joinLines(body) : body).split("\n").filter(l => l.trim());
-    let h = lines.map(l => /^#{1,3}\s/.test(l) ? `<h3>${this.x(l.replace(/^#+\s*/, "").replace(/\*\*/g, ""))}</h3>` : /^%% /.test(l) ? `<p class="mtn" style="border-right:4px solid #b88a2e;background:#f8f1e2;padding:4px 10px;font-weight:700">${this.x(l.slice(3).replace(/\*\*/g, ""))}</p>` : `<p>${this.x(l.replace(/^(@@|<<) /, "").replace(/\*\*/g, ""))}</p>`).join("");
+    let h = lines.map(l => /^#{1,3}\s/.test(l) ? `<h3>${this.x(l.replace(/^#+\s*/, "").replace(/\*\*/g, ""))}</h3>` : /^%% /.test(l) ? `<p class="mtn" style="font-weight:700">${this.x(l.slice(3).replace(/\*\*/g, ""))}</p>` : `<p>${this.x(l.replace(/^(@@|<<) /, "").replace(/\*\*/g, ""))}</p>`).join("");
     if (fn && opt.fn) h += `<div class="fn">${fn.split("\n").filter(Boolean).map(l => `<p>${this.x(l)}</p>`).join("")}</div>`;
     return h;
   }
@@ -102,7 +102,7 @@ async function expRun(f) {
   const toc = (b.toc || []).filter(t => t.p >= a && t.p <= z);
   const foot = SITENAME + (CFG.siteUrl ? " — " + CFG.siteUrl : ""), src = b.source || "";
   if (fm === "txt") return dl(safe + ".txt", `${title}\n${au}\n\n` + pages.map(p => plain(opt.fn ? p.t : p.t.split(/^\s*_{4,}\s*$/m)[0]).trim() + (opt.pl ? `\n— ${p.l} —` : "")).join("\n\n") + `\n\n${foot}`, "text/plain");
-  if (fm === "md") return dl(safe + ".md", `# ${title}\n\n**${au}**\n\n` + (opt.toc && toc.length ? "## الفهرس\n\n" + toc.map(t => `- ${t.t} (ص ${t.p})`).join("\n") + "\n\n" : "") + pages.map(p => p.t.replace(/^\s*_{4,}\s*$/m, "\n---\n").replace(/^#\s/gm, "### ").replace(/^%% (.*)$/gm, "> **المتن:** $1") + (opt.pl ? `\n\n*— ${p.l} —*` : "")).join("\n\n") + `\n\n${foot}\n`, "text/markdown");
+  if (fm === "md") return dl(safe + ".md", `# ${title}\n\n**${au}**\n\n` + (opt.toc && toc.length ? "## الفهرس\n\n" + toc.map(t => `- ${t.t} (ص ${t.p})`).join("\n") + "\n\n" : "") + pages.map(p => p.t.replace(/^\s*_{4,}\s*$/m, "\n---\n").replace(/^#\s/gm, "### ").replace(/^%% (.*)$/gm, "**$1**") + (opt.pl ? `\n\n*— ${p.l} —*` : "")).join("\n\n") + `\n\n${foot}\n`, "text/markdown");
   const X = EXT.x.bind(EXT), tocH = opt.toc && toc.length ? `<nav class="toc"><h2>الفهرس</h2>${toc.map(t => `<p class="l${t.l || 1}"><a href="#p${t.p}">${X(t.t)}</a><span>${X(PL(b, t.p - 1) || t.p)}</span></p>`).join("")}</nav>` : "";
   const css = `@page{size:${f.sz.value};margin:18mm 16mm}body{font-size:16pt;line-height:2;max-width:760px;margin:auto;padding:16px;text-align:justify}h1{text-align:center;font-size:26pt}h2{text-align:center}.au{text-align:center;font-size:15pt}.pg{page-break-after:always;margin-bottom:24px}.pl{text-align:center;color:#888;font-size:11pt}p{margin:0 0 .35em;text-indent:1.2em}h3{text-align:center;font-size:17pt}.fn{border-top:1px solid #aaa;margin-top:10px;padding-top:6px;font-size:12pt;line-height:1.7}.fn p{text-indent:0}.toc p{display:flex;justify-content:space-between;text-indent:0;border-bottom:1px dotted #bbb}.toc .l2{padding-right:1.5em;font-size:.92em}.toc a{color:inherit;text-decoration:none}.foot{text-align:center;color:#888;font-size:11pt;margin-top:30px}${tpl.css}`;
   const body = pages.map(p => `<div class="pg" id="p${p.i}">${EXT.pageHtml(p.t, opt)}${opt.pl ? `<p class="pl">— ${X(p.l)} —</p>` : ""}</div>`).join("");
