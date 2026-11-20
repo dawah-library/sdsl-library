@@ -16,6 +16,7 @@
 - المرحلة ٣ (منجزة): التشكيل الدقيق (#/tahrir)، المختصر مع تشجير كل فصل وتصديره، المقارنة العلمية (cmpai.js، جدول comparisons) — docs/ai-text-services.md. والبحث الشامل (الفهرس المسبق) مؤجل بقرار المدير.
 - السلسلة التلقائية: تصحيح النص ← التشكيل ← الصوت (refresh للصفحات المصححة) ← الإذاعة (derived.yml)، استثناء صريح من قرار إيقاف التوليد التلقائي.
 - المرحلة ٤ (منجزة): شرح الكتب والمتون — sharh.js، tools/sharh-align.py، data/shp، shp.yml؛ docs/sharh-service.md.
+- رحلة شرح السنة مفعّلة (ق-١٠): جولتان يوميًّا؛ «من شروح مشايخ الدعوة» في صفحة الحديث (tools/sharh-dawah.py ← data/sharh/dawah، فوائد بنص الشيخ تعتمدها الإدارة)؛ مشروع «صحيح مسلم وشروحه» منشور وجامع لكل شروحه.
 - المرحلة ٥ (منجزة، تنتظر المفتاح): ElevenLabs — tools/tts.py (speak_eleven)، eleven.js، api/edit.js mode=eleven؛ docs/elevenlabs.md.
 - المرحلة ٦ (منجزة): صانع الفيديو — النص في خانة واحدة وredistribute، مدة حرة، انتقالات xfade، أيقونات، فواصل ناعمة بلا موسيقى، tools/video-gen.py (Veo/fal)، openmontage.yml؛ docs/video-maker.md.
 - المرحلة ٧: الواجهة الثلاثية (portal.js) نفّذها وكيل آخر في main — تُراجَع فقط. 
