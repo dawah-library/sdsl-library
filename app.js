@@ -1643,12 +1643,14 @@ function authorBrief(id){const a=A(id),t=tj(id);if(!a||!a.name||a.name==="—")r
  <div class="row">${t?`<a class="btn p nf" href="#/tarjama/${id}" data-act="closeDlg">الترجمة المفصلة</a>`:""}<a class="btn nf" href="#/author/${id}" data-act="closeDlg">كتبه ومقالاته</a>${isAdmin()&&GH.on?`<button class="btn nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button>`:""}</div></div>`)}
 // الضغط المطول (أو الزر الأيمن) على أي اسم مؤلف يعرض التعريف الموجز
 let lpTimer=null,lpFired=false;
-document.addEventListener("pointerdown",e=>{const el=e.target.closest("[data-author]");if(!el)return;lpFired=false;clearTimeout(lpTimer);
+// داخل بطاقة مادة للإدارة: الضغط المطول لقائمة إجراءات المحتوى (manage.js) لا لتعريف المؤلف
+const authorLP=e=>{const el=e.target.closest("[data-author]");return el&&!(el.closest("a.bk,a.acard2")&&typeof MG!=="undefined"&&MG.cardMenu&&MG.cardMenu())?el:null};
+document.addEventListener("pointerdown",e=>{const el=authorLP(e);if(!el)return;lpFired=false;clearTimeout(lpTimer);
  lpTimer=setTimeout(()=>{lpFired=true;if(navigator.vibrate)try{navigator.vibrate(15)}catch(x){}authorBrief(el.dataset.author)},520)});
 ["pointerup","pointercancel","pointerleave"].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpTimer),true));
 document.addEventListener("pointermove",e=>{if(Math.abs(e.movementX)+Math.abs(e.movementY)>6)clearTimeout(lpTimer)},true);
 document.addEventListener("click",e=>{if(lpFired&&e.target.closest("[data-author]")){e.preventDefault();e.stopPropagation();lpFired=false}},true);
-document.addEventListener("contextmenu",e=>{const el=e.target.closest("[data-author]");if(el){e.preventDefault();clearTimeout(lpTimer);authorBrief(el.dataset.author)}});
+document.addEventListener("contextmenu",e=>{const el=authorLP(e);if(el){e.preventDefault();clearTimeout(lpTimer);authorBrief(el.dataset.author)}});
 const sheikhs=()=>Object.keys(TJ.items).filter(id=>A(id).name!=="—");
 // قسم التراجم قسمان: «مشايخ الدعوة السلفية بمصر» (التراجم المفصلة في data/tarajim.json ثم بقية مؤلفي مكتبة الدعوة من المشايخ)،
 // و«تراجم عامة» (أئمة المكتبة العامة بوفياتهم، مع الربط بتراجمهم في كتب التراجم المحفوظة في المكتبة — #/alam).
