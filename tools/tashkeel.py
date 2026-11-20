@@ -279,6 +279,8 @@ def main():
     lst = jload(os.path.join(OUT, "_list.json"), {})
     q = jload(os.path.join(OUT, "_queue.json"), {"items": []})
     pri = [x["id"] if isinstance(x, dict) else x for x in q.get("items", [])]
+    # إعادة التشكيل من الإدارة (الضغط المطول): {"id", "redo": "<وسم>"} — كل صفحة لم تُشكَّل بهذا الوسم تُعاد ولو لم يتغير نصها
+    REDO = {x["id"]: x["redo"] for x in q.get("items", []) if isinstance(x, dict) and x.get("redo")}
     only = [x for x in os.environ.get("TK_ONLY", "").split(",") if x.strip()]
     books = {b["id"]: b for b in ready_books(cat)}
     if os.environ.get("TK_ALLOW_ALL", "0") != "1":  # بقرار الإدارة: خدمة التشكيل لكتب مكتبة الدعوة وحدها في هذه المرحلة
@@ -298,7 +300,8 @@ def main():
             continue
         pages = sh["pages"]
         sample = " ".join(pages[: min(len(pages), 40)])
-        if diac_ratio(sample) > 0.35 and bid not in only:  # الكتاب مشكول أصلًا
+        rd = REDO.get(bid)
+        if diac_ratio(sample) > 0.35 and bid not in only and not rd:  # الكتاب مشكول أصلًا
             continue
         chunks = {}
         todo = []
@@ -310,7 +313,7 @@ def main():
             if k not in chunks:
                 chunks[k] = jload(os.path.join(OUT, bid, "%d.json" % k), {})
             e = chunks[k].get(str(i + 1))
-            if e and e.get("h") == fnv(t):
+            if e and e.get("h") == fnv(t) and (not rd or e.get("rd") == rd):
                 continue
             todo.append(i)
         if not todo:
@@ -334,7 +337,7 @@ def main():
                     continue
                 t, m1, m2 = r
                 k = i // CH
-                chunks[k][str(i + 1)] = {"t": t, "h": fnv(pages[i]), "m": m1, "r": m2}
+                chunks[k][str(i + 1)] = dict({"t": t, "h": fnv(pages[i]), "m": m1, "r": m2}, **({"rd": rd} if rd else {}))
                 done += 1
                 STATS["pages"] += 1
                 if done % 20 == 0:

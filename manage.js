@@ -3,7 +3,7 @@
    - الضغط المطول (أو الزر الأيمن) على بطاقة مادة يفتح قائمة إجراءات للمشرف، وكل إجراء متاح أيضًا من التبويب.
    - «سجل التعديلات»: كل عملية تُسجَّل في data/admin-log.json بقيمها السابقة واللاحقة، ويمكن التراجع عنها.
    - «الخدمات والمفاتيح»: data/switches.json يوقف خدمات الموقع والمهام الآلية ويعيد تشغيلها.
-   لا حذف نهائي: «الإخفاء» يحجب المادة عن الزوار ويبقيها للمشرفين وفي السجل. */
+   «الإخفاء» يحجب المادة عن الزوار ويبقيها للمشرفين وفي السجل؛ والحذف النهائي للمدير ولمن يمنحه صلاحية «manage» بتأكيد مكتوب. */
 const MG = (() => {
   const LOG = "data/admin-log.json", SW = "data/switches.json", PER = 50;
   const FIELDS = { title: ["title", "t"], author: ["authorId", "a"], topic: ["topicId", "tp"], col: ["col", "col"], hidden: ["hidden", "h"], set: ["set", "set"], setTitle: ["setTitle", "setTitle"], vol: ["vol", "vol"], vols: ["vols", "vols"], ed: ["ed", "ed"], tps: ["tps", "tps"], lvl: ["lvl", "lvl"] };
@@ -577,19 +577,94 @@ const MG = (() => {
   }
 
 
-  // ===== الضغط المطول/الزر الأيمن على بطاقة =====
+  // ===== الضغط المطول/الزر الأيمن على أي عنصر من المحتوى (طلب المدير ٢٠ نوفمبر) =====
+  // كتاب أو مجلد أو مقال أو فتوى أو كراسة أو تشجير أو كتاب مسموع: إخفاء، وإعادة التدقيق والتنسيق والتشكيل والتوليد، وحذف بتأكيد مكتوب.
+  // للمدير ولمن يمنحه صلاحية «manage» (#/perms)؛ والخادم (api/gh) يقصر كتابة المفوَّض وحذفه على ملفات هذه الخدمة.
+  const CARD = "a.bk, a.acard2";
   let lpT = 0, lpFired = false;
-  const cardId = a => { const m = (a.getAttribute("href") || "").match(/#\/book\/([^/?]+)/); return m && decodeURIComponent(m[1]); };
-  function menu(id, x, y) {
-    const it = raw().find(b => b.id === id); if (!it) return;
-    openSheet(it.title, `<div class="tools-grid"><button data-act="mgedit" data-id="${esc(id)}">✎ تعديل البيانات أو النقل</button><button data-act="mghide1" data-id="${esc(id)}" data-v="${it.hidden ? 0 : 1}">${it.hidden ? "↺ استعادة" : "⊘ إخفاء"}</button><a href="#/book/${encodeURIComponent(id)}/1">فتح</a><a href="#/admin?t=items&q=${encodeURIComponent(it.title.slice(0, 30))}">في «إدارة المواد»</a></div>`);
+  const target = a => {
+    const h = a.getAttribute("href") || ""; let m;
+    if ((m = h.match(/^#\/book\/([^/?]+)/))) { const id = decodeURIComponent(m[1]); return { kind: kindOfId(id), id }; }
+    if ((m = h.match(/^#\/(kurrasat|tashjir|audio)\/([^/?]+)/))) return { kind: { kurrasat: "kurrasa", tashjir: "tashjir", audio: "audio" }[m[1]], id: decodeURIComponent(m[2]) };
+    return null;
+  };
+  const C = () => typeof Cloud !== "undefined" ? Cloud : {};
+  const mgr = () => !!GH.token || C().realRole === "admin" || (C().perms || []).includes("manage");  // الحذف وكل إجراءات القائمة
+  const staff = () => mgr() || !!(C().staff && C().staff());  // التعديل والإخفاء (الفريق)
+  const KN = { book: "كتاب", article: "مقال", kurrasa: "كراسة", tashjir: "تشجير", audio: "كتاب مسموع" };
+  const getJ = async p => { try { return JSON.parse((await GH.get(p)).text); } catch (e) { return null; } };
+  async function menu(t) {
+    const { kind, id } = t, b = kind === "book" || kind === "article" ? raw().find(x => x.id === id) : (lib.books || []).find(x => x.id === id);
+    const title = (b && (b.setTitle || b.title)) || id, M = mgr(), btn = (act, label, extra) => `<button data-act="${act}" data-kind="${kind}" data-id="${esc(id)}"${extra || ""}>${label}</button>`;
+    let h = "";
+    if (kind === "book" || kind === "article") {
+      const it = raw().find(x => x.id === id); if (!it) return;
+      h += btn("mgedit", "✎ تعديل البيانات أو النقل") + btn("mghide1", it.hidden ? "↺ استعادة (إظهار)" : "⊘ إخفاء عن الزوار", ` data-v="${it.hidden ? 0 : 1}"`);
+      if (M && kind === "book" && it.ocr) h += btn("mgre", "🔍 إعادة التدقيق على المصورة", ' data-do="rev"') + btn("mgre", "📐 إعادة التحويل والتنسيق كاملًا من المصورة", ' data-do="reocr"');
+      else if (M && kind === "book") h += btn("mgre", "🔍 إعادة التدقيق والتصحيح", ' data-do="proof"');
+      if (M) h += btn("mgre", "✍ إعادة التشكيل", ' data-do="tash"');
+      h += `<a href="#/book/${encodeURIComponent(id)}/1">فتح</a><a href="#/admin?t=items&q=${encodeURIComponent(it.title.slice(0, 30))}">في «إدارة المواد»</a>`;
+    } else if (M) {
+      const L = kind === "audio" ? await getJ("data/audio/_list.json") : await getJ("data/" + kind + "/_list.json"), x = (L || {})[id] || {};
+      h += btn("mgok", x.ok ? "⊘ إخفاء (إلغاء النشر)" : "↺ نشر للأعضاء", ` data-v="${x.ok ? 0 : 1}"`);
+      h += btn("mgre", kind === "audio" ? "♻ حذف التسجيل وإعادة تسجيله" : "♻ إعادة التوليد من جديد", ' data-do="regen"');
+      h += `<a href="#/${kind === "kurrasa" ? "kurrasat" : kind}/${encodeURIComponent(id)}">فتح</a>`;
+    } else return;
+    if (M) h += btn("mgdel", "🗑 حذف نهائي…", ' class="warn"');
+    openSheet(KN[kind] + ": " + title, `<div class="tools-grid">${h}</div>${M ? '<p class="mut">الحذف يطلب تأكيدًا مكتوبًا، ويبقى المحذوف قابلًا للاسترجاع من سجل المستودع.</p>' : ""}`);
   }
-  const staff = () => typeof Cloud !== "undefined" && (Cloud.staff() || GH.token);
-  document.addEventListener("pointerdown", e => { const a = e.target.closest("a.bk"); if (!a || !staff() || e.button) return; lpFired = false; clearTimeout(lpT);
-    lpT = setTimeout(() => { const id = cardId(a); if (id) { lpFired = true; menu(id); } }, 550); });
+  document.addEventListener("pointerdown", e => { const a = e.target.closest(CARD); if (!a || !staff() || e.button) return; lpFired = false; clearTimeout(lpT);
+    lpT = setTimeout(() => { const t = target(a); if (t) { lpFired = true; menu(t); } }, 550); });
   ["pointerup", "pointercancel", "pointermove"].forEach(ev => document.addEventListener(ev, e => { if (ev === "pointermove" && Math.abs(e.movementX) + Math.abs(e.movementY) < 4) return; clearTimeout(lpT); }, { passive: true }));
-  document.addEventListener("click", e => { if (lpFired && e.target.closest("a.bk")) { e.preventDefault(); e.stopImmediatePropagation(); lpFired = false; } }, true);
-  document.addEventListener("contextmenu", e => { const a = e.target.closest("a.bk"); if (!a || !staff()) return; const id = cardId(a); if (!id) return; e.preventDefault(); menu(id); });
+  document.addEventListener("click", e => { if (lpFired && e.target.closest(CARD)) { e.preventDefault(); e.stopImmediatePropagation(); lpFired = false; } }, true);
+  document.addEventListener("contextmenu", e => { const a = e.target.closest(CARD); if (!a || !staff()) return; const t = target(a); if (!t) return; e.preventDefault(); menu(t); });
+
+  const qPush = (path, item, msg) => GH.editJSON(path, o => { o = o && o.items ? o : { items: [] }; o.items = [item].concat(o.items.filter(y => (y.id || y) !== item.id)); return o; }, msg);
+  const nameOf = (kind, id) => { const x = raw().find(b => b.id === id) || (lib.books || []).find(b => b.id === id); return (x && (x.setTitle || x.title)) || id; };
+  // إعادة التدقيق والتنسيق والتشكيل والتوليد: طلب في طابور المهمة الآلية المختصة، يُنفَّذ في جولتها القادمة
+  async function redo(kind, id, what) {
+    const t = nameOf(kind, id), ask = { rev: "إعادة تدقيق صفحاته على المصورة (المراجعة والخفيفة ومواضع الشك أولًا)", reocr: "إعادة تحويله كاملًا من المصورة وتنسيقه من جديد (يستبدل النص الحالي بعد اكتماله)", proof: "إعادة تدقيقه واقتراح التصحيحات في «مراجعة الكتب»", tash: "إعادة تشكيله من جديد (يستبدل التشكيل الحالي)", regen: kind === "audio" ? "حذف تسجيله كله وإعادة تسجيله" : "إعادة توليد " + KN[kind] + " من جديد" }[what];
+    if (!confirm(`«${t}»\n${ask}؟`)) return;
+    try {
+      if (what === "rev") await GH.editJSON("data/review-requests.json", o => { o = o && o.items ? o : { items: [] }; o.items = [id].concat(o.items.filter(x => x !== id)); return o; }, "إعادة التدقيق: " + t);
+      else if (what === "reocr") await GH.put("ocr-inbox/" + id + ".redo", "", "طلب إعادة تحويل: " + t);
+      else if (what === "proof") await qPush("data/proof/_queue.json", { id }, "إعادة التدقيق والتصحيح: " + t);
+      else if (what === "tash") await qPush("data/tashkeel/_queue.json", { id, redo: new Date().toISOString().slice(0, 16) }, "إعادة التشكيل: " + t);
+      else if (what === "regen" && kind === "audio") await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(i => i.id !== id || i.rec); o.items.unshift({ id, del: 1, redo: 1 }); return o; }, "صوتيات: حذف وإعادة تسجيل «" + t + "»");
+      else if (what === "regen") { const L = (await getJ("data/" + kind + "/_list.json")) || {}, x = L[id] || {}; await qPush("data/" + kind + "/_queue.json", Object.assign({ id }, kind === "kurrasa" ? (x.item || { r: x.r || 10 }) : {}), (kind === "kurrasa" ? "كراسة" : "تشجير") + ": إعادة توليد «" + t + "»"); }
+      await log({ op: "mark", kind, ids: [id], note: { rev: "إعادة التدقيق", reocr: "إعادة التحويل والتنسيق", proof: "إعادة التدقيق والتصحيح", tash: "إعادة التشكيل", regen: "إعادة التوليد" }[what] + ": " + t });
+      toast("طُلب؛ يُنفَّذ آليًّا في الجولة القادمة للمهمة المختصة.");
+    } catch (e) { alert(e.message); }
+  }
+  // نشر الكراسة أو التشجير أو الكتاب المسموع وإخفاؤه (ok في قائمته)
+  async function setOk(kind, id, on) {
+    try { await GH.editJSON("data/" + kind + "/_list.json", o => { if (o && o[id]) o[id].ok = on ? 1 : 0; return o; }, (on ? "نشر " : "إخفاء ") + KN[kind] + ": " + nameOf(kind, id));
+      if (kind === "tashjir" && typeof TSJ !== "undefined") TSJ.list = null;
+      await log({ op: "mark", kind, ids: [id], note: (on ? "نشر " : "إخفاء ") + KN[kind] + ": " + nameOf(kind, id) }); toast(on ? "نُشر." : "أُخفي عن الأعضاء."); route();
+    } catch (e) { alert(e.message); }
+  }
+  // الحذف النهائي بتأكيد مكتوب
+  async function delOne(kind, id) {
+    if (kind === "book") return purge([id]);
+    const t = nameOf(kind, id), what = { article: "المقال من فهرس المقالات (ويختفي من الموقع والبحث)", kurrasa: "الكراسة وملفها", tashjir: "التشجير وملفه", audio: "التسجيل الصوتي كله واستبعاد الكتاب من التسجيل التلقائي" }[kind];
+    if (prompt(`سيُحذف نهائيًّا: ${what}\n«${t}»\n\nيبقى قابلًا للاسترجاع من سجل المستودع. للتأكيد اكتب: حذف`) !== "حذف") return;
+    try {
+      if (kind === "article") {
+        let meta = null; await GH.editJSON("data/articles/index.json", o => { const k = o.items.findIndex(x => x.id === id); if (k >= 0) meta = o.items.splice(k, 1)[0]; return o; }, "حذف نهائي: " + t, true);
+        await GH.editJSON("data/removed/_log.json", o => { o = o || { items: [] }; o.items.push({ at: new Date().toISOString(), kind, meta: meta || { id, t } }); return o; }, "سجل المحذوفات");
+        const k = ARTS_IDX.findIndex(x => x.id === id); if (k >= 0) ARTS_IDX.splice(k, 1); merge();
+      } else if (kind === "audio") {
+        await GH.editJSON("data/audio/_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(i => i.id !== id || i.rec); o.items.unshift({ id, del: 1, redo: 0 }); return o; }, "صوتيات: حذف «" + t + "»");
+      } else {
+        await GH.del("data/" + kind + "/" + id + ".json", "حذف نهائي: " + KN[kind] + " «" + t + "»").catch(() => null);
+        await GH.editJSON("data/" + kind + "/_list.json", o => { if (o) delete o[id]; return o; }, "حذف " + KN[kind] + ": " + t);
+        await GH.editJSON("data/" + kind + "/_queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = o.items.filter(y => (y.id || y) !== id); return o; }, "حذف " + KN[kind] + " من الطابور: " + t);
+        if (kind === "tashjir" && typeof TSJ !== "undefined") TSJ.list = null;
+      }
+      await log({ op: "mark", kind, ids: [id], note: "حذف نهائي (" + KN[kind] + "): " + t });
+      toast(kind === "audio" ? "طُلب الحذف؛ يُنفَّذ في جولة الصوتيات القادمة." : "حُذف نهائيًّا."); route();
+    } catch (e) { alert("تعذّر الحذف: " + (e.message || e)); }
+  }
 
   // ===== الأفعال =====
   document.addEventListener("click", e => {
@@ -603,6 +678,9 @@ const MG = (() => {
     else if (a === "mghide") { if (!sel.size) return toast("حدّد مادة أولًا."); hide([...sel], el.dataset.v === "1"); }
     else if (a === "mgpurge") { if (!sel.size) return toast("حدّد كتابًا أو مجلدًا أولًا."); purge([...sel]); }
     else if (a === "mghide1") { closeSheet(); hide([el.dataset.id], el.dataset.v === "1"); }
+    else if (a === "mgre") { closeSheet(); redo(el.dataset.kind, el.dataset.id, el.dataset.do); }
+    else if (a === "mgok") { closeSheet(); setOk(el.dataset.kind, el.dataset.id, el.dataset.v === "1"); }
+    else if (a === "mgdel") { closeSheet(); delOne(el.dataset.kind, el.dataset.id); }
     else if (a === "mgundo") undo(el.dataset.id);
     else if (a === "mgamerge") mergeAuthor(el.dataset.keep, el.dataset.drop, el.dataset.same === "1");
     else if (a === "mgdistinct") { if (!confirm("تعليمهما شخصين مختلفين فلا يُقترح دمجهما مرة أخرى؟")) return; GH.editJSON(DISTINCT, o => { o = o && o.pairs ? o : { v: 1, pairs: [] }; if (!o.pairs.includes(el.dataset.key)) o.pairs.push(el.dataset.key); return o; }, "تكرار المؤلفين: شخصان مختلفان", true).then(() => { (distinct || (distinct = new Set())).add(el.dataset.key); dupsBody(); }).catch(err => alert(err.message)); }
@@ -635,6 +713,6 @@ const MG = (() => {
       if (tab === "dups") { setTimeout(dupsBody, 0); return `${needGH()}<div id="mgdup" class="mut">جارٍ الفحص…</div>`; }
       if (tab === "switches") { setTimeout(swBody, 0); return `${needGH()}<div id="mgsw" class="mut">جارٍ التحميل…</div>`; }
       return null;
-    }, apply, undo, log, sets, volFromName, sameish, nameToks
+    }, apply, undo, log, sets, volFromName, sameish, nameToks, cardMenu: () => staff()
   };
 })();
