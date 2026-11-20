@@ -2,6 +2,11 @@
  "note": "ترتيب الرئيسية: يحرره المدير من زر «ترتيب الواجهة» في الرئيسية",
  "home": [
   {
+   "k": "start",
+   "show": false,
+   "fold": true
+  },
+  {
    "k": "quote",
    "show": true,
    "fold": false
@@ -38,7 +43,7 @@
   },
   {
    "k": "services",
-   "show": true,
+   "show": false,
    "fold": true
   },
   {
@@ -53,7 +58,7 @@
   },
   {
    "k": "topics",
-   "show": true,
+   "show": false,
    "fold": true
   }
  ]
