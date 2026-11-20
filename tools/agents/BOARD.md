@@ -40,4 +40,4 @@
 | P6 | خطة المدير — المرحلة ٦: صانع الفيديو | video.js، tools/book-video.py، tools/video-gen.py، tools/video-slides.js، openmontage.yml | منجزة | التوليد بالمفاتيح |
 | P8 | خطة المدير — المرحلة ٨: موسوعة الآثار | tools/athar.py، tools/athar-ai.py، athar.js، athar.yml | منجزة | |
 | P9 | خطة المدير — المرحلة ٩: المجتمع والتواصل | outreach.js، api/notify.js، tools/weekly.py، tools/newsletter.py | منجزة | تطبيق جدول subscribers |
-| م٢٠-٢ | كتاب الأسبوع استعراضًا شاملًا؛ الاشتراك التلقائي للأعضاء وتذكيراتهم؛ الموسوعات العلمية المتخصصة؛ تمرير الوصايا على مدار الساعة | outreach.js، tools/weekly-dossier.py، api/remind.js، tools/newsletter.py، mawsua.js، tools/mawsua.py، app.js | منجزة | تطبيق 2026-11-20-member-notify.sql؛ مراجعة مخططات الموسوعات واعتمادها |
+| م٢٠-٢ | كتاب الأسبوع استعراضًا شاملًا؛ المِسبار (اختبارات الأقسام)؛ الاشتراك التلقائي للأعضاء وتذكيراتهم؛ الموسوعات العلمية المتخصصة؛ تمرير الوصايا على مدار الساعة | outreach.js، tools/weekly-dossier.py، api/remind.js، tools/newsletter.py، mawsua.js، tools/mawsua.py، app.js | منجزة | تطبيق 2026-11-20-member-notify.sql؛ مراجعة مخططات الموسوعات واعتمادها |
