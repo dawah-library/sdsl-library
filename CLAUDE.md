@@ -7,6 +7,7 @@
 - **البيانات:** `data/catalog.json` (كتب/مؤلفون/موضوعات)، `data/books/<id>.json` و`vols/` (نصوص: pages, toc, pl ترقيم المطبوع, pmap)، `data/*` لكل خدمة.
 - **ملف جديد للواجهة:** يُضاف إلى `index.html` و`CORE` في `sw.js` و`ABOUT_MODULES` في `about.js`؛ الفحص: `node --check` و`python3 tools/check-about.py`.
 - **الاختبار المحلي:** سكربت Playwright يشغّل `python3 -m http.server 8765` بنفسه ثم يغلقه (التشغيل الخلفي المنفصل مرفوض في الجلسة).
+- **المتطلبات المرجعية:** `docs/requirements-2026-11.md` (التوضيح الموسع للمدير، بندًا بندًا مع مرحلته وحالته).
 - **القرارات:** `DECISIONS.md`. **التوثيق:** `docs/`.
 
 ## حالة مراحل خطة المدير (٢٠ نوفمبر ٢٠٢٦)
