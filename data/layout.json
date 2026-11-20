@@ -3,7 +3,7 @@
  "home": [
   {
    "k": "start",
-   "show": false,
+   "show": true,
    "fold": true
   },
   {
