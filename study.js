@@ -146,9 +146,10 @@ const STUDY = (() => {
 
   // ---------- قارن بين كتابين: كتابان متجاوران، ومسألة يُبحث عنها فيهما مع تظليلها والتنقل بين مواضعها ----------
   async function compare(q) {
+    if ((q.ai || q.pub || q.rev || q.id) && typeof CMPAI !== "undefined") return CMPAI.view(q);  // المقارنة العلمية الموسعة (cmpai.js)
     const opts = BOOKS().filter(b => !b.hidden).slice(0, 4000).map(b => `<option value="${esc(b.id)}">${esc(b.setTitle && b.vol ? b.setTitle + " — " + b.title : b.title)} — ${esc(A(b.authorId).name)}</option>`).join("");
     const term = String(q.q || "").trim();
-    view(`<h2>قارن بين كتابين</h2><p class="mut">اختر كتابين واكتب المسألة أو العبارة، فتظهر مواضعها في كليهما جنبًا إلى جنب مع تظليلها؛ وانتقل بين المواضع لمقارنة كلام المؤلفَين. النصوص بلفظها، والحكم بينها للقارئ.</p>
+    view(`<h2>قارن بين كتابين</h2><div class="tabs" role="tablist"><a role="tab" aria-selected="true" href="#/compare">جنبًا إلى جنب (كتابان)</a><a role="tab" aria-selected="false" href="#/compare?ai=1">مقارنة علمية (كتابان فأكثر)</a><a role="tab" aria-selected="false" href="#/compare?pub=1">المقارنات المنشورة</a></div><p class="mut">اختر كتابين واكتب المسألة أو العبارة، فتظهر مواضعها في كليهما جنبًا إلى جنب مع تظليلها؛ وانتقل بين المواضع لمقارنة كلام المؤلفَين. النصوص بلفظها، والحكم بينها للقارئ.</p>
       <form class="cmpf" data-form="cmp"><select name="a" aria-label="الكتاب الأول">${opts}</select><select name="b" aria-label="الكتاب الثاني">${opts}</select><input name="q" value="${esc(term)}" placeholder="المسألة أو العبارة (مثل: الإخلاص)"><button class="btn p">قارن</button></form>
       <div class="cmp"><section id="cmpA"></section><section id="cmpB"></section></div>`);
     const f = document.querySelector("[data-form=cmp]"); if (q.a) f.a.value = q.a; if (q.b) f.b.value = q.b; else if (!q.a) f.b.selectedIndex = Math.min(1, f.b.options.length - 1);

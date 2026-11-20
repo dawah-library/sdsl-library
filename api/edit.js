@@ -1,4 +1,4 @@
-// خدمة «التنسيق وإعادة الصياغة» للأعضاء: تدقيق لغوي، وتنسيق التفريغات، وإعادة صياغتها بأسلوب كتابي، مع الأمانة في المضمون.
+// خدمة «التنسيق وإعادة الصياغة» للأعضاء: تدقيق لغوي، وتنسيق التفريغات، وإعادة صياغتها بأسلوب كتابي، مع الأمانة في المضمون؛ والتشكيل الدقيق (كامل أو جزئي) بضمان عدم تغيير الحروف.
 // متغيرات البيئة: GEMINI_API_KEY، GEMINI_MODEL اختياري، SUPABASE_URL وSUPABASE_ANON_KEY (للأعضاء فقط)، SDSL_EDIT_HOURLY (الافتراضي ٢٠).
 const hits = new Map();
 function limited(id) {
@@ -17,12 +17,54 @@ const MODES = {
   rw: "أعد صياغة النص التالي (وهو غالبًا تفريغ درس صوتي) بعربية فصيحة متصلة بأسلوب كتابي كأنه مقال، مع عناوين فرعية تبدأ بـ «# » عند الانتقال إلى مسألة جديدة، وحذف ما لا يناسب الكتابة من النداءات والتكرار والاستطراد الشفهي، دون زيادة أو نقص في المعنى.",
   short: "اختصر النص التالي إلى نحو ثلثه بعبارات قريبة جدًا من ألفاظ الكاتب، بسياقة متصلة سليمة، مع الإبقاء على المسائل كلها بترتيبها."
 };
+// التشكيل الدقيق (المرحلة ٣-ه): جولة تشكيل ثم جولة تدقيق مستقلة، ولا يُقبل من النموذج إلا الحركات (lib/harakat.js)
+const TK1 = "أنت عالم بالعربية متقن للنحو والصرف والدلالة. شكّل النص الآتي تشكيلًا تامًّا صحيحًا: اضبط أواخر الكلمات بحسب إعرابها في سياقها، وبنية الكلمات بحسب معناها في الجملة (ميّز ما يختلف ضبطه باختلاف المعنى، والمبني للمعلوم من المبني للمجهول)، وضع الشدة والتنوين، وهمزات الوصل بلا حركة، والأعلام بضبطها المشهور. لا تغيّر أي حرف ولا كلمة ولا علامة ترقيم ولا ترتيبًا، ولا تضف ولا تحذف، ولا تصحح الإملاء، وما كان مشكولًا في الأصل (الآيات والأحاديث المضبوطة) اتركه بضبطه. أعد النص المشكول وحده بلا شرح.\n\nالنص:\n";
+const TK2 = "أنت مدقق نحوي وصرفي خبير. فيما يلي نص مشكول آليًّا: راجع تشكيله كلمةً كلمة وصحح كل خطأ في الإعراب أو ضبط البنية أو الشدة والتنوين بحسب السياق والمعنى. لا تغيّر حرفًا ولا كلمة ولا علامة ترقيم، ولا تضف ولا تحذف. أعد النص كاملًا مشكولًا بلا شرح.\n\nالنص:\n";
+async function gem(models, sys, prompt) {
+  for (let k = 0; k < models.length; k++) {
+    let r; try {
+      r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[k]) + ":generateContent", {
+        method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, maxOutputTokens: 16000 } })
+      });
+    } catch (e) { r = null; }
+    if (!r || !r.ok) { if (k < models.length - 1) continue; const e = new Error(r && r.status === 429 ? "نفدت الحصة المجانية مؤقتًا. جرّب بعد قليل." : "تعذر الاتصال بالخدمة الآن."); e.status = r && r.status === 429 ? 429 : 502; throw e; }
+    const j = await r.json(), out = ((((j.candidates || [])[0] || {}).content || {}).parts || []).filter(p => !p.thought).map(p => p.text || "").join("").trim();
+    if (out) return out; if (k === models.length - 1) { const e = new Error("لم يرجع النموذج نصًا."); e.status = 502; throw e; }
+  }
+}
+// المقارنة العلمية بين الكتب (المرحلة ٣-ج): المادة يجمعها المتصفح من نصوص الكتب بوسوم [كتاب:صفحة]، والإحالات تُقبل منها وحدها
+const CMP = `أنت باحث شرعي محقق يقارن بين كتب بدقة وأمانة. أمامك مادة من {n} كتب، وكل مقطع يبدأ بوسم موضعه [المعرف:الصفحة].
+المحاور المطلوبة: {axes}.{topic}
+القواعد: لا تنسب إلى مؤلف إلا ما في مادته، ولا تخترع موقفًا لم يرد؛ وإن لم يتناول كتاب مسألة فقل ذلك صراحة. انقل المصطلحات بلفظها، وميّز بين قول المؤلف وما نقله عن غيره. الإحالات من الوسوم الواردة في المادة فقط بالصيغة "المعرف:الصفحة".
+أخرج JSON فقط: {"summary": "خلاصة المقارنة في ٣–٥ جمل", "axes": [{"axis": "اسم المحور", "agree": [{"point": "وجه الاتفاق", "refs": ["id:p"]}], "differ": [{"point": "موضع الاختلاف", "views": [{"book": "معرف الكتاب", "view": "موقفه أو معالجته بإيجاز", "refs": ["id:p"]}]}]}], "notes": "ملحوظات منهجية أو حدود المادة"}
+
+{books}`;
+async function compare(req, res, body) {
+  const books = (Array.isArray(body.books) ? body.books : []).slice(0, 6).map(b => ({ id: String(b.id || "").slice(0, 60), title: String(b.title || "").slice(0, 200), author: String(b.author || "").slice(0, 120), died: String(b.died || "").slice(0, 10), text: String(b.text || "").slice(0, 30000) }));
+  if (books.length < 2) return res.status(400).json({ error: "اختر كتابين على الأقل." });
+  const total = books.reduce((n, b) => n + b.text.length, 0); if (total > 60000) return res.status(400).json({ error: "المادة أكبر من الحد؛ قلّل عدد الكتب." });
+  const user = await userFrom(req); if (!user) return res.status(401).json({ error: "سجّل الدخول لاستخدام الخدمة." });
+  if (limited(user.id)) return res.status(429).json({ error: "بلغت حد الاستخدام في الساعة، حاول بعد قليل." });
+  const axes = (Array.isArray(body.axes) ? body.axes : []).map(x => String(x).slice(0, 80)).slice(0, 8), topic = String(body.topic || "").slice(0, 200);
+  const prompt = CMP.replace("{n}", books.length).replace("{axes}", axes.join("، ") || "مقارنة عامة شاملة").replace("{topic}", topic ? `\nالمسألة المتتبَّعة: «${topic}» — قارن معالجة كل كتاب لها وفق المحاور.` : "")
+    .replace("{books}", books.map(b => `=== الكتاب ${b.id}: «${b.title}» — ${b.author}${b.died ? " (ت " + b.died + "هـ)" : ""} ===\n${b.text}`).join("\n\n"));
+  const models = [process.env.GEMINI_COMPARE_MODEL, "gemini-pro-latest", process.env.GEMINI_MODEL, "gemini-flash-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+  let out; try { out = await gem(models, "أنت باحث علمي أمين، تخرج JSON صحيحًا فقط.", prompt); } catch (e) { return res.status(e.status || 502).json({ error: e.message }); }
+  let r; try { r = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, "")); } catch (e) { return res.status(502).json({ error: "تعذر تنظيم النتيجة؛ أعد المحاولة." }); }
+  const ok = new Set(), ids = new Set(books.map(b => b.id)); books.forEach(b => (b.text.match(/\[[^\]:\s]+:\d+\]/g) || []).forEach(t => ok.add(t.slice(1, -1))));
+  const fr = a => (Array.isArray(a) ? a : []).map(String).filter(x => ok.has(x)).slice(0, 6);  // إحالة لم ترد في المادة تُحذف
+  r.axes = (Array.isArray(r.axes) ? r.axes : []).map(a => ({ axis: String(a.axis || ""), agree: (a.agree || []).map(x => ({ point: String(x.point || ""), refs: fr(x.refs) })), differ: (a.differ || []).map(x => ({ point: String(x.point || ""), views: (x.views || []).filter(v => ids.has(String(v.book))).map(v => ({ book: String(v.book), view: String(v.view || ""), refs: fr(v.refs) })) })) }));
+  res.setHeader("cache-control", "no-store");
+  return res.status(200).json({ result: { summary: String(r.summary || ""), axes: r.axes, notes: String(r.notes || "") } });
+}
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("edit", res, "التنسيق وإعادة الصياغة")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
   if (!process.env.GEMINI_API_KEY) return res.status(503).json({ error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
   const body = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
-  const mode = MODES[body.mode] ? body.mode : "", text = String(body.text || "").trim();
+  if (body.mode === "compare") return compare(req, res, body);
+  const mode = MODES[body.mode] || body.mode === "tashkeel" ? body.mode : "", text = String(body.text || "").trim();
   if (!mode) return res.status(400).json({ error: "اختر نوع الخدمة." });
   if (text.length < 20) return res.status(400).json({ error: "النص قصير جدًا." });
   if (text.length > 12000) return res.status(400).json({ error: "الحد ١٢٠٠٠ حرف في المرة الواحدة؛ قسّم النص." });
@@ -30,6 +72,16 @@ module.exports = async (req, res) => {
   if (!user) return res.status(401).json({ error: "سجّل الدخول لاستخدام الخدمة." });
   if (limited(user.id)) return res.status(429).json({ error: "بلغت حد الاستخدام في الساعة، حاول بعد قليل." });
   const models = [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-flash-lite-latest"].filter((m, i, a) => m && a.indexOf(m) === i);
+  if (mode === "tashkeel") {
+    const H = require("../lib/harakat");
+    try {
+      const sys = "أنت عالم بالعربية ونحوها وصرفها، تضبط النصوص الشرعية والحديثية واللغوية والأدبية ضبطًا دقيقًا دون أن تغيّر حرفًا منها.";
+      const one = H.transfer(text, await gem(models, sys, TK1 + text));
+      let fin = one; try { const two = H.transfer(text, await gem(models, sys, TK2 + one.text)); if (two.cover >= one.cover * 0.95) fin = two; } catch (e) { }  // جولة التدقيق اختيارية إن نفدت الحصة
+      res.setHeader("cache-control", "no-store");
+      return res.status(200).json({ text: body.part ? H.partial(fin.text, text) : fin.text, mode, cover: Math.round(fin.cover * 100) });
+    } catch (e) { return res.status(e.status || 502).json({ error: e.message }); }
+  }
   for (let k = 0; k < models.length; k++) {
     let r; try {
       r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[k]) + ":generateContent", {
