@@ -1609,3 +1609,9 @@ body.mfull .mpin.on{display:block}body.mfull .mptf{max-width:none;margin:8px 4px
 @media (max-height:700px){.hmin .ptile{min-height:280px}}
 .qzdl{border:1px dashed var(--line,#d6dfda);border-radius:10px;padding:8px 10px;margin:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.qzdl input{flex:1 1 180px;max-width:280px}.qzdl .chips{flex-basis:100%}
 details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:.3em 0}
+/* العقل المتعلّم (brain.js) */
+.brain .lead{line-height:1.9}.brst{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.brst div{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--sf);text-align:center}.brst b{display:block;font-size:1.6rem;color:var(--ac)}.brst span{color:var(--mut);font-size:.88rem}
+.brhow li{margin:0 0 8px;line-height:1.8}.brgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.brch{margin:0;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--sf)}.brch svg{width:100%;height:auto}.brch rect{fill:var(--ac)}.brch text{font-size:11px;fill:var(--mut)}.brch figcaption{color:var(--mut);font-size:.88rem;margin-top:4px}
+.brcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--sf)}.brcard p{margin:6px 0;line-height:1.8}.brcard blockquote{margin:6px 0;padding:6px 10px;border-inline-start:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.brls li{margin:0 0 6px;line-height:1.8}.brls li.off span{text-decoration:line-through;opacity:.6}.brgaps li{margin:0 0 4px}
+.askl{display:inline-flex;gap:6px;margin-inline-start:6px;flex-wrap:wrap}.askl .on{background:var(--ac);color:var(--on)}.askl .mut{font-size:.75rem;opacity:.75}

@@ -80,7 +80,27 @@ const SX = (() => {
     const K = { t: "ترجمة", s: "صحابي", j: "جرح وتعديل", a: "مؤلف في المكتبة" };
     return { key: r.key, entries: (r.es || []).slice(0, 8).map(e => ({ name: e.n, kind: K[e.t] || "", source: e.s === "lib" ? "تراجم المكتبة" : (ALAM.SRC && ALAM.SRC[e.s]) || e.s, place: e.pl || "", grade: e.g || "", text: String(e.d || "").slice(0, 900), ref: e.b ? e.b + ":" + e.p : "" })), mentions: (r.m || []).slice(0, 6).map(x => Array.isArray(x) ? x[0] + ":" + x[1] : x), note: "اقرأ نص الترجمة بـ get_page على المرجع (ref) وانقل منه بحروفه." + ((r.es || []).length > 1 ? " وقد يكون أكثر من علم بهذا الاسم؛ لا تجزم إلا بقرينة." : "") };
   }
-  const XT = { quran_ayah: quranAyah, find_ayah: findAyah, hadith_lookup: hadithLookup, word_meaning: wordMeaning, person_bio: personBio };
+  /* الذاكرة العلمية («العقل المتعلّم»، tools/brain.py): بطاقات مسائل استخرجها المساعد بقراءته الآلية للمكتبة، وأسئلة الأعضاء المتكررة
+     ذات الأجوبة المستحسنة الموثقة. تُقرأ من المستودع مباشرة (تتجدد كل بضع ساعات بلا نشر)، والفهرس مطابق لفهرس البحث. */
+  const BRN = { meta: undefined, ix: new Map(), sh: new Map() };
+  const BRAW = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/brain/" + p + "?t=" + Math.floor(Date.now() / 900e3);
+  const bj = async p => { for (const u of [BRAW(p), "data/brain/" + p]) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { } } return null; };
+  async function recall(input) {
+    if (BRN.meta === undefined) BRN.meta = await bj("_meta.json");
+    const M = BRN.meta; if (!M || !M.cards) return { note: "الذاكرة العلمية قيد البناء؛ استعمل search_library." };
+    const ts = []; SS.terms(String(input.query || "")).forEach(t => { ts.push(t); const v = t.replace(P3, ""); if (v !== t) ts.push(v); });
+    const sc = new Map();
+    for (const t of new Set(ts)) { const n = crc(t) % (M.ixn || 128); if (!BRN.ix.has(n)) BRN.ix.set(n, bj("ix/" + n + ".json").then(x => x || {}));
+      const post = (await BRN.ix.get(n))[t] || [], w = 1 / (1 + post.length / 50); post.forEach(i => sc.set(i, (sc.get(i) || 0) + w)); }
+    const top = [...sc.entries()].sort((a, b) => b[1] - a[1]).slice(0, Math.min(8, +input.k || 6)).map(x => x[0]);
+    if (!top.length) return { note: "لا شيء في الذاكرة العلمية لهذا؛ ابحث في النصوص بـ search_library." };
+    const per = M.per || 500, out = [];
+    for (const i of top) { const s = Math.floor(i / per); if (!BRN.sh.has(s)) BRN.sh.set(s, bj("cards/" + s + ".json").then(x => x || [])); const c = (await BRN.sh.get(s))[i % per]; if (!c) continue;
+      const b = typeof B === "function" ? B(String(c.r || "").split(":")[0]) : null;
+      out.push({ question: c.q, answer: c.a, quote: c.s || undefined, ref: c.r, refs: c.rs, source: b ? b.title : undefined, kind: c.k === "faq" ? "سؤال متكرر أجيب سابقًا واستحسنه الأعضاء" : c.k, topic: c.t }); }
+    return { cards: out, note: "خلاصات من قراءة المساعد السابقة للمكتبة: ابدأ بها لتوجيه البحث، ثم اقرأ المرجع بـ get_page وانقل من نصه لا من الخلاصة، ولا تعتمد بطاقة لم تتحقق من نصها." };
+  }
+  const XT = { quran_ayah: quranAyah, find_ayah: findAyah, hadith_lookup: hadithLookup, word_meaning: wordMeaning, person_bio: personBio, recall_knowledge: recall };
   async function runTool(name, input, scope) {
     input = input || {};
     if (XT[name]) { try { return await XT[name](input); } catch (e) { return { error: String(e && e.message || e) }; } }
@@ -88,7 +108,7 @@ const SX = (() => {
     if (name === "get_page" || name === "book_outline") { const id = name === "get_page" ? String(input.ref || "").split(":")[0] : String(input.book_id || ""); if (B(id)) await loadBook(id).catch(() => {}); }
     return SS.runTool(lib, name, input, scope);
   }
-  return { search, runTool, docs };
+  return { search, runTool, docs, recall, brain: bj };
 })();
 
 /* الحلقة: سؤال ← Gemini (عبر الخادم) ← أدوات في المتصفح ← Gemini … حتى الإجابة */
@@ -97,7 +117,7 @@ AI.viaServer = async function (o) {
   const contents = o.turns.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const XO = typeof ASKX !== "undefined" ? ASKX.take() : { att: [], body: {} };  // مرفقات السؤال الأخير وخيارات النموذج والمصادر والأسلوب
   if (XO.att.length) contents[contents.length - 1].parts = XO.att.map(a => ({ inlineData: { mimeType: a.mime, data: a.data } })).concat(contents[contents.length - 1].parts);
-  const label = (n, a) => n === "quran_ayah" ? "يراجع نص الآية في المصحف" : n === "find_ayah" ? "يحدد موضع الآية في المصحف" : n === "hadith_lookup" ? "يبحث عن الحديث في كتب السنة" : n === "word_meaning" ? "يراجع معنى «" + (a.word || "") + "» في المعاجم" : n === "person_bio" ? "يراجع ترجمة «" + (a.name || "") + "»" : n === "search_library" ? "يبحث في المكتبة عن: «" + (a.query || "") + "»" : n === "get_page" ? "يقرأ " + (a.ref || "") : n === "book_outline" ? "يطالع فهرس الكتاب" : "يراجع قائمة " + (n === "list_authors" ? "المؤلفين" : "الكتب");
+  const label = (n, a) => n === "recall_knowledge" ? "يراجع ذاكرته العلمية عن: «" + (a.query || "") + "»" : n === "quran_ayah" ? "يراجع نص الآية في المصحف" : n === "find_ayah" ? "يحدد موضع الآية في المصحف" : n === "hadith_lookup" ? "يبحث عن الحديث في كتب السنة" : n === "word_meaning" ? "يراجع معنى «" + (a.word || "") + "» في المعاجم" : n === "person_bio" ? "يراجع ترجمة «" + (a.name || "") + "»" : n === "search_library" ? "يبحث في المكتبة عن: «" + (a.query || "") + "»" : n === "get_page" ? "يقرأ " + (a.ref || "") : n === "book_outline" ? "يطالع فهرس الكتاب" : "يراجع قائمة " + (n === "list_authors" ? "المؤلفين" : "الكتب");
   let acc = "";
   for (let round = 0; round < maxR; round++) {
     let r;
@@ -216,4 +236,29 @@ const ASKX = (() => {
         Object.assign(c, { features: F, engines: E, limits: L, defaultEngine: document.getElementById("axde").value, webDomains: document.getElementById("axwd").value.split(/\s+/).filter(Boolean), webAnyDomain: document.getElementById("axany").checked, extra: document.getElementById("axex").value.trim() });
         const st = document.getElementById("axst"); st.textContent = "جارٍ الحفظ…"; try { await GH.editJSON("data/ask-config.json", () => c, "المساعد العلمي: تحديث الإعدادات"); CFG_ = c; st.textContent = "✓ حُفظ"; } catch (e) { st.textContent = "تعذّر: " + (e.message || e); } }; }); }
   return { take, addFiles, cfg };
+})();
+
+/* التعلّم من المحادثات (ASKL): يُرسل السؤال والجواب ومراجعه بلا هوية العضو، ثم تقييمه 👍/👎 وتصحيحه إن شاء؛
+   ومنها يستخلص «العقل المتعلّم» الأسئلة المتكررة الموثقة والدروس والفجوات. وللعضو إيقاف المشاركة من الزر نفسه. */
+const ASKL = (() => {
+  const on = () => { try { return localStorage.getItem("askl_off") !== "1"; } catch (e) { return true; } };
+  const post = b => { if (!on() || !Auth.token) return Promise.resolve(); return fetch(CFG.askEndpoint, { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer " + Auth.token }, body: JSON.stringify(Object.assign({ op: "learn" }, b)) }).catch(() => {}); };
+  function log(m, q, o) {
+    if (!m || !q || !m.content || m.content.length < 30) return; m.lid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    const refs = [...new Set([...m.content.matchAll(/\[\[([^\]\s]+?:\d+)\]\]/g)].map(x => x[1]))];
+    post({ id: m.lid, q: String(q).slice(0, 2000), a: m.content.slice(0, 6000), mode: (o && o.mode) || "", refs, searches: (o && o.searches) || [] });
+  }
+  function bar(m) {
+    const w = document.createElement("span"); w.className = "askl"; if (!m || !m.lid) return w;
+    const up = document.createElement("button"), dn = document.createElement("button"); up.className = dn.className = "btn s"; up.textContent = "👍"; dn.textContent = "👎"; up.title = "جواب جيد"; dn.title = "فيه خطأ أو نقص";
+    up.setAttribute("aria-label", "جواب جيد"); dn.setAttribute("aria-label", "فيه خطأ أو نقص");
+    const done = (b, t) => { up.disabled = dn.disabled = true; b.classList.add("on"); toast(t); };
+    up.onclick = () => { m.vote = 1; post({ id: m.lid, vote: 1 }); done(up, "شكرًا؛ يتعلم المساعد من تقييمك"); };
+    dn.onclick = () => { const n = prompt("ما الخطأ أو النقص؟ (تصحيحك يعلّم المساعد؛ اختياري)", "") ; if (n === null) return; m.vote = -1; post({ id: m.lid, vote: -1, note: String(n || "").slice(0, 1000) }); done(dn, "شكرًا؛ سيُراجَع ويتعلم المساعد منه"); };
+    if (m.vote) (m.vote > 0 ? up : dn).classList.add("on"), up.disabled = dn.disabled = true;
+    const off = document.createElement("button"); off.className = "btn s mut"; off.textContent = on() ? "إيقاف مشاركة محادثاتي" : "مشاركة محادثاتي متوقفة";
+    off.title = "تُرسل الأسئلة والأجوبة بلا اسمك ولا بريدك ليتعلم منها المساعد"; off.onclick = () => { try { localStorage.setItem("askl_off", on() ? "1" : "0"); } catch (e) { } off.textContent = on() ? "إيقاف مشاركة محادثاتي" : "مشاركة محادثاتي متوقفة"; };
+    w.append(up, dn, off); return w;
+  }
+  return { log, bar, on };
 })();
