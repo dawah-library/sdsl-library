@@ -18,4 +18,6 @@
 - المرحلة ٤ (منجزة): شرح الكتب والمتون — sharh.js، tools/sharh-align.py، data/shp، shp.yml؛ docs/sharh-service.md.
 - المرحلة ٥ (منجزة، تنتظر المفتاح): ElevenLabs — tools/tts.py (speak_eleven)، eleven.js، api/edit.js mode=eleven؛ docs/elevenlabs.md.
 - المرحلة ٦ (منجزة): صانع الفيديو — النص في خانة واحدة وredistribute، مدة حرة، انتقالات xfade، أيقونات، فواصل ناعمة بلا موسيقى، tools/video-gen.py (Veo/fal)، openmontage.yml؛ docs/video-maker.md.
-- المرحلة ٧: الواجهة الثلاثية (portal.js) نفّذها وكيل آخر في main — تُراجَع فقط. التالية: المرحلة ٨ موسوعة آثار السلف.
+- المرحلة ٧: الواجهة الثلاثية (portal.js) نفّذها وكيل آخر في main — تُراجَع فقط. 
+- المرحلة ٨ (منجزة): الآثار — باب المصدر، fit، مسودات، refit، مصادر مبوبة وخارجية؛ docs/athar.md.
+- المرحلة ٩ (التالية): المجتمع والتواصل.

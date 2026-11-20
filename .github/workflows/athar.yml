@@ -2,6 +2,9 @@ name: موسوعة آثار السلف
 # يراجع مرشحات الآثار (tools/athar/cand.json) بنموذج Groq المجاني ويطابق لفظ كل أثر بمصدره، ثم ينشر المتحقق منه في data/athar.
 # التشغيل اليدوي مع rebuild=1 يعيد استخراج المرشحات من الكتب (بعد إضافة مصادر جديدة). مفتاح الإيقاف: athar.
 on:
+  push:
+    branches: [main]
+    paths: ["data/athar/_review.json", "tools/athar/import/**"]   # قرار الإدارة أو مصدر خارجي جديد: يُعاد النشر
   schedule:
     - cron: "37 9 * * *"
   workflow_dispatch:
@@ -35,14 +38,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: استخراج المرشحات
-        if: ${{ github.event.inputs.rebuild == '1' }}
+        if: ${{ github.event.inputs.rebuild == '1' || github.event_name == 'push' }}
         run: python3 tools/athar.py
       - name: المراجعة والنشر
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ATHAR_MAX: ${{ github.event.inputs.max || '2000' }}
           ATHAR_MINUTES: "160"
-        run: python3 tools/athar-ai.py
+        if: ${{ github.event_name != 'push' }}
+        run: |
+          python3 tools/athar-ai.py
+          # المرحلة ٨: مراجعة تبويب المنشور سابقًا بالفهم السياقي (اقتراحات تعتمدها الإدارة في #/athar/review)
+          ATHAR_MAX=400 ATHAR_MINUTES=40 python3 tools/athar-ai.py --refit || true
       - name: الحفظ
         if: always()
         run: |

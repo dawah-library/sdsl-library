@@ -21,7 +21,7 @@ const ATH = (() => {
     return `<article class="athar" data-id="${esc(it.id)}">${it.t ? `<h4>${esc(it.t)}</h4>` : ""}
       <blockquote>«${esc(it.q)}»</blockquote>
       <p class="athw"><a href="#/athar/w/${encodeURIComponent(it.w)}">${esc(it.w)}</a>${p.t ? ` <span class="tag">${esc(TIER1[p.t] || "")}${p.d ? " • ت " + toAr(p.d) + "هـ" : ""}</span>` : ""}</p>
-      <p class="athsrc">العزو: <a href="#/book/${esc(it.r.b)}/${it.r.p}">${esc(bTitle(it.r.b))} (${esc(where(it.r))})</a>${(it.x || []).length ? `<br><span class="mut">وأخرجه أيضًا: ${it.x.map(x => `<a href="#/book/${esc(x.b)}/${x.p}">${esc(bTitle(x.b))} (${esc(where(x))})</a>`).join("، ")}</span>` : ""}</p>
+      <p class="athsrc">العزو: ${it.src ? `<a href="${esc(it.src.url || "#")}" target="_blank" rel="noopener">${esc(it.src.t || "")}${it.src.ref ? " (" + esc(it.src.ref) + ")" : ""}</a>${it.src.orig ? " — " + esc(it.src.orig) : ""}` : `<a href="#/book/${esc(it.r.b)}/${it.r.p}">${esc(bTitle(it.r.b))} (${esc(where(it.r))})</a>`}${(it.x || []).length ? `<br><span class="mut">وأخرجه أيضًا: ${it.x.map(x => `<a href="#/book/${esc(x.b)}/${x.p}">${esc(bTitle(x.b))} (${esc(where(x))})</a>`).join("، ")}</span>` : ""}</p>
       <div class="row athbtns"><button class="btn s" data-ath="copy" data-id="${esc(it.id)}">نسخ بالعزو</button><button class="btn s${inMy ? "" : " p"}" data-ath="my" data-id="${esc(it.id)}">${inMy ? "✓ في مختاراتي" : "＋ إلى مختاراتي"}</button><a class="btn s" href="#/book/${esc(it.r.b)}/${it.r.p}">موضعه في الكتاب</a></div></article>`; };
   let LIST = [], SHOWN = 0;
   const more = () => { const el = $("#athl"); if (!el) return; el.insertAdjacentHTML("beforeend", LIST.slice(SHOWN, SHOWN + 40).map(card).join("")); SHOWN += 40; const m = $("#athmore"); if (m) m.hidden = SHOWN >= LIST.length; };
@@ -36,16 +36,34 @@ const ATH = (() => {
     if (a === "t" && b) { const t = IX.topics.find(x => x.k === b); return listView(crumbs(t ? t.n : "") + `<h2>${esc(t ? t.n : b)}</h2>` + searchBox(), await topic(b).catch(() => [])); }
     if (a === "w" && b) { const w = decodeURIComponent(b), p = per(w), L = (await all()).filter(x => x.w === w); return listView(crumbs(w) + `<h2>${esc(w)}</h2><p class="mut">${esc(TIER1[p.t] || "")}${p.d ? " • توفي سنة " + toAr(p.d) + "هـ" : ""}</p>`, L); }
     if (a === "my") return mine();
+    if (a === "review") return review();
     if (q.q) { const w = norm(q.q).split(/\s+/).filter(Boolean), L = (await all()).filter(x => { const h = norm(x.q + " " + x.w + " " + (x.t || "")); return w.every(k => h.includes(k)); }); return listView(crumbs("بحث") + searchBox(q.q), L, "نتائج «" + esc(q.q) + "»"); }
     const tiers = ["s", "t", "a", "b"].map(t => [t, IX.people.filter(p => p.t === t)]).filter(x => x[1].length);
     view(`<div class="cmhero athhero"><div><h2>موسوعة آثار السلف</h2><p>وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث، وحكمهم ومواعظهم وتقريراتهم في العقيدة والاتباع والعلم والعبادة والتزكية والأخلاق والهمة والترغيب والترهيب؛ بألفاظها من كتب السنة والتراجم والرقائق في المكتبة، معزوّة إلى مواضعها مع تخريجها، يُنسخ منها لخطبة أو درس.</p>
       <p class="mut">${toAr(IX.count)} أثرًا من ${toAr(IX.people.length)} علمًا • تُجمع تباعًا وتُراجَع قبل نشرها (رُوجع ${toAr(IX.checked || 0)} من ${toAr(IX.candidates || 0)} موضعًا مرشحًا)</p></div></div>
       ${searchBox()}
-      <p><a class="btn s" href="#/athar/my">📌 مختاراتي (${toAr(MY.get().length)})</a></p>
+      <p><a class="btn s" href="#/athar/my">📌 مختاراتي (${toAr(MY.get().length)})</a>${(isAdmin() || (typeof can === "function" && can("edit"))) ? ` <a class="btn s" href="#/athar/review">🛡️ مراجعة الإدراج (${toAr(IX.drafts || 0)})</a>` : ""}</p>
       <h3>الأبواب</h3><div class="athtopics">${IX.topics.filter(t => t.c).map(t => `<a class="card" href="#/athar/t/${t.k}"><b>${esc(t.n)}</b><span>${toAr(t.c)} أثرًا</span></a>`).join("") || '<p class="note">تُراجَع الآثار الآن، وتظهر هنا تباعًا.</p>'}</div>
       <h3>الأعلام</h3>${tiers.map(([t, L]) => `<h4>${TIER[t]}</h4><div class="chips">${L.map(p => `<a class="chip" href="#/athar/w/${encodeURIComponent(p.n)}">${esc(p.n)} <small>${toAr(p.c)}</small></a>`).join("")}</div>`).join("")}
       ${(IX.sources || []).length ? `<details><summary>المصادر</summary><ul>${IX.sources.map(s => `<li><a href="#/book/${esc(s.b)}">${esc(s.t)}</a> — ${toAr(s.c)} أثرًا</li>`).join("")}</ul></details>` : ""}
       <p class="mut">منهج الجمع: يُستخرج القول من نص الكتاب نفسه بلفظه، ويُراجَع: أنه قول العلم نفسه لا راويه، وليس حديثًا مرفوعًا ولا قصة ولا مسألة فقهية جزئية؛ ثم يُطابَق لفظه بالمصدر قبل نشره. والمكرر يُعرض مرة واحدة ويُذكر بقية مصادره تخريجًا. ورُتبت المصادر: كتب السنة والاعتقاد المسندة، ثم التراجم، ثم الرقائق والتزكية.</p>`);
+  }
+  /* المرحلة ٨: مراجعة الإدراج قبل النشر — مسودات الفحص الآلي (بباب مصدرها ودرجة مناسبتها وسببها)، واقتراحات نقل المنشور سابقًا
+     من باب أُدرج فيه بالكلمات المفتاحية؛ القرار في data/athar/_review.json وتُعيد مهمة الموسوعة النشر به. */
+  async function review() {
+    if (!(isAdmin() || (typeof can === "function" && can("edit")))) return view('<div class="note">للإدارة.</div>');
+    view('<p class="mut">جارٍ التحميل…</p>'); let D = { items: [], topics: [] }; try { D = await getJ("data/athar/_drafts.json"); } catch (e) { }
+    const T = Object.fromEntries(D.topics || []), sel = (id, ks) => `<select data-athk="${esc(id)}" multiple size="3">${(D.topics || []).map(([k, n]) => `<option value="${k}"${(ks || []).includes(k) ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>`;
+    view(crumbs("مراجعة الإدراج") + `<h2>مراجعة الإدراج قبل النشر</h2><p class="mut">${toAr(D.items.length)} أثرًا: مسودات أدرجها الفحص الآلي بفهم السياق، واقتراحات نقل آثار أُدرجت سابقًا بالكلمات المفتاحية. تحقق من دلالة الأثر ومناسبته للباب وارتباطه المباشر بالمسألة ومن مصدره، ثم اعتمد أو انقل أو ارفض.</p>
+      <div id="athl">${D.items.slice(0, 150).map(it => { const pr = it.prop; return `<article class="athar" data-id="${esc(it.id)}"><blockquote>«${esc(it.q)}»</blockquote><p class="athw">${esc(it.w)}</p>
+        <p class="athsrc">${it.src ? `مصدر خارجي: <a href="${esc(it.src.url || "#")}" target="_blank" rel="noopener">${esc(it.src.t || "")} ${esc(it.src.ref || "")}</a>${it.src.orig ? " — الأصل: " + esc(it.src.orig) : ""}` : `<a href="#/book/${esc(it.r.b)}/${it.r.p}" target="_blank">${esc(bTitle(it.r.b))} (${esc(where(it.r))})</a>`}${it.bab ? ` • باب المصدر: «${esc(it.bab)}»` : ""}</p>
+        <p class="mut">${pr ? `مقترح النقل من «${esc((pr.old || []).map(k => T[k] || k).join("، "))}» إلى «${esc(pr.k.map(k => T[k] || k).join("، "))}» • مناسبة الباب الحالي ${toAr(Math.round((pr.fit || 0) * 100))}٪ — ${esc(pr.why || "")}` : `الباب: ${esc((it.k || []).map(k => T[k] || k).join("، "))} • المناسبة ${toAr(Math.round((it.fit || 0) * 100))}٪${it.why ? " — " + esc(it.why) : ""}`}</p>
+        <div class="row athbtns">${sel(it.id, pr ? pr.k : it.k)}<button class="btn s p" data-ath="rvok" data-id="${esc(it.id)}">اعتماد بالباب المحدد</button>${pr ? `<button class="btn s" data-ath="rvkeep" data-id="${esc(it.id)}" data-k="${esc((pr.old || []).join(","))}">إبقاؤه في بابه</button>` : ""}<button class="btn s" data-ath="rvno" data-id="${esc(it.id)}">${pr ? "إخراجه من الموسوعة" : "رفض"}</button></div></article>`; }).join("") || '<p class="mut">لا شيء ينتظر المراجعة.</p>'}</div>`);
+  }
+  async function decide(id, d, el) {
+    if (typeof GH === "undefined" || !GH.on) return toast("فعّل الإدارة المباشرة أولًا");
+    await GH.editJSON("data/athar/_review.json", o => { o = o || { dec: {}, prop: {} }; (o.dec = o.dec || {})[id] = d; return o; }, "موسوعة الآثار: مراجعة " + id, true);
+    const a = el.closest("article"); if (a) a.remove(); toast("حُفظ؛ يُعاد النشر خلال دقائق");
   }
   async function mine() {
     const L = MY.get();
@@ -56,6 +74,8 @@ const ATH = (() => {
   document.addEventListener("submit", e => { const f = e.target.closest("[data-form=athq]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); const v = f.q.value.trim(); location.hash = "#/athar" + (v ? "?q=" + encodeURIComponent(v) : ""); }, true);
   document.addEventListener("click", async e => { const el = e.target.closest("[data-ath]"); if (!el) return; const a = el.dataset.ath;
     if (a === "more") return more();
+    if (/^rv/.test(a)) { const id = el.dataset.id, ks = [...((document.querySelector(`[data-athk="${id}"]`) || {}).selectedOptions || [])].map(o => o.value).slice(0, 2);
+      return decide(id, a === "rvno" ? { ok: 0 } : a === "rvkeep" ? { ok: 1, k: (el.dataset.k || "").split(",").filter(Boolean) } : { ok: 1, k: ks.length ? ks : undefined }, el).catch(x => toast(x.message)); }
     const find = async id => LIST.find(x => x.id === id) || MY.get().find(x => x.id === id) || (await all()).find(x => x.id === id);
     if (a === "copy") { const it = await find(el.dataset.id); if (it && navigator.clipboard) navigator.clipboard.writeText(plainCopy(it)).then(() => toast("نُسخ الأثر بعزوه")); }
     else if (a === "my") { const it = await find(el.dataset.id); if (!it) return; let L = MY.get(); const i = L.findIndex(x => x.id === it.id); if (i >= 0) L.splice(i, 1); else L.push(Object.assign({}, it, { c: cite(it) })); MY.set(L); el.textContent = i >= 0 ? "＋ إلى مختاراتي" : "✓ في مختاراتي"; el.classList.toggle("p", i >= 0); toast(i >= 0 ? "أُزيل من مختاراتي" : "أُضيف إلى مختاراتي"); }
