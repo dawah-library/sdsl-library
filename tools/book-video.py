@@ -246,8 +246,8 @@ def redistribute(D, script, opts):
     return sc
 
 
-def render(scenes, theme, aspect, title, out, pages=False, bg=None):
-    spec_ = {"scenes": scenes, "theme": theme, "aspect": aspect, "title": title, "out": out, "pages": 1 if pages else 0, "fps": FPS, "bg": bg or [],
+def render(scenes, theme, aspect, title, out, pages=False, bg=None, reveal=False):
+    spec_ = {"scenes": scenes, "theme": theme, "aspect": aspect, "title": title, "out": out, "pages": 1 if pages else 0, "fps": FPS, "bg": bg or [], "reveal": 1 if reveal else 0,
              "icons": os.path.join(ROOT, "icons.js")}
     p = os.path.join(out, "spec.json"); json.dump(spec_, open(p, "w", encoding="utf-8"), ensure_ascii=False)
     subprocess.run(["node", os.path.join(ROOT, "tools", "video-slides.js"), p], check=True)
@@ -421,7 +421,7 @@ async def render_video(it, D, aspect, L, did, replace):
     bid = it["id"]; style = it.get("style") or "summary"; sc = D["scenes"]; title = D.get("title") or bid
     th = dict(D.get("theme") or THEMES["green"]); th["cap"] = 1 if it.get("cap") else 0; th["font"] = it.get("font") or ""
     voice = it.get("voice") if it.get("voice") in VOICES or str(it.get("voice") or "").startswith("eleven:") else "gemini:Charon"
-    engine = it.get("gen") or "none"; spent = []; os.environ["VG_ASPECT"] = aspect
+    engine = it.get("gen") or "local:auto"; spent = []; os.environ["VG_ASPECT"] = aspect; os.environ["VG_THEME"] = json.dumps(th)  # الافتراضي: خلفيات متحركة مجانية
     tag = "video-" + bid; ensure_release(tag, title)
     tmp = tempfile.mkdtemp(); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
     pages = bool(it.get("pages"))
@@ -430,8 +430,9 @@ async def render_video(it, D, aspect, L, did, replace):
     bgs = []
     for i, s in enumerate(sc):
         f = os.path.join(tmp, "bg%02d.mp4" % i)
+        os.environ["VG_IDX"] = str(i)
         bgs.append(f if engine != "none" and not (pages and s.get("page")) and VG.clip(engine, s.get("vis"), 8, aspect, f, spent) else None)
-    render(sc, th, aspect, title, tmp, pages, [1 if b else 0 for b in bgs])
+    render(sc, th, aspect, title, tmp, pages, [1 if b else 0 for b in bgs], reveal=bool(it.get("reveal", 1)))
     lex = lexicon(); want_sfx = bool(it.get("sfx") and pages)
     segs = []
     for i, s in enumerate(sc):
@@ -443,6 +444,13 @@ async def render_video(it, D, aspect, L, did, replace):
         d = max(secs(a) + 0.8 + lead, float(s.get("min") or 0), P + 1.5); v = os.path.join(tmp, "s%02d.mp4" % i)
         img = os.path.join(tmp, "f%02d.png" % i); rest = max(0.1, d - P)
         vin = ["-loop", "1", "-t", "%.2f" % rest, "-framerate", str(FPS), "-i", img]
+        rv = sorted([x for x in os.listdir(tmp) if x.startswith("f%02d_" % i)], key=lambda x: int(x.split("_")[1].split(".")[0]))
+        if rv and not P:  # النقاط تظهر تباعًا على امتداد ثلاثة أرباع كلام الراوي، ثم تبقى الشريحة كاملة
+            n = len(rv); step = max(0.6, (rest * 0.75) / (n + 1)); lst = os.path.join(tmp, "rv%02d.txt" % i)
+            open(lst, "w").write("".join("file '%s'\nduration %.2f\n" % (os.path.join(tmp, x), step) for x in rv) + "file '%s'\nduration %.2f\nfile '%s'\n" % (img, max(0.5, rest - step * n), img))
+            sl = os.path.join(tmp, "sl%02d.mov" % i)
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-vf", "fps=%d,format=rgba" % FPS, "-c:v", "png", "-t", "%.2f" % rest, sl], check=True)
+            vin = ["-i", sl]
         if bgs[i] and not P:  # لقطة متحركة خلف الشريحة الشفافة: مكتومة، معتمة قليلًا، تتكرر إلى نهاية الكلام
             W_, H_ = {"9:16": (1080, 1920), "1:1": (1080, 1080), "4:5": (1080, 1350)}.get(aspect, (1920, 1080))
             vin = ["-stream_loop", "-1", "-t", "%.2f" % d, "-i", bgs[i]] + vin

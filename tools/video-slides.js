@@ -69,7 +69,12 @@ window.at=t=>document.getAnimations().forEach(a=>{a.currentTime=t*1000});
   for (let i = 0; i < S.scenes.length; i++) {
     const g = page(S.scenes[i], i, S.scenes.length), still = path.join(S.out, "f" + String(i).padStart(2, "0") + ".png");
     await p.setContent(g.html, { waitUntil: "networkidle" }).catch(() => { }); await p.evaluate(() => document.fonts && document.fonts.ready); await p.waitForTimeout(300);
-    if (!g.P) { await p.screenshot({ path: still, omitBackground: !!(S.bg || [])[i] }); continue; }
+    if (!g.P) { await p.screenshot({ path: still, omitBackground: !!(S.bg || [])[i] });
+      // ظهور النقاط تباعًا مع كلام الراوي (S.reveal): لقطة لكل عدد ظاهر من النقاط f<NN>_<k>.png (k=0..n)
+      if (S.reveal) { const n = await p.evaluate(() => document.querySelectorAll("ul li").length);
+        for (let k = 0; k < n; k++) { await p.evaluate(k => document.querySelectorAll("ul li").forEach((li, j) => { li.style.visibility = j < k ? "visible" : "hidden"; }), k);
+          await p.screenshot({ path: path.join(S.out, "f" + String(i).padStart(2, "0") + "_" + k + ".png"), omitBackground: !!(S.bg || [])[i] }); } }
+      continue; }
     const dir = path.join(S.out, "p" + String(i).padStart(2, "0")); fs.mkdirSync(dir, { recursive: true });
     await p.evaluate(hl => window.setup(hl), g.hl);
     const nf = Math.round(g.dur * FPS);
