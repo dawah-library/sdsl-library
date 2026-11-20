@@ -1638,3 +1638,5 @@ details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:
 .shr .shr-m p{font-weight:700}.shr .shr-c p{white-space:pre-wrap;font-size:.92em}.shr .shr-a{grid-column:1/-1}@media (max-width:700px){.shrev .shr{grid-template-columns:1fr}}
 /* ElevenLabs (المرحلة ٥) */
 .elsls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 16px;margin:8px 0}.elsl{display:flex;flex-direction:column;font-size:.9em}.elsl output{font-weight:700;color:var(--accent,#0f5c4d)}
+/* صانع الفيديو: النص الكامل في خانة واحدة (المرحلة ٦) */
+.vscript{width:100%;min-height:50vh;line-height:2;font-size:1.02rem;font-family:Amiri,"Traditional Arabic",serif}

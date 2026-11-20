@@ -37,3 +37,4 @@
 | P3 | خطة المدير — المرحلة ٣: التشكيل الدقيق، المختصر مع التشجير والتصدير الكامل، المقارنة العلمية | api/edit.js، lib/harakat.js، learn.js، docx.js، cmpai.js، supabase/migrations/2026-11-20-comparisons.sql | منجزة (PR #59) | تطبيق جدول comparisons |
 | P4 | خطة المدير — المرحلة ٤: شرح الكتب والمتون | sharh.js، tools/sharh-align.py، data/shp، shp.yml | منجزة | مشروع الطحاوية مسودة للمراجعة |
 | P5 | خطة المدير — المرحلة ٥: ElevenLabs | tools/tts.py، eleven.js، api/edit.js | منجزة (تنتظر ELEVENLABS_API_KEY) | |
+| P6 | خطة المدير — المرحلة ٦: صانع الفيديو | video.js، tools/book-video.py، tools/video-gen.py، tools/video-slides.js، openmontage.yml | منجزة | التوليد بالمفاتيح |

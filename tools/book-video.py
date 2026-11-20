@@ -25,6 +25,11 @@ DRAFTS = os.path.join(VD, "drafts")
 ASPECTS = ("16:9", "9:16", "4:5", "1:1")
 VOICES = ("gemini:Charon", "gemini:Orus")
 FPS = 20
+WPM = 130  # كلمات الراوي العربي في الدقيقة تقريبًا (إلقاء هادئ)
+ICONS = ["book-open", "library", "scroll-text", "scroll", "scale", "sparkles", "heart", "compass", "landmark", "quote", "clipboard-check", "message-circle-question", "brain", "network", "history", "users", "flag", "trophy", "pen-line", "book-marked"]  # من icons.js
+TRANS = ["fade", "smoothleft", "dissolve", "circleopen", "slideup", "fadegrays", "wipeleft", "radial", "smoothright", "circlecrop"]  # انتقالات xfade متنوعة هادئة
+XF = 0.7  # مدة الانتقال بين المشاهد (ث)
+VG = importlib.util.spec_from_file_location("vg", os.path.join(ROOT, "tools", "video-gen.py")); VG = (lambda m: (VG.loader.exec_module(m), m)[1])(importlib.util.module_from_spec(VG))
 KIND = {"summary": "ملخص", "review": "مراجعة واختبار", "benefits": "أبرز الفوائد والدروس المستفادة", "story": "سرد قصصي متسلسل لأحداثه وأفكاره", "faq": "أسئلة شائعة وأجوبتها من الكتاب",
         "quotes": "مختارات من أقوال المؤلف بنصها مع تعليق موجز", "intro": "تعريف ترويجي قصير بالكتاب يدعو إلى قراءته", "lesson": "درس تعليمي مبسط مرتب كالدرس",
         "features": "عرض مميزات الكتاب ومنهج مؤلفه وقيمته العلمية ولمن يُنصح به", "critique": "قراءة نقدية علمية منصفة: مزايا الكتاب، وما يُستدرك عليه بأدب وإنصاف ودليل، دون تجريح، مع التنبيه على أن الاستدراك اجتهاد",
@@ -49,6 +54,7 @@ PROMPT = """أعدّ نص فيديو ({kind}) لكتاب «{title}» لـ{author
 - المشهد الأول تعريف بالكتاب ومؤلفه وموضوعه، والأخير خلاصة جامعة ودعوة لقراءة الكتاب في المكتبة.
 - التزم مضمون الكتاب وألفاظ مؤلفه وترتيب أفكاره، ولا تضف رأيًا ولا معلومة من خارجه، وانقل الآيات والأحاديث بلفظها إن ذكرتها.
 - اضبط بالشكل أسماء الأعلام والكلمات التي يُخطأ في نطقها في نص الراوي (say).
+- لكل مشهد "icon": أنسب أيقونة لمضمونه من: {icons}، و"vis": وصف إنجليزي قصير للقطة خلفية هادئة تناسبه (مناظر، عمارة إسلامية، مكتبة وكتب، مخطوطات، خط عربي، طبيعة، ضوء) بلا بشر ولا حيوانات.
 {extra}
 المادة (علامات [ص N] أرقام صفحات الكتاب):
 {src}"""
@@ -204,8 +210,45 @@ def prepare_pages(bid, cat, sc, tmp):
 
 
 # ———— الصورة والصوت ————
-def render(scenes, theme, aspect, title, out, pages=False):
-    spec_ = {"scenes": scenes, "theme": theme, "aspect": aspect, "title": title, "out": out, "pages": 1 if pages else 0, "fps": FPS}
+REDIST = """هذا النص الكامل المعتمد لفيديو عن كتاب «{title}»، مقسّمًا إلى {n} مشاهد بالترتيب (لا تغيّر نص أي مشهد). لكل مشهد أخرج:
+"h" عنوانًا قصيرًا على الشاشة، و"pts" من ٢ إلى ٤ نقاط قصيرة (أقل من ١٢ كلمة) مأخوذة من نصه، و"icon" من: {icons}، و"vis" وصفًا إنجليزيًّا قصيرًا للقطة خلفية هادئة بلا بشر ولا حيوانات.
+أخرج JSON حرفيًّا: {{"scenes": [{{"h": "...", "pts": ["..."], "icon": "...", "vis": "..."}}]}}
+
+{blocks}"""
+
+
+def redistribute(D, script, opts):
+    """المرحلة ٦: النص الكامل (خانة واحدة) ← مشاهد. «## عنوان» يبدأ مشهدًا إن وُجد؛ وإلا تُقسم الفقرات على عدد مشاهد يناسب المدة،
+    ونص الراوي يبقى كما كتبه المدير حرفًا بحرف؛ ويُستبقى من المشهد القديم صفحته وعبارته إن طابق عنوانه."""
+    lines = [l.rstrip() for l in script.replace("\r", "").split("\n")]
+    blocks, cur = [], None
+    for l in lines:
+        if re.match(r"^\s*#{1,3}\s+\S", l): cur = {"h": re.sub(r"^\s*#+\s*", "", l).strip(), "say": []}; blocks.append(cur)
+        elif l.strip():
+            if cur is None: cur = {"h": "", "say": []}; blocks.append(cur)
+            cur["say"].append(l.strip())
+    blocks = [b for b in blocks if b["say"]]
+    if len(blocks) <= 1:  # بلا عناوين: فقرات تُجمع على عدد مشاهد بحسب الطول (مشهد لكل ~٢٨ ثانية)
+        paras = [p for b in blocks for p in b["say"]]; words = sum(len(p.split()) for p in paras)
+        n = max(1, min(len(paras), round(words / WPM * 60 / 28) or 1)); per = words / n; blocks, acc = [], 0
+        for p in paras:
+            if not blocks or (acc >= per * len(blocks) and len(blocks) < n): blocks.append({"h": "", "say": []})
+            blocks[-1]["say"].append(p); acc += len(p.split())
+    old = {(s.get("h") or "").strip(): s for s in D.get("scenes") or []}
+    sc = [dict({k: v for k, v in (old.get(b["h"]) or {}).items() if k in ("pg", "q", "pgoff", "icon", "vis", "pts")}, h=b["h"], say="\n".join(b["say"])) for b in blocks]
+    need = [i for i, x in enumerate(sc) if not x.get("h") or not x.get("pts")]
+    if need:
+        j = T.gemini(REDIST.format(title=D.get("title", ""), n=len(sc), icons="، ".join(ICONS), blocks="\n\n".join("[%d] %s" % (i + 1, x["say"][:1500]) for i, x in enumerate(sc)))) or {}
+        for i, g in enumerate((j.get("scenes") or [])[:len(sc)]):
+            for k in ("h", "pts", "icon", "vis"):
+                if g.get(k) and not sc[i].get(k): sc[i][k] = g[k]
+    for x in sc: x["h"] = x.get("h") or D.get("title", ""); x["pts"] = x.get("pts") or []
+    return sc
+
+
+def render(scenes, theme, aspect, title, out, pages=False, bg=None):
+    spec_ = {"scenes": scenes, "theme": theme, "aspect": aspect, "title": title, "out": out, "pages": 1 if pages else 0, "fps": FPS, "bg": bg or [],
+             "icons": os.path.join(ROOT, "icons.js")}
     p = os.path.join(out, "spec.json"); json.dump(spec_, open(p, "w", encoding="utf-8"), ensure_ascii=False)
     subprocess.run(["node", os.path.join(ROOT, "tools", "video-slides.js"), p], check=True)
 
@@ -253,9 +296,38 @@ async def speak(text, voice, path, tag):
     if voice.startswith("gemini:"):
         try: TTS.speak_gemini(text, voice.split(":", 1)[1], path); done = True
         except Exception as e: print("  Gemini TTS تعذر:", str(e)[:120])
+    elif voice.startswith("eleven:"):  # ElevenLabs (المرحلة ٥)
+        try: TTS.ELS.update(jl(os.path.join(ROOT, "data", "audio", "_settings.json"), {}).get("eleven") or {}); TTS.speak_eleven(text, voice.split(":", 1)[1], path); done = True
+        except Exception as e: print("  ElevenLabs تعذر:", str(e)[:120])
     if not done: await TTS.speak(text, "ar-SA-HamedNeural", "-5%", path); return  # البديل لا يُخزَّن حتى يُعاد بالصوت المختار لاحقًا
     c = os.path.join(os.path.dirname(path), name); shutil.copy(path, c)
     if subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", c], capture_output=True).returncode == 0: have.add(name)
+
+
+def soft(tmp):
+    """فاصل الانتقال: نفَس هوائي ناعم (ضوضاء وردية منخفضة التردد ترتفع ثم تتلاشى في ٠٫٩ث) بمستوى خافت؛ لا موسيقى ولا صوت حاد."""
+    f = os.path.join(tmp, "soft.wav")
+    if not os.path.exists(f):
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=color=pink:amplitude=0.5:d=0.9:r=24000",
+                        "-af", "lowpass=f=900,highpass=f=120,afade=t=in:d=0.35,afade=t=out:st=0.4:d=0.5,volume=0.16", f], check=True)
+    return f
+
+
+def join(segs, outp, trans="auto"):
+    """وصل المشاهد بانتقالات متنوعة سلسة (xfade) وتداخل صوتي ناعم (acrossfade)؛ وعند التعذر وصلٌ مباشر."""
+    if len(segs) == 1: shutil.copy(segs[0], outp); return
+    ds = [secs(x) for x in segs]; ins = []
+    for x in segs: ins += ["-i", x]
+    fv, fa, off, pv, pa = [], [], 0.0, "[0:v]", "[0:a]"
+    for k in range(1, len(segs)):
+        off += ds[k - 1] - XF; t = TRANS[(k - 1) % len(TRANS)] if trans == "auto" else trans
+        fv.append("%s[%d:v]xfade=transition=%s:duration=%.2f:offset=%.2f[v%d]" % (pv, k, t, XF, off, k)); pv = "[v%d]" % k
+        fa.append("%s[%d:a]acrossfade=d=%.2f:c1=tri:c2=tri[a%d]" % (pa, k, XF, k)); pa = "[a%d]" % k
+    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error"] + ins + ["-filter_complex", ";".join(fv + fa), "-map", pv, "-map", pa, "-c:v", "libx264", "-preset", "veryfast",
+                        "-pix_fmt", "yuv420p", "-r", str(FPS), "-c:a", "aac", "-b:a", "96k", "-ar", "24000", "-movflags", "+faststart", outp], capture_output=True, text=True)
+    if r.returncode:
+        print("  الانتقالات تعذرت، وصل مباشر:", r.stderr[-200:]); lst = outp + ".txt"; open(lst, "w").write("".join("file '%s'\n" % x for x in segs))
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", outp], check=True)
 
 
 def sfx(tmp, dur):
@@ -302,21 +374,25 @@ async def make(it, cat, L):
         if not D or not D.get("scenes"): print("مسودة غير موجودة:", it["draft"]); return False
         if it.get("fix"): apply_fix(D, it["fix"], os.path.join(VD, "_lexicon.json"))
         opts = dict(D.get("opts") or {}, **{k: v for k, v in it.items() if k not in ("draft", "fix", "replace", "err", "at")})
-        D["opts"] = {k: v for k, v in opts.items() if k not in ("phase",)}
+        if it.get("script"): D["scenes"] = redistribute(D, str(it["script"]), opts)  # النص الكامل المعتمد يُعاد توزيعه على المشاهد آليًّا
+        D["opts"] = {k: v for k, v in opts.items() if k not in ("phase", "script")}
         ok = await render_all(opts, D, L, it["draft"], it.get("replace"))
         draft_save(it["draft"], D); return ok
     m = material(bid, cat, it.get("topics"))
     if not m: print("لا مادة:", bid); return False
     title, au, src = m; style = it.get("style") or "summary"; n = int(it["scenes"]) if str(it.get("scenes") or "").isdigit() else (max(3, round(float(it["min"]) * 1.6)) if it.get("min") else N.get(it.get("len") or "medium", 9))
+    if it.get("min"):  # المدة حرة من دقيقة: طول نص الراوي على قدرها (نحو ١٣٠ كلمة في الدقيقة)، بلا حشو ولا اختزال مخل
+        mins = max(1.0, float(it["min"])); it["_words"] = int(mins * WPM)
     sts = [x for x in style.split("+") if x in KIND] or ["summary"]  # يجوز الجمع بين عدة أنماط
     kind = KIND[sts[0]] if len(sts) == 1 else "يجمع بين: " + "، و".join(KIND[x] for x in sts) + " — وزّع المشاهد على هذه الأنماط كلها في سياق واحد متصل"
     extra = [REVIEW if set(sts) & {"review", "faq"} else "", ("- ركّز على هذه الموضوعات وحدها: " + "، ".join(it["topics"])) if it.get("topics") else "",
              ("- أفكار يجب أن يتضمنها الفيديو: " + str(it["ideas"])[:1500]) if it.get("ideas") else "", ("- افتتح بهذا المعنى: " + str(it["intro"])[:400]) if it.get("intro") else "",
              ("- اختم بهذا المعنى: " + str(it["outro"])[:400]) if it.get("outro") else "", ("- متطلبات المدير: " + str(it["note"])[:800]) if it.get("note") else ""]
+    if it.get("_words"): extra.append("- المدة %s دقيقة: اجعل مجموع نص الراوي (say) نحو %d كلمة. وزّعها على الأفكار بقدر أهميتها، ولا تحشُ بتكرار أو عموميات لملء المدة، ولا تختزل اختزالًا يُخل بالمعنى؛ فإن كانت مادة الكتاب أقل من المدة فاكتفِ بما تحمله وقل ذلك في \"note\"." % (it["min"], it["_words"]))
     lex = lexicon()
     if lex: extra.append("- انطق هذه الأسماء والكلمات هكذا في say: " + "، ".join("%s ← %s" % (a, b) for a, b in lex[:60]))
     j = T.gemini(PROMPT.format(kind=kind, aud=AUD.get(it.get("aud"), "عموم المسلمين"), tone=TONE.get(it.get("tone"), "هادئ وقور"), title=title, author=au, n=n, src=src,
-                               theme_hint=CREATIVE if it.get("creative") or it.get("theme") == "auto" else "", extra="\n".join(x for x in extra if x)))
+                               theme_hint=CREATIVE if it.get("creative") or it.get("theme") == "auto" else "", icons="، ".join(ICONS), extra="\n".join(x for x in extra if x)))
     if not j or not j.get("scenes"): print("تعذر النص:", bid); return False
     sc = [s for s in j["scenes"] if s.get("say")][:n + 2]
     th = dict(THEMES.get(it.get("theme"), THEMES["green"]))
@@ -344,12 +420,18 @@ async def render_all(it, D, L, did, replace):
 async def render_video(it, D, aspect, L, did, replace):
     bid = it["id"]; style = it.get("style") or "summary"; sc = D["scenes"]; title = D.get("title") or bid
     th = dict(D.get("theme") or THEMES["green"]); th["cap"] = 1 if it.get("cap") else 0; th["font"] = it.get("font") or ""
-    voice = it.get("voice") if it.get("voice") in VOICES else "gemini:Charon"
+    voice = it.get("voice") if it.get("voice") in VOICES or str(it.get("voice") or "").startswith("eleven:") else "gemini:Charon"
+    engine = it.get("gen") or "none"; spent = []; os.environ["VG_ASPECT"] = aspect
     tag = "video-" + bid; ensure_release(tag, title)
     tmp = tempfile.mkdtemp(); cat = jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []})
     pages = bool(it.get("pages"))
     if pages: prepare_pages(bid, cat, sc, tmp)
-    render(sc, th, aspect, title, tmp, pages)
+    # لقطات خلفية مولَّدة (اختياري، مكلف): للمشاهد التي لا تعرض صفحة الكتاب، ضمن السقف
+    bgs = []
+    for i, s in enumerate(sc):
+        f = os.path.join(tmp, "bg%02d.mp4" % i)
+        bgs.append(f if engine != "none" and not (pages and s.get("page")) and VG.clip(engine, s.get("vis"), 8, aspect, f, spent) else None)
+    render(sc, th, aspect, title, tmp, pages, [1 if b else 0 for b in bgs])
     lex = lexicon(); want_sfx = bool(it.get("sfx") and pages)
     segs = []
     for i, s in enumerate(sc):
@@ -361,24 +443,32 @@ async def render_video(it, D, aspect, L, did, replace):
         d = max(secs(a) + 0.8 + lead, float(s.get("min") or 0), P + 1.5); v = os.path.join(tmp, "s%02d.mp4" % i)
         img = os.path.join(tmp, "f%02d.png" % i); rest = max(0.1, d - P)
         vin = ["-loop", "1", "-t", "%.2f" % rest, "-framerate", str(FPS), "-i", img]
+        if bgs[i] and not P:  # لقطة متحركة خلف الشريحة الشفافة: مكتومة، معتمة قليلًا، تتكرر إلى نهاية الكلام
+            W_, H_ = {"9:16": (1080, 1920), "1:1": (1080, 1080), "4:5": (1080, 1350)}.get(aspect, (1920, 1080))
+            vin = ["-stream_loop", "-1", "-t", "%.2f" % d, "-i", bgs[i]] + vin
+            vf = ("[0:v]scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d,eq=brightness=-0.18:saturation=0.85,fps=%d,setsar=1[bgv];[1:v]format=rgba[fg];"
+                  "[bgv][fg]overlay=0:0:format=auto,format=yuv420p,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]") % (W_, H_, W_, H_, FPS, max(0, d - 0.4))
+            ai = 2
         if P:  # الصفحة تنقلب ويُحدَّد سطرها داخل الشريحة نفسها، ثم تثبت الشريحة (آخر إطار) حتى نهاية الكلام
             vin = ["-framerate", str(FPS), "-i", os.path.join(pclip, "%04d.png")] + vin
             vf = "[0:v]format=yuv420p,setsar=1,fps=%d[pv];[1:v]format=yuv420p,setsar=1,fps=%d[sv];[pv][sv]concat=n=2:v=1:a=0,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, FPS, max(0, d - 0.4))
             ai = 2
-        else:
+        elif not bgs[i]:
             vf = "[0:v]format=yuv420p,setsar=1,fps=%d,fade=t=in:st=0:d=0.4,fade=t=out:st=%.2f:d=0.4[v]" % (FPS, max(0, d - 0.4)); ai = 1
         ain = ["-i", a]; amix = "[%d:a]adelay=%d:all=1,apad[n]" % (ai, int(lead * 1000)); mixn = ["[n]"]
         if want_sfx and P:  # القلم من ٠٫٧ث إلى قبل نهاية مقطع الصفحة بـ٠٫٦ث (كما في video-slides.js)
             flip, pen = sfx(tmp, max(0.4, P - 1.3))
             ain += ["-i", flip, "-i", pen]
             amix += ";[%d:a]apad[fl];[%d:a]adelay=700:all=1,apad[pn]" % (ai + 1, ai + 2); mixn += ["[fl]", "[pn]"]
+        if it.get("sfx") and i > 0:  # فاصل صوتي ناعم غير حاد عند الانتقال: نفَس هوائي خافت منخفض التردد يتلاشى (بلا موسيقى)
+            k_in = sum(1 for x in vin + ain if x == "-i"); ain += ["-i", soft(tmp)]
+            amix += ";[%d:a]apad[sw]" % k_in; mixn += ["[sw]"]
         amix += ";%samix=inputs=%d:duration=first:normalize=0[a]" % ("".join(mixn), len(mixn)) if len(mixn) > 1 else ";[n]anull[a]"
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error"] + vin + ain + ["-filter_complex", vf + ";" + amix, "-map", "[v]", "-map", "[a]",
                         "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "4.1", "-r", str(FPS), "-c:a", "aac", "-b:a", "96k", "-ar", "24000", "-t", "%.2f" % d, v], check=True)
         segs.append(v)
-    lst = os.path.join(tmp, "l.txt"); open(lst, "w").write("".join("file '%s'\n" % x for x in segs))
     stamp = datetime.datetime.now().strftime("%m%d%H%M"); fn = "%s-%s-%s-%s.mp4" % (bid, style.replace("+", "_"), aspect.replace(":", "x"), stamp); outp = os.path.join(tmp, fn)
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", outp], check=True)
+    join(segs, outp, it.get("trans") or "auto")
     subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", outp], check=True)
     rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
            "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0, "v420": 1}
