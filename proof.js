@@ -29,6 +29,7 @@ const PROOF = (() => {
     try { let done = 0, skip = 0;
       await GH.editJSON((b.vf ? "vols/" : "data/books/") + id + ".json", sh => { pick.forEach(f => { const t = sh.pages[f.p - 1]; if (typeof t === "string" && t.split(f.from).length === 2) { sh.pages[f.p - 1] = t.replace(f.from, f.to); done++; } else skip++; }); return sh; }, "تدقيق «" + (b.setTitle || b.title) + "»: " + pick.length + " تصحيحًا", true);
       await GH.editJSON("data/proof/" + id + ".json", R => { pick.forEach(f => { const pg = R.pages[String(f.p)]; if (pg) pg.fx = (pg.fx || []).filter(x => !(x.from === f.from && x.to === f.to)); }); return R; }, "تدقيق: اعتماد", true);
+      await GH.editJSON("data/audit/derived-queue.json", o => { o = o || { items: [] }; if (!o.items.includes(id)) o.items.push(id); return o; }, "المصدر الواحد: إعادة اشتقاق «" + (b.setTitle || b.title) + "»", true).catch(() => { });  // tools/derived-sync.py
       await GH.editJSON("data/proof/_list.json", L => { if (L && L[id]) { L[id].n = Math.max(0, L[id].n - pick.length); L[id].ap = (L[id].ap || 0) + done; } return L; }, "تدقيق: اعتماد", true);
       if (b.pages) pick.forEach(f => { const t = b.pages[f.p - 1]; if (typeof t === "string") b.pages[f.p - 1] = t.replace(f.from, f.to); });
       st.textContent = `✓ طُبّق ${toAr(done)}${skip ? "، وتُخطّي " + toAr(skip) + " (تغيّر نصه)" : ""}`; setTimeout(() => book(id), 1200);

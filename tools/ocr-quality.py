@@ -45,11 +45,24 @@ def score(t):
     return unk, junk, wpl, len(lines)
 
 
+_OKS = set("و ف ب ل ك في من عن لا ما لم لن قد يا أو إن أن ثم هو هي إذ له به لك بل كي ذا هل مع إلى على أي كل إذا لو".split())
+
+
+def shattered(t):
+    """نسبة الكلمات المفتتة (حرف أو حرفان ليسا من الأدوات): «قَ الُ وا» — في الكتب الموثوقة لا تتجاوز ٠٫٢ (فحص ٢٠ نوفمبر)."""
+    t = re.sub(r"[ً-ْٰـ]", "", re.split(r"^\s*_{4,}\s*$", t or "", flags=re.M)[0]); ws = AR.findall(t)
+    return sum(1 for w in ws if len(w) <= 2 and w not in _OKS) / len(ws) if len(ws) >= 30 else 0
+
+
+# أثر خطوط الطبعة في طبقة النص: «اهلل» (لفظ الجلالة مقلوب الحروف) ورموز الدعاء حروفًا لاتينية بعد الأسماء (رسول اهلل H، أبي هريرة I)
+GLYPH = re.compile(r"اهلل|[ء-ي][ً-ْ]*\s?[HIJLMDSU](?![A-Za-z])")
+
+
 def page_bad(t):
     s = score(t)
     if not s: return False
     unk, junk, wpl, nl = s
-    return unk > 0.2 or junk > 0.03 or (nl > 35 and wpl < 2.5)
+    return unk > 0.2 or junk > 0.03 or (nl > 35 and wpl < 2.5) or shattered(t) > 0.3 or len(GLYPH.findall(t or "")) >= 2
 
 
 def main():

@@ -48,5 +48,7 @@ jobs:
           python3 tools/scan-proof.py || echo "::warning::تعذّر التدقيق على المصورة"
           # ما لم تراجعه الإدارة خلال ثلاثة أيام من التصحيحات الصغيرة الآمنة يُطبَّق تلقائيًّا بسجل (tools/proof-auto.py)
           python3 tools/proof-auto.py
+          # المصدر الواحد: ما تغيّر نصه يُعاد اشتقاق مخرجاته (الاختصار والتشجير والكراسة والاختبار؛ والصوت في جولته) — tools/derived-sync.py
+          python3 tools/derived-sync.py --changed --apply || echo "::warning::تعذّر فحص المشتقات"
       - run: |
-          bash tools/git-save.sh "تدقيق الكتب النصية: اقتراحات تصحيح تنتظر الاعتماد" data/proof data/catalog.json data/books vols
+          bash tools/git-save.sh "تدقيق الكتب النصية: اقتراحات تصحيح تنتظر الاعتماد" data/proof data/catalog.json data/books vols data/audit data/study-queue.json data/tashjir/_queue.json data/kurrasa/_queue.json
