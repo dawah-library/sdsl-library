@@ -1,8 +1,8 @@
 {
  "tts": {
-  "gemini-3.8-flash-tts": "ok:330280",
-  "gemini-3.1-flash-tts-preview": "ok:222720",
-  "gemini-2.5-flash-preview-tts": "ok:187584"
+  "gemini-3.8-flash-tts": "ok:317480",
+  "gemini-3.1-flash-tts-preview": "ok:202240",
+  "gemini-2.5-flash-preview-tts": "ok:220864"
  },
  "models": [
   "gemini-2.5-flash",
@@ -57,7 +57,7 @@
   "gemini-3.5-live-translate-preview",
   "gemini-decision-1"
  ],
- "at": "2026-11-19T15:44Z",
+ "at": "2026-11-20T15:23Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
@@ -71,7 +71,7 @@
   },
   {
    "name": "GEMINI_API_KEY_3",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -86,12 +86,12 @@
   },
   {
    "name": "GEMINI_API_KEY_6",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_7",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -101,12 +101,12 @@
   },
   {
    "name": "GEMINI_API_KEY_9",
-   "status": "error",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_10",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -116,32 +116,32 @@
   },
   {
    "name": "GEMINI_API_KEY_12",
-   "status": "error",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_13",
-   "status": "error",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_14",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_15",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_16",
-   "status": "error",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_17",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
@@ -151,14 +151,14 @@
   },
   {
    "name": "GEMINI_API_KEY_19",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   },
   {
    "name": "GEMINI_API_KEY_20",
-   "status": "http503",
+   "status": "ok",
    "type": "AQ"
   }
  ],
- "working": 7
+ "working": 20
 }
