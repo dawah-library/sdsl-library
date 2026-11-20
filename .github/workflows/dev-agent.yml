@@ -44,6 +44,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/cache@v4     # أدوات الوكيل (Claude Code / Gemini CLI) محفوظة بين التشغيلات
+        with:
+          path: |
+            ~/.npm
+            /opt/hostedtoolcache/node/*/x64/lib/node_modules/@anthropic-ai
+            /opt/hostedtoolcache/node/*/x64/lib/node_modules/@google
+          key: devagent-cli-v1
       - name: التنفيذ
         env:
           GH_TOKEN: ${{ github.token }}

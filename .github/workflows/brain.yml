@@ -37,7 +37,7 @@ jobs:
       - name: القراءة والتعلّم والاختبار
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://nqxkkdexpodjjwfdkxoq.supabase.co' }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           BRAIN_CHUNKS: ${{ github.event.inputs.chunks || '160' }}
           BRAIN_MINUTES: "140"
@@ -64,4 +64,5 @@ jobs:
         run: python3 tools/brain.py ${{ github.event.inputs.cmds || 'learn read eval' }}
       - name: الحفظ
         if: always()
-        run: bash tools/git-save.sh "العقل المتعلم: قراءة وتعلّم" data/brain
+        run: |
+          bash tools/git-save.sh "العقل المتعلم: قراءة وتعلّم" data/brain

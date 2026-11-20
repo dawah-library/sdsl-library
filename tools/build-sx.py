@@ -38,6 +38,30 @@ def stems(text):
 
 def key(i): return format(zlib.crc32(i.encode()) & 0xFFFFFF, "x")
 
+OSH = 64  # شرائح مواضع الصفحات بالبايت (data/sx/o/<n>.json)
+
+
+def page_offsets(raw):
+    """مواضع نصوص الصفحات داخل ملف الكتاب كما يُنشر (بايتات UTF-8): [حجم الملف، بداية أول صفحة، أطوال الصفحات…]
+    إن تتابعت الصفحات بفاصلة واحدة (json.dump المضغوط)، وإلا {"s": البدايات، "l": الأطوال}. يجلب بها المتصفح صفحة بعينها
+    بطلب نطاق (Range) بدل تحميل الكتاب كله — وهو أكبر سبب لبطء المساعد العلمي في المجلدات الكبيرة."""
+    i = raw.find(b'"pages":[')
+    if i < 0: return None
+    i += 9; st, ln, n = [], [], len(raw)
+    while i < n:
+        c = raw[i]
+        if c in b" \n\r\t,": i += 1; continue
+        if c == 0x5D: break  # ]
+        if c != 0x22: return None  # صفحة ليست نصًّا
+        j = i + 1
+        while j < n:
+            if raw[j] == 0x5C: j += 2; continue
+            if raw[j] == 0x22: break
+            j += 1
+        st.append(i); ln.append(j + 1 - i); i = j + 1
+    if all(st[k + 1] == st[k] + ln[k] + 1 for k in range(len(st) - 1)): return [len(raw), st[0] if st else 0] + ln
+    return {"z": len(raw), "s": st, "l": ln}
+
 def main():
     t0 = time.time()
     cat = json.loads((R / "data" / "catalog.json").read_text(encoding="utf-8"))
@@ -47,7 +71,7 @@ def main():
         if k in docs and docs[k] != i: print("تصادم مفتاح:", i, docs[k]); return None
         docs[k] = i; codes.setdefault(k, len(codes)); return codes[k]
     term_doc, term_tf = collections.defaultdict(lambda: array.array("Q")), collections.defaultdict(lambda: array.array("B"))
-    npages = 0
+    npages = 0; offs = [dict() for _ in range(OSH)]
     def index(i, pages):
         nonlocal npages
         d = add_doc(i)
@@ -63,7 +87,10 @@ def main():
         if b.get("hidden") or b.get("demo"): continue
         f = (R / "vols" / (b["id"] + ".json")) if b.get("vf") else (R / "data" / "books" / (b["id"] + ".json"))
         if not f.exists(): continue
-        try: index(b["id"], json.loads(f.read_text(encoding="utf-8")).get("pages") or [])
+        try:
+            raw = f.read_bytes(); pages = json.loads(raw.decode("utf-8")).get("pages") or []; index(b["id"], pages)
+            o = page_offsets(raw)
+            if o and len(o["l"] if isinstance(o, dict) else o[2:]) == len(pages): offs[zlib.crc32(key(b["id"]).encode()) % OSH][key(b["id"])] = o
         except Exception as e: print("تعذر:", b["id"], e)
     try:
         items = json.loads((R / "data" / "articles" / "index.json").read_text(encoding="utf-8"))["items"]
@@ -90,8 +117,10 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for i, s in enumerate(shards):
         (OUT / f"{i}.json").write_text(json.dumps(s, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    (OUT / "_docs.json").write_text(json.dumps({"k": docs, "n": npages, "shards": SHARDS}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    size = sum(f.stat().st_size for f in OUT.iterdir())
+    (OUT / "o").mkdir(parents=True, exist_ok=True)
+    for i, o in enumerate(offs): (OUT / "o" / f"{i}.json").write_text(json.dumps(o, separators=(",", ":")), encoding="utf-8")
+    (OUT / "_docs.json").write_text(json.dumps({"k": docs, "n": npages, "shards": SHARDS, "osh": OSH}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"sx: {len(docs)} مادة، {npages} صفحة، {len(term_doc)} كلمة، {size/1048576:.1f} م.ب، {time.time()-t0:.0f} ث")
 
 if __name__ == "__main__":
