@@ -267,6 +267,13 @@ def main():
         meta = {"id": bid, "title": it.get("t") or bid, "authorId": it.get("a") or "", "topicId": it.get("tp") or "", "col": "dawah", "type": "book", "n": len(pages),
                 "added": str(datetime.date.today()), "size": sum(len(p) for p in pages), "tags": ["tafrigh"], "source": "تفريغ آلي لدروس صوتية: " + (" ، ".join((it.get("fn") or [])[:3]) or " ، ".join(x for x in srcs[:3] if x.startswith("http"))) + (" …" if len(srcs) > 3 else ""),
                 "hidden": True, "unrev": len(pages), "tfauto": 1, "trsrc": srcs, "treng": sorted({W["parts"][str(n)].get("e", "gemini") for n in range(len(srcs))})}
+        # الكتاب المشروح وسلسلة الشرح (تُكمَّل بدروس لاحقة): it.ser سلسلة قائمة، it.ctx الكتاب المشروح
+        import series as SR
+        if it.get("ser"): SR.cont(cat, it["ser"], meta)
+        if it.get("ctx") and not meta.get("sharh") and not meta.get("matn"):
+            mid, mname = SR.matn_of(cat, it["ctx"])
+            if mid: meta["sharh"] = mid
+            elif mname: meta["matn"] = mname
         web = [x for x in srcs if x.startswith("http")]
         if web: meta["audio"] = web[0]
         cat["books"] = [b for b in cat["books"] if b["id"] != bid] + [meta]; cat["version"] = int(time.time() * 1000)

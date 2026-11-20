@@ -13,6 +13,8 @@ import json, os, re, sys, time, subprocess, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tashjir as T  # noqa: E402
+import series as S  # noqa: E402
+SH_EXTRA = ""
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "tfedit")
@@ -66,6 +68,10 @@ def body(pg):
 
 
 def do_book(bid, cat, lst):
+    global SH_EXTRA
+    mn = S.matn_name(cat, next((x for x in cat["books"] if x["id"] == bid), None))
+    SH_EXTRA = ("\n\nتمييز المتن والشرح (في f وr كلتيهما): " + S.SHARH_HINT.format(m=mn) + "\nوفي r خاصة: يبقى الشرح ممزوجًا بالمتن، وما في كلام الشارح من تخريج الأحاديث والحكم عليها وتعريف الأعلام والمصطلحات والغريب يُنقل موجزًا إلى الحاشية. "
+                + S.FN_HINT) if mn else ""
     src = T.source(bid, cat)
     if not src:
         return "missing"
@@ -81,7 +87,7 @@ def do_book(bid, cat, lst):
         while k < len(todo) and len(grp) < 4 and size < 9000:
             p = todo[k]; grp.append(p); size += len(body(pages[p - 1])); k += 1
         text = "\n".join("[ص %d]\n%s" % (p, body(pages[p - 1])[:6000]) for p in grp)
-        r = T.gemini(PROMPT.format(title=title, author=au, text=text))
+        r = T.gemini(PROMPT.format(title=title, author=au, text=text) + SH_EXTRA)
         if not r:
             if len(T.EXH) >= len(T.KEYS):
                 break

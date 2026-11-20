@@ -330,6 +330,14 @@ def img_part(img):
 BOOKHINT = ""  # تعليمات خاصة بالكتاب (ocrHint في الفهرس)، مثل طبقات الشرح والتعليق في كتب الشروح
 
 
+def book_hint(cat, b):
+    """تعليمات الكتاب: ocrHint، وتمييز المتن من الشرح في كتب الشروح (sharh أو matn في الفهرس)."""
+    import series as SR
+    h = ("\n- تعليمات خاصة بهذا الكتاب: " + b["ocrHint"]) if b and b.get("ocrHint") else ""
+    mn = SR.matn_name(cat, b)
+    return h + ("\n- " + SR.SHARH_HINT.format(m=mn) + "\n- " + SR.FN_HINT.replace("مع وضع رقمها (١) في موضعه من النص.", "وأرقام الحواشي كما في الكتاب.")) if mn else h
+
+
 def gemini_page(img, draft=""):
     t = gemini_call([img_part(img), {"text": PROMPT + BOOKHINT + (REVIEW.format(draft=draft[:9000]) if draft.strip() else "")}])
     return t.replace("[صفحة بلا نص]", "").strip() if t else None
@@ -1081,7 +1089,7 @@ def rereview(bid):
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
     b = next((x for x in cat["books"] if x["id"] == bid), None)
     global BOOKHINT
-    BOOKHINT = ("\n- تعليمات خاصة بهذا الكتاب: " + b["ocrHint"]) if b and b.get("ocrHint") else ""
+    BOOKHINT = book_hint(cat, b)
     pdf = local_pdf(bid) if idx else None
     if not idx or not pdf: print("لا شيء لتدقيقه في", bid); return
     print("== تدقيق %s: %d صفحة (فاتتها المراجعة %d، خفيفة %d، فيها شك %d)" % (bid, len(idx), len(unrev), len(lite), len(unc0)), flush=True)
@@ -1207,8 +1215,11 @@ def main():
         if "offset" in cfg: entry["pdfOffset"] = int(cfg["offset"])
         if cfg.get("tags"): entry["tags"] = sorted(set(entry.get("tags", []) + cfg["tags"]))
         if not existing:
-            for k in ("source", "audio", "sharh"):
+            for k in ("source", "audio", "sharh", "matn"):
                 if cfg.get(k) and not entry.get(k): entry[k] = cfg[k]
+            if cfg.get("cont"):  # تكملة لسلسلة شرح قائمة (درس أو مجلد تالٍ)
+                import series as SR
+                SR.cont(cat, cfg["cont"], entry)
         if not existing and entry.get("col") != "dawah": entry["upl"] = True  # كتاب مصور رفعته الإدارة للمكتبة العامة: يأخذ كل الخدمات (مراجعة وتشكيل وصوت وفهارس واختبارات)
         do_ocr = cfg.get("ocr", existing is None)
         if not existing and cfg.get("set"):
@@ -1235,6 +1246,8 @@ def main():
                     cat["authors"].append({"id": aid, "name": author, "col": entry["col"], "bio": "", "auto": True})
             entry["authorId"] = aid or "a8"
         if do_ocr:
+            global BOOKHINT
+            BOOKHINT = book_hint(cat, entry)
             pages = ocr(dest)
             if cfg.get("refBook"): ref_compare(pages, ref_pages(cfg["refBook"]))
             toc = make_toc(pages)
