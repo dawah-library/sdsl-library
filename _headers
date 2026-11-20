@@ -52,6 +52,9 @@
 /audio.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/brain.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /cmpai.js
   Cache-Control: public, max-age=60, must-revalidate
 

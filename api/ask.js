@@ -217,6 +217,21 @@ module.exports = async (req, res) => {
     const text = await sttGemini(body.audio, body.mime, body.hint).catch(() => "");
     return res.status(text ? 200 : 502).json(text ? { text } : { error: "تعذّر التفريغ" });
   }
+  if (body.op === "learn") {  // العقل المتعلّم: السؤال والجواب والتقييم بلا هوية العضو (tools/brain.py يتعلم منها)
+    const u1 = await userFrom(req); if (!u1) return res.status(401).json({ error: "للأعضاء" });
+    if (!(await SW().on("brain_learn"))) return res.status(200).json({ ok: false, off: 1 });
+    if (limited("learn:" + u1.id, true, 120)) return res.status(429).json({ error: "كثرت الطلبات" });
+    const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const id = String(body.id || ""); if (!url || !key || !/^[a-z0-9]{8,40}$/i.test(id)) return res.status(400).json({ error: "طلب غير صالح" });
+    const arr = (x, n, m) => (Array.isArray(x) ? x : []).map(v => String(v).slice(0, m)).filter(Boolean).slice(0, n);
+    const row = { id };
+    if (typeof body.q === "string") Object.assign(row, { q: body.q.slice(0, 2000), a: String(body.a || "").slice(0, 6000), mode: String(body.mode || "").slice(0, 20), eng: String(body.eng || "").slice(0, 20), refs: arr(body.refs, 40, 80).filter(r => /^[\w.-]+:\d+$/.test(r)), searches: arr(body.searches, 30, 200) });
+    if (body.vote !== undefined) row.vote = Math.max(-1, Math.min(1, parseInt(body.vote, 10) || 0));
+    if (typeof body.note === "string") row.note = body.note.slice(0, 1000);
+    if (!row.q && row.vote === undefined && row.note === undefined) return res.status(400).json({ error: "لا شيء" });
+    try { const r = await fetch(url + "/rest/v1/ask_learn" + (row.q ? "" : "?id=eq." + encodeURIComponent(id)), { method: row.q ? "POST" : "PATCH", headers: { apikey: key, Authorization: "Bearer " + key, "content-type": "application/json", prefer: row.q ? "resolution=merge-duplicates,return=minimal" : "return=minimal" }, body: JSON.stringify(row) });
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok }); } catch (e) { return res.status(502).json({ ok: false }); }
+  }
   const contents = sanitize(body.contents);
   if (!contents) return res.status(400).json({ error: "محادثة غير صالحة أو طويلة جدًا؛ ابدأ محادثة جديدة." });
   const user = await userFrom(req);
@@ -236,6 +251,8 @@ module.exports = async (req, res) => {
     "\nاليوم: " + new Date().toISOString().slice(0, 10) + ".";
   const st = body.style || {}; if (STYLE[st.basis]) system += "\nأسلوب الجواب: " + STYLE[st.basis]; if (FORM[st.form]) system += "\n" + FORM[st.form];
   system += "\nميّز في جوابك بين النقل (بين «» مع الإحالة) والتحليل والاستنتاج، ونسّق الجواب بعناوين وقوائم وجداول عند الحاجة، بعربية فصيحة سليمة النحو والإملاء." + (cfg.extra ? "\nتوجيه الإدارة: " + String(cfg.extra).slice(0, 2000) : "");
+  // دروس «العقل المتعلّم» المستخلصة من تقييم الأعضاء (data/brain/lessons.json، وللإدارة إيقاف أي درس)
+  try { const LS = await SW().json("data/brain/lessons.json", null), ls = ((LS || {}).items || []).filter(l => l && l.on !== false && l.t).slice(-25); if (ls.length) system += "\nدروس مستفادة من مراجعة محادثات سابقة مع الأعضاء (التزمها):\n" + ls.map(l => "- " + String(l.t).slice(0, 260)).join("\n"); } catch (e) { }
   if (contents.some(c => c.parts.some(p => p.inlineData))) system += "\nفي المحادثة مرفقات (صور أو ملفات أو صوت) من العضو: اقرأها وحلّلها بحسب سؤاله، وإن كانت نصًّا مصوّرًا فانقل نصه بدقة قبل التعليق عليه.";
   if (!body.round) { const lastQ = (contents[contents.length - 1].parts.find(x => x.text) || {}).text; system += await expand(lastQ);
     if (body.web && allowed(cfg, "web", prof, "ask_web")) system += await webContext(lastQ, body.web, cfg); }
