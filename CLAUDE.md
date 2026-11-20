@@ -20,4 +20,5 @@
 - المرحلة ٦ (منجزة): صانع الفيديو — النص في خانة واحدة وredistribute، مدة حرة، انتقالات xfade، أيقونات، فواصل ناعمة بلا موسيقى، tools/video-gen.py (Veo/fal)، openmontage.yml؛ docs/video-maker.md.
 - المرحلة ٧: الواجهة الثلاثية (portal.js) نفّذها وكيل آخر في main — تُراجَع فقط. 
 - المرحلة ٨ (منجزة): الآثار — باب المصدر، fit، مسودات، refit، مصادر مبوبة وخارجية؛ docs/athar.md.
-- المرحلة ٩ (التالية): المجتمع والتواصل.
+- المرحلة ٩ (منجزة): outreach.js (#/awael، #/weekly، #/masala، #/newsletter)، tools/weekly.py، tools/newsletter.py، جدول subscribers؛ docs/community.md.
+- الختام (التالي): تحديث «دراسة الموقع» بالمستجدات والمقارنات.

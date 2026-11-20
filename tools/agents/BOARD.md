@@ -39,3 +39,4 @@
 | P5 | خطة المدير — المرحلة ٥: ElevenLabs | tools/tts.py، eleven.js، api/edit.js | منجزة (تنتظر ELEVENLABS_API_KEY) | |
 | P6 | خطة المدير — المرحلة ٦: صانع الفيديو | video.js، tools/book-video.py، tools/video-gen.py، tools/video-slides.js، openmontage.yml | منجزة | التوليد بالمفاتيح |
 | P8 | خطة المدير — المرحلة ٨: موسوعة الآثار | tools/athar.py، tools/athar-ai.py، athar.js، athar.yml | منجزة | |
+| P9 | خطة المدير — المرحلة ٩: المجتمع والتواصل | outreach.js، api/notify.js، tools/weekly.py، tools/newsletter.py | منجزة | تطبيق جدول subscribers |

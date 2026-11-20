@@ -1651,3 +1651,8 @@ body.phome .top .backb{display:none!important}
 .ptrack.p3d{perspective:1100px}.ptrack.p3d .ptile{transform:rotateY(calc(var(--off,0) * -28deg)) scale(calc(1 - (var(--off,0) * var(--off,0)) * .06));transform-style:preserve-3d;will-change:transform}
 @media (min-width:1100px){.ptrack.p3d .ptile{transform:none}}
 @media (prefers-reduced-motion:reduce){.ptrack.p3d .ptile{transform:none!important}}
+/* المرحلة ٩: كتاب الأسبوع والمسألة الواحدة والشارة */
+.wkcard{display:flex;gap:14px;align-items:flex-start;margin:14px 12px 4px;padding:14px;border-radius:20px;background:color-mix(in srgb,var(--sf) 78%,transparent);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.wkcard .bcov{width:84px;flex:none;border-radius:8px;box-shadow:0 8px 20px -10px rgba(0,0,0,.4)}.wkcard>div{display:flex;flex-direction:column;gap:2px;min-width:0}.wkcard b{font-size:1.08rem}.wkcard blockquote{margin:6px 0;font-family:Amiri,serif;line-height:1.9;border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}
+.wkrow.on{border-color:var(--gold,#b88a2e)}.wksn{line-height:2;font-family:Amiri,serif}.founder{display:inline-block;margin-inline-end:8px;padding:2px 10px;border-radius:99px;background:linear-gradient(135deg,#0f5c4d,#b88a2e);color:#fff;font-size:.85rem}
+.masa h3 small{font-weight:400}.masq{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.masq p{margin:2px 0;line-height:1.9}

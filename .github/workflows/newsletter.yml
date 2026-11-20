@@ -1,0 +1,25 @@
+name: النشرة البريدية الأسبوعية
+# كل خميس: يُبنى العدد (جديد الكتب والإصدارات، وجديد المنصة، وفائدة علمية، وكتاب الأسبوع) ويُحفظ أرشيفه، ويُرسل إلى المشتركين المؤكَّدين (tools/newsletter.py).
+on:
+  schedule:
+    - cron: "41 16 * * 4"
+  workflow_dispatch:
+    inputs:
+      dry: { description: "تجربة دون إرسال (1)", required: false, default: "0" }
+permissions:
+  contents: write
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: البناء والإرسال
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://nqxkkdexpodjjwfdkxoq.supabase.co' }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NL_DRY: ${{ github.event.inputs.dry || '0' }}
+        run: python3 tools/newsletter.py
+      - run: |
+          bash tools/git-save.sh "النشرة الأسبوعية" data/newsletter

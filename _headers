@@ -127,6 +127,9 @@
 /mutun.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/outreach.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /paths.js
   Cache-Control: public, max-age=60, must-revalidate
 

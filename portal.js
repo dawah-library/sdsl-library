@@ -41,6 +41,7 @@ const PORTAL = (() => {
     return `<section class="portal" aria-label="الأقسام الرئيسية"><div class="ptrack" id="ptrack" role="list" tabindex="0" data-noswipe>${HUBS.map(tile).join("")}</div>
       <div class="pdots" role="tablist" aria-label="الأقسام">${HUBS.map((h, i) => `<button role="tab" data-act="pdot" data-i="${i}" aria-label="${esc(h.t)}"${i ? "" : ' class="on"'}></button>`).join("")}</div>
       <div class="popts"><button class="btn s" data-act="psnd" aria-pressed="${snd()}" title="مؤثرات التقليب الصوتية">${snd() ? "🔊" : "🔇"}</button><button class="btn s" data-act="p3d" aria-pressed="${d3()}" title="تأثير العمق">${d3() ? "◉ عمق" : "○ عمق"}</button></div>
+      <div id="wkhome"></div>
       <button class="btn s pmore" data-act="hfull" aria-expanded="${full()}">${full() ? "طيّ بقية الرئيسية ▲" : "عرض بقية الرئيسية ▼"}</button></section>`;
   }
   // بعد العرض: النقطة الحالية تتبع السحب، والرئيسية مختصرة أو موسعة
