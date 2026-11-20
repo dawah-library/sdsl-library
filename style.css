@@ -1723,3 +1723,5 @@ sup.shr{color:var(--gold,#b88a2e);font-size:.7em}
 .msbres{text-align:center;padding:20px;border-radius:20px;border:1px solid var(--line);background:var(--sf)}.msbring{--c:var(--gold,#b88a2e);width:130px;height:130px;margin:auto;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) var(--p),var(--line) 0)}.msbres.no .msbring{--c:#c0392b}
 .msbring b{width:104px;height:104px;border-radius:50%;background:var(--sf);display:grid;place-items:center;font-size:1.6rem}.msbres .row{justify-content:center}
 .msbrev{line-height:1.9}.msbrev li{margin:6px 0}.msbrev li.ok{color:inherit}.msbrev li.no b{color:#c0392b}
+.msbenc{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0;padding:14px 16px;border-radius:16px;border:1px solid var(--gold,#b88a2e);background:color-mix(in srgb,var(--gold,#b88a2e) 8%,var(--sf))}.msbenc>div:first-child{display:flex;flex-direction:column;gap:2px}
+#msbhome .msbhero{margin-top:28px}

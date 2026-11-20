@@ -17,13 +17,15 @@ const MAWS = (() => {
     const I = await getJ(R + "_index.json"); if (!I) return view('<div class="note">تعذر تحميل الموسوعات.</div>');
     const tot = I.items.reduce((a, x) => a + x.m, 0), ok = I.items.reduce((a, x) => a + x.ok, 0);
     view(`<section class="cmhero mwhero"><div><h2>الموسوعات العلمية المتخصصة</h2><p>موسوعات محكمة في العلوم الشرعية، عمادها ومرجعيتها كتب مشايخ الدعوة السلفية ومؤلفاتهم ومقالاتهم وفتاواهم، وتُكمَّل أبوابها ومسائلها من المراجع العلمية المتخصصة المشهورة في كل فن؛
-      مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ومراجعة كل مادة قبل نشرها.</p>
+      مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ومراجعة كل مادة قبل نشرها؛ ولكل موسوعة اختبارات «المِسبار» لقياس مستواك فيها.</p>
       <p class="mut">${toAr(I.items.length)} موسوعة${tot ? ` • ${toAr(tot)} مسألة في المخططات • ${toAr(ok)} مادة معتمدة` : " • تُعد المخططات الآن"}</p></div></section>
       <form class="sbox" data-form="mwq" style="max-width:none"><input name="q" type="search" value="${esc(q.q || "")}" placeholder="ابحث عن مسألة في الموسوعات كلها" aria-label="بحث في الموسوعات"><button class="btn">بحث</button></form><div id="mwres"></div>
       <div class="mwgrid">${I.items.map(x => `<a class="mwcard" href="#/mawsua/${x.k}"><i aria-hidden="true">${x.ic}</i><b>${esc(x.n)}</b><span>${esc(x.d)}</span><small>${x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد"}</small>${x.m ? `<em style="--p:${Math.round(100 * (adm() ? x.e : x.ok) / x.m)}%"></em>` : ""}</a>`).join("")}</div>
+      <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>
       <li>كل مادة مسودة حتى يراجعها متخصص ويعتمدها؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li></ul></details>`);
+    if (typeof MSB !== "undefined") MSB.homeBlock($("#msbhome"));
     if (q.q) search(q.q, I);
   }
   async function search(term, I) {
@@ -33,12 +35,13 @@ const MAWS = (() => {
   }
   async function enc(k, q) {
     const t = await tree(k), I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k, ic: "📚", d: "" };
-    if (!t) return view(crumbs([x.n]) + `<h2>${x.ic} ${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div>${adm() ? admBar(k, null) : ""}`);
+    if (!t) { setTimeout(() => typeof MSB !== "undefined" && MSB.encBlock($("#msbenc"), k), 0); return view(crumbs([x.n]) + `<h2>${x.ic} ${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div><div id="msbenc"></div>${adm() ? admBar(k, null) : ""}`); }
     const L = flat(t), done = L.filter(vis).length;
     view(crumbs([x.n]) + `<section class="mwhead"><i aria-hidden="true">${x.ic}</i><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p></div></section>
-      ${adm() ? admBar(k, t) : ""}
+      <div id="msbenc"></div>${adm() ? admBar(k, t) : ""}
       <div class="mwtree">${t.b.map((b, i) => `<details${i === 0 || q.b == i + 1 ? " open" : ""}><summary><b>الباب ${ord(i + 1)}:</b> ${esc(b.t)} <small class="mut">${toAr(b.f.reduce((a, f) => a + f.m.filter(vis).length, 0))}/${toAr(b.f.reduce((a, f) => a + f.m.length, 0))}</small></summary>
         ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
+    if (typeof MSB !== "undefined") MSB.encBlock($("#msbenc"), k);
   }
   const admBar = (k, t) => `<div class="mwadm card"><b>🛡️ الإدارة:</b> <button class="btn s p" data-mw="q" data-k="${k}" data-n="20">حرّر ٢٠ مسألة تالية</button> <button class="btn s" data-mw="q" data-k="${k}" data-n="60">٦٠ مسألة</button> <button class="btn s" data-mw="plan" data-k="${k}">${t ? "إعادة المخطط" : "إعداد المخطط"}</button>${t && !t.ok ? ` <button class="btn s" data-mw="tok" data-k="${k}">اعتماد المخطط</button>` : ""} <span class="mut">التعديل اليدوي: data/mawsua/${k}/_tree.json</span> <span class="mwst mut"></span></div>`;
 
@@ -59,7 +62,7 @@ const MAWS = (() => {
       <nav class="mwnav">${prev ? `<a href="#/mawsua/${k}/${prev.id}">→ ${esc(prev.t)}</a>` : "<span></span>"}${next ? `<a href="#/mawsua/${k}/${next.id}">${esc(next.t)} ←</a>` : ""}</nav></article>`);
     window.__mwE = E;
   }
-  function show(q, k, id) { q = q || {}; if (!k) return home(q); if (!id) return enc(k, q); return art(k, decodeURIComponent(id)); }
+  function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id)); }
 
   document.addEventListener("submit", e => { const f = e.target.closest('[data-form="mwq"]'); if (!f) return; e.preventDefault(); location.hash = "#/mawsua?q=" + encodeURIComponent(f.q.value.trim()); }, true);
   document.addEventListener("click", async e => {
