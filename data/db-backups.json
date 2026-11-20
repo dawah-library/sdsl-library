@@ -16,6 +16,14 @@
    "rows": 1688,
    "tables": 36,
    "errors": {}
+  },
+  {
+   "d": "2026-11-20",
+   "key": "backups/db/2026-11-20.json.gz",
+   "kb": 147.1,
+   "rows": 3492,
+   "tables": 36,
+   "errors": {}
   }
  ]
 }
