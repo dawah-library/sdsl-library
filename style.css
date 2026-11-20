@@ -1725,3 +1725,4 @@ sup.shr{color:var(--gold,#b88a2e);font-size:.7em}
 .msbrev{line-height:1.9}.msbrev li{margin:6px 0}.msbrev li.ok{color:inherit}.msbrev li.no b{color:#c0392b}
 .msbenc{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0;padding:14px 16px;border-radius:16px;border:1px solid var(--gold,#b88a2e);background:color-mix(in srgb,var(--gold,#b88a2e) 8%,var(--sf))}.msbenc>div:first-child{display:flex;flex-direction:column;gap:2px}
 #msbhome .msbhero{margin-top:28px}
+.mwcard.mwath{background:linear-gradient(160deg,color-mix(in srgb,var(--gold,#b88a2e) 14%,var(--sf)),var(--sf));border-color:color-mix(in srgb,var(--gold,#b88a2e) 45%,var(--line))}.mwcard.mwath b{color:var(--gold,#b88a2e)}
