@@ -1146,7 +1146,15 @@
    "a": "ta2",
    "an": "",
    "tp": "t7",
-   "new": 1
+   "new": 1,
+   "cands": [
+    {
+     "b": 7263,
+     "name": "الحسبة في الإسلام، أو وظيفة الحكومة الإسلامية",
+     "r": 0.018
+    }
+   ],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "amradqulub",
@@ -1155,7 +1163,15 @@
    "a": "ta2",
    "an": "",
    "tp": "t6",
-   "new": 1
+   "new": 1,
+   "cands": [
+    {
+     "b": 1512,
+     "name": "أمراض القلوب وشفاؤها",
+     "r": 0.35
+    }
+   ],
+   "b": 1512
   },
   {
    "id": "tuhfairaqiyya",
@@ -1380,6 +1396,7 @@
   "masalik",
   "tarikhtabari",
   "turuqhukmiyya",
-  "hidayathayara"
+  "hidayathayara",
+  "amradqulub"
  ]
 }
