@@ -49,12 +49,25 @@ const HDS = (() => {
       ${riw ? `<p class="mut shr"><b>الروايات المشروحة معه:</b> ${riw}</p>` : ""}
       <p class="mut shn">شرح مجموع من الشروح المعتمدة في المكتبة بعزو كل نقطة إلى موضعها، أُعدّ آليًّا (${esc(c.at || "")}) وهو قيد المراجعة العلمية.</p></div>`;
   }
-  const NOSH = '<p class="mut">لم يُشرح هذا الحديث بعد. يبدأ شرح السنة بعد استيراد الشروح المعتمدة كلها إلى المكتبة، ثم يجري يوميًّا: صحيح البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ؛ ويُشرح الحديث مع رواياته كلها مرة واحدة.</p>';
+  const NOSH = '<p class="mut">لم يُشرح هذا الحديث بعد. تجري رحلة شرح السنة يوميًّا من الشروح المعتمدة في المكتبة بالترتيب: صحيح البخاري، ثم زوائد مسلم، فأبي داود، فالنسائي، فالترمذي، فابن ماجه، فمسند أحمد، فالموطأ؛ ويُشرح الحديث مع رواياته كلها مرة واحدة.</p>';
   const canEdit = () => typeof isAdmin === "function" && isAdmin() && typeof GH !== "undefined" && GH.on;
   async function sharhInto(el, b, n, full) { if (!el) return; el.hidden = false; el.innerHTML = '<p class="mut">جارٍ تحميل الشرح…</p>';
     const c = await sharhOf(b, n);
     const bar = full ? `<div class="row shbar">${NINE.includes(b) ? `<button class="btn s" data-act="shexp" data-b="${b}" data-n="${esc(String(n))}">⬇ تنزيل الشرح</button>` : ""}${canEdit() && NINE.includes(b) ? `<button class="btn s" data-act="shedit" data-b="${b}" data-n="${esc(String(n))}">${c ? "✎ تعديل الشرح" : "＋ إضافة شرح"}</button>` : ""}</div>` : "";
-    el.innerHTML = (c ? sharhHtml(c, full) : NOSH) + bar; }
+    el.innerHTML = (c ? sharhHtml(c, full) : NOSH) + (await dawahHtml(b, n)) + bar; }
+
+  /* ===== من شروح مشايخ الدعوة (tools/sharh-dawah.py ← data/sharh/dawah): موضع شرح الشيخ للحديث، وفوائده وترجيحاته بنص كلامه — تظهر للقراء بعد اعتماد الإدارة ===== */
+  async function dawahOf(b, n) { const D_ = await sget("dawah/" + b + ".json"); return D_[String(n)] || D_[String(n).split(".")[0]] || []; }
+  async function dawahHtml(b, n) {
+    if (!NINE.includes(b)) return ""; const L = await dawahOf(b, n); if (!L.length) return "";
+    return `<div class="shdawah"><h4>من شروح مشايخ الدعوة</h4>${L.map((e, i) => { const show = (e.f || []).length && (e.fst === "ok" || canEdit());
+      return `<div class="shdw"><p><b>${esc(e.an)}</b>${e.t ? " — " + esc(e.t.replace(" — " + e.an, "")) : ""} • <a href="#/book/${esc(e.sb)}/${e.p}">اقرأ شرحه لهذا الحديث (ص ${toAr(e.p)}${e.pz > e.p ? "–" + toAr(e.pz) : ""})</a></p>
+        ${show ? `<ul class="shdwf">${e.f.map((x, k) => `<li>${x.k === "tarjih" ? '<em class="tag">ترجيح</em> ' : ""}${x.m ? "<b>" + esc(x.m) + ":</b> " : ""}«${esc(x.q)}»${canEdit() ? ` <button class="btn s" data-act="dwdel" data-b="${b}" data-n="${esc(String(n))}" data-i="${i}" data-k="${k}" title="حذف هذه الفائدة">✕</button>` : ""}</li>`).join("")}</ul>
+          ${e.fst !== "ok" ? `<p class="mut"><em class="tag">مسودة للمشرفين</em> فوائد مستخرجة آليًّا بنص كلام الشيخ — <button class="btn s p" data-act="dwok" data-b="${b}" data-n="${esc(String(n))}" data-i="${i}">اعتماد ونشر</button></p>` : `<p class="mut">بنص كلام الشيخ من شرحه، ومراجعة الإدارة.</p>`}` : ""}</div>`; }).join("")}</div>`;
+  }
+  async function dawahSet(b, n, i, fn, msg) {
+    const key = String(n); await GH.editJSON("data/sharh/dawah/" + b + ".json", o => { o = o || {}; const k = o[key] ? key : key.split(".")[0], e = (o[k] || [])[i]; if (e) fn(e); return o; }, msg);
+    Object.keys(SC).filter(k => k.startsWith("dawah/")).forEach(k => delete SC[k]); toast("حُفظ، ويظهر للجميع خلال دقائق."); sharhInto($("#hdds"), b, n, true); }
 
   /* ===== تنزيل الشرح: النطاق (حديث، باب، أرقام، الكتاب كاملًا)، والمحتوى، والصيغة والقالب.
      كل حديث «صفحة» بتنسيق نصوص المكتبة، والعزو [[المرجع]] حاشية مرقمة تحته («(١) فتح الباري، ج١، ص ٤٩٩»)، وفي آخر الملف «المراجع».
@@ -350,6 +363,8 @@ const HDS = (() => {
     if (a === "hddorar") dorar(el.dataset.q);
     else if (a === "shexp") sharhExport(el.dataset.b, el.dataset.n);
     else if (a === "shedit") sharhEdit(el.dataset.b, el.dataset.n);
+    else if (a === "dwok") dawahSet(el.dataset.b, el.dataset.n, +el.dataset.i, e => { e.fst = "ok"; e.fby = "admin"; }, "شروح مشايخ الدعوة: اعتماد فوائد الحديث " + el.dataset.n).catch(x => toast(x.message));
+    else if (a === "dwdel") dawahSet(el.dataset.b, el.dataset.n, +el.dataset.i, e => { e.f.splice(+el.dataset.k, 1); }, "شروح مشايخ الدعوة: حذف فائدة من الحديث " + el.dataset.n).catch(x => toast(x.message));
     else if (a === "hdrsh") { const box = el.closest(".hrh").querySelector(".hrsh"); if (!box.hidden && box.dataset.f) { box.hidden = true; return; } box.dataset.f = 1; sharhInto(box, el.dataset.b, el.dataset.n, false); }
     if (a === "hdoff") offSave("hadith", async say => { say("جارٍ تجهيز القائمة…"); const L = await klist(), out = ["data/hadith/index.json", "data/hadith/arbain.json", "data/hadith/riyad.json", "data/hadith/bulugh.json", RAWK("_list.json"), RAWT("_index.json")];
       Object.entries(L).forEach(([b, v]) => { out.push(RAWK(b + ".json"), RAWL(b + ".json")); for (let i = 0; i < Math.ceil((v.n || 0) / 500); i++) out.push(RAWK(b + "/m" + i + ".json")); if (["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b)) out.push(RAWK("").replace("/k/", "/grades/") + b + ".json"); });

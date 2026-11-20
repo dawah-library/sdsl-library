@@ -15,7 +15,7 @@
 
 المخرجات: data/sharh/c/<ملف>.json (العناقيد)، وdata/sharh/map/<كتاب>.json ({رقم: [معرّف العنقود، الملف]})،
 وdata/sharh/_state.json (التقدم)، وtools/sharh-report.md. مفتاح الإيقاف: sharh_ai.
-خدمة يومية قليلة غير مستعجلة (أمر المدير): ١٢ حديثًا بعناقيدها مرة يوميًّا آخر اليوم، وتتنحى عند أول نفاد حصة.
+جولتان يوميًّا (٣٠ حديثًا بعناقيدها لكل جولة)، وتتنحى إذا نفدت حصة نصف المفاتيح (تفعيل ٢٠ نوفمبر بطلب المدير).
 المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ١٢)، SHARH_MINUTES (٦٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
 """
 import glob, json, os, re, sys, time
@@ -30,7 +30,7 @@ SHR = {"bukhari": ["fathbari", "fathbarirajab", "alamhadith"], "muslim": ["nawaw
        "tirmidhi": ["aridatahwadhi", "tuhfaahwadhi", "sinditirmidhi"], "nasai": ["suyutinasai", "sindinasai"], "ibnmajah": ["sindiibnmajah"],
        "musnadahmad": ["sindimusnad", "fathrabbani"], "muwatta": ["istidhkar", "tamhid", "qabas", "masalik"], "darimi": []}
 THEMATIC = ["naylawtar", "sayljarrar", "subulsalam", "faydqadir", "tarhtathrib", "fathrabbani", "jamiulum"]
-MAX = int(os.environ.get("SHARH_MAX", "12")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
+MAX = int(os.environ.get("SHARH_MAX", "30")); T.DEADLINE[0] = time.time() + 60 * float(os.environ.get("SHARH_MINUTES", "150"))
 AR2EN = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
 
@@ -100,9 +100,12 @@ def main():
     need = [x for x in tq.get("items") or [] if x.get("sharh")]
     wait = [x.get("q0") or x["q"] for x in need if x["id"] not in tdone and not x.get("skip")]
     skipped = [(x.get("q0") or x["q"]) + " (" + str(x.get("skip")) + ")" for x in need if x.get("skip") and x["id"] not in tdone]
-    if wait and os.environ.get("SHARH_FORCE") != "1" and os.environ.get("SHARH_DRY") != "1":
-        st0 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}}); st0["wait"] = wait; st0["skipped"] = skipped; st0["at"] = time.strftime("%Y-%m-%d")
-        js(os.path.join(OUT, "_state.json"), st0, 1); print("ينتظر استيراد الشروح:", "، ".join(wait)); return
+    # (تعديل ٢٠ نوفمبر: كان انتظار شرح واحد يوقف الرحلة كلها) — الانتظار الآن لكتاب ذلك الشرح وحده، وتمضي سائر الكتب
+    wait_ids = {x["id"] for x in need if x["id"] not in tdone and not x.get("skip")}
+    HOLD = set() if os.environ.get("SHARH_FORCE") == "1" else {b for b, v in SHR.items() if wait_ids & set(v)}
+    st0 = jl(os.path.join(OUT, "_state.json"), {"done": 0, "books": {}}); st0["wait"] = wait; st0["skipped"] = skipped; st0["hold"] = sorted(HOLD)
+    if os.environ.get("SHARH_DRY") != "1": js(os.path.join(OUT, "_state.json"), st0, 1)
+    if wait: print("ينتظر استيراد الشروح:", "، ".join(wait), "— فتؤجل كتبها:", "، ".join(sorted(HOLD)) or "لا شيء")
     # روابط مواضع الشرح بالشروح المستوردة: إن وُجدت شروح لم تكن عند آخر بناء للروابط أُعيد بناؤها أولًا (tools/hadith-links.py)
     if os.environ.get("SHARH_DRY") != "1":
         present = sorted({b for v in SHR.values() for b in v} | set(THEMATIC), key=str)
@@ -179,7 +182,7 @@ def main():
     if only: b, n = only.split(":"); todo = [(b, n)]
     else:
         for b in ORDER:
-            if b not in BK: continue
+            if b not in BK or b in HOLD: continue
             for x in BK[b]["items"]:
                 n = str(x[0])
                 if "." in n or covered(b, n): continue
@@ -207,7 +210,8 @@ def main():
     for b, n in todo:
         if made >= MAX or time.time() > T.DEADLINE[0]: break
         # خدمة غير مستعجلة: تتنحى عند أول علامة على ضيق الحصة (نفاد حصة يومية لأي مفتاح أو نموذج)، فلا تزاحم تجهيز الكتب وسائر الخدمات
-        if T.EXH: rep.append("- ضاقت حصة المفاتيح اليوم؛ تتنحى الخدمة ويُستكمل غدًا"); break
+        # (تعديل ٢٠ نوفمبر بطلب المدير «تفعيل الشرح»: كان التنحي عند نفاد أول مفتاح فلا يُشرح إلا ١–٣ أحاديث يوميًّا) — يتنحى عند نفاد نصف المفاتيح
+        if len(T.EXH) >= max(1, len(T.KEYS) // 2): rep.append("- ضاقت حصة المفاتيح اليوم (نفد نصفها)؛ تتنحى الخدمة ويُستكمل في الجولة التالية"); break
         if covered(b, n): continue
         seed = (b, n)
         mem = [seed] + sorted((x for x in set(NB.get(seed, ())) | set(variants(seed)) if not covered(*x) and x != seed), key=lambda x: (ORDER.index(x[0]), float(x[1]) if re.match(r"^[\d.]+$", x[1]) else 0))[:40]
