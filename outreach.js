@@ -21,6 +21,24 @@ const OUTR = (() => {
     if (!box || typeof Auth === "undefined" || !Auth.sb || !Auth.user) return;
     try { const { data } = await Auth.sb.rpc("is_founder"); if (data) box.insertAdjacentHTML("afterbegin", '<span class="founder" title="سجّل في «كن من الأوائل» قبل الإطلاق">🌱 عضو مؤسس</span>'); } catch (e) { }
   }
+  /* ---------- تفضيلات الإشعارات والبريد (طلب المدير، ٢٠ نوفمبر ٢٠٢٦) ----------
+     كل عضو مسجل بالبريد مشترك تلقائيًّا (مشغّل member_autosub)؛ وهنا يختار ما يصله في حسابه وجهازه وبريده (جدول member_prefs). */
+  const NK = [["read", "📖 التذكير بالقراءة", "وردك اليومي، وتنبيه إن انقطعت عن القراءة أسبوعًا"], ["group", "⏰ القراءة الجماعية", "تذكير قبل موعد الجلسة بثلاث ساعات"],
+    ["new", "📚 جديد الكتب", "ما يُرفع من كتب ومواد جديدة"], ["audio", "🎧 الصوتيات والإذاعة", "الكتب المسموعة الجديدة وما ينضم إلى الإذاعة"],
+    ["motiv", "✦ رسائل تحفيزية", "في فضل العلم والقراءة وعلو الهمة، ثلاث مرات في الأسبوع"], ["newsletter", "✉️ النشرة الأسبوعية", "كل خميس: جديد المكتبة وكتاب الأسبوع وفائدة علمية"]];
+  async function prefs(box) {
+    if (!box || typeof Auth === "undefined" || !Auth.sb || !Auth.user || !Cloud.on()) return;
+    let P = { mail: true, push: true, off: [] };
+    try { const { data } = await Auth.sb.from("member_prefs").select("*").eq("user_id", Auth.user.id).maybeSingle(); if (data) P = data; } catch (e) { }
+    box.innerHTML = `<section class="card nprefs"><h3>🔔 الإشعارات والبريد</h3><p class="mut">بتسجيلك بالبريد صرت مشتركًا تلقائيًّا في هذه الرسائل؛ اختر ما يصلك منها.</p>
+      <div class="row"><label class="inl"><input type="checkbox" data-np="mail"${P.mail !== false ? " checked" : ""}> الرسائل على بريدي</label><label class="inl"><input type="checkbox" data-np="push"${P.push !== false ? " checked" : ""}> إشعارات الجهاز</label></div>
+      <ul class="nplist">${NK.map(([k, t, d]) => `<li><label class="inl"><input type="checkbox" data-nk="${k}"${(P.off || []).includes(k) ? "" : " checked"}> <b>${t}</b></label> <small class="mut">${d}</small></li>`).join("")}</ul><p class="mut npst"></p></section>`;
+    box.onchange = async () => {
+      const row = { user_id: Auth.user.id, mail: box.querySelector('[data-np="mail"]').checked, push: box.querySelector('[data-np="push"]').checked, off: [...box.querySelectorAll("[data-nk]")].filter(x => !x.checked).map(x => x.dataset.nk) };
+      const st = box.querySelector(".npst"); st.textContent = "جارٍ الحفظ…";
+      const { error } = await Auth.sb.from("member_prefs").upsert(row); st.textContent = error ? "تعذّر الحفظ: " + error.message : "✓ حُفظت تفضيلاتك";
+    };
+  }
   /* ---------- كتاب الأسبوع ---------- */
   let WK = null; const wk = async () => WK || (WK = await getJ("data/weekly.json"));
   const curWeek = W => { if (!W || !(W.weeks || []).length) return null; const t = new Date().toISOString().slice(0, 10); return [...W.weeks].reverse().find(w => w.from <= t) || (W.weeks[0].from > t ? Object.assign({ soon: 1 }, W.weeks[0]) : null); };
@@ -29,14 +47,70 @@ const OUTR = (() => {
   async function homeCard(box) {  // في الرئيسية: غلاف الكتاب ومقتطف اليوم (يتجدد كل يوم من أيام الأسبوع)
     const W = await wk(); if (!box || !W || (W.st !== "ok" && !adm())) return; const w = curWeek(W); if (!w || !B(w.b)) return; const s = w.sn[dayIdx(w)];
     box.innerHTML = `<section class="wkcard" aria-label="كتاب الأسبوع">${typeof coverOf === "function" ? coverOf(B(w.b)) : ""}<div><small>📚 كتاب الأسبوع ${toAr(w.w)} من ٨${w.soon ? " — يبدأ " + esc(w.from) : ""}${W.st !== "ok" ? ' <em class="tag">مسودة</em>' : ""}</small><b>${esc(w.t)}</b><span class="mut">${esc(w.a)}</span>
-      <blockquote>«${esc(s.t)}» <a href="#/book/${esc(w.b)}/${s.p}"><small>(ص ${toAr(s.p)})</small></a></blockquote><div class="row">${wkLinks(w)}<a class="btn s" href="#/weekly">السلسلة</a></div></div></section>`;
+      <blockquote>«${esc(s.t)}» <a href="#/book/${esc(w.b)}/${s.p}"><small>(ص ${toAr(s.p)})</small></a></blockquote><div class="row">${wkLinks(w)}<a class="btn s" href="#/weekly">✦ استعراض الكتاب</a></div></div></section>`;
   }
-  async function weekly() {
-    const W = await wk(); if (!W) return view('<p class="note">لا سلسلة بعد.</p>'); const c = curWeek(W);
-    view(`<h2>📚 كتاب الأسبوع</h2><p class="mut">سلسلة تعريفية تفاعلية لثمانية أسابيع: في كل أسبوع كتاب من كتب مشايخ الدعوة، ومقتطف قصير منه كل يوم بنصه وصفحته، ورابط القراءة المباشر، والتشجير أو الاختبار التفاعلي.${W.st !== "ok" ? " <b>(مسودة تنتظر اعتماد الإدارة)</b>" : ""}</p>
-      ${adm() && W.st !== "ok" ? `<p><button class="btn p" data-outr="wkok">اعتماد السلسلة ونشرها</button> <span class="mut">ويمكن تعديل الكتب والمقتطفات في data/weekly.json</span></p>` : ""}
-      ${W.weeks.map(w => `<article class="card wkrow${c && c.w === w.w ? " on" : ""}"><h3>الأسبوع ${toAr(w.w)} <small class="mut">(من ${esc(w.from)})</small>: ${esc(w.t)} <small>— ${esc(w.a)}</small></h3>
-        <ol class="wksn">${w.sn.map(s => `<li>«${esc(s.t)}» <a href="#/book/${esc(w.b)}/${s.p}"><small>ص ${toAr(s.p)}</small></a> <button class="linkbtn" data-outr="share" data-t="${esc("«" + s.t + "»\n— " + w.t + "، " + w.a + "، ص " + s.p)}" data-u="${esc(siteLink("#/book/" + w.b + "/" + s.p))}">⤴</button></li>`).join("")}</ol><div class="row">${wkLinks(w)}</div></article>`).join("")}`);
+  /* استعراض «كتاب الأسبوع» (طلب المدير، ٢٠ نوفمبر ٢٠٢٦): كل شيء عن الكتاب في صفحة واحدة — الغلاف، والتعريف الموجز والشامل،
+     وأبرز أفكاره بصفحاتها، والدراسة والتحليل، وخريطته، ومنتجاته في الموقع (القراءة والاستماع والخلاصة والتشجير والاختبار والكراسة والفيديو…)،
+     ومقتطفات الأسبوع، والمؤلف؛ والملف العلمي من tools/weekly-dossier.py (data/weekly/<id>.json). ?w=N لأسبوع آخر من السلسلة. */
+  const P = (t, n) => n === 1 ? "صفحة واحدة" : n === 2 ? "صفحتان" : toAr(n) + (n <= 10 ? " صفحات" : " صفحة");
+  async function products(w, b) {
+    const id = b.id, has = (o, k) => o && Object.prototype.hasOwnProperty.call(o, k), head = async u => { try { return (await fetch(u, { method: "HEAD" })).ok; } catch (e) { return false; } };
+    const [su, ku, tj, vi, tr, qa, qz, au] = await Promise.all([getJ("data/summ/_list.json"), getJ("data/kurrasa/_list.json"), getJ("data/tashjir/_list.json"), getJ("data/video/_list.json"), getJ("data/tr/index.json"),
+      head("data/qa/" + id + ".json"), w.quiz ? true : head("data/quizzes/" + id + ".json"), typeof AUDIO !== "undefined" ? AUDIO.load().catch(() => ({})) : {}]);
+    const L = [["📖", "اقرأ الكتاب", "النص الكامل بفهرسه وترقيم المطبوع", "#/book/" + id + "/1", 1]];
+    if (typeof AUDIO !== "undefined" && AUDIO.ready(au[id])) L.push(["🎧", "الكتاب المسموع", au[id].d ? "نحو " + toAr(Math.round(au[id].d / 60)) + " دقيقة استماع" : "استمع إليه كاملًا", "#/audio/" + id]);
+    if (has(su, id)) L.push(["🧾", "خلاصة الكتاب", "اختصار فصوله بمستويات متعددة", "#/summary?b=" + encodeURIComponent(id) + "&r=20"]);
+    if (has(tj, id) && (tj[id].ok || adm())) L.push(["🌳", "التشجير", "خريطة ذهنية لأبوابه ومسائله", "#/tashjir/" + id]);
+    if (qz) L.push(["✅", "اختبر فهمك", "اختبار تفاعلي بثلاثة مستويات", "#/quizzes/" + id + "?l=easy"]);
+    if (has(ku, id) && (ku[id].ok || adm())) L.push(["📘", "كراسة المذاكرة", "أسئلة وتمارين للمراجعة", "#/kurrasat/" + id]);
+    if (vi && Array.isArray(vi[id]) && vi[id].length) L.push(["🎬", "فيديو تعريفي", toAr(vi[id].length) + " مقطعًا عن الكتاب", "#/video?b=" + encodeURIComponent(id)]);
+    if (qa) L.push(["❓", "سؤال وجواب", "أسئلة يجيب عنها الكتاب", "#/qa/" + encodeURIComponent(id)]);
+    if (tr && tr.l) { const ls = Object.entries(tr.l).filter(([, x]) => has(x, id)).map(([k]) => k); if (ls.length) L.push(["🌐", "الترجمات", ls.join("، "), "#/translate?l=" + encodeURIComponent(ls[0])]); }
+    const sh = BOOKS().filter(x => x.sharh === id && !x.hidden && !VOL2(x)); if (sh.length) L.push(["🎙", "شروحه", toAr(sh.length) + " شرحًا مفرغًا", "#/book/" + sh[0].id + "/1"]);
+    if (b.sharh && B(b.sharh)) L.push(["📜", "المتن المشروح", B(b.sharh).title, "#/book/" + b.sharh + "/1"]);
+    L.push(["🆚", "قارنه بكتاب", "مقارنة علمية بكتاب آخر", "#/compare?a=" + encodeURIComponent(id)]);
+    return L;
+  }
+  async function weekly(q) {
+    q = q || {}; const W = await wk(); if (!W || !(W.weeks || []).length) return view('<p class="note">لا سلسلة بعد.</p>');
+    const c = curWeek(W), w = (q.w && W.weeks[+q.w - 1]) || c || W.weeks[0], b = B(w.b); if (!b) return view('<p class="note">الكتاب غير متاح.</p>');
+    const a0 = A(b.authorId) || {}, a = a0.name === "—" ? {} : a0, card = b.card || {}, live = W.st === "ok", isCur = c && c.w === w.w;
+    view(`<p class="mut">جارٍ تحضير الاستعراض…</p>`);
+    const [Dx, prods, full] = await Promise.all([getJ("data/weekly/" + w.b + ".json"), products(w, b), loadBook(w.b).catch(() => null)]);
+    const Dd = Dx && (live || adm()) ? Dx : null, n = (full && full.pages.length) || b.n || 0, day = Math.max(1, Math.ceil(n / 7));
+    const toc = full ? (full.toc || []).filter((t, i, L) => t.p && (!t.l || t.l <= 1) && !L.slice(0, i).some(x => x.t === t.t)).slice(0, 16) : [];
+    const ideas = (Dd && Dd.ideas) || [], st = (Dd && Dd.study) || {}, quotes = (Dd && Dd.quotes) || [];
+    const sec = (ic, t, h, cls) => h ? `<section class="wks${cls ? " " + cls : ""}"><h3><span aria-hidden="true">${ic}</span> ${t}</h3>${h}</section>` : "";
+    const para = x => (Array.isArray(x) ? x : [x]).filter(Boolean).map(t => `<p>${esc(t)}</p>`).join("");
+    const pg = p => p ? ` <a class="wkpg" href="#/book/${esc(w.b)}/${p}">ص ${toAr(p)}</a>` : "";
+    const s = w.sn[dayIdx(w)] || w.sn[0];
+    view(`<p><a href="#/weekly">📚 كتاب الأسبوع</a>${q.w ? ` › الأسبوع ${toAr(w.w)}` : ""}</p>
+      ${!live ? `<p class="note">السلسلة مسودة تنتظر اعتماد الإدارة.${adm() ? ` <button class="btn s p" data-outr="wkok">اعتماد السلسلة ونشرها</button>` : ""}</p>` : ""}
+      <section class="wkhero"><div class="wkcov">${coverOf(b)}</div><div class="wkhi">
+        <span class="wkbadge">📚 كتاب الأسبوع ${toAr(w.w)} من ${toAr(W.weeks.length)}${isCur ? " • هذا الأسبوع" : w.from > today() ? " • يبدأ " + esc(w.from) : ""}</span>
+        <h2>${esc(b.setTitle || b.title)}</h2><p class="wkau"><a href="#/author/${esc(b.authorId)}">${esc(a.name || w.a)}</a>${a.died ? ` <small class="mut">(ت ${toAr(a.died)}هـ)</small>` : ""}</p>
+        ${Dd && Dd.hook ? `<p class="wkhook">${esc(Dd.hook)}</p>` : ""}
+        <div class="wkst"><span><b>${toAr(n)}</b>صفحة</span>${toc.length ? `<span><b>${toAr(toc.length)}</b>بابًا وفصلًا</span>` : ""}<span><b>${toAr(day)}</b>صفحة يوميًّا لتختمه في أسبوع</span>${ideas.length ? `<span><b>${toAr(ideas.length)}</b>فكرة محورية</span>` : ""}</div>
+        <div class="row"><a class="btn p" href="#/book/${esc(w.b)}/1">📖 ابدأ القراءة الآن</a>${prods.slice(1, 3).map(x => `<a class="btn" href="${x[3]}">${x[0]} ${esc(x[1])}</a>`).join("")}<button class="btn" data-outr="share" data-t="${esc("📚 كتاب الأسبوع: «" + (b.setTitle || b.title) + "» — " + (a.name || w.a) + (Dd && Dd.brief ? "\n" + Dd.brief : ""))}" data-u="${esc(siteLink("#/weekly?w=" + w.w))}">⤴ شارك</button></div>
+      </div></section>
+      ${sec("✦", "تعريف موجز", para((Dd && Dd.brief) || card.summary), "wkbrief")}
+      <blockquote class="wkday"><small>مقتطف اليوم</small>«${esc(s.t)}» <a href="#/book/${esc(w.b)}/${s.p}"><small>(ص ${toAr(s.p)})</small></a></blockquote>
+      ${sec("📜", "التعريف الشامل", para(Dd && Dd.about))}
+      ${sec("💡", "أبرز أفكار الكتاب", ideas.length ? `<ol class="wkideas">${ideas.map(x => `<li><b>${esc(x.t)}</b><p>${esc(x.d)}${pg(x.p)}</p></li>`).join("")}</ol>` : (card.parts || []).length ? `<div class="chips">${card.parts.map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div>` : "")}
+      ${sec("🔎", "دراسة وتحليل", (st.importance || st.method || st.structure || (st.features || []).length) ? `<div class="wkgrid">
+        ${st.importance ? `<div><h4>أهمية الكتاب</h4><p>${esc(st.importance)}</p></div>` : ""}${st.method ? `<div><h4>منهج المؤلف</h4><p>${esc(st.method)}</p></div>` : ""}
+        ${st.structure ? `<div><h4>بناء الكتاب</h4><p>${esc(st.structure)}</p></div>` : ""}${(st.features || []).length ? `<div><h4>مميزاته</h4><ul>${st.features.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+        ${st.audience || card.audience ? `<div><h4>لمن يُقرأ</h4><p>${esc(st.audience || card.audience)}</p></div>` : ""}${(st.tips || []).length ? `<div><h4>كيف تقرؤه وتنتفع به</h4><ul>${st.tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}</div>` : card.audience ? `<p>${esc(card.audience)}</p>` : "")}
+      ${sec("🗺️", "خريطة الكتاب", toc.length ? `<ol class="wktoc">${toc.map(t => `<li><a href="#/book/${esc(w.b)}/${t.p}">${esc(t.t)}</a> <small class="mut">ص ${toAr(t.p)}</small></li>`).join("")}</ol>` : "")}
+      ${sec("🧰", "الكتاب في المكتبة: منتجاته وخدماته", `<div class="wkprod">${prods.map(x => `<a href="${x[3]}"${x[4] ? ' class="on"' : ""}><i aria-hidden="true">${x[0]}</i><b>${esc(x[1])}</b><span>${esc(x[2])}</span></a>`).join("")}</div>`)}
+      ${sec("❝", "من أقوال الكتاب", quotes.length ? quotes.map(x => `<blockquote class="wkq">«${esc(x.t)}»${pg(x.p)}</blockquote>`).join("") : "")}
+      ${sec("🤔", "أسئلة يجيبك عنها الكتاب", (Dd && (Dd.questions || []).length) ? `<ul class="wkqs">${Dd.questions.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "")}
+      ${sec("📅", "مقتطفات الأسبوع", `<ol class="wksn">${w.sn.map((x, k) => `<li${k === dayIdx(w) && isCur ? ' class="on"' : ""}>«${esc(x.t)}» <a href="#/book/${esc(w.b)}/${x.p}"><small>ص ${toAr(x.p)}</small></a> <button class="linkbtn" data-outr="share" data-t="${esc("«" + x.t + "»\n— " + w.t + "، " + w.a + "، ص " + x.p)}" data-u="${esc(siteLink("#/book/" + w.b + "/" + x.p))}" aria-label="مشاركة">⤴</button></li>`).join("")}</ol>`)}
+      ${sec("👤", "المؤلف", a.name ? `<div class="wkau2">${a.photo ? `<img src="${esc(a.photo)}" alt="" loading="lazy">` : ""}<div><b><a href="#/author/${esc(b.authorId)}">${esc(a.name)}</a></b>${a.bio ? `<p>${esc(String(a.bio).slice(0, 600))}${String(a.bio).length > 600 ? "…" : ""}</p>` : ""}</div></div>` : "")}
+      ${(card.keywords || []).length ? `<p class="chips">${card.keywords.map(k => `<a class="chip" href="#/search?q=${encodeURIComponent(k)}">${esc(k)}</a>`).join("")}</p>` : ""}
+      ${!Dd && adm() ? `<p class="note">ملف الاستعراض العلمي (الأفكار والدراسة والتحليل) لم يُبنَ بعد لهذا الكتاب: شغّل مهمة «ملف كتاب الأسبوع» (weekly-dossier.yml).</p>` : ""}
+      ${Dd ? `<p class="mut wknote">أُعد هذا الاستعراض من نص الكتاب نفسه، والأقوال منقولة بحروفها من صفحاتها؛ والمرجع هو الكتاب.</p>` : ""}
+      <h3>السلسلة كاملة</h3><div class="wkser">${W.weeks.map(x => `<a href="#/weekly?w=${x.w}" class="${x.w === w.w ? "on" : ""}">${B(x.b) ? coverOf(B(x.b)) : ""}<small>الأسبوع ${toAr(x.w)}${c && c.w === x.w ? " • الحالي" : ""}</small><b>${esc(x.t)}</b><span class="mut">${esc(x.a)}</span></a>`).join("")}</div>`);
   }
   /* ---------- المسألة الواحدة ---------- */
   async function masala(q) {
@@ -89,5 +163,5 @@ const OUTR = (() => {
         await GH.editJSON("data/masail/_index.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(x => x.s !== s).concat([{ s, t, n: items.length }]); return o; }, "المسألة الواحدة: الفهرس", true);
         st.textContent = "✓ نُشرت"; } catch (x) { st.textContent = x.message; } }
   });
-  return { awael, weekly, masala, newsletter, homeCard, founderBadge };
+  return { awael, weekly, masala, newsletter, homeCard, founderBadge, prefs };
 })();

@@ -1,0 +1,69 @@
+name: ملف كتاب الأسبوع
+# استعراض شامل لكل كتاب في سلسلة «كتاب الأسبوع» (tools/weekly-dossier.py): التعريف الموجز والشامل، وأبرز الأفكار، والدراسة والتحليل،
+# والأقوال المختارة المتحقق منها بنصها. الجمعة: يُبنى ملف الأسبوع الحالي والقادم إن لم يوجد (طلب المدير، ٢٠ نوفمبر ٢٠٢٦). مفتاح الإيقاف: weekly.
+on:
+  schedule:
+    - cron: "17 11 * * 5"
+  push:
+    branches: [main]
+    paths: ["data/weekly.json"]
+  workflow_dispatch:
+    inputs:
+      books: { description: "معرّفات كتب (اختياري؛ فارغ = كتب السلسلة كلها التي لا ملف لها)", required: false, default: "" }
+      force: { description: "إعادة البناء (1)", required: false, default: "0" }
+permissions:
+  contents: write
+  models: read
+concurrency:
+  group: weekly-dossier
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" weekly)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  build:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: بناء الملفات
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+        run: |
+          A=""; [ "${{ github.event.inputs.force }}" = "1" ] && A="--force"
+          if [ "${{ github.event_name }}" = "schedule" ]; then python3 tools/weekly-dossier.py --next; else python3 tools/weekly-dossier.py ${{ github.event.inputs.books }} $A; fi
+      - name: الحفظ
+        if: always()
+        run: |
+          bash tools/git-save.sh "كتاب الأسبوع - ملف الاستعراض الشامل" data/weekly
