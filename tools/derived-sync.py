@@ -123,6 +123,8 @@ def main():
             if not o or (o.get(key) or "") >= src: continue
             r["stale"].append("%s (بُني %s)" % (kind, o.get(key)))
             if not reviewed: r["note"].append("%s: يُعاد بعد اكتمال مراجعة النص على المصورة" % kind); continue
+            if kind != "الاختبار":  # قرار المدير ٢٠ نوفمبر: لا إضافة تلقائية لطوابير الاختصار والتشجير والكراسة؛ يُبلَّغ وتطلبه الإدارة يدويًّا
+                r["note"].append("%s: قديم بعد التصحيح — تُعيده الإدارة يدويًّا (التوليد التلقائي موقوف)" % kind); continue
             if apply:
                 qp = os.path.join(D, q)
                 if q == "study-queue.json":
