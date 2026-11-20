@@ -262,21 +262,21 @@ const KUR = (() => {
   });
 
   /* ---------- التنسيق وإعادة الصياغة (#/tahrir) ---------- */
-  const EM = [["fmt", "تنسيق وتدقيق", "ألفاظ المتكلم نفسها بعد تصحيح الأخطاء ووضع الترقيم والفقرات والعناوين وحذف الحشو الكلامي"], ["rw", "إعادة صياغة بأسلوب كتابي", "المضمون نفسه بعربية فصيحة متصلة، بلا زيادة ولا نقص في المعنى"], ["proof", "تدقيق لغوي فقط", "تصحيح الإملاء والنحو والترقيم مع إبقاء الألفاظ والترتيب"], ["short", "اختصار قريب من الألفاظ", "نحو الثلث بسياقة متصلة"]];
+  const EM = [["fmt", "تنسيق وتدقيق", "ألفاظ المتكلم نفسها بعد تصحيح الأخطاء ووضع الترقيم والفقرات والعناوين وحذف الحشو الكلامي"], ["rw", "إعادة صياغة بأسلوب كتابي", "المضمون نفسه بعربية فصيحة متصلة، بلا زيادة ولا نقص في المعنى"], ["proof", "تدقيق لغوي فقط", "تصحيح الإملاء والنحو والترقيم مع إبقاء الألفاظ والترتيب"], ["short", "اختصار قريب من الألفاظ", "نحو الثلث بسياقة متصلة"], ["tashkeel", "التشكيل الدقيق", "ضبط النص بالحركات بحسب الإعراب والصرف والمعنى في سياقه، دون تغيير حرف ولا كلمة؛ والمضبوط في الأصل (الآيات والأحاديث) يبقى بضبطه. اختر الكامل أو الجزئي (أواخر الكلمات والشدة)"]];
   async function tahrir(q) {
     let pre = ""; if (q.b && B(q.b)) { try { const b = await loadBook(q.b); pre = String(b.pages[(+q.p || 1) - 1] || "").split(/^\s*_{4,}\s*$/m)[0].replace(/^#+\s*/gm, ""); } catch (e) { } }
     view(`<h2>التنسيق وإعادة الصياغة</h2><p class="mut">خدمة للأعضاء: الصق نصًّا (تفريغ درس، أو مقالًا، أو فقرة من كتاب) واختر الخدمة. الأمانة شرط: لا تُضاف معلومة ولا رأي، ولا يُحذف شيء من المضمون، والآيات والأحاديث بلفظها. الحد ١٢٠٠٠ حرف في المرة.</p>
       <form data-form="tahrir"><div class="tabs" role="radiogroup">${EM.map(([k, t], i) => `<label class="chip"><input type="radio" name="m" value="${k}"${i === 0 ? " checked" : ""}> ${t}</label>`).join("")}</div>
-      <p class="mut" id="tahd">${EM[0][2]}</p><textarea name="t" style="min-height:220px" maxlength="12000" required placeholder="الصق النص هنا">${esc(pre)}</textarea><div class="savebar"><button class="btn p">نفّذ</button> <span id="tahs" class="mut"></span></div></form>
+      <p class="mut" id="tahd">${EM[0][2]}</p><label class="inl" id="tahpart" hidden><input type="checkbox" name="part" value="1"> تشكيل جزئي (أواخر الكلمات والشدة فقط)</label><textarea name="t" style="min-height:220px" maxlength="12000" required placeholder="الصق النص هنا">${esc(pre)}</textarea><div class="savebar"><button class="btn p">نفّذ</button> <span id="tahs" class="mut"></span></div></form>
       <div id="tahr" hidden><h3>النتيجة</h3><div class="note">النتيجة من إعداد آلي بالذكاء الاصطناعي؛ راجعها قبل النشر، وانسب الكلام إلى قائله، ونبّه على أن الصياغة بتصرف إن أعدت صياغته.</div><article class="tahout" id="tahout"></article><div class="row"><button class="btn s" data-tah="copy">نسخ</button><button class="btn s" data-tah="doc">Word</button></div></div>`);
-    document.querySelectorAll("[name=m]").forEach(r => r.onchange = () => { $("#tahd").textContent = (EM.find(x => x[0] === r.value) || [])[2] || ""; });
+    document.querySelectorAll("[name=m]").forEach(r => r.onchange = () => { $("#tahd").textContent = (EM.find(x => x[0] === r.value) || [])[2] || ""; $("#tahpart").hidden = r.value !== "tashkeel"; });
   }
   document.addEventListener("submit", async e => {
     const f = e.target.closest("[data-form=tahrir]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation(); const st = $("#tahs"), bt = f.querySelector("button");
     if (typeof Auth === "undefined" || !Auth.user) return toast("سجّل الدخول لاستخدام الخدمة");
     bt.disabled = true; st.textContent = "جارٍ التنفيذ… قد يستغرق دقيقة";
-    try { const r = await fetch("/api/edit", { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer " + (Auth.token || "") }, body: JSON.stringify({ mode: f.m.value, text: f.t.value }) }), j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || j.message || "تعذر التنفيذ"); $("#tahr").hidden = false; $("#tahout").innerHTML = String(j.text).split(/\n+/).filter(Boolean).map(l => /^#\s/.test(l) ? `<h4>${esc(l.replace(/^#\s*/, ""))}</h4>` : `<p>${esc(l)}</p>`).join(""); window.__tah = j.text; st.textContent = ""; $("#tahr").scrollIntoView({ behavior: "smooth" }); }
+    try { const r = await fetch("/api/edit", { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer " + (Auth.token || "") }, body: JSON.stringify({ mode: f.m.value, text: f.t.value, part: f.m.value === "tashkeel" && f.part && f.part.checked ? 1 : 0 }) }), j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || j.message || "تعذر التنفيذ"); $("#tahr").hidden = false; $("#tahout").innerHTML = String(j.text).split(/\n+/).filter(Boolean).map(l => /^#\s/.test(l) ? `<h4>${esc(l.replace(/^#\s*/, ""))}</h4>` : `<p>${esc(l)}</p>`).join(""); window.__tah = j.text; st.textContent = j.cover != null ? "ضُبط " + toAr(j.cover) + "٪ من الكلمات؛ وما لم يُضبط بقي كما في الأصل" : ""; $("#tahr").scrollIntoView({ behavior: "smooth" }); }
     catch (x) { st.textContent = x.message; } finally { bt.disabled = false; }
   }, true);
   document.addEventListener("click", async e => { const el = e.target.closest("[data-tah]"); if (!el || !window.__tah) return; e.preventDefault();

@@ -1,0 +1,41 @@
+name: المصدر الواحد (إعادة اشتقاق التشكيل والصوت والإذاعة بعد التصحيح)
+# كل تصحيح لنص كتاب أو تشكيله (من #/proof، أو تحرير الصفحة، أو التدقيق الآلي، أو إعادة القراءة من المصورة) يتبعه تلقائيًّا:
+# إعادة تشكيل الصفحات المتغيرة ← إعادة تسجيل صوتها (refresh) ← الإذاعة تقرأ الملفات الجديدة. tools/derived-sync.py --auto
+on:
+  push:
+    branches: [main]
+    paths: ["data/books/**", "vols/**", "data/tashkeel/**", "data/audit/derived-queue.json"]
+  workflow_run:  # إيداعات المهام بالرمز الافتراضي لا تُطلق push؛ فيُستأنف بعد اكتمالها
+    workflows: ["تدقيق الكتب النصية (اقتراحات تصحيح)", "تحويل الكتب المصورة إلى نص", "تشكيل الكتب (تشكيل مدقق نحويًا ولغويًا)"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: derived
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 tools/derived-sync.py --auto --apply
+      - run: |
+          before=$(git rev-parse HEAD)
+          bash tools/git-save.sh "المصدر الواحد: إعادة اشتقاق ما صُحّح" data/audit data/catalog.json data/audio/_queue.json data/tashkeel/_queue.json data/study-queue.json data/tashjir/_queue.json data/kurrasa/_queue.json
+          # الإيداع بالرمز الافتراضي لا يُطلق المهام؛ فتُشغَّل مباشرة: التشكيل أولًا ثم الصوت
+          if [ "$(git rev-parse HEAD)" != "$before" ]; then
+            ch=$(git diff --name-only "$before" HEAD)
+            echo "$ch" | grep -q "data/tashkeel/_queue.json" && gh workflow run tashkeel.yml --ref main || true
+            echo "$ch" | grep -q "data/audio/_queue.json" && gh workflow run tts.yml --ref main || true
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

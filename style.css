@@ -1615,3 +1615,10 @@ details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:
 .brcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--sf)}.brcard p{margin:6px 0;line-height:1.8}.brcard blockquote{margin:6px 0;padding:6px 10px;border-inline-start:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent)}
 .brls li{margin:0 0 6px;line-height:1.8}.brls li.off span{text-decoration:line-through;opacity:.6}.brgaps li{margin:0 0 4px}
 .askl{display:inline-flex;gap:6px;margin-inline-start:6px;flex-wrap:wrap}.askl .on{background:var(--ac);color:var(--on)}.askl .mut{font-size:.75rem;opacity:.75}
+/* المختصر مع التشجير (المرحلة ٣-أ) */
+.sumtx .sumh{color:var(--accent,#0f5c4d);margin:12px 0 4px;font-size:1.02em}.sumtx .suml{margin:4px 1.4em 10px 0;padding:0}.sumtx .suml li{margin:3px 0;line-height:1.9}
+.sumtj{margin:10px 0 18px;border:1px solid color-mix(in srgb,currentColor 15%,transparent);border-radius:12px;padding:8px 12px}.sumtj>summary{cursor:pointer;font-weight:600}
+.sumtj .tjout ul{margin:4px 1.1em 4px 0;padding:0;font-size:.95em}.sumtj .tjmini{overflow:auto;max-height:70vh;margin-top:8px;-webkit-overflow-scrolling:touch}.sumtj .tjmini svg{max-width:100%;height:auto}
+/* المقارنة العلمية (المرحلة ٣-ج) */
+.cmpai .chip.x small{color:inherit;opacity:.85}.cmpsug{display:flex;flex-direction:column;gap:4px;margin:4px 0}.cmpsug .cmps{text-align:start;padding:8px 12px;border-radius:10px;border:1px solid color-mix(in srgb,currentColor 14%,transparent);background:var(--sf,#fff);color:inherit;cursor:pointer;font:inherit}
+.cmpsug .cmps:hover,.cmpsug .cmps:focus{border-color:var(--accent,#0f5c4d)}.cmpres .cmpax{margin:14px 0}.cmpres h5{margin:8px 0 4px}.cmpres .cref{font-size:.82em;white-space:nowrap;margin-inline-start:4px}.cmpdif{margin:8px 0;overflow-x:auto}

@@ -1,0 +1,45 @@
+{
+ "id": "p24c16cf5",
+ "status": "draft",
+ "ref": {
+  "title": "تمام المنة بالرد على أعداء السنة",
+  "muhaqqiq": "",
+  "publisher": "دار الخلفاء الراشدين ودار الفتح الإسلامي، الإسكندرية",
+  "edition": "الأولى",
+  "year": "1436هـ - 2015م",
+  "vols": 1,
+  "pages": "112"
+ },
+ "vols": [
+  {
+   "book": "p24c16cf5",
+   "part": null,
+   "runs": [
+    [
+     1,
+     null,
+     null
+    ],
+    [
+     2,
+     1,
+     null
+    ]
+   ],
+   "fix": {}
+  }
+ ],
+ "chapters": [],
+ "review": [
+  {
+   "book": "p24c16cf5",
+   "pages": [
+    1
+   ],
+   "count": 1
+  }
+ ],
+ "by": "tools/refmap.py --draft",
+ "at": "2026-11-20",
+ "note": ""
+}

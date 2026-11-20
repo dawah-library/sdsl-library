@@ -55,7 +55,11 @@ const LRN = (() => {
     const res = secs.map((sc, si) => ({ h: sc.h, p: sc.p, si, s: all.filter(x => x.si === si && pick.has(x)) })).filter(x => x.s.length || (r === 0 && x.h));
     return { res, all: all.length, total: pick.size, ow, sw: used, secs: S0 };
   }
-  const absHtml = (A, pg) => A.res.map(sc => `${sc.h ? `<h3>${esc(sc.h)}${pg ? ` <small>(ص ${toAr(sc.p)})</small>` : ""}</h3>` : ""}${sc.s.map(x => `<p${x.key ? ' class="sumkey"' : ""}>${esc(x.t)}${pg ? ` <small class="pref">(ص ${toAr(x.p)})</small>` : ""}</p>`).join("")}`).join("");
+  // عناصر المختصر: فقرة، أو عنوان فرعي (k=h من «## »)، أو بند تعداد (k=li من «- »)؛ وكل فصل في قسم يحمل نطاق صفحاته لربط تشجيره
+  const itemHtml = (x, pg) => x.k === "h" ? `<h4 class="sumh">${esc(x.t)}</h4>` : `<${x.k === "li" ? "li" : "p"}${x.key ? ' class="sumkey"' : ""}>${esc(x.t)}${pg && x.k !== "li" ? ` <small class="pref">(ص ${toAr(x.p)})</small>` : ""}</${x.k === "li" ? "li" : "p"}>`;
+  const itemsHtml = (s, pg) => s.map((x, i) => (x.k === "li" && (i === 0 || s[i - 1].k !== "li") ? "<ul class=\"suml\">" : "") + itemHtml(x, pg) + (x.k === "li" && (i === s.length - 1 || s[i + 1].k !== "li") ? "</ul>" : "")).join("");
+  const absHtml = (A, pg) => A.res.map((sc, i) => `<section class="sumch"${sc.pr ? ` data-i="${i}" data-a="${sc.pr[0]}" data-z="${sc.pr[1]}"` : ""}>${sc.h ? `<h3>${esc(sc.h)}${pg ? ` <small>(ص ${toAr(sc.p)})</small>` : ""}</h3>` : ""}${itemsHtml(sc.s, pg)}</section>`).join("");
+  const sumLines = (txt, p0) => String(txt || "").split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/\[ص\s*(\d+)\]\s*$/), k = /^#{2,4}\s/.test(x) ? "h" : /^[-•]\s/.test(x) ? "li" : ""; return { t: x.replace(/^#{2,4}\s*|^[-•]\s*/, "").replace(/\s*\[ص\s*\d+\]\s*/g, " ").trim(), p: m ? +m[1] : p0, k }; });
   const absText = A => A.res.map(sc => (sc.h ? "■ " + sc.h + "\n" : "") + sc.s.map(x => x.t + " (ص " + x.p + ")").join("\n")).join("\n\n");
   async function vSummary(q) {
     const b = q.b && B(q.b), r = RATIOS.some(x => String(x[0]) === q.r) ? +q.r : 20;
@@ -86,7 +90,7 @@ const LRN = (() => {
   const AIR = [[50, "نحو النصف"], [25, "نحو الربع"], [10, "نحو العُشر"], [1, "الأفكار المحورية"]];
   function aiSummary(b, AI, q, intro, tabs) {
     const r = AIR.some(x => String(x[0]) === q.r) ? +q.r : (+q.r >= 40 ? 50 : +q.r >= 15 ? 25 : +q.r > 1 ? 10 : +q.r === 1 ? 1 : 25);
-    const res = AI.chs.map(c => ({ h: c.t, p: c.p[0], s: r === 1 ? (c.k ? [{ t: c.k, p: c.p[0], key: true }] : []) : String(c["r" + r] || "").split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/\[ص\s*(\d+)\]\s*$/); return { t: x.replace(/\s*\[ص\s*\d+\]\s*/g, " ").trim(), p: m ? +m[1] : c.p[0] }; }) })).filter(x => x.s.length);
+    const res = AI.chs.map(c => ({ h: c.t, p: c.p[0], pr: c.p, s: r === 1 ? (c.k ? [{ t: c.k, p: c.p[0], key: true }] : []) : sumLines(c["r" + r], c.p[0]) })).filter(x => x.s.length);
     const nw = t => t.split(/\s+/).length, sw = res.reduce((n, sc) => n + sc.s.reduce((m, x) => m + nw(x.t), 0), 0), ow = AI.chs.reduce((n, c) => n + (c.ow || 0), 0);
     const lits = AI.chs.map(c => [(c.lit || {})[String(r)], nw(String(c["r" + r] || ""))]).filter(x => x[0] != null), lit = lits.length ? lits.reduce((s, x) => s + x[0] * x[1], 0) / Math.max(1, lits.reduce((s, x) => s + x[1], 0)) : null;
     const A = { res, sw, ow, all: 0, total: 0, secs: [] }; window.__sum = { b, A, ai: true, r, lit };
@@ -96,8 +100,48 @@ const LRN = (() => {
      <div class="note sumwarn">⚠️ <b>تنبيه:</b> هذا مختصر أعدّته المكتبة بتصرف يسير، قريب جدًا من ألفاظ المؤلف وليس بنصها كاملًا${deg ? "، " + deg : ""}${lit != null ? ` (نحو ${toAr(Math.round(lit * 100))}٪ من ألفاظه منقولة من الأصل بترتيبها)` : ""}. فارجع إلى الأصل عند النقل والاستشهاد، ولكل فقرة رقم صفحتها.</div>
      <p class="mut">المختصر: ${toAr(sw)} كلمة من ${toAr(ow)} (${toAr(Math.round(sw * 100 / Math.max(1, ow)))}٪)، في ${toAr(res.length)} مقطعًا • مدة القراءة نحو ${toAr(Math.max(1, Math.round(sw / 180)))} دقيقة.</p>
      <div class="row" style="margin:6px 0 12px;gap:6px;flex-wrap:wrap"><button class="btn p" data-act="sumpdf" data-b="${esc(b.id)}" data-r="${r}">تحميل المختصر PDF</button><button class="btn" data-act="sumword">Word</button><button class="btn" data-act="sumcopy">نسخ المختصر</button> <a class="btn" href="#/book/${esc(b.id)}/1">قراءة الأصل</a></div>
+     <div class="row sumtjbar" style="margin:-4px 0 12px;gap:6px;flex-wrap:wrap"><a class="btn${q.tj ? " p" : ""}" href="#/summary?b=${encodeURIComponent(b.id)}&r=${r}${q.tj ? "" : "&tj=1"}">🌳 ${q.tj ? "إخفاء" : "مع"} تشجير كل فصل</a><button class="btn" data-act="sumfull" data-k="docx">📦 الكتاب كاملًا (مختصر + تشجير + خريطة) Word</button><button class="btn" data-act="sumfull" data-k="pdf">PDF</button> <span id="sumfst" class="mut"></span></div>
      <article class="sumtx">${absHtml(A, true)}</article><p class="mut">أُعدّ في ${esc(AI.built || "")}. والمختصر بنص المؤلف (جمل منتقاة بلا تصرف) متاح من التبويب الثاني أعلاه.</p>`);
+    if (q.tj) sumTj(b);
   }
+  /* المختصر مع التشجير (المرحلة ٣-أ): لكل فصل من المختصر تشجيره المستقل من تشجير الكتاب (data/tashjir) بحسب نطاق صفحاته
+     (tjFilter)، مخططًا متدرجًا وخريطة ذهنية (tjRadial)؛ والتصدير يجمعها كلها في ملف واحد Word أو PDF بتنسيق موحد. */
+  const tjSub = (m, pr) => { if (!m || !m.c || typeof tjFilter !== "function") return null; const t = tjFilter(m, 3, pr[0], pr[1]); return t && t.c && t.c.length ? t : null; };
+  const tjOutline = (n, d = 0) => (n.c || []).map(c => "  ".repeat(d) + "- " + (c.t || "") + (c.s ? ": " + c.s : "") + "\n" + tjOutline(c, d + 1)).join("");
+  const tjOutHtml = n => (n.c || []).length ? `<ul>${n.c.map(c => `<li><b>${esc(c.t || "")}</b>${c.s ? ` — ${esc(c.s)}` : ""}${tjOutHtml(c)}</li>`).join("")}</ul>` : "";
+  const tjSvgOf = (t, title) => { try { TJS.q = ""; TJS.k = ""; return tjRadial(Object.assign({}, t, { t: title })); } catch (e) { return ""; } };
+  async function sumTj(b) {
+    const m = await TSJ.map(b.id), secs = document.querySelectorAll(".sumtx .sumch[data-a]");
+    if (!m) { const st = $("#sumfst"); if (st) st.textContent = "لا تشجير لهذا الكتاب بعد."; return; }
+    secs.forEach(sc => { const t = tjSub(m, [+sc.dataset.a, +sc.dataset.z]); if (!t) return; const h = (sc.querySelector("h3") || {}).textContent || "";
+      sc.insertAdjacentHTML("beforeend", `<details class="sumtj" open><summary>🌳 تشجير الفصل</summary><div class="tjout">${tjOutHtml(t)}</div><div class="tjmini">${tjSvgOf(t, h.replace(/\(ص.*$/, "").trim())}</div><p><a href="#/tashjir/${esc(b.id)}?from=${sc.dataset.a}&to=${sc.dataset.z}">فتح التشجير التفاعلي لهذا الفصل</a></p></details>`); });
+  }
+  async function svgPng(svg) {  // الخريطة الذهنية صورةً (للـWord): {data, w, h}
+    const tmp = document.createElement("div"); tmp.innerHTML = svg; const el = tmp.querySelector("svg"); if (!el) return null;
+    const w0 = +el.getAttribute("width") || 800, h0 = +el.getAttribute("height") || 600, sc = Math.min(2, 3000 / Math.max(w0, h0));
+    const x = new XMLSerializer().serializeToString(el).replace(/var\(--sf,#fff\)/g, "#ffffff").replace(/var\(--ink,#14231f\)/g, "#14231f"), img = new Image();
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(x); });
+    const cv = document.createElement("canvas"); cv.width = Math.round(w0 * sc); cv.height = Math.round(h0 * sc); const g = cv.getContext("2d"); g.fillStyle = "#ffffff"; g.fillRect(0, 0, cv.width, cv.height); g.scale(sc, sc); g.drawImage(img, 0, 0);
+    const bl = await new Promise(r => cv.toBlob(r, "image/png")); return { data: new Uint8Array(await bl.arrayBuffer()), w: Math.min(640, w0), h: Math.min(640, w0) * h0 / w0 };
+  }
+  async function sumFull(kind) {
+    const S0 = window.__sum; if (!S0 || !S0.ai) return; const { b, A } = S0, st = $("#sumfst"), title = "مختصر " + (b.setTitle || b.title) + " مع التشجير";
+    st.textContent = "جارٍ إعداد الملف…"; const m = await TSJ.map(b.id), chs = A.res.map(sc => ({ sc, t: sc.pr ? tjSub(m, sc.pr) : null }));
+    if (kind === "pdf") {
+      const body = chs.map(({ sc, t }) => `<section class="ch"><h2>${esc(sc.h || "")}</h2>${itemsHtml(sc.s, true)}${t ? `<h3>تشجير الفصل</h3><div class="out">${tjOutHtml(t)}</div><h3>الخريطة الذهنية</h3><div class="map">${tjSvgOf(t, sc.h || "")}</div>` : ""}</section>`).join("");
+      const w = window.open("", "_blank"); if (!w) { st.textContent = ""; return toast("اسمح بالنوافذ المنبثقة"); }
+      w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap"><style>@page{size:A4;margin:16mm}body{font-family:Amiri,serif;font-size:13pt;line-height:1.9;color:#14231f}h1{text-align:center;color:#0f5c4d}h2{color:#0f5c4d;border-bottom:1px solid #b88a2e;padding-bottom:2mm}h3{color:#b88a2e;font-size:12pt}.ch{page-break-before:always}.ch:first-of-type{page-break-before:auto}.pref{color:#998;font-size:8pt}.out ul{margin:0 1.2em 0 0;padding:0}.out li{font-size:11pt}.map svg{max-width:100%;height:auto}.map{page-break-inside:avoid;text-align:center}.note{font-size:10pt;color:#555;border:1px solid #ddd;padding:3mm}</style></head><body><h1>${esc(title)}</h1><p style="text-align:center">${esc(A_(b))}</p><p class="note">مختصر أعدّته ${esc(SITENAME)} بتصرف يسير قريب من ألفاظ المؤلف، وتشجير آلي مدقق بنص الصفحات؛ فارجع إلى الأصل عند الاستشهاد.</p>${body}<script>onload=()=>setTimeout(()=>print(),900)<\/script></body></html>`); w.document.close(); st.textContent = ""; return;
+    }
+    if (typeof DOCX === "undefined") return st.textContent = "أداة Word غير محمّلة"; const images = [], pages = [];
+    for (const { sc, t } of chs) {
+      let txt = "# " + (sc.h || "") + "\n" + sc.s.map(x => x.k === "h" ? "## " + x.t : x.k === "li" ? "- " + x.t : x.t + " (ص " + toAr(x.p) + ")").join("\n");
+      if (t) { txt += "\n## تشجير الفصل\n" + tjOutline(t); const im = await svgPng(tjSvgOf(t, sc.h || "")).catch(() => null); if (im) { images.push(im); txt += "\n## الخريطة الذهنية\n![img:" + (images.length - 1) + "]"; } }
+      pages.push({ i: pages.length + 1, t: txt, l: "" });
+    }
+    const blob = await DOCX.build({ fmt: { cover: 1 }, title, author: A_(b), pages, images, toc: chs.map((c, i) => ({ t: c.sc.h || "", p: i + 1, l: 1, pl: "" })), opt: { fn: false, toc: true, pl: false }, url: siteLink("#/summary?b=" + b.id), src: "مختصر بتصرف يسير وتشجير آلي مدقق — يُرجع إلى الأصل عند الاستشهاد", who: "", site: SITENAME, siteUrl: (CFG.siteUrl || "https://dawahlibrary.org").replace(/^https?:\/\//, "").replace(/\/+$/, "") });
+    dl(title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) + ".docx", blob, blob.type); st.textContent = "";
+  }
+  document.addEventListener("click", e => { const el = e.target.closest('[data-act="sumfull"]'); if (!el) return; e.preventDefault(); sumFull(el.dataset.k).catch(x => { const st = $("#sumfst"); if (st) st.textContent = "تعذّر: " + x.message; }); });
   // «الخلاصة المنظمة»: خلاصة الكتاب وأقسامه وأبوابه من تشجيره (data/tashjir) — صياغة آلية دققت كل نقطة بنص صفحتها،
   // مع رابط كل باب إلى موضعه؛ وإن لم يُشجَّر الكتاب بعد يطلبه المشرف بضغطة فيُعدّ آليًا.
   async function sumOrg(b) {

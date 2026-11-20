@@ -4,7 +4,7 @@
 لكل كتاب إصدار باسم audio-<المعرف>، وفيه ملف صوتي لكل صفحة pNNNN.mp3، وملف بيان data/audio/<المعرف>.json
 فيه مدة كل صفحة وتوقيت جملها (لإظهار النص متزامنًا أثناء الاستماع)، وبصمة نصها (تُعاد الصفحة إذا تغيّر نصها بعد التدقيق).
 الطابور data/audio/_queue.json:
-  {"items": [{"id": "<كتاب>", "voice": "ar-SA-HamedNeural", "rate": "-5%"},   # "pages": [3, 7] لإعادة صفحات بعينها
+  {"items": [{"id": "<كتاب>", "voice": "ar-SA-HamedNeural", "rate": "-5%"},   # "pages": [3, 7] لإعادة صفحات بعينها، "refresh": 1 لإعادة ما تغيّر نصه أو تشكيله (derived-sync)
              {"id": "<كتاب>", "rec": {"f": "au....mp3", "t": "عنوان التسجيل", "p": 1}}]}
 المتغيرات: TTS_MAX_MIN (حد دقائق التشغيل)، TTS_CONC (التوازي)، TTS_ONLY (كتب بعينها)، TTS_REFRESH=1 (إعادة الصفحات التي تغيّر نصها)
 """
@@ -413,6 +413,14 @@ def tashkeel_text(bid, p, raw):
     return e["t"] if e and e.get("h") == _fnv(raw) and e.get("t") else raw
 
 
+def tk_stale(bid, p, raw):
+    """للكتاب تشكيل مدقق وصفحته صُحّح نصها بعد تشكيلها (البصمة لا تطابق): يُنتظر tashkeel.py أولًا فلا يُسجَّل نص بلا تشكيل."""
+    k = (p - 1) // 50; key = (bid, k)
+    if key not in _TK: _TK[key] = jload(os.path.join(ROOT, "data", "tashkeel", bid, "%d.json" % k), {})
+    e = _TK[key].get(str(p))
+    return bool(e and e.get("t") and e.get("h") != _fnv(raw))
+
+
 ORD = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر",
        "السادس عشر", "السابع عشر", "الثامن عشر", "التاسع عشر", "العشرون"]
 
@@ -481,8 +489,10 @@ async def tts_book(item, lst):
             man["pages"][str(p)] = {"d": 0, "h": h(tx)}
             continue
         force = bool(item.get("force")) or p in only_p or (p == p0 and cur and cur.get("h") != h(tx)) or bid in [x.strip() for x in os.environ.get("TTS_FORCE", "").split(",")]
-        if cur and cur.get("d") and not force and (cur.get("pv", 0) >= PV or not str(voice).startswith("gemini:")) and (cur.get("h") == h(tx) or os.environ.get("TTS_REFRESH") != "1"):
+        if cur and cur.get("d") and not force and (cur.get("pv", 0) >= PV or not str(voice).startswith("gemini:")) and (cur.get("h") == h(tx) or (os.environ.get("TTS_REFRESH") != "1" and not item.get("refresh"))):
             continue
+        if item.get("refresh") and cur and cur.get("d") and tk_stale(bid, p, pages[p - 1]):
+            REPORT.append("%s ص%d: تُنتظر إعادة تشكيلها بعد تصحيح نصها قبل إعادة تسجيلها" % (bid, p)); continue
         todo.append((p, tx))
     if not todo:
         save_book(man, b, lst, len(pages))
