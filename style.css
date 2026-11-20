@@ -1656,8 +1656,10 @@ body.phome .top .backb{display:none!important}
 .wkcard .bcov{width:84px;flex:none;border-radius:8px;box-shadow:0 8px 20px -10px rgba(0,0,0,.4)}.wkcard>div{display:flex;flex-direction:column;gap:2px;min-width:0}.wkcard b{font-size:1.08rem}.wkcard blockquote{margin:6px 0;font-family:Amiri,serif;line-height:1.9;border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}
 .wkrow.on{border-color:var(--gold,#b88a2e)}.wksn{line-height:2;font-family:Amiri,serif}.founder{display:inline-block;margin-inline-end:8px;padding:2px 10px;border-radius:99px;background:linear-gradient(135deg,#0f5c4d,#b88a2e);color:#fff;font-size:.85rem}
 .masa h3 small{font-weight:400}.masq{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.masq p{margin:2px 0;line-height:1.9}
-/* شروح الكتب: المتن المشروح (سطر «%% ») مميّز عن كلام الشارح */
+/* شروح الكتب: المتن المشروح (سطر «%% ») بالخط الغامق كما في الشروح المطبوعة، بلا إطار ولا عناوين؛ وكلام الشارح على المعتاد */
 .shnote{margin:6px 0;font-size:.9rem}
-p.mtn{border-right:4px solid var(--gold,#b88a2e);background:rgba(184,138,46,.08);border-radius:8px;padding:.35em .8em;margin:.6em 0 .4em;font-weight:700;color:var(--ac,#0f5c4d)}
-p:not(.mtn)+p.mtn::before,p.mtn:first-child::before{content:"المتن";display:block;font-size:.72em;font-weight:400;color:var(--gold,#b88a2e);margin-bottom:.1em}
-p.mtn+p:not(.mtn):not(.ph)::before{content:"الشرح";display:block;font-size:.72em;color:var(--mut,#5b6b66)}
+p.mtn{font-weight:700}
+.shmode button[aria-pressed="true"]{font-weight:700;text-decoration:underline}
+.shfn{border-top:1px solid var(--line,#d6dfda);margin-top:1em;padding-top:.4em;font-size:.95em}.shh{font-weight:700;color:var(--gold,#b88a2e);margin:.2em 0}
+.shg{margin:.3em 0}.shn{color:var(--gold,#b88a2e)}
+sup.shr{color:var(--gold,#b88a2e);font-size:.7em}
