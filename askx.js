@@ -24,8 +24,35 @@ const SX = (() => {
     const full = cand.filter(c => c[2] === ts.length); if (ts.length > 1 && full.length >= 4) cand = full;
     const byBook = new Map(); cand.sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const id = k.split(":")[0], l = byBook.get(id) || []; if (l.length < 3) l.push(v); byBook.set(id, l); });
     const books = [...byBook].map(([id, l]) => [id, l.reduce((a, b) => a + b, 0) + l[0]]).sort((a, b) => b[1] - a[1]).slice(0, o.bookId ? 1 : 8).map(x => x[0]);
-    const loaded = (await Promise.all(books.map(id => loadBook(id).catch(() => null)))).filter(Boolean);
+    // السرعة: الصفحات المرشحة وحدها تُجلب بطلبات نطاق (Range) وتُخزَّن على الجهاز، بدل تحميل الكتب كاملة؛ وعند التعذر يُحمَّل الكتاب كما كان
+    const want = new Map(); cand.forEach(([k]) => { const [id, p] = k.split(":"); if (!books.includes(id)) return; const L = want.get(id) || []; if (L.length < 6) L.push(+p); want.set(id, L); });
+    const loaded = (await Promise.all(books.map(id => pagesOf(id, want.get(id) || []).catch(() => loadBook(id).catch(() => null))))).filter(Boolean);
     return SS.search({ books: loaded, authors: lib.authors, topics: lib.topics }, q, { col: o.col, bookId: o.bookId, k: o.k || 8, includeDemo: false });
+  }
+  /* مخزن الصفحات: مواضع كل صفحة بالبايت (data/sx/o، يُبنى مع الفهرس) ← طلب نطاق للصفحة وحدها ← تخزين دائم في المتصفح (Cache Storage)
+     فلا يُعاد جلبها؛ ويُبنى منها «كتاب مصغر» بالصفحات المطلوبة وحدها للترتيب والمقتطفات والإحالة. */
+  const OF = new Map(), PG = new Map(); let PC = null;
+  const pcache = async () => { if (PC !== null) return PC; try { PC = await caches.open("sdsl-pages-v1"); } catch (e) { PC = false; } return PC; };
+  async function offsets(id) { const D = await docs(); if (!D || !D.osh) return null; const k = Object.keys(D.k).find(x => D.k[x] === id) || null; if (!k) return null; const n = crc(k) % D.osh;
+    if (!OF.has(n)) OF.set(n, fetch("data/sx/o/" + n + ".json").then(r => r.ok ? r.json() : {}).catch(() => ({}))); const o = (await OF.get(n))[k]; if (!o) return null;
+    if (!Array.isArray(o)) return { z: o.z, s: o.s, l: o.l }; const l = o.slice(2), st = [o[1]]; for (let i = 0; i < l.length - 1; i++) st.push(st[i] + l[i] + 1); return { z: o[0], s: st, l }; }
+  const srcOf = b => b.vf ? "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/vols/" + encodeURIComponent(b.id) + ".json" : "data/books/" + encodeURIComponent(b.id) + ".json" + (b.size ? "?v=" + b.size : "");
+  async function onePage(b, O, p) {
+    const key = b.id + ":" + p; if (PG.has(key)) return PG.get(key);
+    const pr = (async () => { const url = srcOf(b), ck = new Request(location.origin + "/__pg/" + encodeURIComponent(key) + "?z=" + O.z), C = await pcache();
+      if (C) { const hit = await C.match(ck).catch(() => null); if (hit) return hit.text(); }
+      const s = O.s[p - 1], l = O.l[p - 1]; if (s == null) throw new Error("no page");
+      const r = await fetch(url, { headers: { Range: "bytes=" + s + "-" + (s + l - 1) } }); if (r.status !== 206) throw new Error("no range");
+      const tot = +String(r.headers.get("content-range") || "").split("/")[1]; if (tot && tot !== O.z) throw new Error("stale");  // تغيّر الملف بعد بناء الفهرس
+      const raw = await r.text(); const t = JSON.parse(raw); if (typeof t !== "string") throw new Error("bad");
+      if (C) C.put(ck, new Response(t, { headers: { "content-type": "text/plain; charset=utf-8" } })).then(() => Math.random() < 0.05 && C.keys().then(ks => ks.slice(0, Math.max(0, ks.length - 3000)).forEach(k => C.delete(k)))).catch(() => { }); return t; })();
+    PG.set(key, pr); pr.catch(() => PG.delete(key)); return pr;
+  }
+  async function pagesOf(id, ps) {
+    const b = B(id); if (!b) return null; if (b.pages) return b;  // الكتاب محمَّل أصلًا
+    const O = await offsets(id); if (!O || !ps.length) throw new Error("no offsets");
+    const pages = new Array(O.l.length).fill(""), txt = await Promise.all(ps.map(p => onePage(b, O, p))); ps.forEach((p, i) => { pages[p - 1] = txt[i]; });
+    return Object.assign(Object.create(b), { pages, toc: [] });  // كتاب مصغر: بياناته من الفهرس، ونصوصه الصفحات المطلوبة وحدها
   }
   // ===== أدوات المصادر المتخصصة (تعمل في المتصفح على بيانات الموقع): القرآن، والحديث، واللغة، والأعلام =====
   const J = {}, getJ = u => J[u] || (J[u] = fetch(u).then(r => r.ok ? r.json() : null).catch(() => null));
@@ -105,6 +132,8 @@ const SX = (() => {
     input = input || {};
     if (XT[name]) { try { return await XT[name](input); } catch (e) { return { error: String(e && e.message || e) }; } }
     if (name === "search_library") { const r = await search(String(input.query || ""), { col: scope.col || input.collection || "", bookId: scope.bookId || input.book_id || "", authorId: input.author_id || "", type: input.type || "", k: Math.min(+input.k || 8, 12) }); return r === null ? { error: "فهرس البحث غير متاح" } : r.length ? r : { note: "لا نتائج؛ جرّب صيغة أخرى أو مرادفًا" }; }
+    if (name === "get_page") { const [id, p] = String(input.ref || "").split(":"); const b = B(id);
+      if (b && !b.pages && +p > 0) { const mb = await pagesOf(id, [+p]).catch(() => null); if (mb) return SS.runTool({ books: [mb], authors: lib.authors, topics: lib.topics }, name, input, scope); } }
     if (name === "get_page" || name === "book_outline") { const id = name === "get_page" ? String(input.ref || "").split(":")[0] : String(input.book_id || ""); if (B(id)) await loadBook(id).catch(() => {}); }
     return SS.runTool(lib, name, input, scope);
   }

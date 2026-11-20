@@ -275,7 +275,7 @@ module.exports = async (req, res) => {
     try {
       r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(mdl) + ":streamGenerateContent?alt=sse", {
         method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": gk },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gcontents, tools: body.last ? undefined : TOOLS(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: 0.4 } })
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gcontents, tools: body.last ? undefined : TOOLS(), generationConfig: { maxOutputTokens: deep ? 8000 : 3500, temperature: deep ? 0.35 : 0.25 }  /* أدنى للدقة في النقل والإحالة */ })
       });
     } catch (e) { r = null; }
     if (!r || !r.ok || !r.body) {
