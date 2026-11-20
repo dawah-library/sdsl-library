@@ -98,11 +98,7 @@ def main():
         out[bid] = {"t": b.get("setTitle") or b.get("title"), "a": b.get("authorId"), "topic": b.get("topicId"), "added": b.get("added"), "n": n,
                     "pct": pct, "next": nxt["t"] if nxt else "اكتمل", "eta": eta, "st": st, "h": hist, "path": bid in in_paths}
 
-        # التقديم الآلي للخدمات بعد اكتمال تدقيق النص
-        if text_ready and bid not in tj_have and not tj_off:
-            tjq.setdefault("items", []).append({"id": bid, "auto": 1}); tj_have.add(bid); dispatch.add("tashjir")
-        if text_ready and t.get("ok") and bid not in au_have and (not au_only or bid in au_only):
-            auq.setdefault("items", []).append({"id": bid, "auto": 1}); au_have.add(bid); dispatch.add("tts " + bid)
+        # (أُلغي التقديم الآلي إلى طابوري التشجير والصوتيات بقرار المدير ٢٠ نوفمبر: تُضاف الكتب إليهما من الإدارة يدويًّا)
 
     # الكتب المرفوعة التي لم تُحوَّل بعد (صندوق التحويل)
     inbox = []
@@ -131,8 +127,6 @@ def main():
     res = {"upd": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M"), "speed": speed, "pending_pages": tot, "lite_h": th,
            "books": out, "inbox": inbox}
     json.dump(res, open(D("progress.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    json.dump(tjq, open(D("tashjir", "_queue.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    json.dump(auq, open(D("audio", "_queue.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     open(os.path.join(ROOT, ".progress-dispatch"), "w").write("\n".join(sorted(dispatch)))
     for bid, r in sorted(out.items(), key=lambda kv: -kv[1]["pct"]):
         print("%5.1f%%  %s  ← %s%s" % (r["pct"], r["t"], r["next"], ("  (≈%s يوم)" % r["eta"]) if r["eta"] else ""))

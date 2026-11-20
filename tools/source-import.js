@@ -93,8 +93,10 @@ async function runSource(s, ctx) {
   const ents = await discover(s, ctx, L), links = ents.map(e => e.u);
   st.mode = ents.mode || st.mode; if (ents.err) errs++;
   L(`روابط: ${links.length} (${ents.mode || "—"})`);
-  for (const en of ents.slice(0, s.perRun || 40)) {
-    const u = en.u, key = String(en.id || (s.key === "url" ? [require("crypto").createHash("md5").update(u).digest("hex").slice(0, 12)] : null) || (u.match(/\d{3,}/) || [require("crypto").createHash("md5").update(u).digest("hex").slice(0, 10)])[0]); if (seen.has(key)) continue;
+  const keyOf = en => String(en.id || (s.key === "url" ? [require("crypto").createHash("md5").update(en.u).digest("hex").slice(0, 12)] : null) || (en.u.match(/\d{3,}/) || [require("crypto").createHash("md5").update(en.u).digest("hex").slice(0, 10)])[0]);
+  // غير المرئي أولًا ثم الحد: كان الحد يُطبَّق على أول الروابط (الأحدث) فإن رُئيت كلها لم يُستورد شيء من بقية الأرشيف المكتشَف (٢٠ نوفمبر)
+  for (const en of ents.filter(e => !seen.has(keyOf(e))).slice(0, s.perRun || 40)) {
+    const u = en.u, key = keyOf(en); if (seen.has(key)) continue;
     try {
       const html = en.html || await get(u); if (!en.html) await sleep(s.delayMs || 1500);
       let title = en.title || meta(html, "og:title") || decode((html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || ""); title = title.replace(new RegExp("\\s*[-|–]\\s*(" + (s.siteSuffix || "$^") + ").*$"), "").trim();
