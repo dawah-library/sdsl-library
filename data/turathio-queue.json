@@ -1180,7 +1180,9 @@
    "a": "ta2",
    "an": "",
    "tp": "t6",
-   "new": 1
+   "new": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "qaidajalila",
@@ -1189,7 +1191,9 @@
    "a": "ta2",
    "an": "",
    "tp": "t1",
-   "new": 1
+   "new": 1,
+   "cands": [],
+   "skip": "لا نسخة مشكولة كافية"
   },
   {
    "id": "zuhdahmad",
@@ -1198,7 +1202,20 @@
    "a": "ta_ibnhanbal",
    "an": "",
    "tp": "t6",
-   "new": 1
+   "new": 1,
+   "cands": [
+    {
+     "b": 8494,
+     "name": "الزهد لأحمد بن حنبل",
+     "r": 0.851
+    },
+    {
+     "b": 20882,
+     "name": "الجامع لعلوم الإمام أحمد - الأدب والزهد",
+     "r": 0.097
+    }
+   ],
+   "b": 8494
   },
   {
    "id": "wara",
@@ -1397,6 +1414,7 @@
   "tarikhtabari",
   "turuqhukmiyya",
   "hidayathayara",
-  "amradqulub"
+  "amradqulub",
+  "zuhdahmad"
  ]
 }
