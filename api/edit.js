@@ -58,12 +58,41 @@ async function compare(req, res, body) {
   res.setHeader("cache-control", "no-store");
   return res.status(200).json({ result: { summary: String(r.summary || ""), axes: r.axes, notes: String(r.notes || "") } });
 }
+// ElevenLabs لإدارة الصوتيات (المرحلة ٥): قائمة الأصوات والنماذج، وحالة الباقة، وعينة قصيرة — للمشرفين وحدهم، والمفتاح في الخادم فقط
+const EL_MODELS = [["eleven_multilingual_v2", "Multilingual v2 — الأدق والأثبت للكتب الطويلة (١ رصيد/حرف)"], ["eleven_v3", "Eleven v3 — الأكثر تعبيرًا وأداءً (١ رصيد/حرف، أقل ثباتًا في النصوص الطويلة)"],
+  ["eleven_turbo_v2_5", "Turbo v2.5 — توازن الجودة والسرعة (٠٫٥ رصيد/حرف)"], ["eleven_flash_v2_5", "Flash v2.5 — الأسرع والأرخص للمعاينات (٠٫٥ رصيد/حرف)"]];
+async function staff(req) {
+  const u = await userFrom(req); if (!u) return null; const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY, tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  try { const r = await fetch(url + "/rest/v1/profiles?id=eq." + u.id + "&select=role,perms", { headers: { apikey: key, Authorization: "Bearer " + tok } }); const [p] = await r.json();
+    return p && (["admin", "partner"].includes(p.role) || (p.role === "editor" && (p.perms || []).some(x => /audio|radio/.test(x)))) ? u : null; } catch (e) { return null; }
+}
+async function eleven(req, res, body) {
+  const key = process.env.ELEVENLABS_API_KEY; if (!key) return res.status(503).json({ error: "لم يُضبط مفتاح ElevenLabs على الخادم (ELEVENLABS_API_KEY)." });
+  const u = await staff(req); if (!u) return res.status(403).json({ error: "لإدارة الصوتيات فقط." });
+  const H = { "xi-api-key": key, "content-type": "application/json" }, op = String(body.op || "");
+  try {
+    if (op === "status") { const r = await fetch("https://api.elevenlabs.io/v1/user/subscription", { headers: H }), j = await r.json(); return res.status(r.ok ? 200 : 502).json({ tier: j.tier, used: j.character_count, limit: j.character_limit, reset: j.next_character_count_reset_unix, models: EL_MODELS }); }
+    if (op === "voices") { const r = await fetch("https://api.elevenlabs.io/v2/voices?page_size=100&include_total_count=false", { headers: H }), j = await r.json();
+      return res.status(r.ok ? 200 : 502).json({ voices: (j.voices || []).map(v => ({ id: v.voice_id, name: v.name, cat: v.category, lang: ((v.labels || {}).language || (v.verified_languages || []).map(x => x.language).join(",") || ""), accent: (v.labels || {}).accent || "", gender: (v.labels || {}).gender || "", desc: (v.labels || {}).description || v.description || "", preview: v.preview_url })), models: EL_MODELS }); }
+    if (op === "preview") {
+      if (limited("el:" + u.id)) return res.status(429).json({ error: "بلغت حد المعاينات في الساعة." });
+      const text = String(body.text || "").slice(0, 400), vid = String(body.voice || "").replace(/[^\w]/g, ""), o = body.settings || {}; if (!text || !vid) return res.status(400).json({ error: "النص والصوت مطلوبان." });
+      const model = EL_MODELS.some(m => m[0] === o.model) ? o.model : "eleven_flash_v2_5";
+      const r = await fetch("https://api.elevenlabs.io/v1/text-to-speech/" + vid + "?output_format=mp3_44100_64", { method: "POST", headers: H, body: JSON.stringify({ text, model_id: model, ...(model.includes("v2_5") ? { language_code: "ar" } : {}), voice_settings: { stability: +o.stability || 0.55, similarity_boost: +o.similarity || 0.8, style: +o.style || 0, speed: +o.speed || 1, use_speaker_boost: o.boost !== false } }) });
+      if (!r.ok) return res.status(502).json({ error: "ElevenLabs: " + (await r.text()).slice(0, 200) });
+      const buf = new Uint8Array(await r.arrayBuffer()); let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+      res.setHeader("cache-control", "no-store"); return res.status(200).json({ audio: "data:audio/mpeg;base64," + btoa(bin), chars: text.length, model });
+    }
+    return res.status(400).json({ error: "عملية غير معروفة" });
+  } catch (e) { return res.status(502).json({ error: "تعذر الاتصال بـElevenLabs." }); }
+}
 module.exports = async (req, res) => {
   if (req.method === "POST" && await require("../lib/switch").stopped("edit", res, "التنسيق وإعادة الصياغة")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "POST فقط" });
   if (!process.env.GEMINI_API_KEY) return res.status(503).json({ error: "لم يُضبط مفتاح الذكاء الاصطناعي على الخادم بعد." });
   const body = typeof req.body === "string" ? (() => { try { return JSON.parse(req.body); } catch (e) { return {}; } })() : (req.body || {});
   if (body.mode === "compare") return compare(req, res, body);
+  if (body.mode === "eleven") return eleven(req, res, body);
   const mode = MODES[body.mode] || body.mode === "tashkeel" ? body.mode : "", text = String(body.text || "").trim();
   if (!mode) return res.status(400).json({ error: "اختر نوع الخدمة." });
   if (text.length < 20) return res.status(400).json({ error: "النص قصير جدًا." });

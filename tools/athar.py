@@ -27,7 +27,11 @@ SOURCES = [
     ("jamibayan", "علم"), ("iqtidailm", "علم"),
     ("sifatsafwa", "تراجم"), ("tadhkirahuffaz", "تراجم")] + [("siyar-v%02d" % i, "تراجم") for i in range(1, 14)] + [
     ("jamiulum", "رقائق"), ("lataif", "رقائق"), ("mukhtasarminhaj", "رقائق"), ("madarij-v01", "رقائق"), ("madarij-v02", "رقائق"),
-    ("madarij-v03", "رقائق"), ("adabshariyya-v01", "رقائق"), ("adabshariyya-v02", "رقائق"), ("adabshariyya-v03", "رقائق"), ("uyunakhbar", "رقائق")]
+    ("madarij-v03", "رقائق"), ("adabshariyya-v01", "رقائق"), ("adabshariyya-v02", "رقائق"), ("adabshariyya-v03", "رقائق"), ("uyunakhbar", "رقائق"),
+    # المرحلة ٨: كتب صنّفت الآثار على الموضوعات (أبوابها سياقٌ للتبويب): الزهد لأحمد (مجموعة)، ومكارم الأخلاق لابن أبي الدنيا، وأخلاق العلماء للآجري، والعلم لأبي خيثمة
+    ("zuhdahmad", "زهد"), ("makarimakhlaq", "أخلاق"), ("ajurriakhlaq", "علم"), ("kitabilmabikhaythama", "علم")]
+IMPORT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "athar", "import")  # مصادر خارجية متخصصة (انظر import_external)
+REVIEW = os.path.join(ROOT, "data", "athar", "_review.json")  # قرارات الإدارة: {"dec": {id: {"ok": 1|0, "k": [...]}}, "prop": {...}}
 
 TOPICS = [
     ("aqeeda", "العقيدة والتوحيد والإيمان", r"التوحيد|الإيمان|يؤمن|القدر|الصفات|القرآن كلام|الرؤية|الشرك|الكفر|النفاق|المنافق|أسماء الله|عرشه|العرش|الاستواء|الجهمي|القدري|المرجئ|الخوارج|الرافض|الشيعة|الصحابة|أصحاب رسول الله|السلف"),
@@ -137,8 +141,13 @@ def main():
     B = {b["id"]: b for b in cat["books"]}
     items, by_person = [], defaultdict(list)
     stats = {}
-    for bid, kind in SOURCES:
+    sets = defaultdict(list)
+    for b in cat["books"]:
+        if b.get("set"): sets[b["set"]].append(b["id"])
+    srcs = [(v, kind) for bid, kind in SOURCES for v in ([bid] if bid in B else sorted(sets.get(bid, [])))]
+    for bid, kind in srcs:
         if bid not in B: continue
+        toc = (json.load(open(os.path.join(ROOT, "data", "books", bid + ".json"), encoding="utf-8")).get("toc") if os.path.exists(os.path.join(ROOT, "data", "books", bid + ".json")) else []) or []
         pages, pl = load_pages(bid)
         if not pages: continue
         numbered = sum(1 for p in pages[:200] if re.search(r"^#\s*[\d٠-٩]+\s*-\s*$", str(p or ""), re.M)) > 20
@@ -165,10 +174,12 @@ def main():
             if dup:
                 if len(dup["x"]) < 6 and not any(r["b"] == bid for r in [dup["r"]] + dup["x"]): dup["x"].append(ref)
                 continue
-            it = {"id": "%s-%s" % (bid, num or page), "q": q, "w": who, "r": ref, "x": [], "k": topics_of(q), "_sig": sig, "u": re.sub(r"\[ص:\s*[\d٠-٩]+\]", " ", txt)[-1500:]}
+            bab = next((re.sub(r"^#+\s*", "", str(t.get("t", ""))) for t in reversed(toc) if (t.get("p") or 0) <= page), "")[:120]  # باب الأثر في كتاب مصدره: سياقه
+            it = {"id": "%s-%s" % (bid, num or page), "q": q, "w": who, "r": ref, "x": [], "k": topics_of(q + " " + bab), "bab": bab, "_sig": sig, "u": re.sub(r"\[ص:\s*[\d٠-٩]+\]", " ", txt)[-1500:]}
             items.append(it); by_person[who].append(it)
         stats[bid] = len(items) - n0
         print("%s: %d" % (bid, stats[bid]), flush=True)
+    items += import_external(by_person)
     for it in items: it.pop("_sig", None)
     os.makedirs(CAND_DIR, exist_ok=True)
     json.dump({"note": "مرشحات موسوعة الآثار قبل التحقق (tools/athar.py)؛ يتحقق منها tools/athar-ai.py", "items": items, "stats": stats},
@@ -177,8 +188,35 @@ def main():
     publish()
 
 
+def import_external(by_person):
+    """مصادر خارجية متخصصة (مثل موسوعة آثار السلف وغيرها): ملفات JSON في tools/athar/import/<المصدر>.json
+    {"source": {"t": "اسم المصدر", "url": "…"}, "items": [{"q": "نص الأثر", "w": "القائل", "ref": "الموضع في المصدر", "url": "رابطه", "bab": "عنوان الباب", "orig": "المصدر الأصلي المسند إن ذُكر"}]}
+    تدخل مرشحاتٍ كغيرها (تتحقق منها athar-ai ثم تعتمدها الإدارة)، مع تتبع المصدر لكل أثر في "src"؛ ولا يُكرر ما في كتب المكتبة."""
+    out = []
+    if not os.path.isdir(IMPORT_DIR): return out
+    for f in sorted(os.listdir(IMPORT_DIR)):
+        if not f.endswith(".json"): continue
+        try: J = json.load(open(os.path.join(IMPORT_DIR, f), encoding="utf-8"))
+        except Exception: continue
+        S = J.get("source") or {"t": f[:-5]}
+        for k, x in enumerate(J.get("items") or []):
+            q, who = clean_quote(str(x.get("q") or "")), str(x.get("w") or "").strip()
+            if not q or not who or len(words(q)) < 4: continue
+            w = words(q); sig = set(zip(w, w[1:], w[2:]))
+            if any(len(sig & it.get("_sig", set())) / max(1, min(len(sig), len(it.get("_sig") or {1}))) > 0.6 for it in by_person.get(who, [])): continue
+            src = {"t": S.get("t"), "url": x.get("url") or S.get("url") or "", "ref": str(x.get("ref") or ""), "orig": str(x.get("orig") or "")}
+            it = {"id": "ext-%s-%d" % (f[:-5], k), "q": q, "w": who, "r": {"b": "", "p": 0, "l": src["ref"]}, "x": [], "k": topics_of(q + " " + str(x.get("bab") or "")), "bab": str(x.get("bab") or "")[:120],
+                  "src": src, "_sig": sig, "u": q}
+            out.append(it); by_person[who].append(it)
+    if out: print("مصادر خارجية: %d مرشحًا" % len(out))
+    return out
+
+
 def publish():
-    """ينشر المتحقق منه وحده: data/athar/<باب>.json و_index.json."""
+    """ينشر المعتمد وحده: data/athar/<باب>.json و_index.json؛ والمسودات (ما أدرجه الفحص الآلي ولم تعتمده الإدارة بعد)
+    وما اقتُرح نقله من باب إلى باب في data/athar/_drafts.json لواجهة المراجعة (#/athar/review)."""
+    RV = json.load(open(REVIEW, encoding="utf-8")) if os.path.exists(REVIEW) else {"dec": {}, "prop": {}}
+    dec, prop = RV.get("dec") or {}, RV.get("prop") or {}
     _, _, info = build_people()
     cat = json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))
     B = {b["id"]: b for b in cat["books"]}
@@ -186,23 +224,31 @@ def publish():
     V = json.load(open(vp, encoding="utf-8")) if os.path.exists(vp) else {"items": {}}
     cp = os.path.join(CAND_DIR, "cand.json")
     total = len(json.load(open(cp, encoding="utf-8"))["items"]) if os.path.exists(cp) else 0
-    items = [v for v in V["items"].values() if v.get("ok")]
+    allok = [v for v in V["items"].values() if v.get("ok")]
+    for v in allok:  # قرار الإدارة يغلب: اعتماد أو رفض أو تعديل الأبواب
+        d = dec.get(v["id"]) or {}
+        if d.get("k"): v["k"] = d["k"]
+    items = [v for v in allok if (dec.get(v["id"]) or {}).get("ok") == 1 or (not v.get("d") and (dec.get(v["id"]) or {}).get("ok") != 0)]
+    drafts = [dict({k: v[k] for k in ("id", "q", "w", "t", "k", "r", "x", "bab", "fit", "why", "src") if k in v}, prop=prop.get(v["id"])) for v in allok
+              if (v.get("d") and v["id"] not in dec) or (v["id"] in prop and v["id"] not in dec)]
     os.makedirs(OUT, exist_ok=True)
     tnames = dict((k, n) for k, n, _ in TOPICS); tnames[GENERAL[0]] = GENERAL[1]
     by_topic, by_person, src = defaultdict(list), defaultdict(int), defaultdict(int)
     for it in items:
-        pub = {k: it[k] for k in ("id", "q", "w", "t", "k", "r", "x") if k in it}
+        pub = {k: it[k] for k in ("id", "q", "w", "t", "k", "r", "x", "src") if k in it}
         for k in it["k"] or [GENERAL[0]]: by_topic[k].append(pub)
         by_person[it["w"]] += 1; src[it["r"]["b"]] += 1
     for f in os.listdir(OUT):
-        if f.endswith(".json") and f != "_index.json": os.remove(os.path.join(OUT, f))
+        if f.endswith(".json") and not f.startswith("_"): os.remove(os.path.join(OUT, f))  # ملفات الأبواب تُعاد كتابتها؛ _review و_drafts و_index باقية
     for k, L in by_topic.items():
         json.dump({"k": k, "n": tnames.get(k, k), "items": L}, open(os.path.join(OUT, k + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     people = sorted(({"n": w, "t": info.get(w, {}).get("t", "b"), "d": info.get(w, {}).get("d", 0), "c": c} for w, c in by_person.items()), key=lambda x: ("stab".index(x["t"]), -x["c"]))
     idx = {"note": "موسوعة آثار السلف — tools/athar.py ثم tools/athar-ai.py", "count": len(items), "checked": len(V["items"]), "candidates": total,
            "topics": [{"k": k, "n": tnames[k], "c": len(by_topic.get(k, []))} for k in tnames],
            "people": people, "sources": [{"b": b, "c": c, "t": B.get(b, {}).get("setTitle") or B.get(b, {}).get("title", b)} for b, c in sorted(src.items(), key=lambda x: -x[1])]}
+    idx["drafts"] = len(drafts)
     json.dump(idx, open(os.path.join(OUT, "_index.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+    json.dump({"items": drafts, "topics": [[k, n] for k, n in tnames.items()]}, open(os.path.join(OUT, "_drafts.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("المنشور: %d أثرًا متحققًا منه (من %d مرشحًا، فُحص %d)" % (len(items), total, len(V["items"])))
 
 

@@ -30,6 +30,10 @@ const VIDX = (() => {
   const ASPL = a => ({ "16:9": "أفقي", "9:16": "ستوري", "4:5": "طولي", "1:1": "مربع" })[a] || a;
   // النمط قد يجمع عدة أنماط مفصولة بـ «+» (مثل summary+benefits)
   const styleName = s => String(s || "summary").split("+").map(k => (OPT.style.find(x => x[0] === k) || ["", ""])[1]).filter(Boolean).join(" + ") || "ملخص";
+  // نماذج توليد الفيديو (tools/video-gen.py): [المعرّف، الوصف، التكلفة التقديرية $/ث]
+  const GEN = [["none", "بلا توليد (مجاني)", 0], ["veo:veo-3.0-fast-generate-001", "Google Veo 3 Fast — جودة عالية وسرعة", 0.10], ["veo:veo-3.0-generate-001", "Google Veo 3 — أعلى جودة", 0.40],
+    ["fal:fal-ai/kling-video/v2.1/standard/text-to-video", "Kling 2.1 (عبر fal.ai) — حركة سينمائية بتكلفة منخفضة", 0.05], ["fal:fal-ai/minimax/hailuo-02/standard/text-to-video", "Hailuo 02 (عبر fal.ai) — الأرخص", 0.045],
+    ["fal:fal-ai/wan/v2.2-a14b/text-to-video", "Wan 2.2 (عبر fal.ai) — مفتوح المصدر", 0.08], ["fal:fal-ai/luma-dream-machine/ray-2-flash", "Luma Ray 2 Flash (عبر fal.ai)", 0.08]];
   const radios = (n, d) => `<div class="vchips">${OPT[n].map(([v, t]) => `<label class="chip"><input type="radio" name="${n}" value="${v}"${v === d ? " checked" : ""}> ${t}</label>`).join("")}</div>`;
   async function page(q) {
     const adm = may(), [L, DX] = await Promise.all([list(true), adm ? getj("data/video/drafts/_index.json", {}) : {}]), bid = q.b;
@@ -39,14 +43,16 @@ const VIDX = (() => {
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
         <label>الكتاب أو المقال</label><input name="t" autocomplete="off" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب جزءًا من اسم الكتاب أو المقال ثم اختره" required><div id="vidsug" class="vidsug" hidden></div>
         <label>نمط الفيديو <span class="mut">(يمكن الجمع بين أكثر من نمط)</span></label>${checks("style", ["summary"])}
-        <label>المدة</label>${radios("min", "6")}<input name="scenes" type="number" min="3" max="30" placeholder="أو عدد المشاهد (اختياري)" style="max-width:220px">
+        <label>المدة بالدقائق (حرة، من دقيقة واحدة)</label><div class="row"><input name="min" type="number" min="1" max="60" step="0.5" value="4" style="max-width:140px" required><span id="vidrec" class="mut"></span></div><input name="scenes" type="number" min="1" max="40" placeholder="أو عدد المشاهد (اختياري)" style="max-width:220px">
         <label>الجمهور</label>${radios("aud", "general")}<label>أسلوب الإلقاء</label>${radios("tone", "calm")}
         <label>الموضوعات والأبواب (اختر من فهرس الكتاب، أو اتركها للكتاب كله)</label><div id="vidtoc" class="vchips"><span class="mut">اختر الكتاب أولًا</span></div><input name="topics2" placeholder="أو اكتب موضوعات أخرى مفصولة بفواصل">
         <label>الأفكار التي تريدها في الفيديو</label><textarea name="ideas" rows="3" placeholder="مثال: بيان حجية السنة، والرد على شبهة الاكتفاء بالقرآن، ونماذج من الواقع"></textarea>
         <div class="row"><div style="flex:1"><label>الافتتاح (اختياري)</label><input name="intro" placeholder="معنى يبدأ به الراوي"></div><div style="flex:1"><label>الختام (اختياري)</label><input name="outro" placeholder="معنى يختم به"></div></div>
         <label>مقاس الفيديو (اختر مقاسًا أو أكثر)</label>${checks("aspect", ["16:9"])}
         <label class="chk"><input type="checkbox" name="pages" checked> 📖 إظهار صفحات الكتاب أثناء العرض داخل الشريحة نفسها (بجوار النقاط، أو تحتها في الطولي): تنقلب الصفحة التي أُخذ منها المشهد (المصورة إن وُجدت) ويمر قلم التحديد على العبارة المقصودة</label>
-        <label class="chk"><input type="checkbox" name="sfx" checked> 🔊 صوت قلم التحديد وتقليب الصفحات</label>
+        <label class="chk"><input type="checkbox" name="sfx" checked> 🔊 مؤثرات صوتية ناعمة: قلم التحديد وتقليب الصفحات وفواصل هادئة بين المشاهد (بلا موسيقى)</label>
+        <details><summary>🎞️ اللقطات المولَّدة والانتقالات</summary><label>نموذج توليد لقطات الخلفية المتحركة (مناظر وعمارة وكتب ومخطوطات، بلا بشر ولا حيوانات)</label><select name="gen">${GEN.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join("")}</select><p class="mut" id="vidgenc">بلا توليد: الشرائح المرسومة وحدها (مجانًا).</p>
+          <label>الانتقال بين المشاهد</label><select name="trans">${[["auto", "متنوع تلقائيًّا (سلس)"], ["fade", "تلاشٍ"], ["dissolve", "ذوبان"], ["smoothleft", "انزلاق ناعم"], ["circleopen", "دائرة تنفتح"], ["fadegrays", "تلاشٍ رمادي"]].map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select></details>
         <details><summary>المظهر والصوت</summary><label>الصوت</label>${radios("voice", "gemini:Charon")}<label>السمة</label>${radios("theme", "green")}<label>خط العناوين</label>${radios("font", "amiri")}<label>الزخرفة</label>${radios("pat", "stars")}
           <label class="chk"><input type="checkbox" name="cap" checked> إظهار نص الراوي على الشاشة (ترجمة نصية)</label></details>
         <label>متطلبات أخرى (اختياري)</label><textarea name="note" rows="2"></textarea>
@@ -75,9 +81,15 @@ const VIDX = (() => {
       let T = []; try { const bb = await loadBook(b.id); T = (bb.toc || []).filter(x => x.t).slice(0, 80); } catch (e) { }
       el.innerHTML = T.length ? T.map(x => { const t = String(x.t).replace(/^#+\s*/, ""); return `<label class="chip"><input type="checkbox" name="topics" value="${esc(t)}"> ${esc(t.slice(0, 60))}</label>`; }).join("") : '<span class="mut">لا فهرس لهذا الكتاب؛ اكتب الموضوعات في الخانة.</span>'; };
     f.t.addEventListener("change", toc); if (bid) toc();
+    // تناسب المدة مع حجم الكتاب: مدى مقترح (لا اختزال مخل ولا حشو)، والتكلفة التقديرية للقطات المولَّدة قبل الطلب
+    const rec = () => { const b = bookOf(), el = document.getElementById("vidrec"); if (!b || !el) return; const n = b.set ? lib.books.filter(x => x.set === b.set).reduce((s, x) => s + (x.n || 0), 0) : (b.n || 1), lo = Math.max(1, Math.min(3, Math.round(n / 120))), hi = Math.max(lo + 1, Math.min(30, Math.round(n / 12))), m = +f.min.value || 0;
+      el.innerHTML = `المقترح لحجم ${toAr(n)} صفحة: ${toAr(lo)}–${toAr(hi)} دقيقة${m && m < lo ? ' — <b class="warn">قصيرة: سيُقتصر على أهم الأفكار</b>' : m > hi ? ' — <b class="warn">طويلة على حجم الكتاب: قد لا تكفي مادته (لا حشو)</b>' : ""} • نحو ${toAr(Math.round(m * 130))} كلمة للراوي`; };
+    const genc = () => { const g = f.gen.value, el = document.getElementById("vidgenc"); if (!el) return; const c = GEN.find(x => x[0] === g) || [], cl = Math.min(Math.ceil((+f.min.value || 4) * 1.6), 6);
+      el.textContent = g === "none" ? "بلا توليد: الشرائح المرسومة وحدها (مجانًا)." : `تقديريًّا: حتى ${toAr(cl)} لقطات × ٨ ثوانٍ ≈ ${toAr((cl * 8 * c[2]).toFixed(1))}$ لكل مقاس (سقف ٤٨ ثانية مولَّدة للفيديو). يحتاج مفتاح المزوّد في أسرار GitHub.`; };
+    f.min.addEventListener("input", () => { rec(); genc(); }); f.t.addEventListener("change", rec); f.gen.addEventListener("change", genc); if (bid) rec();
     f.addEventListener("submit", async e => { e.preventDefault(); const mode = (e.submitter && e.submitter.dataset.mode) || "draft", b = bookOf(), st = document.getElementById("vidst"); if (!b) return st.textContent = "اختر الكتاب أو المقال من نتائج البحث";
       const v = n => (f.querySelector(`[name=${n}]:checked`) || {}).value, topics = [...f.querySelectorAll("[name=topics]:checked")].map(x => x.value).concat(f.topics2.value.split(/[,،]/).map(x => x.trim()).filter(Boolean));
-      const it = { id: b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : b.id, style: [...f.querySelectorAll("[name=style]:checked")].map(x => x.value).join("+"), min: v("min"), scenes: f.scenes.value || "", aud: v("aud"), tone: v("tone"), topics, ideas: f.ideas.value.trim(), intro: f.intro.value.trim(), outro: f.outro.value.trim(),
+      const it = { id: b.set ? (lib.books.find(x => x.set === b.set && !VOL2(x)) || b).id : b.id, style: [...f.querySelectorAll("[name=style]:checked")].map(x => x.value).join("+"), min: f.min.value || "4", scenes: f.scenes.value || "", gen: f.gen.value, trans: f.trans.value, aud: v("aud"), tone: v("tone"), topics, ideas: f.ideas.value.trim(), intro: f.intro.value.trim(), outro: f.outro.value.trim(),
         aspects: [...f.querySelectorAll("[name=aspect]:checked")].map(x => x.value), pages: f.pages.checked ? 1 : 0, sfx: f.sfx.checked ? 1 : 0, voice: v("voice"), theme: mode === "creative" ? "auto" : v("theme"), font: v("font"), pat: mode === "creative" ? "" : v("pat"), cap: f.cap.checked ? 1 : 0, note: f.note.value.trim(), creative: mode === "creative" ? 1 : 0, phase: mode === "draft" ? "script" : "", at: new Date().toISOString() };
       if (!it.style) return st.textContent = "اختر نمطًا واحدًا على الأقل";
       if (!it.aspects.length) return st.textContent = "اختر مقاسًا واحدًا على الأقل";
@@ -88,7 +100,7 @@ const VIDX = (() => {
   const fixBox = v => `<details class="vfix"><summary>✎ تصحيحات وملاحظات قبل الاعتماد</summary><form data-form="noop" data-vfix="${esc(v.id)}" data-f="${esc(v.f)}" data-d="${esc(v.draft)}">
       <label>الملاحظات والتعديلات (ما يُغيَّر في الكلام أو العناوين أو النقاط أو ترتيب المشاهد)</label><textarea name="notes" rows="3" placeholder="مثال: في المشهد الثالث اذكر أن الكتاب للمبتدئين، واحذف المشهد الخامس، واجعل الخاتمة أقصر"></textarea>
       <label>تصحيح النطق (سطر لكل كلمة: الكلمة = نطقها مشكولًا) — يُحفظ في قاموس النطق لكل الفيديوهات</label><textarea name="lex" rows="2" placeholder="برهامي = بُرْهَامِي"></textarea>
-      <div class="row"><button class="btn p s">تطبيق التصحيحات وإعادة الإخراج</button><a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}&r=${encodeURIComponent(v.f)}">✂ تعديل المشاهد يدويًّا</a><span class="mut" data-st></span></div>
+      <div class="row"><button class="btn p s">تطبيق التصحيحات وإعادة الإخراج</button><a class="btn s" href="#/video?d=${encodeURIComponent(v.draft)}&r=${encodeURIComponent(v.f)}">✂ تعديل النص الكامل وإعادة الإخراج</a><span class="mut" data-st></span></div>
       <p class="mut">يُستعمل نص هذا الفيديو نفسه وتسجيلاته: لا يُعاد إلا صوت المشاهد التي تغيّرت، ويحل الفيديو المصحَّح محل هذا.</p></form></details>`;
   const lexParse = t => String(t || "").split("\n").map(x => x.split(/\s*[=←:]\s*/)).filter(x => x.length === 2 && x[0].trim() && x[1].trim()).map(x => [x[0].trim(), x[1].trim()]);
   document.addEventListener("submit", async e => { const f = e.target.closest("[data-vfix]"); if (!f) return; e.preventDefault();
@@ -106,28 +118,23 @@ const VIDX = (() => {
   async function montage(id, repl) {
     const D = await getj("data/video/drafts/" + id + ".json", null); if (!D) return view('<p class="note">المسودة غير موجودة بعد؛ أعد المحاولة بعد دقائق.</p><p><a href="#/video">← الفيديوهات</a></p>');
     const O = D.opts || {};
-    const row = (s, i) => `<div class="card vscene" data-i="${i}"><div class="row"><b>المشهد ${toAr(i + 1)}</b><span style="flex:1"></span><button type="button" class="btn s" data-mv="-1">▲</button><button type="button" class="btn s" data-mv="1">▼</button><button type="button" class="btn s" data-del>حذف</button></div>
-      <label>العنوان على الشاشة</label><input data-k="h" value="${esc(s.h || "")}"><label>النقاط على الشاشة (سطر لكل نقطة)</label><textarea data-k="pts" rows="3">${esc((s.pts || []).join("\n"))}</textarea>
-      <label>نص الراوي</label><textarea data-k="say" rows="4">${esc(s.say || "")}</textarea>
-      <div class="row"><div><label>صفحة الكتاب</label><input data-k="pg" type="number" min="0" value="${esc(s.pg || "")}" style="max-width:110px"></div><div style="flex:1"><label>العبارة التي يحددها القلم في الصفحة</label><input data-k="q" value="${esc(s.q || "")}"></div></div>
-      <label class="chk"><input type="checkbox" data-k="pgoff"${s.pgoff ? " checked" : ""}> بلا صفحة في هذا المشهد</label>
-      <label>أقل مدة للمشهد بالثواني (اختياري)</label><input data-k="min" type="number" min="0" max="120" value="${esc(s.min || "")}" style="max-width:140px"></div>`;
-    view(`<p><a href="#/video">← الفيديوهات</a></p><h2>✂ مونتاج: ${esc(D.title)}</h2><p class="mut">عدّل العناوين والنقاط ونص الراوي، ورتّب المشاهد أو احذفها أو أضف غيرها، ثم أخرج الفيديو. الخيارات: ${esc(styleName(O.style))} • ${esc(O.voice || "")}${repl ? " • يحل الفيديو الناتج محل الفيديو غير المعتمد" : ""}</p>
+    view(`<p><a href="#/video">← الفيديوهات</a></p><h2>✂ مونتاج: ${esc(D.title)}</h2><p class="mut">النص كله في خانة واحدة: راجعه وحرّره ثم اعتمده؛ ويُوزَّع آليًّا على المشاهد. الخيارات: ${esc(styleName(O.style))} • ${esc(O.voice || "")}${repl ? " • يحل الفيديو الناتج محل الفيديو غير المعتمد" : ""}</p>
       <div class="card"><label>المقاسات</label>${checks("aspect", repl ? [] : (O.aspects || [O.aspect || "16:9"]))}${repl ? '<p class="mut">اتركها فارغة لإخراج مقاس الفيديو المصحَّح وحده.</p>' : ""}
         <label>الصوت</label>${radios("voice", OPT.voice.some(x => x[0] === O.voice) ? O.voice : "gemini:Charon")}
         <label class="chk"><input type="checkbox" id="vpg"${O.pages ? " checked" : ""}> 📖 صفحات الكتاب مع قلم التحديد</label><label class="chk"><input type="checkbox" id="vsfx"${O.sfx || O.sfx === undefined ? " checked" : ""}> 🔊 صوت القلم وتقليب الصفحات</label></div>
-      <label>عنوان الفيديو</label><input id="vdt" value="${esc(D.title)}"><div id="vscs">${(D.scenes || []).map(row).join("")}</div>
-      <div class="row"><button class="btn" id="vadd">＋ مشهد جديد</button><button class="btn p" id="vgo">🎬 حفظ وإخراج الفيديو</button><span id="vgost" class="mut"></span></div>`);
-    const box = document.getElementById("vscs"), collect = keep => [...box.querySelectorAll(".vscene")].map(c => { const g = k => c.querySelector(`[data-k=${k}]`).value; return { h: g("h").trim(), pts: g("pts").split("\n").map(x => x.trim()).filter(Boolean), say: g("say").trim(), pg: +g("pg") || 0, q: g("q").trim(), pgoff: c.querySelector("[data-k=pgoff]").checked ? 1 : 0, min: +g("min") || 0 }; }).filter(s => keep || s.say);
-    const redraw = l => { box.innerHTML = l.map(row).join(""); };
-    box.addEventListener("click", e => { const c = e.target.closest(".vscene"); if (!c) return; const l = collect(true), i = +c.dataset.i;
-      if (e.target.closest("[data-del]")) { l.splice(i, 1); redraw(l); } else if (e.target.closest("[data-mv]")) { const j = i + +e.target.closest("[data-mv]").dataset.mv; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; redraw(l); } });
-    document.getElementById("vadd").onclick = () => { const l = collect(true); l.push({ h: "", pts: [], say: "" }); redraw(l); };
-    document.getElementById("vgo").onclick = async () => { const st = document.getElementById("vgost"), l = collect(false); if (!l.length) return st.textContent = "لا مشاهد فيها نص للراوي";
-      st.textContent = "جارٍ الحفظ…"; try { await GH.editJSON("data/video/drafts/" + id + ".json", o => Object.assign(o || D, { title: document.getElementById("vdt").value.trim() || D.title, scenes: l, edited: new Date().toISOString() }), "فيديو: مونتاج «" + D.title + "»");
-        await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; const asp = [...document.querySelectorAll("[name=aspect]:checked")].map(x => x.value), x = { id: D.book, draft: id, voice: (document.querySelector("[name=voice]:checked") || {}).value, pages: document.getElementById("vpg").checked ? 1 : 0, sfx: document.getElementById("vsfx").checked ? 1 : 0, at: new Date().toISOString() };
+      <label>عنوان الفيديو</label><input id="vdt" value="${esc(D.title)}">
+      <label>النص الكامل للفيديو (خانة واحدة) <span class="mut">— حرّر وأضف واحذف بحرية؛ السطر الذي يبدأ بـ «## » عنوان مشهد (اختياري). بعد الاعتماد يُعاد توزيع النص على المشاهد آليًّا مع عناوينها ونقاطها، ونص الراوي يبقى كما كتبته حرفًا بحرف.</span></label>
+      <textarea id="vscript" class="vscript" rows="22" dir="rtl">${esc(D.script || (D.scenes || []).map(s => (s.h ? "## " + s.h + "\n" : "") + (s.say || "")).join("\n\n"))}</textarea>
+      <p class="mut" id="vwc"></p>
+      <div class="row"><button class="btn p" id="vgo">✓ اعتماد النص وإخراج الفيديو</button><span id="vgost" class="mut"></span></div>
+      <p class="mut">🧪 إخراج تجريبي بمحرك <b>OpenMontage</b> المفتوح المصدر من النص نفسه بعد اعتماده: <a href="https://github.com/${esc(CFG.repo || "dawah-library/sdsl-library")}/actions/workflows/openmontage.yml" target="_blank" rel="noopener">تشغيل المهمة</a> بمعرّف المسودة <code>${esc(id)}</code> (يظهر الناتج هنا بانتظار الاعتماد).</p>`);
+    const ta = document.getElementById("vscript"), wc = () => { const w = ta.value.replace(/^#+.*$/gm, "").split(/\s+/).filter(Boolean).length; document.getElementById("vwc").textContent = toAr(w) + " كلمة للراوي ≈ " + toAr(Math.max(1, Math.round(w / 130 * 10) / 10)) + " دقيقة • " + toAr((ta.value.match(/^##\s/gm) || []).length) + " عنوان مشهد"; };
+    ta.addEventListener("input", wc); wc();
+    document.getElementById("vgo").onclick = async () => { const st = document.getElementById("vgost"), script = ta.value.trim(); if (script.replace(/^#+.*$/gm, "").trim().length < 20) return st.textContent = "النص فارغ أو قصير جدًّا";
+      st.textContent = "جارٍ الحفظ…"; try { await GH.editJSON("data/video/drafts/" + id + ".json", o => Object.assign(o || D, { title: document.getElementById("vdt").value.trim() || D.title, script, edited: new Date().toISOString() }), "فيديو: اعتماد نص «" + D.title + "»");
+        await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; const asp = [...document.querySelectorAll("[name=aspect]:checked")].map(x => x.value), x = { id: D.book, draft: id, script, voice: (document.querySelector("[name=voice]:checked") || {}).value, pages: document.getElementById("vpg").checked ? 1 : 0, sfx: document.getElementById("vsfx").checked ? 1 : 0, at: new Date().toISOString() };
           if (asp.length) x.aspects = asp; if (repl) x.replace = repl; (o.items = o.items || []).push(x); return o; }, "فيديو: إخراج «" + D.title + "»");
-        st.textContent = "✓ أُرسل للإخراج؛ يظهر في الفيديوهات خلال دقائق بانتظار اعتمادك."; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
+        st.textContent = "✓ أُرسل: يُوزَّع النص على المشاهد ثم يُخرج الفيديو، ويظهر خلال دقائق بانتظار اعتمادك."; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
   }
   document.addEventListener("click", async e => { const el = e.target.closest("[data-act^=vid]"); if (!el) return; e.preventDefault();
     if (el.dataset.act === "vidshare") { const d = { title: el.dataset.t, text: el.dataset.t + " — فيديو من المكتبة الرقمية للدعوة السلفية", url: el.dataset.u }; if (navigator.share) navigator.share(d).catch(() => { }); else { navigator.clipboard.writeText(d.url); toast("نُسخ رابط الفيديو"); } }

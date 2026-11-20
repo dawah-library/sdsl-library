@@ -35,3 +35,8 @@
 | P1 | خطة المدير (٢٠ نوفمبر) — المرحلة ١: أكمل القراءة بلا تكرار، الطبعة المرجعية وخريطة الترقيم، البحث الصرفي بالجذر والمشتقات والقرن | stats.js، app.js، armorph.js، tools/refmap.py، data/refmap/ | منجزة (claude/busy-noether-ytac52) | التالي: المرحلة ٢؛ الفهرس المسبق في R2 (DECISIONS.md ق-٣) |
 | P2 | خطة المدير — المرحلة ٢: التدقيق العلمي (تمام المنة، الجامع لأحكام الصيام، إشكالية علم الكلام) والمصدر الواحد للمشتقات | tools/sci-audit.py، tools/derived-sync.py، tools/ocr-quality.py، proof.js، proof.yml | منجزة (claude/busy-noether-ytac52) | الصيام: ٢٤١ صفحة تُعاد من المصورة ثم sci-audit مجددًا؛ اعتماد ٤٤ اقتراحًا في #/proof |
 | P3 | خطة المدير — المرحلة ٣: التشكيل الدقيق، المختصر مع التشجير والتصدير الكامل، المقارنة العلمية | api/edit.js، lib/harakat.js، learn.js، docx.js، cmpai.js، supabase/migrations/2026-11-20-comparisons.sql | منجزة (PR #59) | تطبيق جدول comparisons |
+| P4 | خطة المدير — المرحلة ٤: شرح الكتب والمتون | sharh.js، tools/sharh-align.py، data/shp، shp.yml | منجزة | مشروع الطحاوية مسودة للمراجعة |
+| P5 | خطة المدير — المرحلة ٥: ElevenLabs | tools/tts.py، eleven.js، api/edit.js | منجزة (تنتظر ELEVENLABS_API_KEY) | |
+| P6 | خطة المدير — المرحلة ٦: صانع الفيديو | video.js، tools/book-video.py، tools/video-gen.py، tools/video-slides.js، openmontage.yml | منجزة | التوليد بالمفاتيح |
+| P8 | خطة المدير — المرحلة ٨: موسوعة الآثار | tools/athar.py، tools/athar-ai.py، athar.js، athar.yml | منجزة | |
+| P9 | خطة المدير — المرحلة ٩: المجتمع والتواصل | outreach.js، api/notify.js، tools/weekly.py، tools/newsletter.py | منجزة | تطبيق جدول subscribers |

@@ -1,0 +1,88 @@
+name: فيديو الكتب بمحرك OpenMontage (تجريبي)
+# الاستفادة من OpenMontage (github.com/calesthio/OpenMontage، رخصة AGPL-3.0): نظام إنتاج فيديو وكيلي يعمل داخل مساعد برمجي.
+# لا يُدمج كوده في الموقع (اختلاف الرخصة): يُستنسخ هنا في كل تشغيل بإصدار مثبت، ويُعطى «موجزًا» من مسودة الفيديو المعتمدة
+# (النص الكامل والمشاهد وصوت الراوي من خط فيديو المكتبة)، فيخرج MP4 يُرفع إلى إصدار الكتاب مثل بقية الفيديوهات بانتظار الاعتماد.
+# الضوابط في الموجز: لا بشر ولا حيوانات ولا موسيقى، ونص الراوي حرفيًّا. يحتاج CLAUDE_CODE_OAUTH_TOKEN أو ANTHROPIC_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: "معرّف مسودة الفيديو (data/video/drafts/<id>.json) بعد اعتماد نصها"
+        required: true
+      aspect:
+        description: "المقاس"
+        required: false
+        default: "16:9"
+      ref:
+        description: "إصدار OpenMontage المثبت (commit أو tag)"
+        required: false
+        default: "main"
+permissions:
+  contents: write
+concurrency:
+  group: openmontage
+  cancel-in-progress: false
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: الموجز
+        env:
+          DRAFT: ${{ github.event.inputs.draft }}
+          ASPECT: ${{ github.event.inputs.aspect }}
+        run: |
+          case "$DRAFT" in */*|*..*) echo "معرّف غير صالح"; exit 1;; esac
+          python3 - <<'PY'
+          import json, os
+          d = json.load(open("data/video/drafts/%s.json" % os.environ["DRAFT"], encoding="utf-8"))
+          brief = {"title": d.get("title"), "book": d.get("book"), "aspect": os.environ.get("ASPECT") or "16:9", "language": "ar", "direction": "rtl",
+                   "script": d.get("script") or "\n\n".join(("## " + s.get("h", "") + "\n" if s.get("h") else "") + s.get("say", "") for s in d.get("scenes", [])),
+                   "scenes": [{k: s.get(k) for k in ("h", "pts", "say", "icon", "vis")} for s in d.get("scenes", [])], "theme": d.get("theme"),
+                   "rules": ["Narration text must be used verbatim; never rewrite Quran verses, hadith or quotes.",
+                             "No people, faces, hands, animals or birds in any visual; no depictions of prophets or companions.",
+                             "No music or musical instruments; only the narrator voice and very soft, non-harsh transition sounds.",
+                             "Calm, dignified style suitable for Islamic scholarly books; Arabic text right-to-left with proper Arabic fonts (Amiri / Readex Pro).",
+                             "Smooth varied transitions; icons and abstract illustrations, calligraphy, books, manuscripts, Islamic architecture, landscapes."],
+                   "output": "out/video.mp4"}
+          os.makedirs("om", exist_ok=True); json.dump(brief, open("om/brief.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          PY
+      - name: OpenMontage
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REF: ${{ github.event.inputs.ref }}
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN$ANTHROPIC_API_KEY" ]; then echo "::warning::لا رمز Claude Code؛ OpenMontage يعمل داخل مساعد برمجي"; exit 0; fi
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg fonts-hosny-amiri >/dev/null
+          git clone --depth 50 https://github.com/calesthio/OpenMontage om/engine && (cd om/engine && git checkout -q "$REF")
+          (cd om/engine && (make setup || true))
+          npm i -g -s @anthropic-ai/claude-code >/dev/null 2>&1
+          cp om/brief.json om/engine/brief.json && mkdir -p om/engine/out
+          (cd om/engine && timeout 70m claude -p "Produce the video described in brief.json using this repository's OpenMontage pipelines (pick the explainer/documentary style pipeline). Follow every rule in brief.rules strictly. Use only free sources (no paid APIs). Write the final MP4 to out/video.mp4." --dangerously-skip-permissions --max-turns 150) || true
+          ls -la om/engine/out || true
+      - name: الرفع بانتظار الاعتماد
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRAFT: ${{ github.event.inputs.draft }}
+          ASPECT: ${{ github.event.inputs.aspect }}
+        run: |
+          f=om/engine/out/video.mp4; [ -s "$f" ] || { echo "لا ناتج"; exit 0; }
+          python3 - <<'PY'
+          import json, os, subprocess, datetime
+          d = json.load(open("data/video/drafts/%s.json" % os.environ["DRAFT"], encoding="utf-8")); bid = d["book"]; tag = "video-" + bid
+          fn = "%s-openmontage-%s-%s.mp4" % (bid, os.environ.get("ASPECT", "16:9").replace(":", "x"), datetime.datetime.now().strftime("%m%d%H%M"))
+          os.rename("om/engine/out/video.mp4", fn)
+          if subprocess.run(["gh", "release", "view", tag], capture_output=True).returncode: subprocess.run(["gh", "release", "create", tag, "--title", "فيديو: " + d.get("title", bid), "--notes", "فيديوهات الكتاب", "--latest=false"], check=True)
+          subprocess.run(["gh", "release", "upload", tag, "--clobber", fn], check=True)
+          L = json.load(open("data/video/_list.json", encoding="utf-8")); L.setdefault(bid, []).append({"f": fn, "t": d.get("title"), "draft": os.environ["DRAFT"], "style": "openmontage", "aspect": os.environ.get("ASPECT", "16:9"), "at": str(datetime.date.today()), "ok": 0, "engine": "openmontage"})
+          json.dump(L, open("data/video/_list.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          PY
+          bash tools/git-save.sh "فيديو: إخراج تجريبي بمحرك OpenMontage" data/video/_list.json

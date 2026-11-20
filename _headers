@@ -79,6 +79,9 @@
 /eds.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/eleven.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /export.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -124,6 +127,9 @@
 /mutun.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/outreach.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /paths.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -146,6 +152,9 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /search.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/sharh.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /side.js

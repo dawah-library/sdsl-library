@@ -5,6 +5,9 @@ let chromium; try { ({ chromium } = require("playwright")); } catch (e) { ({ chr
 const S = JSON.parse(fs.readFileSync(process.argv[2], "utf8")), T = S.theme || {}, [W, H] = { "9:16": [1080, 1920], "1:1": [1080, 1080], "4:5": [1080, 1350] }[S.aspect] || [1920, 1080];
 const FPS = S.fps || 20;
 const FONT = { amiri: "Amiri,serif", ruqaa: "'Aref Ruqaa',Amiri,serif", kufi: "'Reem Kufi',sans-serif", readex: "'Readex Pro',sans-serif" }[T.font] || "Amiri,serif";
+// أيقونات المشاهد من أيقونات الموقع نفسها (icons.js، Lucide)؛ واللقطة المولَّدة خلف الشريحة تجعل خلفيتها شفافة جزئيًّا (S.bg[i])
+let ICONS = {}; try { const vm = require("vm"), ctx = {}; vm.runInNewContext(fs.readFileSync(S.icons || path.join(__dirname, "..", "icons.js"), "utf8").replace(/^const ICONS=/m, "this.ICONS=").replace(/^const /gm, "var "), ctx); ICONS = ctx.ICONS || {}; } catch (e) { }
+const hexA = (h, a) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return "rgba(15,61,51," + a + ")"; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const PAT = { stars: "radial-gradient(circle at 20% 20%, rgba(255,255,255,.08) 0 2px, transparent 3px) 0 0/90px 90px", lines: "repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 26px)", arch: "radial-gradient(ellipse at 50% 120%, rgba(255,255,255,.10) 0 40%, transparent 41%)", none: "none" };
 // المشهد: العنوان والنقاط، ومعها صفحة الكتاب (إن عُرفت) في الشريحة نفسها: بجوار النقاط في الأفقي والمربع، وتحتها في الطولي.
@@ -27,7 +30,7 @@ function page(s, i, n) {
 <svg class="pen" id="pen" viewBox="0 0 120 40"><rect x="20" y="8" width="86" height="24" rx="6" fill="#2d6a4f"/><rect x="96" y="10" width="20" height="20" rx="4" fill="#1b4332"/><path d="M20 10 L4 16 L4 24 L20 30 Z" fill="#ffd60a"/><path d="M4 16 L0 18 L0 22 L4 24 Z" fill="#e0b400"/><rect x="34" y="14" width="40" height="4" rx="2" fill="rgba(255,255,255,.35)"/></svg></div><div class="plab">📖 ${pre}${lab}</div></div>`;
   }
   const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Readex+Pro:wght@400;600&family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@600&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box;margin:0}body{width:${W}px;height:${H}px;background:${T.bg || "#0f3d33"};background-image:${PAT[T.pat] || PAT.stars};color:${T.c1 || "#fff"};font-family:"Readex Pro",sans-serif;display:flex;flex-direction:column;padding:${pad[0]}px ${pad[1]}px;overflow:hidden}
+<style>*{box-sizing:border-box;margin:0}html{background:transparent}body{width:${W}px;height:${H}px;background:${(S.bg || [])[i] ? hexA(T.bg, .58) : T.bg || "#0f3d33"};background-image:${PAT[T.pat] || PAT.stars};color:${T.c1 || "#fff"};font-family:"Readex Pro",sans-serif;display:flex;flex-direction:column;padding:${pad[0]}px ${pad[1]}px;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center;font-size:${portrait ? 34 : 28}px;color:${T.c2 || "#cfe6dc"}}.top b{font-family:"Aref Ruqaa",Amiri,serif;color:${T.acc || "#d4af37"};font-size:1.3em}
 .main{flex:1;min-height:0;display:flex;flex-direction:${portrait ? "column" : "row"};gap:${portrait ? 40 : 60}px;min-height:0;align-items:${portrait ? "stretch" : "center"}}.txtc{flex:1;min-width:0;display:flex;flex-direction:column;${P && !portrait ? "justify-content:center" : ""}}
 h1{font-family:${FONT};font-size:${fz(portrait ? 88 : sq ? 64 : 82)}px;line-height:1.35;margin:${P ? (portrait ? "50px 0 34px" : "0 0 32px") : portrait ? "120px 0 60px" : "60px 0 44px"};color:${T.acc || "#d4af37"};border-inline-start:12px solid ${T.acc || "#d4af37"};padding-inline-start:28px}
@@ -43,9 +46,9 @@ ul{list-style:none;display:grid;gap:${fz(portrait ? 40 : 28)}px}li{font-size:${f
 .hl{position:absolute;background:linear-gradient(${acc},${acc}) no-repeat right/0% 100%;mix-blend-mode:multiply;border-radius:6px}
 .hlt{background:linear-gradient(${acc},${acc}) no-repeat right/0% 100%;color:inherit;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .1em;border-radius:4px}
 .pen{position:absolute;width:17cqw;height:auto;transform:translate(-30%,-78%) rotate(-28deg);filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));opacity:0}
-.shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent 30%);opacity:0;pointer-events:none}</style></head>
+.sic{width:1em;height:1em;vertical-align:-0.12em;margin-inline-end:.35em;color:${T.acc || "#d4af37"};opacity:.95}.shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent 30%);opacity:0;pointer-events:none}</style></head>
 <body><div class="top"><b>${esc(S.title)}</b><span>${i + 1} / ${n}</span></div>
-<div class="main"><div class="txtc"><h1>${esc(s.h)}</h1><ul>${(s.pts || []).slice(0, P ? 4 : 5).map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+<div class="main"><div class="txtc"><h1>${ICONS[s.icon] ? `<svg class="sic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[s.icon]}</svg>` : ""}${esc(s.h)}</h1><ul>${(s.pts || []).slice(0, P ? 4 : 5).map(p => `<li>${esc(p)}</li>`).join("")}</ul>
 ${T.cap && s.say ? `<p class="cap">${esc(String(s.say).slice(0, P ? 180 : 260))}${String(s.say).length > (P ? 180 : 260) ? "…" : ""}</p>` : ""}</div>${side}</div>
 <div class="bar"><i></i></div><div class="foot"><span>المكتبة الرقمية للدعوة السلفية</span><span>dawahlibrary.org</span></div>
 ${P ? `<script>
@@ -66,7 +69,7 @@ window.at=t=>document.getAnimations().forEach(a=>{a.currentTime=t*1000});
   for (let i = 0; i < S.scenes.length; i++) {
     const g = page(S.scenes[i], i, S.scenes.length), still = path.join(S.out, "f" + String(i).padStart(2, "0") + ".png");
     await p.setContent(g.html, { waitUntil: "networkidle" }).catch(() => { }); await p.evaluate(() => document.fonts && document.fonts.ready); await p.waitForTimeout(300);
-    if (!g.P) { await p.screenshot({ path: still }); continue; }
+    if (!g.P) { await p.screenshot({ path: still, omitBackground: !!(S.bg || [])[i] }); continue; }
     const dir = path.join(S.out, "p" + String(i).padStart(2, "0")); fs.mkdirSync(dir, { recursive: true });
     await p.evaluate(hl => window.setup(hl), g.hl);
     const nf = Math.round(g.dur * FPS);

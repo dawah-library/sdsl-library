@@ -1622,3 +1622,37 @@ details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:
 /* المقارنة العلمية (المرحلة ٣-ج) */
 .cmpai .chip.x small{color:inherit;opacity:.85}.cmpsug{display:flex;flex-direction:column;gap:4px;margin:4px 0}.cmpsug .cmps{text-align:start;padding:8px 12px;border-radius:10px;border:1px solid color-mix(in srgb,currentColor 14%,transparent);background:var(--sf,#fff);color:inherit;cursor:pointer;font:inherit}
 .cmpsug .cmps:hover,.cmpsug .cmps:focus{border-color:var(--accent,#0f5c4d)}.cmpres .cmpax{margin:14px 0}.cmpres h5{margin:8px 0 4px}.cmpres .cref{font-size:.82em;white-space:nowrap;margin-inline-start:4px}.cmpdif{margin:8px 0;overflow-x:auto}
+/* شرح الكتب والمتون (المرحلة ٤): كلام الشارح بلون عمله واسمه، منفصلًا عن كلام المؤلف */
+.shxbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;font-size:.92em}.shxbar select{width:auto;max-width:100%}
+.shchip{border-color:var(--c)!important}.shchip input{accent-color:var(--c)}
+.shx{display:block;border-inline-start:4px solid var(--c);background:color-mix(in srgb,var(--c) 8%,var(--sf,#fff));padding:6px 12px;margin:6px 0 10px;border-radius:0 8px 8px 0;font-size:.9em;line-height:1.9;font-family:var(--ui,inherit);text-align:start;text-indent:0}
+.shx p{margin:0 0 4px}.shx .shxn{color:var(--c);display:block;font-size:.85em;margin-bottom:2px}
+.shfn a{color:var(--c);font-weight:700;text-decoration:none;padding:0 2px}.shfoot{border-top:1px solid color-mix(in srgb,currentColor 20%,transparent);margin-top:14px;padding-top:8px;font-size:.92em}
+.shdrop{display:inline}.shdrop>summary{display:inline;cursor:pointer;color:var(--c);list-style:none}.shdrop>summary::-webkit-details-marker{display:none}.shdrop[open]{display:block}
+.shanch{cursor:pointer;text-decoration:underline dotted var(--c)}
+.shxside{position:fixed;inset-inline-start:0;top:70px;bottom:0;width:min(380px,90vw);overflow:auto;background:var(--sf,#fff);border-inline-end:1px solid color-mix(in srgb,currentColor 15%,transparent);padding:12px;z-index:40;box-shadow:0 0 18px rgba(0,0,0,.08)}
+@media (max-width:900px){.shxside{top:auto;height:42vh;width:100%;border-top:1px solid color-mix(in srgb,currentColor 15%,transparent)}body.shside{padding-bottom:42vh}}
+@media (min-width:901px){body.shside main{margin-inline-start:390px}}
+.shw h3 .shdot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--c)}.shvols select{width:auto}
+.shrev .shr{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:12px;padding:10px;margin:10px 0}.shr.low{border-color:#d08a2a;background:color-mix(in srgb,#d08a2a 6%,transparent)}
+.shr .shr-m p{font-weight:700}.shr .shr-c p{white-space:pre-wrap;font-size:.92em}.shr .shr-a{grid-column:1/-1}@media (max-width:700px){.shrev .shr{grid-template-columns:1fr}}
+/* ElevenLabs (المرحلة ٥) */
+.elsls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 16px;margin:8px 0}.elsl{display:flex;flex-direction:column;font-size:.9em}.elsl output{font-weight:700;color:var(--accent,#0f5c4d)}
+/* صانع الفيديو: النص الكامل في خانة واحدة (المرحلة ٦) */
+.vscript{width:100%;min-height:50vh;line-height:2;font-size:1.02rem;font-family:Amiri,"Traditional Arabic",serif}
+/* المرحلة ٧ (إكمال): الشاشة الأولى لا يظهر فيها إلا الاسم والشعار والدخول واللغة والرئيسية والبطاقات */
+body.phome #ticker,body.phome .top .hsearch,body.phome .top .megab,body.phome .top a[href="#/favs"],body.phome .top .hq,body.phome .top .shareb,body.phome .top [data-act=theme],body.phome #side{display:none!important}
+body.phome .top .backb{display:none!important}
+.popts{display:flex;justify-content:center;gap:6px;margin-top:8px}.popts .btn{min-width:auto}
+/* مكتبة الدعوة السلفية الأبرز: أكبر وبإطار ذهبي */
+.pt-dawah{min-height:360px;box-shadow:0 22px 50px -14px rgba(8,40,32,.6),0 0 0 2px rgba(212,175,55,.55),inset 0 1px 0 rgba(255,255,255,.45)}
+@media (min-width:1100px){.ptile.pt-dawah{flex-basis:340px;transform:translateY(-10px)}}
+/* تأثير العمق الكروي الاختياري: البطاقات تدور حول محور رأسي بحسب بعدها عن الوسط */
+.ptrack.p3d{perspective:1100px}.ptrack.p3d .ptile{transform:rotateY(calc(var(--off,0) * -28deg)) scale(calc(1 - (var(--off,0) * var(--off,0)) * .06));transform-style:preserve-3d;will-change:transform}
+@media (min-width:1100px){.ptrack.p3d .ptile{transform:none}}
+@media (prefers-reduced-motion:reduce){.ptrack.p3d .ptile{transform:none!important}}
+/* المرحلة ٩: كتاب الأسبوع والمسألة الواحدة والشارة */
+.wkcard{display:flex;gap:14px;align-items:flex-start;margin:14px 12px 4px;padding:14px;border-radius:20px;background:color-mix(in srgb,var(--sf) 78%,transparent);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.wkcard .bcov{width:84px;flex:none;border-radius:8px;box-shadow:0 8px 20px -10px rgba(0,0,0,.4)}.wkcard>div{display:flex;flex-direction:column;gap:2px;min-width:0}.wkcard b{font-size:1.08rem}.wkcard blockquote{margin:6px 0;font-family:Amiri,serif;line-height:1.9;border-inline-start:3px solid var(--gold,#b88a2e);padding-inline-start:10px}
+.wkrow.on{border-color:var(--gold,#b88a2e)}.wksn{line-height:2;font-family:Amiri,serif}.founder{display:inline-block;margin-inline-end:8px;padding:2px 10px;border-radius:99px;background:linear-gradient(135deg,#0f5c4d,#b88a2e);color:#fff;font-size:.85rem}
+.masa h3 small{font-weight:400}.masq{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.masq p{margin:2px 0;line-height:1.9}

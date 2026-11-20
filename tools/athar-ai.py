@@ -27,6 +27,9 @@ PROMPT = """أنت محقق في آثار السلف. لكل نص أدناه (م
 القائل يجب أن يكون صاحب القول نفسه (لا الراوي عنه)، ومن هذه القائمة بالاسم كما هو: {people}
 أخرج JSON حرفيًا: {{"r": [{{"i": رقم النص, "ok": true/false, "w": "القائل من القائمة", "a": "أول القول: ٣–٦ كلمات منسوخة حرفيًا من النص", "z": "آخر القول: ٣–٦ كلمات منسوخة حرفيًا من النص", "k": ["مفتاح الباب", "مفتاح ثانٍ اختياري"], "t": "عنوان موضوعي قصير ٢–٦ كلمات"}}]}}
 مفاتيح الأبواب: {topics}
+التبويب بالفهم لا بالألفاظ (المرحلة ٨): اقرأ سياق الأثر ودلالته ومقصود قائله، وباب كتاب المصدر الذي ورد فيه (إن ذُكر)، ثم اختر الباب الذي يرتبط به الأثر ارتباطًا مباشرًا بمعناه، لا لمجرد ورود كلمة من ألفاظ الباب
+(مثل: «العلم» في «علم الله» ليس من باب طلب العلم، و«الصلاة» في تشبيه ليس من باب العبادات). أضف "fit": درجة مناسبة الأثر لأول باب اخترته (٠–١)، و"why": سبب الاختيار في جملة قصيرة.
+إن لم يرتبط بباب ارتباطًا مباشرًا فضع الباب hikam بدرجة مناسبة منخفضة.
 انسخ أول القول وآخره كما في النص تمامًا بحروفه، ولا تُدخل في القول «قال فلان» ولا الإسناد.
 
 النصوص:
@@ -93,7 +96,7 @@ def main():
     for b in range(0, len(todo), BATCH):
         if time.time() - T0 > LIMIT or len(DEAD) == len(MODELS): break
         part = todo[b:b + BATCH]
-        texts = "\n\n".join("[%d] (القائل المرشح: %s)\n%s" % (i + 1, c["w"], c["u"][-1100:]) for i, c in enumerate(part))
+        texts = "\n\n".join("[%d] (القائل المرشح: %s)%s%s\n%s" % (i + 1, c["w"], (" (باب المصدر: %s)" % c["bab"]) if c.get("bab") else "", (" (مصدر خارجي: %s)" % c["src"].get("t")) if c.get("src") else "", c["u"][-1100:]) for i, c in enumerate(part))
         r = call(PROMPT.format(people="، ".join(people), topics=TOPIC_TXT, texts=texts))
         if not r or not isinstance(r.get("r"), list): continue
         res = {int(x.get("i", 0)): x for x in r["r"] if isinstance(x, dict)}
@@ -102,10 +105,12 @@ def main():
             if x is None: continue
             rec = {"id": c["id"], "ok": False}
             if x.get("ok") and x.get("w") in people:
-                q = cut(c["u"], x.get("a"), x.get("z"))
+                q = cut(c["u"], x.get("a"), x.get("z")) or (c["q"] if c.get("src") else None)
                 if q:
                     ks = [k for k in (x.get("k") or []) if k in TOPIC_KEYS][:2] or c["k"]
-                    rec = {"id": c["id"], "ok": True, "q": q, "w": x["w"], "t": str(x.get("t") or "").strip()[:60], "k": ks, "r": c["r"], "x": c["x"]}
+                    rec = {"id": c["id"], "ok": True, "q": q, "w": x["w"], "t": str(x.get("t") or "").strip()[:60], "k": ks, "r": c["r"], "x": c["x"], "d": 1,  # مسودة حتى تعتمدها الإدارة
+                           "bab": c.get("bab", ""), "fit": round(float(x.get("fit") or 0), 2), "why": str(x.get("why") or "")[:160]}
+                    if c.get("src"): rec["src"] = c["src"]
                     ok += 1
             V["items"][c["id"]] = rec; done += 1
         if (b // BATCH) % 10 == 0:
@@ -116,5 +121,38 @@ def main():
     A.publish()
 
 
+REFIT = """أنت محقق في آثار السلف. لكل أثر منشور أدناه بابٌ أُدرج فيه آليًّا بالكلمات المفتاحية. احكم بفهم السياق والدلالة: هل يرتبط الأثر بهذا الباب ارتباطًا مباشرًا بمعناه ومقصود قائله؟
+مفاتيح الأبواب: {topics}
+أخرج JSON حرفيًا: {{"r": [{{"i": رقم الأثر, "fit": ٠–١ لمناسبة بابه الحالي, "k": ["أنسب باب", "باب ثانٍ اختياري"], "why": "السبب في جملة"}}]}}
+
+الآثار:
+{texts}"""
+
+
+def refit():
+    """مراجعة المنشور سابقًا (أُدرج بالكلمات المفتاحية): ما ضعفت مناسبته لبابه (fit < ٠٫٦) أو اقتُرح له باب آخر
+    يُكتب اقتراحًا في data/athar/_review.json → prop، فتعتمده الإدارة أو ترده من #/athar/review؛ ولا يُنقل شيء آليًّا."""
+    vp = os.path.join(CD, "verified.json"); V = json.load(open(vp, encoding="utf-8"))
+    RV = json.load(open(A.REVIEW, encoding="utf-8")) if os.path.exists(A.REVIEW) else {"dec": {}, "prop": {}}
+    prop, seen = RV.setdefault("prop", {}), set(RV.get("fitted") or [])
+    pub = [v for v in V["items"].values() if v.get("ok") and not v.get("d") and v["id"] not in seen][:int(os.environ.get("ATHAR_MAX", "800"))]
+    print("مراجعة التبويب: %d أثرًا" % len(pub), flush=True); n = 0
+    for b in range(0, len(pub), 12):
+        if time.time() - T0 > LIMIT or len(DEAD) == len(MODELS): break
+        part = pub[b:b + 12]
+        texts = "\n\n".join("[%d] الباب الحالي: %s\nقال %s: «%s»" % (i + 1, ",".join(c.get("k") or []), c["w"], c["q"][:700]) for i, c in enumerate(part))
+        r = call(REFIT.format(topics=TOPIC_TXT, texts=texts))
+        if not r or not isinstance(r.get("r"), list): continue
+        for x in r["r"]:
+            try: c = part[int(x.get("i", 0)) - 1]
+            except Exception: continue
+            ks = [k for k in (x.get("k") or []) if k in TOPIC_KEYS][:2]; fit = float(x.get("fit") or 0)
+            seen.add(c["id"])
+            if ks and (fit < 0.6 or ks[0] not in (c.get("k") or [])):
+                prop[c["id"]] = {"k": ks, "fit": round(fit, 2), "why": str(x.get("why") or "")[:160], "old": c.get("k")}; n += 1
+    RV["fitted"] = sorted(seen); json.dump(RV, open(A.REVIEW, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+    print("اقتراحات نقل/مراجعة: %d" % n); A.publish()
+
+
 if __name__ == "__main__":
-    main()
+    refit() if "--refit" in sys.argv else main()
