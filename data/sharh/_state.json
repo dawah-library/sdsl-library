@@ -1,7 +1,7 @@
 {
- "done": 3,
+ "done": 4,
  "books": {
-  "bukhari": 9,
+  "bukhari": 11,
   "abudawud": 1,
   "nasai": 2,
   "ibnmajah": 1,
@@ -9,7 +9,7 @@
   "muwatta": 1
  },
  "cover": {
-  "bukhari": "9/7133",
+  "bukhari": "11/7133",
   "muslim": "0/7536",
   "abudawud": "1/7360",
   "nasai": "2/5716",
@@ -26,7 +26,7 @@
   "عارضة الأحوذي بشرح صحيح الترمذي (غير موجود في turath.io)",
   "حاشية السندي على مسند الإمام أحمد (غير موجود في turath.io)"
  ],
- "at": "2026-11-19",
+ "at": "2026-11-20",
  "links_books": [
   "alamhadith",
   "awnmabud",
