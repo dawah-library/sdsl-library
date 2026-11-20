@@ -1,11 +1,12 @@
 name: صوتيات المكتبة (تحويل النص إلى صوت)
 # مجاني بالكامل: أصوات Edge العصبية العربية عبر edge-tts، والملفات الصوتية في «إصدارات» المستودع (خارج مساحة R2 والموقع)
-# مُفعَّل بقرار المدير (٣١ أكتوبر): يعمل يوميًا تلقائيًا لكتب مكتبة الدعوة (الأقصر أولًا) ثم ما تختاره الإدارة من المكتبة العامة،
+# التشغيل التلقائي موقوف بقرار المدير (٢٠ نوفمبر): لا يُسجَّل إلا ما تضيفه الإدارة يدويًّا إلى الطابور (كان مفعَّلًا تلقائيًّا منذ ٣١ أكتوبر)،
 # بالنص المشكول المدقق متى توفر، ويعيد الصفحات التي تغيّر نصها أو تشكيلها.
 on:
   schedule:
-    - cron: "33 0 * * *"   # يوميًا
-    - cron: "33 12 * * *"  # جولة ثانية
+    # الجولتان المجدولتان تكملان ما وضعته الإدارة في الطابور فقط (ولا تستهلكان شيئًا إن كان فارغًا)؛ لا اختيار تلقائي ولا إعادة تسجيل
+    - cron: "33 0 * * *"
+    - cron: "33 12 * * *"
   push:
     branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["data/audio/_queue.json", "data/audio/_auto.json"]
@@ -46,7 +47,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TTS_COMMIT: "1"
-          TTS_AUTO: ${{ github.event.inputs.books == '' && '1' || '0' }}
+          TTS_AUTO: "0"   # أُوقف الاختيار التلقائي (قرار المدير ٢٠ نوفمبر): لا يُسجَّل إلا ما تضعه الإدارة في الطابور
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
@@ -71,7 +72,7 @@ jobs:
           TTS_MAX_MIN: "320"
           TTS_ONLY: ${{ github.event.inputs.books }}
           TTS_FORCE: ${{ github.event.inputs.force }}
-          TTS_REFRESH: ${{ github.event_name == 'schedule' && '1' || github.event.inputs.refresh || '0' }}
+          TTS_REFRESH: ${{ github.event.inputs.refresh || '0' }}   # إعادة التسجيل الآلية موقوفة؛ تبقى بطلب الإدارة
         run: |
           git config user.name "sdsl-bot"
           git config user.email "sdsl-bot@users.noreply.github.com"

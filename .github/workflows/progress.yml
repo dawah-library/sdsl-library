@@ -28,12 +28,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/progress.py
-      - run: bash tools/git-save.sh "متابعة إنجاز الكتب" data/progress.json data/tashjir/_queue.json data/audio/_queue.json
-      - name: تشغيل الخدمات للكتب المكتملة تدقيقًا
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          [ -s .progress-dispatch ] || exit 0
-          grep -q '^tashjir' .progress-dispatch && gh workflow run tashjir.yml --ref main || true
-          ids=$(grep '^tts ' .progress-dispatch | cut -d' ' -f2 | paste -sd, -)
-          [ -n "$ids" ] && gh workflow run tts.yml --ref main -f books="$ids" -f approved="معتمد" || true
+      - run: bash tools/git-save.sh "متابعة إنجاز الكتب" data/progress.json
+      # (أُلغي تشغيل التشجير والصوتيات آليًّا للكتب المكتملة تدقيقًا بقرار المدير ٢٠ نوفمبر: تُشغَّل من الإدارة يدويًّا)
