@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """النشرة البريدية الأسبوعية (المرحلة ٩): جديد الكتب والإصدارات في أسبوعها، والتطويرات الجديدة في المنصة، وفائدة علمية مختارة
-بنصها وعزوها، وكتاب الأسبوع برابطه؛ مع رابط إلغاء الاشتراك بضغطة في كل رسالة.
+بنصها وعزوها، وكتاب الأسبوع برابطه، وجديد الصوتيات والإذاعة، ووصية تحفيزية في طلب العلم (طلب المدير ٢٠ نوفمبر)؛
+الأعضاء المسجلون بالبريد مشتركون تلقائيًّا (supabase/migrations/2026-11-20-member-notify.sql)، ومن أوقفها من «حسابي» لا تصله؛ مع رابط إلغاء الاشتراك بضغطة في كل رسالة.
 - العدد يُحفظ علنًا (بلا عناوين) في data/newsletter/<التاريخ>.json ويُعرض أرشيفه في #/newsletter.
 - الإرسال: Resend (RESEND_API_KEY) إلى المؤكَّدين في public.subscribers (SUPABASE_URL + SUPABASE_SECRET_KEY) ممن اختاروا newsletter.
 - بلا مفاتيح: يُبنى العدد ويُحفظ ولا يُرسل. NL_DRY=1 للتجربة دون إرسال.
@@ -20,13 +21,18 @@ def build(today):
     fw = (jl(os.path.join(D, "fawaid.json"), {}) or {}).get("items", []); random.seed(str(today)); f = random.choice(fw) if fw else None
     wk = jl(os.path.join(D, "weekly.json"), {}) or {}; cur = None
     if wk.get("st") == "ok": cur = next((w for w in reversed(wk.get("weeks", [])) if w["from"] <= str(today)), None)
+    au = [(k, x) for k, x in (jl(os.path.join(D, "audio", "_list.json"), {}) or {}).items() if isinstance(x, dict) and x.get("ok") and not x.get("preview") and str(x.get("upd") or "") >= since][:8]
+    qs = [q for q in (jl(os.path.join(D, "quotes.json"), {}) or {}).get("items", []) if q.get("c") in ("ilm", "qiraa", "adab", "wasaya")]
+    mq = qs[(today.toordinal() // 7) % len(qs)] if qs else None
     dev = []
     ab = os.path.join(ROOT, "docs", "requirements-2026-11.md")
     if os.path.exists(ab): dev = [re.sub(r"\s+", " ", m).strip() for m in re.findall(r"^\| ([^|]{6,90}) \| [^|]+ \| منجز", open(ab, encoding="utf-8").read(), re.M)][:5]
     return {"date": str(today), "new": [{"id": b["id"], "t": b.get("setTitle") or b["title"], "a": A.get(b.get("authorId"), {}).get("name", "")} for b in new],
             "rel": [{"t": x.get("t") or x.get("title"), "u": x.get("u") or x.get("url")} for x in rel],
             "faida": {"t": f["text"].strip("() "), "b": f["b"], "p": f["p"], "bt": next((b.get("setTitle") or b["title"] for b in cat["books"] if b["id"] == f["b"]), "")} if f else None,
-            "week": {"b": cur["b"], "t": cur["t"], "a": cur["a"], "sn": cur["sn"][0]} if cur else None, "dev": dev}
+            "week": {"b": cur["b"], "t": cur["t"], "a": cur["a"], "sn": cur["sn"][0]} if cur else None, "dev": dev,
+            "audio": [{"id": k, "t": x.get("t", "")} for k, x in au],
+            "motiv": {"t": mq["t"], "k": mq.get("k", ""), "ref": mq.get("ref", ""), "b": mq["b"], "p": mq["p"], "bt": mq.get("title", ""), "who": mq.get("who") or mq.get("author", "")} if mq else None}
 
 
 def html_of(N, unsub):
@@ -35,9 +41,11 @@ def html_of(N, unsub):
          '<h2 style="color:#0f5c4d;margin:0">مكتبة الدعوة السلفية الرقمية</h2><p style="color:#7a6a4a;margin:0 0 14px">النشرة الأسبوعية — %s</p>' % E(N["date"])]
     if N.get("week"): w = N["week"]; h.append('<h3 style="color:#0f5c4d">📖 كتاب الأسبوع: %s</h3><p>%s</p><blockquote style="border-right:4px solid #b88a2e;margin:0;padding:6px 12px;background:#f7f1e3">«%s» <small>(ص %s)</small></blockquote><p><a href="%s/book/%s/1">اقرأ الكتاب</a></p>' % (E(w["t"]), E(w["a"]), E(w["sn"]["t"]), w["sn"]["p"], SITE, E(w["b"])))
     if N["new"]: h.append('<h3 style="color:#0f5c4d">🆕 جديد الكتب</h3><ul>%s</ul>' % li('<a href="%s/book/%s/1">%s</a> — %s' % (SITE, E(b["id"]), E(b["t"]), E(b["a"])) for b in N["new"]))
+    if N.get("audio"): h.append('<h3 style="color:#0f5c4d">🎧 جديد الصوتيات والإذاعة</h3><ul>%s</ul>' % li('<a href="%s/audio/%s">%s</a>' % (SITE, E(x["id"]), E(x["t"])) for x in N["audio"]))
     if N["rel"]: h.append('<h3 style="color:#0f5c4d">📚 جديد الإصدارات</h3><ul>%s</ul>' % li(E(r["t"] or "") for r in N["rel"]))
     if N["dev"]: h.append('<h3 style="color:#0f5c4d">🛠️ جديد المنصة</h3><ul>%s</ul>' % li(E(x) for x in N["dev"]))
     if N.get("faida"): f = N["faida"]; h.append('<h3 style="color:#0f5c4d">💡 فائدة علمية</h3><p>«%s»</p><p style="font-size:13px;color:#666">— %s، ص %s • <a href="%s/book/%s/%s">موضعها</a></p>' % (E(f["t"]), E(f["bt"]), f["p"], SITE, E(f["b"]), f["p"]))
+    if N.get("motiv"): m = N["motiv"]; h.append('<h3 style="color:#0f5c4d">✦ من وصايا طلب العلم وعلو الهمة</h3><blockquote style="border-right:4px solid #b88a2e;margin:0;padding:6px 12px;background:#f7f1e3;font-size:17px">%s%s</blockquote><p style="font-size:13px;color:#666">— %s، ص %s</p><p>اجعل لك هذا الأسبوع وردًا ثابتًا من القراءة، وشارك في <a href="%s/groups">القراءة الجماعية</a>.</p>' % (E(m["t"]) if m["k"] != "آية" else "﴿%s﴾" % E(m["t"]), (" " + E(m["ref"])) if m["ref"] else "", E(m["bt"]), m["p"], SITE))
     h.append('<p style="font-size:12px;color:#999;margin-top:22px">وصلتك هذه الرسالة لاشتراكك في النشرة. <a href="%s">إلغاء الاشتراك بضغطة</a> • <a href="%s/newsletter">الأرشيف</a></p></div>' % (unsub, SITE))
     return "".join(h)
 
@@ -58,6 +66,16 @@ def main():
     key = os.environ.get("RESEND_API_KEY")
     if not key or not os.environ.get("SUPABASE_URL") or os.environ.get("NL_DRY") == "1": print("بُني العدد ولم يُرسل (لا مفاتيح أو تجربة)"); return
     subs = sb("subscribers?select=email,token&confirmed=eq.true&unsub_at=is.null&kinds=cs.%7Bnewsletter%7D&limit=5000")
+    # من أوقف البريد أو النشرة من «حسابي ← الإشعارات والبريد» (member_prefs) لا تصله
+    try:
+        off = sb("member_prefs?select=user_id&or=(mail.eq.false,off.cs.%7Bnewsletter%7D)&limit=5000"); k = os.environ.get("SUPABASE_SECRET_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY"); h = {"apikey": k}
+        if not k.startswith("sb_"): h["Authorization"] = "Bearer " + k
+        ems = set()
+        for r in off[:2000]:
+            try: ems.add((json.load(urllib.request.urlopen(urllib.request.Request(os.environ["SUPABASE_URL"] + "/auth/v1/admin/users/" + r["user_id"], headers=h), timeout=30)).get("email") or "").lower())
+            except Exception: pass
+        subs = [x for x in subs if x["email"].lower() not in ems]
+    except Exception as e: print("تفضيلات الأعضاء:", str(e)[:100])
     sent = 0
     for i in range(0, len(subs), 90):  # دفعات Resend (١٠٠ كحد)
         batch = [{"from": os.environ.get("MAIL_FROM") or "مكتبة الدعوة السلفية الرقمية <noreply@dawahlibrary.org>", "to": s["email"], "subject": "النشرة الأسبوعية — " + N["date"],
