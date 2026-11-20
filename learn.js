@@ -180,7 +180,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
     if (!id) {
       const mine = R().slice(-12).reverse();
       return view(`<h2>اختبارات الكتب</h2><p class="mut">اختبر فهمك لكتب المكتبة بثلاثة مستويات: سهل ومتوسط ومتقدم. الأسئلة مأخوذة من نص الكتاب ومراجَعة من إدارة المكتبة، ولكل سؤال رقم صفحته للرجوع إليه. نتائجك تُحفظ على جهازك فقط.</p>
-       <div class="lvls">${[["easy","سهل","١٥ سؤالًا: معلومات صريحة واضحة، مع زر مساعدة يحيل إلى الصفحة"],["mid","متوسط","٣٠ سؤالًا: فهم وربط وتعليل وتطبيق، ومساعدة عند الحاجة"],["hard","متقدم","٥٠ سؤالًا: مسائل دقيقة وترجيحات وأوجه استدلال، بلا مساعدة"]].map(([k,n,d])=>`<div class="lvl lv-${k}"><b>${n}</b><span>${d}</span></div>`).join("")}</div>
+       <div class="lvls">${[["easy","سهل","١٥ سؤالًا: معلومات صريحة واضحة، مع تلميح يعين على الجواب"],["mid","متوسط","٣٠ سؤالًا: فهم وربط وتعليل وتطبيق، مع تلميح عند الحاجة"],["hard","متقدم","٥٠ سؤالًا: مسائل دقيقة وترجيحات وأوجه استدلال، بلا مساعدة"]].map(([k,n,d])=>`<div class="lvl lv-${k}"><b>${n}</b><span>${d}</span></div>`).join("")}</div>
        <p class="mut">الأسئلة متنوعة: اختيار من متعدد، وصح أم خطأ، و«أكمل» للأحاديث والقواعد والتعريفات التي يحسن حفظها. كل سؤال تام السياق، ومعه بعد الإجابة تعليله وعبارة الكتاب ورقم صفحتها، ويتجدد الاختبار عند إعادته.</p>
        ${items.length ? [["dawah","كتب مشايخ الدعوة السلفية"],["turath","المكتبة العامة"]].map(([c,cn])=>{const L2=items.filter(x=>bc(B(x.b))===c);return L2.length?`<h3>${cn} <span class="mut">(${toAr(L2.length)})</span></h3><div class="newg">${L2.map(x => { const b = B(x.b); return `<section class="newc"><h3>${esc(b.setTitle && b.vol ? b.setTitle + " — " + b.title.replace(b.setTitle,"").replace(/^\s*[—-]\s*/,"") : b.title)}</h3><span class="mut">${esc(A_(b))} • ${toAr(x.n)} سؤالًا</span><div class="chips" style="margin-top:8px">${Object.keys(LV).filter(l => (x.lv || {})[l]).map(l => `<a class="chip" href="#/quizzes/${esc(x.b)}?l=${l}">${LV[l]} (${toAr(x.lv[l])})</a>`).join("")}</div></section>`; }).join("")}</div>`:""}).join("")+'<p class="mut">كل سؤال أُعدّ من نص الكتاب تامّ السياق، وراجعه مدقق ثانٍ فحذف الغامض والمبتور وما له أكثر من جواب، ومعه بعد الإجابة تعليله وعبارة الكتاب ورقم صفحتها.</p>' : '<div class="note">تُعدّ الآن اختبارات محرَّرة لكتب المكتبة (سهل ١٥ سؤالًا، ومتوسط ٣٠، ومتقدم ٥٠)، تُكتب بأسئلة تامة السياق واختيارات صحيحة المعنى، ويراجعها مدقق ثانٍ قبل نشرها؛ وتظهر هنا تباعًا كتابًا بعد كتاب. ولأسئلة الكتب بأجوبتها كما وردت فيها: <a href="#/qa">سؤال وجواب من الكتب</a>.</div>'}
        ${mine.length ? `<h3>نتائجي السابقة</h3>${mine.map(m => { const b = B(m.b); return `<div class="bk"><b>${esc(b ? b.title : m.b)} — ${LV[m.l] || ""}</b><span>${toAr(m.s)} من ${toAr(m.n)} • ${esc(m.at)}</span> <a class="btn s" href="#/quizzes/${esc(m.b)}?l=${m.l}">إعادة</a></div>`; }).join("")}<button class="btn s" data-act="qzclear">مسح نتائجي من هذا الجهاز</button>` : ""}`);
@@ -199,7 +199,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
      <nav class="chips">${Object.keys(LV).map(k => `<a class="chip${k === l ? " x" : ""}" href="#/quizzes/${esc(id)}?l=${k}">${LV[k]} — ${toAr(QN[k])} سؤالًا</a>`).join("")}</nav>${qs.length < QN[l] ? `<p class="mut">المتاح الآن في هذا المستوى ${toAr(qs.length)} سؤالًا، ويكتمل العدد بعد إعداد الأسئلة المحرَّرة للكتاب.</p>` : ""}
      <form data-form="qzrun" class="qz">${qs.map((x, i) => `<fieldset class="qq" data-i="${i}"><legend><b>${toAr(i + 1)}.</b> <span class="mut">${TY[x.type]}</span></legend><p class="qt">${esc(x.q)}</p>
       ${x.type === "mcq" ? x.opts.map(o => `<label class="inl qo"><input type="radio" name="a${i}" value="${esc(o)}" required> ${esc(o)}</label>`).join("") : x.type === "tf" ? ["صح", "خطأ"].map(o => `<label class="inl qo"><input type="radio" name="a${i}" value="${o}" required> ${o}</label>`).join("") : `<input name="a${i}" required placeholder="اكتب الكلمة الناقصة" autocomplete="off">`}
-      ${l !== "hard" ? `<details class="qh"><summary>مساعدة</summary><p class="mut">راجع <a href="#/book/${esc(id)}/${x.p}" target="_blank">الصفحة ${toAr(x.p)} من الكتاب</a>.</p></details>` : ""}<div class="qr" hidden></div></fieldset>`).join("")}
+      ${l !== "hard" ? `<details class="qh"><summary>💡 تلميح</summary>${x.h ? `<p>${esc(x.h)}</p>` : ""}<p class="mut">${x.h ? "وللاستزادة" : "راجع"} <a href="#/book/${esc(id)}/${x.p}" target="_blank">الصفحة ${toAr(x.p)} من الكتاب</a>.</p></details>` : ""}<div class="qr" hidden></div></fieldset>`).join("")}
       <div class="savebar"><button class="btn p">تصحيح الإجابات</button></div></form><div id="qzres"></div>`);
   }
   let CUR = null;
@@ -208,16 +208,74 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
   const same = (a, b) => !!a && bare(a) === bare(b);
   function grade(f) {
     if (!CUR) return; const fd = new FormData(f); let s = 0;
+    CUR.ans = [];
     CUR.qs.forEach((x, i) => {
       const v = String(fd.get("a" + i) || "").trim(), ok = same(v, x.a) || (x.alt || []).some(y => same(v, y)), el = f.querySelector(`.qq[data-i="${i}"] .qr`);
-      if (ok) s++; el.hidden = false; el.className = "qr " + (ok ? "ok" : "no");
+      CUR.ans[i] = { v, ok }; if (ok) s++; el.hidden = false; el.className = "qr " + (ok ? "ok" : "no");
       el.innerHTML = (ok ? "✔ إجابة صحيحة" : `✘ الإجابة الصحيحة: <b>${esc(x.a)}</b>`) + (x.e ? `<br>${esc(x.e)}` : "") + (x.ctx && (!ok || x.e) ? `<br><span class="mut">من الكتاب: «${esc(x.ctx)}»</span>` : "") + ` — <a href="#/book/${esc(CUR.b)}/${x.p}" target="_blank">ص ${toAr(x.p)}</a>`;
     });
     const n = CUR.qs.length, pc = Math.round(s * 100 / n);
     const fb = pc >= 90 ? "ممتاز، فهمٌ متمكن للكتاب. جرّب المستوى الأعلى." : pc >= 70 ? "جيد جدًا. راجع الأسئلة التي أخطأت فيها من صفحاتها." : pc >= 50 ? "جيد. يحسن أن تعيد قراءة المواضع المشار إليها ثم تعيد الاختبار." : "تحتاج إلى مراجعة الكتاب. ابدأ بالصفحات المشار إليها ثم أعد المحاولة.";
-    $("#qzres").innerHTML = `<div class="note qzsum"><b>نتيجتك: ${toAr(s)} من ${toAr(n)} (${toAr(pc)}٪)</b><br>${fb}</div><a class="btn" href="#/quizzes/${esc(CUR.b)}?l=${CUR.l}&r=${Date.now()}">اختبار جديد</a> <a class="btn" href="#/quizzes">كل الاختبارات</a>`;
+    $("#qzres").innerHTML = `<div class="note qzsum"><b>نتيجتك: ${toAr(s)} من ${toAr(n)} (${toAr(pc)}٪)</b><br>${fb}</div><div class="qzdl"><b>تحميل</b> <input id="qzname" placeholder="اسمك في الملف (اختياري)" value="${esc(lsGet("qzname"))}" autocomplete="name">
+      <div class="chips"><button class="chip" data-act="qzout" data-k="res" data-f="pdf">📄 النتيجة PDF</button><button class="chip" data-act="qzout" data-k="res" data-f="png">🖼️ النتيجة صورة</button>
+      <button class="chip" data-act="qzout" data-k="all" data-f="pdf">📄 الأسئلة بإجاباتي PDF</button><button class="chip" data-act="qzout" data-k="all" data-f="png">🖼️ الأسئلة بإجاباتي صورًا</button></div></div>
+      <a class="btn" href="#/quizzes/${esc(CUR.b)}?l=${CUR.l}&r=${Date.now()}">اختبار جديد</a> <a class="btn" href="#/quizzes">كل الاختبارات</a>`;
+    Object.assign(CUR, { s, n, pc, fb, at: today() });
     R().push({ b: CUR.b, l: CUR.l, s, n, at: today() }); if (S.qres.length > 100) S.qres = S.qres.slice(-100); saveS();
     f.querySelector(".savebar").hidden = true; $("#qzres").scrollIntoView({ behavior: "smooth" });
+  }
+
+  // ---------- تحميل النتيجة والأسئلة بإجابات العضو (PDF بالطباعة، أو صور PNG) ----------
+  const lsGet = k => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }, lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
+  const qzTitle = () => { const b = B(CUR.b) || {}; return b.setTitle && b.vol ? b.setTitle + " — " + b.title : (b.title || CUR.b); };
+  const qzRows = () => CUR.qs.map((x, i) => ({ x, i, v: (CUR.ans[i] || {}).v || "", ok: (CUR.ans[i] || {}).ok }));
+  function qzPdf(k, nm) {
+    if (!CUR || !CUR.ans) return; const o = location.origin, t = qzTitle();
+    const rows = k === "all" ? qzRows().map(r => `<section class="q ${r.ok ? "ok" : "no"}"><p class="qt"><b>${toAr(r.i + 1)}.</b> <small>${TY[r.x.type]}</small> ${esc(r.x.q)}</p>
+${r.x.type === "mcq" ? `<ul>${r.x.opts.map(op => `<li class="${op === r.x.a ? "c" : ""}${op === r.v && op !== r.x.a ? " w" : ""}">${esc(op)}</li>`).join("")}</ul>` : ""}
+<p>إجابتي: <b>${esc(r.v || "—")}</b> ${r.ok ? "✔" : "✘"}${r.ok ? "" : ` — الصواب: <b>${esc(r.x.a)}</b>`}</p>${r.x.e ? `<p class="e">${esc(r.x.e)}</p>` : ""}<p class="e">ص ${toAr(r.x.p)} من الكتاب</p></section>`).join("") : "";
+    const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نتيجة اختبار ${esc(t)}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap">
+<style>@page{size:A4;margin:16mm 14mm}body{font-family:Amiri,'Traditional Arabic',serif;font-size:13.5pt;line-height:1.8;color:#14231f}
+.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #b88a2e;padding-bottom:6px;color:#0f5c4d}.hd img{height:42px}
+h1{color:#0f5c4d;font-size:20pt;margin:12px 0 4px}.sum{border:2px solid #0f5c4d;border-radius:10px;padding:10px 14px;margin:10px 0 16px}.sum b.big{font-size:20pt;color:#0f5c4d}
+.q{border:1px solid #d6dfda;border-radius:8px;padding:6px 12px;margin:8px 0;page-break-inside:avoid}.q.ok{border-right:5px solid #2e7d32}.q.no{border-right:5px solid #c62828}
+.qt{margin:2px 0}small{color:#7a6a4a}ul{margin:2px 0;padding-right:22px}li.c{color:#2e7d32;font-weight:700}li.w{color:#c62828;text-decoration:line-through}.e{color:#5b6b66;font-size:11.5pt;margin:2px 0}
+.ft{margin-top:14px;text-align:center;color:#5b6b66;font-size:10pt;border-top:1px solid #d6dfda;padding-top:6px}</style></head><body>
+<div class="hd"><span>مكتبة الدعوة السلفية الرقمية</span><img src="${o}/assets/logo-sdsl-128.png" alt=""><span>dawahlibrary.org</span></div>
+<h1>نتيجة اختبار: ${esc(t)}</h1><div class="sum">${nm ? `الاسم: <b>${esc(nm)}</b><br>` : ""}المستوى: <b>${LV[CUR.l]}</b> • التاريخ: ${esc(CUR.at)}<br>النتيجة: <b class="big">${toAr(CUR.s)} من ${toAr(CUR.n)} (${toAr(CUR.pc)}٪)</b><br>${esc(CUR.fb)}</div>
+${rows}<div class="ft">اختبار ذاتي من مكتبة الدعوة السلفية الرقمية (dawahlibrary.org)، أسئلته من نص الكتاب مع أرقام صفحاتها.</div>
+<script>onload=()=>setTimeout(()=>print(),700)<\/script></body></html>`;
+    const w = window.open("", "_blank"); if (!w) return toast("اسمح بالنوافذ المنبثقة ثم أعد المحاولة"); w.document.write(html); w.document.close();
+  }
+  async function qzImg(k, nm) {
+    if (!CUR || !CUR.ans) return; await document.fonts.ready; const t = qzTitle(), W = 1240, H = 1754, M = 70;
+    const logo = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = "assets/logo-sdsl-128.png"; });
+    const pages = []; let c, x, y;
+    const wrap = (s, w) => { const out = []; let line = ""; String(s).split(/\s+/).forEach(wd => { const tl = line ? line + " " + wd : wd; if (line && x.measureText(tl).width > w) { out.push(line); line = wd; } else line = tl; }); if (line) out.push(line); return out; };
+    const page = () => { c = document.createElement("canvas"); c.width = W; c.height = H; x = c.getContext("2d"); pages.push(c);
+      x.fillStyle = "#fbf7ee"; x.fillRect(0, 0, W, H); x.strokeStyle = "#b88a2e"; x.lineWidth = 6; x.strokeRect(24, 24, W - 48, H - 48);
+      x.direction = "rtl"; x.textAlign = "right"; if (logo) x.drawImage(logo, M, 40, 64, 64);
+      x.fillStyle = "#0f5c4d"; x.font = 'bold 28px Amiri, serif'; x.fillText("مكتبة الدعوة السلفية الرقمية", W - M, 82); x.font = '22px Amiri, serif'; x.fillStyle = "#5b6b66"; x.fillText("dawahlibrary.org", W - M, 110);
+      y = 150; };
+    const text = (s, font, color, gap, ind) => { x.font = font; x.fillStyle = color; for (const ln of wrap(s, W - 2 * M - (ind || 0))) { if (y > H - 90) page(), x.font = font, x.fillStyle = color; x.fillText(ln, W - M - (ind || 0), y); y += gap; } };
+    page();
+    text("نتيجة اختبار: " + t, 'bold 40px Amiri, serif', "#0f5c4d", 54);
+    if (nm) text("الاسم: " + nm, '30px Amiri, serif', "#2a241a", 44);
+    text("المستوى: " + LV[CUR.l] + "  •  التاريخ: " + CUR.at, '28px Amiri, serif', "#2a241a", 42);
+    text("النتيجة: " + toAr(CUR.s) + " من " + toAr(CUR.n) + " (" + toAr(CUR.pc) + "٪)", 'bold 44px Amiri, serif', CUR.pc >= 50 ? "#2e7d32" : "#c62828", 60);
+    text(CUR.fb, '28px Amiri, serif', "#2a241a", 42); y += 16;
+    if (k === "all") qzRows().forEach(r => {
+      if (y > H - 260) page();
+      text(toAr(r.i + 1) + ". " + r.x.q, 'bold 28px Amiri, serif', "#14231f", 40);
+      if (r.x.type === "mcq") r.x.opts.forEach(op => text("◦ " + op, '26px Amiri, serif', op === r.x.a ? "#2e7d32" : op === r.v ? "#c62828" : "#3a4a45", 36, 24));
+      text("إجابتي: " + (r.v || "—") + (r.ok ? "  ✔" : "  ✘   الصواب: " + r.x.a), '26px Amiri, serif', r.ok ? "#2e7d32" : "#c62828", 38, 24);
+      if (r.x.e) text(r.x.e, '23px Amiri, serif', "#5b6b66", 33, 24);
+      text("ص " + toAr(r.x.p) + " من الكتاب", '22px Amiri, serif', "#7a6a4a", 30, 24); y += 18;
+    });
+    pages.forEach((pg, i) => { const g = pg.getContext("2d"); g.direction = "rtl"; g.textAlign = "center"; g.fillStyle = "#5b6b66"; g.font = '20px Amiri, serif'; g.fillText((pages.length > 1 ? "صفحة " + toAr(i + 1) + " من " + toAr(pages.length) + " • " : "") + "اختبار ذاتي من مكتبة الدعوة السلفية الرقمية", W / 2, H - 50); });
+    const base = "اختبار-" + t.slice(0, 40) + "-" + LV[CUR.l];
+    for (let i = 0; i < pages.length; i++) { const b = await new Promise(r => pages[i].toBlob(r, "image/png")); await dl(base + (pages.length > 1 ? "-" + (i + 1) : "") + ".png", b); await new Promise(r => setTimeout(r, 350)); }
   }
   // ---------- الإدارة ----------
   async function admin(q) {
@@ -267,6 +325,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
   document.addEventListener("click", async e => {
     const el = e.target.closest("[data-act^=qz],[data-act=sumpdf]"); if (!el) return; e.preventDefault(); e.stopImmediatePropagation(); const a = el.dataset.act;
     if (a === "sumpdf") pdf(el.dataset.b, +el.dataset.r);
+    else if (a === "qzout") { const nm = ($("#qzname") || {}).value || ""; lsSet("qzname", nm.trim()); (el.dataset.f === "pdf" ? qzPdf : qzImg)(el.dataset.k, nm.trim()); }
     else if (a === "qzai") { el.disabled = true; try { if (!GH.on) throw new Error("فعّل الإدارة المباشرة أولًا."); const bid = el.dataset.b; await GH.editJSON("data/study-queue.json", o => { o = o && o.items ? o : { items: [] }; o.items = [{ id: bid, do: ["quiz", "summ"] }].concat(o.items.filter(x => x.id !== bid)); return o; }, "طلب اختبار ومختصر محرَّرين: " + ((B(bid) || {}).title || bid)); $("#qzais").textContent = "أُضيف في أول الطابور؛ يبدأ الإعداد خلال دقائق ويصلك إشعار عند انتهائه."; } catch (x) { toast(x.message); el.disabled = false; } }
     else if (a === "qzclear") { if (confirm("مسح نتائج الاختبارات من هذا الجهاز؟")) { S.qres = []; saveS(); route(); } }
     else if (a === "qzdraft") { el.disabled = true; el.textContent = "جارٍ التحليل…"; try { const b = await loadBook(el.dataset.b), qs = draft(b); QD.qs = QD.qs.concat(qs); $("#qzlist").insertAdjacentHTML("beforeend", qs.map(rowQ).join("")); el.textContent = "أُضيفت " + toAr(qs.length) + " مسودة — راجعها ثم احفظ"; } catch (err) { el.disabled = false; el.textContent = "تعذر: " + err.message; } }

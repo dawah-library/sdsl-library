@@ -1,0 +1,90 @@
+name: مراجعة الاختبارات المكتملة (تصحيح وتلميحات)
+# طلب المدير (٢٠ نوفمبر ٢٠٢٦): إعادة تدقيق أسئلة الاختبارات المنجزة وأجوبتها وتعليلها، وتلميحات للسهل والمتوسط.
+# لا يُنشئ أسئلة جديدة؛ والجولة المجدولة تكمل ما بقي فقط، فإذا اكتملت المراجعة لم تستهلك شيئًا.
+on:
+  schedule:
+    - cron: "57 9 * * *"
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "معرّفات كتب (اختياري)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+  models: read
+  id-token: write
+concurrency:
+  group: quiz-review
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" quiz_review)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح quiz_review: $on"
+  build:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: هل بقي ما يُراجع؟
+        id: left
+        run: |
+          n=$(python3 -c 'import json,glob
+          print(sum(1 for f in glob.glob("data/quizzes/*.json") if not f.endswith("index.json") for q in (json.load(open(f)).get("qs") or []) if q.get("rv")!=2 and q.get("ok") is not False))')
+          echo "n=$n" >> "$GITHUB_OUTPUT"; echo "بقي: $n"
+      - name: المراجعة
+        if: ${{ steps.left.outputs.n != '0' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
+          QR_ONLY: ${{ github.event.inputs.books }}
+          QR_COMMIT: "1"
+          QR_MINUTES: "200"
+          TJ_MODEL: "gemini-3.7-flash"
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          python3 tools/quiz-review.py
+      - name: الحفظ
+        if: always()
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          git add data/quizzes
+          git diff --cached --quiet && exit 0
+          git commit -qm "مراجعة الاختبارات: تحديث"
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break; sleep 5; done
+      - name: إشعار
+        if: always()
+        run: '[ -s .qr-report.txt ] && python3 tools/notify.py "$(cat .qr-report.txt)" || true'
