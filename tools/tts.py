@@ -363,7 +363,56 @@ class QuotaOut(Exception):
     pass
 
 
+# ---------- ElevenLabs (المرحلة ٥): ربط حقيقي بواجهة ElevenLabs ----------
+# الصوت "eleven:<voice_id>"، والإعدادات من data/audio/_settings.json → "eleven" (يحفظها المشرف من إدارة الصوتيات):
+# model (eleven_multilingual_v2 الأدق للكتب الطويلة، eleven_v3 الأكثر تعبيرًا، eleven_flash_v2_5/turbo_v2_5 الأسرع بنصف التكلفة)،
+# stability، similarity، style، speed، boost. المفتاح ELEVENLABS_API_KEY في أسرار GitHub فقط. سقف شهري للأحرف ELEVEN_MONTHLY_CHARS
+# (الافتراضي ٢٠٠ ألف) مع سجل الاستهلاك data/audio/_eleven-usage.json، فلا تُتجاوز الباقة دون قرار.
+ELS = {}
+EL_USAGE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "audio", "_eleven-usage.json")
+
+
+def el_prepare(text, model):
+    """الوقفات: سطر جديد (عنوان أو فقرة) وقفة أطول؛ علامات الترقيم يحترمها النموذج. وسوم <break> لا تدعمها v3 فتبقى أسطرًا."""
+    t = re.sub(r"[ \t]+", " ", text).strip()
+    if model == "eleven_v3": return t
+    return re.sub(r"\n+", ' <break time="0.8s" /> ', t)
+
+
+def speak_eleven(text, voice_id, path):
+    import base64, json as _j, urllib.request, urllib.error, datetime
+    key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    if not key: raise QuotaOut("لا مفتاح ElevenLabs (ELEVENLABS_API_KEY)")
+    cap = int(os.environ.get("ELEVEN_MONTHLY_CHARS", "200000") or 0); mon = datetime.date.today().strftime("%Y-%m")
+    use = jload(EL_USAGE, {}); used = int(use.get(mon, {}).get("chars", 0))
+    if cap and used + len(text) > cap: raise QuotaOut("بلغ استهلاك ElevenLabs السقف الشهري (%d حرف)" % cap)
+    o = ELS or {}; model = o.get("model") or "eleven_multilingual_v2"
+    body = {"text": el_prepare(text, model), "model_id": model,
+            "voice_settings": {"stability": float(o.get("stability", 0.55)), "similarity_boost": float(o.get("similarity", 0.8)), "style": float(o.get("style", 0.1)),
+                               "use_speaker_boost": bool(o.get("boost", True)), "speed": float(o.get("speed", 0.95))}}
+    if model in ("eleven_flash_v2_5", "eleven_turbo_v2_5"): body["language_code"] = "ar"  # فرض العربية في النماذج السريعة
+    req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/%s/with-timestamps?output_format=mp3_44100_128" % voice_id,
+                                 data=_j.dumps(body).encode(), headers={"content-type": "application/json", "xi-api-key": key})
+    try: j = _j.load(urllib.request.urlopen(req, timeout=300))
+    except urllib.error.HTTPError as e:
+        msg = e.read().decode("utf-8", "ignore")[:200]
+        if e.code in (401, 402, 429) or "quota" in msg: raise QuotaOut("ElevenLabs %d: %s" % (e.code, msg))
+        raise RuntimeError("ElevenLabs %d: %s" % (e.code, msg))
+    open(path, "wb").write(base64.b64decode(j["audio_base64"]))
+    e = use.setdefault(mon, {"chars": 0, "req": 0, "books": {}}); e["chars"] += len(text); e["req"] += 1; jsave(EL_USAGE, use)
+    # توقيت الجمل من محاذاة الأحرف التي تعيدها الواجهة
+    al = j.get("normalized_alignment") or j.get("alignment") or {}; ch, st = al.get("characters") or [], al.get("character_start_times_seconds") or []
+    spoken = "".join(ch); out = []; pos = 0
+    for x in [x for x in re.split(r"(?<=[.؟!:؛])\s+|\n+", text) if x.strip()]:
+        k = spoken.find(x.strip()[:12], pos)
+        if k < 0: k = pos
+        out.append([int((st[k] if k < len(st) else (st[-1] if st else 0)) * 1000), x.strip()]); pos = k + 1
+    return out
+
+
 async def speak(text, voice, rate, path):
+    if str(voice).startswith("eleven:"):  # ElevenLabs (لا يُكمَل بصوت آخر عند نفاد الباقة أو السقف)
+        return speak_eleven(text, voice.split(":", 1)[1], path)
     if str(voice).startswith("gemini:"):  # محرك Gemini بدل Edge
         # لا يُكمَل الكتاب بصوت آخر عند نفاد الحصة: يتوقف ويكمل في الجولة التالية بالصوت نفسه
         try: return speak_gemini(text, voice.split(":", 1)[1], path)
@@ -656,6 +705,7 @@ async def main():
         return await samples()
     global VOICE
     VOICE = jload(os.path.join(AUD, "_settings.json"), {}).get("voice") or VOICE  # الصوت الافتراضي الذي تختاره الإدارة
+    ELS.update(jload(os.path.join(AUD, "_settings.json"), {}).get("eleven") or {})
     global LEX
     SKIP_AUD.update(jload(os.path.join(AUD, "_settings.json"), {}).get("omit") or {})  # من الإدارة: {"<كتاب>": {"front": 4, "back": 6, "pages": [9]}}
     LEX = [x for x in jload(os.path.join(AUD, "_lexicon.json"), {}).get("words", []) if len(x) == 2 and x[0]]

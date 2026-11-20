@@ -16,4 +16,5 @@
 - المرحلة ٣ (منجزة): التشكيل الدقيق (#/tahrir)، المختصر مع تشجير كل فصل وتصديره، المقارنة العلمية (cmpai.js، جدول comparisons) — docs/ai-text-services.md. والبحث الشامل (الفهرس المسبق) مؤجل بقرار المدير.
 - السلسلة التلقائية: تصحيح النص ← التشكيل ← الصوت (refresh للصفحات المصححة) ← الإذاعة (derived.yml)، استثناء صريح من قرار إيقاف التوليد التلقائي.
 - المرحلة ٤ (منجزة): شرح الكتب والمتون — sharh.js، tools/sharh-align.py، data/shp، shp.yml؛ docs/sharh-service.md.
-- المرحلة ٥ (التالية): ElevenLabs.
+- المرحلة ٥ (منجزة، تنتظر المفتاح): ElevenLabs — tools/tts.py (speak_eleven)، eleven.js، api/edit.js mode=eleven؛ docs/elevenlabs.md.
+- المرحلة ٦ (التالية): صانع فيديوهات الكتب.

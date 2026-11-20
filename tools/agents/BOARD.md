@@ -36,3 +36,4 @@
 | P2 | خطة المدير — المرحلة ٢: التدقيق العلمي (تمام المنة، الجامع لأحكام الصيام، إشكالية علم الكلام) والمصدر الواحد للمشتقات | tools/sci-audit.py، tools/derived-sync.py، tools/ocr-quality.py، proof.js، proof.yml | منجزة (claude/busy-noether-ytac52) | الصيام: ٢٤١ صفحة تُعاد من المصورة ثم sci-audit مجددًا؛ اعتماد ٤٤ اقتراحًا في #/proof |
 | P3 | خطة المدير — المرحلة ٣: التشكيل الدقيق، المختصر مع التشجير والتصدير الكامل، المقارنة العلمية | api/edit.js، lib/harakat.js، learn.js، docx.js، cmpai.js، supabase/migrations/2026-11-20-comparisons.sql | منجزة (PR #59) | تطبيق جدول comparisons |
 | P4 | خطة المدير — المرحلة ٤: شرح الكتب والمتون | sharh.js، tools/sharh-align.py، data/shp، shp.yml | منجزة | مشروع الطحاوية مسودة للمراجعة |
+| P5 | خطة المدير — المرحلة ٥: ElevenLabs | tools/tts.py، eleven.js، api/edit.js | منجزة (تنتظر ELEVENLABS_API_KEY) | |

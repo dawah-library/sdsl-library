@@ -79,6 +79,9 @@
 /eds.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/eleven.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /export.js
   Cache-Control: public, max-age=60, must-revalidate
 
