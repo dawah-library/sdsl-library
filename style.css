@@ -1607,3 +1607,5 @@ body.mfull .mpin.on{display:block}body.mfull .mptf{max-width:none;margin:8px 4px
 .hmin .hero .ayah,.hmin .hero .sbox{display:none}
 .hmin .portal{margin-top:0}.hmin .ptrack{padding-top:8px}
 @media (max-height:700px){.hmin .ptile{min-height:280px}}
+.qzdl{border:1px dashed var(--line,#d6dfda);border-radius:10px;padding:8px 10px;margin:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.qzdl input{flex:1 1 180px;max-width:280px}.qzdl .chips{flex-basis:100%}
+details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:.3em 0}
