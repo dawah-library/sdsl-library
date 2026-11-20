@@ -40,6 +40,9 @@
 /arabic.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/armorph.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /askx.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -47,6 +50,9 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /audio.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/cmpai.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /community.js
