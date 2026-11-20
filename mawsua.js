@@ -10,17 +10,19 @@ const MAWS = (() => {
   const entry = async (k, id) => EN[id] || (EN[id] = await getJ(R + k + "/e/" + id + ".json"));
   const flat = t => { const L = []; (t && t.b || []).forEach((b, i) => b.f.forEach((f, j) => f.m.forEach(m => L.push(Object.assign({ bi: i, fi: j, bab: b.t, fasl: f.t }, m))))); return L; };
   const vis = m => m.e && (m.ok || adm());
-  const crumbs = (...l) => `<p class="mwcr"><a href="#/mawsua">الموسوعات العلمية</a>${l.map(([t, h]) => " › " + (h ? `<a href="${h}">${esc(t)}</a>` : esc(t))).join("")}</p>`;
+  const crumbs = (...l) => `<p class="mwcr"><a href="#/mawsua">موسوعات الموقع</a>${l.map(([t, h]) => " › " + (h ? `<a href="${h}">${esc(t)}</a>` : esc(t))).join("")}</p>`;
   const ord = n => ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر"][n] || toAr(n);
 
   async function home(q) {
     const I = await getJ(R + "_index.json"); if (!I) return view('<div class="note">تعذر تحميل الموسوعات.</div>');
-    const tot = I.items.reduce((a, x) => a + x.m, 0), ok = I.items.reduce((a, x) => a + x.ok, 0);
-    view(`<section class="cmhero mwhero"><div><h2>الموسوعات العلمية المتخصصة</h2><p>موسوعات محكمة في العلوم الشرعية، عمادها ومرجعيتها كتب مشايخ الدعوة السلفية ومؤلفاتهم ومقالاتهم وفتاواهم، وتُكمَّل أبوابها ومسائلها من المراجع العلمية المتخصصة المشهورة في كل فن؛
+    const tot = I.items.reduce((a, x) => a + x.m, 0), ok = I.items.reduce((a, x) => a + x.ok, 0), AX = await getJ("data/athar/_index.json");
+    // موسوعة آثار السلف ضمن «موسوعات الموقع» (طلب المدير): أول البطاقات، وصفحتها كما هي في #/athar
+    const ath = `<a class="mwcard mwath" href="#/athar"><i aria-hidden="true">📜</i><b>موسوعة آثار السلف</b><span>وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث وحكمهم ومواعظهم، بألفاظها من كتب السنة والتراجم والرقائق، معزوّة إلى مواضعها مع تخريجها</span><small>${AX ? `${toAr(AX.count || 0)} أثرًا من ${toAr((AX.people || []).length)} علمًا` : "آثار مرتبة بالأبواب والأعلام"}</small><em style="--p:100%"></em></a>`;
+    view(`<section class="cmhero mwhero"><div><h2>موسوعات الموقع</h2><p>موسوعة آثار السلف، والموسوعات العلمية المتخصصة: موسوعات محكمة في العلوم الشرعية، عمادها ومرجعيتها كتب مشايخ الدعوة السلفية ومؤلفاتهم ومقالاتهم وفتاواهم، وتُكمَّل أبوابها ومسائلها من المراجع العلمية المتخصصة المشهورة في كل فن؛
       مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ومراجعة كل مادة قبل نشرها؛ ولكل موسوعة اختبارات «المِسبار» لقياس مستواك فيها.</p>
-      <p class="mut">${toAr(I.items.length)} موسوعة${tot ? ` • ${toAr(tot)} مسألة في المخططات • ${toAr(ok)} مادة معتمدة` : " • تُعد المخططات الآن"}</p></div></section>
+      <p class="mut">${toAr(I.items.length + 1)} موسوعة${tot ? ` • ${toAr(tot)} مسألة في المخططات • ${toAr(ok)} مادة معتمدة` : " • تُعد المخططات الآن"}</p></div></section>
       <form class="sbox" data-form="mwq" style="max-width:none"><input name="q" type="search" value="${esc(q.q || "")}" placeholder="ابحث عن مسألة في الموسوعات كلها" aria-label="بحث في الموسوعات"><button class="btn">بحث</button></form><div id="mwres"></div>
-      <div class="mwgrid">${I.items.map(x => `<a class="mwcard" href="#/mawsua/${x.k}"><i aria-hidden="true">${x.ic}</i><b>${esc(x.n)}</b><span>${esc(x.d)}</span><small>${x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد"}</small>${x.m ? `<em style="--p:${Math.round(100 * (adm() ? x.e : x.ok) / x.m)}%"></em>` : ""}</a>`).join("")}</div>
+      <div class="mwgrid">${ath}${I.items.map(x => `<a class="mwcard" href="#/mawsua/${x.k}"><i aria-hidden="true">${x.ic}</i><b>${esc(x.n)}</b><span>${esc(x.d)}</span><small>${x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد"}</small>${x.m ? `<em style="--p:${Math.round(100 * (adm() ? x.e : x.ok) / x.m)}%"></em>` : ""}</a>`).join("")}</div>
       <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>

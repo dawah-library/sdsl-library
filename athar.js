@@ -26,7 +26,7 @@ const ATH = (() => {
   let LIST = [], SHOWN = 0;
   const more = () => { const el = $("#athl"); if (!el) return; el.insertAdjacentHTML("beforeend", LIST.slice(SHOWN, SHOWN + 40).map(card).join("")); SHOWN += 40; const m = $("#athmore"); if (m) m.hidden = SHOWN >= LIST.length; };
   const listView = (head, L, note) => { LIST = L; SHOWN = 0; view(head + `<p class="mut">${toAr(L.length)} أثرًا${note ? " • " + note : ""}</p><div id="athl"></div><p><button class="btn" id="athmore" data-ath="more">المزيد</button></p>`); more(); };
-  const crumbs = t => `<p><a href="#/athar">موسوعة آثار السلف</a>${t ? " › " + esc(t) : ""}</p>`;
+  const crumbs = t => `<p><a href="#/mawsua">موسوعات الموقع</a> › <a href="#/athar">موسوعة آثار السلف</a>${t ? " › " + esc(t) : ""}</p>`;
   const searchBox = q => `<form class="sbox" data-form="athq" style="max-width:none"><input name="q" type="search" value="${esc(q || "")}" placeholder="ابحث في آثار السلف: كلمة أو موضوع أو اسم" aria-label="بحث في الآثار"><button class="btn">بحث</button></form>`;
 
   async function show(q, a, b) {
@@ -39,7 +39,7 @@ const ATH = (() => {
     if (a === "review") return review();
     if (q.q) { const w = norm(q.q).split(/\s+/).filter(Boolean), L = (await all()).filter(x => { const h = norm(x.q + " " + x.w + " " + (x.t || "")); return w.every(k => h.includes(k)); }); return listView(crumbs("بحث") + searchBox(q.q), L, "نتائج «" + esc(q.q) + "»"); }
     const tiers = ["s", "t", "a", "b"].map(t => [t, IX.people.filter(p => p.t === t)]).filter(x => x[1].length);
-    view(`<div class="cmhero athhero"><div><h2>موسوعة آثار السلف</h2><p>وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث، وحكمهم ومواعظهم وتقريراتهم في العقيدة والاتباع والعلم والعبادة والتزكية والأخلاق والهمة والترغيب والترهيب؛ بألفاظها من كتب السنة والتراجم والرقائق في المكتبة، معزوّة إلى مواضعها مع تخريجها، يُنسخ منها لخطبة أو درس.</p>
+    view(`<p><a href="#/mawsua">موسوعات الموقع</a> › موسوعة آثار السلف</p><div class="cmhero athhero"><div><h2>موسوعة آثار السلف</h2><p>وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث، وحكمهم ومواعظهم وتقريراتهم في العقيدة والاتباع والعلم والعبادة والتزكية والأخلاق والهمة والترغيب والترهيب؛ بألفاظها من كتب السنة والتراجم والرقائق في المكتبة، معزوّة إلى مواضعها مع تخريجها، يُنسخ منها لخطبة أو درس.</p>
       <p class="mut">${toAr(IX.count)} أثرًا من ${toAr(IX.people.length)} علمًا • تُجمع تباعًا وتُراجَع قبل نشرها (رُوجع ${toAr(IX.checked || 0)} من ${toAr(IX.candidates || 0)} موضعًا مرشحًا)</p></div></div>
       ${searchBox()}
       <p><a class="btn s" href="#/athar/my">📌 مختاراتي (${toAr(MY.get().length)})</a>${(isAdmin() || (typeof can === "function" && can("edit"))) ? ` <a class="btn s" href="#/athar/review">🛡️ مراجعة الإدراج (${toAr(IX.drafts || 0)})</a>` : ""}</p>
