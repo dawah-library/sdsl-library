@@ -148,6 +148,9 @@
 /search.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/sharh.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /side.js
   Cache-Control: public, max-age=60, must-revalidate
 

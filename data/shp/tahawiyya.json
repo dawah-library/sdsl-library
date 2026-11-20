@@ -1,0 +1,36 @@
+{
+ "id": "tahawiyya",
+ "t": "العقيدة الطحاوية مع شرح ابن أبي العز",
+ "matn": [
+  "tahawiyya"
+ ],
+ "st": "draft",
+ "created": "2026-11-20",
+ "works": [
+  {
+   "w": "ibnabilizz",
+   "kind": "sharh",
+   "t": "شرح العقيدة الطحاوية",
+   "a": "ta_ibnabicizz",
+   "col": "#1f6f8b",
+   "vols": [
+    {
+     "b": "sharhtahawiyya",
+     "m": null
+    }
+   ],
+   "log": {
+    "up": 1,
+    "done": 1,
+    "segs": 176,
+    "ok": 0,
+    "auto": 165,
+    "rev": 10,
+    "none": 1
+   }
+  }
+ ],
+ "rev": 10,
+ "prog": 1,
+ "at": "2026-11-20"
+}

@@ -254,7 +254,7 @@ const STUDY = (() => {
   const HITS = new Map();
   function reader(b, p, h, o) {
     const desk = document.querySelector(".desk"), paper = document.getElementById("paper"); if (!desk || !paper) return;
-    const n = b.pages.length; if (!o.art) hub(b, p); if (typeof KUR !== "undefined") KUR.tfReader(b, p);
+    const n = b.pages.length; if (!o.art) hub(b, p); if (typeof KUR !== "undefined") KUR.tfReader(b, p); if (typeof SHRH !== "undefined" && !o.art) SHRH.reader(b, p);
     if (!o.art && n > 1 && (p === n || (desk.classList.contains("spreadon") && p + 1 === n))) { const r = recommend(4, [b.id]); if (r.length) desk.insertAdjacentHTML("afterend", `<section class="recend"><h3>📚 ماذا تقرأ بعده؟</h3>${recHtml(r)}<p class="mut"><button class="linkbtn" data-act="shelfadd">ضع هذا الكتاب على رف «قرأت»</button></p></section>`); }
     if (S.spread && innerWidth >= 1100 && !o.scroll && o.pv === "text" && !o.art && n > 1) {
       const q = p < n ? p + 1 : 0;

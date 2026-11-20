@@ -1622,3 +1622,17 @@ details.qh summary{cursor:pointer;color:var(--gold,#b88a2e)}details.qh p{margin:
 /* المقارنة العلمية (المرحلة ٣-ج) */
 .cmpai .chip.x small{color:inherit;opacity:.85}.cmpsug{display:flex;flex-direction:column;gap:4px;margin:4px 0}.cmpsug .cmps{text-align:start;padding:8px 12px;border-radius:10px;border:1px solid color-mix(in srgb,currentColor 14%,transparent);background:var(--sf,#fff);color:inherit;cursor:pointer;font:inherit}
 .cmpsug .cmps:hover,.cmpsug .cmps:focus{border-color:var(--accent,#0f5c4d)}.cmpres .cmpax{margin:14px 0}.cmpres h5{margin:8px 0 4px}.cmpres .cref{font-size:.82em;white-space:nowrap;margin-inline-start:4px}.cmpdif{margin:8px 0;overflow-x:auto}
+/* شرح الكتب والمتون (المرحلة ٤): كلام الشارح بلون عمله واسمه، منفصلًا عن كلام المؤلف */
+.shxbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;font-size:.92em}.shxbar select{width:auto;max-width:100%}
+.shchip{border-color:var(--c)!important}.shchip input{accent-color:var(--c)}
+.shx{display:block;border-inline-start:4px solid var(--c);background:color-mix(in srgb,var(--c) 8%,var(--sf,#fff));padding:6px 12px;margin:6px 0 10px;border-radius:0 8px 8px 0;font-size:.9em;line-height:1.9;font-family:var(--ui,inherit);text-align:start;text-indent:0}
+.shx p{margin:0 0 4px}.shx .shxn{color:var(--c);display:block;font-size:.85em;margin-bottom:2px}
+.shfn a{color:var(--c);font-weight:700;text-decoration:none;padding:0 2px}.shfoot{border-top:1px solid color-mix(in srgb,currentColor 20%,transparent);margin-top:14px;padding-top:8px;font-size:.92em}
+.shdrop{display:inline}.shdrop>summary{display:inline;cursor:pointer;color:var(--c);list-style:none}.shdrop>summary::-webkit-details-marker{display:none}.shdrop[open]{display:block}
+.shanch{cursor:pointer;text-decoration:underline dotted var(--c)}
+.shxside{position:fixed;inset-inline-start:0;top:70px;bottom:0;width:min(380px,90vw);overflow:auto;background:var(--sf,#fff);border-inline-end:1px solid color-mix(in srgb,currentColor 15%,transparent);padding:12px;z-index:40;box-shadow:0 0 18px rgba(0,0,0,.08)}
+@media (max-width:900px){.shxside{top:auto;height:42vh;width:100%;border-top:1px solid color-mix(in srgb,currentColor 15%,transparent)}body.shside{padding-bottom:42vh}}
+@media (min-width:901px){body.shside main{margin-inline-start:390px}}
+.shw h3 .shdot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--c)}.shvols select{width:auto}
+.shrev .shr{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:12px;padding:10px;margin:10px 0}.shr.low{border-color:#d08a2a;background:color-mix(in srgb,#d08a2a 6%,transparent)}
+.shr .shr-m p{font-weight:700}.shr .shr-c p{white-space:pre-wrap;font-size:.92em}.shr .shr-a{grid-column:1/-1}@media (max-width:700px){.shrev .shr{grid-template-columns:1fr}}
