@@ -134,7 +134,7 @@ def clean(t):
     t = re.sub(r"-*\s*NO PAGE\s*NO\s*-*", " ", t, flags=re.I)
     t = re.sub(r"\[\[[^\]]*\]\]", " ", t)
     t = re.sub(r"\[(?:مخطوط|رسم[^\]]*|جدول[^\]]*|صورة[^\]]*)\]", " ", t)
-    t = re.sub(r"^(?:#+|@@|<<)\s*(.+?)\s*$", lambda m: m.group(1) + ("" if re.search(r"[.؟!:؛]$", m.group(1)) else "."), t, flags=re.M)  # العنوان جملة مستقلة بوقفة
+    t = re.sub(r"^(?:#+|@@|<<|%%)\s*(.+?)\s*$", lambda m: m.group(1) + ("" if re.search(r"[.؟!:؛]$", m.group(1)) else "."), t, flags=re.M)  # العنوان جملة مستقلة بوقفة
     t = t.replace("**", "")
     for a, b2 in SYMS:
         t = t.replace(a, b2)

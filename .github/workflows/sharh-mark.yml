@@ -1,0 +1,59 @@
+name: تمييز المتن من الشرح في كتب الشروح
+# طلب المدير (٢٠ نوفمبر ٢٠٢٦): للكتب والتفريغات المنجزة قبل التمييز الآلي؛ تُسبق أسطر المتن المشروح بـ «%% » ولا يُغيَّر غيرها.
+# يعمل بطلب يدوي أو عند إضافة كتاب إلى طابوره (data/sharh-mark/_queue.json) من الإدارة.
+on:
+  push:
+    branches: [main]
+    paths: ["data/sharh-mark/_queue.json"]
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "معرّفات كتب (اختياري)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: ocr   # مع التحويل والمراجعة على الصور: لا يتزاحمان على ملف الكتاب نفسه
+  cancel-in-progress: false
+jobs:
+  mark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: التمييز
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN || github.token }}   # محرك ثانٍ مجاني (GitHub Models) عند نفاد حصص Gemini
+          SM_ONLY: ${{ github.event.inputs.books }}
+          SM_COMMIT: "1"
+          SM_MINUTES: "150"
+          TJ_MODEL: "gemini-3.6-flash"
+        run: |
+          git config user.name "sdsl-bot"
+          git config user.email "sdsl-bot@users.noreply.github.com"
+          python3 tools/sharh-mark.py
+      - name: إشعار
+        if: always()
+        run: '[ -s .sm-report.txt ] && python3 tools/notify.py "$(cat .sm-report.txt)" || true'
