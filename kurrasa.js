@@ -324,7 +324,7 @@ const KUR = (() => {
     const u = o => "#/tfbook/" + encodeURIComponent(id) + "?" + new URLSearchParams(Object.assign({ v, ref: refs ? "1" : "" }, o)).toString().replace(/&?ref=(&|$)/, "$1");
     view(`<p><a href="#/tafrighat">← التفريغات</a></p>
       <div class="row tfbtools"><div class="seg" role="radiogroup"><a role="radio" aria-checked="false" href="#/book/${esc(id)}/1">كما رُفع</a><a role="radio" aria-checked="${v === "f"}" href="${u({ v: "f" })}">منسَّق ومدقَّق</a><a role="radio" aria-checked="${v === "r"}" href="${u({ v: "r" })}">بأسلوب كتابي</a></div>
-       <a class="btn s" href="${u({ ref: refs ? "" : "1" })}">${refs ? "إخفاء" : "إظهار"} صفحات الأصل</a><button class="btn p s" data-tfb="pdf">طباعة / PDF</button><button class="btn s" data-tfb="doc">Word</button>${b.pdf ? `<a class="btn s" href="#/book/${esc(id)}/1">المصورة كما رُفعت</a>` : ""}</div>
+       <a class="btn s" href="${u({ ref: refs ? "" : "1" })}">${refs ? "إخفاء" : "إظهار"} صفحات الأصل</a><a class="btn p s" href="#/saff/${esc(id)}">صف للطباعة (كتاب)</a><button class="btn s" data-tfb="pdf">طباعة سريعة</button><button class="btn s" data-tfb="doc">Word</button>${b.pdf ? `<a class="btn s" href="#/book/${esc(id)}/1">المصورة كما رُفعت</a>` : ""}</div>
       <article class="tfbook" id="tfbook">${html}</article>`);
     window.__tfb = { html, title, v };
   }

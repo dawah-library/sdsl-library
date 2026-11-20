@@ -118,6 +118,9 @@
 /paths.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/portal.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /proof.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -125,6 +128,12 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /releases.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/saff.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/saffp.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /search.js
