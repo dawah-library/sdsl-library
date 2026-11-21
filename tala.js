@@ -560,7 +560,7 @@ const TALA = (() => {
         body += `<div class="card mjlv"><h3>📗 ${esc(s.t)} — ${esc(l.t)} <small class="mut">${esc(l.age)}</small></h3>
           <p class="mut">${toAr(ls.length)} درسًا • أتممت ${toAr(nDone)} <span class="mbar"><i style="width:${ls.length ? Math.round(100 * nDone / ls.length) : 0}%"></i></span></p>
           ${rev ? '<p class="note">هذا المستوى في مرحلة التدقيق على الصور؛ وتقسيم دروسه يكتمل ويتحسن بعد اكتمال التدقيق.</p>' : ""}
-          ${Object.values(by).map(g => `<details class="mjsub"><summary>${g.s[2]} <b>${esc(g.s[1])}</b> <span class="mut">(${toAr(g.l.length)})</span></summary><ol>${g.l.map(x => { const id = b.id + ":" + x.p; return `<li><a href="#/book/${esc(b.id)}/${x.p}">${esc(x.t)}</a> <button class="lnk mjdone${done[id] ? " on" : ""}" data-mjd="${esc(id)}" aria-pressed="${!!done[id]}">${done[id] ? "✓ أتممته" : "أتممت الدرس ⭐"}</button></li>`; }).join("")}</ol></details>`).join("") || `<p><a class="btn" href="#/book/${esc(b.id)}/1">افتح الكتاب</a></p>`}
+          ${Object.values(by).map(g => `<details class="mjsub"><summary>${g.s[2]} <b>${esc(g.s[1])}</b> <span class="mut">(${toAr(g.l.length)})</span></summary><ol>${g.l.map(x => { const id = b.id + ":" + x.p; return `<li><a href="#/book/${esc(b.id)}/${x.p}">${esc(x.t)}</a> <span class="tvl" data-tvl="${esc(id)}"></span> <button class="lnk mjdone${done[id] ? " on" : ""}" data-mjd="${esc(id)}" aria-pressed="${!!done[id]}">${done[id] ? "✓ أتممته" : "أتممت الدرس ⭐"}</button></li>`; }).join("")}</ol></details>`).join("") || `<p><a class="btn" href="#/book/${esc(b.id)}/1">افتح الكتاب</a></p>`}
           <p><a class="btn s" href="#/book/${esc(b.id)}/1">📖 قراءة المستوى كاملًا</a> <a class="btn s" href="#/quizzes/${esc(b.id)}?l=easy">✅ اختبار المستوى</a></p></div>`;
       }
     }
@@ -569,7 +569,7 @@ const TALA = (() => {
       const nD = u.ls.filter(l => done[u.b + ":" + l.p]).length;
       body += `<div class="card mjlv mjunit"><h3>📙 ${esc(u.t)} <small class="mut">— ${esc(u.from)}</small></h3>
         <p class="mut">${toAr(u.ls.length)} دروس • أتممت ${toAr(nD)} <span class="mbar"><i style="width:${Math.round(100 * nD / u.ls.length)}%"></i></span></p>
-        ${u.ls.map((l, li) => { const id = u.b + ":" + l.p; return `<details class="mjsub"><summary><b>${toAr(li + 1)}. ${esc(l.t)}</b> <span class="mut">(ص ${toAr(l.p)}–${toAr(l.to)})</span>${done[id] ? " ✓" : ""}</summary>
+        ${u.ls.map((l, li) => { const id = u.b + ":" + l.p; return `<details class="mjsub"><summary><b>${toAr(li + 1)}. ${esc(l.t)}</b> <span class="mut">(ص ${toAr(l.p)}–${toAr(l.to)})</span> <span class="tvl" data-tvl="${esc(id)}"></span>${done[id] ? " ✓" : ""}</summary>
           <div class="mjpts"><p class="mut">من نص الكتاب:</p>${l.pts.map(([pg, t]) => `<blockquote>${esc(t)} <a href="#/book/${esc(u.b)}/${pg}" class="mut">[ص ${toAr(pg)}]</a></blockquote>`).join("")}</div>
           <p><a class="btn s p" href="#/book/${esc(u.b)}/${l.p}">📖 اقرأ الدرس في الكتاب</a></p>
           <div class="mjq">${l.q.map((q, qi) => `<div class="tmq"><p><b>${esc(q[0])}</b></p><div class="row">${[1, 2, 3].map(i => [Math.random(), i]).sort((a, b) => a[0] - b[0]).map(([, i]) => `<button class="btn tmo" data-mjq="${i === 1 ? 1 : 0}">${esc(q[i])}</button>`).join("")}</div></div>`).join("")}</div>
@@ -583,7 +583,7 @@ const TALA = (() => {
       const more = lib.books.filter(b => isArt(b) && !b.hidden && (M.authors || ["w5", "w107"]).includes(b.authorId) && !listed.has(b.id) && STG[k].some(tp => inTopic(b, tp)) && !(k === "t1" && (b.n || 0) > 3000));
       if (more.length) sup.push(["مقالات أخرى للشيخ مصطفى دياب والأستاذ محمود عمارة", more.slice(-30).reverse().map(b => b.id)]);
     }
-    body += sup.length ? `<h3>🌱 التدعيم التربوي: قصص وتوجيهات وأنشطة</h3><p class="mut">من مقالات الشيخ مصطفى دياب وكتبه، مع نشاط عملي لكل مجموعة.</p>${sup.map(([g, ids]) => { const it = ids.map(id => B(id)).filter(Boolean); if (!it.length) return ""; return `<div class="card mjgrp"><h4>${esc(g)}</h4><ol class="mjarts">${it.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a>${done["a:" + x.id] ? " ✓" : ""}</li>`).join("")}</ol>
+    body += sup.length ? `<h3>🌱 التدعيم التربوي: قصص وتوجيهات وأنشطة</h3><p class="mut">من مقالات الشيخ مصطفى دياب وكتبه، مع نشاط عملي لكل مجموعة.</p>${sup.map(([g, ids]) => { const it = ids.map(id => B(id)).filter(Boolean); if (!it.length) return ""; return `<div class="card mjgrp"><h4>${esc(g)}</h4><ol class="mjarts">${it.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="tvl" data-tvl="${esc(x.id)}:1"></span>${done["a:" + x.id] ? " ✓" : ""}</li>`).join("")}</ol>
       <div class="mjacts">${actsFor(g).map(([i, a]) => `<span>${i} ${esc(a)}</span>`).join("")}</div></div>`; }).join("")}` : "";
     const par = [...new Set((M.parents || []).concat(lib.books.filter(b => isArt(b) && !b.hidden && b.authorId === "w107" && inTopic(b, "at10")).map(b => b.id)))].map(id => B(id)).filter(Boolean);
     body += par.length ? `<details class="card"><summary><b>👪 للوالدين والمربين</b></summary><ul>${par.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="mut">— ${esc(A(x.authorId).name)}</span></li>`).join("")}</ul></details>` : "";
@@ -594,5 +594,9 @@ const TALA = (() => {
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjq]"); if (!b || b.disabled) return; const box = b.closest(".tmq"), ok = b.dataset.mjq === "1";
     b.classList.add(ok ? "right" : "wrong"); if ((typeof TSFX !== "undefined")) { if (ok) TSFX.right(); else TSFX.wrong(); } box.querySelectorAll("[data-mjq]").forEach(x => { if (x.dataset.mjq === "1") x.classList.add("right"); x.disabled = true; }); if (ok) star(1); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-mjd]"); if (!b) return; e.preventDefault(); const d = (st().ml = st().ml || {}), id = b.dataset.mjd; if (d[id]) delete d[id]; else { d[id] = 1; star(1); } saveS(); b.classList.toggle("on", !!d[id]); b.setAttribute("aria-pressed", !!d[id]); b.textContent = d[id] ? "✓ أتممته" : "أتممت الدرس ⭐"; });
-  return { view: show, admin, autoTala };
+  // دروس مستويات المنهج لاختيارها مصدرًا للمقاطع المرئية (talavid.js): السلاسل ومستوياتها، ودروس المجلد بصفحاتها ومادتها
+  async function mjLessons(bid) { const M = await mj(); if (!M) return []; let full = B(bid); try { full = await loadBook(bid); } catch (e) { } if (!full) return [];
+    const toc = (full.toc || []).map(t => t.p).filter(Boolean).sort((a, b) => a - b), n = (full.pages || []).length || full.n || 9999;
+    return lessons(M, full).map(x => { const nx = toc.find(p => p > x.p); return { t: x.t, p: x.p, z: Math.min(nx ? nx - 1 : n, x.p + 10), s: x.s[0], sn: x.s[1], si: x.s[2] }; }); }
+  return { view: show, admin, autoTala, mj, mjLessons };
 })();

@@ -1,13 +1,1 @@
-{
- "items": [
-  {
-   "id": "pd1dfedcc",
-   "do": [
-    "quiz",
-    "summ"
-   ],
-   "auto": 1,
-   "new": 1
-  }
- ]
-}
+{"items":[{"id":"pd1dfedcc","do":["summ"],"auto":1,"new":1}]}

@@ -118,7 +118,7 @@ const VIDX = (() => {
   async function montage(id, repl) {
     const D = await getj("data/video/drafts/" + id + ".json", null); if (!D) return view('<p class="note">المسودة غير موجودة بعد؛ أعد المحاولة بعد دقائق.</p><p><a href="#/video">← الفيديوهات</a></p>');
     const O = D.opts || {};
-    view(`<p><a href="#/video">← الفيديوهات</a></p><h2>✂ مونتاج: ${esc(D.title)}</h2><p class="mut">النص كله في خانة واحدة: راجعه وحرّره ثم اعتمده؛ ويُوزَّع آليًّا على المشاهد. الخيارات: ${esc(styleName(O.style))} • ${esc(O.voice || "")}${repl ? " • يحل الفيديو الناتج محل الفيديو غير المعتمد" : ""}</p>
+    view(`<p><a href="#/video">← الفيديوهات</a></p><h2>✂ مونتاج: ${esc(D.title)}</h2><p class="mut">النص كله في خانة واحدة: راجعه وحرّره ثم اعتمده؛ ويُوزَّع آليًّا على المشاهد. الخيارات: ${esc(styleName(O.style))} • ${esc(O.voice || "")}${D.plan && D.plan.format ? ` • السيناريو المختار: ${esc(D.plan.format)}${D.plan.minutes ? " (" + toAr(D.plan.minutes) + " د)" : ""}${D.plan.why ? " — " + esc(D.plan.why) : ""}` : ""}${repl ? " • يحل الفيديو الناتج محل الفيديو غير المعتمد" : ""}</p>
       <div class="card"><label>المقاسات</label>${checks("aspect", repl ? [] : (O.aspects || [O.aspect || "16:9"]))}${repl ? '<p class="mut">اتركها فارغة لإخراج مقاس الفيديو المصحَّح وحده.</p>' : ""}
         <label>الصوت</label>${radios("voice", OPT.voice.some(x => x[0] === O.voice) ? O.voice : "gemini:Charon")}
         <label class="chk"><input type="checkbox" id="vpg"${O.pages ? " checked" : ""}> 📖 صفحات الكتاب مع قلم التحديد</label><label class="chk"><input type="checkbox" id="vsfx"${O.sfx || O.sfx === undefined ? " checked" : ""}> 🔊 صوت القلم وتقليب الصفحات</label></div>

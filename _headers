@@ -151,6 +151,9 @@
 /qa.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/qfix.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /releases.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -179,6 +182,9 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /stats.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/story.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /study.js
