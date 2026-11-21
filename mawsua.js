@@ -40,6 +40,7 @@ const MAWS = (() => {
       <form class="sbox" data-form="mwq" style="max-width:none"><input name="q" type="search" value="${esc(q.q || "")}" placeholder="ابحث عن مسألة في الموسوعات كلها" aria-label="بحث في الموسوعات"><button class="btn">بحث</button></form><div id="mwres"></div>
       <div class="mwbar"><h3>الموسوعات</h3><div class="mwview" role="group" aria-label="طريقة العرض"><button type="button" data-mwv="apps" title="استعراض بالأيقونات">${ic("layout-grid", 18)}<span>استعراض</span></button><button type="button" data-mwv="list" title="قائمة مفصلة">${ic("list", 18)}<span>قائمة</span></button></div></div>
       <div id="mwtiles"></div>
+      ${recentHtml(I)}
       <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>
@@ -47,6 +48,13 @@ const MAWS = (() => {
     tiles();
     if (typeof MSB !== "undefined") MSB.homeBlock($("#msbhome"));
     if (q.q) search(q.q, I);
+  }
+  // أحدث الإضافات والتحديثات: ما نما في الموسوعات من كتب مشايخ الدعوة وشروحهم الجديدة (tools/mawsua.py grow ← _growth.json)
+  function recentHtml(I) {
+    const R = (I.recent || []).filter(x => x.k && x.id).slice(0, 12); if (!R.length) return "";
+    const nm = k => (((I.items || []).find(y => y.k === k) || {}).n || k).replace(/^موسوعة\s+/, "");
+    return `<section class="card mwrecent"><h3>${ic("sparkles", 18)} أحدث الإضافات والتحديثات</h3><p class="mut">تنمو الموسوعات بكل كتاب أو شرح جديد يُرفع من كتب مشايخ الدعوة: تُضاف به مسائل جديدة، وتُدعَّم المسائل المنشورة بما فيه، بعد التحقق من صلته بالمسألة معنًى وسياقًا.</p>
+      <ul class="mwlist">${R.map(x => `<li><span class="tag">${x.do === "new" ? "مسألة جديدة" : "تحديث"}</span> <a href="#/mawsua/${esc(x.k)}/${esc(x.id)}">${esc(x.t)}</a> <small class="mut">— ${esc(nm(x.k))}${(x.bt || []).length ? " • من «" + x.bt.map(esc).join("»، «") + "»" : ""} • ${esc(x.at || "")}</small></li>`).join("")}</ul></section>`;
   }
   const mode = () => { try { return localStorage.getItem("mw_view") || "apps"; } catch (e) { return "apps"; } };
   function tiles(m) {
@@ -88,6 +96,7 @@ const MAWS = (() => {
       <p class="mut">${esc(m.bab)} › ${esc(m.fasl)}</p><h2>${esc(E.t)}</h2>${E.ok || m.ok ? "" : '<p class="note">مسودة تنتظر المراجعة العلمية والاعتماد.</p>'}
       ${NE ? `<div class="note mwrev">${ic("history", 18)} ${showNew ? "تعرض الآن <b>التحديث المقترح</b>" : "لهذه المادة <b>تحديث مقترح</b>"} من مصادر جديدة لمشايخ الدعوة (${esc(NE.built || "")})${(NE.new || []).length ? ": " + NE.new.map(b => `«${esc(((typeof B === "function" && B(b)) || {}).title || b)}»`).join("، ") : ""}.
         <div class="row">${showNew ? `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}">عرض المنشور</a>` : `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}?rev=1">عرض التحديث</a>`}<button class="btn s p" data-mw="rev" data-k="${k}" data-id="${esc(id)}">✓ اعتماد التحديث ونشره</button><button class="btn s" data-mw="norev" data-k="${k}" data-id="${esc(id)}">رفض التحديث</button> <span class="mwst mut"></span></div></div>` : ""}
+      ${E.upd && (E.new || []).length && !NE ? `<p class="mut mwupd">${ic("sparkles", 14)} دُعِّمت هذه المادة في ${esc(E.upd)} من: ${E.new.map(b => `«${esc(((typeof B === "function" && B(b)) || {}).title || b)}»`).join("، ")}</p>` : ""}
       ${E.lead ? `<p class="mwlead">${esc(E.lead)}</p>` : ""}
       ${(E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${esc(p.t)}${sup(p.c)}</p>`).join("")}</section>`).join("")}
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
