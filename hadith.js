@@ -22,9 +22,18 @@ const HDS = (() => {
   // مطلع الحديث بلفظ روايته في الكتاب («عن فلان قال: قال رسول الله ﷺ…»): tools/hadith-lead.py ← data/hadith/k/<كتاب>/l<i>.json
   const LC2 = {}, klead = (b, i) => LC2[b + i] || (LC2[b + i] = fetch(RAWK(b + "/l" + i + ".json")).then(r => r.ok ? r.json() : {}).catch(() => ({})));
   const SAYV = /(?:قال|قالت|يقول|تقول|فقال|فقالت|يقول:|قال:)\s*[:،]?\s*$/;
-  const clean = t => { t = String(t || "").replace(/⦗[^⦘]*⦘/g, "").replace(/\s+/g, " ").trim(); return (LSG("hd_txt", {}) || {}).d === 0 ? t.replace(/[\u064B-\u0652\u0670]/g, "") : t; };
+  // رموز الترضي والترحم المركبة (U+FD40–FD4F) لا تعرضها أكثر الخطوط (تظهر مربعًا): تُكتب حروفًا
+  const HON = { "\uFD40": "رَحِمَهُ اللهُ", "\uFD41": "رَضِيَ اللهُ عَنْهُ", "\uFD42": "رَضِيَ اللهُ عَنْهَا", "\uFD43": "رَضِيَ اللهُ عَنْهُمْ", "\uFD44": "رَضِيَ اللهُ عَنْهُمَا", "\uFD45": "رَضِيَ اللهُ عَنْهُنَّ", "\uFD46": "صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ", "\uFD47": "عَلَيْهِ السَّلَامُ", "\uFD48": "عَلَيْهَا السَّلَامُ", "\uFD49": "عَلَيْهِمُ السَّلَامُ", "\uFD4A": "عَلَيْهِمَا السَّلَامُ" };
+  const honor = t => String(t || "").replace(/[\uFD40-\uFD4A]/g, c => HON[c] || c);
+  const clean = t => { t = honor(t).replace(/⦗[^⦘]*⦘/g, "").replace(/\s+/g, " ").trim(); return (LSG("hd_txt", {}) || {}).d === 0 ? t.replace(/[\u064B-\u0652\u0670]/g, "") : t; };
   // المتن بمطلعه: إن انتهى المطلع بفعل قول جاء المتن بين علامتي تنصيص، وإلا اتصل به
-  const withLead = (lead, m) => { m = clean(m).replace(/^[«"]\s*/, "").replace(/\s*[»"]\s*$/, ""); if (!lead) return `«${esc(m)}»`; const L = clean(lead).replace(/[\s،:]+$/, "");
+  const withLead = (lead, m) => { m = clean(m); const paren = /\(/.test(m) && /\)/.test(m);
+    if (paren) m = m.replace(/\(/g, "«").replace(/\)/g, "»").replace(/»\s*\.$/, "»");  // نسخ البغا: المتن بين قوسين ← علامتا التنصيص
+    const quoted = /^«/.test(m) && /»\s*\.?$/.test(m);
+    if (!quoted) m = m.replace(/^[«"]\s*/, "").replace(/\s*[»"]\s*$/, "");
+    if (!lead) return quoted || paren ? esc(m) : `«${esc(m)}»`; const L = clean(lead).replace(/[\s،:]+$/, "");
+    if (quoted) return `<span class="hlead">${esc(L)}</span>: ${esc(m)}`;
+    if (paren) return `<span class="hlead">${esc(L)}</span> ${esc(m)}`;
     const Lb = L.replace(/[\u064B-\u0652\u0670]/g, "");
     return `<span class="hlead">${esc(L)}</span>${SAYV.test(Lb + " ") || /(?:قال|قالت|يقول|تقول|فقال)$/.test(Lb) ? ": «" + esc(m) + "»" : " " + esc(m)}`; };
   const MC = {}, kmatn = (b, i) => MC[b + i] || (MC[b + i] = fetch(RAWK(b + "/m" + i + ".json")).then(r => r.json()).catch(() => ({})));
@@ -264,7 +273,7 @@ const HDS = (() => {
         while (j >= 0 && !CHAIN0.test(lines[j].replace(/[ً-ْٰـ]/g, ""))) j--;
         if (j >= 0 && lines.length - 1 - j <= 6) r = lines.slice(j).join(" ").replace(/^\s*(?:[\(\[]?[\d٠-٩]+[\)\]]?\s*[-–.ـ/]*\s*)+/, "").replace(/#?\s*\[ص:\s*[\d٠-٩]+\]\s*/g, " ").replace(/^#+\s*/gm, "").replace(/[\s«"(،:]+$/, "").replace(/\s+/g, " ").trim();
         if (r.length > 1200) r = "…" + r.slice(-1200); } } catch (e) { }
-    return (ISC[key] = r); }
+    return (ISC[key] = honor(r)); }
   const isnBox = (bid, p, m, mode, inl) => inl ? `<details class="hisn"${mode === "show" ? " open" : ""}><summary>الإسناد</summary><p class="hisnad">${esc(inl)}</p></details>`
     : `<details class="hisn" data-bk="${esc(bid)}" data-p="${p}" data-m="${esc(String(m).slice(0, 120))}"${mode === "show" ? " open" : ""}><summary>الإسناد</summary><p class="hisnad mut">جارٍ استخراج الإسناد من الكتاب…</p></details>`;
   async function fillIsn(d) { if (!d || d.dataset.f || !d.dataset.bk) return; d.dataset.f = 1; const el = d.querySelector(".hisnad"), r = await isnadOf(d.dataset.bk, +d.dataset.p, d.dataset.m);
