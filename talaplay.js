@@ -17,25 +17,40 @@ const TSFX = (() => {
   // الجنس: قسم الصفحة (s=g) ثم ملف الطفل الحالي في «ركن الوالدين»
   const sex = () => { try { const q = (location.hash.split("?")[1] || ""); const m = q.match(/(?:^|&)s=([bg])(?:&|$)/); if (m) return m[1];
     const T = (typeof S !== "undefined" && S.tala) || {}, k = (T.kids || []).find(x => x.id === T.cur) || (T.kids || [])[0]; return k && k.g === "g" ? "g" : "b"; } catch (e) { return "b"; } };
-  const TXT = { b: { ok: ["أحسنتَ!", "أحسنتَ، بارك الله فيك!", "ما شاء الله، أحسنتَ!", "أحسنتَ يا بطل!", "زادك الله علمًا!", "جزاك الله خيرًا، إجابة صحيحة!"], no: ["حاولْ مرة أخرى، أنت تستطيع!", "لا بأس، راجعِ الدرس وحاولْ من جديد."], done: ["مبارك! أتممتَ التمرين بنجاح، زادك الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتَ المسابقة."] },
-    g: { ok: ["أحسنتِ!", "أحسنتِ، بارك الله فيكِ!", "ما شاء الله، أحسنتِ!", "أحسنتِ يا بطلة!", "زادكِ الله علمًا!", "جزاكِ الله خيرًا، إجابة صحيحة!"], no: ["حاولي مرة أخرى، أنتِ تستطيعين!", "لا بأس، راجعي الدرس وحاولي من جديد."], done: ["مبارك! أتممتِ التمرين بنجاح، زادكِ الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتِ المسابقة."] } };
-  const word = kind => { const L = TXT[sex()][kind]; return { i: Math.floor(Math.random() * L.length), L }; };
+  const TXT = {"b": {"ok": ["أحسنتَ!", "أحسنتَ، بارك الله فيك!", "ما شاء الله، أحسنتَ!", "أحسنتَ يا بطل!", "زادك الله علمًا!", "جزاك الله خيرًا، إجابة صحيحة!", "رائع! إجابةٌ صحيحة.", "بارك الله فيك، أصبتَ!", "أحسنتَ، أنت نجمٌ لامع!", "صحيح! فتح الله عليك.", "ممتاز، واصِلْ يا بطل!", "أصبتَ، نفع الله بك!"], "no": ["حاولْ مرة أخرى، أنت تستطيع!", "لا بأس، راجعِ الدرس وحاولْ من جديد.", "قريبٌ من الصواب، فكِّرْ مرةً أخرى.", "لا تحزن، كلُّنا نتعلّم من الخطأ.", "تمهَّلْ واقرأ السؤال جيدًا.", "المحاولة القادمة لك بإذن الله!"], "done": ["مبارك! أتممتَ التمرين بنجاح، زادك الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتَ المسابقة.", "أحسنتَ! أنهيتَ الجولة، واصِلْ طريق العلم.", "بارك الله فيك، جولةٌ موفّقة يا بطل!"]}, "g": {"ok": ["أحسنتِ!", "أحسنتِ، بارك الله فيكِ!", "ما شاء الله، أحسنتِ!", "أحسنتِ يا بطلة!", "زادكِ الله علمًا!", "جزاكِ الله خيرًا، إجابة صحيحة!", "رائع! إجابةٌ صحيحة.", "بارك الله فيكِ، أصبتِ!", "أحسنتِ، أنتِ نجمةٌ لامعة!", "صحيح! فتح الله عليكِ.", "ممتاز، واصلي يا بطلة!", "أصبتِ، نفع الله بكِ!"], "no": ["حاولي مرة أخرى، أنتِ تستطيعين!", "لا بأس، راجعي الدرس وحاولي من جديد.", "قريبٌ من الصواب، فكّري مرةً أخرى.", "لا تحزني، كلُّنا نتعلّم من الخطأ.", "تمهَّلي واقرئي السؤال جيدًا.", "المحاولة القادمة لكِ بإذن الله!"], "done": ["مبارك! أتممتِ التمرين بنجاح، زادكِ الله علمًا وتوفيقًا.", "ما شاء الله تبارك الله! أتممتِ المسابقة.", "أحسنتِ! أنهيتِ الجولة، واصلي طريق العلم.", "بارك الله فيكِ، جولةٌ موفّقة يا بطلة!"]}};
+  // التنوع: لا تتكرر العبارة نفسها مرتين متتاليتين (تُدار من آخر ٤ عبارات)
+  const RECENT = []; const word = kind => { const L = TXT[sex()][kind]; let i, t = 0; do { i = Math.floor(Math.random() * L.length); } while (RECENT.includes(kind + i) && ++t < 12); RECENT.push(kind + i); if (RECENT.length > 4) RECENT.shift(); return { i, L }; };
+  // جودة الصوت (طلب المدير، ٢١ نوفمبر): السرعة بحسب المرحلة واختيار القارئ (🐢 بطيء، عادي، 🐇 أسرع)، وأوضح الأصوات العربية المتاحة في الجهاز،
+  // وتقسيم النص الطويل جملًا (المتصفحات تقطع العبارة الطويلة) مع وقفة قصيرة بينها لوضوح النطق.
+  const RATES = [["slow", "🐢", .78], ["mid", "🔉", .92], ["fast", "🐇", 1.05]];
+  const rateKey = () => { try { return localStorage.getItem("tsfx_rate") || ""; } catch (e) { return ""; } };
+  const ageRate = () => { const T = (typeof S !== "undefined" && S.tala) || {}, k = (T.kids || []).find(x => x.id === T.cur) || (T.kids || [])[0], tr = (k && k.track) || "t2"; return { t1: .8, t2: .88, t3: .95, t4: 1 }[tr] || .9; };
+  const rate = () => { const r = RATES.find(x => x[0] === rateKey()); return r ? r[2] : ageRate(); };
+  const bestVoice = g => { const v = (window.speechSynthesis ? speechSynthesis.getVoices() : []).filter(x => /^ar/i.test(x.lang)); if (!v.length) return null;
+    const q = x => (/natural|neural|online|premium|enhanced|google/i.test(x.name) ? 4 : 0) + (/ar-(SA|EG)/i.test(x.lang) ? 1 : 0) + (g === "g" ? (/female|zariyah|salma|hoda|laila|amira|mariam|sana/i.test(x.name) ? 3 : 0) : (/male|hamed|shakir|naayf|tarik|maged|omar/i.test(x.name) && !/female/i.test(x.name) ? 3 : 0));
+    return v.slice().sort((a, b) => q(b) - q(a))[0]; };
+  function speak(text, o = {}) { try { if (!window.speechSynthesis || (muted() && !o.force)) return; speechSynthesis.cancel();
+    const g = o.g || sex(), parts = String(text || "").replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, "").split(/(?<=[.!؟?،:\n])\s+/).map(x => x.trim()).filter(Boolean), vc = bestVoice(g);
+    const chunks = []; parts.forEach(p => { const l = chunks[chunks.length - 1]; if (l && (l + " " + p).length < 160) chunks[chunks.length - 1] = l + " " + p; else chunks.push(p); });
+    chunks.forEach((c, i) => { const u = new SpeechSynthesisUtterance(c); u.lang = (vc && vc.lang) || "ar-SA"; if (vc) u.voice = vc; u.rate = o.rate || rate(); u.pitch = g === "g" ? 1.15 : 1; if (i === chunks.length - 1 && o.end) u.onend = o.end; speechSynthesis.speak(u); });
+  } catch (e) { } }
+  const rateBtn = () => { const r = RATES.find(x => x[0] === rateKey()); return `<button class="tsfxb" data-act="tsrate" title="سرعة الصوت" aria-label="سرعة الصوت">${r ? r[1] : "🔉"}</button>`; };
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act=tsrate]"); if (!el) return; const i = RATES.findIndex(x => x[0] === rateKey()), nx = RATES[(i + 1) % RATES.length]; try { localStorage.setItem("tsfx_rate", nx[0]); } catch (x) { }
+    document.querySelectorAll("[data-act=tsrate]").forEach(b => b.textContent = nx[1]); speak({ slow: "بطيء وواضح", mid: "سرعة متوسطة", fast: "أسرع قليلًا" }[nx[0]], { force: 1 }); });
   const loadIdx = () => IDX || (IDX = fetch("assets/clips/index.json").then(r => r.ok ? r.json() : []).catch(() => []));
   let last = 0;
   async function say(kind) {
     if (muted() || Date.now() - last < 900) return; last = Date.now(); const g = sex(), { i, L } = word(kind), id = "tala-" + g + "-" + kind + (i + 1), ix = await loadIdx();
-    if (ix.includes(id)) { try { const a = new Audio("assets/clips/" + id + ".mp3"); a.volume = .9; await a.play(); return; } catch (e) { } }
-    try { if (!window.speechSynthesis) return; const u = new SpeechSynthesisUtterance(L[i]); u.lang = "ar-SA"; u.rate = .95; u.pitch = g === "g" ? 1.25 : 1.05;
-      const v = speechSynthesis.getVoices().filter(x => /^ar/i.test(x.lang)); if (v.length) u.voice = v.find(x => g === "g" ? /female|zariyah|salma|hoda|laila|amira/i.test(x.name) : /male|hamed|shakir|naayf|tarik/i.test(x.name)) || v[0];
-      speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { } }
+    if (ix.includes(id)) { try { const a = new Audio("assets/clips/" + id + ".mp3"); a.volume = .9; a.playbackRate = Math.max(.85, Math.min(1.1, rate() / .92)); a.preservesPitch = true; await a.play(); return; } catch (e) { } }
+    speak(L[i], { g }); }
   const text = kind => { const { i, L } = word(kind); return L[i]; };
   const right = () => { bubble(); setTimeout(chime, 120); setTimeout(() => say("ok"), 450); };
   const wrong = () => { soft(); setTimeout(() => say("no"), 300); };
   const done = good => { fanfare(); setTimeout(() => say(good === false ? "no" : "done"), 1300); };
   const toggle = () => { const m = !muted(); try { localStorage.setItem("tsfx_off", m ? "1" : "0"); } catch (e) { } return !m; };
-  const btn = () => `<button class="tsfxb" data-act="tsfx" title="الأصوات" aria-label="تشغيل الأصوات أو كتمها">${muted() ? "🔇" : "🔊"}</button>`;
+  const btn = () => `<button class="tsfxb" data-act="tsfx" title="الأصوات" aria-label="تشغيل الأصوات أو كتمها">${muted() ? "🔇" : "🔊"}</button>` + rateBtn();
   document.addEventListener("click", e => { const el = e.target.closest("[data-act=tsfx]"); if (!el) return; const on = toggle(); document.querySelectorAll(".tsfxb").forEach(b => b.textContent = on ? "🔊" : "🔇"); if (on) bubble(); });
-  return { bubble, chime, right, wrong, done, say, text, sex, btn, muted };
+  return { bubble, chime, right, wrong, done, say, text, sex, btn, muted, speak, rate };
 })();
 
 const TPLAY = (() => {
@@ -153,9 +168,9 @@ const TPLAY = (() => {
     const hq = x => { let h = 0; const t = String(x.q || "") + "|" + String(x.o[x.a] || ""); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return h.toString(36); };
     const unseen = a => { const n = a.filter(x => !QS.includes(hq(x))); return n.length >= Math.min(5, a.length) ? n.concat(a.filter(x => QS.includes(hq(x)))) : a; };
     if (g === "mine") { rnd = seeded(day + k + kidId + ":" + (((T0.dn || {})[kidId + new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate()]) || 0)); const big = await mixed(k, 40, ctx); rnd = Math.random; G0 = { hq, QS }; return start(g, k, day, unseen(big).slice(0, 5), ctx); }
-    let L = g === "daily" ? await mixed(k, 10, ctx) : g === "race" ? await mixed(k, 40, ctx).then(async a => a.length < 30 ? a.concat(await genSura(k, 15), await genHadith(k, 10)) : a) : await GEN[g](k, 10);
+    let L = g === "daily" ? await mixed(k, 10, ctx) : g === "race" ? await mixed(k, 40, ctx).then(async a => a.length < 30 ? a.concat(await genSura(k, 15), await genHadith(k, 10)) : a) : await GEN[g](k, 40);  // مجموعة أكبر يُختار منها ما لم يره الطفل (عدم التكرار)
     rnd = Math.random; G0 = { hq, QS };
-    if (g !== "daily") L = unseen(L);
+    if (g !== "daily") L = unseen(L).slice(0, g === "race" ? 40 : 10);
     return start(g, k, day, L, ctx);
   }
   let G0 = null;

@@ -82,9 +82,10 @@ const TQS = (() => {
       <p class="tqnext" hidden><a class="btn s" href="#/talaea/qasas?id=${f.id}">📖 اقرأ قصته</a> <button class="btn p" data-act="tqwnext">التالي ←</button></p></div></div>`);
   }
 
-  const say = () => { try { const box = document.querySelector(".tqstory"); if (!box || !window.speechSynthesis) return; speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance([...box.querySelectorAll("p")].slice(0, -1).map(p => p.textContent.replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, "")).join(" ")); u.lang = "ar-SA"; u.rate = .9;
-    const v = speechSynthesis.getVoices().filter(x => /^ar/i.test(x.lang)); if (v.length) u.voice = v[0]; speechSynthesis.speak(u); } catch (e) { } };
+  // قراءة القصة بصوت أوضح: سرعة بحسب المرحلة واختيار القارئ، وأفضل صوت عربي في الجهاز، وتقسيم جملًا (TSFX.speak في talaplay.js)
+  const say = () => { const box = document.querySelector(".tqstory"); if (!box) return; const t = [...box.querySelectorAll("p")].slice(0, -1).map(p => p.textContent).join("\n");
+    if (typeof TSFX !== "undefined" && TSFX.speak) return TSFX.speak(t, { force: 1 });
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "ar-SA"; u.rate = .9; speechSynthesis.speak(u); } catch (e) { } };
 
   const checkAll = box => { const okQ = box.querySelectorAll(".tmq.ok").length, n = +box.dataset.n, ord = !box.querySelector(".tqev:not(.right)");
     if (okQ >= n && ord && !box.dataset.won) { box.dataset.won = 1; sfx("done"); } };
