@@ -1,27 +1,28 @@
 {
- "done": 4,
+ "done": 12,
  "books": {
-  "bukhari": 11,
-  "abudawud": 1,
-  "nasai": 2,
-  "ibnmajah": 1,
-  "musnadahmad": 2,
-  "muwatta": 1
+  "bukhari": 27,
+  "abudawud": 3,
+  "nasai": 9,
+  "ibnmajah": 2,
+  "musnadahmad": 26,
+  "muwatta": 1,
+  "muslim": 7,
+  "tirmidhi": 3,
+  "darimi": 2
  },
  "cover": {
-  "bukhari": "11/7133",
-  "muslim": "0/7536",
-  "abudawud": "1/7360",
-  "nasai": "2/5716",
-  "tirmidhi": "0/3505",
-  "ibnmajah": "1/4259",
-  "musnadahmad": "2/25473",
+  "bukhari": "27/7133",
+  "muslim": "7/7536",
+  "abudawud": "3/7360",
+  "nasai": "9/5716",
+  "tirmidhi": "3/3505",
+  "ibnmajah": "2/4259",
+  "musnadahmad": "26/25473",
   "muwatta": "1/1796",
-  "darimi": "0/3415"
+  "darimi": "2/3415"
  },
- "wait": [
-  "المسالك في شرح موطأ مالك"
- ],
+ "wait": [],
  "skipped": [
   "عارضة الأحوذي بشرح صحيح الترمذي (غير موجود في turath.io)",
   "حاشية السندي على مسند الإمام أحمد (غير موجود في turath.io)"
@@ -53,5 +54,6 @@
   "tamhid",
   "tarhtathrib",
   "tuhfaahwadhi"
- ]
+ ],
+ "hold": []
 }
