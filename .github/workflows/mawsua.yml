@@ -8,6 +8,7 @@ on:
     paths: ["data/mawsua/_queue.json"]
   schedule:
     - cron: "47 12 * * *"   # يكمل الطابور بعد تجدد الحصة
+    - cron: "47 21 * * *"   # جولة ثانية لما بقي من الحصة (تتوقف فورًا إن نفدت)
   workflow_dispatch:
     inputs:
       args: { description: "اختياري: plan [k] | build <k> [n] (فارغ = الطابور)", required: false, default: "" }
