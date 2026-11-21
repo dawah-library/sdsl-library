@@ -29,32 +29,15 @@ const HDS = (() => {
   // المتن بمطلعه: إن انتهى المطلع بفعل قول جاء المتن بين علامتي تنصيص، وإلا اتصل به
   /* ===== رموز الترضي والسلام المرسومة (طلب المدير، ٢١ نوفمبر): كما تُرسم «ﷺ» يُرسم الترضي عن الصحابي والصحابية بصيغته الثابتة
      (رضي الله عنه/عنها/عنهما/عنهم/عنهن)، و«عليه السلام» للأنبياء والملائكة، و«رحمه الله»؛ رمزًا مرسومًا (.hon) يُقرأ نصه كاملًا.
-     وما لم يُذكر في النص يُضاف عند أول ذكر الصحابي في المطلع، وبعد أسماء الأنبياء والملائكة في المتن، و«ﷺ» بعد «رسول الله»/«النبي»؛
-     ويُميَّز المضاف (.hon.add). الخياران في «خدمات النص». ===== */
+     التزامًا بنص المؤلف: لا يُضاف دعاء لم يكتبه صاحب الكتاب أو الشرح، وإنما تُرسم الصيغة التي اختارها كما وردت (طلب المدير). ===== */
   const DI = "[\\u064B-\\u0652\\u0670]*", rxw = w => [...w].map(c => c === " " ? "\\s+" : c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + DI).join("");
   const PH = [["رضي الله عنهما", "رَضِيَ اللهُ", "عَنْهُمَا"], ["رضي الله عنهن", "رَضِيَ اللهُ", "عَنْهُنَّ"], ["رضي الله عنهم", "رَضِيَ اللهُ", "عَنْهُمْ"], ["رضي الله عنها", "رَضِيَ اللهُ", "عَنْهَا"], ["رضي الله عنه", "رَضِيَ اللهُ", "عَنْهُ"],
     ["رحمهما الله", "رَحِمَهُمَا", "اللهُ"], ["رحمه الله", "رَحِمَهُ", "اللهُ"], ["عليه الصلاة والسلام", "عَلَيْهِ الصَّلَاةُ", "وَالسَّلَامُ"], ["عليهما السلام", "عَلَيْهِمَا", "السَّلَامُ"], ["عليهم السلام", "عَلَيْهِمُ", "السَّلَامُ"], ["عليها السلام", "عَلَيْهَا", "السَّلَامُ"], ["عليه السلام", "عَلَيْهِ", "السَّلَامُ"]];
-  const PHRX = PH.map(([w, a, b]) => [new RegExp("[-–(]?\\s*" + rxw(w) + "(?![\\u0621-\\u064A])\\s*[-–)]?", "g"), a, b, w]);
+  const PHRX = PH.map(([w, a, b]) => [new RegExp("[-–(]?\\s*" + rxw(w) + "(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])\\s*[-–)]?", "g"), a, b, w]);
   const honSpan = (a, b, w, add) => `<span class="hon${add ? " add" : ""}" title="${w}" aria-label="${w}"><i>${a}</i><i>${b}</i></span>`;
-  const HONK = { h: "عنه", f: "عنها", d: "عنهما" };
-  const honOf = k => { const p = PH.find(x => x[0] === "رضي الله " + HONK[k]); return honSpan(p[1], p[2], p[0], 1); };
-  const SAL = honSpan("عَلَيْهِ", "السَّلَامُ", "عليه السلام", 1);
-  const FEM = /^(?:عائشة|أم |حفصة|أسماء|فاطمة|ميمونة|زينب|خديجة|صفية|سودة|جويرية|الربيع بنت|الشفاء|سهلة|نسيبة|خولة|رملة|هند|أميمة|بريرة|سبيعة|فاطمة بنت|أم$)/;
-  const DUAL = /^(?:عبد الله بن عمر|عبد الله بن عمرو|ابن عمر|ابن عمرو|عبد الله بن عباس|ابن عباس|عبد الله بن الزبير|ابن الزبير|النعمان بن بشير|جابر بن عبد الله|أسامة بن زيد|الحسن بن علي|الحسين بن علي|أسماء بنت أبي بكر)(?![\u0621-\u064A])/;
-  const PROPH = ["آدم", "نوح", "إبراهيم", "إسماعيل", "إسحاق", "يعقوب", "يوسف", "موسى", "هارون", "داود", "سليمان", "عيسى", "يونس", "أيوب", "زكريا", "يحيى", "إلياس", "إدريس", "هود", "صالح", "شعيب", "لوط", "جبريل", "جبرائيل", "ميكائيل", "إسرافيل"];
-  const PROPHRX = new RegExp("(^|[\\s«(])((?:" + PROPH.map(rxw).join("|") + "))(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])(?!\\s+(?:بن|ابن)" + DI + "\\s)(?!\\s*<span class=\"hon)", "g");
-  const RASRX = new RegExp("((?:" + rxw("رسول الله") + "|" + rxw("النبي") + "))(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])(?!\\s*(?:ﷺ|" + rxw("صلى") + "|<span|" + PROPH.map(rxw).join("|") + "))", "g");
   const onText = (html, f) => html.split(/(<[^>]+>)/).map((t, i) => i % 2 ? t : f(t)).join("");
   function sym(html, sah) { const T = txtSet(); if (T.h === 0) return html;
     html = onText(html, t => { PHRX.forEach(([rx, a, b, w]) => { t = t.replace(rx, () => " " + honSpan(a, b, w)); }); return t.replace(new RegExp(rxw("صلى الله عليه وسلم"), "g"), "ﷺ"); });
-    if (T.ha === 0) return html;
-    if (sah) { const n = String(sah).replace(/^(?:أبي|أبو)\s+/, m => m), nn = n.replace(/[ً-ْٰ]/g, ""), k = FEM.test(nn) ? "f" : DUAL.test(nn) ? "d" : "h";
-      const rx = new RegExp("(" + rxw(nn.replace(/^أبو\s/, "أبي ")) + "|" + rxw(nn) + ")(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])", "");
-      const m = html.match(rx); if (m) { const e = m.index + m[0].length, after = html.slice(e, e + 40);
-        const hi = html.slice(e, e + 90).indexOf('<span class="hon'), stop = html.slice(e, e + 90).search(/[:؛]|قَ?الَ?|أَ?نَّ/);
-        if (!(hi >= 0 && (stop < 0 || hi < stop))) html = html.slice(0, e) + " " + honOf(k) + html.slice(e); } }
-    html = onText(html, t => t.replace(PROPHRX, (m0, pre, name, off, str) => { const before = str.slice(Math.max(0, off - 6), off + pre.length).replace(/[ً-ْٰ]/g, "");
-      return /(?:أبو|أبي|أبا|أم|بن|ابن|بنت)\s*$/.test(before) ? m0 : pre + name + " " + SAL; }).replace(RASRX, "$1 ﷺ"));
     return html; }
   const withLead = (lead, m, sah) => sym(withLead0(lead, m), sah);
   const withLead0 = (lead, m) => { m = clean(m); const paren = /\(/.test(m) && /\)/.test(m);
@@ -329,7 +312,6 @@ const HDS = (() => {
       <fieldset><legend>لون النص</legend><div class="hdcols">${HCOL.map(([v, n]) => `<button type="button" class="hdcol${t.c === v ? " on" : ""}" data-hdc="${v}" title="${n}" aria-label="${n}" style="${v ? "background:" + v : ""}">${v ? "" : "A"}</button>`).join("")}<input type="color" data-hdt="c" value="${t.c || "#1b1b1b"}" aria-label="لون مخصص"></div></fieldset>
       <label class="inl"><input type="checkbox" data-hdt="d"${t.d ? " checked" : ""}> إظهار التشكيل</label>
       <label class="inl"><input type="checkbox" data-hdt="h"${t.h !== 0 ? " checked" : ""}> رموز الترضي والسلام مرسومة (كـ«ﷺ»)</label>
-      <label class="inl"><input type="checkbox" data-hdt="ha"${t.ha !== 0 ? " checked" : ""}> إضافة الترضي والسلام حيث لم يُذكر في النص (مميَّزًا)</label>
       <p class="hdtxtprev">${sym("عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللهِ ﷺ: «الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ»")}</p>
       <button class="btn s" data-act="hdtxtreset">إعادة الافتراضي</button></div>`); }
   const txtSave = (k, v) => { const t = txtSet(); t[k] = v; LSS("hd_txt", t); txtApply(); const z = document.getElementById("hdzv"); if (z) z.textContent = toAr(t.z) + "٪"; };
