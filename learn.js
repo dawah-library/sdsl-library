@@ -236,7 +236,7 @@ ${absHtml(A2, true)}<script>onload=()=>setTimeout(()=>print(),600)<\/script></bo
     const share = { mcq: .5, tf: .3, cloze: .2 }, qs = [];
     Object.keys(share).forEach(t => qs.push(...(by[t] || []).splice(0, Math.round(want * share[t]))));
     shuffle(Object.values(by).flat()).forEach(x => { if (qs.length < want) qs.push(x); });
-    qs.splice(want); const qs2 = shuffle(qs); qs.length = 0; qs.push(...qs2);
+    qs.splice(want); const qs2 = shuffle(qs).map(x => x.type === "mcq" && Array.isArray(x.opts) ? Object.assign({}, x, { opts: shuffle(x.opts) }) : x); qs.length = 0; qs.push(...qs2);  // ترتيب الخيارات عشوائي في كل زيارة (لا تكون الإجابة الصحيحة أولًا دائمًا)
     if (!b || !qs.length) return view(`<p><a href="#/quizzes">اختبارات الكتب</a> ›</p><div class="note">أسئلة هذا الكتاب قيد الإعداد: تُعدّ له اختبارات محرَّرة متدرجة تامة السياق، تُراجَع مرة ثانية قبل نشرها، وتظهر هنا قريبًا.</div>`);
     CUR = { b: id, l, qs };
     view(`<p><a href="#/quizzes">اختبارات الكتب</a> › ${esc(b.title)}</p><h2>اختبار: ${esc(b.title)} <span class="mut">— ${LV[l]} (${toAr(qs.length)} سؤالًا)</span></h2>

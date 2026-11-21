@@ -18,11 +18,13 @@ const MAWS = (() => {
   const ord = n => ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر"][n] || toAr(n);
 
   // سياسة المصادر (طلب المدير، ٢١ نوفمبر): الكتب أصل، ثم البيانات، ثم فتاوى صوت السلف، ثم مقالات المعتمدين وحدهم
-  const SRCK = { b: "كتاب", s: "بيان", f: "فتوى صوت السلف", a: "مقال", m: "مرجع" };
-  const srcTag = x => x.k === "d" ? (x.s && x.s !== "b" ? SRCK[x.s] : "مشايخ الدعوة") : "مرجع";
+  const SRCK = { b: "كتاب", s: "بيان", f: "فتوى صوت السلف", a: "مقال", o: "كتاب دعوي", m: "مرجع", i: "كتب المحققين" };
+  const srcTag = x => x.k === "d" ? (x.s && x.s !== "b" ? SRCK[x.s] : "مشايخ الدعوة") : x.s === "i" ? SRCK.i : "مرجع";
   function srcPolicy(P) {
     if (!P || !(P.order || []).length) return "";
     return `<li>مصادر الدعوة بترتيب الاعتماد: ${P.order.map((o, i) => `${toAr(i + 1)}. <b>${esc(o[1])}</b>${P.n && P.n[o[0]] ? ` (${toAr(P.n[o[0]])})` : ""} — ${esc(o[2] || "")}`).join("؛ ")}.</li>
+      <li>كتب المشايخ وشروحهم هي المصدر الأساسي، ثم تُكمَّل الأبواب والمسائل من الكتب العلمية المعتمدة المشهورة في كل فن، مع العناية بكتب المحققين من أهل السنة قديمًا وحديثًا (ابن تيمية، وابن القيم، وابن رجب، وابن كثير، والذهبي، والشاطبي، وشراح الحديث، وأئمة اللغة والأدب والتاريخ).</li>
+      <li>تُعرض النصوص والتقريرات بلا ذكر للأسماء في سياق الكلام، والعزو بالأرقام: اضغط الرقم لبطاقة المرجع، والمصادر كاملة في آخر المادة.</li>
       ${(P.authors || []).length ? `<li>المقالات مقصورة مبدئيًّا على المشايخ والكتّاب المعتمدين لأنها تمثل التوجه العلمي المعتمد في الدعوة لا آراء فردية: ${P.authors.map(esc).join("، ")}.</li>` : ""}`;
   }
   async function home(q) {
@@ -33,7 +35,7 @@ const MAWS = (() => {
       .concat(I.items.map(x => ({ k: x.k, h: "#/mawsua/" + x.k, n: x.n, d: x.d, meta: x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد", p: x.m ? Math.round(100 * (adm() ? x.e : x.ok) / x.m) : 0 })));
     window.__mwT = T;
     view(`<section class="cmhero mwhero"><div><h2>موسوعات الموقع</h2><p>موسوعة آثار السلف، والموسوعات العلمية المتخصصة: موسوعات محكمة في العلوم الشرعية، عمادها ومرجعيتها كتب مشايخ الدعوة السلفية ومؤلفاتهم ومقالاتهم وفتاواهم، وتُكمَّل أبوابها ومسائلها من المراجع العلمية المتخصصة المشهورة في كل فن؛
-      مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ومراجعة كل مادة قبل نشرها؛ ولكل موسوعة اختبارات «المِسبار» لقياس مستواك فيها.</p>
+      مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ونشر تلقائي بعد فحص العزو مع المراجعة والتطوير المستمرين؛ ولكل موسوعة اختبارات «المِسبار» لقياس مستواك فيها.</p>
       <p class="mut">${toAr(I.items.length + 1)} موسوعة${tot ? ` • ${toAr(tot)} مسألة في المخططات • ${toAr(ok)} مادة معتمدة` : " • تُعد المخططات الآن"}</p></div></section>
       <form class="sbox" data-form="mwq" style="max-width:none"><input name="q" type="search" value="${esc(q.q || "")}" placeholder="ابحث عن مسألة في الموسوعات كلها" aria-label="بحث في الموسوعات"><button class="btn">بحث</button></form><div id="mwres"></div>
       <div class="mwbar"><h3>الموسوعات</h3><div class="mwview" role="group" aria-label="طريقة العرض"><button type="button" data-mwv="apps" title="استعراض بالأيقونات">${ic("layout-grid", 18)}<span>استعراض</span></button><button type="button" data-mwv="list" title="قائمة مفصلة">${ic("list", 18)}<span>قائمة</span></button></div></div>
@@ -41,7 +43,7 @@ const MAWS = (() => {
       <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>
-      <li>كل مادة مسودة حتى يراجعها متخصص ويعتمدها؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li>${srcPolicy(I.src)}</ul></details>`);
+      <li>تُعتمد المادة وتُنشر تلقائيًّا بعد فحص العزو والاقتباس، وتنمو الموسوعات بكل كتاب جديد يُرفع؛ وللإدارة والمساعد التقني المراجعة والتعديل والإضافة متى طُلب؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li>${srcPolicy(I.src)}</ul></details>`);
     tiles();
     if (typeof MSB !== "undefined") MSB.homeBlock($("#msbhome"));
     if (q.q) search(q.q, I);
@@ -91,16 +93,39 @@ const MAWS = (() => {
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
       <section class="mwsrc"><h3>المصادر</h3><ol>${tags.map(g => `<li id="mwsrc-${num[g]}"><span class="tag">${srcTag(E.src[g])}</span> <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a></li>`).join("")}</ol></section>
       ${seeL.length ? `<p><b>مسائل ذات صلة:</b> ${seeL.map(y => `<a class="chip" href="#/mawsua/${k}/${y.id}">${esc(y.t)}</a>`).join(" ")}</p>` : ""}
-      <div class="row"><button class="btn s" data-mw="copy">نسخ المادة بالعزو</button>${adm() && !(E.ok || m.ok) ? `<button class="btn s p" data-mw="ok" data-k="${k}" data-id="${esc(id)}">✓ اعتماد المادة ونشرها</button>` : ""}${adm() ? `<button class="btn s" data-mw="redo" data-k="${k}" data-id="${esc(id)}">إعادة التحرير</button>` : ""} <span class="mwst mut"></span></div>
+      <div class="row"><button class="btn s" data-mw="copy">نسخ المادة بالعزو</button>${adm() && !(E.ok || m.ok) ? `<button class="btn s p" data-mw="ok" data-k="${k}" data-id="${esc(id)}">✓ اعتماد المادة ونشرها</button>` : ""}${adm() ? `<button class="btn s" data-mw="redo" data-k="${k}" data-id="${esc(id)}">إعادة التحرير</button><button class="btn s" data-mw="edit">✎ تعديل يدوي</button>` : ""} <span class="mwst mut"></span></div>
+      ${adm() ? `<div class="mwedit card" hidden><p class="mut">تعديل المادة (JSON): lead التمهيد، s الأقسام وفقراتها (t النص، c رموز المصادر)، q النصوص المختارة، src المصادر. المادة المعدلة يدويًّا لا يغيرها التحرير التلقائي، بل يقترح تحديثها بجوارها.</p><textarea rows="18" dir="rtl" style="width:100%;font-family:monospace">${esc(JSON.stringify(E, null, 1))}</textarea><div class="row"><button class="btn s p" data-mw="esave" data-k="${k}" data-id="${esc(id)}">حفظ ونشر</button> <span class="mwst mut"></span></div></div>` : ""}
       <nav class="mwnav">${prev ? `<a href="#/mawsua/${k}/${prev.id}">→ ${esc(prev.t)}</a>` : "<span></span>"}${next ? `<a href="#/mawsua/${k}/${next.id}">${esc(next.t)} ←</a>` : ""}</nav></article>`);
     window.__mwE = E;
   }
+  // بطاقة المرجع المختصرة عند الضغط على رقم العزو؛ والحواشي الكاملة باقية في آخر المادة (طلب المدير، ٢١ نوفمبر)
+  function closePop() { const p = document.getElementById("mwpop"); if (p) p.remove(); }
+  function fnPop(el) {
+    const E = window.__mwE; if (!E) return; const n = +el.dataset.n, g = Object.keys(E.src || {})[n - 1], s = g && E.src[g]; if (!s) return;
+    const was = document.getElementById("mwpop"); closePop(); if (was && was.dataset.n == n && was.dataset.at === el.dataset.at) return;
+    const bk = (typeof B === "function" && B(s.b)) || null, qt = (E.q || []).find(q => q.c === g);
+    const p = document.createElement("div"); p.id = "mwpop"; p.className = "mwpop"; p.dataset.n = n; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "المرجع " + n);
+    p.innerHTML = `<button type="button" class="mwpx" aria-label="إغلاق" data-mwpx>×</button><p class="mwpn"><b>${toAr(n)}</b> <span class="tag">${srcTag(s)}</span></p>
+      <p class="mwpt"><b>«${esc(s.t)}»</b>${s.a ? `<br><span class="mut">${esc(s.a)}</span>` : ""}<br><span class="mut">${bk && typeof PL === "function" ? esc(PL(bk, s.p - 1) || "ص " + toAr(s.p)) : "ص " + toAr(s.p)}</span></p>
+      ${qt ? `<blockquote class="mwq">«${esc(qt.t.length > 220 ? qt.t.slice(0, 220) + "…" : qt.t)}»</blockquote>` : ""}
+      <div class="row"><a class="btn s p" href="#/book/${esc(s.b)}/${s.p}${qt ? "?h=" + encodeURIComponent(qt.t.slice(0, 40)) : ""}">افتح الموضع</a><button type="button" class="btn s" data-mw="fnall" data-n="${n}">في الحواشي ↓</button></div>`;
+    document.body.appendChild(p);
+    const r = el.getBoundingClientRect(), w = Math.min(340, innerWidth - 24); p.style.width = w + "px";
+    let left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), innerWidth - w - 12), top = r.bottom + 8 + scrollY;
+    if (r.bottom + p.offsetHeight + 16 > innerHeight && r.top > p.offsetHeight + 16) top = r.top + scrollY - p.offsetHeight - 8;
+    p.style.left = left + scrollX + "px"; p.style.top = top + "px";
+  }
+  document.addEventListener("click", e => { const p = document.getElementById("mwpop"); if (!p) return; if (e.target.closest("[data-mwpx]") || (!p.contains(e.target) && !e.target.closest('[data-mw="fn"]'))) closePop(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+  addEventListener("hashchange", closePop);
   function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id), q); }
 
   document.addEventListener("submit", e => { const f = e.target.closest('[data-form="mwq"]'); if (!f) return; e.preventDefault(); location.hash = "#/mawsua?q=" + encodeURIComponent(f.q.value.trim()); }, true);
   document.addEventListener("click", async e => {
     const el = e.target.closest("[data-mw]"); if (!el) return; const a = el.dataset.mw, k = el.dataset.k, st = el.parentNode.querySelector(".mwst") || { textContent: "" };
-    if (a === "fn") { const t = document.getElementById("mwsrc-" + el.dataset.n); if (t) { t.scrollIntoView({ behavior: "smooth", block: "center" }); t.classList.add("hl"); setTimeout(() => t.classList.remove("hl"), 1800); } return; }
+    if (a === "fn") { fnPop(el); return; }
+    if (a === "fnall") { closePop(); const t = document.getElementById("mwsrc-" + el.dataset.n); if (t) { t.scrollIntoView({ behavior: "smooth", block: "center" }); t.classList.add("hl"); setTimeout(() => t.classList.remove("hl"), 1800); } return; }
+    if (a === "edit") { const b = document.querySelector(".mwedit"); if (b) { b.hidden = !b.hidden; if (!b.hidden) b.querySelector("textarea").focus(); } return; }
     if (a === "copy") { const E = window.__mwE; if (!E) return; const tg = Object.keys(E.src || {}), n = Object.fromEntries(tg.map((g, i) => [g, i + 1]));
       const txt = `${E.t}\n\n${E.lead || ""}\n\n` + E.s.map(s => s.h + "\n" + s.p.map(p => p.t + " " + p.c.map(c => "[" + n[c] + "]").join("")).join("\n")).join("\n\n") + "\n\nالمصادر:\n" + tg.map(g => `[${n[g]}] ${E.src[g].t}${E.src[g].a ? "، " + E.src[g].a : ""}، ص ${E.src[g].p}`).join("\n") + "\n" + location.href;
       return navigator.clipboard && navigator.clipboard.writeText(txt).then(() => toast("نُسخت المادة بمصادرها")); }
@@ -114,6 +139,10 @@ const MAWS = (() => {
         await GH.del(np, "الموسوعات: " + (a === "rev" ? "اعتماد" : "رفض") + " تحديث مقترح");
         await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) delete m.rev; }); return o; }, "الموسوعات: تحديث مسألة");
         TR[k] = null; EN[id] = null; st.textContent = a === "rev" ? "✓ نُشر التحديث" : "✓ رُفض التحديث"; }
+      else if (a === "esave") { const id = el.dataset.id, ta = el.closest(".mwedit").querySelector("textarea"); let N; try { N = JSON.parse(ta.value); } catch (x) { return st.textContent = "صيغة JSON غير صحيحة: " + x.message; }
+        await GH.editJSON(R + k + "/e/" + id + ".json", () => Object.assign(N, { ok: 1, man: 1, manAt: today() }), "الموسوعات: تعديل يدوي لمادة");
+        await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) { m.e = 1; m.ok = 1; } }); return o; }, "الموسوعات: تعديل مسألة");
+        TR[k] = null; EN[id] = null; st.textContent = "✓ حُفظ التعديل ونُشر"; }
       else if (a === "ok" || a === "redo") { const id = el.dataset.id;
         if (a === "ok") await GH.editJSON(R + k + "/e/" + id + ".json", o => Object.assign(o, { ok: 1, okAt: today() }), "الموسوعات: اعتماد مادة");
         await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) { if (a === "ok") m.ok = 1; else { delete m.skip; if (!m.ok) delete m.e; } } }); return o; }, "الموسوعات: " + (a === "ok" ? "اعتماد" : "إعادة تحرير") + " مسألة");
