@@ -5,7 +5,7 @@ const { notify, tgApi, sb, E } = require("../lib/tg");
 module.exports = async (req, res) => {
   const out = (c, o) => { res.statusCode = c; res.setHeader("content-type", "application/json; charset=utf-8"); res.setHeader("cache-control", "no-store"); res.end(JSON.stringify(o)); };
   const u = await userOf(req); if (!u || u.role !== "admin") return out(403, { message: "للمدير فقط." });
-  if (!E("TELEGRAM_BOT_TOKEN")) return out(200, { token: false, linked: false, message: "أضف TELEGRAM_BOT_TOKEN في إعدادات Vercel أولًا." });
+  if (!E("TELEGRAM_BOT_TOKEN")) return out(200, { token: false, linked: false, message: "أضف TELEGRAM_BOT_TOKEN في إعدادات Cloudflare Pages (Settings ← Variables and Secrets) ثم أعد النشر." });
   const me = await tgApi("getMe"); if (!me.ok) return out(200, { token: false, linked: false, message: "رمز البوت غير صحيح." });
   let cur = null; try { const r = await sb("app_settings?select=value&key=eq.telegram_chat"); cur = r && r[0] && r[0].value; } catch (e) { }
   if (req.method !== "POST") return out(200, { token: true, bot: me.result.username, linked: !!(cur && cur.id), name: cur && cur.name });

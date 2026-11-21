@@ -226,7 +226,7 @@ async function tgPanel() {
   const el = document.getElementById("tgst"); if (!el || !Auth.token) return;
   const call = async m => { const r = await fetch("/api/tglink", { method: m, headers: { authorization: "Bearer " + Auth.token } }); return r.json(); };
   const paint = j => { el.innerHTML = j.linked ? `<p>✅ إشعارات تليجرام مربوطة${j.name ? " بحساب " + esc(j.name) : ""} عبر البوت @${esc(j.bot || "")}.</p><button class="btn s" data-act="tglink">إعادة الربط</button>`
-    : `<p class="mut">${esc(j.message || (j.token ? "البوت جاهز. افتحه في تليجرام واضغط Start ثم اضغط «ربط تليجرام»." : "أضف TELEGRAM_BOT_TOKEN في إعدادات Vercel أولًا."))}</p>${j.token ? `<button class="btn s p" data-act="tglink">ربط تليجرام</button>` : ""}`; };
+    : `<p class="mut">${esc(j.message || (j.token ? "البوت جاهز. افتحه في تليجرام واضغط Start ثم اضغط «ربط تليجرام»." : "أضف TELEGRAM_BOT_TOKEN في إعدادات Cloudflare Pages (Settings ← Variables and Secrets) ثم أعد النشر."))}</p>${j.token ? `<button class="btn s p" data-act="tglink">ربط تليجرام</button>` : ""}`; };
   try { paint(await call("GET")); } catch (e) { el.textContent = "تعذر جلب حالة تليجرام."; }
   if (window.__tgBound) return; window.__tgBound = 1;
   document.addEventListener("click", async e => { const b = e.target.closest('[data-act="tglink"]'); if (!b) return; b.disabled = true; try { paint(await call("POST")); } catch (x) { toast(x.message); } b.disabled = false; });
