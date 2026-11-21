@@ -1948,3 +1948,7 @@ body.khdl{overflow:hidden}body.khdl>*:not(.khdlv):not(#toast){display:none!impor
 .hon i{font-style:normal;display:block}.hon.add{border-style:dashed;opacity:.9}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .hon{--hon-c:#d9b45a}}
 :root[data-theme=dark] .hon{--hon-c:#d9b45a}
+.khci{display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:10px;background:color-mix(in srgb,var(--ac) 10%,transparent);color:var(--ac);flex:0 0 auto}
+.khcats a:hover .khci{background:var(--ac);color:var(--on)}.khcats a span{font-size:inherit}
+.khhero h2 .ic-svg{vertical-align:-4px;color:var(--gold)}.khm b .ic-svg,.chip .ic-svg,.btn .ic-svg,h3 .ic-svg,h4 .ic-svg{vertical-align:-3px}.chip.sm .ic-svg{color:var(--ac)}
+.khcn{background:var(--gold);color:#fff;border-radius:999px;padding:0 7px;font-size:.72rem!important;color:#fff!important}
