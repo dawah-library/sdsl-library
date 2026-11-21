@@ -135,7 +135,7 @@ def plan(e, force=False):
     dawah = [b["title"] for b in CAT["books"] if (b.get("col") or "dawah") == "dawah" and (b.get("topicId") in e[4] or any(c in b.get("title", "") for c in e[5]))][:25]
     srcs = "كتب المشايخ: " + ("، ".join(dawah) or "متفرقة") + ". ومقالاتهم وفتاواهم في: " + "، ".join(e[5]) + ". والمراجع: " + "، ".join(e[6]) + "."
     r = T.gemini(PLAN.format(name=e[1], desc=e[2], srcs=srcs))
-    if not r or not r.get("b"): print("  تعذر المخطط:", k); return
+    if not r or not r.get("b"): print("  تعذر المخطط:", k); return False
     tree = []
     for i, b in enumerate(r["b"], 1):
         fs = []
@@ -145,6 +145,7 @@ def plan(e, force=False):
         if fs: tree.append({"t": b["t"].strip(), "f": fs})
     jw(tp, {"k": k, "n": e[1], "built": str(datetime.date.today()), "ok": 0, "b": tree})
     print("  ✓ مخطط %s: %d بابًا، %d مسألة" % (k, len(tree), sum(len(f["m"]) for b in tree for f in b["f"])))
+    return True
 
 
 # ---------- تحرير المسائل ----------
@@ -217,13 +218,18 @@ def new_corpus(ids):
     return out
 
 
+def dead():
+    """نفدت حصة مفاتيح Gemini كلها في هذه الجولة (ولا محرك بديل)."""
+    return bool(T.KEYS) and len(T.EXH) >= len(T.KEYS) and not getattr(T, "GHM_TOKEN", "")
+
+
 def ensure(n=40):
     """الاستمرار الذاتي: موسوعة بلا مخطط يُطلب مخططها، وما بقي من مسائل غير محررة يُطلب تحريره؛ ما لم يكن في الطابور."""
     qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; it = Q["items"]
     for e in ENC:
         k, tree = e[0], jl(os.path.join(OUT, e[0], "_tree.json"))
         if not tree:
-            if not any(x.get("k") == k and x.get("do") == "plan" for x in it): it.append({"k": k, "do": "plan"})
+            if not any(x.get("k") == k and x.get("do") == "plan" for x in it): it.insert(0, {"k": k, "do": "plan"})  # المخططات أولًا قبل أن تستهلك المسائل الحصة
         elif any(not m.get("e") and not m.get("skip") for b in tree["b"] for f in b["f"] for m in f["m"]) and not any(x.get("k") == k and x.get("do") == "build" and not x.get("ids") for x in it):
             it.append({"k": k, "do": "build", "n": n})
     jw(qp, Q)
@@ -277,8 +283,10 @@ def main():
         qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; rest = []
         for it in Q.get("items", []):
             e = E.get(it.get("k"))
-            if not e or time.time() - T0 > LIMIT: rest.append(it); continue
-            if it.get("do") == "plan": plan(e, bool(it.get("force")))
+            if not e: continue
+            if time.time() - T0 > LIMIT or dead(): rest.append(it); continue  # نفدت المهلة أو حصة المفاتيح كلها: يبقى للجولة القادمة
+            if it.get("do") == "plan":
+                if plan(e, bool(it.get("force"))) is False: rest.append(it)
             else:
                 n = int(it.get("n") or 20); d = build(e, n, it.get("ids"), it.get("boost"))
                 if it.get("ids"):
