@@ -4,7 +4,7 @@
 // — يحفظ المصدر الأصلي ورابطه وتاريخ النشر (ب4-11)، ويمنع التكرار داخل المصدر وبين المصادر بالعنوان والنص (ب4-8، ب4-37، ب4-38)،
 //   ويتخطى التهاني والتعازي والأخبار والمقاطع المرئية بلا نص (ب4-9، ب4-10)، ويسجّل وقت المراجعة ونتائجها وأخطاءها (ب4-35، ب4-41، ب4-42).
 // المصادر وإعداداتها في data/sources.json (تُعدَّل من الإدارة)؛ المصدر الموقوف أو المحجوب (403) يُسجَّل ولا يوقف غيره.
-// الاستخدام: node tools/source-import.js [معرّف_المصدر]
+// الاستخدام: node tools/source-import.js [معرّف_المصدر | fb لحسابات فيسبوك وحدها]
 const fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, ".."), DATA = path.join(ROOT, "data");
 const SRC = path.join(DATA, "sources.json"), Q = path.join(DATA, "import-review.json"), IDX = path.join(DATA, "articles", "index.json");
@@ -44,11 +44,14 @@ const htmlText = h => cssOut(decode(String(h).replace(/<!--[\s\S]*?-->/g, " ").r
 const cssOut = t => t.split("\n").map(l => l.replace(/[\w-]+\s*:\s*[^;:\u0600-\u06FF]{1,60};/g, " ").replace(/\s+/g, " ").trim()).filter(l => (l.match(/[\u0621-\u064A]/g) || []).length > 3 && !/mso-|font-family|text-align|line-height/i.test(l)).join("\n");
 const tag = (x, n) => { const m = x.match(new RegExp(`<${n}[^>]*>([\\s\\S]*?)<\/${n}>`, "i")); return m ? m[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim() : ""; };
 // الاكتشاف الآلي لطريقة الجلب من رابط الموقع: واجهة ووردبريس ← خلاصة RSS ← خريطة الموقع ← روابط الصفحات المحددة (lists/linkRx) ← روابط الرئيسية
-// فيسبوك: واجهة Graph الرسمية برمز من الصفحة (السر FB_TOKENS: {"معرّف المصدر": "الرمز"} أو FB_PAGE_TOKEN عامًّا)؛ لا زحف على فيسبوك
+// فيسبوك: واجهة Graph الرسمية إن وُجد رمز (السر FB_TOKENS: {"معرّف المصدر": "الرمز"} أو FB_PAGE_TOKEN)، وإلا صندوق «الزائر بلا حساب» (fb-harvest.js)
 async function fbDiscover(s, ctx, L) {
   let toks = {}; try { toks = JSON.parse(process.env.FB_TOKENS || "{}"); } catch (e) { }
   const tok = toks[s.id] || toks[s.fb] || process.env.FB_PAGE_TOKEN, out = []; out.mode = "fb";
-  if (!tok) { out.mode = "fb-notoken"; L("لا رمز Graph لهذا الحساب؛ تُضاف منشوراته يدويًّا من الإدارة"); return out; }
+  if (!tok) { // بلا رمز: منشورات «الزائر بلا حساب» (tools/fb-harvest.js كل ساعة ← data/fb-inbox.json)
+    const box = ctx.fbBox || (ctx.fbBox = readJSON(path.join(DATA, "fb-inbox.json"), { items: [] }));
+    box.items.filter(p => p.src === s.id).forEach(p => { const msg = String(p.text); out.push({ id: p.k, u: p.u, title: msg.split("\n")[0].slice(0, 90), date: new Date(p.t * 1000).toISOString().slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); });
+    out.mode = out.length ? "fb-web" : "fb-notoken"; if (!out.length) L("لا منشورات في صندوق الزائر بعد (fb-harvest)"); return out; }
   try { const j = JSON.parse(await get("https://graph.facebook.com/v19.0/" + encodeURIComponent(s.fb) + "/posts?fields=id,message,created_time,permalink_url&limit=" + (s.perRun || 25) + "&access_token=" + encodeURIComponent(tok), 1));
     (j.data || []).filter(p => p.message).forEach(p => { const msg = String(p.message); out.push({ id: "p" + String(p.id).replace(/\D/g, "").slice(-14), u: p.permalink_url || "https://www.facebook.com/" + p.id, title: msg.split("\n")[0].slice(0, 90), date: String(p.created_time || "").slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); }); }
   catch (e) { ctx.errors.push({ src: s.id, url: "graph.facebook.com/" + s.fb, err: e.message }); L("تعذر Graph: " + e.message); }
@@ -127,11 +130,11 @@ async function runSource(s, ctx) {
   const conf = readJSON(SRC, { sources: [] }), only = process.argv[2];
   const ctx = { idx: readJSON(IDX, { items: [] }), q: readJSON(Q, { v: 1, items: [] }), errors: [] };
   const res = [];
-  for (const s of conf.sources) { if (only && s.id !== only) continue; if (s.on === false || !((s.lists || []).length || s.base || s.type === "facebook")) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
+  for (const s of conf.sources) { if (only && (only === "fb" ? s.type !== "facebook" : s.id !== only)) continue; if (s.on === false || !((s.lists || []).length || s.base || s.type === "facebook")) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
   ctx.q.items = ctx.q.items.slice(-3000); ctx.q.errors = ctx.errors.slice(-200); ctx.q.lastRun = new Date().toISOString(); ctx.q.results = res;
   // ترقية المنشور ملخصًا إلى النص الكامل حين يصير مصدره «كاملًا» (lic فارغ): يُجلب نص كل مادة من رابطها مرة واحدة
   const full = new Map(conf.sources.filter(s => s.col === "ithra" && s.lic !== "link" && s.on !== false).map(s => [s.id, s])); let up = 0;
-  for (const it of ctx.idx.items) { const s = full.get(it.src); if (!s || it.lic !== "link" || up >= 60) continue;
+  for (const it of ctx.idx.items) { const s = full.get(it.src); if (only || !s || it.lic !== "link" || up >= 60) continue;
     try { let text = "";
       const wp = (it.id.match(/wp(\d+)$/) || [])[1];
       if (wp && s.base) { const j = JSON.parse(await get(s.base.replace(/\/$/, "") + "/wp-json/wp/v2/posts/" + wp + "?_fields=content", 1)); text = htmlText((j.content || {}).rendered || ""); }
