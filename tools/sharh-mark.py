@@ -13,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tashjir as T  # noqa: E402
 import series as S  # noqa: E402
 
+# المفاتيح المحجوزة لخدمات الكتب وحدها (أولها في دور study)، فلا يزاحم تجهيز الكتب المصورة على بقية المفاتيح (أولوية المدير)
+T.KEYS[:] = T.KEYS[:int(os.environ.get("SM_KEYS", "6"))]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 D = os.path.join(ROOT, "data", "sharh-mark")
 REPORT = []
