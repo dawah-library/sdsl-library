@@ -1,5 +1,5 @@
 {
- "at": "2026-11-20 14:06",
+ "at": "2026-11-21 13:31",
  "graphql_errors": [
   "not authorized for that account"
  ],
@@ -7,27 +7,27 @@
  "workers_per_day": {},
  "r2_storage": [],
  "r2_ops_7d": {},
- "deployments_total": 275,
+ "deployments_total": 301,
  "deploy_err": null,
  "last_deploys": [
   {
-   "at": "2026-11-20T13:38:16.452929Z",
+   "at": "2026-11-21T13:24:21.833052Z",
    "status": "success"
   },
   {
-   "at": "2026-11-20T13:26:51.842817Z",
+   "at": "2026-11-21T12:58:49.074501Z",
    "status": "success"
   },
   {
-   "at": "2026-11-20T13:21:35.38889Z",
+   "at": "2026-11-21T12:44:36.352291Z",
    "status": "success"
   },
   {
-   "at": "2026-11-20T12:35:32.438437Z",
+   "at": "2026-11-21T08:02:25.869885Z",
    "status": "success"
   },
   {
-   "at": "2026-11-20T08:28:55.428824Z",
+   "at": "2026-11-21T07:41:06.679075Z",
    "status": "success"
   }
  ],
