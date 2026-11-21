@@ -1506,8 +1506,13 @@ async function progAdmin(){const el=$("#progadm");if(!el)return;let P=null,runs=
  <p class="mut">تستمر المهام على خوادم GitHub دون الحاجة إلى المحادثة؛ وهذه الصفحة تعرض آخر ما وصلت إليه.</p>`}
 async function sysStatus(){const el=$("#sysst");if(!el)return;const R_=GH.repo,api=u=>fetch("https://api.github.com/repos/"+R_+u).then(r=>r.ok?r.json():Promise.reject(new Error(r.status)));
  try{const [cm,runs]=await Promise.all([api("/commits?per_page=8"),api("/actions/runs?per_page=12")]);
-  const st=await Promise.all(cm.slice(0,8).map(c=>api("/commits/"+c.sha+"/status").then(x=>x.state).catch(()=>"")));
-  const ic={success:"✓ منشور",pending:"… يُنشر الآن",failure:"✗ تعذر النشر",error:"✗ تعذر النشر"},rs={completed:"",in_progress:"… جارٍ",queued:"في الانتظار"},cs={success:"✓",failure:"✗",cancelled:"أُلغي",skipped:"تُخطي"};
+  // حالة النشر من مهمة «النشر على Cloudflare Pages» نفسها (حالة Vercel القديمة لم تعد معبّرة: الحساب موقوف والاستضافة على Cloudflare)؛
+  // وإيداعات المهام الآلية لا تشغّل النشر وحدها فتُنشر مع أول نشر لاحق (أي أحدث نشر ناجح بعدها)
+  const dp=await api("/actions/workflows/cf-deploy.yml/runs?branch=main&per_page=30").catch(()=>({workflow_runs:[]})),DR=dp.workflow_runs||[];
+  const lastOk=DR.find(r=>r.conclusion==="success"),okAt=lastOk?Date.parse(lastOk.created_at):0;
+  const st=cm.slice(0,8).map(c=>{const r=DR.find(x=>x.head_sha===c.sha);if(r)return r.status!=="completed"?"pending":r.conclusion==="success"?"success":"failure";
+   const at=Date.parse(c.commit.committer?c.commit.committer.date:c.commit.author.date);return at&&okAt>=at?"success":DR.some(x=>x.status!=="completed")?"pending":"later"});
+  const ic={success:"✓ منشور",pending:"… يُنشر الآن",failure:"✗ تعذر النشر",error:"✗ تعذر النشر",later:"⏳ يُنشر مع النشر القادم"},rs={completed:"",in_progress:"… جارٍ",queued:"في الانتظار"},cs={success:"✓",failure:"✗",cancelled:"أُلغي",skipped:"تُخطي"};
   el.innerHTML=`<h3 style="font-size:1rem">آخر الحفظ والنشر على الموقع</h3>${cm.map((c,i)=>`<div class="card"><b>${esc(c.commit.message.split("\n")[0].slice(0,140))}</b><span class="mut">${esc(ago(c.commit.author.date))} • ${esc(c.commit.author.name)} • ${ic[st[i]]||"—"}</span></div>`).join("")}
   <h3 style="font-size:1rem">المهام الآلية (التحويل والاستيراد والفهارس)</h3>${(runs.workflow_runs||[]).map(r=>`<div class="card"><b>${esc(r.name)}</b><span class="mut">${esc(ago(r.created_at))} • ${r.status==="completed"?(cs[r.conclusion]||r.conclusion):rs[r.status]||r.status} • <a href="${esc(r.html_url)}" target="_blank" rel="noopener">التفاصيل</a></span></div>`).join("")}`}
  catch(e){el.innerHTML='<p class="note">تعذر جلب الحالة الآن ('+esc(e.message)+').</p>'}}
