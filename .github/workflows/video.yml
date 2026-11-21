@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  id-token: write   # إشعار تليجرام بالفيديوهات الجديدة
 concurrency:
   group: book-video
   cancel-in-progress: false
@@ -54,4 +55,5 @@ jobs:
           VIDEO_GEN_MAX_SECONDS: ${{ vars.VIDEO_GEN_MAX_SECONDS || '48' }}
         run: |
           python3 tools/book-video.py
+          python3 tools/notify-new.py video || true
           bash tools/git-save.sh "فيديوهات الكتب" data/video
