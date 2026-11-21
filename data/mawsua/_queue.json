@@ -3,26 +3,7 @@
   {
    "k": "fiqh",
    "do": "build",
-   "n": 11,
-   "ids": [
-    "fiqh-1-1-1",
-    "fiqh-1-1-2",
-    "fiqh-1-1-3",
-    "fiqh-1-2-1",
-    "fiqh-1-2-2",
-    "fiqh-1-2-3",
-    "fiqh-2-1-1",
-    "fiqh-2-1-2",
-    "fiqh-2-1-3",
-    "fiqh-2-2-1",
-    "fiqh-2-2-2"
-   ],
-   "redo": "v2"
-  },
-  {
-   "k": "fiqh",
-   "do": "build",
-   "n": 29
+   "n": 13
   },
   {
    "k": "tafsir",
@@ -51,6 +32,26 @@
   },
   {
    "k": "tarikh",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "adab",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "tarbiya",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "usra",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "siyasa",
    "do": "build",
    "n": 40
   }
