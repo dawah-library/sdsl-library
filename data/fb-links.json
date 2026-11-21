@@ -506,6 +506,87 @@
    "aid": "",
    "aname": "",
    "org": 0
+  },
+  {
+   "share": "https://www.facebook.com/share/1G2hZ4bxj6/",
+   "url": "https://www.facebook.com/mohamedismail.abugamil/",
+   "title": "Mohamed Abugamil",
+   "desc": "‏‎Mohamed Abugamil‎‏. ‏‏٦٬٠٨٩‏ متابعًا · يتحدث ‏٣٢‏ عن هذا‏. ‏منشئ محتوى رقمي‏",
+   "fb": "mohamedismail.abugamil",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1DiwxHLNPE/",
+   "url": "https://www.facebook.com/edrees.negm.2025/",
+   "title": "Edrees Negm",
+   "desc": "‏‎Edrees Negm‎‏. ‏‏١٣٬٢٢٣‏ متابعًا · يتحدث ‏٣٬٤٠١‏ عن هذا‏. ‏وسنرحل جميعا ويبقى الأثر ✍🏻\nفاصنع في حياتك ما يجلب لك الحسنات بعد مماتك‏",
+   "fb": "edrees.negm.2025",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1HDkgTYiQ1/",
+   "url": "https://www.facebook.com/Educ.World2/",
+   "title": "عالم التربية",
+   "desc": "‏عالم التربية‏. ‏‏٦١٬٢٥٤‏ متابعًا · يتحدث ‏٦٥٧‏ عن هذا‏. ‏تهتم بتوعية أولياء الأمور والمربين بطرق تربية أبنائهم تربية صحيحة في جميع المراحل العمرية‏",
+   "fb": "Educ.World2",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1CAkan1ZmQ/",
+   "url": "https://www.facebook.com/hmmztwsl/",
+   "title": "همزة وصل",
+   "desc": "‏همزة وصل‏. ‏‏١١٧٬٩٢٧‏ متابعًا · يتحدث ‏١٬٧١٩‏ عن هذا‏. ‏في حياتنا حجات كتير متفرقة، والدنيا سريعة جدا ومش ملاحقين\nازاي هانجمع بينها، ونرتبها، ونستمتع بالحياة؟\nده السؤال اللي هانجاوب عليه في ” همزة...",
+   "fb": "hmmztwsl",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/19jpeyQgfz/",
+   "url": "https://www.facebook.com/abdalrahman.soliman.568/",
+   "title": "عبدالرحمن سليمان",
+   "desc": "‏عبدالرحمن سليمان‏. ‏‏٣٦٬٤١٧‏ متابعًا · يتحدث ‏٤٬٨١٨‏ عن هذا‏. ‏أسعَى أن أترُكَ أثرًا\nيُرضِي الله عـَــــنِّي\nويَغفِر لي بِه ذَنبِـي‏",
+   "fb": "abdalrahman.soliman.568",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1KMCEtqdvL/",
+   "url": "https://www.facebook.com/M0azhary/",
+   "title": "محمد أزهري",
+   "desc": "‏محمد أزهري‏. ‏‏٣٤٬١١٠‏ متابعين · يتحدث ‏١٬٧٥٤‏ عن هذا‏. ‏طالب علم‏",
+   "fb": "M0azhary",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1PMhiCJfks/",
+   "url": "https://www.facebook.com/SalemAboghaliy/",
+   "title": "سالم أبوغالى - Salim Aboghaliy",
+   "desc": "‏سالم أبوغالى - Salim Aboghaliy‏. ‏‏٦٧٠٬٠٢١‏ متابعًا · يتحدث ‏١١٬٨٨٨‏ عن هذا‏. ‏(خير للإنسان أن يندم على ما فعل، من أن يتحسّر على ما لم يفعل)\nصفحة شبابية دينية تحُثك علي طاعة الله والقرب منه .‏",
+   "fb": "SalemAboghaliy",
+   "kind": "page?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1Qi29bmo8F/",
+   "url": "https://www.facebook.com/profile.php?id=100001826500544",
+   "title": "Facebook",
+   "desc": "",
+   "fb": "100001826500544",
+   "kind": "person?",
+   "status": 200
+  },
+  {
+   "share": "https://www.facebook.com/share/1KSL962NER/",
+   "url": "https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2FIbrahimAil2%2F%3Frdid%3DO0FXPaQS4IimTA0z",
+   "title": "Facebook",
+   "desc": "",
+   "fb": "login",
+   "kind": "page?",
+   "status": 200
   }
  ]
 }

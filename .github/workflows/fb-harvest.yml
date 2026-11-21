@@ -1,0 +1,45 @@
+name: منشورات فيسبوك (الزائر بلا حساب، كل ساعة)
+# يجلب أحدث المنشورات العامة لحسابات فيسبوك المفعّلة في data/sources.json كما يراها زائر غير مسجّل (tools/fb-harvest.js)
+# ثم يمررها بمسار الاستجلاب نفسه (source-import.js fb): نشر تلقائي للحساب المفعّل نشره، وإلا «مراجعة المستجلب».
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    paths: ["tools/fb-harvest.js", ".github/workflows/fb-harvest.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: sources
+  cancel-in-progress: false
+jobs:
+  # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json): fb_harvest
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" fb_harvest)
+          echo "on=$on" >> "$GITHUB_OUTPUT"; echo "المفتاح fb_harvest: $on"
+  harvest:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright-core@1.47.2 >/dev/null
+      - run: node tools/fb-harvest.js
+      - run: node tools/source-import.js fb
+        env:
+          FB_TOKENS: ${{ secrets.FB_TOKENS }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      - run: bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json
