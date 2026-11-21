@@ -1,62 +1,51 @@
-// فحص طرق جلب منشورات فيسبوك العامة بلا رمز ولا تسجيل دخول (يعمل على خوادم GitHub: fb-probe.yml).
-// الطرق: (١) أداة «الصفحة» المضمّنة الرسمية plugins/page.php، (٢) الصفحة العامة بمتصفح بلا دخول،
-// (٣) أداة «المنشور» المضمّنة plugins/post.php لنص منشور معروف الرابط، (٤) نسخة الجوال m.facebook.com.
+// فحص (٢): جلب منشورات فيسبوك العامة بمتصفح بلا دخول ولا رمز — يقرأ بيانات JSON المضمّنة في الصفحة
+// وردود graphql، ويستخرج كل منشور (المعرّف، النص الكامل، التاريخ، الرابط). يعمل على خوادم GitHub (fb-probe.yml).
 const { chromium } = require("playwright-core");
-const TARGETS = (process.env.FB_IDS || "Salafiacall,yasserborhamy,samh.mhmd.bsywny,100010404454280,memara60").split(",");
+const TARGETS = (process.env.FB_IDS || "Salafiacall,yasserborhamy,samh.mhmd.bsywny,100010404454280,memara60,d.la.rmdan,AlnourPartyOfficialPage").split(",");
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-const out = [];
-const L = (...a) => { const s = a.join(" "); console.log(s); out.push(s); };
-const unesc = s => { try { return JSON.parse('"' + s + '"'); } catch (e) { return s; } };
-const msgs = html => [...new Set([...html.matchAll(/"message":\{(?:"delight_ranges":\[\],)?[^{}]*?"text":"((?:[^"\\]|\\.){20,})"/g)].map(m => unesc(m[1])))];
-const links = html => [...new Set([...html.matchAll(/https?:\\?\/\\?\/www\.facebook\.com\\?\/[^"]*?(?:\\?\/posts\\?\/|story_fbid=|permalink\.php|pfbid)[^"\\&]*/g)].map(m => m[0].replace(/\\\//g, "/")))].slice(0, 5);
+const out = []; const L = (...a) => { const s = a.join(" "); console.log(s); out.push(s); };
+function walk(o, acc, ctx) {
+  if (!o || typeof o !== "object") return;
+  if (Array.isArray(o)) { o.forEach(x => walk(x, acc, ctx)); return; }
+  const c = { ...ctx };
+  if (o.creation_time) c.t = o.creation_time;
+  if (typeof o.url === "string" && /\/(posts|videos|reel|permalink|photo)/.test(o.url)) c.u = o.url;
+  if (o.post_id) c.id = o.post_id;
+  if (o.message && typeof o.message.text === "string" && o.message.text.length > 15) {
+    const k = o.message.text.slice(0, 80); const prev = acc.get(k) || {};
+    acc.set(k, { text: o.message.text, t: prev.t || c.t, u: prev.u || c.u, id: prev.id || c.id });
+  }
+  for (const v of Object.values(o)) walk(v, acc, c);
+  // التاريخ والرابط قد يأتيان في أخوة الرسالة لا آبائها
+  if (o.message && typeof o.message.text === "string") { const a = acc.get(o.message.text.slice(0, 80)); if (a) { a.t = a.t || c.t; a.u = a.u || c.u; } }
+}
+const parseBlobs = s => { const r = []; for (const line of s.split(/\n/)) { const x = line.trim(); if (x[0] === "{" || x[0] === "[") try { r.push(JSON.parse(x)); } catch (e) {} } return r; };
 (async () => {
   const br = await chromium.launch({ executablePath: process.env.CHROME || "/usr/bin/google-chrome", args: ["--no-sandbox", "--lang=ar"] });
-  const ctx = await br.newContext({ userAgent: UA, locale: "ar-EG", viewport: { width: 1280, height: 2400 } });
   for (const id of TARGETS) {
-    L("\n==== " + id);
-    const page = "https://www.facebook.com/" + (/^\d+$/.test(id) ? "profile.php?id=" + id : id);
-    // ١) أداة الصفحة المضمّنة
-    try {
-      const u = "https://www.facebook.com/plugins/page.php?href=" + encodeURIComponent(page) + "&tabs=timeline&width=500&height=3000&small_header=true&locale=ar_AR";
-      const r = await fetch(u, { headers: { "user-agent": UA, "accept-language": "ar" } }); const h = await r.text();
-      const t = [...h.matchAll(/<div[^>]+(?:userContent|_5pbx)[^>]*>([\s\S]*?)<\/div>/g)].map(m => m[1].replace(/<[^>]+>/g, " ").trim());
-      L("١-خام plugin/page:", r.status, h.length, "منشورات:", t.length, t[0] ? "| " + t[0].slice(0, 120) : "");
-      const p = await ctx.newPage(); await p.goto(u, { waitUntil: "networkidle", timeout: 45000 }).catch(() => {});
-      const txt = await p.evaluate(() => [...document.querySelectorAll(".userContent,._5pbx,[data-testid=post_message]")].map(e => e.innerText.trim()).filter(Boolean)).catch(() => []);
-      const body = await p.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => "");
-      L("١-متصفح plugin/page: منشورات:", txt.length, txt[0] ? "| " + txt[0].slice(0, 160).replace(/\n/g, " ") : "| نص الصفحة: " + body.replace(/\n/g, " ").slice(0, 200));
+    const ctx = await br.newContext({ userAgent: UA, locale: "ar-EG", viewport: { width: 1280, height: 2400 } });
+    for (const page of ["https://www.facebook.com/" + (/^\d+$/.test(id) ? "profile.php?id=" + id : id)].concat(/^\d+$/.test(id) ? ["https://www.facebook.com/" + id] : [])) {
+      L("\n==== " + id + " ← " + page);
+      const p = await ctx.newPage(); const blobs = []; let wall = 0;
+      p.on("response", async r => { if (/\/api\/graphql|\/ajax\//.test(r.url())) { try { blobs.push(...parseBlobs(await r.text())); } catch (e) {} } });
+      try {
+        await p.goto(page, { waitUntil: "domcontentloaded", timeout: 45000 });
+        await p.waitForTimeout(4000);
+        for (let i = 0; i < 8; i++) {
+          const close = await p.$('div[role=dialog] [aria-label="إغلاق"], div[role=dialog] [aria-label="Close"]');
+          if (close) { wall++; await close.click().catch(() => {}); await p.waitForTimeout(800); }
+          await p.mouse.wheel(0, 3000); await p.waitForTimeout(1800);
+        }
+        const scripts = await p.$$eval('script[type="application/json"]', es => es.map(e => e.textContent));
+        scripts.forEach(s => { try { blobs.push(JSON.parse(s)); } catch (e) {} });
+        const acc = new Map(); blobs.forEach(b => walk(b, acc, {}));
+        const posts = [...acc.values()].sort((a, b) => (b.t || 0) - (a.t || 0));
+        L("الرابط النهائي:", p.url().slice(0, 70), "| كتل JSON:", blobs.length, "| نوافذ دخول أُغلقت:", wall, "| منشورات:", posts.length);
+        posts.slice(0, 12).forEach(x => L("  •", x.t ? new Date(x.t * 1000).toISOString().slice(0, 16) : "؟", "| طول", x.text.length, "|", (x.u || "").split("?")[0].slice(0, 90), "|", x.text.slice(0, 100).replace(/\n/g, " ")));
+      } catch (e) { L("خطأ", e.message); }
       await p.close();
-    } catch (e) { L("١ خطأ", e.message); }
-    // ٢) الصفحة العامة بمتصفح بلا دخول
-    let found = [];
-    try {
-      const p = await ctx.newPage(); let gql = "";
-      p.on("response", async r => { if (/graphql|ajax/.test(r.url())) { try { gql += await r.text(); } catch (e) {} } });
-      await p.goto(page, { waitUntil: "domcontentloaded", timeout: 45000 }).catch(() => {});
-      await p.waitForTimeout(4000);
-      for (const sel of ['[aria-label="إغلاق"]', '[aria-label="Close"]', 'div[role=dialog] [role=button]']) { const b = await p.$(sel); if (b) { await b.click().catch(() => {}); break; } }
-      for (let i = 0; i < 4; i++) { await p.mouse.wheel(0, 2500); await p.waitForTimeout(1500); }
-      const html = await p.content() + gql;
-      const m = msgs(html); found = links(html);
-      L("٢-متصفح الصفحة:", p.url().slice(0, 80), "| نصوص منشورات:", m.length, "| روابط منشورات:", found.length, "| تسجيل؟", /login/.test(p.url()) ? "نعم" : "لا");
-      m.slice(0, 3).forEach(s => L("   •", s.slice(0, 160).replace(/\n/g, " ")));
-      found.slice(0, 2).forEach(s => L("   ↳", s));
-      await p.close();
-    } catch (e) { L("٢ خطأ", e.message); }
-    // ٣) أداة المنشور المضمّنة لأول رابط
-    if (found[0]) try {
-      const u = "https://www.facebook.com/plugins/post.php?href=" + encodeURIComponent(found[0]) + "&width=500&locale=ar_AR";
-      const r = await fetch(u, { headers: { "user-agent": UA } }); const h = await r.text();
-      const t = (h.match(/<div[^>]+(?:userContent|_5pbx)[^>]*>([\s\S]*?)<\/div>\s*<\/div>/) || [])[1] || "";
-      L("٣-plugin/post:", r.status, h.length, "| نص:", t.replace(/<[^>]+>/g, " ").trim().slice(0, 160));
-    } catch (e) { L("٣ خطأ", e.message); }
-    // ٤) نسخة الجوال
-    try {
-      const r = await fetch(page.replace("www.", "m."), { headers: { "user-agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36", "accept-language": "ar" }, redirect: "follow" });
-      const h = await r.text(); L("٤-m.facebook:", r.status, r.url.slice(0, 70), h.length, "| نصوص:", msgs(h).length);
-    } catch (e) { L("٤ خطأ", e.message); }
+    }
+    await ctx.close();
   }
   await br.close();
-  require("fs").mkdirSync("tools/fb-probe", { recursive: true });
-  require("fs").writeFileSync("tools/fb-probe/report.md", out.join("\n") + "\n");
 })();
