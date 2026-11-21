@@ -17,6 +17,14 @@ const MAWS = (() => {
   const crumbs = (...l) => `<p class="mwcr"><a href="#/mawsua">موسوعات الموقع</a>${l.map(([t, h]) => " › " + (h ? `<a href="${h}">${esc(t)}</a>` : esc(t))).join("")}</p>`;
   const ord = n => ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر"][n] || toAr(n);
 
+  // سياسة المصادر (طلب المدير، ٢١ نوفمبر): الكتب أصل، ثم البيانات، ثم فتاوى صوت السلف، ثم مقالات المعتمدين وحدهم
+  const SRCK = { b: "كتاب", s: "بيان", f: "فتوى صوت السلف", a: "مقال", m: "مرجع" };
+  const srcTag = x => x.k === "d" ? (x.s && x.s !== "b" ? SRCK[x.s] : "مشايخ الدعوة") : "مرجع";
+  function srcPolicy(P) {
+    if (!P || !(P.order || []).length) return "";
+    return `<li>مصادر الدعوة بترتيب الاعتماد: ${P.order.map((o, i) => `${toAr(i + 1)}. <b>${esc(o[1])}</b>${P.n && P.n[o[0]] ? ` (${toAr(P.n[o[0]])})` : ""} — ${esc(o[2] || "")}`).join("؛ ")}.</li>
+      ${(P.authors || []).length ? `<li>المقالات مقصورة مبدئيًّا على المشايخ والكتّاب المعتمدين لأنها تمثل التوجه العلمي المعتمد في الدعوة لا آراء فردية: ${P.authors.map(esc).join("، ")}.</li>` : ""}`;
+  }
   async function home(q) {
     const I = await getJ(R + "_index.json"); if (!I) return view('<div class="note">تعذر تحميل الموسوعات.</div>');
     const tot = I.items.reduce((a, x) => a + x.m, 0), ok = I.items.reduce((a, x) => a + x.ok, 0), AX = await getJ("data/athar/_index.json");
@@ -33,7 +41,7 @@ const MAWS = (() => {
       <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>
-      <li>كل مادة مسودة حتى يراجعها متخصص ويعتمدها؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li></ul></details>`);
+      <li>كل مادة مسودة حتى يراجعها متخصص ويعتمدها؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li>${srcPolicy(I.src)}</ul></details>`);
     tiles();
     if (typeof MSB !== "undefined") MSB.homeBlock($("#msbhome"));
     if (q.q) search(q.q, I);
@@ -81,7 +89,7 @@ const MAWS = (() => {
       ${E.lead ? `<p class="mwlead">${esc(E.lead)}</p>` : ""}
       ${(E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${esc(p.t)}${sup(p.c)}</p>`).join("")}</section>`).join("")}
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
-      <section class="mwsrc"><h3>المصادر</h3><ol>${tags.map(g => `<li id="mwsrc-${num[g]}"><span class="tag">${E.src[g].k === "d" ? "مشايخ الدعوة" : "مرجع"}</span> <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a></li>`).join("")}</ol></section>
+      <section class="mwsrc"><h3>المصادر</h3><ol>${tags.map(g => `<li id="mwsrc-${num[g]}"><span class="tag">${srcTag(E.src[g])}</span> <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a></li>`).join("")}</ol></section>
       ${seeL.length ? `<p><b>مسائل ذات صلة:</b> ${seeL.map(y => `<a class="chip" href="#/mawsua/${k}/${y.id}">${esc(y.t)}</a>`).join(" ")}</p>` : ""}
       <div class="row"><button class="btn s" data-mw="copy">نسخ المادة بالعزو</button>${adm() && !(E.ok || m.ok) ? `<button class="btn s p" data-mw="ok" data-k="${k}" data-id="${esc(id)}">✓ اعتماد المادة ونشرها</button>` : ""}${adm() ? `<button class="btn s" data-mw="redo" data-k="${k}" data-id="${esc(id)}">إعادة التحرير</button>` : ""} <span class="mwst mut"></span></div>
       <nav class="mwnav">${prev ? `<a href="#/mawsua/${k}/${prev.id}">→ ${esc(prev.t)}</a>` : "<span></span>"}${next ? `<a href="#/mawsua/${k}/${next.id}">${esc(next.t)} ←</a>` : ""}</nav></article>`);
