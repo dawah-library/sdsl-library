@@ -90,6 +90,25 @@ TALA_PROMPT = """أعدّ نص مقطع مرئي تعليمي لقسم «طلا�
 - لا موسيقى، ولا تجسيد لنبي ولا صحابي ولا ملَك بأي صورة، ولا ما يخدش الحياء.
 النص:
 {src}"""
+# التخطيط الآلي (plan="auto"، الافتراضي لطلبات الطلائع): النص المرسل مصدر المادة وحده، والنموذج يختار أسلوب العرض والمدة والمشاهد والأصوات.
+TALA_RANGE = {"t1": (3, 6, "١–٢"), "t2": (4, 8, "٢–٣"), "t3": (5, 10, "٢–٤"), "t4": (5, 12, "٣–٦")}
+TALA_FORMATS = "قصة مروية؛ حوار بين شخصيتين أو أكثر؛ شرح بأمثلة من حياة الطفل؛ سؤال وجواب ومسابقة؛ خطوات عملية؛ مواقف وقيم (ماذا تفعل لو…)؛ أو مزيج منها"
+TALA_AUTO = """أنت مخرج ومؤلف سيناريو لمقاطع تعليمية تربوية لقسم «طلائع الدعوة السلفية» ({sec}). المادة أدناه درس أو مقال أو قصة من كتب المكتبة: هي مصدر المحتوى وحده.
+الجمهور: {aud}.
+خطط أولًا ثم اكتب:
+١) اختر أنسب أسلوب عرض لهذه المادة وهذه المرحلة من: {formats}؛ وعلّل اختيارك في سطر.
+٢) قدّر المدة المناسبة ({mins} دقيقة لهذه المرحلة، أقصر إن كانت المادة قليلة) وعدد المشاهد بين {nmin} و{nmax}، بحسب حجم المادة وأهميتها؛ ونحو ١٢٠ كلمة منطوقة في الدقيقة.
+٣) اكتب السيناريو بأسلوب جذاب مشوّق: افتتاحية تشد الانتباه (سؤال أو موقف)، وتسلسل واضح، وتشويق، ومثال من واقع {who}، وخاتمة بخلاصة ودعوة لطيفة إلى العمل وسؤال تفكير.
+أخرج JSON حرفيًا: {{"plan": {{"format": "الأسلوب", "why": "السبب", "minutes": 0}}, "title": "عنوان جذاب قصير", "scenes": [{{"h": "عنوان قصير", "pts": ["نقطة قصيرة على الشاشة (٢–٣ نقاط، أقل من ٨ كلمات)"], "say": "الكلام المنطوق في المشهد", "vx": "narrator", "icon": "…", "vis": "…"}}]}}
+- "vx" صوت المتكلم في المشهد: narrator (الراوي) أو young_m (فتى أو طفل) أو elder_m (شيخ أو أب أو معلم){fvoice}. في الحوار اجعل كل مشهد لمتكلم واحد، واذكر اسمه في أول "say" أو في "h".
+- التزم المادة: لا تضف حكمًا ولا دليلًا ولا حدثًا ليس فيها؛ ويجوز التمثيل بمواقف يومية متخيلة لطفل أو شاب لتقريب المعنى. انقل الآيات والأحاديث بلفظها، ولا تنسب إلى النبي ﷺ ما ليس في المادة.
+- لكل مشهد "icon" من: {icons}، و"vis" وصف إنجليزي قصير لخلفية المشهد: {vis_rule}
+- لا موسيقى، ولا تجسيد لنبي ولا صحابي ولا ملَك بأي صورة، ولا ما يخدش الحياء، ولا اختلاط في المواقف{gsec}.
+- عربية فصيحة سهلة مشكولة ما يُلتبس، بلا عامية.
+المادة:
+{src}"""
+VX = {"young_m": "gemini:Puck", "elder_m": "gemini:Charon", "young_f": "gemini:Leda"}
+
 VIS_CARTOON = "رسم كرتوني تعليمي لطيف لأطفال أو حيوانات أو طبيعة يناسب المشهد (لا يمثل نبيًا ولا صحابيًا ولا ملَكًا ولا أي شخصية تاريخية)."
 VIS_SCENE = "مناظر وطبيعة وعمارة إسلامية وكتب وخط عربي فقط، بلا بشر ولا حيوانات."
 
@@ -112,12 +131,20 @@ LESSON_SKIP = re.compile(r"^(\d+\s*)?(الأهداف|الاهداف|المناق
 NOCART = re.compile(r"نبي|النبي|رسول|الأنبياء|صحاب|الصحابة|التابع|غزو|سير[ةه]|عليه السلام|رضي الله")
 
 
+_CAT = []
+def CAT0():
+    if not _CAT: _CAT.append(jl(os.path.join(ROOT, "data", "catalog.json"), {"books": [], "authors": []}))
+    return _CAT[0]
+
+
 def lesson_material(it, age):
     parts, cart, nm = [], age != "t4", []
     for L in (it.get("lessons") or [])[:8]:
-        bid = str(L.get("b") or ""); f = next((x for x in (os.path.join(ROOT, "data", "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")) if os.path.exists(x)), None)
-        if not f: continue
-        pages = (jl(f, {}) or {}).get("pages") or []
+        bid = str(L.get("b") or "")
+        try: src = T.source(bid, CAT0())  # الكتب والمجلدات والمقالات (المقال الطويل مقاطع ~٣٠٠٠ حرف)
+        except Exception: src = None
+        if not src: continue
+        pages = src[2] or []
         a = max(1, int(L.get("p") or 1)); z = min(len(pages), max(a, int(L.get("z") or a)), a + 10)
         body = []
         for pg in pages[a - 1:z]:
@@ -298,7 +325,7 @@ def redistribute(D, script, opts):
             if not blocks or (acc >= per * len(blocks) and len(blocks) < n): blocks.append({"h": "", "say": []})
             blocks[-1]["say"].append(p); acc += len(p.split())
     old = {(s.get("h") or "").strip(): s for s in D.get("scenes") or []}
-    sc = [dict({k: v for k, v in (old.get(b["h"]) or {}).items() if k in ("pg", "q", "pgoff", "icon", "vis", "pts")}, h=b["h"], say="\n".join(b["say"])) for b in blocks]
+    sc = [dict({k: v for k, v in (old.get(b["h"]) or {}).items() if k in ("pg", "q", "pgoff", "icon", "vis", "pts", "vx")}, h=b["h"], say="\n".join(b["say"])) for b in blocks]
     need = [i for i, x in enumerate(sc) if not x.get("h") or not x.get("pts")]
     if need:
         j = T.gemini(REDIST.format(title=D.get("title", ""), n=len(sc), icons="، ".join(ICONS), blocks="\n\n".join("[%d] %s" % (i + 1, x["say"][:1500]) for i, x in enumerate(sc)))) or {}
@@ -446,11 +473,19 @@ async def make(it, cat, L):
         if not tm or not tm[1].strip(): print("لا مادة للطلائع:", bid); return False
         title, txt, cart = tm; age = it.get("age") if it.get("age") in TALA_AGE else "t2"; A = TALA_AGE[age]
         it["cartoon"] = bool(cart and it.get("cartoon", 1)); it.setdefault("voice", "gemini:Orus"); it.setdefault("style", "story"); it.setdefault("theme", {"b": "kids_b", "g": "kids_g"}.get(it.get("g"), "kids"))
-        j = T.gemini(TALA_PROMPT.format(title=title, n=A["n"], aud=A["aud"], w=A["w"], icons="، ".join(ICONS), vis_rule=VIS_CARTOON if it["cartoon"] else VIS_SCENE, src=txt))
+        vis = VIS_CARTOON if it["cartoon"] else VIS_SCENE
+        if it.get("plan", "auto") == "auto":  # السيناريو والأسلوب والمدة من الذكاء الاصطناعي بحسب المادة والمرحلة
+            R = TALA_RANGE[age]; g = it.get("g") or ""
+            j = T.gemini(TALA_AUTO.format(sec={"b": "قسم البنين", "g": "قسم البنات"}.get(g, "البنين والبنات"), aud=A["aud"], formats=TALA_FORMATS, mins=R[2], nmin="٠١٢٣٤٥٦٧٨٩"[R[0]], nmax=str(R[1]).translate(str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")),
+                                          who={"b": "الفتيان", "g": "الفتيات"}.get(g, "الأطفال والشباب"), fvoice=" أو young_f (فتاة صغيرة)" if g == "g" else "", gsec="؛ وفي قسم البنات تكون الشخصيات فتيات" if g == "g" else ("؛ والشخصيات فتيان" if g == "b" else ""),
+                                          icons="، ".join(ICONS), vis_rule=vis, src="العنوان: " + title + "\n" + txt))
+            if j and j.get("scenes"): j["scenes"] = j["scenes"][:R[1] + 1]
+        else:
+            j = T.gemini(TALA_PROMPT.format(title=title, n=A["n"], aud=A["aud"], w=A["w"], icons="، ".join(ICONS), vis_rule=vis, src=txt))
         if not j or not j.get("scenes"): print("تعذر النص:", bid); return False
         th = dict(THEMES.get(it.get("theme"), THEMES["kids"]))
         did = "%s-%s" % (bid, datetime.datetime.now().strftime("%m%d%H%M%S"))
-        D = {"id": did, "book": bid, "title": j.get("title") or title, "theme": th, "opts": {k: v for k, v in it.items() if k not in ("phase", "err")}, "scenes": [x for x in j["scenes"] if x.get("say")][:A["n"] + 1], "at": str(datetime.date.today()), "tala": age}
+        D = {"id": did, "book": bid, "title": j.get("title") or title, "theme": th, "opts": {k: v for k, v in it.items() if k not in ("phase", "err")}, "scenes": [x for x in j["scenes"] if x.get("say")][:max(A["n"], TALA_RANGE[age][1]) + 1], "at": str(datetime.date.today()), "tala": age, "plan": j.get("plan") or {}}
         if it.get("phase") == "script": draft_save(did, D); print("✓ مسودة", did); return True
         ok = await render_all(it, D, L, did, None); draft_save(did, D); return ok
     m = material(bid, cat, it.get("topics"))
@@ -511,7 +546,9 @@ async def render_video(it, D, aspect, L, did, replace):
     lex = lexicon(); want_sfx = bool(it.get("sfx") and pages)
     segs = []
     for i, s in enumerate(sc):
-        a = os.path.join(tmp, "a%02d.mp3" % i); await speak(spoken(s["say"], lex), voice, a, tag)
+        sv = VX.get(s.get("vx")) if bid.startswith("tala-") else None
+        if sv == VX["young_f"] and it.get("g") != "g": sv = None  # الصوت الأنثوي في قسم البنات وحده
+        a = os.path.join(tmp, "a%02d.mp3" % i); await speak(spoken(s["say"], lex), sv or voice, a, tag)
         pclip = os.path.join(tmp, "p%02d" % i); P = 0.0
         if pages and os.path.exists(os.path.join(pclip, "0000.png")):
             nf = len([x for x in os.listdir(pclip) if x.endswith(".png")]); P = nf / FPS

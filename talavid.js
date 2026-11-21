@@ -31,20 +31,48 @@ const TVID = (() => {
       <div class="tvgrid">${L.map(card).join("") || '<div class="note">لا مقاطع معتمدة لهذه المرحلة بعد؛ تُضاف تباعًا بإذن الله.</div>'}</div>
       ${rules()}${adm() ? await form() : ""}</div>`);
   }
-  async function form() { const Q = await stories();
-    return `<section class="card tvform"><h3>🛠️ تحويل قصة أو فقرة أو موضوع إلى مقطع مرئي (للإدارة)</h3>
-      <p class="mut">ينتج بمحرك «فيديوهات الكتب» بإعداد المرحلة: عدد المشاهد، وطول عبارة الراوي، ولغته، وألوان القسم؛ والمسودة تُراجع في <a href="#/video">صفحة الفيديوهات</a> ثم تُعتمد قبل ظهورها للأطفال.</p>
-      <form data-form="tvreq"><label>المصدر<select name="src"><option value="__ls" selected>📘 درس أو دروس من كتب المنهج (الأساس، البنيان، البداية) — بلا كتابة نص</option><option value="">نص حر (فقرة أو موضوع علمي)</option>${(Q.items || []).map(x => `<option value="${esc(x.id)}">${esc(x.ic || "")} ${esc(x.n)}</option>`).join("")}</select></label>
-      <div data-tvls>${await lsPicker()}</div>
+  // مصادر المقاطع: كل محتوى الطلائع جاهزًا للاختيار (بلا كتابة نص)، والسيناريو والأسلوب والمدة من الذكاء الاصطناعي
+  const SRCS = [["__ls", "📘 دروس كتب المنهج (الأساس، البنيان، البداية)"], ["__sup", "🌱 قصص وتوجيهات ومقالات تربوية للمرحلة"], ["__un", "📙 وحدات «المنة»: الاتباع والتزكية"], ["__par", "👪 للوالدين والمربين"], ["__qs", "📚 قصص الأنبياء والصحابة والتابعين"], ["", "✍️ نص حر (فقرة أو موضوع)"]];
+  async function form() {
+    return `<section class="card tvform"><h3>🛠️ صناعة مقطع مرئي من محتوى الطلائع (للإدارة وفريق الطلائع)</h3>
+      <p class="mut">اختر المادة من محتوى القسم، فيقرأها الذكاء الاصطناعي ويختار لها أنسب أسلوب عرض (قصة، حوار بشخصيات وأصوات، شرح بأمثلة، سؤال وجواب، خطوات عملية…) ومدتها وعدد مشاهدها بحسب المادة والمرحلة، ثم تُراجع المسودة في <a href="#/video">صفحة الفيديوهات</a> وتُعتمد قبل ظهورها للأطفال.</p>
+      <form data-form="tvreq"><div class="row"><label>المادة<select name="src">${SRCS.map(([v, n], i) => `<option value="${v}"${i ? "" : " selected"}>${n}</option>`).join("")}</select></label>
+      <label>المرحلة<select name="age">${AGES.map(([a, n]) => `<option value="${a}"${a === "t2" ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label>القسم<select name="g"><option value="">البنين والبنات</option><option value="b">البنين</option><option value="g">البنات</option></select></label></div>
+      <div data-tvls>${await lsPicker()}</div><div data-tvany hidden></div>
       <div data-tvtext hidden><label>العنوان<input name="title" maxlength="80" placeholder="مثال: آداب الطعام"></label><label>النص<textarea name="text" rows="6" placeholder="الصق الفقرة أو الموضوع من كتب المكتبة"></textarea></label></div>
-      <div class="row"><label>المرحلة<select name="age">${AGES.map(([a, n]) => `<option value="${a}"${a === "t2" ? " selected" : ""}>${n}</option>`).join("")}</select></label>
-      <label>القسم<select name="g"><option value="">الجميع</option><option value="b">البنين</option><option value="g">البنات</option></select></label>
+      <div class="row"><label>السيناريو والمدة<select name="plan"><option value="auto">يختارهما الذكاء الاصطناعي بحسب المادة والمرحلة (مستحسن)</option><option value="fixed">الإعداد الثابت للمرحلة</option></select></label>
       <label>المقاس<select name="asp"><option value="16:9">أفقي ١٦:٩</option><option value="9:16">عمودي للهاتف ٩:١٦</option><option value="both">كلاهما</option></select></label></div>
-      <label class="inl"><input type="checkbox" name="cartoon" checked> رسوم كرتونية تعليمية (للمراحل حتى ١٥ سنة، وفي غير قصص الأنبياء والصحابة)</label>
-      <label class="inl"><input type="checkbox" name="script" checked> إعداد النص أولًا للمراجعة (مونتاج) قبل الإخراج</label>
+      <label class="inl"><input type="checkbox" name="cartoon" checked> رسوم كرتونية تعليمية (حتى ١٥ سنة، وتُمنع آليًّا في قصص الأنبياء والصحابة ودروس القرآن)</label>
+      <label class="inl"><input type="checkbox" name="script" checked> إعداد السيناريو أولًا للمراجعة قبل الإخراج</label>
       <button class="btn p">أرسل إلى الإنتاج</button> <span id="tvst" class="mut" role="status"></span></form></section>`; }
   // اختيار الدروس: السلسلة ← المستوى (المجلد) ← دروسه مصنفة بموادها، ومرحلة المقطع تتبع المستوى
   let MJ = null; const mjs = async () => MJ || (MJ = typeof TALA !== "undefined" && TALA.mj ? await TALA.mj() : null);
+  const pick = (x, name, type) => `<label class="inl tvl1"><input type="${type || "checkbox"}" name="${name || "ls"}" value="${esc(typeof x.v === "string" ? x.v : JSON.stringify(x.v))}"> ${esc(x.t)}${x.m ? ` <span class="mut">${esc(x.m)}</span>` : ""}</label>`;
+  const grp = (t, items, open) => items.length ? `<details class="mjsub"${open ? " open" : ""}><summary><b>${esc(t)}</b> <span class="mut">(${toAr(items.length)})</span></summary>${items.join("")}</details>` : "";
+  const artItem = b => ({ t: b.title, m: (A(b.authorId) || {}).name || "", v: { b: b.id, p: 1, z: 99, t: b.title } });
+  // كتاب موسوم للمرحلة: فصوله من فهرسه؛ والمقال كله مادة واحدة
+  const bookItems = async b => { if (isArt(b)) return [artItem(b)]; let full = b; try { full = await loadBook(b.id); } catch (e) { }
+    const toc = (full.toc || []).filter(t => t.p).sort((x, y) => x.p - y.p); if (!toc.length) return [{ t: b.title, v: { b: b.id, p: 1, z: 10, t: b.title } }];
+    return toc.slice(0, 40).map((t, i) => ({ t: String(t.t).slice(0, 80), m: "ص " + toAr(t.p), v: { b: b.id, p: t.p, z: Math.min(((toc[i + 1] || {}).p || t.p + 10) - 1, t.p + 10), t: String(t.t).slice(0, 80) } })); };
+  let SEQ = 0;
+  async function fillAny(f) {
+    const my = ++SEQ, box = f.querySelector("[data-tvany]"), src = f.src.value, a = f.age.value, M = await mjs(); if (!box) return;
+    box.innerHTML = '<p class="mut">جارٍ التحميل…</p>'; let h = "";
+    if (src === "__sup") {
+      h += ((M && M.support && M.support[a]) || []).map(([g, ids]) => grp(g, ids.map(id => B(id)).filter(Boolean).map(b => pick(artItem(b))), true)).join("");
+      const tagged = lib.books.filter(b => !b.hidden && (b.tags || []).includes("tala:" + a) && (!f.g.value || !(b.tags || []).some(t => /^tala:[bg]$/.test(t)) || (b.tags || []).includes("tala:" + f.g.value)));
+      const arts = tagged.filter(b => isArt(b)), bks = tagged.filter(b => !isArt(b));
+      h += grp("📄 مقالات وموضوعات للمرحلة", arts.slice(0, 60).map(b => pick(artItem(b))), false);
+      h += bks.slice(0, 40).map(b => `<details class="mjsub" data-tvbk="${esc(b.id)}"><summary><b>📗 ${esc(b.setTitle || b.title)}${b.vol ? " — ج" + toAr(b.vol) : ""}</b> <span class="mut">(افتح لاختيار فصل)</span></summary><p class="mut">…</p></details>`).join("");
+    } else if (src === "__un") h = ((M && M.units && M.units[a]) || []).map(u => grp(u.t, u.ls.map(l => pick({ t: l.t, m: "ص " + toAr(l.p) + "–" + toAr(l.to), v: { b: u.b, p: l.p, z: l.to, t: l.t } })), true)).join("");
+    else if (src === "__par") h = grp("للوالدين والمربين", ((M && M.parents) || []).map(id => B(id)).filter(Boolean).map(b => pick(artItem(b))), true);
+    else if (src === "__qs") { const Q = await stories(); h = `<div class="tvqs">${(Q.items || []).map(x => pick({ t: (x.ic || "") + " " + x.n, v: x.id }, "qs", "radio")).join("")}</div><p class="mut">قصص الأنبياء والصحابة والتابعين تُعرض بالمناظر والخط وحدها بلا شخصيات.</p>`; }
+    if (my !== SEQ) return;  // اختيار أحدث سبق هذا التحميل
+    box.innerHTML = h ? (src === "__qs" ? "" : '<p class="mut">اختر مادة واحدة أو حتى أربعًا (يُصنع منها مقطع واحد).</p>') + h : '<p class="note">لا محتوى في هذا الباب لهذه المرحلة بعد.</p>'; }
+  // فصول الكتاب الموسوم تُحمَّل عند فتحه فقط
+  document.addEventListener("toggle", async e => { const d = e.target; if (!d.matches || !d.matches("[data-tvbk]") || !d.open || d.dataset.f) return; d.dataset.f = 1;
+    const b = B(d.dataset.tvbk); if (!b) return; const items = await bookItems(b); d.querySelector("p").outerHTML = items.map(x => pick(x)).join(""); }, true);
   async function lsPicker() { const M = await mjs(); if (!M) return '<p class="mut">المنهج غير متاح الآن.</p>';
     return `<div class="row"><label>الكتاب<select name="ser">${M.series.map(x => `<option value="${esc(x.k)}">${esc(x.t)} — ${esc(x.for)}</option>`).join("")}</select></label><label>المستوى<select name="lv"></select></label></div><div class="tvlsl" data-tvlsl><p class="mut">اختر المستوى لتظهر دروسه.</p></div>`; }
   async function fillLv(f) { const M = await mjs(), x = M && M.series.find(y => y.k === f.ser.value), sel = f.lv, box = f.querySelector("[data-tvlsl]"); if (!x || !sel) return;
@@ -54,24 +82,26 @@ const TVID = (() => {
   async function fillLs(f) { const box = f.querySelector("[data-tvlsl]"), o = f.lv && f.lv.selectedOptions[0]; if (!o) return; box.innerHTML = '<p class="mut">جارٍ تحميل الدروس…</p>';
     if (f.age && o.dataset.st) f.age.value = o.dataset.st;
     const L = await TALA.mjLessons(o.value), by = {}; L.forEach(x => (by[x.s] = by[x.s] || { n: x.sn, i: x.si, l: [] }).l.push(x));
-    box.innerHTML = L.length ? `<p class="mut">اختر درسًا أو حتى أربعة دروس (يُصنع منها مقطع واحد).</p>` + Object.values(by).map(g => `<details class="mjsub" open><summary>${g.i} <b>${esc(g.n)}</b> <span class="mut">(${toAr(g.l.length)})</span></summary>${g.l.map(x => `<label class="inl tvl1"><input type="checkbox" name="ls" value="${esc(JSON.stringify({ b: o.value, p: x.p, z: x.z, t: x.t, s: x.s }))}"> ${esc(x.t)} <span class="mut">ص ${toAr(x.p)}</span></label>`).join("")}</details>`).join("") : '<p class="note">لم تُقسَّم دروس هذا المستوى بعد (قيد التدقيق).</p>'; }
-  document.addEventListener("change", e => { const f = e.target.closest("[data-form=tvreq]"); if (!f) return;
-    if (e.target.name === "src") { const t = f.querySelector("[data-tvtext]"), l = f.querySelector("[data-tvls]"); if (t) t.hidden = e.target.value !== ""; if (l) l.hidden = e.target.value !== "__ls"; }
-    else if (e.target.name === "ser") fillLv(f); else if (e.target.name === "lv") fillLs(f);
-    else if (e.target.name === "ls" && f.querySelectorAll("[name=ls]:checked").length > 4) { e.target.checked = false; toast("أربعة دروس على الأكثر في المقطع الواحد"); } });
+    box.innerHTML = L.length ? `<p class="mut">اختر درسًا أو حتى أربعة دروس (يُصنع منها مقطع واحد).</p>` + Object.values(by).map(g => grp(g.i + " " + g.n, g.l.map(x => pick({ t: x.t, m: "ص " + toAr(x.p), v: { b: o.value, p: x.p, z: x.z, t: x.t, s: x.s } })), true)).join("") : '<p class="note">لم تُقسَّم دروس هذا المستوى بعد (قيد التدقيق).</p>'; }
+  document.addEventListener("change", e => { const f = e.target.closest("[data-form=tvreq]"); if (!f) return; const n = e.target.name;
+    if (n === "src" || ((n === "age" || n === "g") && f.src.value !== "__ls")) { const v = f.src.value, t = f.querySelector("[data-tvtext]"), l = f.querySelector("[data-tvls]"), an = f.querySelector("[data-tvany]");
+      if (t) t.hidden = v !== ""; if (l) l.hidden = v !== "__ls"; if (an) an.hidden = !v || v === "__ls"; if (v && v !== "__ls") fillAny(f); }
+    else if (n === "ser") fillLv(f); else if (n === "lv") fillLs(f);
+    else if (n === "ls" && f.querySelectorAll("[name=ls]:checked").length > 4) { e.target.checked = false; toast("أربع مواد على الأكثر في المقطع الواحد"); } });
   new MutationObserver(() => { const f = document.querySelector("[data-form=tvreq]"); if (f && f.lv && !f.dataset.lvf) { f.dataset.lvf = 1; fillLv(f); } }).observe(document.documentElement, { childList: true, subtree: true });
   document.addEventListener("submit", async e => { const f = e.target.closest("[data-form=tvreq]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
-    const fd = new FormData(f), st = $("#tvst"), src = String(fd.get("src") || ""), text = String(fd.get("text") || "").trim(), title = String(fd.get("title") || "").trim();
-    const ls = src === "__ls" ? fd.getAll("ls").map(x => { try { return JSON.parse(x); } catch (e) { return null; } }).filter(Boolean) : [];
-    if (src === "__ls" && !ls.length) { st.textContent = "اختر درسًا واحدًا على الأقل."; return; }
-    if (!src && (text.length < 80 || !title)) { st.textContent = "اكتب عنوانًا ونصًّا لا يقل عن سطرين."; return; }
+    const fd = new FormData(f), st = $("#tvst"), kind = String(fd.get("src") || ""), text = String(fd.get("text") || "").trim(), title = String(fd.get("title") || "").trim();
+    const ls = kind && kind !== "__qs" ? fd.getAll("ls").map(x => { try { return JSON.parse(x); } catch (e) { return null; } }).filter(Boolean) : [], qs = kind === "__qs" ? String(fd.get("qs") || "") : "";
+    if (kind === "__qs" && !qs) { st.textContent = "اختر قصة."; return; }
+    if (kind && kind !== "__qs" && !ls.length) { st.textContent = "اختر مادة واحدة على الأقل."; return; }
+    if (!kind && (text.length < 80 || !title)) { st.textContent = "اكتب عنوانًا ونصًّا لا يقل عن سطرين."; return; }
     if (typeof GH === "undefined" || !(GH.on || GH.proxied)) { st.textContent = "فعّل الإدارة المباشرة أولًا."; return; }
-    const age = String(fd.get("age")), asp = String(fd.get("asp")), it = { id: ls.length ? "tala-l" + Date.now().toString(36) : src ? "tala-" + src : "tala-t" + Date.now().toString(36), age, g: String(fd.get("g") || ""), aspects: asp === "both" ? ["16:9", "9:16"] : [asp], cartoon: fd.get("cartoon") ? 1 : 0, tone: "warm", aud: "kids", sfx: 0 };
-    if (!src) { it.text = text.slice(0, 12000); it.title = title.slice(0, 80); }
-    if (ls.length) { it.lessons = ls; it.ser = String(fd.get("ser") || ""); it.title = ls.length === 1 ? ls[0].t : "دروس: " + ls.map(x => x.t).slice(0, 3).join("، "); }
+    const age = String(fd.get("age")), asp = String(fd.get("asp")), it = { id: ls.length ? "tala-l" + Date.now().toString(36) : qs ? "tala-" + qs : "tala-t" + Date.now().toString(36), age, g: String(fd.get("g") || ""), aspects: asp === "both" ? ["16:9", "9:16"] : [asp], cartoon: fd.get("cartoon") ? 1 : 0, tone: "warm", aud: "kids", sfx: 0, plan: String(fd.get("plan") || "auto") };
+    if (!kind) { it.text = text.slice(0, 12000); it.title = title.slice(0, 80); }
+    if (ls.length) { it.lessons = ls; it.ser = kind === "__ls" ? String(fd.get("ser") || "") : kind.slice(2); it.title = ls.length === 1 ? ls[0].t : ls.map(x => x.t).slice(0, 3).join("، "); }
     if (fd.get("script")) it.phase = "script";
     st.textContent = "جارٍ الإرسال…";
-    try { await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).push(it); return o; }, "الطلائع: طلب مقطع مرئي — " + (it.title || title || src)); st.textContent = "✓ أُرسل؛ يبدأ الإنتاج خلال دقائق، وتظهر المسودة في صفحة الفيديوهات، وبعد اعتمادها يظهر المقطع في مرحلته وعند دروسه في المنهج."; f.querySelectorAll("[name=ls]:checked").forEach(x => x.checked = false); }
+    try { await GH.editJSON("data/video/_queue.json", o => { o = o || { items: [] }; (o.items = o.items || []).push(it); return o; }, "الطلائع: طلب مقطع مرئي — " + (it.title || title || qs)); st.textContent = "✓ أُرسل؛ يبدأ الإنتاج خلال دقائق، وتظهر المسودة في صفحة الفيديوهات، وبعد اعتمادها يظهر المقطع في مرحلته وعند مادته."; f.querySelectorAll("[name=ls]:checked,[name=qs]:checked").forEach(x => x.checked = false); }
     catch (x) { st.textContent = "تعذر: " + x.message; } }, true);
   // داخل صفحة القصة: المقطع المعتمد لهذه القصة ومرحلتها، وزر طلبه للإدارة
   async function storyBlock(id, age) { const L = ((await list())["tala-" + id] || []).filter(v => (v.ok || adm()) && (!v.tala || v.tala === age));
