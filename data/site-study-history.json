@@ -426,7 +426,7 @@
 "prep_n": 56,
 "scripts": 62,
 "deferred": 0,
-"js_kb": 2356,
+"js_kb": 2357,
 "app_kb": 474,
 "fonts": 6,
 "services": 108,
@@ -442,7 +442,7 @@
 "server_search": false,
 "workflows": 88,
 "api": 13,
-"sw": "sdsl-v283",
+"sw": "sdsl-v284",
 "plan_done": 4,
 "plan_n": 27,
 "search_console": false
