@@ -225,7 +225,7 @@ def fawaid(cat):
     # فحص الجودة على المجدول والمنشور سابقًا: ما لم يستوف الشروط يُخفى (hide="q" بسببه) ولا يُحذف؛ وللإدارة إظهاره
     hid = 0
     for it in keep:
-        if it.get("hide"): continue
+        if it.get("hide") or it.get("edited"): continue  # ما عدّلته الإدارة بيدها معتمد
         t2 = polish(it["text"])
         if t2 != it["text"] and t2: it["text"] = t2
         why = quality(it["text"])

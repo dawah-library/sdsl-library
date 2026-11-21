@@ -1773,3 +1773,4 @@ body.citeplain .cit .cbt{display:inline}body.citeplain .cit .cbx{display:none}
 .pmodes{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}.row.pmodes>.chip{flex:0 0 auto;min-width:0;width:auto;cursor:pointer;font:inherit;font-size:.9rem}
 .pmodes .chip.on,.pmodes .chip[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:transparent}
 .post .pq{margin:0 0 6px;padding:6px 10px;border-inline-start:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);border-radius:6px;font-size:.95em}
+.row.pmodes>.mut{flex:1 1 220px}
