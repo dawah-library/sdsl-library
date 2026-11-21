@@ -33,7 +33,7 @@ const QFIX = (() => {
     st.textContent = "جارٍ الإرسال…";
     try { const { error } = await Auth.sb.from("corrections").insert({ book_id: "q:" + c.r, page: 0, proposed: JSON.stringify({ q: c.q, o: c.o, t: c.t, ai: c.ai || "" }), note: n.trim().slice(0, 1500), user_id: Auth.user.id, user_name: Auth.user.name || "" });
       if (error) throw new Error(error.message);
-      if (typeof tgNote === "function") try { tgNote("corr", { name: Auth.user.name || Auth.user.email, subject: "طلب تصحيح سؤال", details: c.q.slice(0, 300) + "\n— " + n.slice(0, 300) }); } catch (e) { }
+      if (typeof tgNote === "function") try { tgNote("corr", { name: Auth.user.name || Auth.user.email, subject: "طلب تصحيح سؤال", detail: c.q.slice(0, 300) + "\n— " + n.slice(0, 300) }); } catch (e) { }
       st.textContent = "✓ وصل طلبك إلى الإدارة، جزاك الله خيرًا."; }
     catch (e) { st.textContent = "تعذر الإرسال: " + e.message; } }
   // تعديل المدير لسؤال من بنك أسئلة الطلائع مباشرة
