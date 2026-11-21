@@ -363,8 +363,20 @@ const TALA = (() => {
      <h3>أسئلة «صح أم خطأ» (${toAr((D.facts || []).length)})</h3><p class="mut">سطر لكل سؤال بالصيغة: المعلومة | صح أو خطأ | الشرح</p>
      <textarea name="facts" rows="12" style="width:100%">${esc((D.facts || []).map(f => [f.q, f.a ? "صح" : "خطأ", f.why || ""].join(" | ")).join("\n"))}</textarea>
      <h3>استبعاد من سُلّم القراءة ومن الإلحاق التلقائي</h3><p class="mut">معرّفات مقالات أو كتب لا تناسب الأطفال (مفصولة بمسافة)؛ يُعاد بناء السلم آليًا (tools/tala-curate.py) بعد الحفظ.</p><textarea name="hide" rows="2" style="width:100%">${esc((D.planHide || []).join(" "))}</textarea>
-     <div class="savebar"><button class="btn p">حفظ</button> <span id="talast" class="mut"></span></div></form>`;
+     <div class="savebar"><button class="btn p">حفظ</button> <span id="talast" class="mut"></span></div></form>${await bankAdmin()}`;
   }
+  // اعتماد بنك الأسئلة المتجدد (tools/tala-bank.py ← tala-bank.yml مرتين أسبوعيًّا من مصادر الموقع الجديدة)
+  async function bankAdmin() { BANK = null; const Bk = await loadBank(), dr = (Bk.items || []).filter(x => !x.ok && !x.x), ok = (Bk.items || []).filter(x => x.ok).length;
+    const one = x => `<div class="talabk" data-id="${esc(x.id)}"><p><b>${x.t === "tf" ? "صح أم خطأ" : "اختيار"}:</b> ${esc(x.q)}${x.t === "mc" ? ` — <span class="ok">✔ ${esc(x.a)}</span> <span class="mut">✗ ${(x.o || []).map(esc).join("، ")}</span>` : ` — <b>${x.v ? "صح" : "خطأ"}</b>`}</p>
+      <p class="mut">${(x.k || []).map(k => esc((D.tracks.find(t => t[0] === k) || [])[1] || k)).join("، ")}${x.g ? " • " + (x.g === "g" ? "البنات" : "البنين") : ""} • الدليل: «${esc(x.ev)}» — <a href="${esc((x.src || {}).u || "#")}">${esc((x.src || {}).t || "")}</a>${x.why ? " • " + esc(x.why) : ""}</p>
+      <div class="row"><button class="btn s p" data-act="tbok" data-id="${esc(x.id)}">اعتماد</button><button class="btn s" data-act="tbx" data-id="${esc(x.id)}">استبعاد</button></div></div>`;
+    return `<h3>🔄 بنك الأسئلة المتجدد</h3><p class="mut">أسئلة جديدة تُعدّ مرتين أسبوعيًّا من مصادر الموقع الجديدة (مقالات النشء، ومواد الموسوعات المعتمدة، وقصص الطلائع) بدليلها من نص المصدر؛ ولا تظهر للأطفال إلا بعد اعتمادها. المعتمد: ${toAr(ok)} • بانتظار المراجعة: ${toAr(dr.length)}${Bk.upd ? " • آخر تحديث " + esc(Bk.upd) : ""}</p>
+      ${dr.length ? `<p><button class="btn s" data-act="tball">اعتماد الظاهر كله (${toAr(Math.min(30, dr.length))})</button></p>${dr.slice(0, 30).map(one).join("")}` : '<p class="mut">لا مسودات الآن.</p>'}`; }
+  async function bankSet(ids, f, msg) { if (typeof GH === "undefined" || !GH.on) return toast("فعّل الإدارة المباشرة أولًا.");
+    try { await GH.editJSON("data/tala-bank.json", o => { (o.items || []).forEach(x => { if (ids.includes(x.id)) f(x); }); return o; }, msg); ids.forEach(id => { const el = document.querySelector(`.talabk[data-id="${id}"]`); if (el) el.remove(); }); BANK = null; toast("حُفظ ✓"); } catch (e) { toast(e.message); } }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act=tbok],[data-act=tbx],[data-act=tball]"); if (!el) return; const a = el.dataset.act;
+    if (a === "tball") bankSet([...document.querySelectorAll(".talabk")].map(x => x.dataset.id), x => { x.ok = 1; }, "الطلائع: اعتماد أسئلة من البنك المتجدد");
+    else bankSet([el.dataset.id], x => { if (a === "tbok") x.ok = 1; else x.x = 1; }, "الطلائع: " + (a === "tbok" ? "اعتماد" : "استبعاد") + " سؤال من البنك المتجدد"); });
   document.addEventListener("submit", async e => {
     const f = e.target.closest("[data-form=talasave]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
     const fd = new FormData(f), stt = $("#talast"); stt.textContent = "جارٍ الحفظ…";
