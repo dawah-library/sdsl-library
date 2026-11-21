@@ -569,7 +569,7 @@ const TALA = (() => {
       const nD = u.ls.filter(l => done[u.b + ":" + l.p]).length;
       body += `<div class="card mjlv mjunit"><h3>📙 ${esc(u.t)} <small class="mut">— ${esc(u.from)}</small></h3>
         <p class="mut">${toAr(u.ls.length)} دروس • أتممت ${toAr(nD)} <span class="mbar"><i style="width:${Math.round(100 * nD / u.ls.length)}%"></i></span></p>
-        ${u.ls.map((l, li) => { const id = u.b + ":" + l.p; return `<details class="mjsub"><summary><b>${toAr(li + 1)}. ${esc(l.t)}</b> <span class="mut">(ص ${toAr(l.p)}–${toAr(l.to)})</span>${done[id] ? " ✓" : ""}</summary>
+        ${u.ls.map((l, li) => { const id = u.b + ":" + l.p; return `<details class="mjsub"><summary><b>${toAr(li + 1)}. ${esc(l.t)}</b> <span class="mut">(ص ${toAr(l.p)}–${toAr(l.to)})</span> <span class="tvl" data-tvl="${esc(id)}"></span>${done[id] ? " ✓" : ""}</summary>
           <div class="mjpts"><p class="mut">من نص الكتاب:</p>${l.pts.map(([pg, t]) => `<blockquote>${esc(t)} <a href="#/book/${esc(u.b)}/${pg}" class="mut">[ص ${toAr(pg)}]</a></blockquote>`).join("")}</div>
           <p><a class="btn s p" href="#/book/${esc(u.b)}/${l.p}">📖 اقرأ الدرس في الكتاب</a></p>
           <div class="mjq">${l.q.map((q, qi) => `<div class="tmq"><p><b>${esc(q[0])}</b></p><div class="row">${[1, 2, 3].map(i => [Math.random(), i]).sort((a, b) => a[0] - b[0]).map(([, i]) => `<button class="btn tmo" data-mjq="${i === 1 ? 1 : 0}">${esc(q[i])}</button>`).join("")}</div></div>`).join("")}</div>
@@ -583,7 +583,7 @@ const TALA = (() => {
       const more = lib.books.filter(b => isArt(b) && !b.hidden && (M.authors || ["w5", "w107"]).includes(b.authorId) && !listed.has(b.id) && STG[k].some(tp => inTopic(b, tp)) && !(k === "t1" && (b.n || 0) > 3000));
       if (more.length) sup.push(["مقالات أخرى للشيخ مصطفى دياب والأستاذ محمود عمارة", more.slice(-30).reverse().map(b => b.id)]);
     }
-    body += sup.length ? `<h3>🌱 التدعيم التربوي: قصص وتوجيهات وأنشطة</h3><p class="mut">من مقالات الشيخ مصطفى دياب وكتبه، مع نشاط عملي لكل مجموعة.</p>${sup.map(([g, ids]) => { const it = ids.map(id => B(id)).filter(Boolean); if (!it.length) return ""; return `<div class="card mjgrp"><h4>${esc(g)}</h4><ol class="mjarts">${it.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a>${done["a:" + x.id] ? " ✓" : ""}</li>`).join("")}</ol>
+    body += sup.length ? `<h3>🌱 التدعيم التربوي: قصص وتوجيهات وأنشطة</h3><p class="mut">من مقالات الشيخ مصطفى دياب وكتبه، مع نشاط عملي لكل مجموعة.</p>${sup.map(([g, ids]) => { const it = ids.map(id => B(id)).filter(Boolean); if (!it.length) return ""; return `<div class="card mjgrp"><h4>${esc(g)}</h4><ol class="mjarts">${it.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="tvl" data-tvl="${esc(x.id)}:1"></span>${done["a:" + x.id] ? " ✓" : ""}</li>`).join("")}</ol>
       <div class="mjacts">${actsFor(g).map(([i, a]) => `<span>${i} ${esc(a)}</span>`).join("")}</div></div>`; }).join("")}` : "";
     const par = [...new Set((M.parents || []).concat(lib.books.filter(b => isArt(b) && !b.hidden && b.authorId === "w107" && inTopic(b, "at10")).map(b => b.id)))].map(id => B(id)).filter(Boolean);
     body += par.length ? `<details class="card"><summary><b>👪 للوالدين والمربين</b></summary><ul>${par.map(x => `<li><a href="#/book/${esc(x.id)}/1">${esc(x.title)}</a> <span class="mut">— ${esc(A(x.authorId).name)}</span></li>`).join("")}</ul></details>` : "";
