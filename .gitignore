@@ -11,3 +11,4 @@ node_modules/
 .qref-report.txt
 package-lock.json
 .sharh-report.txt
+.maj-report.txt
