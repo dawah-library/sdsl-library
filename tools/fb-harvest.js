@@ -2,12 +2,15 @@
 // بلا رمز ولا تسجيل دخول ولا حساب. فيسبوك يعرض للزائر أحدث منشور أو اثنين ثم يطلب الدخول، فتعمل المهمة كل ساعة
 // (fb-harvest.yml) لتلتقط كل جديد في ساعته. الناتج data/fb-inbox.json، ويقرؤه tools/source-import.js (fbDiscover)
 // فيمر بمسار المراجعة أو النشر التلقائي نفسه. يقرأ المنشورات من بيانات JSON المضمّنة في الصفحة وردود graphql.
+// التناوب (قرار المدير ٢١ نوفمبر): فيسبوك يحوّل الزائر إلى صفحة الدخول بعد نحو ٨ صفحات متتالية، فتزور كل جولة
+// FB_PER_RUN حسابات (٦ افتراضيًّا) أقدمها زيارةً، واحدًا بعد واحد بمهلة بينها، وتتوقف الجولة عند أول تحويل إلى الدخول
+// احترامًا للحد؛ فيدور كل حساب نحو مرة كل ٧ ساعات. لا تعدد عناوين ولا إعادة محاولة لتجاوز الحد.
 // الاستخدام: node tools/fb-harvest.js [معرّف_مصدر ...]
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const { chromium } = require("playwright-core");
 const DATA = path.join(__dirname, "..", "data"), SRC = path.join(DATA, "sources.json"), BOX = path.join(DATA, "fb-inbox.json");
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-const PAR = +process.env.FB_PAR || 4, MAX_AGE = (+process.env.FB_MAX_AGE_DAYS || 10) * 864e5, STALE = 7 * 864e5;
+const PER_RUN = +process.env.FB_PER_RUN || 6, GAP = (+process.env.FB_GAP_S || 12) * 1000, MAX_AGE = (+process.env.FB_MAX_AGE_DAYS || 10) * 864e5, STALE = 7 * 864e5;
 const readJSON = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return d; } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -56,22 +59,23 @@ async function harvest(br, s) {
   const list = conf.sources.filter(s => s.type === "facebook" && s.fb && s.fb !== "share" && s.fb !== "login" && (only.length ? only.includes(s.id) : s.on !== false));
   const box = readJSON(BOX, { v: 1, items: [], st: {} }); box.st = box.st || {};
   const have = new Set(box.items.map(x => x.src + "|" + x.k));
+  // نصيب هذه الجولة: الأقدم زيارةً أولًا (ولم يُزر قط قبل الجميع)
+  const turn = only.length ? list : list.slice().sort((a, b) => Date.parse((box.st[a.id] || {}).at || 0) - Date.parse((box.st[b.id] || {}).at || 0)).slice(0, PER_RUN);
   const br = await chromium.launch({ executablePath: process.env.CHROME || "/usr/bin/google-chrome", args: ["--no-sandbox", "--lang=ar"] });
-  let added = 0, i = 0;
-  await Promise.all(Array.from({ length: Math.min(PAR, list.length) }, async () => {
-    while (i < list.length) {
-      const s = list[i++], r = await harvest(br, s), st = box.st[s.id] || (box.st[s.id] = {});
-      st.at = new Date().toISOString(); st.err = r.err || undefined; st.n = r.n;
-      for (const x of r.posts || []) { if (have.has(x.src + "|" + x.k)) continue; have.add(x.src + "|" + x.k); box.items.push(Object.assign(x, { at: st.at })); added++; st.lastNew = st.at; }
-      if (r.n) st.lastSeen = st.at;
-      console.log(`[${s.id}] ${r.err ? "خطأ: " + r.err : "منشورات ظاهرة: " + r.n}`);
-      await sleep(1500);
-    }
-  }));
+  let added = 0;
+  for (const s of turn) {
+    const r = await harvest(br, s), st = box.st[s.id] || (box.st[s.id] = {});
+    if (/الدخول/.test(r.err)) { console.log(`[${s.id}] حوّل فيسبوك إلى صفحة الدخول؛ تتوقف الجولة ويُكمل الدور في الجولة التالية`); box.wall = st.at = new Date().toISOString(); st.err = r.err; st.n = 0; break; } // يُسجَّل زائرًا فينتقل إلى آخر الدور (لا يعلق الدور عند حساب مقيّد)
+    st.at = new Date().toISOString(); st.err = r.err || undefined; st.n = r.n;
+    for (const x of r.posts || []) { if (have.has(x.src + "|" + x.k)) continue; have.add(x.src + "|" + x.k); box.items.push(Object.assign(x, { at: st.at })); added++; st.lastNew = st.at; }
+    if (r.n) st.lastSeen = st.at;
+    console.log(`[${s.id}] ${r.err ? "خطأ: " + r.err : "منشورات ظاهرة: " + r.n}`);
+    await sleep(GAP);
+  }
   await br.close();
   // الحسابات التي لم يظهر منها منشور أسبوعًا (تغيّر في فيسبوك أو حساب مقيّد) — تُعرض في التقرير
   box.stale = list.filter(s => { const st = box.st[s.id] || {}; return !st.lastSeen || Date.now() - Date.parse(st.lastSeen) > STALE; }).map(s => s.id);
   box.items = box.items.sort((a, b) => b.t - a.t).slice(0, 3000); box.lastRun = new Date().toISOString(); box.lastAdded = added;
   fs.writeFileSync(BOX, JSON.stringify(box, null, 1));
-  console.log(`الحسابات: ${list.length} | جديد في الصندوق: ${added} | بلا منشور ظاهر أسبوعًا: ${box.stale.length}`);
+  console.log(`الحسابات: ${list.length} | زِيرَ في هذه الجولة: ${turn.length} | جديد في الصندوق: ${added} | بلا منشور ظاهر أسبوعًا: ${box.stale.length}`);
 })();
