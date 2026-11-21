@@ -14,6 +14,7 @@ on:
       args: { description: "اختياري: plan [k] | build <k> [n] (فارغ = الطابور)", required: false, default: "" }
 permissions:
   contents: write
+  id-token: write   # إشعار تليجرام بما حُرِّر
   models: read
 concurrency:
   group: mawsua
@@ -66,6 +67,9 @@ jobs:
           # النمو التلقائي أولًا: الجديد من كتب مشايخ الدعوة ومقالاتهم وشروحهم يُطابَق بالمسائل، وما بقي من المخططات والمسائل يُطلب
           [ -z "${{ github.event.inputs.args }}" ] && python3 tools/mawsua.py grow
           python3 tools/mawsua.py ${{ github.event.inputs.args }}
+      - name: إشعار بما حُرِّر
+        if: always()
+        run: python3 tools/notify-new.py mawsua || true
       - name: الحفظ
         if: always()
         run: |

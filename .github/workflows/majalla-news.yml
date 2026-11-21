@@ -7,6 +7,7 @@ on:
       dry: { description: "تجربة بلا حفظ (1) مع تقرير مفصل", required: false, default: "" }
 permissions:
   contents: write
+  id-token: write   # إشعار تليجرام بالجديد (tools/notify.py عبر الموقع)
 concurrency:
   group: majalla-news
   cancel-in-progress: false
@@ -48,6 +49,9 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
           MAJ_STRICT=0 node tools/majalla-pdf.js
+      - name: إشعار بالجديد
+        if: github.event.inputs.dry != '1'
+        run: python3 tools/notify-new.py news || true
       - name: الحفظ
         if: github.event.inputs.dry != '1'
         run: |
