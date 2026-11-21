@@ -19,6 +19,14 @@ const HDS = (() => {
   async function gradesBox(b, n) { const el = $("#hdgr"); if (!el) return; const G = await kgrades(b), l = (G.g || {})[String(n)];
     if (!$("#hdgr")) return; if (!l) { el.remove(); return; }
     el.innerHTML = `<h3>أحكام المحدثين المعاصرين</h3><ul class="hdgr">${l.map(([w, g]) => `<li><b>${esc(w)}</b>: <span class="grb ${grCls(g)}">${esc(g)}</span></li>`).join("")}</ul><p class="mut">حكم الألباني من «صحيح السنن» و«ضعيفها»، والأرناؤوط وأحمد شاكر وبشار عواد من تحقيقاتهم، بترقيم المصنف بعد مطابقة المتن؛ والمصدر مجموعة hadith-api المفتوحة. للتوسع: أحكام المحدثين من الموسوعة الحديثية أدناه.</p>`; }
+  // مطلع الحديث بلفظ روايته في الكتاب («عن فلان قال: قال رسول الله ﷺ…»): tools/hadith-lead.py ← data/hadith/k/<كتاب>/l<i>.json
+  const LC2 = {}, klead = (b, i) => LC2[b + i] || (LC2[b + i] = fetch(RAWK(b + "/l" + i + ".json")).then(r => r.ok ? r.json() : {}).catch(() => ({})));
+  const SAYV = /(?:قال|قالت|يقول|تقول|فقال|فقالت|يقول:|قال:)\s*[:،]?\s*$/;
+  const clean = t => { t = String(t || "").replace(/⦗[^⦘]*⦘/g, "").replace(/\s+/g, " ").trim(); return (LSG("hd_txt", {}) || {}).d === 0 ? t.replace(/[\u064B-\u0652\u0670]/g, "") : t; };
+  // المتن بمطلعه: إن انتهى المطلع بفعل قول جاء المتن بين علامتي تنصيص، وإلا اتصل به
+  const withLead = (lead, m) => { m = clean(m).replace(/^[«"]\s*/, "").replace(/\s*[»"]\s*$/, ""); if (!lead) return `«${esc(m)}»`; const L = clean(lead).replace(/[\s،:]+$/, "");
+    const Lb = L.replace(/[\u064B-\u0652\u0670]/g, "");
+    return `<span class="hlead">${esc(L)}</span>${SAYV.test(Lb + " ") || /(?:قال|قالت|يقول|تقول|فقال)$/.test(Lb) ? ": «" + esc(m) + "»" : " " + esc(m)}`; };
   const MC = {}, kmatn = (b, i) => MC[b + i] || (MC[b + i] = fetch(RAWK(b + "/m" + i + ".json")).then(r => r.json()).catch(() => ({})));
   // روابط الحديث من نصوص المكتبة (tools/hadith-links.py): موضع شرحه، وتخريجه في كتب السنة، وفهرس البدايات لفتح نتائج البحث في موضعها
   const RAWL = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/links/" + p;
@@ -264,11 +272,37 @@ const HDS = (() => {
     if (r && typeof HDX !== "undefined" && HDX.colorIsn) HDX.colorIsn(el); }
   document.addEventListener("toggle", e => { const d = e.target; if (d.classList && d.classList.contains("hisn") && d.open) fillIsn(d); }, true);
   const isnOpenAll = () => setTimeout(() => document.querySelectorAll("details.hisn[open]").forEach(fillIsn), 50);
+  // ===== خدمات النص في قسم الحديث (طلب المدير، ٢١ نوفمبر): الخط والحجم واللون وتباعد الأسطر وإظهار التشكيل، محفوظة على الجهاز (hd_txt) =====
+  const HFONTS = ["Amiri", "Scheherazade New", "Noto Naskh Arabic", "Lateef", "Markazi Text", "Reem Kufi", "Cairo", "Tajawal", "Readex Pro"];
+  const HCOL = [["", "الافتراضي"], ["#1b1b1b", "أسود"], ["#0b4a3b", "أخضر داكن"], ["#123a6b", "أزرق داكن"], ["#5a2d0c", "بني"], ["#6b1d4a", "خمري"]];
+  const txtSet = () => Object.assign({ f: "", z: 100, c: "", lh: 0, d: 1 }, LSG("hd_txt", {}));
+  function txtApply() { const t = txtSet(), r = document.documentElement.style;
+    if (t.f && typeof loadFont === "function") loadFont(t.f);
+    r.setProperty("--hdf", t.f ? `"${t.f}", Amiri, serif` : ""); r.setProperty("--hdz", (t.z / 100) + ""); r.setProperty("--hdc", t.c || ""); r.setProperty("--hdlh", t.lh ? String(t.lh) : "");
+    document.documentElement.classList.toggle("hd-nodia", !t.d); }
+  // تغيير الإعداد يُعيد رسم الصفحة المفتوحة (لإظهار التشكيل أو إخفائه)
+  addEventListener("change", e => { if (e.target.closest("input[type=checkbox][data-hdt=d]") && typeof route === "function") setTimeout(route, 50); });
+  const txtBtn = () => `<button class="btn s" data-act="hdtxt" title="الخط والحجم واللون">Aa خدمات النص</button>`;
+  function txtPanel() { const t = txtSet();
+    openSheet("خدمات النص في قسم الحديث", `<div class="hdtxtp" data-noswipe><label>الخط<select data-hdt="f"><option value="">الافتراضي (Amiri)</option>${HFONTS.map(f => `<option value="${f}"${t.f === f ? " selected" : ""} style="font-family:'${f}'">${f}</option>`).join("")}</select></label>
+      <label>الحجم <b id="hdzv">${toAr(t.z)}٪</b><input type="range" min="80" max="200" step="10" value="${t.z}" data-hdt="z"></label>
+      <label>تباعد الأسطر<select data-hdt="lh">${[[0, "الافتراضي"], [1.8, "متقارب"], [2.2, "متوسط"], [2.6, "واسع"]].map(([v, n]) => `<option value="${v}"${+t.lh === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+      <fieldset><legend>لون النص</legend><div class="hdcols">${HCOL.map(([v, n]) => `<button type="button" class="hdcol${t.c === v ? " on" : ""}" data-hdc="${v}" title="${n}" aria-label="${n}" style="${v ? "background:" + v : ""}">${v ? "" : "A"}</button>`).join("")}<input type="color" data-hdt="c" value="${t.c || "#1b1b1b"}" aria-label="لون مخصص"></div></fieldset>
+      <label class="inl"><input type="checkbox" data-hdt="d"${t.d ? " checked" : ""}> إظهار التشكيل</label>
+      <p class="hdtxtprev">عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللهِ ﷺ: «الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ»</p>
+      <button class="btn s" data-act="hdtxtreset">إعادة الافتراضي</button></div>`); }
+  const txtSave = (k, v) => { const t = txtSet(); t[k] = v; LSS("hd_txt", t); txtApply(); const z = document.getElementById("hdzv"); if (z) z.textContent = toAr(t.z) + "٪"; };
+  document.addEventListener("input", e => { const el = e.target.closest("[data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, k === "d" ? (el.checked ? 1 : 0) : k === "z" || k === "lh" ? +el.value : el.value); if (k === "c") document.querySelectorAll(".hdcol").forEach(b => b.classList.remove("on")); });
+  document.addEventListener("change", e => { const el = e.target.closest("select[data-hdt],input[type=checkbox][data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, k === "d" ? (el.checked ? 1 : 0) : k === "lh" ? +el.value : el.value); });
+  document.addEventListener("click", e => { const b = e.target.closest("[data-hdc],[data-act=hdtxt],[data-act=hdtxtreset]"); if (!b) return;
+    if (b.dataset.act === "hdtxt") return txtPanel(); if (b.dataset.act === "hdtxtreset") { LSS("hd_txt", {}); txtApply(); return txtPanel(); }
+    txtSave("c", b.dataset.hdc); document.querySelectorAll(".hdcol").forEach(x => x.classList.toggle("on", x === b)); });
+  txtApply();
   // خيارات التصفح في كتب السنة: حديث واحد في الصفحة (بالسحب أو التالي/السابق) أو عدد يختاره القارئ (hd_per)
   const PERS = [1, 5, 10, 20, 30, 50];
   const perOf = () => Math.max(1, Math.min(100, +LSG("hd_per", 0) || 20));
   const browseOpts = (b, first) => `<div class="row hdbrowse" data-noswipe><label>طريقة التصفح: <select id="hdper" data-kb="${b}" data-at="${esc(String(first))}">${PERS.map(n => `<option value="${n}"${perOf() === n ? " selected" : ""}>${n === 1 ? "حديث واحد في الصفحة (سحب أو التالي/السابق)" : toAr(n) + " أحاديث في الصفحة"}</option>`).join("")}${PERS.includes(perOf()) ? "" : `<option value="${perOf()}" selected>${toAr(perOf())} حديثًا في الصفحة</option>`}<option value="x">عدد آخر…</option></select></label>
-    <label>الإسناد: <select id="hdisn">${[["fold", "مطوي تحت المتن"], ["show", "ظاهر تحت المتن"], ["tools", "في أدوات الحديث فقط"]].map(([v, l]) => `<option value="${v}"${isnMode() === v ? " selected" : ""}>${l}</option>`).join("")}</select></label></div>`;
+    <label>الإسناد: <select id="hdisn">${[["fold", "مطوي تحت المتن"], ["show", "ظاهر تحت المتن"], ["tools", "في أدوات الحديث فقط"]].map(([v, l]) => `<option value="${v}"${isnMode() === v ? " selected" : ""}>${l}</option>`).join("")}</select></label>${txtBtn()}</div>`;
   function firstChoice(b, first) { if (LSG("hd_per", 0)) return "";
     return `<section class="hdchoose card" data-noswipe><b>كيف تحب أن تتصفح الكتاب؟</b><p class="mut">يمكنك تغيير ذلك في أي وقت من «طريقة التصفح».</p><div class="row"><button class="btn p" data-act="hdper" data-v="1" data-kb="${b}" data-at="${esc(String(first))}">📄 حديث واحد في الصفحة</button><button class="btn" data-act="hdper" data-v="10" data-kb="${b}" data-at="${esc(String(first))}">📚 عشرة أحاديث</button><button class="btn" data-act="hdper" data-v="20" data-kb="${b}" data-at="${esc(String(first))}">📚 عشرون حديثًا</button><button class="btn s" data-act="hdper" data-v="x" data-kb="${b}" data-at="${esc(String(first))}">عدد آخر…</button></div></section>`; }
   function setPer(v, b, at) { if (v === "x") { const n = parseInt(String(prompt("عدد الأحاديث في الصفحة (١–١٠٠):", "15") || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)), 10); if (!n) return; v = n; }
@@ -288,14 +322,14 @@ const HDS = (() => {
     if (!it.length) return `<p><a href="#/hadith?t=kutub">← كتب السنة</a></p><p class="note">تعذّر تحميل الكتاب.</p>`;
     let pg = Math.min(np, Math.max(1, +q.pg || 1)); if (q.at) { const k = it.findIndex(x => String(x[0]) === String(q.at)); if (k >= 0) pg = Math.floor(k / RPER) + 1; }
     const k0 = (pg - 1) * RPER, sl = it.slice(k0, k0 + RPER), MM = {};
-    for (const c of [...new Set(sl.map((x, j) => Math.floor((k0 + j) / 500)))]) Object.assign(MM, await kmatn(b, c));
+    const LL = {}; for (const c of [...new Set(sl.map((x, j) => Math.floor((k0 + j) / 500)))]) { const [a1, a2] = await Promise.all([kmatn(b, c), klead(b, c)]); Object.assign(MM, a1); Object.assign(LL, a2); }
     const u = p => "#/hadith?" + new URLSearchParams({ t: "kutub", kb: b, pg: p }).toString();
     const toc = []; it.forEach((x, i) => { if (x[3] && (!toc.length || toc[toc.length - 1][0] !== x[3])) toc.push([x[3], Math.floor(i / RPER) + 1, x[0]]); });
     let lk = null, lb = null;  // أول كل صفحة: كتابها وبابها
     const rows = sl.map(x => { let h = ""; if (x[3] && x[3] !== lk) { h += `<h3 class="hrk">${esc(x[3])}</h3>`; lb = null; } if (x[4] && x[4] !== lb) h += `<h4 class="hrb">${esc(x[4])}</h4>`; lk = x[3]; lb = x[4];
       const m = MM[String(x[0])] || x[6], cite = (x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")";
       const sp = splitMatn(m), isn = mode === "tools" ? "" : isnBox(x[1], x[2], sp.matn, mode, sp.isnad);
-      return h + `<article class="hrh${one1 ? " hrone" : ""}" id="hr${esc(String(x[0]))}"><a class="hrn" href="#/hadith/k/${b}/${x[0]}" title="خدمات الحديث">${toAr(x[0])}</a>${x[5] ? `<p class="hds">عن ${esc(x[5])}</p>` : ""}<p class="hdm">${esc(sp.matn)}</p>${isn}
+      return h + `<article class="hrh${one1 ? " hrone" : ""}" id="hr${esc(String(x[0]))}"><a class="hrn" href="#/hadith/k/${b}/${x[0]}" title="خدمات الحديث">${toAr(x[0])}</a>${LL[String(x[0])] ? "" : x[5] ? `<p class="hds">عن ${esc(x[5])}</p>` : ""}<p class="hdm">${LL[String(x[0])] ? withLead(LL[String(x[0])], sp.matn) : esc(clean(sp.matn))}</p>${isn}
         <div class="hra"><a class="btn s" href="#/hadith/k/${b}/${x[0]}">خدمات الحديث</a><button class="btn s" data-act="hdrsh" data-b="${b}" data-n="${esc(String(x[0]))}">📖 شرحه</button><a class="btn s" href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(String(x[6]).split(" ").slice(0, 4).join(" "))}" title="بإسناده في الكتاب">📚 بإسناده</a><button class="btn s" data-act="hkcopy" data-t="${esc(cite)}">نسخ</button></div><div class="hrsh" hidden></div></article>`; }).join("");
     const nav = top => one1 ? `<div class="pgn hrpg hrone-nav" data-noswipe>${pg > 1 ? `<a class="btn" href="${u(pg - 1)}" rel="prev">› السابق</a>` : "<span></span>"}<span class="mut">الحديث ${toAr(pg)} من ${toAr(np)}${sl[0] ? " • رقم " + toAr(sl[0][0]) : ""}</span>${pg < np ? `<a class="btn p" href="${u(pg + 1)}" rel="next">التالي ‹</a>` : "<span></span>"}</div>`
       : `<div class="pgn hrpg">${pg > 1 ? `<a class="btn s" href="${u(1)}" title="أول الكتاب">«</a><a class="btn s" href="${u(pg - 1)}">› السابقة</a>` : ""}<span class="mut">صفحة ${toAr(pg)} من ${toAr(np)} • الأحاديث ${toAr(sl[0][0])}–${toAr(sl[sl.length - 1][0])}</span>${pg < np ? `<a class="btn s" href="${u(pg + 1)}">التالية ‹</a><a class="btn s" href="${u(np)}" title="آخر الكتاب">»</a>` : ""}</div>`;
@@ -329,16 +363,16 @@ const HDS = (() => {
   }
   async function kone(b, n) {
     const D = await kidx(b), k = (D.items || []).findIndex(x => String(x[0]) === String(n)); if (k < 0) return view('<p class="note">الحديث غير موجود.</p>');
-    await klist(); const x = D.items[k], M = await kmatn(b, Math.floor(k / 500)), m = M[String(x[0])] || x[6], prev = D.items[k - 1], next = D.items[k + 1], SPX = splitMatn(m);
+    await klist(); const x = D.items[k], M = await kmatn(b, Math.floor(k / 500)), LD = (await klead(b, Math.floor(k / 500)))[String(x[0])] || "", m = M[String(x[0])] || x[6], prev = D.items[k - 1], next = D.items[k + 1], SPX = splitMatn(m);
     window.__hdIsn = { bk: x[1], p: x[2], m: SPX.matn, inl: SPX.isnad };
     view(`<p><a href="#/hadith?t=kutub&kb=${b}&at=${encodeURIComponent(x[0])}">← ${esc(D.t)} (موضعه في الكتاب)</a>${x[3] ? " › " + esc(x[3]) : ""}</p>
-    <article class="hdone"><p class="hds">${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">«${esc(SPX.matn)}»</p>${isnMode() === "tools" ? "" : isnBox(x[1], x[2], SPX.matn, isnMode(), SPX.isnad)}<p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
+    <article class="hdone"><p class="hds"${LD ? " hidden" : ""}>${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">${withLead(LD, SPX.matn)}</p>${isnMode() === "tools" ? "" : isnBox(x[1], x[2], SPX.matn, isnMode(), SPX.isnad)}<p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
     <p class="mut"><a href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(x[6].split(" ").slice(0, 4).join(" "))}">اقرأ الحديث بإسناده في موضعه من الكتاب ←</a></p></article>
     ${["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b) ? '<section class="stsec" id="hdgr"><p class="mut">…</p></section>' : ""}
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
     <section class="stsec"><h3>شرح الحديث</h3><div id="hdds"><p class="mut">…</p></div></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه</h3><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc(m.split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين من الموسوعة الحديثية</button></div></section>
-    <div class="row">${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
+    <div class="row">${txtBtn()}${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
     <div class="mnav mnb">${next ? `<a class="btn s" href="#/hadith/k/${b}/${next[0]}">‹ التالي</a>` : "<span></span>"}${prev ? `<a class="btn s" href="#/hadith/k/${b}/${prev[0]}">السابق ›</a>` : ""}</div>`);
     linksBox(b, x[0]); gradesBox(b, x[0]); sharhInto($("#hdds"), b, x[0], true); isnOpenAll();
     swipeNav(document.querySelector("article.hdone"), prev ? "#/hadith/k/" + b + "/" + prev[0] : null, next ? "#/hadith/k/" + b + "/" + next[0] : null);
