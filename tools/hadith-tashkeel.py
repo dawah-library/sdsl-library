@@ -13,7 +13,7 @@ ROOT = os.path.dirname(HERE); K = os.path.join(ROOT, "data", "hadith", "k"); SP 
 from gkeys import keys as _gkeys, Pool as _Pool  # noqa: E402
 KEYS = _gkeys("bulk"); POOL = _Pool(KEYS); EXH = set()
 # نماذج flash كلها (لكل نموذج حصة يومية مستقلة لكل مفتاح)، لا الخفيفة حفاظًا على دقة الإعراب
-MODELS = [m.strip() for m in os.environ.get("HT_MODELS", "gemini-3-flash-preview,gemini-2.5-flash,gemini-flash-latest,gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash").split(",") if m.strip()]
+MODELS = [m.strip() for m in os.environ.get("HT_MODELS", "gemini-3-flash-preview,gemini-flash-latest,gemini-3.5-flash,gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash").split(",") if m.strip()]
 STAT = {"req": 0, "ok": 0, "day": 0, "min": 0, "err": 0, "bad": 0}
 MEXH = set(); BUDGET = [int(os.environ.get("HT_MAX", "300"))]; DEADLINE = time.time() + 60 * float(os.environ.get("HT_MINUTES", "140"))
 DIA = re.compile(r"[ً-ْٰ]")

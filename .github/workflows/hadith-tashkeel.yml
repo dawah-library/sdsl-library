@@ -3,9 +3,11 @@ name: تشكيل أحاديث قسم الحديث
 # طلب المدير (٢١ نوفمبر ٢٠٢٦). مفتاح الإيقاف: hadith_tashkeel.
 on:
   schedule:
-    - cron: "37 1 * * *"
+    # الحصة اليومية تتجدد نحو ٠٨:٠٠ UTC؛ وجولة ٢١ نوفمبر المسائية وجدت حصص المفاتيح العامة كلها نافدة (٨٤ من ٨٥ طلبًا)،
+    # فأولى الجولات بعد التجدد بحصة محدودة (HT_MAX) لا تزاحم تجهيز الكتب المصورة، ثم جولتان لما يبقى.
+    - cron: "19 8 * * *"
     - cron: "37 13 * * *"
-    - cron: "37 19 * * *"
+    - cron: "37 22 * * *"
   workflow_dispatch:
     inputs:
       books: { description: "اختياري: كتب بعينها مفصولة بمسافة (bukhari muwatta …)", required: false, default: "" }
@@ -59,6 +61,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           HT_MINUTES: "150"
+          HT_MAX: "200"
         run: python3 tools/hadith-tashkeel.py ${{ github.event.inputs.books }}
       - name: الحفظ
         if: always()
