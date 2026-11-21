@@ -98,11 +98,42 @@ def tala_material(it):
     """(العنوان، النص، كرتون؟) لعنصر الطلائع. الكرتون للمراحل حتى ١٥ سنة في الموضوعات العامة، لا في قصص الأنبياء والصحابة والتابعين."""
     age = it.get("age") if it.get("age") in TALA_AGE else "t2"
     if it.get("text"): return (it.get("title") or "درس للطلائع"), str(it["text"])[:12000], age != "t4"
+    if it.get("lessons"): return lesson_material(it, age)
     Q = jl(os.path.join(ROOT, "data", "tala-qasas.json"), {}) or {}; sid = it["id"][5:]
     x = next((y for y in Q.get("items") or [] if y.get("id") == sid), None)
     if not x: return None
     s = x.get("s") or {}; txt = s.get(age) or s.get("t2") or next(iter(s.values()), "")
     return x.get("n") or sid, txt, False  # قصص الأنبياء والصحابة والتابعين: مناظر فقط
+
+
+# دروس كتب منهج الطلائع («الأساس» و«البنيان» و«البداية» للشيخ مصطفى دياب): نص الدرس من صفحاته مباشرة بلا كتابة من المشرف.
+# العنصر: "lessons": [{"b": معرف المجلد, "p": أول صفحة, "z": آخر صفحة, "t": عنوان الدرس, "s": مادته}] (درس أو عدة دروس).
+LESSON_SKIP = re.compile(r"^(\d+\s*)?(الأهداف|الاهداف|المناقشة|صل |اختر|ضع علامة|أكمل|اكمل|ظلل|مع معلمك|التقويم|أسئلة|اسئلة|نشاط)")
+NOCART = re.compile(r"نبي|النبي|رسول|الأنبياء|صحاب|الصحابة|التابع|غزو|سير[ةه]|عليه السلام|رضي الله")
+
+
+def lesson_material(it, age):
+    parts, cart, nm = [], age != "t4", []
+    for L in (it.get("lessons") or [])[:8]:
+        bid = str(L.get("b") or ""); f = next((x for x in (os.path.join(ROOT, "data", "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")) if os.path.exists(x)), None)
+        if not f: continue
+        pages = (jl(f, {}) or {}).get("pages") or []
+        a = max(1, int(L.get("p") or 1)); z = min(len(pages), max(a, int(L.get("z") or a)), a + 10)
+        body = []
+        for pg in pages[a - 1:z]:
+            t = re.split(r"^\s*_{4,}\s*$", pg or "", maxsplit=1, flags=re.M)[0]  # بلا الحواشي
+            for l in t.split("\n"):
+                l = re.sub(r"^(@@|<<|#{1,3})\s*", "", l.strip())
+                if not l or LESSON_SKIP.match(l) or re.match(r"^\[(رسم|صورة|شكل)", l) or re.match(r"^\|?\s*:?-{3}", l) or re.match(r"^[\d٠-٩]+\s*[-–)]\s*أن (ي|ت)", l): continue  # أهداف الدرس للمعلم وفواصل الجداول
+                if l.startswith("|"): l = " — ".join(c.strip() for c in l.strip("|").split("|") if c.strip())  # صف جدول: الكلمة — معناها
+                body.append(l)
+        if not body: continue
+        tt = str(L.get("t") or "").strip(); nm.append(tt)
+        parts.append("## " + tt + "\n" + "\n".join(body))
+        if L.get("s") in ("sira", "quran") or NOCART.search(tt): cart = False  # لا تُشخَّص الأنبياء ولا الصحابة بالرسوم، ولا تُركَّب الرسوم على الآيات
+    if not parts: return None
+    title = it.get("title") or (nm[0] if len(nm) == 1 else "دروس: " + "، ".join(nm[:3]))
+    return title, ("\n\n".join(parts))[:12000], cart
 
 
 # ———— المادة ————
@@ -525,6 +556,7 @@ async def render_video(it, D, aspect, L, did, replace):
     rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
            "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0, "v420": 1}
     if bid.startswith("tala-"): rec.update({"tala": it.get("age") or "t2", "g": it.get("g") or "", "cartoon": 1 if it.get("cartoon") else 0})
+    if it.get("lessons"): rec.update({"ls": ["%s:%s" % (x.get("b"), x.get("p")) for x in it["lessons"]][:8], "ser": it.get("ser") or ""})  # ربط المقطع بدروسه في منهج الطلائع
     lst_ = L.setdefault(bid, [])
     old = next((k for k, v in enumerate(lst_) if replace and v.get("f") == replace and not v.get("ok")), None)
     if old is not None:  # التصحيح يحل محل الفيديو غير المعتمد (ويُحذف ملفه القديم من الإصدار)
