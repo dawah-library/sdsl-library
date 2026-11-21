@@ -302,12 +302,12 @@ const HDS = (() => {
     KEYH = one1 ? [pg > 1 ? u(pg - 1) : null, pg < np ? u(pg + 1) : null] : null;
     setTimeout(() => { const el = document.querySelector(".hread.one"); if (el && !el.dataset.sw) { el.dataset.sw = 1; swipeNav(el, KEYH && KEYH[0], KEYH && KEYH[1]); } isnOpenAll(); }, 60);
     return `<p><a href="#/hadith?t=kutub">← كتب السنة</a> <b>${esc(D.t || b)}</b> <span class="mut">${toAr(it.length)} حديثًا</span>${NINE.includes(b) && sl[0] ? ` <button class="btn s" data-act="shexp" data-b="${b}" data-n="${esc(String(sl[0][0]))}">⬇ تنزيل الشرح</button>` : ""}</p>
-      <form class="sbox" data-form="noop" id="hkq"><input name="q" placeholder="ابحث في ${esc(D.t || "")}: طرف الحديث أو الصحابي أو الباب"><button class="btn p">بحث</button></form>
+      ${firstChoice(b, sl[0] ? sl[0][0] : "")}
+      ${one1 ? "" : nav(1)}<div class="hread${one1 ? " one" : ""}" data-kb="${b}"${one1 ? ' data-noswipe' : ""}>${rows}</div>${nav(0)}
+      <div class="hrbelow"><form class="sbox" data-form="noop" id="hkq"><input name="q" placeholder="ابحث في ${esc(D.t || "")}: طرف الحديث أو الصحابي أو الباب"><button class="btn p">بحث</button></form>
       <div class="row hrtools">${toc.length > 1 ? `<select id="hrtoc" aria-label="فهرس الكتاب"><option value="">📑 فهرس الكتاب…</option>${toc.map(([t, p, n]) => `<option value="${p}"${p === pg ? " selected" : ""}>${esc(t.slice(0, 70))} (${toAr(n)})</option>`).join("")}</select>` : ""}
         <form id="hrgo" data-form="noop" class="row"><input name="n" inputmode="numeric" placeholder="رقم الحديث" aria-label="انتقل إلى رقم حديث" data-novoice style="width:7.5em"><button class="btn s">انتقل</button></form>
-        <form id="hrpgf" data-form="noop" class="row"><input name="p" inputmode="numeric" placeholder="الصفحة" aria-label="انتقل إلى صفحة" data-novoice style="width:5.5em"><button class="btn s">صفحة</button></form></div>
-      ${firstChoice(b, sl[0] ? sl[0][0] : "")}${browseOpts(b, sl[0] ? sl[0][0] : "")}
-      ${one1 ? "" : nav(1)}<div class="hread${one1 ? " one" : ""}" data-kb="${b}"${one1 ? ' data-noswipe' : ""}>${rows}</div>${nav(0)}`;
+        <form id="hrpgf" data-form="noop" class="row"><input name="p" inputmode="numeric" placeholder="الصفحة" aria-label="انتقل إلى صفحة" data-novoice style="width:5.5em"><button class="btn s">صفحة</button></form></div>${browseOpts(b, sl[0] ? sl[0][0] : "")}</div>`;
   }
   // شرح الحديث من «الموسوعة الحديثية» في الدرر السنية (عبر api/translate?dsharh=)
   const DSC = {};
@@ -357,13 +357,16 @@ const HDS = (() => {
     if (t === "kutub") { side = await kutub(q); L = []; }
     if (t === "fav") { side = HDX.favHtml(q.f); L = []; }
     const showList = qq || (t === "book" && q.b) || t === "atraf" || (t === "sahabi" && q.s), pg = Math.max(1, +q.pg || 1), np = Math.max(1, Math.ceil(L.length / PER));
-    view(`<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة المشهورة (الصحيحان والسنن الأربع والموطأ والدارمي ومسند أحمد وسنن البيهقي الكبرى وشعب الإيمان والأدب المفرد والشمائل وعمل اليوم والليلة وشرح السنة للبغوي، نحو مئة ألف حديث، وتُضاف إليها الكتب الأخرى تباعًا) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>
+    // التعريف بالقسم في واجهته وحدها؛ وعند قراءة كتاب يأتي نص الأحاديث أولًا والأدوات تحته (طلب المدير، ٢١ نوفمبر)
+    const home = !qq && !q.kb && !q.g && !q.b && !q.s && !q.l && !q.f && !q.pg && !q.at, reading = t === "kutub" && !!q.kb;
+    const HERO = home ? `<div class="cmhero"><div><h2>الحديث النبوي</h2><p>كتب السنة المشهورة (الصحيحان والسنن الأربع والموطأ والدارمي ومسند أحمد وسنن البيهقي الكبرى وشعب الإيمان والأدب المفرد والشمائل وعمل اليوم والليلة وشرح السنة للبغوي، نحو مئة ألف حديث، وتُضاف إليها الكتب الأخرى تباعًا) مع رياض الصالحين والأربعين النووية وبلوغ المرام، مرتبةً على الكتب العلمية وأبوابها، مع موضع شرح كل حديث في شروحه المشهورة والشرح الموجز منها، وتخريجه في كتب السنة، وأحكام المحدثين من الموسوعة الحديثية. والمختارات بنصها: مرتبة بالموضوع، وبالمصدر، وبأطرافها، وبالصحابي؛ مع التخريج وحكم المصنف وشرحه، والانتقال إلى موضعها، وتصديرها بقوالب.</p></div></div>` : "", TOOLS = `
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
     <div class="row"><button class="btn s" data-act="hdoff">${offState("hadith", "قسم الحديث")}</button></div>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
-    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"], ["fav", "⭐ مجلداتي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>
+    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"], ["fav", "⭐ مجلداتي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>`;
+    view(HERO + (reading ? "" : TOOLS) + `
     ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
-    ${side}${showList ? `<p class="mut">${toAr(L.length)} حديثًا</p>${L.slice((pg - 1) * PER, pg * PER).map(card).join("")}${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg - 1 }))}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg + 1 }))}">التالية</a>` : ""}</div>` : ""}` : ""}`);
+    ${side}${reading ? `<section class="hdtoolsb"><h3 class="mut">أدوات قسم الحديث</h3>${TOOLS}</section>` : ""}${showList ? `<p class="mut">${toAr(L.length)} حديثًا</p>${L.slice((pg - 1) * PER, pg * PER).map(card).join("")}${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg - 1 }))}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg + 1 }))}">التالية</a>` : ""}</div>` : ""}` : ""}`);
     $("#hdq").addEventListener("submit", e => { e.preventDefault(); location.hash = u({ q: e.target.q.value.trim() }); });
     if (qq && t !== "kutub") kutubSearch(qq);
     $("#hddq").addEventListener("submit", e => { e.preventDefault(); dorar(e.target.q.value.trim()); });

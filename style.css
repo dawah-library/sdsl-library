@@ -1823,3 +1823,28 @@ details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summar
 .tvc figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 12px}
 .tvrules ul{padding-inline-start:1.2em;line-height:1.9}.tvform label{display:flex;flex-direction:column;gap:4px;margin:6px 0}.tvform label.inl{flex-direction:row;align-items:center}
 .talabk{border-bottom:1px dashed var(--line);padding:8px 0}.talabk .ok{color:#2e7d32;font-weight:700}
+
+/* الحديث: نص الأحاديث أولًا والأدوات تحته */
+.hrbelow,.hdtoolsb{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line,#ddd)}
+.hdtoolsb>h3{font-size:.95rem;margin:0 0 8px}
+/* الموسوعات: بطاقة المرجع عند الضغط على رقم العزو */
+.mwpop{position:absolute;z-index:1200;background:var(--card,#fff);color:inherit;border:1px solid var(--line,#ddd);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px 14px;font-size:.92rem;line-height:1.7}
+.mwpop .mwpx{position:absolute;top:4px;left:8px;border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit;opacity:.6}
+.mwpop .mwpn{margin:0 0 4px}.mwpop .mwpt{margin:0 0 8px}.mwpop blockquote{margin:6px 0 10px;font-size:.88rem}
+/* الطلائع: لوحة الترحيب المرسومة وتحديث عصري للبطاقات (طلب المدير، ٢١ نوفمبر) */
+.talahero{position:relative;border-radius:24px;overflow:hidden;margin:10px 0 14px;box-shadow:0 12px 30px rgba(58,12,163,.25);min-height:150px}
+.talahero svg{display:block;width:100%;height:clamp(150px,26vw,220px)}
+.talahero-t{position:absolute;inset-inline-start:18px;top:14px;color:#fff;display:flex;flex-direction:column;gap:2px;text-shadow:0 2px 8px rgba(0,0,0,.35);max-width:60%}
+.talahero-t b{font-size:clamp(1.2rem,3.4vw,1.9rem);font-weight:800}.talahero-t span{font-size:clamp(.85rem,2vw,1.05rem)}
+.talahero .tw{animation:thtw 2.4s ease-in-out infinite}.talahero .tw.d1{animation-delay:.8s}.talahero .tw.d2{animation-delay:1.6s}
+.talahero .flt{animation:thflt 5s ease-in-out infinite}
+@keyframes thtw{0%,100%{opacity:.35}50%{opacity:1}}@keyframes thflt{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.tala .talag{gap:14px}
+.tala:not(.kids) .talac{border:1px solid color-mix(in srgb,#6d28d9 22%,transparent);border-radius:18px;background:linear-gradient(160deg,color-mix(in srgb,#7c3aed 9%,var(--sf,#fff)),var(--sf,#fff) 60%);box-shadow:0 6px 18px rgba(30,27,75,.08);transition:transform .18s,box-shadow .18s}
+.tala:not(.kids) .talac:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(30,27,75,.16)}
+.tala:not(.kids) .talac i{font-style:normal;display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;font-size:1.6rem;background:linear-gradient(135deg,#7c3aed,#22d3ee);color:#fff;box-shadow:0 6px 14px rgba(124,58,237,.3)}
+.tala:not(.kids) .talah{background:linear-gradient(90deg,#1e1b4b,#4338ca);color:#fff;border-radius:16px;padding:8px 14px}.tala:not(.kids) .talah a,.tala:not(.kids) .talah .mut{color:#fff}
+.tala.kids .tgames .talac i{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:inset 0 -4px 0 rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.08)}
+.tpsub{font-weight:700}
+@media(prefers-reduced-motion:reduce){.talahero .tw,.talahero .flt{animation:none}}
+:root[data-theme=dark] .tala:not(.kids) .talac{background:linear-gradient(160deg,#2a2150,#1b1b2f);border-color:#4c3a8a}

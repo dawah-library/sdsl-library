@@ -8,7 +8,7 @@
 يُعلَّم المراجَع rv=2، فتُستأنف المراجعة من حيث توقفت إن نفدت الحصة أو المهلة. لا يُنشئ أسئلة جديدة.
 المتغيرات: QR_ONLY (كتب بعينها)، QR_MINUTES، QR_COMMIT=1.
 """
-import json, os, re, sys, time, subprocess, glob
+import json, os, re, sys, time, subprocess, glob, random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tashjir as T  # noqa: E402
@@ -73,6 +73,7 @@ def valid(q):
         o = [str(x).strip() for x in (q.get("opts") or []) if str(x).strip()]
         if len(o) != 4 or len(set(o)) != 4 or a not in o:
             return False
+        random.shuffle(o)  # لا تستقر الإجابة الصحيحة في الموضع الأول
         q["opts"] = o
     elif t == "tf":
         if a not in ("صح", "خطأ"):

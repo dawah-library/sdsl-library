@@ -65,7 +65,9 @@ const TPLAY = (() => {
     ["gharib", "معنى الكلمة", "كلمات من جزء عمّ ومعناها من «السراج في غريب القرآن»", "🔤"],
     ["haraka", "الحركة الصحيحة", "اختر ضبط آخر الكلمة كما في المصحف", "ـَ"],
     ["tartib", "رتّب الآية", "أيّ ترتيب للكلمات هو الآية كما في المصحف؟", "🧩"],
-    ["jarr", "حرف الجر", "اعرف حرف الجر في جمل من مقالات مشايخ الدعوة", "🔗"]];
+    ["jarr", "حرف الجر", "اعرف حرف الجر في جمل من مقالات مشايخ الدعوة", "🔗"],
+    // ألغاز علمية وثقافية (طلب المدير، ٢١ نوفمبر): data/tala-riddles.json
+    ["lughz", "ألغاز علمية وثقافية", "ألغاز ممتعة في العلوم والثقافة واللغة والمعرفة الإسلامية", "🧠"]];
   const has = g => g === "mine" || GAMES.some(x => x[0] === g);
   const J = {}, getj = u => J[u] || (J[u] = fetch(u).then(r => r.ok ? r.json() : null).catch(() => null));
   const AR = n => (typeof toAr === "function" ? toAr(n) : String(n));
@@ -149,9 +151,14 @@ const TPLAY = (() => {
       out.push(mk(x.t, r, wr, { sub: "أيّ هذه الكلمات حرف جر؟", why: "حروف الجر: من، إلى، عن، على، في، الباء، الكاف، اللام…", link: "#/book/" + x.a + "/1", tag: "🔗" })); if (out.length >= n) break; }
     return out;
   }
-  const GEN = { hadith: genHadith, rawi: genRawi, sura: genSura, nazm: genNazm, exer: genExer, gharib: genGharib, haraka: genHaraka, tartib: genTartib, jarr: genJarr };
+  const LZC = { "لغز": "🧩 لغز", "إسلامية": "🕌 لغز إسلامي", "علوم": "🔬 لغز علمي", "ثقافة": "🌍 لغز ثقافي", "لغة": "✒️ لغز لغوي" };
+  async function genLughz(k, n) {
+    const L = (((await getj("data/tala-riddles.json")) || {}).items || []).filter(x => x.q && x.a && (x.w || []).length >= 2 && (!(x.k || []).length || x.k.includes(k)));
+    return mix(L).slice(0, n).map(x => mk(x.q, x.a, x.w.slice(0, 3), { sub: (LZC[x.c] || "🧠 لغز") + " — فكّر جيدًا:", why: x.why || "", tag: "🧠" }));
+  }
+  const GEN = { lughz: genLughz, hadith: genHadith, rawi: genRawi, sura: genSura, nazm: genNazm, exer: genExer, gharib: genGharib, haraka: genHaraka, tartib: genTartib, jarr: genJarr };
   async function mixed(k, n, ctx) {
-    const parts = await Promise.all([genHadith(k, 3), genSura(k, 3), genRawi(k, 2), genNazm(k, k === "t1" ? 0 : 2), genExer(k, 2), genGharib(k, 2), genHaraka(k, k === "t1" ? 0 : 1), genJarr(k, k === "t1" ? 0 : 1)]);
+    const parts = await Promise.all([genHadith(k, 3), genSura(k, 3), genRawi(k, 2), genNazm(k, k === "t1" ? 0 : 2), genExer(k, 2), genGharib(k, 2), genHaraka(k, k === "t1" ? 0 : 1), genJarr(k, k === "t1" ? 0 : 1), genLughz(k, 2)]);
     return mix(parts.flat().concat(fromQZ(ctx.qz, 3))).slice(0, n);
   }
 
@@ -178,6 +185,8 @@ const TPLAY = (() => {
     if (!L.length) return view(ctx.head(name(g), true) + `<div class="note">${g === "exer" ? "لم تُعتمد إجابات تمارين هذه المرحلة بعد؛ تُعتمد من الإدارة في «تمارين الأساس والبنيان»." : "تعذّر تجهيز الأسئلة الآن."}</div></div>`);
     const done = (S.tala && S.tala.daily || {})[day + k];
     if (g === "daily" && done != null) return view(ctx.head(name(g), true) + `<div class="tpwin"><div class="tpbig">🎯</div><h2>أنهيت مسابقة اليوم</h2><p>نتيجتك: ${AR(done)} من ${AR(L.length)}</p><p class="mut">تعود غدًا بأسئلة جديدة. جرّب «سباق الدقيقة» الآن!</p><a class="btn p" href="#/talaea/games?g=race&k=${k}">⏱️ سباق الدقيقة</a></div></div>`);
+    // ترتيب الخيارات عشوائي في كل دخول، حتى في مسابقة اليوم (الأسئلة ثابتة لليوم، أما مواضع الإجابات فتتبدل)
+    L = L.map(x => { const t = String((x.o || [])[0] || ""); if (!x.o || x.o.length < 2 || /^(✅|❌)/.test(t)) return x; const r = x.o[x.a], o = x.o.map(v => [Math.random(), v]).sort((p, q) => p[0] - q[0]).map(v => v[1]); return Object.assign({}, x, { o, a: o.indexOf(r) }); });
     G = { g, k, L, i: 0, s: 0, streak: 0, day, t0: Date.now(), end: g === "race" ? Date.now() + 60e3 : 0 };
     if (G.end) TM = setInterval(() => { const el = document.getElementById("tptime"); if (!el) return clearInterval(TM); const r = Math.max(0, Math.ceil((G.end - Date.now()) / 1000)); el.textContent = AR(r); el.parentElement.style.setProperty("--p", (r / 60 * 100) + "%"); if (r <= 0) { clearInterval(TM); finish(); } }, 250);
     draw();

@@ -51,13 +51,14 @@ def gen(e, n=60):
         if not r: break
         for x in r.get("r") or []:
             q, o, a, c = (x.get("q") or "").strip(), [str(y).strip() for y in (x.get("o") or [])], str(x.get("a") or "").strip(), x.get("c")
+            random.shuffle(o)  # لا يستقر الجواب الصحيح في موضع واحد
             if not q or len(o) != 4 or a not in o or len(set(o)) != 4 or c not in tags or nz(q) in have: continue
             if re.search(r"(في|حسب|ذكر|يرى) (هذا )?(الكتاب|النص|المؤلف|الكاتب|المقال|الموضع)", q): continue
             h, m = tags[c], owner[c]; have.add(nz(q))
             bank.setdefault("qs", []).append({"id": hashlib.md5(q.encode()).hexdigest()[:8], "l": max(1, min(3, int(x.get("l") or 1))), "q": q, "o": o, "a": a, "e": (x.get("e") or "").strip(),
                                               "m": m["id"], "mt": m["t"], "s": {"b": h[1], "p": h[4], "t": h[2], "a": h[3]}})
             added += 1
-        bank.update({"k": k, "n": e[1], "upd": str(datetime.date.today())}); jw(bp, bank)
+        bank.update({"k": k, "n": e[1], "upd": str(datetime.date.today()), "ok": 1, "auto": 1}); jw(bp, bank)  # اعتماد ونشر تلقائيان (طلب المدير، ٢١ نوفمبر)؛ وللإدارة إخفاء أي سؤال
         print("  %s: +%d (المجموع %d)" % (k, added, len(bank["qs"])), flush=True)
     return added, bool(ms) or added < n and r is None  # بقيت مسائل أو نفدت الحصة
 

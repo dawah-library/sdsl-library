@@ -17,7 +17,9 @@
       الكتب التربوية (التربية والأسرة والتزكية والآداب، أو عنوانها يدل عليها) ← الطلائع بمراحلها (للصغار t1–t2، وإلا t3–t4).
   - الخدمات كلها بعد جاهزية النص، لكل كتاب أيًّا كان موضوعه: الخرائط الذهنية، والاختبارات والمختصرات، والكراسة، والصوت (لكتب الدعوة)،
     والتدقيق (للمكتبة العامة). وتُعلَّم الكتب المرفوعة مصوّرةً بأولوية في هذه الطوابير.
-التقرير: tools/enrich-new.md. مفتاح الإيقاف: enrich في «الخدمات والمفاتيح».
+وبطلب المدير (٢١ نوفمبر): الكتب المرفوعة حديثًا وحدها تدخل طوابير خدمات الكتب (التشجير، والاختبارات والمختصر، والكراسة والصوت لكتب الدعوة،
+وتمييز المتن في كتب الشروح)، وتنمو بها الموسوعات (tools/mawsua.py grow)؛ أما ما سبق رفعه فيبقى بالاختيار اليدوي (قرار ٢٠ نوفمبر).
+التقرير: tools/enrich-new.md. مفتاح الإيقاف: enrich في «الخدمات والمفاتيح» (وenrich_tts للصوت، وenrich_kurrasa للكراسة).
 """
 import datetime, json, os, re
 
@@ -95,7 +97,17 @@ def main():
             for v in vs: v["tags"] = sorted(set(v.get("tags") or []) | {"tala:t3", "tala:t4"})
             changed = True; did.append("سلّم قراءة الطلائع الكبار")
         scan = any(v.get("ocr") or v.get("pdf") or v.get("img") for v in vs)  # كتاب مصوّر: تُفعَّل خدماته كلها أيًّا كان موضوعه
-        # الخرائط الذهنية والمختصرات والاختبارات والكراسات والصوتيات لا تُضاف تلقائيًا (قرار المدير ٢٠ نوفمبر): تختار الإدارة الكتب يدويًّا
+        # خدمات الكتب للكتب المرفوعة حديثًا (طلب المدير، ٢١ نوفمبر ٢٠٢٦: «تفعيل خدمات الكتب على الكتب التي ترفع حديثًا مع ربطها بالموقع وأقسامه»):
+        # الكتاب الجديد وحده يدخل طوابير التشجير والاختبارات والمختصرات والكراسة (ولكتب الدعوة الصوت)؛ وقرار ٢٠ نوفمبر باقٍ على ما سبق رفعه (لا إعادة للطوابير القديمة).
+        # المفاتيح: enrich يوقفها كلها، وenrich_tts يوقف الصوت وحده، وenrich_kurrasa الكراسة وحدها.
+        if svc and not b.get("noauto"):
+            bid = vs[0]["id"]
+            if addq(os.path.join(D, "tashjir", "_queue.json"), {"id": bid, "auto": 1, "new": 1}): did.append("التشجير")
+            if addq(os.path.join(D, "study-queue.json"), {"id": bid, "do": ["quiz", "summ"], "auto": 1, "new": 1}): did.append("الاختبارات والمختصر")
+            if col == "dawah" and sw.get("enrich_kurrasa") is not False and addq(os.path.join(D, "kurrasa", "_queue.json"), {"id": bid, "auto": 1, "new": 1}): did.append("الكراسة")
+            if col == "dawah" and sw.get("enrich_tts") is not False and addq(os.path.join(D, "audio", "_queue.json"), {"id": bid, "new": 1}): did.append("الصوت")
+            if (b.get("sharh") or b.get("matn") or re.match(r"\s*(شرح|تعليق|التعليق)", t)) and addq(os.path.join(D, "sharh-mark", "_queue.json"), {"id": bid}): did.append("تمييز المتن من الشرح")
+            if col == "dawah": did.append("الموسوعات (تُطابَق مسائلها بالكتاب في جولة mawsua.yml اليومية)")
         if col == "turath":
             if addq(os.path.join(D, "proof", "_queue.json"), {"id": vs[0]["id"]}): did.append("التدقيق")
             did.append("ربط مصورة الطبعة (يوميًّا)")
