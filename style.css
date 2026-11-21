@@ -1823,6 +1823,15 @@ details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summar
 .tvc figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 12px}
 .tvrules ul{padding-inline-start:1.2em;line-height:1.9}.tvform label{display:flex;flex-direction:column;gap:4px;margin:6px 0}.tvform label.inl{flex-direction:row;align-items:center}
 .talabk{border-bottom:1px dashed var(--line);padding:8px 0}.talabk .ok{color:#2e7d32;font-weight:700}
+/* الحديث: خدمات النص (الخط والحجم واللون وتباعد الأسطر) والمطلع بلفظ الرواية */
+.hdm,.hrh .hdm,.hdone .hdm{font-family:var(--hdf,inherit);color:var(--hdc,inherit);line-height:var(--hdlh,inherit)}
+.hrh .hdm{font-size:calc(1em * var(--hdz,1))}.hdone .hdm{font-size:calc(1.25em * var(--hdz,1))}
+.hlead{color:var(--hdc,#3b5b4f);opacity:.92}
+.hdtxtp{display:grid;gap:12px}.hdtxtp label{display:flex;flex-direction:column;gap:4px}.hdtxtp label.inl{flex-direction:row;align-items:center;gap:8px}
+.hdtxtp fieldset{border:0;padding:0;margin:0}.hdcols{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hdcol{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--sf);cursor:pointer;font-weight:700}.hdcol.on{outline:3px solid var(--ac);outline-offset:2px}
+.hdcols input[type=color]{width:40px;height:34px;border:0;background:none;padding:0}
+.hdtxtprev{font-family:var(--hdf,Amiri),serif;font-size:calc(1.2em * var(--hdz,1));color:var(--hdc,inherit);line-height:var(--hdlh,2);background:var(--sf);border-radius:10px;padding:10px 12px;margin:0}
 
 /* الحديث: نص الأحاديث أولًا والأدوات تحته */
 .hrbelow,.hdtoolsb{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line,#ddd)}

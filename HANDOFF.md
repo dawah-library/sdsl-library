@@ -538,6 +538,8 @@
 - **الطلائع:** نموذج اشتراك (اسم، قسم، عمر، صورة)، وتمييز tala-b/tala-g، وfreshPick وأنشطة أسبوعية دوّارة، وTSFX.speak (سرعة/صوت/تقسيم) و٣٤ عبارة جديدة في clips.json، وtools/tala-bank.py + tala-bank.yml (مسودات تعتمدها الإدارة)، وtalavid.js (#/talaea/video) مع book-video.py (tala-<قصة> أو نص حر، TALA_AGE، SAFE_KIDS). docs/tala-media.md.
 - **الرفع والمفاتيح:** progress.py readiness() ← progress.json ready (لافتة الإدارة وبطاقة #/ops وتنبيه تليجرام عند تغيّر المستوى)؛ gkeys._rot (إزاحة لكل مهمة) وgkeys.Pool (دوران وفاصل وتهدئة) في tashjir.gemini وcurate.gemini وtts. docs/upload-readiness-keys.md.
 - **يُتابَع:** تشغيل voice-clips.yml (يعمل آليًّا عند تغير clips.json في main)، وأول جولة tala-bank.yml ثم اعتماد أسئلتها، وطلب أول مقطع مرئي للطلائع ومراجعة مسودته.
+- **(تتمة ٢١ نوفمبر)** تليجرام مربوط (‎@dawahlibrary_alerts_bot‎، الرمز في Cloudflare Pages، المحادثة في app_settings.telegram_chat)، وإشعارات الجديد بـ tools/notify-new.py (الركن الإخباري، الفيديوهات، الموسوعات). موازنة المفاتيح في ocr-pdf.py وtashkeel.py (تهدئة المرفوض والانتقال الفوري). الحديث: خدمات النص (hd_txt)، والمطلع بلفظ الرواية (tools/hadith-lead.py ← l<i>.json، ٦٤٪)، وتشكيل الأحاديث كلها (hadith-tashkeel.yml ثلاث جولات يوميًّا، الحالة data/hadith/k/_tashkeel.json). لوحة «حالة النشر» تقرأ من cf-deploy لا من Vercel (الحساب موقوف). بنك الطلائع يحفظ بعد كل مصدر بمهلة ٤٥ دقيقة.
+- **يُتابَع:** اكتمال تشكيل الأحاديث (نحو أسبوعين)؛ تنقية متون البخاري من تعليق المحقق (مهمة مستقلة إن طلبها المدير)؛ رفع تغطية المطلع في ابن أبي شيبة وعبد الرزاق (٢١٪).
 
 ## ٢١ نوفمبر: الدفعة الثانية من طلبات المدير (claude/happy-ride-kzumv6)
 - التفاصيل: docs/updates-2026-11-21b.md وdocs/mawsua.md (تحديث ٢١ نوفمبر).

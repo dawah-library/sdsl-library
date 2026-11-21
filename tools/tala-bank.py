@@ -15,6 +15,9 @@ import datetime, hashlib, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE); D = os.path.join(ROOT, "data"); OUT = os.path.join(D, "tala-bank.json")
 import tashjir as T  # noqa: E402
+import time  # noqa: E402
+T0 = time.time(); MIN = float(os.environ.get("TB_MINUTES", "45"))
+T.DEADLINE[0] = T0 + (MIN - 20) * 60  # tashjir.gemini يتوقف عند DEADLINE + ٢٠ دقيقة: فيبقى وقت للحفظ قبل مهلة المهمة
 
 jl = lambda p, d=None: json.load(open(p, encoding="utf-8")) if os.path.exists(p) else d
 DIA = re.compile(r"[ً-ْٰـ]")
@@ -92,7 +95,11 @@ def main():
     seen = set(B.get("seen") or []); have = {x["id"] for x in B["items"]}
     src = sources(cat, seen); print("مصادر جديدة:", len(src), flush=True)
     added, rej, done = 0, {}, 0
+    def save():
+        B["seen"] = sorted(seen); B["upd"] = str(datetime.date.today())
+        json.dump(B, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
     for sid, title, au, txt, link, g0 in src[:mx]:
+        if time.time() - T0 > (MIN - 8) * 60: break  # المهلة: يُحفظ ما أُنجز، والباقي للجولة القادمة
         r = T.gemini(PROMPT.format(title=title, au=("، " + au) if au else "", n=8, text=txt))
         if r is None: break  # نفدت الحصة: يبقى المصدر للجولة القادمة
         done += 1; seen.add(sid)
@@ -106,9 +113,8 @@ def main():
             if it["t"] == "mc": x["a"] = it["a"].strip(); x["o"] = [str(o).strip() for o in it["o"]][:3]
             else: x["v"] = bool(it["v"])
             B["items"].append(x); have.add(iid); added += 1
-    B["seen"] = sorted(seen)
-    B["upd"] = str(datetime.date.today())
-    json.dump(B, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+        save()  # بعد كل مصدر: لا يضيع المنجز إن انتهت المهلة أو تعثر الخادم
+    save()
     msg = "🌟 <b>بنك أسئلة الطلائع</b>: قُرئ %d مصدرًا جديدًا (من %d)، وأضيف %d سؤالًا مسودة للاعتماد%s. المعتمد %d، والمسودات %d." % (
         done, len(src), added, (" (رُفض %s)" % "، ".join("%s %d" % kv for kv in rej.items())) if rej else "", sum(1 for x in B["items"] if x.get("ok")), sum(1 for x in B["items"] if not x.get("ok") and not x.get("x")))
     print(msg); open(os.path.join(ROOT, ".tb-report.txt"), "w", encoding="utf-8").write(msg)

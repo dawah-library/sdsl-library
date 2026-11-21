@@ -57,6 +57,7 @@ jobs:
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           TB_MAX: ${{ github.event.inputs.max || '20' }}
+          TB_MINUTES: "45"
         run: python3 tools/tala-bank.py
       - name: الحفظ
         if: always()
