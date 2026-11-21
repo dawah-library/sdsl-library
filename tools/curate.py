@@ -12,8 +12,9 @@
 import datetime, hashlib, json, os, re, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+from gkeys import keys as _gkeys, Pool as _Pool  # noqa: E402  (tools/gkeys.py)
 KEYS = _gkeys("bulk")
+POOL = _Pool(KEYS)
 MODEL = os.environ.get("CUR_MODEL", "gemini-flash-latest")
 BUDGET = [int(os.environ.get("CUR_MAX", "80"))]
 # حد زمني يترك وقتًا للحفظ قبل مهلة المهمة (حين تتزاحم المهام على حصة Gemini نفسها)
@@ -24,14 +25,16 @@ REPORT = []
 
 
 def gemini(prompt):
+    """موزَّع على المفاتيح (gkeys.Pool): دوران وفاصل أدنى وتهدئة المرفوض بحد الدقيقة بدل الانتظار عليه."""
     if BUDGET[0] <= 0 or time.time() > DEADLINE:
         return None
-    for k in range(len(KEYS)):
-        if k in EXH:
-            continue
-        for attempt in range(4):
+    for rnd in range(6):
+        for k in POOL.order(EXH):
+            if not POOL.ready(k):
+                continue
             if time.time() > DEADLINE:
                 return None
+            POOL.pace(k)
             try:
                 body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json", "maxOutputTokens": 16000}}).encode()
                 req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body, headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
@@ -42,11 +45,16 @@ def gemini(prompt):
                 return json.loads(re.sub(r"^```json|```$", "", t.strip()))
             except urllib.error.HTTPError as e:
                 msg = e.read()[:300].decode("utf-8", "ignore")
-                if e.code == 429 and re.search(r"day|PerDay", msg, re.I):
-                    EXH.add(k); break
-                time.sleep(15 * (attempt + 1))
+                if e.code == 429 and re.search(r"day|PerDay", msg, re.I) and not re.search(r"PerMinute", msg):
+                    EXH.add(k); continue
+                POOL.cool(k, 45 if e.code == 429 else 15)
             except Exception:
-                time.sleep(5 * (attempt + 1))
+                POOL.cool(k, 10)
+        if len(EXH) >= len(KEYS):
+            return None
+        w = POOL.wait(EXH)
+        if w > 0:
+            time.sleep(min(w, 60))
     return None
 
 
@@ -77,14 +85,64 @@ def locate(text, start, end):
     if b < 0:
         return None
     ia, ib = idx[a], idx[min(len(idx) - 1, b + len(e1) - 1)] + 1
-    # التوسيع إلى حدود الجمل
-    pre = text.rfind("\n", 0, ia)
-    if ia - pre < 60 and pre >= 0:
-        ia = pre + 1
-    m = re.search(r"[.؟!»]", text[ib:ib + 220])
+    # التوسيع إلى حدود الجمل: البداية من أول الجملة (بعد آخر نقطة أو علامة استفهام أو سطر جديد قبلها في حدود ٢٥٠ حرفًا)،
+    # والنهاية إلى آخر الجملة؛ فلا يبدأ المنشور ولا ينتهي في منتصف فكرة
+    m0 = list(re.finditer(r"[.؟!:]\s|\n", text[max(0, ia - 250):ia]))
+    if m0:
+        ia = max(0, ia - 250) + m0[-1].end()
+    elif ia <= 250:
+        ia = 0
+    m = re.search(r"[.؟!»)](?=\s|$)", text[ib:ib + 260])
     if m:
         ib = ib + m.end()
-    return text[ia:ib].strip()
+    return polish(text[ia:ib])
+
+
+# ---------- جودة المنشور (طلب المدير، ٢١ نوفمبر ٢٠٢٦): جمل تامة المعنى واضحة السياق ذات فائدة، بلا مقدمات ولا مقتطفات مبتورة ----------
+FN_MARK = re.compile(r"\s*(\(¬?\d{1,3}\)|\[\d{1,3}\]|¬\d{1,3}|\(\*+\))")
+OPEN_BAD = re.compile(r"^(و|ف|ثم|أو|أم|بل|لكن|لكنه|ولكن|حتى|إذ|إذن|أي|يعني|وهذا|وهذه|وذلك|فهذا|فهذه|فذلك|هذا|هذه|ذلك|تلك|هؤلاء|هو|هي|هم|وهو|وهي|وهم|فهو|فهي|"
+                      r"كما|كذلك|لذلك|لذا|ولهذا|فلهذا|ولذلك|وعليه|وعلى هذا|فإن|فإنه|فإنها|وإن|وإنما|إلا|غير أن|مع أن|والثاني|والثالث|الثاني|الثالث|ثانيًا|ثالثًا|"
+                      r"أيضًا|أيضا|وأيضًا|منها|ومنها|فيه|فيها|عليه|عليها|قوله|وقوله|قلت|قالوا|المسألة الثانية)(\s|،|:)")
+INTRO = re.compile(r"^(الحمد لله|إن الحمد لله|بسم الله الرحمن|أما بعد|وبعد|مقدمة|تمهيد|المقدمة|فهذا كتاب|فهذه رسالة|هذا الكتاب|في هذا الكتاب|في هذه الرسالة|"
+                   r"نبدأ|نستكمل|نواصل|نكمل|كنا قد|كنا نتكلم|توقفنا|في الدرس|في المحاضرة|في اللقاء|في الحلقة|الدرس|المحاضرة|اللقاء|الحلقة|"
+                   r"السلام عليكم|أيها الإخوة|أيها الأحبة|إخواني|أحبتي|معاشر|الفصل|الباب|المبحث|المطلب|فصل|باب)")
+REFS = re.compile(r"كما تقدم|كما سبق|سبق ذكره|سبق بيانه|كما سيأتي|سيأتي بيانه|سيأتي إن شاء الله|المذكور آنفًا|المذكورة آنفًا|انظر ص|انظر:? ?الصفحة|في الصفحة السابقة|في الحلقة السابقة|في المقال السابق|المذكور أعلاه|السابق ذكره")
+CLOSE_OK = re.compile(r"[.؟!»)\]﴿﴾»\"]\s*(اهـ|اه|ا\.هـ)?\.?\s*$")
+
+
+def polish(t):
+    """تنظيف المقطع: رموز الحواشي ونجومها، والفراغات والأسطر الزائدة، وعلامات القطع في طرفيه."""
+    t = FN_MARK.sub("", t or "")
+    t = re.sub(r"^[\s…\.\-–—،:؛]+", "", t); t = re.sub(r"[\s…]+$", "", t)
+    t = re.sub(r"[ \t]+", " ", t); t = re.sub(r"\n{3,}", "\n\n", t)
+    if t.startswith("(") and t.count("(") > t.count(")"): t = t[1:]
+    return t.strip()
+
+
+def strip_fatwa_intro(t):
+    """جواب الفتوى بلا خطبة الحاجة («الحمد لله، والصلاة والسلام على رسول الله، أما بعد؛»)."""
+    t = re.sub(r"^.{0,40}?(الجواب|الإجابة)\s*:?\s*", "", t, flags=re.S) if re.match(r"^.{0,40}?(الجواب|الإجابة)\s*:", t, re.S) else t
+    t2 = re.sub(r"^\s*الحمد لله[^.؛]{0,120}?(أما بعد|وبعد)\s*[؛:،]?\s*", "", t, flags=re.S).strip()
+    if t2 != t.strip(): t2 = re.sub(r"^ف(?=إن|إنه|إنها|إنما|لا |يجوز|يجب|الواجب|الصحيح|الراجح)", "", t2)  # «أما بعد؛ فإن…» ← «إن…»
+    return t2
+
+
+def quality(t):
+    """None إن صلح المقطع منشورًا مستقلًا، وإلا سبب رفضه."""
+    if not t: return "فارغ"
+    w = len(re.findall(r"[\u0621-\u064A]+", t))
+    if w < 25: return "قصير"
+    if w > 300: return "طويل"
+    head = DIAC.sub("", t[:60]).lstrip("«\"(")
+    if INTRO.match(head): return "مقدمة"
+    if OPEN_BAD.match(head): return "يبدأ بربط أو إحالة"
+    if REFS.search(DIAC.sub("", t)): return "إحالة إلى سياق"
+    if not CLOSE_OK.search(t): return "مبتور الآخر"
+    for a, b in ("()", "«»", "[]", "﴿﴾"):  # فرق واحد يُحتمل (اختلاف علامات النقل في المصدر)، وأكثر منه قطع داخل نقل
+        if abs(t.count(a) - t.count(b)) > 1: return "قوس مفتوح"
+    if re.search(r"[(«﴿\[][^)»﴾\]]{0,80}$", t) and not re.search(r"[)»﴾\]]", t[-80:]): return "قوس مفتوح في آخره"
+    if len(re.findall(r"\d", t)) > max(12, len(t) // 25): return "أرقام وفهارس"
+    return None
 
 
 def fp(t):
@@ -93,14 +151,20 @@ def fp(t):
 
 PICK = """أنت محرر علمي في مكتبة الدعوة السلفية. من النص الآتي (من كتاب «{title}» لـ{author}، والصفحات معلّمة بـ[ص N])
 اختر ما يصلح «منشورًا» مستقلًا يفيد القارئ وحده دون سياقه: فائدة علمية تامة، أو شرح عبارة أو مصطلح، أو تعليق على أمر، أو تنبيه، أو قاعدة.
-الشروط: تام المعنى من أوله إلى آخره، لا يبدأ بضمير يعود على ما قبله ولا بأداة ربط معلّقة، ولا ينتهي في منتصف فكرة؛ بين ٣٠ و٢٢٠ كلمة؛ لا تختر فهارس ولا مقدمات شكلية ولا عناوين.
-أعد JSON: {{"items": [ {{"type": "فائدة|شرح|تعليق|تنبيه|قاعدة", "page": رقم_الصفحة, "start": "أول ٨ كلمات من المقطع بلفظها حرفيًا", "end": "آخر ٨ كلمات من المقطع بلفظها حرفيًا"}} ]}}
-اختر من ٠ إلى {n} مقاطع فقط، والأجود أولًا. إن لم يوجد ما يستحق فأعد قائمة فارغة.
+الشروط الملزمة:
+- جمل تامة المعنى واضحة السياق: يبدأ بأول جملة وينتهي بنهاية جملة، ويُفهم مغزاه كاملًا دون ما قبله وما بعده.
+- لا يبدأ بضمير أو اسم إشارة يعود على ما قبله (هذا، ذلك، هو…) ولا بأداة ربط معلّقة (و، ف، ثم، لكن، كما، لذلك، ومنها…)، ولا يحيل إلى ما سبق أو سيأتي.
+- استبعد: المقدمات وخطب الحاجة والافتتاحيات والترحيب، وتمهيد الدروس («في الدرس الماضي»، «نستكمل»)، والفهارس والعناوين، وتراجم الإسناد المجردة، والمقتطفات المبتورة التي تخلّ بالمغزى.
+- ذو فائدة علمية ظاهرة (حكم، قاعدة، معنى، تنبيه، توجيه تربوي، رد شبهة)؛ بين ٣٠ و٢٢٠ كلمة.{extra}
+أعد JSON: {{"items": [ {{"type": "فائدة|شرح|تعليق|تنبيه|قاعدة|فتوى", "page": رقم_الصفحة, "start": "أول ٨ كلمات من المقطع بلفظها حرفيًا", "end": "آخر ٨ كلمات من المقطع بلفظها حرفيًا", "score": درجة الفائدة من ١ إلى ٥}} ]}}
+اختر من ٠ إلى {n} مقاطع فقط، والأجود أولًا، ولا تختر ما درجته دون ٤. إن لم يوجد ما يستحق فأعد قائمة فارغة.
 
 {text}"""
 
-CHECK = """قيّم كل مقطع منقول من كتاب: هل هو تام المعنى مستقل يُفهم وحده، مفيد علميًا، لا يحتاج سياقًا قبله ولا بعده؟
-أعد JSON: {{"r": [ {{"i": رقمه, "ok": true أو false}} ]}}
+CHECK = """أنت مدقق علمي. قيّم كل مقطع منقول من كتاب أو فتوى أو مقال ليُنشر منشورًا مستقلًا:
+١) تام المعنى: أوله أول جملة وآخره آخر جملة، لا بتر يخل بالمغزى. ٢) واضح السياق: يُفهم وحده دون ما قبله وما بعده، لا إحالة فيه.
+٣) ليس مقدمة ولا افتتاحية ولا تمهيدًا لدرس ولا فهرسًا. ٤) ذو فائدة علمية ظاهرة. ٥) لا يوهم خلاف مقصود قائله إذا اقتُطع.
+أعد JSON: {{"r": [ {{"i": رقمه, "ok": true فقط إن تحققت الخمسة, "why": "سبب قصير إن كان false"}} ]}}
 
 {items}"""
 
@@ -128,7 +192,17 @@ def art_pages(x):
 
 def dawah_articles():
     """مقالات مكتبة الدعوة الصالحة للانتقاء: غير مخفية ولا إثرائية ولا فتاوى ولا بيانات، ولها نص كافٍ؛ الأحدث أولًا."""
-    out = [x for x in art_index() if not x.get("h") and x.get("col") != "ithra" and not x.get("fa") and x.get("tp") not in ("at16", "at17")]
+    out = [x for x in art_index() if not x.get("h") and x.get("col") not in ("ithra", "turath") and x.get("f") and not x.get("fa") and not re.match(r"(أسئلة|الاستفتاء|من فقه الواقع)", x.get("c") or "") and x.get("tp") not in ("at16", "at17")]
+    return sorted(out, key=lambda x: x.get("d") or "", reverse=True)
+
+
+FAT_HINT = """
+- هذا نص فتوى (سؤال وجواب): اختر من الجواب وحده ما يحمل الحكم وتعليله تامًّا، بلا خطبة الحاجة («الحمد لله… أما بعد»)، وبلا نص السؤال؛ فالسؤال يُعرض عنوانًا للمنشور."""
+
+
+def dawah_fatwas():
+    """فتاوى الدعوة السلفية (صوت السلف) غير المخفية، الأحدث أولًا."""
+    out = [x for x in art_index() if not x.get("h") and x.get("col") not in ("ithra", "turath") and x.get("f") and (x.get("fa") or re.match(r"(أسئلة|الاستفتاء|من فقه الواقع)", x.get("c") or ""))]
     return sorted(out, key=lambda x: x.get("d") or "", reverse=True)
 
 
@@ -153,12 +227,39 @@ def fawaid(cat):
     keep = []
     for it in F["items"]:
         sh = shard(it["b"])
-        if sh and 0 < it["p"] <= len(sh["pages"]) and DIAC.sub("", it["text"])[:40] in DIAC.sub("", (sh["pages"][it["p"] - 1] or "") + (sh["pages"][it["p"]] if it["p"] < len(sh["pages"]) else "")):
+        if sh and 0 < it["p"] <= len(sh["pages"]) and re.sub(r"\s+", " ", DIAC.sub("", polish(it["text"])))[:40] in re.sub(r"\s+", " ", DIAC.sub("", FN_MARK.sub("", (sh["pages"][it["p"] - 1] or "") + "\n" + (sh["pages"][it["p"]] if it["p"] < len(sh["pages"]) else "")))):
             keep.append(it)
     dropped = len(F["items"]) - len(keep)
+    # فحص الجودة على المجدول والمنشور سابقًا: ما لم يستوف الشروط يُخفى (hide="q" بسببه) ولا يُحذف؛ وللإدارة إظهاره
+    hid = 0
+    for it in keep:
+        if it.get("hide") or it.get("edited"): continue  # ما عدّلته الإدارة بيدها معتمد
+        t2 = polish(it["text"])
+        if t2 != it["text"] and t2: it["text"] = t2
+        why = quality(it["text"])
+        if why: it["hide"] = "q"; it["why"] = why; hid += 1
     F["items"] = keep
-    new = []
-    half = BUDGET[0] // 2  # نصف الحصة للكتب ونصفها للمقالات
+    new, rej = [], {}
+
+    def take(r, sid, pages, p0, n, kind, q=None):
+        """يقتطع المقاطع المختارة بحروفها من المصدر ويمررها على فحص الجودة الآلي قبل جولة التدقيق."""
+        for x in (r or {}).get("items", [])[:n]:
+            try: sc = float(x.get("score") or 4)
+            except (TypeError, ValueError): sc = 4
+            if sc < 4: rej["درجة الفائدة"] = rej.get("درجة الفائدة", 0) + 1; continue
+            try: pg = int(x.get("page") or p0)
+            except (TypeError, ValueError): pg = p0
+            pg = max(1, min(len(pages), pg))
+            src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
+            if kind == "f": src = strip_fatwa_intro(src)
+            t = locate(src, x.get("start", ""), x.get("end", ""))
+            if kind == "f" and t: t = strip_fatwa_intro(t)
+            why = quality(t) or (None if t and 150 <= len(t) <= 1800 else "الطول")
+            if why: rej[why] = rej.get(why, 0) + 1; continue
+            it = {"id": fp(sid + t), "b": sid, "p": pg, "t": "فتوى" if kind == "f" else x.get("type", "فائدة"), "k": kind, "text": t}
+            if q: it["q"] = q
+            new.append(it)
+    half = BUDGET[0] * 3 // 5  # الكتب أولًا (٤٠٪ من الحصة)، ثم الفتاوى والمقالات مناصفة
     for b in books:
         sh = shard(b["id"])
         if not sh:
@@ -171,46 +272,39 @@ def fawaid(cat):
             done = z
             if len(re.sub(r"\s", "", text)) < 600:
                 continue
-            r = gemini(PICK.format(title=b.get("setTitle") or b["title"], author=au.get(b.get("authorId"), ""), n=3, text=text[:40000]))
+            r = gemini(PICK.format(title=b.get("setTitle") or b["title"], author=au.get(b.get("authorId"), ""), n=3, extra="", text=text[:40000]))
             if r is None:  # تعذر الطلب (نفاد الحصة أو المهلة): لا تُعدّ هذه الصفحات مقروءة، ويُستأنف منها لاحقًا
                 done = a
                 BUDGET[0] = min(BUDGET[0], 2)
                 break
-            for x in r.get("items", [])[:3]:
-                pg = int(x.get("page") or a + 1)
-                src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
-                t = locate(src, x.get("start", ""), x.get("end", ""))
-                if t and 150 <= len(t) <= 1600:
-                    new.append({"id": fp(b["id"] + t), "b": b["id"], "p": pg, "t": x.get("type", "فائدة"), "text": t})
+            take(r, b["id"], pages, a + 1, 3, "b")
         F["done"][b["id"]] = done
         if BUDGET[0] <= half:
             break
-    # المقالات: كل مقال طلب واحد، الأحدث أولًا، ولا يُعاد مقال قُرئ
-    nart = 0
-    for x in dawah_articles():
-        if BUDGET[0] <= 2 or F["done"].get(x["id"]):
-            continue
-        pages = art_pages(x)
-        text = "\n".join("[ص %d]\n%s" % (i + 1, re.split(r"^\s*_{4,}\s*$", pg or "", flags=re.M)[0][:9000]) for i, pg in enumerate(pages[:6]))
-        F["done"][x["id"]] = 1
-        if len(re.sub(r"\s", "", text)) < 900:
-            continue
-        r = gemini(PICK.format(title=x["t"], author=au.get(x.get("a"), ""), n=2, text=text[:40000]))
-        if r is None:
-            F["done"].pop(x["id"], None); break
-        nart += 1
-        for it in r.get("items", [])[:2]:
-            pg = int(it.get("page") or 1)
-            src = "\n".join(pages[max(0, pg - 1):min(len(pages), pg + 1)])
-            t = locate(src, it.get("start", ""), it.get("end", ""))
-            if t and 150 <= len(t) <= 1600:
-                new.append({"id": fp(x["id"] + t), "b": x["id"], "p": pg, "t": it.get("type", "فائدة"), "text": t})
+    # الفتاوى والمقالات: كل مادة طلب واحد، الأحدث أولًا، ولا تُعاد مادة قُرئت؛ الفتاوى إلى نصف الباقي ثم المقالات
+    nart, nfat = 0, 0
+    mid = max(2, BUDGET[0] // 2)
+    for kind, lst in (("f", dawah_fatwas()), ("a", dawah_articles())):
+        for x in lst:
+            if BUDGET[0] <= (mid if kind == "f" else 2) or F["done"].get(x["id"]):
+                continue
+            pages = art_pages(x)
+            text = "\n".join("[ص %d]\n%s" % (i + 1, re.split(r"^\s*_{4,}\s*$", pg or "", flags=re.M)[0][:9000]) for i, pg in enumerate(pages[:6]))
+            F["done"][x["id"]] = 1
+            if len(re.sub(r"\s", "", text)) < (500 if kind == "f" else 900):
+                continue
+            r = gemini(PICK.format(title=x["t"], author=au.get(x.get("a"), ""), n=1 if kind == "f" else 2, extra=FAT_HINT if kind == "f" else "", text=text[:40000]))
+            if r is None:
+                F["done"].pop(x["id"], None); break
+            if kind == "f": nfat += 1
+            else: nart += 1
+            take(r, x["id"], pages, 1, 1 if kind == "f" else 2, kind, q=x["t"] if kind == "f" else None)
     # جولة التدقيق الثانية
     ok = []
     for k in range(0, len(new), 12):
         part = new[k:k + 12]
         rv = gemini(CHECK.format(items="\n\n".join("مقطع %d:\n%s" % (i, x["text"]) for i, x in enumerate(part))))
-        good = {r.get("i") for r in (rv or {}).get("r", []) if r.get("ok")} if rv else set()
+        good = {r.get("i") for r in (rv or {}).get("r", []) if r.get("ok") is True} if rv else set()
         ok += [x for i, x in enumerate(part) if i in good]
     have = {x["id"] for x in F["items"]}
     ok = [x for x in ok if x["id"] not in have]
@@ -227,7 +321,9 @@ def fawaid(cat):
         x["date"] = d.isoformat(); cnt[x["date"]] = cnt.get(x["date"], 0) + 1
         F["items"].append(x)
     json.dump(F, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    REPORT.append("منشورات المشايخ: أضيفت %d فائدة مدققة (سُحبت %d تغيّر نصها)، والمجدول حتى %s" % (len(ok), dropped, d.isoformat()))
+    REPORT.append("منشورات المشايخ: أضيفت %d فائدة مدققة (كتب %d، فتاوى %d، مقالات %d؛ قُرئت %d فتوى و%d مقالًا)، ورُفض آليًّا %d مقطعًا (%s)، وأُخفي %d من السابق لم يستوف الشروط، وسُحبت %d تغيّر نصها؛ والمجدول حتى %s" % (
+        len(ok), sum(1 for x in ok if x.get("k", "b") == "b"), sum(1 for x in ok if x.get("k") == "f"), sum(1 for x in ok if x.get("k") == "a"), nfat, nart,
+        sum(rej.values()), "، ".join("%s %d" % kv for kv in sorted(rej.items(), key=lambda kv: -kv[1])) or "—", hid, dropped, d.isoformat()))
 
 
 QA_PICK = """أنت محرر علمي في مكتبة الدعوة السلفية. من النص الآتي (من «{title}» لـ{author}، والصفحات معلّمة بـ[ص N])

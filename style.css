@@ -1769,3 +1769,57 @@ body.citeplain .cit .cbt{display:inline}body.citeplain .cit .cbx{display:none}
 /* فرق الأقسام (secteams.js) */
 .myteams .mtcard{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--sf);margin-top:10px}.myteams h3{margin:16px 0 8px}.mtsw{display:flex;flex-direction:column;gap:6px}
 .pmteams{margin:8px 0;padding:8px 10px;border:1px dashed var(--line);border-radius:10px}
+/* المنشورات: أوضاع العرض (العام، المستخلصة، فيسبوك) وسؤال الفتوى */
+.pmodes{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}.row.pmodes>.chip{flex:0 0 auto;min-width:0;width:auto;cursor:pointer;font:inherit;font-size:.9rem}
+.pmodes .chip.on,.pmodes .chip[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:transparent}
+.post .pq{margin:0 0 6px;padding:6px 10px;border-inline-start:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);border-radius:6px;font-size:.95em}
+.row.pmodes>.mut{flex:1 1 220px}
+/* الحديث: المتن منفصلًا عن الإسناد، وطريقة التصفح (حديث واحد بالسحب أو عدد في الصفحة) */
+details.hisn{margin:6px 0 4px;border-inline-start:3px solid var(--line);padding-inline-start:10px}
+details.hisn>summary{cursor:pointer;color:var(--mut,#667);font-size:.88rem;list-style:none}
+details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summary{margin-bottom:4px}
+.hisnad{font-size:.92em;line-height:1.9;color:var(--mut,#556);margin:0}
+.hdbrowse{gap:10px;margin:6px 0 10px;font-size:.9rem}.hdbrowse label{display:flex;gap:6px;align-items:center;flex:0 1 auto;min-width:0}.hdbrowse select{max-width:100%}
+.hdchoose{margin:8px 0;padding:12px 14px}.hdchoose .row>.btn{flex:none}
+.hread.one{touch-action:pan-y}.hrh.hrone{padding:18px 16px;min-height:42vh;font-size:1.08em}
+.hrh.hrone .hdm{font-size:1.15em;line-height:2.1}
+.hrone-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;bottom:78px;background:var(--bg);padding:8px 0;z-index:3}
+.hread.one.sw-n{animation:hdswn .25s ease}.hread.one.sw-p{animation:hdswp .25s ease}
+@keyframes hdswn{to{transform:translateX(40px);opacity:.3}}@keyframes hdswp{to{transform:translateX(-40px);opacity:.3}}
+@media (prefers-reduced-motion:reduce){.hread.one.sw-n,.hread.one.sw-p{animation:none}}
+/* جاهزية الرفع */
+.rdyban:empty{display:none}.rdyban{border:1px solid var(--line);border-inline-start:5px solid #999;border-radius:10px;padding:10px 14px;margin:0 0 12px;background:var(--sf)}
+.rdyban.rdy-green{border-inline-start-color:#2e8b57}.rdyban.rdy-yellow{border-inline-start-color:#d39b16}.rdyban.rdy-red{border-inline-start-color:#c0392b}
+.rdyh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.rdyg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 14px;margin-top:8px}.rdyg>div{display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.rdybar{height:7px;background:var(--line);border-radius:6px;overflow:hidden}.rdybar>span{display:block;height:100%;background:var(--ac)}.rdycap{margin:8px 0 0}
+/* الطلائع: تمييز واضح بين البنين والبنات (طلب المدير، ٢١ نوفمبر) — ألوان وزخارف وشريط مختلف لكل قسم */
+.tala.tala-b{--sx1:#1d4ed8;--sx2:#0f766e;--sxbg:#e8f1ff}
+.tala.tala-g{--sx1:#c2185b;--sx2:#7e57c2;--sxbg:#fdeef5}
+.tala.tala-b .talah{background:linear-gradient(90deg,#1d4ed8,#0f766e)!important}
+.tala.tala-g .talah{background:linear-gradient(90deg,#d63384,#8e5cc4)!important}
+.tala.tala-b h2,.tala.tala-b h3,.tala.tala-b .talat{color:#12355b!important}
+.tala.tala-g h2,.tala.tala-g h3,.tala.tala-g .talat{color:#8a1150!important}
+.tala.tala-b{background-image:radial-gradient(circle at 92% 6%,rgba(29,78,216,.10) 0 90px,transparent 91px),radial-gradient(circle at 6% 30%,rgba(15,118,110,.08) 0 60px,transparent 61px)}
+.tala.tala-g{background-image:radial-gradient(circle at 92% 6%,rgba(214,51,132,.10) 0 90px,transparent 91px),radial-gradient(circle at 6% 30%,rgba(142,92,196,.09) 0 60px,transparent 61px)}
+.tala.tala-b .talac{border-radius:14px!important;border-top:4px solid var(--sx1)!important}
+.tala.tala-g .talac{border-radius:26px!important;border-top:4px solid var(--sx1)!important}
+.tala.tala-g .talac i::after{content:" ✿";font-size:.6em;opacity:.55}
+.talahi{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--sxbg,#f3f4f6);border-radius:16px;padding:10px 14px;margin:10px 0}
+.talahi .av{font-size:2.2rem;line-height:1}.talahi>div:not(.row){display:flex;flex-direction:column;flex:1 1 180px}.talahi .row{flex:0 1 auto;gap:6px}.talahi .row>.btn{flex:none}
+.talaregc{border:2px dashed var(--ac)}
+.talareg{display:grid;gap:10px;max-width:520px}.talareg label{display:flex;flex-direction:column;gap:4px}
+.talareg fieldset{border:0;padding:0;margin:0}.talareg legend{margin-bottom:6px}
+.talasex{display:flex;gap:10px}.talasex label{flex:1;flex-direction:row!important;align-items:center;gap:8px;border:2px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer}
+.talasex input{accent-color:var(--ac)}.talasex i{font-style:normal;font-size:1.6rem}
+.talasex .sx-b:has(input:checked){border-color:#1d4ed8;background:#e8f1ff}.talasex .sx-g:has(input:checked){border-color:#d63384;background:#fdeef5}
+.talaav .avs{display:flex;flex-wrap:wrap;gap:6px}.talaav label{flex-direction:row!important}.talaav input{position:absolute;opacity:0}
+.talaav span{font-size:1.7rem;border:2px solid transparent;border-radius:12px;padding:4px 6px;cursor:pointer}.talaav input:checked+span{border-color:var(--ac);background:var(--sf)}
+.talaav input:focus-visible+span{outline:2px solid var(--ac)}
+/* المقاطع المرئية للطلائع */
+.tvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:10px 0}
+.tvc{margin:0;background:var(--sf);border-radius:16px;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.tvc video{width:100%;display:block;background:#000;aspect-ratio:16/9}.tvc video.tall{aspect-ratio:9/16;max-height:70vh}
+.tvc figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 12px}
+.tvrules ul{padding-inline-start:1.2em;line-height:1.9}.tvform label{display:flex;flex-direction:column;gap:4px;margin:6px 0}.tvform label.inl{flex-direction:row;align-items:center}
+.talabk{border-bottom:1px dashed var(--line);padding:8px 0}.talabk .ok{color:#2e7d32;font-weight:700}

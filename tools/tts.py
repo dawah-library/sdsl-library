@@ -344,6 +344,9 @@ def speak_gemini(text, voice, path, style=""):
     لا يعيد مواضع الكلمات، فيُقدَّر توقيت الجمل بنسبة طولها إلى مدة المقطع."""
     import base64, json as _j, urllib.request, tempfile
     keys = [os.environ[k] for k in sorted(os.environ) if k.startswith("GEMINI_API_KEY") and os.environ[k]]
+    try:  # موازنة الحمل: كل مهمة تبدأ بمفتاح مختلف (tools/gkeys.py _rot)
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from gkeys import _rot; keys = _rot(keys)
+    except Exception: pass
     if not keys: raise RuntimeError("لا مفتاح Gemini")
     # النص وحده بلا تعليمات: التعليمات المرسلة مع النص كان الصوت يقرؤها في أول كل مقطع
     prompt = (style + "\n\n" + text) if style else text

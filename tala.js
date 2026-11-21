@@ -5,33 +5,44 @@
 const TALA = (() => {
   const P = "data/tala.json";
   const DEF = { tracks: [["t1", "المستكشفون الصغار", "٥–٨ سنوات • الأساس (المستويان ١–٢)"], ["t2", "براعم المعرفة", "٩–١٢ سنة • الأساس (المستويات العليا)"], ["t3", "رواد العلم", "١٢–١٥ سنة • البنيان (الإعدادية)"], ["t4", "الناشئة", "١٥–١٨ سنة فما فوق • البداية (الثانوية)"]], facts: [], books: {} };
-  let D = null, Q = null;
+  let D = null, Q = null, BANK = null;
+  // بنك الأسئلة المتجدد (tools/tala-bank.py ← data/tala-bank.json): أسئلة من مصادر الموقع الجديدة، تظهر للأطفال بعد اعتماد الإدارة (ok=1)
+  const loadBank = async () => BANK || (BANK = await fetch("data/tala-bank.json").then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })));
+  const bankQZ = (k, sg) => ((BANK || {}).items || []).filter(x => x.ok && x.t === "mc" && (!x.k || x.k.includes(k)) && (!x.g || !sg || x.g === sg)).map(x => [x.q, x.a].concat(x.o || []).concat(x.src ? [] : []));
+  const bankTF = () => ((BANK || {}).items || []).filter(x => x.ok && x.t === "tf").map(x => ({ q: x.q, a: !!x.v, why: x.why || "" }));
   const load = async f => { if (D && !f) return D; try { const r = await fetch(P + (f ? "?fresh=1" : "")); D = Object.assign({}, DEF, r.ok ? await r.json() : {}); } catch (e) { D = Object.assign({}, DEF); } return D; };
   const quran = async () => Q || (Q = fetch("data/quran/quran.json").then(r => r.json()).then(j => j.suras.map(s => ({ n: s.n, name: s.name, ayat: s.ayat.map((a, i) => (i === 0 && s.n !== 1 && s.n !== 9 ? a.replace(/^﻿?بسم الله الرحمن الرحيم\s*/, "") : a.replace(/^﻿/, "")).trim()).filter(Boolean) }))));
   const st = () => (S.tala = S.tala || { stars: 0, done: {} });
   const star = n => { st().stars += n; saveS(); const el = $("#tstars"); if (el) el.textContent = toAr(st().stars); };
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // عدم التكرار (طلب المدير، ٢١ نوفمبر): لكل طفل ولكل لعبة سجل بما عُرض عليه؛ يُختار ما لم يره أولًا، ولا تُعاد الدورة إلا بعد أن يرى الكل
+  const seenOf = ns => { const T = st(), id = (kid() || {}).id || "_"; T.sq = T.sq || {}; T.sq[id] = T.sq[id] || {}; return T.sq[id][ns] = T.sq[id][ns] || []; };
+  const qkey = x => typeof x === "string" ? x.slice(0, 60) : JSON.stringify(x).slice(0, 80);
+  function freshPick(ns, list, n) { const seen = seenOf(ns), sset = new Set(seen), un = list.filter(x => !sset.has(qkey(x)));
+    let out = shuffle(un).slice(0, n); if (out.length < n) { seen.length = 0; out = out.concat(shuffle(list.filter(x => !out.includes(x))).slice(0, n - out.length)); }
+    out.forEach(x => { seen.push(qkey(x)); }); if (seen.length > 600) seen.splice(0, seen.length - 600); saveS(); return out; }
   const kidBooks = k => { const ids = new Set(((D.books || {})[k] || [])); return lib.books.filter(b => !b.hidden && !b.demo && (ids.has(b.id) || (b.tags || []).includes("tala:" + k) || (!k && (b.tags || []).some(t => /^tala(:|$)/.test(t))))); };
   const GAMES = [["ayah", "أكمل الآية", "اختر الكلمة التي تُكمل الآية من سور جزء عمّ", "📖"], ["order", "رتّب الآيات", "رتّب آيات السورة كما في المصحف", "🔢"], ["tf", "صح أم خطأ؟", "ميّز المعلومة الصحيحة من الخاطئة مع الشرح", "✅"], ["memory", "ذاكرة الحروف", "اقلب البطاقات وطابق الحروف المتشابهة", "🧠"], ["adhkar", "أذكار المسلم", "اختر الذكر المناسب لكل موقف من يومك", "🤲"], ["quiz", "مسابقة المعرفة", "أسئلة في العقيدة والسيرة والقرآن تناسب مرحلتك", "🏆"], ["ws", "البحث عن الكلمات", "ابحث عن كلمات مخبأة في شبكة الحروف", "🔍"], ["harakat", "حروف وحركات", "التأسيس اللغوي: اقرأ الحرف بحركته واختر الصحيح", "🔤"], ["word", "ركّب الكلمة", "رتّب حروف كلمة من القرآن الكريم", "🧩"]];
-  const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span>${(typeof TSFX !== "undefined") ? TSFX.btn() : ""}</div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
+  const head = (t, back) => `<div class="tala${((kid() || {}).track || "t2") !== "t4" ? " kids" : ""}${sx() ? " tala-" + sx() : ""}"><div class="talah"><a href="#/talaea" class="talab">🌟 الطلائع</a><span class="mut">${t || ""}</span><span class="tstar">⭐ <b id="tstars">${toAr(st().stars)}</b></span>${(typeof TSFX !== "undefined") ? TSFX.btn() : ""}</div>${back ? `<p><a href="#/talaea">← العودة إلى الطلائع</a></p>` : ""}`;
   // التوجيه بالعمر: إذا اختير ملف طفل لا يظهر له إلا مستواه في المسارات التعليمية والتربوية، إلا إن فتح الوالد كل المستويات من «ركن الوالدين»
   const locked = () => !!(kid() && !st().allst);
   const vis = () => locked() ? D.tracks.filter(t => t[0] === kid().track) : D.tracks;
   const own = k => locked() ? kid().track : k;
   async function show(q, sub) {
     if (q.k && locked() && q.k !== kid().track && /^(track|ladder|manhaj|games)$/.test(sub || "")) q.k = kid().track;
-    await load(); if (typeof TPLAY !== "undefined") TPLAY.font(); SX_ = GEN[q.s] ? q.s : ((kid() || {}).g || "");
+    await load(); await loadBank(); if (typeof TPLAY !== "undefined") TPLAY.font(); SX_ = GEN[q.s] ? q.s : ((kid() || {}).g || "");
     if (sub === "games" && q.g) return game(q.g, q);
     if (sub === "track") { PLc = await plan(); return track(own(q.k || (kid() || {}).track || "t1")); }
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
     if (sub === "parents") return parents();
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     if (sub === "furqan") return furqan(q);
+    if (sub === "video" && typeof TVID !== "undefined") return TVID.view(q, { head, view_, kid, sx });
     if (sub === "qasas" && typeof TQS !== "undefined") return TQS.view(q, { head, view_, star, kid, sx, vis, own, st });
-    const sg = GEN[q.s] ? q.s : "", sq = sg ? "&s=" + sg : "";
+    const sg = GEN[q.s] ? q.s : (q.s === "all" ? "" : ((kid() || {}).g || "")), sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
-      ${sg ? "" : await daily()}
-      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/talaea/qasas"><i aria-hidden="true">📚</i><b>قصص الأنبياء والصحابة والتابعين</b><span>قصص ممتعة لكل مرحلة، وأسئلة وألعاب ونشاط عملي</span></a><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
+      ${regCard()}${kid() ? await daily() : ""}
+      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/talaea/qasas"><i aria-hidden="true">📚</i><b>قصص الأنبياء والصحابة والتابعين</b><span>قصص ممتعة لكل مرحلة، وأسئلة وألعاب ونشاط عملي</span></a><a class="talac game" href="#/talaea/video"><i aria-hidden="true">🎬</i><b>المقاطع المرئية</b><span>قصص وموضوعات علمية في مقاطع مرئية بإخراج يناسب مرحلتك</span></a><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
       ${!locked() || /^t[34]$/.test(kid().track) ? FQ_CARD : ""}
@@ -44,6 +55,25 @@ const TALA = (() => {
       <h3>مكتبة الطلائع</h3><p class="mut">${vis().map(([k, n]) => `<a href="#/talaea/track?k=${k}${sq}">${esc(n)}: ${toAr(autoList(k, sg).length)} مادة</a>`).join(" • ")} — تُضاف تلقائيًّا كل مادة موجّهة لسن ٥–٢٠ من مكتبة الدعوة ومصادر المكتبة.</p>${kidBooks(locked() ? kid().track : "").map(bookCard).join("") || '<div class="note">تُضاف كتب الأطفال وقصصهم هنا قريبًا بإذن الله بعد اختيارها ومراجعتها.</div>'}
       <p class="note">إلى الوالدين: هذا القسم بلا إعلانات ولا روابط خارجية ولا تعليقات أو مراسلة، ونجوم الطفل تُحفظ على هذا الجهاز وحده. نص القرآن الكريم في الألعاب من مصحف المكتبة دون تغيير.</p></div>`);
   }
+  // ---------- التسجيل بالاسم والجنس (طلب المدير، ٢١ نوفمبر): نموذج واضح بدل النوافذ المتتابعة، ويُميَّز به القسم واجهةً ومحتوًى وأنشطة ----------
+  const AVS = { b: ["🦁", "🦅", "🚀", "🐎", "⚽", "🛡️", "🌟", "🐬"], g: ["🌷", "🦋", "🌸", "🕊️", "🌙", "⭐", "🐚", "🍀"] };
+  const ageTrack = age => age <= 8 ? "t1" : age <= 11 ? "t2" : age <= 14 ? "t3" : "t4";
+  const regForm = (x = {}) => `<form class="talareg" data-form="talareg"><input type="hidden" name="id" value="${esc(x.id || "")}">
+    <label>الاسم<input name="name" required maxlength="20" value="${esc(x.name || "")}" placeholder="اكتب اسمك" autocomplete="off"></label>
+    <fieldset class="talasex"><legend>القسم</legend><label class="sx-b"><input type="radio" name="g" value="b"${x.g !== "g" ? " checked" : ""} required><i>🧑‍🎓</i><b>بنين</b></label><label class="sx-g"><input type="radio" name="g" value="g"${x.g === "g" ? " checked" : ""}><i>🌸</i><b>بنات</b></label></fieldset>
+    <label>العمر<select name="age">${Array.from({ length: 16 }, (_, i) => i + 5).map(a => `<option value="${a}"${(x.age || 8) === a ? " selected" : ""}>${toAr(a)} سنوات</option>`).join("")}</select></label>
+    <fieldset class="talaav"><legend>اختر صورتك</legend><div class="avs" data-avs>${AVS[x.g === "g" ? "g" : "b"].map((a, i) => `<label><input type="radio" name="av" value="${a}"${(x.av ? x.av === a : !i) ? " checked" : ""}><span>${a}</span></label>`).join("")}</div></fieldset>
+    <button class="btn p">${x.id ? "حفظ" : "اشترك وابدأ ⭐"}</button></form>`;
+  function regCard() { const k = kid();
+    if (!k) return `<section class="card talaregc"><h3>🌟 اشترك في الطلائع باسمك</h3><p class="mut">سجّل اسمك وقسمك (بنين أو بنات) وعمرك، فيتغير لك القسم: ألوانه، وقدواتك، وأنشطتك ومسابقاتك المناسبة لك، وبطاقة يومية لا تتكرر.</p>${regForm()}<p class="mut" style="font-size:.85rem">تُحفظ البيانات على هذا الجهاز وحده.</p></section>`;
+    const others = kids().filter(x => x.id !== k.id), fem = k.g === "g";
+    return `<section class="talahi"><span class="av">${esc(k.av || (fem ? "🌸" : "🦁"))}</span><div><b>${fem ? "أهلًا بكِ" : "أهلًا بك"} يا ${esc(k.name)} في ${fem ? "زهرات الطلائع" : "فرسان الطلائع"}</b><small class="mut">${esc((D.tracks.find(t => t[0] === k.track) || [])[1] || "")} • ⭐ ${toAr(st().stars)}</small></div>
+      <div class="row">${others.map(x => `<button class="btn s" data-act="talakid" data-id="${x.id}" title="التبديل إلى ${esc(x.name)}">${esc(x.av || "🙂")} ${esc(x.name)}</button>`).join("")}<button class="btn s" data-act="talakidedit">✎ ملفي</button><button class="btn s" data-act="talakidnew">＋ طفل آخر</button></div></section>`; }
+  document.addEventListener("change", e => { const r = e.target; if (r.name !== "g" || !r.closest("[data-form=talareg]")) return; const box = r.closest("form").querySelector("[data-avs]"); if (box) box.innerHTML = AVS[r.value].map((a, i) => `<label><input type="radio" name="av" value="${a}"${!i ? " checked" : ""}><span>${a}</span></label>`).join(""); r.closest("form").classList.toggle("is-g", r.value === "g"); });
+  document.addEventListener("submit", e => { const f = e.target.closest("[data-form=talareg]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
+    const fd = new FormData(f), name = String(fd.get("name") || "").trim().slice(0, 20); if (!name) return; const g = fd.get("g") === "g" ? "g" : "b", age = +fd.get("age") || 8, id = String(fd.get("id") || "");
+    const old = id && kids().find(x => x.id === id), x = Object.assign(old || { id: Date.now().toString(36) }, { name, g, age, track: ageTrack(age), av: String(fd.get("av") || AVS[g][0]) });
+    if (!old) kids().push(x); st().cur = x.id; saveS(); if (typeof closeSheet === "function") closeSheet(); if (typeof TSFX !== "undefined") TSFX.done(); location.hash = "#/talaea"; show({}, ""); }, true);
   const view_ = h => { view(h); if (/class="talawin"/.test(h) && (typeof TSFX !== "undefined")) TSFX.done(); };
   function track(k) {
     const t = D.tracks.find(x => x[0] === k) || D.tracks[0], bs = kidBooks(t[0]), sg = sx(), sq = sg ? "&s=" + sg : "";
@@ -60,21 +90,21 @@ const TALA = (() => {
   // ---------- الألعاب ----------
   let G = null;
   async function game(g, q) {
-    if (typeof TPLAY !== "undefined" && TPLAY.has(g)) { const k = q.k || (kid() || {}).track || "t2", sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); return TPLAY.run(g, q, { k, head, star, kid: kid(), qz: (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : []) }); }
+    if (typeof TPLAY !== "undefined" && TPLAY.has(g)) { const k = q.k || (kid() || {}).track || "t2", sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); return TPLAY.run(g, q, { k, head, star, kid: kid(), fresh: freshPick, qz: (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : [], bankQZ(k, sg)) }); }
     if (g === "ayah" || g === "order") {
       const Qs = await quran(), am = Qs.filter(s => s.n >= 78), sn = +q.s || 0, s = am.find(x => x.n === sn);
       if (!s) return view_(head(g === "ayah" ? "أكمل الآية" : "رتّب الآيات", true) + `<h2 class="talat">${g === "ayah" ? "أكمل الآية" : "رتّب الآيات"}</h2><p>اختر سورة من جزء عمّ:</p><div class="chips">${am.slice().reverse().map(x => `<a class="chip" href="#/talaea/games?g=${g}&s=${x.n}">${esc(x.name.replace(/^سُورَةُ\s*/, ""))}</a>`).join("")}</div></div>`);
       return g === "ayah" ? ayahRound(s, 0, 0) : orderRound(s);
     }
-    if (g === "tf") { const fs = shuffle(D.facts || []).slice(0, 10); if (!fs.length) return view_(head("صح أم خطأ؟", true) + '<div class="note">تُضاف الأسئلة قريبًا.</div></div>'); G = { fs, i: 0, s: 0 }; return tfRound(); }
+    if (g === "tf") { const fs = freshPick("tf", (D.facts || []).concat(bankTF()), 10); if (!fs.length) return view_(head("صح أم خطأ؟", true) + '<div class="note">تُضاف الأسئلة قريبًا.</div></div>'); G = { fs, i: 0, s: 0 }; return tfRound(); }
     const k = q.k || (kid() || {}).track || "t2";
-    if (g === "adhkar") { const n = k === "t1" ? 6 : 10; G = { list: shuffle(ADH).slice(0, n), i: 0, s: 0, n: k === "t1" ? 2 : 3, k }; return adhkar(k); }
-    if (g === "quiz") { const sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); G = { list: shuffle((QZ[k] || QZ.t2).concat(sg ? QZG[sg] : [])).slice(0, 12), i: 0, s: 0, k }; return quiz(k); }
+    if (g === "adhkar") { const n = k === "t1" ? 6 : 10; G = { list: freshPick("adhkar", ADH, n), i: 0, s: 0, n: k === "t1" ? 2 : 3, k }; return adhkar(k); }
+    if (g === "quiz") { const sg = GEN[q.s] ? q.s : ((kid() || {}).g || ""); G = { list: freshPick("quiz:" + k + sg, (QZ[k] || QZ.t2).concat(sg ? QZG[sg] : [], bankQZ(k, sg)), 12), i: 0, s: 0, k }; return quiz(k); }
     if (g === "ws") return wsNew(k === "t1" ? "t2" : k);
     if (g === "memory") return memory(k);
     if (g === "harakat") { G = { i: 0, s: 0 }; return harakat(); }
     if (g === "word") { const Qs = await quran(); const ws = []; Qs.filter(x => x.n >= 93).forEach(x => x.ayat.forEach(a => String(a).split(/\s+/).forEach(w => { const b = w.replace(/[^\u0621-\u064A]/g, ""); if (b.length >= 3 && b.length <= 6 && !/[ٱۜ-ۭ]/.test(w)) ws.push([w, b]); })));
-      G = { ws: shuffle(ws).slice(0, 10), i: 0, s: 0 }; return wordRound(); }
+      G = { ws: freshPick("word", ws, 10), i: 0, s: 0 }; return wordRound(); }
     location.hash = "#/talaea";
   }
 
@@ -125,7 +155,7 @@ const TALA = (() => {
   }
   document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el) return; const a = el.dataset.act;
     if (a === "tdnew") { const kd = kid(); if (!kd) return; const T = st(), k = kd.id + today_(); T.dn = T.dn || {}; T.dn[k] = (T.dn[k] || 0) + 1; saveS(); show({}, ""); }
-    else if (a === "tdsay") { try { const u = new SpeechSynthesisUtterance(el.dataset.t); u.lang = "ar-SA"; u.rate = .8; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (x) { } } });
+    else if (a === "tdsay") { if (typeof TSFX !== "undefined" && TSFX.speak) TSFX.speak(el.dataset.t, { force: 1 }); else try { const u = new SpeechSynthesisUtterance(el.dataset.t); u.lang = "ar-SA"; u.rate = .8; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (x) { } } });
   document.addEventListener("change", e => { const el = e.target.closest("[data-act=tdact]"); if (!el) return; const A = st().act = st().act || {}; if (el.checked) { A[el.dataset.key] = 1; star(2); } else delete A[el.dataset.key]; saveS(); el.closest(".talaa").classList.toggle("on", el.checked); });
   const intro = () => `<details class="card talaintro"><summary><b>🌟 طلائع الدعوة السلفية .. من نحن وماذا نريد؟</b></summary>
     <p>«الدعوة السلفية تحت العشرين وقبل سن الجامعة»: اقتداءً باهتمام النبي ﷺ بهذا السن، «وأن منهم مَن قاد الجيوش كأسامة بن زيد، ومنهم مَن صار عالمًا بل بحرًا في العلم مثل عبد الله بن عباس، أو معلِّمًا للقرآن مثل عبد الله بن مسعود، ومنهم مَن كان عابدًا كعبد الله بن عمر، ومنهم مَن كان خادمًا لدين الله وللرسول ﷺ كأنس بن مالك وزيد بن ثابت».</p>
@@ -185,10 +215,19 @@ const TALA = (() => {
       act: [["📖", "وردي اليومي", "جزء أو نصف جزء يوميًا مع مراجعة المحفوظ"], ["🎯", "مساري العلمي", "يسير في مستوى مبتدئ من «المسارات العلمية» بخطة وتذكير"], ["📝", "مقالة قصيرة", "يكتب مقالة في موضوع قرأه ويعرضها على والده"], ["🧭", "نقاش أسري", "يناقش والده في شبهة معاصرة وجوابها من كتاب «الإلحاد للمبتدئين»"], ["🤝", "تطوع", "ساعتان أسبوعيًا في خدمة نافعة"], ["💻", "مهارة جديدة", "يتعلم مهارة (خط، حاسوب، لغة) ويعرض ما أنجز"]] }
   };
   const actKey = (k, i) => "w" + Math.floor(Date.now() / 6048e5) + ":" + k + ":" + (sx() || "") + ":" + i;
+  // بنك أنشطة إضافي لكل مرحلة (الرابع: b للبنين وحدهم، g للبنات وحدهن) يُدار مع أنشطة المرحلة أسبوعيًّا
+  const XACT = {
+    t1: [["🌱", "سقيا النبتة", "يسقي نبتة البيت ويقول: سبحان الله الذي أنبتها"], ["🧸", "ترتيب الألعاب", "يرتب ألعابه بعد اللعب ويقول: الحمد لله"], ["🤲", "دعاء الوالدين", "يحفظ ﴿رَبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا﴾"], ["🍎", "نعمة اليوم", "يذكر نعمة من نعم الله في الطعام ويشكره"], ["😊", "الابتسامة صدقة", "يبتسم في وجه إخوته ويذكر الحديث"]],
+    t2: [["🕋", "أسماء الله", "يحفظ ثلاثة من أسماء الله الحسنى ومعانيها"], ["📜", "حديث قصير", "يحفظ «الدين النصيحة» ويطبقه مع صديق"], ["🧮", "زكاة صغيرة", "يحسب مع والده مثالًا لزكاة المال"], ["🌙", "أذكار النوم", "يحافظ على أذكار النوم ثلاث ليال"], ["📚", "بطاقة كلمات", "يكتب خمس كلمات جديدة من القرآن ومعانيها"], ["🚲", "رياضة نافعة", "ركض أو سباحة مع أبيه", "b"], ["🧁", "مطبخ أمي", "تعدّ مع أمها طبقًا بسيطًا وتذكر التسمية", "g"]],
+    t3: [["🗣️", "خطبة قصيرة", "يلقي كلمة دقيقتين عن خلق حسن أمام أسرته"], ["📖", "تفسير آية", "يقرأ تفسير آية من «تفسير السعدي» ويلخصه"], ["🕰️", "جدول الوقت", "يرسم جدول يومه بين الدراسة والعبادة والراحة"], ["🧭", "سيرة نبوية", "يقرأ غزوة من السيرة ويستخرج ثلاث فوائد"], ["🎯", "هدف الشهر", "يكتب هدفًا علميًّا لهذا الشهر وخطته"], ["🏹", "الرماية والفروسية", "يتعلم مهارة من مهارات القوة النافعة", "b"], ["🪡", "مهارة يدوية", "تتقن عملًا يدويًّا نافعًا وتهديه لأمها", "g"]],
+    t4: [["🔎", "بحث صغير", "يكتب بحثًا من صفحة في مسألة فقهية مع دليلها"], ["🎙️", "حوار هادف", "يحاور صديقًا في شبهة وجوابها بأدب"], ["🧾", "تلخيص كتاب", "يلخص فصلًا من كتاب في مرحلته ويعرضه"], ["💡", "مبادرة خير", "ينظم مبادرة خير صغيرة مع أصدقائه"], ["🕌", "درس المسجد", "يحضر درسًا علميًّا ويكتب أهم ما فيه", "b"], ["🎓", "حلقة الفتيات", "تحضر حلقة علمية للفتيات وتلخصها", "g"]] };
   const stageCard = (k, sg) => { const x0 = STG[k]; if (!x0) return ""; const A = st().act || {}, G_ = GEN[sg], fem = t => sg === "g" ? String(t).replace(/^ي(?=[\u0621-\u064A])/, "ت").replace(/ (ي)(?=(حافظ|قرأ|كتب|خدم|سمّع|عرب|شارك|مارس|تصدق|رسم|تعلم|ناقش|سير|لقي|رتب))/g, " ت").replace(/ وي(شرح|لخص|كتب|سمّع|جلس|عرض)/g, " وت$1").replace(/والده/g, "والديها").replace(/عمره/g, "عمرها").replace(/مرحلته/g, "مرحلتها").replace(/بأسلوبه/g, "بأسلوبها").replace(/مصروفه/g, "مصروفها").replace(/والديه/g, "والديها").replace(/غرفته/g, "غرفتها").replace(/ألعابه/g, "ألعابها") : t,
       x = { sk: x0.sk.concat(G_ ? G_.sk[k] || [] : []), act: x0.act.filter(a => !(sg === "g" && a[3] === "b")).map(a => [a[0], a[1], fem(a[2])]).concat(G_ ? G_.act[k] || [] : []) };
+    { // تجدد فعلي كل أسبوع: من مجموع الأنشطة (المشتركة وأنشطة القسم وبنك إضافي) تُعرض خمسة لا تتكرر من الأسبوع السابق
+      const pool = x.act.concat((XACT[k] || []).filter(a => !(sg === "g" && a[3] === "b") && !(sg !== "g" && a[3] === "g")).map(a => [a[0], a[1], fem(a[2])])), wk = Math.floor(Date.now() / 6048e5), n = Math.min(5, pool.length), st0 = (wk * n) % Math.max(1, pool.length);
+      x.act = Array.from({ length: n }, (_, i) => pool[(st0 + i) % pool.length]); }
     return `<h3>🎯 المهارات المستهدفة</h3><div class="talask">${x.sk.map(([c, d]) => `<div><b>${esc(c)}</b><span>${esc(d)}</span></div>`).join("")}</div>
-      <h3>✅ أنشطة الأسبوع</h3><p class="mut">علّم ما أنجزه الطفل هذا الأسبوع، ولكل نشاط نجمتان. تتجدد الأنشطة كل أسبوع.</p><div class="talaact">${x.act.map(([ic, t, d], i) => { const on = !!A[actKey(k, i)]; return `<label class="talaa${on ? " on" : ""}"><input type="checkbox" data-act="talaact" data-k="${k}" data-i="${i}"${on ? " checked" : ""}><i>${ic}</i><b>${esc(t)}</b><span>${esc(d)}</span></label>`; }).join("")}</div>`; };
+      <h3>✅ أنشطة الأسبوع</h3><p class="mut">علّم ما أنجزه الطفل هذا الأسبوع، ولكل نشاط نجمتان. تتجدد الأنشطة كل أسبوع فلا يتكرر نشاط الأسبوع الماضي.</p><div class="talaact">${x.act.map(([ic, t, d], i) => { const on = !!A[actKey(k, i)]; return `<label class="talaa${on ? " on" : ""}"><input type="checkbox" data-act="talaact" data-k="${k}" data-i="${i}"${on ? " checked" : ""}><i>${ic}</i><b>${esc(t)}</b><span>${esc(d)}</span></label>`; }).join("")}</div>`; };
   const gamesFor = k => STG[k] ? STG[k].g.map(g => GAMES.find(x => x[0] === g)).filter(Boolean) : GAMES;
   // أذكار المسلم اليومية (بنصوصها الثابتة ومصادرها) — لعبة مطابقة المناسبة بالذكر
   const ADH = [["قبل الطعام", "بسم الله", "متفق عليه"], ["بعد الطعام", "الحمد لله الذي أطعمني هذا ورزقنيه من غير حول مني ولا قوة", "أبو داود والترمذي"], ["عند النوم", "باسمك اللهم أموت وأحيا", "البخاري"], ["عند الاستيقاظ", "الحمد لله الذي أحيانا بعد ما أماتنا وإليه النشور", "البخاري"],
@@ -325,8 +364,20 @@ const TALA = (() => {
      <h3>أسئلة «صح أم خطأ» (${toAr((D.facts || []).length)})</h3><p class="mut">سطر لكل سؤال بالصيغة: المعلومة | صح أو خطأ | الشرح</p>
      <textarea name="facts" rows="12" style="width:100%">${esc((D.facts || []).map(f => [f.q, f.a ? "صح" : "خطأ", f.why || ""].join(" | ")).join("\n"))}</textarea>
      <h3>استبعاد من سُلّم القراءة ومن الإلحاق التلقائي</h3><p class="mut">معرّفات مقالات أو كتب لا تناسب الأطفال (مفصولة بمسافة)؛ يُعاد بناء السلم آليًا (tools/tala-curate.py) بعد الحفظ.</p><textarea name="hide" rows="2" style="width:100%">${esc((D.planHide || []).join(" "))}</textarea>
-     <div class="savebar"><button class="btn p">حفظ</button> <span id="talast" class="mut"></span></div></form>`;
+     <div class="savebar"><button class="btn p">حفظ</button> <span id="talast" class="mut"></span></div></form>${await bankAdmin()}`;
   }
+  // اعتماد بنك الأسئلة المتجدد (tools/tala-bank.py ← tala-bank.yml مرتين أسبوعيًّا من مصادر الموقع الجديدة)
+  async function bankAdmin() { BANK = null; const Bk = await loadBank(), dr = (Bk.items || []).filter(x => !x.ok && !x.x), ok = (Bk.items || []).filter(x => x.ok).length;
+    const one = x => `<div class="talabk" data-id="${esc(x.id)}"><p><b>${x.t === "tf" ? "صح أم خطأ" : "اختيار"}:</b> ${esc(x.q)}${x.t === "mc" ? ` — <span class="ok">✔ ${esc(x.a)}</span> <span class="mut">✗ ${(x.o || []).map(esc).join("، ")}</span>` : ` — <b>${x.v ? "صح" : "خطأ"}</b>`}</p>
+      <p class="mut">${(x.k || []).map(k => esc((D.tracks.find(t => t[0] === k) || [])[1] || k)).join("، ")}${x.g ? " • " + (x.g === "g" ? "البنات" : "البنين") : ""} • الدليل: «${esc(x.ev)}» — <a href="${esc((x.src || {}).u || "#")}">${esc((x.src || {}).t || "")}</a>${x.why ? " • " + esc(x.why) : ""}</p>
+      <div class="row"><button class="btn s p" data-act="tbok" data-id="${esc(x.id)}">اعتماد</button><button class="btn s" data-act="tbx" data-id="${esc(x.id)}">استبعاد</button></div></div>`;
+    return `<h3>🔄 بنك الأسئلة المتجدد</h3><p class="mut">أسئلة جديدة تُعدّ مرتين أسبوعيًّا من مصادر الموقع الجديدة (مقالات النشء، ومواد الموسوعات المعتمدة، وقصص الطلائع) بدليلها من نص المصدر؛ ولا تظهر للأطفال إلا بعد اعتمادها. المعتمد: ${toAr(ok)} • بانتظار المراجعة: ${toAr(dr.length)}${Bk.upd ? " • آخر تحديث " + esc(Bk.upd) : ""}</p>
+      ${dr.length ? `<p><button class="btn s" data-act="tball">اعتماد الظاهر كله (${toAr(Math.min(30, dr.length))})</button></p>${dr.slice(0, 30).map(one).join("")}` : '<p class="mut">لا مسودات الآن.</p>'}`; }
+  async function bankSet(ids, f, msg) { if (typeof GH === "undefined" || !GH.on) return toast("فعّل الإدارة المباشرة أولًا.");
+    try { await GH.editJSON("data/tala-bank.json", o => { (o.items || []).forEach(x => { if (ids.includes(x.id)) f(x); }); return o; }, msg); ids.forEach(id => { const el = document.querySelector(`.talabk[data-id="${id}"]`); if (el) el.remove(); }); BANK = null; toast("حُفظ ✓"); } catch (e) { toast(e.message); } }
+  document.addEventListener("click", e => { const el = e.target.closest("[data-act=tbok],[data-act=tbx],[data-act=tball]"); if (!el) return; const a = el.dataset.act;
+    if (a === "tball") bankSet([...document.querySelectorAll(".talabk")].map(x => x.dataset.id), x => { x.ok = 1; }, "الطلائع: اعتماد أسئلة من البنك المتجدد");
+    else bankSet([el.dataset.id], x => { if (a === "tbok") x.ok = 1; else x.x = 1; }, "الطلائع: " + (a === "tbok" ? "اعتماد" : "استبعاد") + " سؤال من البنك المتجدد"); });
   document.addEventListener("submit", async e => {
     const f = e.target.closest("[data-form=talasave]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
     const fd = new FormData(f), stt = $("#talast"); stt.textContent = "جارٍ الحفظ…";
@@ -381,9 +432,8 @@ const TALA = (() => {
   }
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act^=tala]"); if (!el) return; const a = el.dataset.act;
-    if (a === "talakidnew") { const name = (prompt("اسم الطفل:") || "").trim().slice(0, 20); if (!name) return; const age = +prompt("عمره بالسنوات:", "8") || 8, g = confirm("هل هو من البنين؟ (موافق = بنين، إلغاء = فتيات)") ? "b" : "g";
-      const track = age <= 8 ? "t1" : age <= 11 ? "t2" : age <= 14 ? "t3" : "t4"  /* مطابق لتسميات المراحل: ٥–٨، ٩–١٢، ١٢–١٥، ١٥ فما فوق */, AV = ["🦁", "🐢", "🦉", "🐬", "🌟", "🚀", "🌷", "🦋"];
-      const x = { id: Date.now().toString(36), name, track, g, av: AV[kids().length % AV.length] }; kids().push(x); st().cur = x.id; saveS(); show({}, ""); }
+    if (a === "talakidnew") openSheet("اشتراك طفل جديد في الطلائع", regForm());
+    else if (a === "talakidedit") { const k = kid(); if (k) openSheet("ملفي في الطلائع", regForm(k)); }
     else if (a === "talakid") { st().cur = el.dataset.id; saveS(); show({}, ""); }
     else if (a === "talakiddel") { if (confirm("حذف ملف الطفل وتقدمه من هذا الجهاز؟")) { st().kids = kids().filter(x => x.id !== el.dataset.id); if (st().p) delete st().p[el.dataset.id]; saveS(); parents(); } }
     else if (a === "talaunlock") { st().unlock = el.checked; saveS(); }

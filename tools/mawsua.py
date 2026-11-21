@@ -68,6 +68,53 @@ CAT = jl(os.path.join(D, "catalog.json")); AUTH = {a["id"]: a.get("name", "") fo
 BOOKS = {b["id"]: b for b in CAT["books"]}
 _PG = {}
 
+# ---------- سياسة المصادر (طلب المدير، ٢١ نوفمبر ٢٠٢٦): data/mawsua/_sources.json ----------
+# الأنواع: b كتب مشايخ الدعوة (الأصل) ← s البيانات ← f فتاوى الدعوة السلفية (صوت السلف) ← a مقالات المعتمدين وحدهم.
+POL = jl(os.path.join(OUT, "_sources.json"), {}) or {}
+KW = dict({"b": 4, "s": 3, "f": 3, "a": 1}, **(POL.get("weight") or {}))
+KCAP = dict({"b": 10, "s": 2, "f": 4, "a": 4}, **(POL.get("cap") or {}))
+KLBL = {x[0]: x[1] for x in POL.get("order") or []} or {"b": "كتاب", "s": "بيان", "f": "فتوى صوت السلف", "a": "مقال"}
+
+
+def _ntok(s):
+    """ألفاظ الاسم للمطابقة: بلا ألقاب، و«عبد X» لفظ واحد، وبلا «ال» التعريف (عبدالمنعم = عبد المنعم، سيد = السيد)."""
+    s = nz(re.sub(r"^\s*(الشيخ|الدكتور|المهندس|د\.|م\.)\s*", "", s or "")); s = re.sub(r"\bعبد\s+", "عبد", s)
+    return [re.sub(r"^ال(?=..)", "", w) for w in s.split() if w]
+
+
+def _approved():
+    """معرّفات المؤلفين المعتمدين لمقالات الموسوعات: كل ألفاظ الاسم المعتمد في اسم المؤلف بترتيبها (سيد العفاني ← السيد حسين العفاني)."""
+    L = [_ntok(n) for n in POL.get("authors") or []]
+    def ok(name):
+        t = _ntok(name)
+        for w in L:
+            if not w: continue
+            i = 0
+            for x in t:
+                if i < len(w) and x == w[i]: i += 1
+            if i == len(w): return True
+        return False
+    return {a["id"] for a in CAT["authors"] if ok(a.get("name", ""))} if L else None
+
+
+APPROVED = _approved()
+
+
+def art_kind(a):
+    """نوع مادة فهرس المقالات للموسوعات: s بيان، f فتوى، a مقال لمعتمد، None مستبعد (التراث والإثرائي ومقالات غير المعتمدين)."""
+    if a.get("col") in ("turath", "ithra") or not a.get("f"): return None
+    c = a.get("c") or ""
+    if a.get("tp") == "at17" or re.search(r"بيانات|(^|›\s*)بيان", c) or re.match(r"بيان(\s|ات)", a.get("t") or ""): return "s"
+    if a.get("fa") or re.match(r"(أسئلة|الاستفتاء|من فقه الواقع)", c): return "f"
+    return "a" if APPROVED is None or a.get("a") in APPROVED else None
+
+
+def art_items():
+    return [(a, k) for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) for k in [art_kind(a)] if k]
+
+
+def is_src_book(b): return (b.get("col") or "dawah") == "dawah" and not b.get("hidden")
+
 
 def pages_of(bid):
     if bid in _PG: return _PG[bid]
@@ -82,29 +129,19 @@ def body(pg): return re.split(r"^\s*_{4,}\s*$", pg or "", flags=re.M)[0]
 
 
 def corpus(e):
-    """[(نوع، معرّف، عنوان، مؤلف، صفحة، نص، نص مطبع)]: كتب المشايخ ومقالاتهم وفتاواهم كلها، ومراجع الفن (بالعنوان ثم بالموضوع حتى ٣٠ كتابًا)."""
-    k, name, desc, ic, topics, acats, refs = e; out = []
-    for b in CAT["books"]:
-        if (b.get("col") or "dawah") != "dawah" or b.get("hidden"): continue
-        for i, pg in enumerate(pages_of(b["id"])):
-            t = body(pg)
-            if len(t) > 200: out.append(("d", b["id"], b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t)))
-    ix = (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", [])
-    grp = {}
-    for a in ix:
-        if a.get("col") == "turath" or not a.get("f"): continue
-        if a["f"] not in grp: grp[a["f"]] = jl(os.path.join(D, "articles", a["f"] + ".json"), {}) or {}
-        for i, pg in enumerate((grp[a["f"]].get(a["id"]) or {}).get("pages") or []):
-            t = body(pg)
-            if len(t) > 200: out.append(("d", a["id"], a.get("t", ""), AUTH.get(a.get("a"), ""), i + 1, t, nz(t)))
+    """[(نوع، معرّف، عنوان، مؤلف، صفحة، نص، نص مطبع، صنف)]: مصادر الدعوة بحسب سياستها (الكتب، البيانات، فتاوى صوت السلف،
+    مقالات المعتمدين)، ومراجع الفن (بالعنوان ثم بالموضوع حتى ٣٠ كتابًا) بصنف m."""
+    k, name, desc, ic, topics, acats, refs = e
+    out = dawah_corpus(None)
     tr = [b for b in CAT["books"] if b.get("col") == "turath" and not b.get("hidden")]
     pick = [b for b in tr if any(r in (b.get("setTitle") or b["title"]) for r in refs)]
     pick += sorted([b for b in tr if b.get("topicId") in topics and b not in pick and not (b.get("vol") or 0) > 3], key=lambda b: -(b.get("size") or 0))[:max(0, 30 - len(pick))]
     for b in pick[:60]:
         for i, pg in enumerate(pages_of(b["id"])):
             t = body(pg)
-            if len(t) > 200: out.append(("m", b["id"], b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t)))
-    print("  المواضع: %d (مراجع %d كتابًا)" % (len(out), len(pick[:60])), flush=True)
+            if len(t) > 200: out.append(("m", b["id"], b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t), "m"))
+    from collections import Counter
+    print("  المواضع: %d (%s؛ مراجع %d كتابًا)" % (len(out), "، ".join("%s %d" % (KLBL.get(x, x), n) for x, n in Counter(r[7] for r in out).items()), len(pick[:60])), flush=True)
     return out
 
 
@@ -114,11 +151,12 @@ def find(C, m, boost=None):
     sc = []
     for r in C:
         n = r[6]; s = sum((3 if j <= 1 else 1) * min(3, n.count(w)) for j, w in enumerate(kws) if len(w) > 2)
-        if s >= 3 and any(w in n for w in kws[:3]): sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0) + (8 if boost and r[1] in boost else 0), r))  # عنوان المصدر بالمسألة أقوى
-    sc.sort(key=lambda x: -x[0]); out, per, cnt = [], {}, {"d": 0, "m": 0}
+        if s >= 3 and any(w in n for w in kws[:3]):  # عنوان المصدر بالمسألة أقوى، ثم وزن الصنف (الكتب أصل، ثم البيانات والفتاوى، ثم المقالات)
+            sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0) + (8 if boost and r[1] in boost else 0) + KW.get(r[7], 0), r))
+    sc.sort(key=lambda x: -x[0]); out, per, cnt, kc = [], {}, {"d": 0, "m": 0}, {}
     for s, r in sc:
-        if per.get(r[1], 0) >= 2 or cnt[r[0]] >= (10 if r[0] == "d" else 6): continue
-        per[r[1]] = per.get(r[1], 0) + 1; cnt[r[0]] += 1; out.append(r)
+        if per.get(r[1], 0) >= 2 or cnt[r[0]] >= (10 if r[0] == "d" else 6) or (r[0] == "d" and kc.get(r[7], 0) >= KCAP.get(r[7], 10)): continue
+        per[r[1]] = per.get(r[1], 0) + 1; cnt[r[0]] += 1; kc[r[7]] = kc.get(r[7], 0) + 1; out.append(r)
     return out
 
 
@@ -163,7 +201,7 @@ def build(e, n=20, ids=None, boost=None):
         tags, ctx = {}, []
         for h in hits:
             tg = ("د" if h[0] == "d" else "م") + str(1 + sum(1 for x in tags.values() if x[0] == h[0]))
-            tags[tg] = h; ctx.append("[%s] «%s» — %s، ص %d:\n%s" % (tg, h[2], h[3], h[4], window(h, m)))
+            tags[tg] = h; ctx.append("[%s] (%s) «%s» — %s، ص %d:\n%s" % (tg, KLBL.get(h[7], "مرجع"), h[2], h[3], h[4], window(h, m)))
         r = T.gemini(ENTRY.format(name=e[1], t=m["t"], bab=b["t"], fasl=f["t"], secs="، ".join(SECS), ctx="\n\n".join(ctx)))
         if not r: break  # نفدت الحصة
         if r.get("skip"): m["skip"] = "المواضع لا تتعلق بالمسألة"; continue
@@ -179,7 +217,7 @@ def build(e, n=20, ids=None, boost=None):
             c = q.get("c"); t = (q.get("t") or "").strip(" «»\"")
             if c in tags and t and nz(t) in tags[c][6]: qs.append({"t": t, "c": c}); used.add(c)
         if not secs: m["skip"] = "لم تُعزَ الفقرات"; continue
-        src = {tg: {"k": h[0], "b": h[1], "t": h[2], "a": h[3], "p": h[4]} for tg, h in tags.items() if tg in used}
+        src = {tg: {"k": h[0], "s": h[7], "b": h[1], "t": h[2], "a": h[3], "p": h[4]} for tg, h in tags.items() if tg in used}
         ent = {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": r.get("lead", ""), "s": secs, "q": qs, "src": src,
                "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 0}
         ep = os.path.join(OUT, k, "e", m["id"] + ".json"); old = jl(ep)
@@ -195,27 +233,29 @@ def build(e, n=20, ids=None, boost=None):
 
 # ---------- النمو التلقائي (طلب المدير، ٢١ نوفمبر ٢٠٢٦) ----------
 def dawah_sources():
-    """معرّفات مصادر مشايخ الدعوة الحالية: كتبهم وشروحهم وتفريغاتهم (الفهرس، col=dawah)، ومقالاتهم وفتاواهم (فهرس المقالات غير التراثية)."""
-    ids = {b["id"] for b in CAT["books"] if (b.get("col") or "dawah") == "dawah" and not b.get("hidden")}
-    ids |= {a["id"] for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) if a.get("col") != "turath" and a.get("f")}
-    return ids
+    """معرّفات مصادر الدعوة بحسب سياسة المصادر: كتب المشايخ وشروحهم وتفريغاتهم (col=dawah)، والبيانات، وفتاوى صوت السلف، ومقالات المعتمدين."""
+    return {b["id"] for b in CAT["books"] if is_src_book(b)} | {a["id"] for a, _ in art_items()}
 
 
-def new_corpus(ids):
-    out, ix = [], {a["id"]: a for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) if a["id"] in ids}
-    for bid in ids:
-        b = BOOKS.get(bid)
-        if b:
-            for i, pg in enumerate(pages_of(bid)):
-                t = body(pg)
-                if len(t) > 200: out.append(("d", bid, b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t)))
+def dawah_corpus(ids):
+    """مواضع مصادر الدعوة (كلها، أو المعرّفات المعطاة) بصنفها في الحقل الثامن."""
+    out = []
+    for b in CAT["books"]:
+        if not is_src_book(b) or (ids is not None and b["id"] not in ids): continue
+        for i, pg in enumerate(pages_of(b["id"])):
+            t = body(pg)
+            if len(t) > 200: out.append(("d", b["id"], b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t), "b"))
     grp = {}
-    for a in ix.values():
+    for a, kd in art_items():
+        if ids is not None and a["id"] not in ids: continue
         if a["f"] not in grp: grp[a["f"]] = jl(os.path.join(D, "articles", a["f"] + ".json"), {}) or {}
         for i, pg in enumerate((grp[a["f"]].get(a["id"]) or {}).get("pages") or []):
             t = body(pg)
-            if len(t) > 200: out.append(("d", a["id"], a.get("t", ""), AUTH.get(a.get("a"), ""), i + 1, t, nz(t)))
+            if len(t) > 200: out.append(("d", a["id"], a.get("t", ""), AUTH.get(a.get("a"), ""), i + 1, t, nz(t), kd))
     return out
+
+
+def new_corpus(ids): return dawah_corpus(set(ids))
 
 
 def dead():
@@ -271,7 +311,10 @@ def index():
     for e in ENC:
         t = jl(os.path.join(OUT, e[0], "_tree.json"), {}) or {}; ms = [m for b in t.get("b", []) for f in b["f"] for m in f["m"]]
         items.append({"k": e[0], "n": e[1], "d": e[2], "ic": e[3], "bab": len(t.get("b", [])), "m": len(ms), "e": sum(1 for m in ms if m.get("e")), "ok": sum(1 for m in ms if m.get("ok"))})
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "items": items})
+    pol = {"order": POL.get("order") or [], "authors": POL.get("authors") or [], "n": {}}
+    from collections import Counter
+    pol["n"] = dict(Counter(k for _, k in art_items())); pol["n"]["b"] = sum(1 for b in CAT["books"] if is_src_book(b))
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "items": items})
 
 
 def main():
