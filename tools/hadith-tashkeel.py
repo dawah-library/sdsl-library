@@ -46,7 +46,8 @@ def gemini(prompt):
                     with urllib.request.urlopen(req, timeout=240) as r: j = json.loads(r.read())
                     BUDGET[0] -= 1
                     t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
-                    return json.loads(re.sub(r"^```json|```$", "", t.strip()))
+                    try: return json.loads(re.sub(r"^```json|```$", "", t.strip()))
+                    except ValueError: print("  رد غير مكتمل (يُتخطى ويُعاد في الجولة القادمة)", flush=True); return {}
                 except urllib.error.HTTPError as e:
                     msg = e.read()[:2000].decode("utf-8", "ignore")
                     if (e.code == 429 and re.search(r"PerDay|per day|exceeded your current quota", msg, re.I) and not re.search(r"PerMinute", msg)) or e.code in (400, 403, 404):
@@ -70,20 +71,27 @@ def chunk(b, c, S):
     ok = 0; i = 0
     while i < len(todo):
         part, size = [], 0
-        while i < len(todo) and len(part) < 30 and size < 9000:
+        while i < len(todo) and len(part) < 20 and size < 5000:  # دفعات أصغر: الرد المشكول نحو ضعف النص، والطويل كان يُقطع
             part.append(todo[i]); size += len(todo[i][2]); i += 1
         r = gemini(PROMPT.format(items="\n".join(json.dumps({(t + ":" + k): v[:2500]}, ensure_ascii=False) for t, k, v in part)))
         if r is None:
             if ok: save(mf, M, lf, L)
             return None
+        if isinstance(r, list):  # بعض النماذج تعيد قائمة كائنات بدل كائن واحد
+            rr = {}
+            for o in r:
+                if isinstance(o, dict): rr.update(o)
+            r = rr
+        if not isinstance(r, dict): r = {}
         for t, k, v in part:
-            nv = (r or {}).get(t + ":" + k)
+            nv = r.get(t + ":" + k)
             if isinstance(nv, str) and skel(nv) == skel(v[:2500]) and ratio(nv) >= 0.3:
                 nv = nv + v[2500:]
                 (M if t == "m" else L)[k] = nv; ok += 1
+        if ok: save(mf, M, lf, L)  # حفظ بعد كل دفعة: لا يضيع المنجز إن توقفت المهمة
     save(mf, M, lf, L); S["n"] = S.get("n", 0) + ok
     print("  %s/m%d: شُكّل %d من %d" % (b, c, ok, len(todo)), flush=True)
-    return True
+    return ok >= len(todo) * 0.98  # لا يُعدّ الجزء مكتملًا إلا إن شُكّل كله تقريبًا؛ وإلا أُعيد ما بقي منه في جولة قادمة
 
 
 def save(mf, M, lf, L):
@@ -103,7 +111,7 @@ def main():
             if c in done or not os.path.exists(os.path.join(K, b, "m%d.json" % c)): continue
             r = chunk(b, c, S)
             if r is None: break
-            done.add(c); S["done"][b] = sorted(done)
+            if r: done.add(c); S["done"][b] = sorted(done)
             S["upd"] = str(datetime.date.today()); json.dump(S, open(SP, "w", encoding="utf-8"), ensure_ascii=False)
         else: continue
         break
