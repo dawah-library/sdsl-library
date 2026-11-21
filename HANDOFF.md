@@ -559,3 +559,6 @@
 ## ٢١ نوفمبر: نمو الموسوعات بالكتب الجديدة بدقة (claude/happy-ride-kzumv6)
 - mawsua.py: ready() للمصادر، verify() بالمعنى، expand() مسائل جديدة من فصول الكتاب، دمج المادة الحالية عند التحديث، وسم [المتن]، glog ← _growth.json ← recent؛ mawsua.yml ينشر على Cloudflare بعد الجولة. التفاصيل docs/mawsua.md.
 
+
+## ٢١ نوفمبر: «قصة الموقع» — السجل التاريخي (طلب المدير، claude/keen-allen-3s6n2r)
+- story.js (`#/story`، للإدارة مبدئيًّا STORY_PUBLIC=false، ورابط في قائمة الإدارة الجانبية) + STORY.brief() في صفحة التعريف (عام بلا أسماء ولا مبالغ). التفاصيل docs/story.md. حدّث TL وSNAP مع كل محطة كبرى.

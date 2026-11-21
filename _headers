@@ -181,6 +181,9 @@
 /stats.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/story.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /study.js
   Cache-Control: public, max-age=60, must-revalidate
 
