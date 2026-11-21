@@ -11,7 +11,7 @@ const SIDE = (() => {
     ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"], ["#/offline", "المكتبة دون إنترنت والتطبيق", "download"]]],
     ["عن المكتبة", [["#/about", "من نحن", "info"], ["#/dawah", "التعريف بالدعوة", "flag"], ["#/history", "تاريخ الدعوة", "scroll-text"], ["#/standards", "معايير التحرير", "ruler"], ["#/contact", "تواصل معنا", "mail"]]],
   ];
-  const ADM = [["#/admin", "الإدارة", "settings"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"], ["#/sitestudy", "دراسة الموقع ومقارنته", "chart-bar"]];
+  const ADM = [["#/admin", "الإدارة", "settings"], ["#/myteams", "أقسامي (فرق الأقسام)", "users-round"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"], ["#/sitestudy", "دراسة الموقع ومقارنته", "chart-bar"]];
   // التكرار حُذف (طلب المدير): «مكتبة الدعوة السلفية» و«المكتبة العامة» داخل بوابتي القسمين؛ وتبقى أيقونة #/library لبطاقات الرئيسية
   const MAP = { "#/library": "book-open" }; G.forEach(([, l]) => l.forEach(([h, , i]) => MAP[h.split("?")[0]] = MAP[h.split("?")[0]] || i));
   const fold = () => { try { return JSON.parse(localStorage.getItem("side_fold") || "{}"); } catch (e) { return {}; } };
@@ -19,7 +19,7 @@ const SIDE = (() => {
     let el = $("#side"); const adm = isAdmin() || (Cloud.perms || []).length, F = fold();
     if (!el) { el = document.createElement("aside"); el.id = "side"; el.setAttribute("aria-label", "أقسام المكتبة"); document.body.appendChild(el);
       const bg = document.createElement("div"); bg.id = "sidebg"; bg.hidden = true; bg.onclick = close; document.body.appendChild(bg); }
-    const groups = G.concat(adm ? [["الإدارة", ADM.filter(x => isAdmin() || x[0] === "#/admin" || (x[0] === "#/proof" && can("edit")) || (x[0] === "#/sitestudy" && can("site_study")))]] : []);
+    const groups = G.concat(adm ? [["الإدارة", ADM.filter(x => isAdmin() || x[0] === "#/admin" || (x[0] === "#/myteams" && typeof SECTEAMS !== "undefined" && SECTEAMS.teamsOf(Cloud.perms || []).length) || (x[0] === "#/proof" && can("edit")) || (x[0] === "#/sitestudy" && can("site_study")))]] : []);
     el.innerHTML = `<div class="sdh"><b>الأقسام</b><button class="sdx" data-act="sdclose" aria-label="إغلاق">${ic("x", 18)}</button></div><input id="sdq" type="search" placeholder="ابحث عن قسم" aria-label="ابحث عن قسم" autocomplete="off">
       ${groups.map(([g, l], k) => `<section class="sdg${F[k] ? " fold" : ""}" data-k="${k}"><button class="sdgt" data-act="sdfold">${esc(g)}</button>${l.map(([h, t, i]) => `<a href="${h}" data-t="${esc(norm(t))}">${ic(i, 18)}<span>${esc(t)}</span></a>`).join("")}</section>`).join("")}
       <div class="sdf"><button data-act="skin">${ic("palette", 16)} قالب الواجهة</button><button data-act="gdshow">${ic("compass", 16)} دليل الموقع</button><button data-act="theme">◐ ليلي / نهاري</button><button data-act="uilang" data-noi18n>EN / ع</button><button data-act="shareSite">${ic("rss", 16)} مشاركة المكتبة</button><a class="sdfa" href="#/favs">${ic("heart", 16)} المفضلة</a></div>`;

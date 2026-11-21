@@ -82,7 +82,7 @@ KINDS = {"feature": "تطوير أو إضافة", "fix": "إصلاح خلل", "c
 
 def prompt(i):
     x = find(load(), i)
-    hist = "\n".join(f"- [{h.get('at','')[:16]}] {'المدير' if h.get('by') == 'admin' else 'الوكيل'}: {h.get('m','')}" for h in x.get("h", [])[-12:])
+    hist = "\n".join(f"- [{h.get('at','')[:16]}] {'المدير' if h.get('by') == 'admin' else 'فريق القسم' if h.get('by') == 'team' else 'الوكيل'}: {h.get('m','')}" for h in x.get("h", [])[-12:])
     tpl = open("tools/agents/dev-agent-prompt.md", encoding="utf-8").read()
     txt = tpl.format(
         id=i, kind=KINDS.get(x.get("k"), x.get("k", "")), prio={1: "عاجلة", 2: "عادية", 3: "لاحقًا"}.get(x.get("p"), "عادية"),
