@@ -1766,3 +1766,6 @@ body.citeplain .cit .cbt{display:inline}body.citeplain .cit .cbx{display:none}
 [data-theme="dark"] .cpop .cpcopy{background:#25402a;border-color:#35553a;color:#a8dc9c}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cpop{background:#1f3320;color:#cfe9c8;border-color:#35553a}}
 @media print{.cit .cbt{display:inline!important}.cit .cbx,.cpop{display:none!important}}
+/* فرق الأقسام (secteams.js) */
+.myteams .mtcard{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--sf);margin-top:10px}.myteams h3{margin:16px 0 8px}.mtsw{display:flex;flex-direction:column;gap:6px}
+.pmteams{margin:8px 0;padding:8px 10px;border:1px dashed var(--line);border-radius:10px}

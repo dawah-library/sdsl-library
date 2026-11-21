@@ -9,10 +9,12 @@ const ALLOWED = /^\/(contents\/(data|vols|ocr-inbox|pdf|assets\/posts|assets\/au
 // المستودع عام: لا يُكتب بريد المشرف في رسائل الحفظ، بل صفته ومعرّف مختصر لا يكشف هويته
 const ROLE_AR = w => (w.role === "admin" ? "مشرف" : w.role === "delegate" ? "مفوَّض" : "محرر") + " #" + String(w.id || "").slice(0, 6);
 // صلاحيات التفويض (profiles.perms): العضو المفوَّض يكتب في مسارات خدمته فقط
-const PERM_PATHS = { translate: /^data\/tr\/(?!_queue)/, translate_admin: /^data\/(tr\/|tr-config\.json$)/, video: /^data\/video\/(_queue|_list|_lexicon)\.json$|^data\/video\/drafts\//, tala: /^data\/(tala[\w-]*\.json|tala\/)/, majalla: /^data\/(majalla\.json|majalla\/)/, ask_cfg: /^data\/ask-config\.json$/, kutub_review: /^data\/(proof\/|review-requests\.json$)/, audio_upload: /^data\/audio\/(_queue|_lexicon)\.json$/, radio: /^data\/radio\.json$/, upload: /^(data\/books\/|data\/articles\/|ocr-inbox\/|pdf\/|data\/catalog\.json$)/, edit: /^(data\/books\/|data\/articles\/|vols\/|data\/catalog\.json$|data\/tashkeel\/)/, kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, manage: /^(data\/(catalog\.json|articles\/index\.json|admin-log\.json|removed\/_log\.json|review-requests\.json|tashkeel\/_queue\.json|proof\/_queue\.json|kurrasa\/|tashjir\/|summ\/|quizzes\/|qa\/|tashkeel\/|tr\/|video\/_list\.json$|majalla\.json$|paths\.json$|audio\/(_queue|_list)\.json$|books\/[^/]+\.json$)|ocr-inbox\/[^/]+\.redo$)/, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$|data\/transcribe\/in\/)/ };
+const PERM_PATHS = { tafrigh_upload: /^(data\/books\/|data\/catalog\.json$|ocr-inbox\/|pdf\/|data\/transcribe\/_queue\.json$|data\/transcribe\/in\/|data\/tfedit\/_queue\.json$)/, translate: /^data\/tr\/(?!_queue)/, translate_admin: /^data\/(tr\/|tr-config\.json$)/, video: /^data\/video\/(_queue|_list|_lexicon)\.json$|^data\/video\/drafts\//, tala: /^data\/(tala[\w-]*\.json|tala\/)/, majalla: /^data\/(majalla\.json|majalla\/)/, ask_cfg: /^data\/ask-config\.json$/, kutub_review: /^data\/(proof\/|review-requests\.json$)/, audio_upload: /^data\/audio\/(_queue|_lexicon)\.json$/, radio: /^data\/radio\.json$/, upload: /^(data\/books\/|data\/articles\/|ocr-inbox\/|pdf\/|data\/catalog\.json$)/, edit: /^(data\/books\/|data\/articles\/|vols\/|data\/catalog\.json$|data\/tashkeel\/)/, kurrasa: /^data\/kurrasa\//, tashjir: /^data\/tashjir\//, manage: /^(data\/(catalog\.json|articles\/index\.json|admin-log\.json|removed\/_log\.json|review-requests\.json|tashkeel\/_queue\.json|proof\/_queue\.json|kurrasa\/|tashjir\/|summ\/|quizzes\/|qa\/|tashkeel\/|tr\/|video\/_list\.json$|majalla\.json$|paths\.json$|audio\/(_queue|_list)\.json$|books\/[^/]+\.json$)|ocr-inbox\/[^/]+\.redo$)/, convert: /^(ocr-inbox\/|pdf\/|data\/review-requests\.json$|data\/tashkeel\/_queue\.json$|data\/transcribe\/_queue\.json$|data\/transcribe\/in\/)/ };
 const cleanP = p => String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "");
 const DEL_OK = /^data\/(books|kurrasa|tashjir|summ|quizzes|qa|tashkeel\/[^/]+|tr\/[^/]+)\/(?!_)[^/]+\.json$/;
-const delegateOk = (who, p) => who.role !== "delegate" || who.perms.some(k => PERM_PATHS[k] && PERM_PATHS[k].test(String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "")));
+// فرق الأقسام (secteams.js): مفاتيح القسم في switches.json وطلبات تطويره في dev-requests.json، ويتحقق من مضمونها teamGuard
+const TEAMS = require("../secteams.js"), TEAM_FILES = /^data\/(switches|dev-requests)\.json$/;
+const delegateOk = (who, p) => who.role !== "delegate" || ((who.teams || []).length && TEAM_FILES.test(cleanP(p))) || who.perms.some(k => PERM_PATHS[k] && PERM_PATHS[k].test(String(p).replace(/^\/?contents\//, "").replace(/\?.*$/, "")));
 async function staffOf(req) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
   const tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -23,9 +25,9 @@ async function staffOf(req) {
   const p = await fetch(url + "/rest/v1/profiles?select=role,perms&id=eq." + encodeURIComponent(user.id), { headers: { apikey: key, Authorization: "Bearer " + tok } });
   const rows = p.ok ? await p.json() : [];
   const role = rows[0] && rows[0].role === "partner" ? "admin" : rows[0] && rows[0].role;
-  if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role, partner: rows[0].role === "partner", perms: (rows[0].perms || []).filter(k => PERM_PATHS[k]) };
-  const perms = ((rows[0] && rows[0].perms) || []).filter(k => PERM_PATHS[k]);
-  return perms.length ? { id: user.id, email: user.email, role: "delegate", perms } : null;
+  const raw = (rows[0] && rows[0].perms) || [], teams = TEAMS.teamsOf(raw).map(t => t.k), perms = TEAMS.expand(raw).filter(k => PERM_PATHS[k]);
+  if (/^(admin|editor)$/.test(role || "")) return { id: user.id, email: user.email, role, partner: rows[0].role === "partner", perms, teams };
+  return perms.length || teams.length ? { id: user.id, email: user.email, role: "delegate", perms, teams } : null;
 }
 
 
@@ -43,6 +45,31 @@ async function partnerGuard(who, p, text) {
   if (p === "data/ask-config.json" || p === "data/offline.json") { const ks = x => Object.keys(x || {}); if (ks(old).some(k => !(k in nw))) return "لا يحذف الشريك إعدادات الخدمات التشغيلية."; }
   return null;
 }
+// عضو فريق القسم: لا يغيّر في المفاتيح إلا مفاتيح أقسامه، ولا في طلبات التطوير إلا إضافة طلب لقسمه (بانتظار إذن المدير) أو متابعة طلب قسمه
+async function teamGuard(who, p, text) {
+  p = cleanP(p); if (who.role !== "delegate" && !(who.role === "editor" && p === "data/dev-requests.json")) return null;
+  if (!TEAM_FILES.test(p)) return null;
+  let nw; try { nw = JSON.parse(text); } catch (e) { return "ملف غير صالح."; }
+  let old = {}; try { const r = await fetch("https://raw.githubusercontent.com/" + REPO + "/main/" + p + "?t=" + Date.now()); if (r.ok) old = await r.json(); } catch (e) { return "تعذر التحقق؛ أعد المحاولة."; }
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  if (p === "data/switches.json") {
+    const ok = new Set(TEAMS.switchesOf(who.teams.map(k => "t_" + k))), o = old.s || {}, n = nw.s || {};
+    for (const k of new Set(Object.keys(o).concat(Object.keys(n)))) if ((o[k] === false) !== (n[k] === false) && !ok.has(k)) return "لا تملك تشغيل «" + k + "» أو إيقافه؛ مفاتيح أقسامك فقط.";
+    const ro = Object.assign({}, old, { s: 0 }), rn = Object.assign({}, nw, { s: 0 }); if (!same(ro, rn)) return "يُعدَّل من هذا الملف مفاتيح أقسامك فقط.";
+    return null;
+  }
+  const O = (old.items || []), N = (nw.items || []), byId = new Map(O.map(x => [x.id, x]));
+  for (const x of O) if (!N.some(y => y.id === x.id)) return "لا يحذف عضو الفريق طلبات التطوير.";
+  for (const y of N) {
+    const x = byId.get(y.id);
+    if (!x) { if (!who.teams.includes(y.sec) || y.st !== "await" || y.by !== "team" || String(y.t || "").length > 4000) return "طلب جديد لقسمك بحالة «بانتظار إذن المدير» فقط."; continue; }
+    if (same(x, y)) continue;
+    const hx = x.h || [], hy = y.h || [];
+    if (!who.teams.includes(x.sec) || hy.length < hx.length || !same(hx, hy.slice(0, hx.length)) || !same(Object.assign({}, x, { h: 0 }), Object.assign({}, y, { h: 0 })) || hy.slice(hx.length).some(h => h.by !== "team")) return "يضيف عضو الفريق متابعات على طلبات قسمه فقط.";
+  }
+  if (!same(Object.assign({}, old, { items: 0 }), Object.assign({}, nw, { items: 0 }))) return "يُعدَّل من هذا الملف طلبات قسمك فقط.";
+  return null;
+}
 const b64t = s => { try { return Buffer.from(String(s || ""), "base64").toString("utf8"); } catch (e) { return ""; } };
 const GHH = () => ({ Authorization: "Bearer " + process.env.GITHUB_WRITE_TOKEN, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "sdsl-library" });
 async function gh(path, method, body) {
@@ -58,10 +85,10 @@ async function batch(req, res, who) {
   if (!files.length || files.length > 60) return res.status(400).json({ message: "عدد الملفات بين ١ و٦٠ في الدفعة." });
   for (const f of files) {
     const p = String(f.path || "");
-    if (p === "data/dev-requests.json" && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
+    if (p === "data/dev-requests.json" && who.role !== "admin" && !(who.teams || []).length) return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!ALLOWED.test("/contents/" + p) || !delegateOk(who, p) || /(^|\/)\.\.(\/|$)/.test(p) || (typeof f.text !== "string" && typeof f.b64 !== "string"))
       return res.status(400).json({ message: "مسار غير مسموح: " + p });
-    const pg = await partnerGuard(who, p, typeof f.text === "string" ? f.text : b64t(f.b64)); if (pg) return res.status(403).json({ message: pg });
+    const ft = typeof f.text === "string" ? f.text : b64t(f.b64), pg = await partnerGuard(who, p, ft) || await teamGuard(who, p, ft); if (pg) return res.status(403).json({ message: pg });
   }
   const branch = String(b.branch || "main").replace(/[^\w.-]/g, "");
   const message = String(b.message || "حفظ دفعة من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
@@ -86,7 +113,7 @@ async function batch(req, res, who) {
   }
 }
 
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
   try {
     if (!process.env.GITHUB_WRITE_TOKEN) return res.status(503).json({ message: "لم يُضبط مفتاح الحفظ (GITHUB_WRITE_TOKEN) على الخادم بعد." });
     const who = await staffOf(req);
@@ -98,14 +125,14 @@ module.exports = async (req, res) => {
     if (!ALLOWED.test(path)) return res.status(400).json({ message: "مسار غير مسموح." });
     if (req.method === "PUT" && !delegateOk(who, path)) return res.status(403).json({ message: "صلاحيتك المفوَّضة لا تشمل هذا الملف." });
     // طلبات المساعد التقني (الوكيل البرمجي) يكتبها المدير وشركاؤه وحدهم
-    if (req.method !== "GET" && /^\/contents\/data\/dev-requests\.json/.test(path) && who.role !== "admin") return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
+    if (req.method !== "GET" && /^\/contents\/data\/dev-requests\.json/.test(path) && who.role !== "admin" && !(who.role === "delegate" && (who.teams || []).length && req.method === "PUT")) return res.status(403).json({ message: "طلبات المساعد التقني للمدير وحده." });
     if (!["GET", "PUT", "DELETE"].includes(req.method)) return res.status(405).json({ message: "طريقة غير مسموحة." });
     // الحذف النهائي: للمدير الأصلي، ولمن منحه صلاحية «manage» في ملفات المحتوى التعليمي وحدها (نص الكتاب، والكراسة، والتشجير، والاختصار، والاختبار، والأسئلة، والتشكيل، والترجمة)
     if (req.method === "DELETE" && !(who.role === "admin" && !who.partner) && !((who.perms || []).includes("manage") && DEL_OK.test(cleanP(path)))) return res.status(403).json({ message: "الحذف النهائي للمدير ولمن يفوّضه بصلاحية إدارة المحتوى." });
     let body;
     if (req.method === "PUT" || req.method === "DELETE") {
       const b = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-      if (req.method === "PUT") { const pg = await partnerGuard(who, path, b64t(b.content)); if (pg) return res.status(403).json({ message: pg }); }
+      if (req.method === "PUT") { const pg = await partnerGuard(who, path, b64t(b.content)) || await teamGuard(who, path, b64t(b.content)); if (pg) return res.status(403).json({ message: pg }); }
       b.message = String(b.message || "تعديل من صفحة الإدارة") + "\n\nبواسطة: " + ROLE_AR(who);
       body = JSON.stringify(b);
     }
@@ -129,3 +156,6 @@ module.exports = async (req, res) => {
     return res.status(500).json({ message: "خطأ في خادم الحفظ." });
   }
 };
+
+module.exports = handler;
+module.exports.teamGuard = teamGuard;
