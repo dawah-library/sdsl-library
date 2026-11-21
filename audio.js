@@ -279,6 +279,22 @@ async function vAudioBook(bid) {
 }
 
 /* ---------- صفحة «راديو المكتبة» ---------- */
+/* «قناتي»: يختار العضو مشايخه وأنواع ما يسمعه والتلاوات، فتُبنى له قناة بالجدول نفسه (S.myradio، متزامنة بالحساب) */
+function myRadioHtml() { const M = S.myradio || {}, F = M.f || {}, L = AUDIO.list || {}, ids = Object.keys(L).filter(id => B(id) && AUDIO.ready(L[id]));
+  const AU = [...new Set(ids.map(id => B(id).authorId).filter(Boolean))].map(a => [a, (A(a) || {}).name || a]), TP = [...new Set(ids.map(id => B(id).topicId).filter(Boolean))].map(t => [t, (T(t) || {}).name || t]);
+  const ck = (n, v, on, l) => `<label class="chk inl"><input type="checkbox" name="${n}" value="${esc(v)}"${on ? " checked" : ""}> ${esc(l)}</label>`;
+  return `<details class="card myrd"${M.on ? "" : ""}><summary><b>⭐ قناتي: اختر ما تسمعه</b> <small class="mut">${M.on ? "مفعّلة — تظهر بين القنوات باسم «⭐ قناتي»" : "قناة خاصة بك"}</small></summary><form data-form="myradio">
+   <label>اسمها</label><input name="n" value="${esc(M.n || "قناتي")}" maxlength="40">
+   <p><b>المشايخ</b> <small class="mut">(فارغ = الكل)</small><br>${AU.map(([a, n]) => ck("a", a, (F.a || []).includes(a), n)).join(" ") || '<span class="mut">—</span>'}</p>
+   <p><b>الأقسام</b> <small class="mut">(فارغ = الكل)</small><br>${TP.map(([t, n]) => ck("t", t, (F.t || []).includes(t), n)).join(" ") || '<span class="mut">—</span>'}</p>
+   <p><b>الأنواع</b><br>${ck("k", "book", (F.k || []).includes("book"), "الكتب")} ${ck("k", "article", (F.k || []).includes("article"), "المقالات")} ${ck("k", "tafrigh", (F.k || []).includes("tafrigh"), "الدروس")} ${ck("onlyq", "1", M.kind === "quran", "تلاوات فقط")}</p>
+   <p>${ck("q", "1", M.q !== false, "تتخللها تلاوات الختمة")} ${ck("adh", "1", !!M.adh, "والأذان بتوقيت القاهرة")}</p>
+   <button class="btn p">حفظ وتشغيل قناتي</button> ${M.on ? '<button type="button" class="btn s" data-act="myrdoff">إلغاء قناتي</button>' : ""}</form></details>`; }
+document.addEventListener("submit", e => { const f = e.target.closest('[data-form="myradio"]'); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
+  const v = n => [...f.querySelectorAll(`input[name="${n}"]:checked`)].map(x => x.value), qo = !!f.querySelector('input[name="onlyq"]:checked');
+  S.myradio = { on: 1, n: f.n.value.trim() || "قناتي", kind: qo ? "quran" : "custom", f: qo ? {} : { a: v("a"), t: v("t"), k: v("k") }, q: qo || !!f.querySelector('input[name="q"]:checked'), adh: !!f.querySelector('input[name="adh"]:checked') };
+  saveS(); try { Prefs.push(); } catch (x) { } location.hash = "#/radio/st-my"; route(); }, true);
+document.addEventListener("click", e => { if (!e.target.closest('[data-act="myrdoff"]')) return; S.myradio = Object.assign({}, S.myradio, { on: 0 }); saveS(); try { Prefs.push(); } catch (x) { } location.hash = "#/radio"; route(); });
 async function vRadio(q, cid) {
   view(`<div class="radio"><div class="rdhead"><h2>📻 راديو المكتبة</h2><p>بث متواصل من كتب المكتبة المسموعة، يسمعه كل المستمعين في اللحظة نفسها كالإذاعة. يعمل في خلفية جهازك ولو أغلقت الشاشة.</p></div><div id="rdbox"><p class="mut">جارٍ ضبط الموجات…</p></div></div>`);
   const ch = await radioChannels(), box = $("#rdbox"); if (!box) return;
@@ -293,6 +309,7 @@ async function vRadio(q, cid) {
   <button class="btn p big" data-act="rdplay" data-c="${sel.id}">${live && !AP.audio().paused ? "⏸ إيقاف" : "▶ استمع الآن"}</button>
   <p class="mut">${sel.station ? "بث متجدد بالساعة" : "مدة دورة القناة " + fmtDur(sel.T)} • ${toAr(sel.ids.length)} ${sel.ids.length > 2 && sel.ids.length < 11 ? "كتب" : "كتاب"}</p></div>
   ${radioNextHtml(sel)}
+  ${myRadioHtml()}
   ${sched}
   <p class="mut">تريد كتابًا من أوله بالترتيب الذي تختاره؟ <a href="#/audio">صوتيات المكتبة</a>.</p>`;
   window.__rch = ch;
@@ -576,7 +593,7 @@ const RSTATION = (() => {
   const ayU = (r, s, a) => `https://everyayah.com/data/${r}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
   // الكتل الخاصة في يوم (تلاوة وأذان) بالملي ثانية
   function specials(C, t) { const tz = (C.adhan || {}).tz || "Africa/Cairo", m0 = midnight(t, tz), out = [], Q = C.quran || {}, qm = (+Q.minutes || 30) * 6e4;
-    if (Q.off) { } // قناة بلا تلاوات
+    if (Q.off || C.kind === "quran") { } // قناة بلا فترات تلاوة (أو قناة تلاوات متصلة كلها)
     else if (Q.mode === "prayer" && C.adhan) { const [y, mo, d] = ymd(t, tz), P = prayers(y, mo, d, C.adhan); (Q.after || ["fajr", "dhuhr", "asr", "maghrib", "isha"]).forEach(k => { if (P[k]) { const a = Math.round(P[k] / 6e4) * 6e4 + (+Q.gap || 15) * 6e4; out.push({ k: "quran", a, b: a + qm }); } }); }  // التلاوة بعد كل صلاة بمقدار ثابت
     else (Q.slots || []).forEach(h => { const [H, M] = h.split(":").map(Number), a = m0 + (H * 60 + (M || 0)) * 6e4; out.push({ k: "quran", a, b: a + qm }); });
     if (C.adhan) { const [y, mo, d] = ymd(t, tz), P = prayers(y, mo, d, C.adhan), NM = { fajr: "الفجر", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" };
@@ -585,7 +602,7 @@ const RSTATION = (() => {
     return res.filter(x => x.b > x.a); }
   // الكتب في البث: ما رتّبه المدير أولًا، ثم (في الوضع التلقائي) كل كتاب صوتي يكتمل ويُعتمد يدخل البث آليًّا:
   // كتب مكتبة الدعوة قبل المكتبة العامة، مع التنويع بين الموضوعات فلا يتتابع كتابان من موضوع واحد، والأقصر أولًا ليكتمل عرضه أسرع.
-  function items(C, L) { const ok = id => L[id] && AUDIO.ready(L[id]) && !L[id].preview && B(id), man = (C.items || []).filter(x => x.book && ok(x.book) && !x.off);
+  function items(C, L) { if (C.kind === "quran") return []; const ok = id => L[id] && AUDIO.ready(L[id]) && !L[id].preview && B(id), man = (C.items || []).filter(x => x.book && ok(x.book) && !x.off);
     if (C.auto === false) return man; const have = new Set((C.items || []).map(x => x.book)), skip = new Set(C.exclude || []);
     const F = C.f || {}, kd = id => { const b = B(id) || {}; return (b.tags || []).includes("tafrigh") ? "tafrigh" : b.type === "article" ? "article" : "book"; };
     // قنوات مخصصة: شيخ أو مشايخ مختارون، وأقسام (موضوعات) أو مكتبة (الدعوة/العامة)، وأنواع (كتب، مقالات، تفريغات)
@@ -594,14 +611,14 @@ const RSTATION = (() => {
     const out = [], byT = {}; rest.forEach(id => (byT[B(id).topicId || "x"] = byT[B(id).topicId || "x"] || []).push(id));
     const ks = Object.keys(byT); for (let r = 0; out.length < rest.length; r++) ks.forEach(k => { if (byT[k][r]) out.push(byT[k][r]); });
     return man.concat(out.map(id => ({ book: id, auto: 1, by: (A(B(id).authorId) || {}).name || "" }))); }
-  const dayQ = C => (C.quran || {}).off ? 0 : (((C.quran || {}).mode === "prayer" ? ((C.quran || {}).after || [1, 2, 3, 4, 5]) : (C.quran || {}).slots) || []).length * (+(C.quran || {}).minutes || 30) * 60;
+  const dayQ = C => (C.quran || {}).off || C.kind === "quran" ? 0 : (((C.quran || {}).mode === "prayer" ? ((C.quran || {}).after || [1, 2, 3, 4, 5]) : (C.quran || {}).slots) || []).length * (+(C.quran || {}).minutes || 30) * 60;
   async function build(C, L, now) {
     const cl = await clips(), tz = (C.adhan || {}).tz || "Africa/Cairo", ep = midnight(Date.parse(((C.quran || {}).epoch || "2026-11-14") + "T12:00:00Z"), tz);
     const W0 = now - 30 * 6e4, W1 = now + 8 * 36e5, out = []; let t = W0;
     const books = items(C, L).map(x => ({ x, b: x.book })), P = books.map(({ b }) => (L[b].ds || []).map((d, k) => ({ bid: b, p: k + 1, d, f: AUDIO.page(k + 1) })).filter(z => z.d > 0));
     const totB = P.reduce((s, l) => s + l.reduce((a, z) => a + z.d, 0), 0);
     // ثوانٍ مضت من الكتب ومن التلاوة منذ بداية الإذاعة حتى لحظة ما
-    const consumed = until => { let days = Math.floor((until - ep) / 864e5), q = 0, sp = 0; if (days < 0) return { q: 0, b: 0 };
+    const consumed = until => { if (C.kind === "quran") return { q: Math.max(0, (until - ep) / 1e3), b: 0 }; let days = Math.floor((until - ep) / 864e5), q = 0, sp = 0; if (days < 0) return { q: 0, b: 0 };
       const m = ep + days * 864e5, SP = specials(C, m + 6 * 36e5); SP.forEach(x => { const e = Math.min(x.b, until); if (e > x.a && x.a >= m) { sp += (e - x.a) / 1e3; if (x.k === "quran") q += (e - x.a) / 1e3; } });
       const perDaySp = specials(C, ep + 6 * 36e5).reduce((s, x) => s + (x.b - x.a) / 1e3, 0); return { q: days * dayQ(C) + q, b: (until - ep) / 1e3 - days * perDaySp - sp }; };
     const clip = (id, d, title) => cl.has(id) ? { u: clipU(id), d, title, bid: "_clip", p: 1 } : null, push = x => { if (x && x.d > 0) { out.push(x); t += x.d * 1e3; } };
@@ -622,19 +639,31 @@ const RSTATION = (() => {
         if (pi === P[bi].length - 1) push(clip("radio-" + pg.bid + "-last", 4, "مع ختام الكتاب")); else if (n && C.nextEvery && n % C.nextEvery === 0) push(clip("radio-" + pg.bid + (n / C.nextEvery % 2 ? "-next" : "-next2"), 3, "ونتابع"));
         const d = Math.min(pg.d - (n === 0 ? sec : 0), (b - t) / 1e3); push(Object.assign({}, pg, { d: Math.max(1, d) })); pi++; n++; } t = b; };
     const SP = [].concat(specials(C, W0 - 864e5), specials(C, W0), specials(C, W0 + 864e5)).filter(x => x.b > W0 && x.a < W1).sort((x, y) => x.a - y.a);
-    for (const x of SP) { if (x.a > t) fillBooks(t, x.a); if (x.b <= t) continue;
+    const fillMain = C.kind === "quran" ? fillQuran : fillBooks;  // قناة التلاوات: الختمة متصلة لا يقطعها إلا الأذان
+    for (const x of SP) { if (x.a > t) fillMain(t, x.a); if (x.b <= t) continue;
       if (x.k === "quran") fillQuran(Math.max(t, x.a), x.b); else { push(clip("radio-adhan-" + x.p, 6, "أذان " + x.pn + " بتوقيت القاهرة")); if (C.adhan.url) push({ u: C.adhan.url, d: Math.max(1, (x.b - t) / 1e3), title: "الأذان", bid: "_clip", p: 1 }); if (t < x.b) t = x.b; } }
-    if (t < W1) fillBooks(t, W1);
-    window.__rsched = SP; return { id: "st-" + C.id, n: "📻 " + C.n, d: C.d || "", station: C.id, ids: books.map(y => y.b), items: out, T: out.reduce((a, x) => a + x.d, 0) + 1e6, start: W0 };
+    if (t < W1) fillMain(t, W1);
+    window.__rsched = SP; return { id: "st-" + C.id, n: (C.id === "my" ? "⭐ " : C.kind === "quran" ? "📖 " : "📻 ") + C.n + (C.st === "draft" ? " (مسودة)" : ""), d: C.d || "", station: C.id, ids: books.map(y => y.b), items: out, T: out.reduce((a, x) => a + x.d, 0) + 1e6, start: W0 };
   }
-  async function channels(L) { const c = await cfg(), out = []; for (const C of c.channels || []) { try { const ch = await build(C, L, Date.now()); if (ch.items.length) out.push(ch); } catch (e) { console.warn(e); } } return out; }
-  async function refresh(ap) { const L = await AUDIO.load(), C = ((await cfg()).channels || []).find(x => "st-" + x.id === ap.ch.id); if (!C) return; const ch = await build(C, L, Date.now()); ap.ch = ch; ap.q = ch.items; const { i, off } = radioPos(ch); ap.load(i, off, true); }
+  // القناة المسودة (st:"draft") تراها الإدارة وحدها حتى تعتمدها فتظهر للأعضاء؛ و«قناتي» يبنيها العضو لنفسه (S.myradio)
+  const staffR = () => typeof Cloud !== "undefined" && (Cloud.staff() || (Cloud.perms || []).includes("radio"));
+  async function channels(L) { const c = await cfg(), out = [], my = typeof S !== "undefined" && S.myradio && S.myradio.on ? [Object.assign({ id: "my", n: "قناتي", d: "قناة اخترت موادها بنفسك" }, S.myradio, { quran: S.myradio.q ? JSON.parse(JSON.stringify(((c.channels || [])[0] || {}).quran || {})) : { off: 1 }, adhan: S.myradio.adh ? ((c.channels || [])[0] || {}).adhan || null : null, auto: true, items: [] })] : [];
+    for (const C0 of (c.channels || []).concat(my)) { const C = C0; if (C.st === "draft" && !staffR()) continue; try { const ch = await build(C, L, Date.now()); if (ch.items.length) out.push(ch); } catch (e) { console.warn(e); } } return out; }
+  async function refresh(ap) { const L = await AUDIO.load(); if (ap.ch.id === "st-my") { const ch = (await channels(L)).find(x => x.id === "st-my"); if (ch) { ap.ch = ch; ap.q = ch.items; const { i, off } = radioPos(ch); ap.load(i, off, true); } return; } const C = ((await cfg()).channels || []).find(x => "st-" + x.id === ap.ch.id); if (!C) return; const ch = await build(C, L, Date.now()); ap.ch = ch; ap.q = ch.items; const { i, off } = radioPos(ch); ap.load(i, off, true); }
   // جدول اليوم: مواعيد التلاوة والأذان (للصفحة)
   async function todayHtml() { const c = await cfg(), C = (c.channels || [])[0]; if (!C) return ""; await AUDIO.load(); const tz = (C.adhan || {}).tz || "Africa/Cairo", SP = specials(C, Date.now()), f = x => new Date(x).toLocaleTimeString("ar-EG", { timeZone: tz, hour: "numeric", minute: "2-digit" });
     return `<details class="card rsched" open><summary><b>🕌 ${esc(C.n)}: التلاوة والأذان اليوم</b> <small class="mut">بتوقيت ${esc((C.adhan || {}).city || "القاهرة")}</small></summary>${SP.map(x => `<div class="rprog${Date.now() >= x.a && Date.now() < x.b ? " live" : ""}"><b>${f(x.a)}</b> <span>${x.k === "quran" ? "📖 تلاوة من الختمة المرتلة (" + toAr(Math.round((x.b - x.a) / 6e4)) + " دقيقة)" : "🔔 أذان " + x.pn}</span></div>`).join("")}<p class="mut">وبين ذلك: ${items(C, AUDIO.list || {}).map(x => "«" + esc((B(x.book) || {}).title || x.book) + "»" + (x.auto ? " <small>(تلقائي)</small>" : "")).join("، ")}.</p></details>`; }
   return { channels, refresh, todayHtml, prayers, specials, cfg, items };
 })();
 
+// أنماط القنوات (طلب المدير ٢١ نوفمبر): قناة عامة منوعة وقنوات تخصصية؛ تُنشأ مسودة وتظهر للأعضاء بعد اعتمادها
+const RKINDS = [["mix", "عامة منوعة", "كل الصوتيات المعتمدة (كتب ومقالات ودروس) بالتنويع بين الموضوعات، وتتخللها التلاوات والأذان. يمكن قصرها على مكتبة الدعوة أو العامة."],
+  ["sheikh", "شيخ أو مشايخ مختارون", "كتب ودروس ومقالات الشيخ أو المشايخ الذين تختارهم."],
+  ["quran", "تلاوات قرآنية فقط", "ختمة مرتلة متصلة على مدار اليوم بالقراء الذين تختارهم، لا يقطعها إلا الأذان إن فعّلته."],
+  ["article", "المقالات والفتاوى", "المقالات والفتاوى المسموعة (ويمكن قصرها على كتّاب بأعينهم)."],
+  ["tafrigh", "الدروس والشروح", "الدروس والشروح المفرّغة المسموعة (ويمكن قصرها على مشايخ بأعينهم)."],
+  ["topic", "قسم أو موضوع", "صوتيات قسم أو أكثر (العقيدة، الفقه، السيرة…)."],
+  ["custom", "مخصصة (اختيار حر)", "اجمع ما شئت: مشايخ وأقسام وأنواع ومكتبة معًا."]];
 /* محرر إذاعة المكتبة (للمدير ومن فوّضه بصلاحية radio): data/radio.json */
 async function rstEditor() {
   const box = document.getElementById("rstf"); if (!box) return; const c = JSON.parse(JSON.stringify(await RSTATION.cfg())); c.channels = c.channels || []; const K = +(box.dataset.k || 0), isNew = K >= c.channels.length;
@@ -644,18 +673,20 @@ async function rstEditor() {
   const chk = (nm, v, on, l) => `<label class="chk inl"><input type="checkbox" name="${nm}" value="${esc(v)}"${on ? " checked" : ""}> ${esc(l)}</label>`;
   const ready = Object.keys(L).filter(id => AUDIO.ready(L[id]) && B(id)), ord = id => { const i = (C.items || []).findIndex(x => x.book === id); return i < 0 ? "" : i + 1; };
   const REC = [["Minshawy_Murattal_128kbps", "محمد صديق المنشاوي"], ["Husary_128kbps", "محمود خليل الحصري"], ["mahmoud_ali_al_banna_32kbps", "محمود علي البنا"], ["Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد"], ["Alafasy_128kbps", "مشاري العفاسي"]], Q = C.quran || {};
-  box.className = ""; box.innerHTML = `<form id="rstform"><div class="row"><label>القناة</label><select id="rsch">${c.channels.map((x, i) => `<option value="${i}"${i === K ? " selected" : ""}>📻 ${esc(x.n || x.id)}</option>`).join("")}<option value="${c.channels.length}"${isNew ? " selected" : ""}>➕ قناة جديدة</option></select>${!isNew && K > 0 ? ` <button type="button" class="btn s" id="rsdel">حذف القناة</button>` : ""}</div>
+  box.className = ""; box.innerHTML = `<form id="rstform"><div class="row"><label>القناة</label><select id="rsch">${c.channels.map((x, i) => `<option value="${i}"${i === K ? " selected" : ""}>${x.kind === "quran" ? "📖" : "📻"} ${esc(x.n || x.id)}${x.st === "draft" ? " — مسودة" : ""}</option>`).join("")}<option value="${c.channels.length}"${isNew ? " selected" : ""}>➕ قناة جديدة</option></select>${!isNew && K > 0 ? ` <button type="button" class="btn s" id="rsdel">حذف القناة</button>` : ""}</div>
     <p class="mut">قنوات تبث على مدار اليوم بمواعيد التلاوة والأذان نفسها: إذاعة عامة، أو مخصصة لشيخ أو مشايخ مختارين، أو لقسم من الأقسام، أو للمقالات، أو لمجموع من ذلك.</p>
+    <div class="row"><div><label>نمط القناة</label><select name="kind">${RKINDS.map(([k, n]) => `<option value="${k}"${(C.kind || (K === 0 && !isNew ? "mix" : "custom")) === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div><label>الحالة</label><select name="st"><option value="draft"${C.st === "draft" || isNew ? " selected" : ""}>مسودة: تراها الإدارة وحدها للتجربة</option><option value="live"${C.st !== "draft" && !isNew ? " selected" : ""}>معتمدة: تظهر للأعضاء في الراديو</option></select></div></div>
     <label>اسم القناة</label><input name="n" required value="${esc(C.n || "")}"><label>وصف قصير</label><input name="d" value="${esc(C.d || "")}">
-    <details${(F.a || []).length || (F.t || []).length || (F.k || []).length || F.c ? " open" : ""}><summary><b>ما تبثه القناة تلقائيًّا</b> <small class="mut">(فارغ = كل الصوتيات المعتمدة)</small></summary>
-    <p><b>المشايخ والمؤلفون</b><br>${AU.map(([a, n]) => chk("fa", a, (F.a || []).includes(a), n)).join(" ") || '<span class="mut">—</span>'}</p>
-    <p><b>الأقسام (الموضوعات)</b><br>${TP.map(([t, n]) => chk("ft", t, (F.t || []).includes(t), n)).join(" ") || '<span class="mut">—</span>'}</p>
-    <p><b>الأنواع</b><br>${chk("fk", "book", (F.k || []).includes("book"), "الكتب")} ${chk("fk", "article", (F.k || []).includes("article"), "المقالات والفتاوى")} ${chk("fk", "tafrigh", (F.k || []).includes("tafrigh"), "التفريغات والدروس")}</p>
-    <p><b>المكتبة</b> <select name="fc"><option value="">الكل</option><option value="dawah"${F.c === "dawah" ? " selected" : ""}>مكتبة الدعوة</option><option value="turath"${F.c === "turath" ? " selected" : ""}>المكتبة العامة</option></select></p></details>
-    <label class="chk"><input type="checkbox" name="qon"${C.quran && C.quran.off ? "" : " checked"}> تتخللها تلاوات الختمة القرآنية في مواعيدها</label> <label class="chk"><input type="checkbox" name="aon"${C.adhan === null ? "" : " checked"}> والأذان بتوقيت القاهرة</label><h4>الكتب وترتيبها في البث</h4><p class="mut">اكتب رقم الترتيب أمام الكتاب لإدراجه (فارغ = غير مدرج). يتقدم البث في الكتاب يومًا بعد يوم ثم ينتقل إلى التالي.</p>
+    <div data-sec="f"><p class="mut" id="rkhint"></p>
+    <p data-sec="a"><b>المشايخ والمؤلفون</b><br>${AU.map(([a, n]) => chk("fa", a, (F.a || []).includes(a), n)).join(" ") || '<span class="mut">—</span>'}</p>
+    <p data-sec="t"><b>الأقسام (الموضوعات)</b><br>${TP.map(([t, n]) => chk("ft", t, (F.t || []).includes(t), n)).join(" ") || '<span class="mut">—</span>'}</p>
+    <p data-sec="k"><b>الأنواع</b><br>${chk("fk", "book", (F.k || []).includes("book"), "الكتب")} ${chk("fk", "article", (F.k || []).includes("article"), "المقالات والفتاوى")} ${chk("fk", "tafrigh", (F.k || []).includes("tafrigh"), "التفريغات والدروس")}</p>
+    <p data-sec="c"><b>المكتبة</b> <select name="fc"><option value="">الكل</option><option value="dawah"${F.c === "dawah" ? " selected" : ""}>مكتبة الدعوة</option><option value="turath"${F.c === "turath" ? " selected" : ""}>المكتبة العامة</option></select></p></div>
+    <label class="chk" data-sec="q"><input type="checkbox" name="qon"${C.quran && C.quran.off ? "" : " checked"}> تتخللها تلاوات الختمة القرآنية في مواعيدها</label> <label class="chk"><input type="checkbox" name="aon"${C.adhan === null ? "" : " checked"}> والأذان بتوقيت القاهرة</label><div data-sec="bk"><h4>الكتب وترتيبها في البث</h4><p class="mut">اكتب رقم الترتيب أمام الكتاب لإدراجه (فارغ = غير مدرج). يتقدم البث في الكتاب يومًا بعد يوم ثم ينتقل إلى التالي.</p>
     ${ready.map(id => `<div class="row"><input type="number" min="1" data-bk="${id}" value="${ord(id)}" style="width:5em"><span style="flex:1">${esc(B(id).setTitle || B(id).title)}</span></div>`).join("") || '<p class="mut">لا كتب صوتية معتمدة بعد.</p>'}
     <label class="chk"><input type="checkbox" name="auto"${C.auto === false ? "" : " checked"}> إدراج تلقائي: كل كتاب صوتي يكتمل ويُعتمد يدخل البث بعد الكتب المرتبة يدويًا (الدعوة أولًا مع التنويع بين الموضوعات)</label>${ready.filter(id => !(C.items || []).some(x => x.book === id)).length ? `<details><summary>استبعاد كتب من الإدراج التلقائي</summary>${ready.filter(id => !(C.items || []).some(x => x.book === id)).map(id => `<label class="chk"><input type="checkbox" data-ex="${id}"${(C.exclude || []).includes(id) ? " checked" : ""}> ${esc(B(id).setTitle || B(id).title)}</label>`).join("")}</details>` : ""}
-    <h4>الختمة القرآنية</h4><label>طريقة المواعيد</label><select name="qm"><option value="fixed"${Q.mode === "prayer" ? "" : " selected"}>مواعيد ثابتة أحددها</option><option value="prayer"${Q.mode === "prayer" ? " selected" : ""}>ذكية: بعد كل صلاة بتوقيت القاهرة</option></select><label>بعد الأذان بـ (دقيقة، للوضع الذكي)</label><input name="gap" type="number" min="5" max="90" value="${+Q.gap || 15}"><label>مواعيد التلاوة اليومية (بتوقيت القاهرة، مفصولة بفواصل)</label><input name="slots" dir="ltr" value="${esc((Q.slots || []).join(", "))}"><label>مدة كل فترة (دقيقة)</label><input name="min" type="number" min="5" max="180" value="${+Q.minutes || 30}">
+    </div><h4>الختمة القرآنية</h4><label>طريقة المواعيد</label><select name="qm"><option value="fixed"${Q.mode === "prayer" ? "" : " selected"}>مواعيد ثابتة أحددها</option><option value="prayer"${Q.mode === "prayer" ? " selected" : ""}>ذكية: بعد كل صلاة بتوقيت القاهرة</option></select><label>بعد الأذان بـ (دقيقة، للوضع الذكي)</label><input name="gap" type="number" min="5" max="90" value="${+Q.gap || 15}"><label>مواعيد التلاوة اليومية (بتوقيت القاهرة، مفصولة بفواصل)</label><input name="slots" dir="ltr" value="${esc((Q.slots || []).join(", "))}"><label>مدة كل فترة (دقيقة)</label><input name="min" type="number" min="5" max="180" value="${+Q.minutes || 30}">
     <label>القراء بالترتيب (ختمة كاملة لكل قارئ ثم التالي)</label>${[0, 1, 2].map(k => `<select name="rc${k}"><option value="">—</option>${REC.map(([v, n]) => `<option value="${v}"${(Q.reciters || [])[k] === v ? " selected" : ""}>${n}</option>`).join("")}</select>`).join(" ")}
     <label>بداية الختمة الأولى</label><input name="ep" type="date" value="${esc(Q.epoch || MKT.day())}">
     <h4>الأذان</h4><label>رابط ملف صوت الأذان (اختياري؛ وإلا يُذاع الإعلان وحده)</label><input name="au" dir="ltr" value="${esc((C.adhan || {}).url || "")}">
@@ -664,12 +695,19 @@ async function rstEditor() {
   document.getElementById("rstform").onsubmit = async e => { e.preventDefault(); const f = e.target, st = document.getElementById("rsts");
     const items = [...f.querySelectorAll("[data-bk]")].filter(x => +x.value > 0).sort((a, b) => a.value - b.value).map(x => ({ book: x.dataset.bk, by: (A((B(x.dataset.bk) || {}).authorId) || {}).name || "" }));
     const vals = nm => [...f.querySelectorAll(`input[name="${nm}"]:checked`)].map(x => x.value);
-    C.f = { a: vals("fa"), t: vals("ft"), k: vals("fk"), c: f.fc.value || undefined }; C.d = f.d.value.trim();
+    const kind = f.kind.value; C.kind = kind; C.st = f.st.value === "draft" ? "draft" : undefined;
+    C.f = kind === "quran" ? {} : kind === "article" ? { k: ["article"], a: vals("fa"), c: f.fc.value || undefined } : kind === "tafrigh" ? { k: ["tafrigh"], a: vals("fa") } : kind === "sheikh" ? { a: vals("fa") } : kind === "topic" ? { t: vals("ft"), c: f.fc.value || undefined } : kind === "mix" ? { c: f.fc.value || undefined } : { a: vals("fa"), t: vals("ft"), k: vals("fk"), c: f.fc.value || undefined };
+    if (kind === "sheikh" && !C.f.a.length) { st.textContent = "اختر شيخًا واحدًا على الأقل."; return; } if (kind === "topic" && !C.f.t.length) { st.textContent = "اختر قسمًا واحدًا على الأقل."; return; }
+    C.d = f.d.value.trim();
     Object.assign(C, { n: f.n.value.trim() || "إذاعة المكتبة", items, auto: f.auto.checked, exclude: [...f.querySelectorAll("[data-ex]:checked")].map(x => x.dataset.ex), nextEvery: +f.ne.value || 0, quran: Object.assign(Q, { mode: f.qm.value, gap: +f.gap.value || 15, slots: f.slots.value.split(/[,،\s]+/).filter(x => /^\d{1,2}:\d{2}$/.test(x)), minutes: +f.min.value || 30, reciters: [f.rc0.value, f.rc1.value, f.rc2.value].filter(Boolean), epoch: f.ep.value }), adhan: Object.assign({ city: "القاهرة", lat: 30.0444, lng: 31.2357, tz: "Africa/Cairo", fajr: 19.5, isha: 17.5, minutes: 5 }, C.adhan || {}, { url: f.au.value.trim() }) });
-    C.quran.off = !f.qon.checked ? 1 : undefined; if (!f.aon.checked) C.adhan = null;
+    C.quran.off = kind !== "quran" && !f.qon.checked ? 1 : undefined; if (kind === "quran") C.items = []; if (!f.aon.checked) C.adhan = null;
     if (isNew) c.channels.push(C); else c.channels[K] = C; st.textContent = "جارٍ الحفظ…";
     try { await GH.editJSON("data/radio.json", () => c, "إذاعة المكتبة: " + (isNew ? "قناة جديدة «" + C.n + "»" : "تحديث «" + C.n + "»")); st.textContent = "✓ حُفظ؛ تظهر القناة في الراديو، وتُسجَّل فواصل الكتب الجديدة آليًّا خلال دقائق."; } catch (x) { st.textContent = "تعذّر: " + (x.message || x); } };
   document.getElementById("rsch").onchange = e => { box.dataset.k = e.target.value; rstEditor(); };
+  const fm = document.getElementById("rstform"), RSHOW = { mix: "c", sheikh: "a", quran: "", article: "ac", tafrigh: "a", topic: "tc", custom: "atkc" };
+  const kindUI = () => { const k = fm.kind.value, show = RSHOW[k] || ""; fm.querySelectorAll("[data-sec]").forEach(el => { const s = el.dataset.sec; el.hidden = s === "f" ? !show : s === "bk" ? k === "quran" : s === "q" ? k === "quran" : !show.includes(s); });
+    document.getElementById("rkhint").textContent = (RKINDS.find(x => x[0] === k) || [])[2] || ""; if (!fm.n.value.trim() && k !== "custom") fm.n.placeholder = (RKINDS.find(x => x[0] === k) || [])[1] || ""; };
+  fm.kind.onchange = kindUI; kindUI();
   const del = document.getElementById("rsdel"); if (del) del.onclick = async () => { if (!confirm("حذف القناة «" + (C.n || "") + "»؟ (لا يُحذف شيء من الصوتيات)")) return; c.channels.splice(K, 1);
     try { await GH.editJSON("data/radio.json", () => c, "إذاعة المكتبة: حذف قناة «" + C.n + "»"); box.dataset.k = 0; rstEditor(); } catch (x) { alert(x.message || x); } };
 }
