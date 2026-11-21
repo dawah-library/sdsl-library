@@ -1,33 +1,33 @@
 {
- "done": 12,
+ "done": 39,
  "books": {
-  "bukhari": 27,
-  "abudawud": 3,
-  "nasai": 9,
-  "ibnmajah": 2,
-  "musnadahmad": 26,
-  "muwatta": 1,
-  "muslim": 7,
-  "tirmidhi": 3,
-  "darimi": 2
+  "bukhari": 85,
+  "abudawud": 10,
+  "nasai": 60,
+  "ibnmajah": 13,
+  "musnadahmad": 78,
+  "muwatta": 2,
+  "muslim": 22,
+  "tirmidhi": 7,
+  "darimi": 6
  },
  "cover": {
-  "bukhari": "27/7133",
-  "muslim": "7/7536",
-  "abudawud": "3/7360",
-  "nasai": "9/5716",
-  "tirmidhi": "3/3505",
-  "ibnmajah": "2/4259",
-  "musnadahmad": "26/25473",
-  "muwatta": "1/1796",
-  "darimi": "2/3415"
+  "bukhari": "85/7133",
+  "muslim": "22/7536",
+  "abudawud": "10/7360",
+  "nasai": "60/5716",
+  "tirmidhi": "7/3505",
+  "ibnmajah": "13/4259",
+  "musnadahmad": "78/25473",
+  "muwatta": "2/1796",
+  "darimi": "6/3415"
  },
  "wait": [],
  "skipped": [
   "عارضة الأحوذي بشرح صحيح الترمذي (غير موجود في turath.io)",
   "حاشية السندي على مسند الإمام أحمد (غير موجود في turath.io)"
  ],
- "at": "2026-11-20",
+ "at": "2026-11-21",
  "links_books": [
   "alamhadith",
   "awnmabud",
