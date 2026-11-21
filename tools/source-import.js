@@ -50,7 +50,7 @@ async function fbDiscover(s, ctx, L) {
   const tok = toks[s.id] || toks[s.fb] || process.env.FB_PAGE_TOKEN, out = []; out.mode = "fb";
   if (!tok) { // بلا رمز: منشورات «الزائر بلا حساب» (tools/fb-harvest.js كل ساعة ← data/fb-inbox.json)
     const box = ctx.fbBox || (ctx.fbBox = readJSON(path.join(DATA, "fb-inbox.json"), { items: [] }));
-    box.items.filter(p => p.src === s.id).forEach(p => { const msg = String(p.text); out.push({ id: p.k, u: p.u, title: msg.split("\n")[0].slice(0, 90), date: new Date(p.t * 1000).toISOString().slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); });
+    box.items.filter(p => p.src === s.id).forEach(p => { const msg = String(p.text); out.push({ id: p.k, u: p.u, video: !!p.video, title: msg.split("\n")[0].slice(0, 90), date: new Date(p.t * 1000).toISOString().slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); });
     out.mode = out.length ? "fb-web" : "fb-notoken"; if (!out.length) L("لا منشورات في صندوق الزائر بعد (fb-harvest)"); return out; }
   try { const j = JSON.parse(await get("https://graph.facebook.com/v19.0/" + encodeURIComponent(s.fb) + "/posts?fields=id,message,created_time,permalink_url&limit=" + (s.perRun || 25) + "&access_token=" + encodeURIComponent(tok), 1));
     (j.data || []).filter(p => p.message).forEach(p => { const msg = String(p.message); out.push({ id: "p" + String(p.id).replace(/\D/g, "").slice(-14), u: p.permalink_url || "https://www.facebook.com/" + p.id, title: msg.split("\n")[0].slice(0, 90), date: String(p.created_time || "").slice(0, 10), author: s.author || "", html: msg.split("\n").map(l => "<p>" + l.replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]) + "</p>").join("") }); }); }
@@ -106,7 +106,10 @@ async function runSource(s, ctx) {
       let author = en.author || meta(html, "author") || meta(html, "article:author") || ((html.match(/(?:بقلم|كتبه|الكاتب)\s*[:：]\s*([^<\n]{3,40})/) || [])[1] || "").trim(); if (/^https?:|حزب النور|السلفي|^admin$/i.test(author)) author = ""; const am = title.match(/[.،]\s*(?:د\/|الشيخ\/|م\/|أ\/|د\.|الشيخ)\s*([^.()]+)$/); if (am) { author = am[1].trim(); title = title.slice(0, am.index).trim(); }
       const text = en.html ? htmlText(en.html) : mainText(html, s.contentRx), date = (en.date || meta(html, "article:published_time") || (html.match(/\b(20\d\d-\d\d-\d\d)/) || [])[1] || "").slice(0, 10);
       seen.add(key);
-      const reason = /^(تهنئة|تعزية)|بخالص العزاء/.test(title) ? "تهنئة/تعزية" : (s.skipRx && new RegExp(s.skipRx).test(title)) ? "خارج النطاق (خبر/مقطع)" : text.length < (s.minChars || 600) ? "بلا نص كافٍ (مقطع مرئي أو صوتي)" : "";
+      // فيسبوك: لا يُنشر عنوان مقطع مرئي وحده؛ ويُقبل المقطع إن صحبه منشور يتحدث عنه أو يلخصه (قرار المدير ٢١ نوفمبر)
+      const fbClean = s.type === "facebook" ? text.replace(/https?:\/\/\S+/g, " ").replace(/#[^\s#]+/g, " ").replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\uFE0F*>_~]/gu, " ").replace(/\s+/g, " ").trim() : text;
+      const vidTitle = s.type === "facebook" && ((en.video && fbClean.length < 120) || (/\s[|｜]\s/.test(fbClean) && fbClean.length < 250) || (/فيديو|مقطع|حلقة|محاضرة|خطبة|بث مباشر/.test(fbClean) && fbClean.length < 80) || (fbClean.length < 150 && (s.author || "").split(/\s+/).pop().length > 2 && new RegExp((s.author || "").split(/\s+/).pop() + "\\s*$").test(fbClean))); // عنوان يُختم باسم الشيخ
+      const reason = /^(تهنئة|تعزية)|بخالص العزاء/.test(title) ? "تهنئة/تعزية" : (s.skipRx && new RegExp(s.skipRx).test(title)) ? "خارج النطاق (خبر/مقطع)" : vidTitle ? "عنوان مقطع مرئي بلا منشور يصحبه" : fbClean.length < (s.minChars || 600) ? "بلا نص كافٍ (مقطع مرئي أو صوتي)" : "";
       if (!reason && s.authorRx && !new RegExp(s.authorRx).test(author + " " + text.slice(0, 300))) { skipped++; continue; } // مصدر مخصوص بكتّاب بأعينهم (مثل مقالات الطلائع)
       if (reason) { skipped++; continue; }
       // التكرار: في الفهرس القائم (مصادر أخرى) أو في قائمة المراجعة
