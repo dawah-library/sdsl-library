@@ -2,15 +2,22 @@
    البيانات في data/majalla.json: {v, name, issues:[{id, no, title, theme, date, status, intro, secs:[{t, items:[...]}], log:[...]}]}.
    المادة: {ref, p, p2} لسجل في المكتبة (كتاب ونطاق صفحات، أو مقال/فتوى كاملًا)، أو {text, author, src} لنص ملصوق.
    العنوان التحريري (title) والمقدمة (intro) من إعداد المجلة ويُميَّزان عن النص الأصلي، والنص الأصلي لا يُغيَّر.
-   الحالات: draft مسودة، review قيد المراجعة، approved معتمد، published منشور؛ لا يرى الزائر إلا المنشور، والنشر للمدير وحده. */
+   الحالات: open يستقبل المشاركات، draft مسودة، review قيد المراجعة، approved معتمد، published منشور؛ لا يرى الزائر إلا المنشور، والنشر للمدير وحده.
+   الإصدار الدوري (plan): يفتح tools/majalla-auto.py العدد القادم قبل موعده (pub) للمشاركات، ويصدره في موعده مستكملًا ما نقص آليًّا (it.auto)،
+   ويبقى قابلًا لتعديل الفريق حتى edUntil. مشاركات الأعضاء في admin_messages بعنوان «مشاركة للمجلة [الركن]: …» وتُعتمد من المحرر (it.contrib). */
 const MAJ = (() => {
   const P = "data/majalla.json", NAME = "مجلة مكتبة الدعوة السلفية";
-  const ST = [["draft", "مسودة"], ["review", "قيد المراجعة"], ["approved", "معتمد للنشر"], ["published", "منشور"]];
+  const ST = [["open", "يستقبل المشاركات"], ["draft", "مسودة"], ["review", "قيد المراجعة"], ["approved", "معتمد للنشر"], ["published", "منشور"]];
   const stName = k => (ST.find(s => s[0] === k) || ST[0])[1];
   let D = null, ED = null; // ED: العدد المفتوح للتحرير (نسخة محلية حتى الحفظ)
   const load = async (fresh) => { if (D && !fresh) return D; try { const r = await fetch(P + (fresh ? "?fresh=1" : ""), { cache: "no-cache" }); D = r.ok ? await r.json() : null; } catch (e) { D = null; } D = D && D.issues ? D : { v: 1, name: NAME, issues: [] }; return D; };
   const staff = () => typeof isAdmin === "function" && isAdmin();
   const canPublish = () => (typeof GH !== "undefined" && GH.on) || (typeof Cloud !== "undefined" && Cloud.staff() && Cloud.role === "admin");
+  const CP = "مشاركة للمجلة"; // بادئة عنوان المشاركة في admin_messages: «مشاركة للمجلة [الركن]: العنوان»
+  const todayS = () => new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10);
+  // بعد الصدور: التعديل للفريق حتى edUntil (افتراضيًّا يومان)، ثم للمدير وحده
+  const canEdit = x => x.status !== "published" || canPublish() || (staff() && x.edUntil && todayS() <= x.edUntil);
+  const upcoming = () => (D.issues || []).filter(x => x.status !== "published" && x.pub).sort((a, b) => a.pub.localeCompare(b.pub))[0];
   const visible = () => D.issues.filter(x => x.status === "published" || staff()).sort((a, b) => (b.no || 0) - (a.no || 0));
   const fmtDate = d => { try { return new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return d || ""; } };
   const kindAr = b => ({ article: "مقال", fatwa: "فتوى", statement: "بيان", book: "من كتاب" })[kindOf(b)] || "مادة";
@@ -72,6 +79,10 @@ const MAJ = (() => {
     view(`<div class="majhead"><h2>${esc(D.name || NAME)}</h2><p class="mut">مجلة دورية تجمع في كل عدد موضوعًا علميًا أو دعويًا من كتب المكتبة ومقالاتها وفتاواها، مرتبةً في أبواب، مع روابط القراءة في مصادرها الأصلية. العناوين والمقدمات التحريرية من إعداد المجلة، والنصوص كما هي في مصادرها.</p>
       <form class="sbox" data-form="majq" style="max-width:none"><input name="q" type="search" value="${esc(sq)}" placeholder="ابحث في أعداد المجلة: العناوين والكتّاب والنصوص" aria-label="بحث في المجلة"><button class="btn">بحث</button></form></div>
      ${staff() ? `<p><a class="btn s" href="#/admin?t=majalla">إدارة أعداد المجلة</a></p>` : ""}
+     ${(() => { const up = upcoming(); return up && up.status === "open" ? `<details class="note mjcall"><summary><b>شارك في العدد القادم:</b> «${esc(up.theme || up.title || "")}» — يصدر ${esc(fmtDate(up.pub))}</summary>
+       ${typeof Auth !== "undefined" && Auth.user ? `<form data-form="majcontrib" class="relform"><input type="hidden" name="i" value="${esc(up.id)}"><label>الباب</label><select name="cr"><option value="">مقال أو مشاركة عامة</option>${CORNERS.filter(c => c[0] !== "news").map(c => `<option value="${c[0]}">${esc(c[1])}</option>`).join("")}</select>
+        <label>العنوان</label><input name="t" required maxlength="100"><label>النص (حتى ٣٨٠٠ حرف؛ يراجعه فريق المجلة قبل النشر)</label><textarea name="b" required rows="8" maxlength="3800"></textarea>
+        <div class="savebar"><button class="btn p">إرسال المشاركة</button> <span class="mut" id="majcst"></span></div></form>` : `<p>سجّل دخولك لترسل مقالًا أو مشاركة لهذا العدد. <a class="btn s p" href="#/account">تسجيل الدخول</a></p>`}</details>` : ""; })()}
      <div class="mjcorners">${CORNERS.map(c => `<a class="mjcorner cr-${c[0]}" href="#/majalla/c/${c[0]}"><span>${c[2]}</span><b>${esc(c[1])}</b><small>${esc(c[3])}</small></a>`).join("")}</div>
      <div id="majres"></div>
      <div class="majlist">${L.map(x => `<a class="majcard" href="#/majalla/${esc(x.id)}"><span class="majcov"><span class="majno">العدد ${toAr(x.no || "")}</span><b>${esc(x.title || x.theme || "")}</b></span><span class="mut">${esc(fmtDate(x.date))}${x.status !== "published" ? ` • <span class="rb ad">${esc(stName(x.status))}</span>` : ""}</span><small class="mut">${esc((x.secs || []).map(s => s.t).join(" • "))}</small></a>`).join("") || '<div class="note">لم يصدر عدد بعد. تُعدّ الأعداد من «الإدارة ← مجلة المكتبة» وتظهر هنا بعد اعتمادها ونشرها.</div>'}</div>`);
@@ -334,20 +345,48 @@ const MAJ = (() => {
       <label>موضوع العدد (كلمات يُبحث بها في المكتبة)</label><input name="theme" required maxlength="120" placeholder="مثل: الصيام، بر الوالدين، التوحيد">
       <label>عنوان العدد (اختياري؛ الافتراضي الموضوع)</label><input name="title" maxlength="160">
       <div class="savebar"><button class="btn p" name="auto" value="1">إنشاء مسودة آلية</button> <button class="btn" name="auto" value="0">عدد فارغ</button> <span id="majst" class="mut"></span></div></form>
+     ${planBox()}
      <h3>الأعداد (${toAr(L.length)})</h3>${L.map(x => `<div class="bk"><b>العدد ${toAr(x.no || "")}: ${esc(x.title || x.theme || "")}</b><span>${esc([fmtDate(x.date), stName(x.status), (x.secs || []).reduce((n, s) => n + s.items.length, 0) + " مادة"].join(" • "))}</span> <a class="btn s" href="#/admin?t=majalla&i=${esc(x.id)}">تحرير</a> <a class="btn s" href="#/majalla/${esc(x.id)}">معاينة</a></div>`).join("") || '<p class="mut">لا أعداد بعد.</p>'}`;
   }
 
+  // جدول الإصدار الدوري (data/majalla.json ← plan): يقرؤه tools/majalla-auto.py يوميًّا
+  function planBox() {
+    const pl = D.plan || {}, up = upcoming(), M = canPublish();
+    return `<details class="note" ${up || pl.auto ? "" : "open"}><summary><b>الإصدار الدوري الآلي</b> ${pl.auto ? "✓ مفعّل" : "— غير مفعّل"}${up ? ` • العدد القادم ${toAr(up.no)}: «${esc(up.theme || up.title || "")}» يصدر ${esc(fmtDate(up.pub))} <a class="btn s p" href="#/admin?t=majalla&i=${esc(up.id)}">أضف إليه</a>` : ""}</summary>
+     <p class="mut">قبل موعد العدد بأيام «الفتح» يُنشأ العدد القادم فيضيف إليه المدير والفريق أبوابًا ومقالات، وتصل إليه مشاركات المؤلفين والقراء للاعتماد. وفي موعده يصدر آليًّا: يبقى كل ما أُضيف، ويُستكمل ما نقص من أبواب العدد المعتادة من مواد المكتبة بموضوعه، وإن لم تُضف مشاركة صدر آليًّا كاملًا. وبعد صدوره يبقى قابلًا للتعديل للفريق أيام «التعديل»، ثم للمدير وحده.</p>
+     ${M ? `<form data-form="majplan" class="relform"><label class="inl"><input type="checkbox" name="auto"${pl.auto ? " checked" : ""}> تفعيل الإصدار الآلي</label>
+      <div class="row"><div><label>الدورية</label><select name="every"><option value="month"${(pl.every || "month") === "month" ? " selected" : ""}>شهرية</option>${[7, 14, 15].map(n => `<option value="${n}"${String(pl.every) === String(n) ? " selected" : ""}>كل ${toAr(n)} يومًا</option>`).join("")}</select></div>
+       <div><label>يوم الصدور في الشهر</label><input name="day" type="number" min="1" max="28" value="${esc(pl.day || 1)}"></div>
+       <div><label>يُفتح للمشاركات قبل الصدور بـ (أيام)</label><input name="prep" type="number" min="1" max="30" value="${esc(pl.prep || 7)}"></div>
+       <div><label>التعديل بعد الصدور (أيام)</label><input name="grace" type="number" min="0" max="7" value="${esc(pl.grace ?? 2)}"></div></div>
+      <label>موضوعات الأعداد القادمة بالترتيب (سطر لكل عدد؛ إن نفدت اختيرت آليًّا)</label><textarea name="themes" rows="3" placeholder="بر الوالدين&#10;طلب العلم">${esc((pl.themes || []).join("\n"))}</textarea>
+      <div class="savebar"><button class="btn p">حفظ الجدول</button> <span id="majplanst" class="mut"></span></div></form>` : '<p class="mut">ضبط الجدول للمدير.</p>'}</details>`;
+  }
+  // مشاركات المؤلفين والقراء (admin_messages بعنوان يبدأ بـ «مشاركة للمجلة»): تُعتمد في العدد المفتوح أو يُعتذر عنها
+  async function contribs() {
+    const box = document.getElementById("majcontrib"); if (!box || typeof Auth === "undefined" || !Auth.sb) return;
+    const { data, error } = await Auth.sb.from("admin_messages").select("id,user_id,user_name,subject,body,status,created_at").like("subject", CP + "%").eq("status", "open").order("created_at", { ascending: true }).limit(100);
+    if (error) { box.innerHTML = '<p class="mut">تعذر تحميل المشاركات.</p>'; return; }
+    const secs = (ED && ED.secs) || [];
+    box.innerHTML = (data || []).length ? data.map(m => { const mm = m.subject.match(/\[([a-z]+)\]/), cr = mm && mm[1], t = m.subject.replace(/^[^:]*:\s*/, "");
+      return `<div class="majit"><b>${esc(t)}</b> <span class="mut">${esc(m.user_name || "عضو")}${cr && cornerOf(cr) ? " • " + esc(cornerOf(cr)[1]) : ""} • ${esc(fmtDate(m.created_at))}</span><details><summary>النص (${toAr(m.body.length)} حرفًا)</summary><p style="white-space:pre-wrap">${esc(m.body)}</p></details>
+       <div class="row"><select data-majcsec="${m.id}">${secs.map((sc, i) => `<option value="${i}"${cr && sc.corner === cr ? " selected" : ""}>${esc(sc.t)}</option>`).join("")}<option value="new">باب «مشاركات القراء» (جديد)</option></select><button class="btn s p" data-majact="cok" data-k="${m.id}">إضافة إلى العدد</button><button class="btn s" data-majact="cno" data-k="${m.id}">اعتذار</button></div></div>`; }).join("") : '<p class="mut">لا مشاركات جديدة.</p>';
+    box._rows = data || [];
+  }
+
   function paint() {
-    const el = document.getElementById("majed"); if (!el || !ED) return;
+    const el = document.getElementById("majed"); if (!el || !ED) return; setTimeout(contribs, 0);
     const x = ED, ns = (x.secs || []).length;
     const stOpts = ST.filter(([k]) => k !== "published" || canPublish() || x.status === "published").map(([k, l]) => `<option value="${k}"${x.status === k ? " selected" : ""}>${l}</option>`).join("");
     el.innerHTML = `<p><a href="#/admin?t=majalla">كل الأعداد</a> › العدد ${toAr(x.no || "")} <a class="btn s" href="#/majalla/${esc(x.id)}">معاينة المحفوظ</a></p>
-     <div class="row"><div><label>رقم العدد</label><input data-majf="no" type="number" min="1" value="${esc(x.no || "")}"></div><div><label>التاريخ</label><input data-majf="date" type="date" value="${esc(x.date || "")}"></div><div><label>الحالة</label><select data-majf="status">${stOpts}</select></div></div>
+     <div class="row"><div><label>رقم العدد</label><input data-majf="no" type="number" min="1" value="${esc(x.no || "")}"></div><div><label>التاريخ</label><input data-majf="date" type="date" value="${esc(x.date || "")}"></div><div><label>الحالة</label><select data-majf="status">${stOpts}</select></div><div><label>موعد الصدور الآلي</label><input data-majf="pub" type="date" value="${esc(x.pub || "")}"></div></div>
+     ${x.status === "published" ? `<p class="note">${canEdit(x) ? (x.edUntil && !canPublish() ? "يمكن تعديل هذا العدد بعد صدوره حتى " + esc(fmtDate(x.edUntil)) + " ثم يُقفل للمدير وحده." : "العدد صادر؛ تعديله متاح لك" + (x.edUntil ? " (وللفريق حتى " + esc(fmtDate(x.edUntil)) + ")" : "") + ".") : "انتهت مدة التعديل بعد الصدور؛ التعديل الآن للمدير وحده."}</p>` : x.pub ? `<p class="note">يصدر آليًّا يوم ${esc(fmtDate(x.pub))}: يبقى ما تضيفه هنا، ويُستكمل ما نقص من الأبواب المعتادة (مقالات، فتاوى، من كتب المشايخ، من المكتبة العامة، الركن الأدبي) من مواد المكتبة بموضوع «${esc(x.theme || "")}».</p>` : ""}
+     ${x.status !== "published" || canEdit(x) ? `<details open><summary><b>مشاركات المؤلفين والقراء</b></summary><div id="majcontrib" class="mut">جارٍ التحميل…</div></details>` : ""}
      <label>عنوان العدد</label><input data-majf="title" maxlength="160" value="${esc(x.title || "")}">
      <div class="row"><div><label>عنوان فرعي للغلاف</label><input data-majf="sub" maxlength="200" value="${esc(x.sub || "")}"></div><div><label>التاريخ الهجري (اختياري)</label><input data-majf="hijri" maxlength="40" value="${esc(x.hijri || "")}"></div></div>
      <label>افتتاحية العدد (من إعداد المجلة)</label><textarea data-majf="intro" rows="4" maxlength="4000">${esc(x.intro || "")}</textarea>
      ${(x.secs || []).map((s, si) => `<fieldset class="majsecd"><legend><input data-majsec="${si}" value="${esc(s.t)}" maxlength="80" aria-label="اسم الباب"> <select data-majcr="${si}" aria-label="الركن"><option value="">— باب عام —</option>${CORNERS.map(c => `<option value="${c[0]}"${s.corner === c[0] ? " selected" : ""}>${esc(c[1])}</option>`).join("")}</select>${s.corner === "news" ? ` <label class="inl"><input type="checkbox" data-majlive="${si}"${s.live === "news" ? " checked" : ""}> عرض أحدث الأخبار آليًا</label>` : ""}</legend>
-       ${s.items.map((it, ii) => `<div class="majit"><div><b>${toAr(ii + 1)}. ${esc(itemTitle(it))}</b> <span class="mut">${esc(itemAuthor(it))}${it.ref ? " • " + esc(kindAr(B(it.ref) || {})) + (kindOf(B(it.ref) || {}) === "book" ? ` ص${toAr(it.p || 1)}${it.p2 > it.p ? "–" + toAr(it.p2) : ""}` : "") : " • نص ملصوق"}</span></div>
+       ${s.items.map((it, ii) => `<div class="majit"><div><b>${toAr(ii + 1)}. ${esc(itemTitle(it))}</b>${it.auto ? ' <em class="tag">آلي</em>' : ""}${it.contrib ? ' <em class="tag">مشاركة</em>' : ""} <span class="mut">${esc(itemAuthor(it))}${it.ref ? " • " + esc(kindAr(B(it.ref) || {})) + (kindOf(B(it.ref) || {}) === "book" ? ` ص${toAr(it.p || 1)}${it.p2 > it.p ? "–" + toAr(it.p2) : ""}` : "") : " • نص ملصوق"}</span></div>
         <div class="row"><input data-majit="${si}.${ii}.title" placeholder="عنوان تحريري (اختياري؛ الأصلي: ${esc(itemOrig(it) || "—")})" value="${esc(it.title || "")}" maxlength="160">${kindOf(B(it.ref) || {}) === "book" ? `<input data-majit="${si}.${ii}.p" type="number" min="1" style="max-width:90px" value="${it.p || 1}" aria-label="من صفحة"><input data-majit="${si}.${ii}.p2" type="number" min="1" style="max-width:90px" value="${it.p2 || it.p || 1}" aria-label="إلى صفحة">` : ""}</div>
         <div class="row"><div><label>نمط العرض</label><select data-majst="${si}.${ii}">${STY.map(([k, l]) => `<option value="${k}"${styOf(it) === k ? " selected" : ""}>${l}</option>`).join("")}</select></div><div><label>المقتطف يبدأ من عبارة (اختياري)</label><input data-majit="${si}.${ii}.from" value="${esc(it.from || "")}" maxlength="200"></div><div><label>وينتهي بعبارة</label><input data-majit="${si}.${ii}.to" value="${esc(it.to || "")}" maxlength="200"></div></div>
         <textarea data-majit="${si}.${ii}.intro" rows="2" maxlength="1500" placeholder="مقدمة المجلة لهذه المادة (اختياري)">${esc(it.intro || "")}</textarea>
@@ -391,6 +430,22 @@ const MAJ = (() => {
     catch (err) { st.textContent = "تعذر: " + err.message; }
   }, true);
 
+  document.addEventListener("submit", async e => {
+    const f = e.target.closest("[data-form=majplan]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
+    const fd = new FormData(f), st = f.querySelector("#majplanst"), ev = fd.get("every");
+    const plan = { auto: f.auto.checked ? 1 : 0, every: ev === "month" ? "month" : +ev, day: Math.min(28, Math.max(1, +fd.get("day") || 1)), prep: Math.max(1, +fd.get("prep") || 7), grace: Math.max(0, +fd.get("grace") || 0), themes: String(fd.get("themes") || "").split("\n").map(t => t.trim()).filter(Boolean) };
+    st.textContent = "جارٍ الحفظ…";
+    try { await GH.editJSON(P, d => { d = d && d.issues ? d : { v: 1, name: NAME, issues: [] }; d.plan = plan; return d; }, "مجلة المكتبة: جدول الإصدار الدوري"); D = null; st.textContent = "حُفظ ✓ (يعمل الإصدار الآلي يوميًّا ٦:٤١ صباحًا)"; } catch (err) { st.textContent = "تعذر: " + err.message; }
+  }, true);
+
+  document.addEventListener("submit", async e => {
+    const f = e.target.closest("[data-form=majcontrib]"); if (!f) return; e.preventDefault(); e.stopImmediatePropagation();
+    const st = f.querySelector("#majcst"), t = f.t.value.trim(), b = f.b.value.trim(), cr = f.cr.value; if (t.length < 3 || b.length < 30) { st.textContent = "اكتب عنوانًا ونصًّا كافيًا."; return; }
+    try { const pg = typeof Members !== "undefined" ? await Members.page(Auth.user.id) : null, nm = (pg && pg.name) || Auth.user.name || "عضو";
+      const { error } = await Auth.sb.from("admin_messages").insert({ user_id: Auth.user.id, user_name: nm, subject: (CP + (cr ? " [" + cr + "]" : "") + ": " + t).slice(0, 120), body: b });
+      if (error) throw error; f.reset(); st.textContent = "✓ وصلت مشاركتك إلى فريق المجلة، وتصلك الإجابة في رسائلك."; } catch (err) { st.textContent = "تعذر الإرسال: " + (err.message || err); }
+  }, true);
+
   document.addEventListener("input", e => {
     const t = e.target; if (!ED || !t.closest("#majed")) return;
     if (t.dataset.majf) ED[t.dataset.majf] = t.dataset.majf === "no" ? +t.value : t.value;
@@ -421,6 +476,16 @@ const MAJ = (() => {
     if (!ED) return;
     const st = document.getElementById("majst");
     if (a === "preview") { try { localStorage.setItem("majpress:draft", JSON.stringify(ED)); window.open("majpress/?src=draft", "_blank", "noopener"); } catch (err) { st.textContent = "تعذر فتح المعاينة: " + err.message; } return; }
+    if (a === "cok" || a === "cno") {
+      const box = document.getElementById("majcontrib"), m = ((box && box._rows) || []).find(r => String(r.id) === el.dataset.k); if (!m) return;
+      if (a === "cno") { const r = prompt("رسالة الاعتذار للكاتب:", "جزاك الله خيرًا على مشاركتك؛ لم تُدرج في هذا العدد."); if (r === null) return;
+        const { error } = await Auth.sb.from("admin_messages").update({ reply: r, replied_at: new Date().toISOString(), status: "replied" }).eq("id", m.id); if (error) return toast(error.message); return contribs(); }
+      const sel = document.querySelector(`[data-majcsec="${m.id}"]`); let si = sel ? sel.value : "new";
+      if (si === "new") { si = ED.secs.findIndex(sc => sc.t === "مشاركات القراء"); if (si < 0) { ED.secs.push({ t: "مشاركات القراء", items: [] }); si = ED.secs.length - 1; } }
+      ED.secs[+si].items.push({ title: m.subject.replace(/^[^:]*:\s*/, ""), author: m.user_name || "", src: "مشاركة في مجلة المكتبة", text: m.body, contrib: { mid: m.id, uid: m.user_id } });
+      try { await persist(ED, "اعتماد مشاركة: " + m.subject.replace(/^[^:]*:\s*/, "")); await Auth.sb.from("admin_messages").update({ reply: "قُبلت مشاركتك في العدد " + (ED.no || "") + " من مجلة المكتبة. جزاك الله خيرًا.", replied_at: new Date().toISOString(), status: "replied" }).eq("id", m.id); toast("أُضيفت إلى العدد وحُفظ."); paint(); } catch (err) { st.textContent = "تعذر: " + err.message; }
+      return;
+    }
     if (a === "up" || a === "down") { const [s, ii] = at(el.dataset.k), j = a === "up" ? ii - 1 : ii + 1; [s.items[ii], s.items[j]] = [s.items[j], s.items[ii]]; paint(); }
     else if (a === "rm") { const [s, ii] = at(el.dataset.k); s.items.splice(ii, 1); paint(); }
     else if (a === "rmsec") { if (!ED.secs[+el.dataset.k].items.length || confirm("حذف الباب وما فيه من العدد؟ (لا تُحذف المواد من المكتبة)")) { ED.secs.splice(+el.dataset.k, 1); paint(); } }
@@ -432,7 +497,8 @@ const MAJ = (() => {
       if (!text || !v("title")) { st.textContent = "اكتب العنوان والنص."; return; } ED.secs[+si].items.push({ title: v("title"), author: v("author"), src: v("src"), text }); paint(); }
     else if (a === "regen") { const th = (document.getElementById("majretheme").value || "").trim(); st.textContent = "جارٍ إعداد المسودة…"; try { ED.secs = await autoDraft(th, ED.id); ED.theme = th; paint(); } catch (err) { st.textContent = err.message; } }
     else if (a === "save") {
-      if (ED.status === "published" && !canPublish()) { st.textContent = "النشر للمدير وحده؛ اختر «قيد المراجعة»."; return; }
+      const was = (D && D.issues || []).find(y => y.id === ED.id) || ED;
+      if (ED.status === "published" && !canPublish() && !(was.status === "published" && canEdit(was))) { st.textContent = was.status === "published" ? "انتهت مدة التعديل بعد الصدور؛ التعديل للمدير وحده." : "النشر للمدير وحده؛ اختر «قيد المراجعة»."; return; }
       el.disabled = true; st.textContent = "جارٍ الحفظ…";
       try { await persist(ED, "حفظ (" + stName(ED.status) + ")"); st.textContent = "حُفظ ✓"; } catch (err) { st.textContent = "تعذر الحفظ: " + err.message; }
       el.disabled = false;
