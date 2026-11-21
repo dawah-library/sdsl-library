@@ -1774,3 +1774,16 @@ body.citeplain .cit .cbt{display:inline}body.citeplain .cit .cbx{display:none}
 .pmodes .chip.on,.pmodes .chip[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:transparent}
 .post .pq{margin:0 0 6px;padding:6px 10px;border-inline-start:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);border-radius:6px;font-size:.95em}
 .row.pmodes>.mut{flex:1 1 220px}
+/* الحديث: المتن منفصلًا عن الإسناد، وطريقة التصفح (حديث واحد بالسحب أو عدد في الصفحة) */
+details.hisn{margin:6px 0 4px;border-inline-start:3px solid var(--line);padding-inline-start:10px}
+details.hisn>summary{cursor:pointer;color:var(--mut,#667);font-size:.88rem;list-style:none}
+details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summary{margin-bottom:4px}
+.hisnad{font-size:.92em;line-height:1.9;color:var(--mut,#556);margin:0}
+.hdbrowse{gap:10px;margin:6px 0 10px;font-size:.9rem}.hdbrowse label{display:flex;gap:6px;align-items:center;flex:0 1 auto;min-width:0}.hdbrowse select{max-width:100%}
+.hdchoose{margin:8px 0;padding:12px 14px}.hdchoose .row>.btn{flex:none}
+.hread.one{touch-action:pan-y}.hrh.hrone{padding:18px 16px;min-height:42vh;font-size:1.08em}
+.hrh.hrone .hdm{font-size:1.15em;line-height:2.1}
+.hrone-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;bottom:78px;background:var(--bg);padding:8px 0;z-index:3}
+.hread.one.sw-n{animation:hdswn .25s ease}.hread.one.sw-p{animation:hdswp .25s ease}
+@keyframes hdswn{to{transform:translateX(40px);opacity:.3}}@keyframes hdswp{to{transform:translateX(-40px);opacity:.3}}
+@media (prefers-reduced-motion:reduce){.hread.one.sw-n,.hread.one.sw-p{animation:none}}
