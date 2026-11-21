@@ -331,12 +331,13 @@ def evaluate(st):
     sample = [c for c in (st.get(i) for i in rnd.sample(range(st.n), min(40, st.n))) if c and c.get("k") != "faq"][:30]
     r = llm(PARA.format(qs="\n".join("%d. %s" % (i + 1, c["q"]) for i, c in enumerate(sample)))) if sample else None
     qs = [str(x) for x in (r or {}).get("r", [])][:len(sample)]
-    if len(qs) < len(sample) * 0.6: qs = [c["q"] for c in sample]  # تعذرت إعادة الصياغة: يُختبر بالسؤال الأصلي (أسهل)
+    if len(qs) < len(sample) * 0.6:  # تعذرت إعادة الصياغة (نفاد الحصة): لا يُقاس بالسؤال الأصلي لأنه يضخّم الدقة زيفًا
+        REPORT.append("🧪 تأجل الاختبار الذاتي: تعذرت إعادة صياغة الأسئلة في هذه الجولة"); return
     hit = sum(1 for c, q in zip(sample, qs) if c["i"] in rank(st, q)[:5])
-    fb = st.meta.get("feedback", {}); sat = round(100 * fb.get("up", 0) / max(1, fb.get("up", 0) + fb.get("down", 0)))
+    fb = st.meta.get("feedback", {}); nv = fb.get("up", 0) + fb.get("down", 0); sat = round(100 * fb.get("up", 0) / nv) if nv else None
     h = st.meta.setdefault("eval", []); h.append({"d": time.strftime("%Y-%m-%d"), "recall": round(100 * hit / max(1, len(qs))), "n": len(qs), "cards": st.n, "sat": sat})
     st.meta["eval"] = h[-180:]; st.save()
-    REPORT.append("🧪 الاختبار الذاتي: دقة الاسترجاع %d٪ من %d سؤالًا، ورضا الأعضاء %d٪" % (h[-1]["recall"], len(qs), sat))
+    REPORT.append("🧪 الاختبار الذاتي: دقة الاسترجاع %d٪ من %d سؤالًا مُعاد الصياغة، ورضا الأعضاء %s" % (h[-1]["recall"], len(qs), "%d٪" % sat if sat is not None else "— (لا تقييمات بعد)"))
 
 
 def rank(st, q):

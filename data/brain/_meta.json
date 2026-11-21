@@ -29,13 +29,5 @@
  },
  "pages_read": 8,
  "books_done": 8,
- "eval": [
-  {
-   "d": "2026-11-20",
-   "recall": 100,
-   "n": 30,
-   "cards": 172,
-   "sat": 0
-  }
- ]
+ "eval": []
 }
