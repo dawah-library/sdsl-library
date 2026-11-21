@@ -1,9 +1,39 @@
 {
  "items": [
   {
-   "k": "aqeeda",
+   "k": "fiqh",
    "do": "build",
-   "n": 45
+   "n": 29
+  },
+  {
+   "k": "tafsir",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "quran",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "fikr",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "dawa",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "lugha",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "tarikh",
+   "do": "build",
+   "n": 40
   }
  ]
 }
