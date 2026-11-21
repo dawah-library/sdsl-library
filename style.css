@@ -1750,3 +1750,4 @@ sup.shr{color:var(--gold,#b88a2e);font-size:.7em}
 .msbabout i{display:inline-grid;place-items:center;width:56px;height:56px;border-radius:50%;color:var(--gold,#b88a2e);background:color-mix(in srgb,var(--gold,#b88a2e) 12%,var(--sf))}
 .msbenc b .ic-svg,.msbmore .ic-svg{vertical-align:-3px}
 @media (max-width:600px){.mwapps{grid-template-columns:repeat(4,1fr);gap:16px 6px}.mwapp .mwai{width:58px;height:58px;border-radius:17px}.mwapp b{font-size:.76rem}}
+.mwrev{border-inline-start:4px solid var(--gold,#b88a2e)}.mwrev .row{margin-top:8px}

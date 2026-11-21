@@ -59,19 +59,25 @@ const MAWS = (() => {
     view(crumbs([x.n]) + `<section class="mwhead" style="--h:${MWH(k)}"><span class="mwai">${ic(MWI[k] || "book-marked", 30)}</span><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p></div></section>
       <div id="msbenc"></div>${adm() ? admBar(k, t) : ""}
       <div class="mwtree">${t.b.map((b, i) => `<details${i === 0 || q.b == i + 1 ? " open" : ""}><summary><b>الباب ${ord(i + 1)}:</b> ${esc(b.t)} <small class="mut">${toAr(b.f.reduce((a, f) => a + f.m.filter(vis).length, 0))}/${toAr(b.f.reduce((a, f) => a + f.m.length, 0))}</small></summary>
-        ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
+        ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}${m.rev && adm() ? ' <em class="tag">تحديث مقترح</em>' : ""}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
     if (typeof MSB !== "undefined") MSB.encBlock($("#msbenc"), k);
   }
   const admBar = (k, t) => `<div class="mwadm card"><b>🛡️ الإدارة:</b> <button class="btn s p" data-mw="q" data-k="${k}" data-n="20">حرّر ٢٠ مسألة تالية</button> <button class="btn s" data-mw="q" data-k="${k}" data-n="60">٦٠ مسألة</button> <button class="btn s" data-mw="plan" data-k="${k}">${t ? "إعادة المخطط" : "إعداد المخطط"}</button>${t && !t.ok ? ` <button class="btn s" data-mw="tok" data-k="${k}">اعتماد المخطط</button>` : ""} <span class="mut">التعديل اليدوي: data/mawsua/${k}/_tree.json</span> <span class="mwst mut"></span></div>`;
 
-  async function art(k, id) {
-    const t = await tree(k), L = flat(t), i = L.findIndex(m => m.id === id), m = L[i], E = m && m.e ? await entry(k, id) : null, I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k };
+  async function art(k, id, q) {
+    q = q || {}; const t = await tree(k), L = flat(t), i = L.findIndex(m => m.id === id), m = L[i];
+    // تحديث مقترح لمادة معتمدة من مصادر جديدة (tools/mawsua.py grow): المنشور باقٍ، والإدارة تعرض التحديث وتعتمده أو ترفضه
+    const NE = m && m.rev && adm() ? await getJ(R + k + "/e/" + id + ".new.json") : null;
+    let E = m && m.e ? await entry(k, id) : null; const showNew = NE && q.rev; if (showNew) E = NE;
+    const I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k };
     if (!E || !(E.ok || m.ok || adm())) return view(crumbs([x.n, "#/mawsua/" + k]) + '<div class="note">هذه المسألة قيد التحرير والمراجعة.</div>');
     const tags = Object.keys(E.src || {}), num = Object.fromEntries(tags.map((g, n) => [g, n + 1])), sup = c => c.map(g => `<button type="button" class="mwfn linkbtn" data-mw="fn" data-n="${num[g]}" title="${esc(E.src[g].t)}">${toAr(num[g])}</button>`).join("");
     const where = s => `«${esc(s.t)}»${s.a ? " — " + esc(s.a) : ""}، ص ${toAr(s.p)}`;
     const prev = L.slice(0, i).reverse().find(vis), next = L.slice(i + 1).find(vis), seeL = (E.see || []).map(s => L.find(y => norm(y.t) === norm(s))).filter(y => y && vis(y) && y.id !== id);
     view(crumbs([x.n, "#/mawsua/" + k], [m.bab, "#/mawsua/" + k + "?b=" + (m.bi + 1)]) + `<article class="mwart">
       <p class="mut">${esc(m.bab)} › ${esc(m.fasl)}</p><h2>${esc(E.t)}</h2>${E.ok || m.ok ? "" : '<p class="note">مسودة تنتظر المراجعة العلمية والاعتماد.</p>'}
+      ${NE ? `<div class="note mwrev">${ic("history", 18)} ${showNew ? "تعرض الآن <b>التحديث المقترح</b>" : "لهذه المادة <b>تحديث مقترح</b>"} من مصادر جديدة لمشايخ الدعوة (${esc(NE.built || "")})${(NE.new || []).length ? ": " + NE.new.map(b => `«${esc(((typeof B === "function" && B(b)) || {}).title || b)}»`).join("، ") : ""}.
+        <div class="row">${showNew ? `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}">عرض المنشور</a>` : `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}?rev=1">عرض التحديث</a>`}<button class="btn s p" data-mw="rev" data-k="${k}" data-id="${esc(id)}">✓ اعتماد التحديث ونشره</button><button class="btn s" data-mw="norev" data-k="${k}" data-id="${esc(id)}">رفض التحديث</button> <span class="mwst mut"></span></div></div>` : ""}
       ${E.lead ? `<p class="mwlead">${esc(E.lead)}</p>` : ""}
       ${(E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${esc(p.t)}${sup(p.c)}</p>`).join("")}</section>`).join("")}
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
@@ -81,7 +87,7 @@ const MAWS = (() => {
       <nav class="mwnav">${prev ? `<a href="#/mawsua/${k}/${prev.id}">→ ${esc(prev.t)}</a>` : "<span></span>"}${next ? `<a href="#/mawsua/${k}/${next.id}">${esc(next.t)} ←</a>` : ""}</nav></article>`);
     window.__mwE = E;
   }
-  function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id)); }
+  function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id), q); }
 
   document.addEventListener("submit", e => { const f = e.target.closest('[data-form="mwq"]'); if (!f) return; e.preventDefault(); location.hash = "#/mawsua?q=" + encodeURIComponent(f.q.value.trim()); }, true);
   document.addEventListener("click", async e => {
@@ -95,9 +101,14 @@ const MAWS = (() => {
     try {
       if (a === "q" || a === "plan") { await GH.editJSON(R + "_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).filter(x => x.k !== k || x.do !== a.replace("q", "build")); o.items.push(a === "plan" ? { k, do: "plan", force: 1 } : { k, do: "build", n: +el.dataset.n }); return o; }, "الموسوعات: طابور " + k, true); st.textContent = "✓ أُضيف إلى طابور التحرير؛ يبدأ خلال دقائق"; }
       else if (a === "tok") { await GH.editJSON(tp, o => Object.assign(o, { ok: 1 }), "الموسوعات: اعتماد مخطط " + k); TR[k] = null; st.textContent = "✓ اعتُمد المخطط"; }
+      else if (a === "rev" || a === "norev") { const id = el.dataset.id, np = R + k + "/e/" + id + ".new.json";
+        if (a === "rev") { const N = JSON.parse((await GH.get(np)).text); await GH.editJSON(R + k + "/e/" + id + ".json", () => Object.assign(N, { ok: 1, okAt: today() }), "الموسوعات: اعتماد تحديث مادة"); }
+        await GH.del(np, "الموسوعات: " + (a === "rev" ? "اعتماد" : "رفض") + " تحديث مقترح");
+        await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) delete m.rev; }); return o; }, "الموسوعات: تحديث مسألة");
+        TR[k] = null; EN[id] = null; st.textContent = a === "rev" ? "✓ نُشر التحديث" : "✓ رُفض التحديث"; }
       else if (a === "ok" || a === "redo") { const id = el.dataset.id;
         if (a === "ok") await GH.editJSON(R + k + "/e/" + id + ".json", o => Object.assign(o, { ok: 1, okAt: today() }), "الموسوعات: اعتماد مادة");
-        await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) { if (a === "ok") m.ok = 1; else { delete m.e; delete m.ok; delete m.skip; } } }); return o; }, "الموسوعات: " + (a === "ok" ? "اعتماد" : "إعادة تحرير") + " مسألة");
+        await GH.editJSON(tp, o => { each(o, m => { if (m.id === id) { if (a === "ok") m.ok = 1; else { delete m.skip; if (!m.ok) delete m.e; } } }); return o; }, "الموسوعات: " + (a === "ok" ? "اعتماد" : "إعادة تحرير") + " مسألة");
         if (a === "redo") await GH.editJSON(R + "_queue.json", o => { o = o || { items: [] }; o.items = (o.items || []).concat([{ k, do: "build", n: 1, ids: [id] }]); return o; }, "الموسوعات: إعادة تحرير", true);
         TR[k] = null; EN[id] = null; st.textContent = a === "ok" ? "✓ اعتُمدت ونُشرت" : "✓ أُعيدت إلى طابور التحرير"; }
     } catch (x) { st.textContent = x.message; }

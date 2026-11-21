@@ -8,6 +8,7 @@
 - build: تحرير المسائل واحدة واحدة: تُجمع المواضع من نصوص المكتبة (المشايخ أولًا ثم المراجع)، ثم تُحرَّر المادة بأقسام ثابتة
   (التعريف، التأصيل والأدلة، تقريرات مشايخ الدعوة، أقوال أهل العلم من المراجع، الخلاصة) وكل فقرة معزوة إلى مواضعها.
   لا تُقبل فقرة بلا عزو إلى موضع مما أُرسل، ولا اقتباس لا يوجد بحروفه في موضعه. المادة مسودة (ok=0) حتى تعتمدها الإدارة من #/mawsua.
+- grow (يوميًّا قبل الطابور): ما يُضاف من كتب مشايخ الدعوة ومقالاتهم وشروحهم يُطابَق بالمسائل فتُحرَّر أو تُحدَّث به (انظر grow()).
 - الطابور: data/mawsua/_queue.json {"items": [{"k": "aqeeda", "do": "plan"}, {"k": "fiqh", "do": "build", "n": 30}]} — تضيفه الإدارة.
 الاستعمال: python3 tools/mawsua.py [plan|build <k> [n]] — بلا وسائط: ينفّذ الطابور.
 """
@@ -107,13 +108,13 @@ def corpus(e):
     return out
 
 
-def find(C, m):
+def find(C, m, boost=None):
     """أقوى المواضع للمسألة: العبارة الأخص أولًا، وتقارب ألفاظها؛ ١٠ من كلام المشايخ و٦ من المراجع، وموضعان على الأكثر من المصدر الواحد."""
     kws = [nz(x) for x in ([m["t"]] + (m.get("kw") or [])) if nz(x)]
     sc = []
     for r in C:
         n = r[6]; s = sum((3 if j <= 1 else 1) * min(3, n.count(w)) for j, w in enumerate(kws) if len(w) > 2)
-        if s >= 3 and any(w in n for w in kws[:3]): sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0), r))  # عنوان المصدر بالمسألة أقوى
+        if s >= 3 and any(w in n for w in kws[:3]): sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0) + (8 if boost and r[1] in boost else 0), r))  # عنوان المصدر بالمسألة أقوى
     sc.sort(key=lambda x: -x[0]); out, per, cnt = [], {}, {"d": 0, "m": 0}
     for s, r in sc:
         if per.get(r[1], 0) >= 2 or cnt[r[0]] >= (10 if r[0] == "d" else 6): continue
@@ -147,7 +148,7 @@ def plan(e, force=False):
 
 
 # ---------- تحرير المسائل ----------
-def build(e, n=20, ids=None):
+def build(e, n=20, ids=None, boost=None):
     k = e[0]; tp = os.path.join(OUT, k, "_tree.json"); tree = jl(tp)
     if not tree: print("  لا مخطط لـ", k, "— يُبنى أولًا"); plan(e); tree = jl(tp)
     if not tree: return 0
@@ -156,7 +157,7 @@ def build(e, n=20, ids=None):
     C = corpus(e); done = 0
     for b, f, m in todo:
         if time.time() - T0 > LIMIT: break
-        hits = find(C, m)
+        hits = find(C, m, set(boost or []))
         if len([h for h in hits if h[0] == "d"]) < 1 and len(hits) < 3: m["skip"] = "قلة المواضع"; print("  ✗ قلة المواضع:", m["t"]); continue
         tags, ctx = {}, []
         for h in hits:
@@ -178,11 +179,85 @@ def build(e, n=20, ids=None):
             if c in tags and t and nz(t) in tags[c][6]: qs.append({"t": t, "c": c}); used.add(c)
         if not secs: m["skip"] = "لم تُعزَ الفقرات"; continue
         src = {tg: {"k": h[0], "b": h[1], "t": h[2], "a": h[3], "p": h[4]} for tg, h in tags.items() if tg in used}
-        jw(os.path.join(OUT, k, "e", m["id"] + ".json"), {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": r.get("lead", ""), "s": secs, "q": qs, "src": src,
-                                                       "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 0})
+        ent = {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": r.get("lead", ""), "s": secs, "q": qs, "src": src,
+               "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 0}
+        ep = os.path.join(OUT, k, "e", m["id"] + ".json"); old = jl(ep)
+        if old and (old.get("ok") or m.get("ok")):  # مادة معتمدة: التحديث مقترح بجوارها حتى تعتمده الإدارة، والمنشور باقٍ
+            ent["new"] = sorted({h["b"] for h in src.values()} & set(boost or []))
+            jw(os.path.join(OUT, k, "e", m["id"] + ".new.json"), ent); m["rev"] = 1; done += 1; print("  ↻ تحديث مقترح:", m["t"], flush=True)
+            jw(tp, tree); continue
+        jw(ep, ent)
         m["e"] = 1; m.pop("skip", None); done += 1; print("  ✓", m["t"], "— مواضع", len(src), flush=True)
         jw(tp, tree)
     jw(tp, tree); return done
+
+
+# ---------- النمو التلقائي (طلب المدير، ٢١ نوفمبر ٢٠٢٦) ----------
+def dawah_sources():
+    """معرّفات مصادر مشايخ الدعوة الحالية: كتبهم وشروحهم وتفريغاتهم (الفهرس، col=dawah)، ومقالاتهم وفتاواهم (فهرس المقالات غير التراثية)."""
+    ids = {b["id"] for b in CAT["books"] if (b.get("col") or "dawah") == "dawah" and not b.get("hidden")}
+    ids |= {a["id"] for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) if a.get("col") != "turath" and a.get("f")}
+    return ids
+
+
+def new_corpus(ids):
+    out, ix = [], {a["id"]: a for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) if a["id"] in ids}
+    for bid in ids:
+        b = BOOKS.get(bid)
+        if b:
+            for i, pg in enumerate(pages_of(bid)):
+                t = body(pg)
+                if len(t) > 200: out.append(("d", bid, b.get("setTitle") or b["title"], AUTH.get(b.get("authorId"), ""), i + 1, t, nz(t)))
+    grp = {}
+    for a in ix.values():
+        if a["f"] not in grp: grp[a["f"]] = jl(os.path.join(D, "articles", a["f"] + ".json"), {}) or {}
+        for i, pg in enumerate((grp[a["f"]].get(a["id"]) or {}).get("pages") or []):
+            t = body(pg)
+            if len(t) > 200: out.append(("d", a["id"], a.get("t", ""), AUTH.get(a.get("a"), ""), i + 1, t, nz(t)))
+    return out
+
+
+def ensure(n=40):
+    """الاستمرار الذاتي: موسوعة بلا مخطط يُطلب مخططها، وما بقي من مسائل غير محررة يُطلب تحريره؛ ما لم يكن في الطابور."""
+    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; it = Q["items"]
+    for e in ENC:
+        k, tree = e[0], jl(os.path.join(OUT, e[0], "_tree.json"))
+        if not tree:
+            if not any(x.get("k") == k and x.get("do") == "plan" for x in it): it.append({"k": k, "do": "plan"})
+        elif any(not m.get("e") and not m.get("skip") for b in tree["b"] for f in b["f"] for m in f["m"]) and not any(x.get("k") == k and x.get("do") == "build" and not x.get("ids") for x in it):
+            it.append({"k": k, "do": "build", "n": n})
+    jw(qp, Q)
+
+
+def grow(cap=25):
+    """ما أُضيف من كتب مشايخ الدعوة ومقالاتهم وشروحهم منذ آخر جولة: تُطابَق نصوصه بمسائل المخططات كلها، فالمسألة التي يتعلق بها
+    تُوضع في طابور التحرير مع تقديم المصدر الجديد (boost): غير المحررة تُحرَّر، والمتروكة لقلة مواضعها يُعاد النظر فيها، والمحررة تُعاد
+    كتابتها بالمصدر الجديد، والمعتمدة يُقترح تحديثها بجوارها (e/<id>.new.json) حتى تعتمده الإدارة. الحالة: data/mawsua/_seen.json."""
+    ensure()
+    sp = os.path.join(OUT, "_seen.json"); seen = jl(sp); now = dawah_sources()
+    if seen is None: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now)}); print("  النمو: بُدئت الحالة بـ%d مصدرًا" % len(now)); return
+    new = sorted(now - set(seen.get("ids") or []))
+    if not new: print("  النمو: لا مصادر جديدة"); return
+    C = new_corpus(set(new)); print("  النمو: %d مصدرًا جديدًا (%d موضعًا)" % (len(new), len(C)), flush=True)
+    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0
+    for e in ENC:
+        tp = os.path.join(OUT, e[0], "_tree.json"); tree = jl(tp)
+        if not tree: continue
+        hit, boost = [], set()
+        for b in tree["b"]:
+            for f in b["f"]:
+                for m in f["m"]:
+                    H = find(C, m)
+                    if not H: continue
+                    hit.append((sum(1 for _ in H), m)); boost |= {h[1] for h in H}
+        hit.sort(key=lambda x: -x[0]); ids = []
+        for _, m in hit[:cap]:
+            m.pop("skip", None); ids.append(m["id"])
+        if ids:
+            jw(tp, tree); Q["items"].append({"k": e[0], "do": "build", "n": len(ids), "ids": ids, "boost": sorted(boost), "grow": str(datetime.date.today())}); added += len(ids)
+            print("  %s: %d مسألة تتعلق بالجديد" % (e[0], len(ids)))
+    jw(qp, Q); jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now)})
+    print("  النمو: %d مسألة في الطابور" % added)
 
 
 def index():
@@ -195,6 +270,7 @@ def index():
 
 def main():
     a = sys.argv[1:]; E = {e[0]: e for e in ENC}
+    if a and a[0] == "grow": grow(); index(); return
     if a and a[0] == "plan": [plan(E[k], "--force" in a) for k in (a[1:2] if len(a) > 1 and a[1] in E else E)]
     elif a and a[0] == "build" and len(a) > 1: build(E[a[1]], int(a[2]) if len(a) > 2 else 20)
     else:
@@ -204,7 +280,7 @@ def main():
             if not e or time.time() - T0 > LIMIT: rest.append(it); continue
             if it.get("do") == "plan": plan(e, bool(it.get("force")))
             else:
-                n = int(it.get("n") or 20); d = build(e, n, it.get("ids"))
+                n = int(it.get("n") or 20); d = build(e, n, it.get("ids"), it.get("boost"))
                 if it.get("ids"):
                     if not d: rest.append(it)
                 elif d < n and any(not m.get("e") and not m.get("skip") for b in jl(os.path.join(OUT, e[0], "_tree.json"))["b"] for f in b["f"] for m in f["m"]): rest.append(dict(it, n=n - d))  # ما بقي (أو كله إن نفدت الحصة) إلى الجولة القادمة
