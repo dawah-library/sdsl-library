@@ -23,3 +23,4 @@
 - المرحلة ٨ (منجزة): الآثار — باب المصدر، fit، مسودات، refit، مصادر مبوبة وخارجية؛ docs/athar.md.
 - المرحلة ٩ (منجزة): outreach.js (#/awael، #/weekly، #/masala، #/newsletter)، tools/weekly.py، tools/newsletter.py، جدول subscribers؛ docs/community.md.
 - الختام (التالي): تحديث «دراسة الموقع» بالمستجدات والمقارنات.
+- قسم «خطب الجمعة» (منجز، طلب المدير ٢١ نوفمبر): khutab.js، tools/khutab.py، khutab.yml، data/khutab — docs/khutab.md، ق-١٣.
