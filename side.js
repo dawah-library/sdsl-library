@@ -11,7 +11,7 @@ const SIDE = (() => {
     ["حسابي", [["#/account", "حسابي «مكتبتي»", "circle-user"], ["#/favs", "المفضلة", "heart"], ["#/offline", "المكتبة دون إنترنت والتطبيق", "download"]]],
     ["عن المكتبة", [["#/about", "من نحن", "info"], ["#/dawah", "التعريف بالدعوة", "flag"], ["#/history", "تاريخ الدعوة", "scroll-text"], ["#/standards", "معايير التحرير", "ruler"], ["#/contact", "تواصل معنا", "mail"]]],
   ];
-  const ADM = [["#/admin", "الإدارة", "settings"], ["#/myteams", "أقسامي (فرق الأقسام)", "users-round"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"], ["#/sitestudy", "دراسة الموقع ومقارنته", "chart-bar"]];
+  const ADM = [["#/admin", "الإدارة", "settings"], ["#/myteams", "أقسامي (فرق الأقسام)", "users-round"], ["#/perms", "صلاحيات التفويض", "key-round"], ["#/fbin", "جلب منشورات فيسبوك", "download"], ["#/dev", "المساعد التقني", "bot"], ["#/ops", "لوحة التشغيل", "activity"], ["#/proof", "تدقيق الكتب النصية", "pen-line"], ["#/sitestudy", "دراسة الموقع ومقارنته", "chart-bar"], ["#/story", "قصة الموقع (السجل التاريخي)", "scroll-text"]];
   // التكرار حُذف (طلب المدير): «مكتبة الدعوة السلفية» و«المكتبة العامة» داخل بوابتي القسمين؛ وتبقى أيقونة #/library لبطاقات الرئيسية
   const MAP = { "#/library": "book-open" }; G.forEach(([, l]) => l.forEach(([h, , i]) => MAP[h.split("?")[0]] = MAP[h.split("?")[0]] || i));
   const fold = () => { try { return JSON.parse(localStorage.getItem("side_fold") || "{}"); } catch (e) { return {}; } };
