@@ -57,11 +57,13 @@ ENTRY = """أنت محرر علمي متخصص في «{name}» تحرر مادة
 - كل فقرة تُبنى على المواضع المرسلة فقط، وتذكر رموز مواضعها في "c" (مثل ["د1","م2"]). لا تنسب قولًا ليس في المواضع، ولا تضف معلومة من خارجها إلا آية بسورتها ورقمها أو حديثًا ورد في المواضع.
 - لا تذكر في الفقرات أسماء المشايخ ولا المؤلفين ولا الكتب في سياق الكلام (لا «قال الشيخ فلان»، ولا «يقرر فلان»، ولا «ذكر ابن فلان في كتابه»): اعرض المعنى أو النص نفسه مباشرة بصيغة التقرير العلمي، والعزو يكون بالرموز في "c" وحدها.
 - «{dsec}»: ما قرره مشايخ الدعوة في المواضع [د…] معروضًا تقريرًا علميًّا بلا أسماء. و«{msec}»: النصوص والأقوال المشهورة من المواضع [م…]، وإن تعددت الأقوال فاعرضها أقوالًا («القول الأول…») بلا أسماء. وإن لم تكف المواضع لقسم فاتركه فارغًا.
+- الأسطر الموسومة [المتن] في كتب الشروح هي نص الكتاب المشروح لا كلام الشارح: اعرضها متنًا يُشرح، والتقرير ما قاله الشارح بعدها؛ وراعِ سياق كل موضع ومراده (تقرير، أو حكاية قول، أو رد على مخالف) فلا تجعل القول المردود عليه تقريرًا.
+- إن أُرسلت «المادة الحالية» فهي المنشورة: احفظ صحيحها وعزوها، وأضف إليها ما في المواضع الجديدة من زيادة أو دليل أو تفصيل أو قول، وادمجه في موضعه من الأقسام بلا تكرار ولا حذف لمعلومة معزوة صحيحة.
 - "q": اقتباسات قصيرة (١٠–٤٠ كلمة) منسوخة بحروفها من المواضع، مع رمز موضعها.
 - إن كانت المواضع لا تتعلق بالمسألة حقيقة فأخرج {{"skip": true}}.
 أخرج JSON: {{"lead": "تمهيد في سطرين", "s": [{{"h": "عنوان القسم", "p": [{{"t": "فقرة", "c": ["د1"]}}]}}], "q": [{{"t": "اقتباس", "c": "د1"}}], "see": ["عنوان مسألة ذات صلة"]}}
 
-المواضع:
+{cur}المواضع:
 {ctx}"""
 
 
@@ -128,7 +130,12 @@ def art_items():
     return [(a, k) for a in (jl(os.path.join(D, "articles", "index.json"), {}) or {}).get("items", []) for k in [art_kind(a)] if k]
 
 
-def is_src_book(b): return (b.get("col") or "dawah") == "dawah" and not b.get("hidden")
+def ready(b):
+    """النص جاهز: كتاب إلكتروني، أو مصوَّر اكتمل تدقيقه (كما في enrich-new.py)؛ فلا تُبنى الموسوعة على تحويل لم يُراجَع."""
+    return not b.get("ocr") or (b.get("unrev") or 0) + (b.get("unc") or 0) == 0
+
+
+def is_src_book(b): return (b.get("col") or "dawah") == "dawah" and not b.get("hidden") and not b.get("demo") and ready(b)
 
 
 def book_kind(b):
@@ -183,8 +190,13 @@ def find(C, m, boost=None):
     return out
 
 
+def _mark_matn(t):
+    """كتب الشروح: أسطر المتن («%% ») تُوسم [المتن] حتى لا يُنسب كلام صاحب المتن إلى الشارح، ويُفهم الشرح في سياقه."""
+    return re.sub(r"^%%\s*", "[المتن] ", t, flags=re.M) if "%%" in t else t
+
+
 def window(r, m, w=1400):
-    t, n = r[5], nz(r[5]); kw = next((nz(x) for x in (m.get("kw") or []) + [m["t"]] if nz(x) in n), "")
+    t, n = _mark_matn(r[5]), nz(r[5]); kw = next((nz(x) for x in (m.get("kw") or []) + [m["t"]] if nz(x) in n), "")
     k = n.find(kw) if kw else 0; k = int(k * len(t) / max(1, len(n)))
     a = max(0, k - w // 3); return ("…" if a else "") + t[a:a + w].strip()
 
@@ -260,15 +272,33 @@ def build(e, n=20, ids=None, boost=None):
     for b, f, m in todo:
         if time.time() - T0 > LIMIT: break
         hits = find(C, m, set(boost or []))
-        if len([h for h in hits if h[0] == "d"]) < 1 and len(hits) < 3: m["skip"] = "قلة المواضع"; print("  ✗ قلة المواضع:", m["t"]); continue
+        ep = os.path.join(OUT, k, "e", m["id"] + ".json"); old = jl(ep) if m.get("e") else None
+        if old and boost:  # التحديث بمصدر جديد يضيف ولا يُسقط: مواضع المادة المنشورة تبقى في السياق
+            have = {(h[1], h[4]) for h in hits}; ix = {(r[1], r[4]): r for r in C}
+            for v in (old.get("src") or {}).values():
+                r = ix.get((v.get("b"), v.get("p")))
+                if r and (r[1], r[4]) not in have and len(hits) < 18: hits.append(r); have.add((r[1], r[4]))
+        if len([h for h in hits if h[0] == "d"]) < 1 and len(hits) < 3:
+            if not m.get("e"): m["skip"] = "قلة المواضع"  # المنشورة تبقى كما هي
+            print("  ✗ قلة المواضع:", m["t"]); continue
         tags, ctx = {}, []
         for h in hits:
             tg = ("د" if h[0] == "d" else "م") + str(1 + sum(1 for x in tags.values() if x[0] == h[0]))
             tags[tg] = h; ctx.append("[%s] (%s) «%s» — %s، ص %d:\n%s" % (tg, KLBL.get(h[7], "مرجع"), h[2], h[3], h[4], window(h, m)))
         SX = SECS_LUGHA if k == "lugha" else SECS
-        r = T.gemini(ENTRY.format(name=e[1], t=m["t"], bab=b["t"], fasl=f["t"], secs="، ".join(SX), dsec=SX[2], msec=SX[3], ctx="\n\n".join(ctx)))
+        cur = ""
+        if old and boost:  # المادة الحالية برموز المواضع الجديدة، ليُضاف إليها الجديد في موضعه
+            back = {(h[1], h[4]): tg for tg, h in tags.items()}
+            rmap = {g: back.get((v.get("b"), v.get("p"))) for g, v in (old.get("src") or {}).items()}
+            lines = [old.get("lead", "")] + ["## " + x.get("h", "") + "\n" + "\n".join(p["t"] + " " + "".join("[%s]" % rmap[c] for c in p.get("c") or [] if rmap.get(c)) for p in x.get("p") or []) for x in old.get("s") or []]
+            cur = "المادة الحالية (المنشورة):\n" + "\n".join(lines)[:6000] + "\n\n"
+            newt = sorted({tg for tg, h in tags.items() if h[1] in set(boost)})
+            if newt: cur += "المواضع الجديدة المطلوب إدخالها: " + "، ".join(newt) + "\n\n"
+        r = T.gemini(ENTRY.format(name=e[1], t=m["t"], bab=b["t"], fasl=f["t"], secs="، ".join(SX), dsec=SX[2], msec=SX[3], cur=cur, ctx="\n\n".join(ctx)))
         if not r: break  # نفدت الحصة
-        if r.get("skip"): m["skip"] = "المواضع لا تتعلق بالمسألة"; continue
+        if r.get("skip"):
+            if not m.get("e"): m["skip"] = "المواضع لا تتعلق بالمسألة"
+            continue
         used, secs = set(), []
         for s in r.get("s") or []:
             ps = []
@@ -280,20 +310,24 @@ def build(e, n=20, ids=None, boost=None):
         for q in r.get("q") or []:
             c = q.get("c"); t = (q.get("t") or "").strip(" «»\"")
             if c in tags and t and nz(t) in tags[c][6]: qs.append({"t": t, "c": c}); used.add(c)
-        if not secs: m["skip"] = "لم تُعزَ الفقرات"; continue
+        if not secs:
+            if not m.get("e"): m["skip"] = "لم تُعزَ الفقرات"
+            continue
         src = {tg: {"k": h[0], "s": h[7], "b": h[1], "t": h[2], "a": h[3], "p": h[4]} for tg, h in tags.items() if tg in used}
         # الاعتماد والنشر تلقائيان (طلب المدير، ٢١ نوفمبر): المادة تُنشر فور تحريرها، وتبقى للإدارة المراجعة والتعديل اليدوي
         ent = {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": unname(r.get("lead", ""), [h[3] for h in tags.values()]), "s": secs, "q": qs, "src": src,
                "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 1, "auto": 1, "v2": 1}
-        ep = os.path.join(OUT, k, "e", m["id"] + ".json"); old = jl(ep)
+        old = old or jl(ep)
+        nb = sorted({h["b"] for h in src.values()} & set(boost or []))
+        if nb: ent["upd"] = str(datetime.date.today()); ent["new"] = nb
         if old and old.get("man"):  # مادة عدّلتها الإدارة يدويًّا: التحديث مقترح بجوارها حتى تعتمده، والمنشور باقٍ
             ent["ok"] = 0
-            ent["new"] = sorted({h["b"] for h in src.values()} & set(boost or []))
             jw(os.path.join(OUT, k, "e", m["id"] + ".new.json"), ent); m["rev"] = 1; done += 1; print("  ↻ تحديث مقترح:", m["t"], flush=True)
             jw(tp, tree); continue
         if old: jw(os.path.join(OUT, k, "e", m["id"] + ".prev.json"), old)  # النسخة السابقة محفوظة للمقارنة والاسترجاع
         jw(ep, ent)
         m["e"] = 1; m["ok"] = 1; m.pop("skip", None); m.pop("rev", None); done += 1; print("  ✓", m["t"], "— مواضع", len(src), flush=True)
+        if nb or m.get("add"): glog({"k": k, "id": m["id"], "t": m["t"], "do": "upd" if old else "new", "b": nb})
         jw(tp, tree)
     jw(tp, tree); return done
 
@@ -342,34 +376,115 @@ def ensure(n=40):
     jw(qp, Q)
 
 
+VERIFY = """أنت مدقق علمي في «{name}». لكل زوج (مسألة، موضع من كتاب جديد) قرّر: هل يتناول الموضع هذه المسألة حقيقةً بمعناها وسياقها
+(تعريفها، أو دليلها، أو حكمها، أو الخلاف فيها، أو تفصيلها، أو فائدة متصلة بها)؟ لا يكفي اشتراك لفظ، ولا ذكر عابر، ولا أن يكون المعنى غير المعنى المراد في المسألة.
+أخرج JSON: {{"r": [{{"i": رقم_الزوج, "ok": true أو false, "w": "تعريف|دليل|حكم|خلاف|تفصيل|فائدة"}}]}}
+
+{pairs}"""
+
+EXPAND = """أنت لجنة علمية تنمّي «{name}». هذا مخططها الحالي (أبواب ← فصول، ومن مسائلها):
+{outline}
+
+وهذه فصول كتاب جديد من كتب مشايخ الدعوة السلفية: «{book}»، مع مقتطف من كل فصل:
+{chapters}
+
+اقترح مسائل جديدة يحررها هذا الكتاب وليست في المخطط بمعناها (لا تكرر مسألة موجودة ولو بلفظ آخر)، وتدخل في نطاق الموسوعة حقيقةً؛
+وضع كل مسألة في الباب والفصل المناسبين من المخطط (بأرقامهما)، بعنوان علمي دقيق لمسألة واحدة، مع ٣–٦ ألفاظ بحث يرد بها الكلام عنها في الكتاب.
+إن لم يكن في الكتاب جديد يخص هذه الموسوعة فأخرج {{"m": []}}. لا تزد على {cap} مسائل.
+أخرج JSON: {{"m": [{{"b": رقم_الباب, "f": رقم_الفصل, "t": "عنوان المسألة", "kw": ["…"]}}]}}"""
+
+
+def glog(ev):
+    """سجل نمو الموسوعات (يعرضه «أحدث الإضافات والتحديثات» في #/mawsua): آخر ٢٠٠ حدث."""
+    gp = os.path.join(OUT, "_growth.json"); G = jl(gp, {"items": []}) or {"items": []}
+    ev["at"] = str(datetime.date.today()); G["items"] = ([ev] + [x for x in G["items"] if not (x.get("id") == ev.get("id") and x.get("at") == ev["at"])])[:200]
+    jw(gp, G)
+
+
+def verify(e, pairs):
+    """التحقق بالمعنى والسياق من مطابقة المواضع الجديدة لمسائل الموسوعة (المطابقة اللفظية وحدها تخطئ): دفعات من ١٢ زوجًا."""
+    ok = {}
+    for i in range(0, len(pairs), 12):
+        if dead() or time.time() - T0 > LIMIT * 0.4: break
+        chunk = pairs[i:i + 12]
+        txt = "\n\n".join("[%d] المسألة: «%s» (باب «%s»)\nالموضع: «%s»، ص %d:\n%s" % (j + 1, m["t"], bt, h[2], h[4], window(h, m, 700)) for j, (m, h, bt) in enumerate(chunk))
+        r = T.gemini(VERIFY.format(name=e[1], pairs=txt))
+        if not r: break
+        for x in r.get("r") or []:
+            try: j = int(x.get("i")) - 1
+            except Exception: continue
+            if 0 <= j < len(chunk) and x.get("ok") is True: m, h, _ = chunk[j]; ok.setdefault(m["id"], set()).add(h[1])
+    return ok
+
+
+def expand(e, tree, bid, cap=6):
+    """مسائل جديدة من فصول الكتاب الجديد لا يغطيها المخطط: تُضاف إلى بابها وفصلها (منشورة تلقائيًّا) وتُحرَّر بالكتاب نفسه."""
+    b = BOOKS.get(bid) or {}; doc = None
+    for p_ in (os.path.join(D, "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")):
+        if os.path.exists(p_): doc = jl(p_); break
+    if not doc: return []
+    pages, toc, seen_t = doc.get("pages") or [], [], set()
+    for x in doc.get("toc") or []:
+        t = (x.get("t") or "").strip(); p_ = int(x.get("p") or 1)
+        if t and t not in seen_t and 0 < p_ <= len(pages): seen_t.add(t); toc.append((t, p_))
+    if len(toc) < 2: return []
+    ch = "\n".join("- %s: %s" % (t, re.sub(r"\s+", " ", body(pages[p_ - 1]))[:220]) for t, p_ in toc[:60])
+    outline = "\n".join("%d. %s\n%s" % (i + 1, B_["t"], "\n".join("   %d.%d %s: %s" % (i + 1, j + 1, F["t"], "، ".join(m["t"] for m in F["m"][:8])) for j, F in enumerate(B_["f"]))) for i, B_ in enumerate(tree["b"]))
+    r = T.gemini(EXPAND.format(name=e[1], outline=outline[:9000], book=b.get("setTitle") or b.get("title", bid), chapters=ch[:9000], cap=cap))
+    if not r: return []
+    have = {nz(m["t"]) for B_ in tree["b"] for F in B_["f"] for m in F["m"]}; out = []
+    for x in (r.get("m") or [])[:cap]:
+        try: bi, fi = int(x.get("b")) - 1, int(x.get("f")) - 1; F = tree["b"][bi]["f"][fi]
+        except Exception: continue
+        t = (x.get("t") or "").strip()
+        if not t or nz(t) in have: continue
+        n = 1 + max([int(m["id"].rsplit("-", 1)[-1]) for m in F["m"] if m["id"].rsplit("-", 1)[-1].isdigit()] or [0])
+        m = {"id": "%s-%d-%d-%d" % (e[0], bi + 1, fi + 1, n), "t": t, "kw": [w for w in (x.get("kw") or []) if isinstance(w, str)][:6], "add": str(datetime.date.today()), "from": bid}
+        F["m"].append(m); have.add(nz(t)); out.append(m["id"])
+    return out
+
+
 def grow(cap=25):
-    """ما أُضيف من كتب مشايخ الدعوة ومقالاتهم وشروحهم منذ آخر جولة: تُطابَق نصوصه بمسائل المخططات كلها، فالمسألة التي يتعلق بها
-    تُوضع في طابور التحرير مع تقديم المصدر الجديد (boost): غير المحررة تُحرَّر، والمتروكة لقلة مواضعها يُعاد النظر فيها، والمحررة تُعاد
-    كتابتها بالمصدر الجديد، والمعتمدة يُقترح تحديثها بجوارها (e/<id>.new.json) حتى تعتمده الإدارة. الحالة: data/mawsua/_seen.json."""
+    """النمو التلقائي بكل ما يُرفع من كتب مشايخ الدعوة وشروحهم وتفريغاتهم ومقالاتهم (بعد جاهزية نصه):
+    ١) المطابقة اللفظية تقترح المسائل المتعلقة بالجديد؛ ٢) التحقق بالمعنى والسياق يُبقي ما يتناول المسألة حقيقةً (verify)؛
+    ٣) مسائل جديدة من فصول الكتاب الجديد لا يغطيها المخطط تُضاف إلى أبوابها (expand)؛ ٤) تُحرَّر في الطابور مع تقديم المصدر الجديد:
+    غير المحررة تُحرَّر، والمنشورة يُدمج فيها الجديد مع بقاء مواضعها السابقة، والمعدلة يدويًّا يُقترح تحديثها بجوارها.
+    الكتاب المصوَّر لا يُعدّ «مقروءًا» حتى يكتمل تدقيقه، فيُتناول عند جاهزيته. الحالة: data/mawsua/_seen.json، والسجل: _growth.json."""
     ensure()
     sp = os.path.join(OUT, "_seen.json"); seen = jl(sp); now = dawah_sources()
     if seen is None: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now)}); print("  النمو: بُدئت الحالة بـ%d مصدرًا" % len(now)); return
     new = sorted(now - set(seen.get("ids") or []))
     if not new: print("  النمو: لا مصادر جديدة"); return
     C = new_corpus(set(new)); print("  النمو: %d مصدرًا جديدًا (%d موضعًا)" % (len(new), len(C)), flush=True)
-    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0
+    newbooks = [x for x in new if x in BOOKS]
+    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0; done_ids = set(new)
     for e in ENC:
         tp = os.path.join(OUT, e[0], "_tree.json"); tree = jl(tp)
         if not tree: continue
-        hit, boost = [], set()
+        cand = []
         for b in tree["b"]:
             for f in b["f"]:
                 for m in f["m"]:
-                    H = find(C, m)
-                    if not H: continue
-                    hit.append((sum(1 for _ in H), m)); boost |= {h[1] for h in H}
-        hit.sort(key=lambda x: -x[0]); ids = []
-        for _, m in hit[:cap]:
-            m.pop("skip", None); ids.append(m["id"])
+                    for h in find(C, m)[:3]: cand.append((m, h, b["t"]))
+        cand.sort(key=lambda x: -len(x[0].get("kw") or []))
+        okm = verify(e, cand[:cap * 3]) if cand else {}
+        if cand and not okm and dead(): done_ids = set(); print("  النمو: نفدت الحصة قبل التحقق؛ يعاد غدًا"); break
+        ids = list(okm)[:cap]; boost = set().union(*okm.values()) if okm else set()
+        from collections import Counter
+        rel = Counter(b_ for v in okm.values() for b_ in v)  # كتب جديدة ثبتت صلتها بالموسوعة بالمعنى (مسألتان فأكثر) أو بموضوعها: تُستخرج منها مسائل جديدة
+        for bid in [x for x in newbooks if rel[x] >= 2 or (BOOKS[x].get("topicId") in e[4])][:3]:
+            if dead(): break
+            add = expand(e, tree, bid)
+            if add: ids += add; boost.add(bid); print("  %s: %d مسألة جديدة من «%s»" % (e[0], len(add), BOOKS[bid].get("title", bid)))
         if ids:
+            for B_ in tree["b"]:
+                for F in B_["f"]:
+                    for m in F["m"]:
+                        if m["id"] in ids: m.pop("skip", None)
             jw(tp, tree); Q["items"].append({"k": e[0], "do": "build", "n": len(ids), "ids": ids, "boost": sorted(boost), "grow": str(datetime.date.today())}); added += len(ids)
-            print("  %s: %d مسألة تتعلق بالجديد" % (e[0], len(ids)))
-    jw(qp, Q); jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now)})
+            print("  %s: %d مسألة تتعلق بالجديد (بعد التحقق بالمعنى)" % (e[0], len(ids)))
+    jw(qp, Q)
+    if done_ids: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(set(seen.get("ids") or []) | done_ids)})
     print("  النمو: %d مسألة في الطابور" % added)
 
 
@@ -381,7 +496,9 @@ def index():
     pol = {"order": POL.get("order") or [], "authors": POL.get("authors") or [], "n": {}}
     from collections import Counter
     pol["n"] = dict(Counter(k for _, k in art_items())); pol["n"]["b"] = sum(1 for b in CAT["books"] if is_src_book(b))
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "items": items})
+    recent = [x for x in (jl(os.path.join(OUT, "_growth.json"), {}) or {}).get("items", [])][:30]
+    for x in recent: x["bt"] = [(BOOKS.get(b) or {}).get("setTitle") or (BOOKS.get(b) or {}).get("title", b) for b in x.get("b") or []][:3]
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "items": items, "recent": recent})
 
 
 def fix_existing():
