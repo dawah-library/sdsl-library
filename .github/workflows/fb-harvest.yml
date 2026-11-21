@@ -1,16 +1,18 @@
-name: منشورات فيسبوك (الزائر بلا حساب، كل ساعة)
+name: منشورات فيسبوك (الزائر بلا حساب، جولة كل ساعة)
 # يجلب أحدث المنشورات العامة لحسابات فيسبوك المفعّلة في data/sources.json كما يراها زائر غير مسجّل (tools/fb-harvest.js)
 # ثم يمررها بمسار الاستجلاب نفسه (source-import.js fb): نشر تلقائي للحساب المفعّل نشره، وإلا «مراجعة المستجلب».
+# جدولة GitHub تفوّت أكثر التشغيلات الساعية (فاتت ٥ من ٦ في أول يوم)، فالتشغيل الواحد يبقى قرابة ست ساعات
+# ويدير جولة كل ساعة بنفسه (ROUNDS)، ويكفي أن يبدأ أربع مرات يوميًّا؛ والحارس (watchdog) يعيد تشغيله إن فات.
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 */6 * * *"
   push:
     paths: ["tools/fb-harvest.js", ".github/workflows/fb-harvest.yml"]
 permissions:
   contents: write
 concurrency:
-  group: sources
+  group: fb-harvest
   cancel-in-progress: false
 jobs:
   # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json): fb_harvest
@@ -31,15 +33,24 @@ jobs:
     needs: gate
     if: ${{ needs.gate.outputs.on == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 355
+    env:
+      ROUNDS: ${{ github.event_name == 'push' && '1' || '6' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm i --no-save playwright-core@1.47.2 >/dev/null
-      - run: node tools/fb-harvest.js
-      - run: node tools/source-import.js fb
+      - name: جولات الجلب (جولة كل ساعة)
         env:
           FB_TOKENS: ${{ secrets.FB_TOKENS }}
           FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
-      - run: bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json
+        run: |
+          for r in $(seq 1 "$ROUNDS"); do
+            echo "::group::الجولة $r من $ROUNDS"
+            node tools/fb-harvest.js || true
+            node tools/source-import.js fb || true
+            bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json || true
+            echo "::endgroup::"
+            [ "$r" -lt "$ROUNDS" ] && sleep 3300
+          done
