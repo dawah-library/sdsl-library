@@ -1816,3 +1816,10 @@ details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summar
 .talaav .avs{display:flex;flex-wrap:wrap;gap:6px}.talaav label{flex-direction:row!important}.talaav input{position:absolute;opacity:0}
 .talaav span{font-size:1.7rem;border:2px solid transparent;border-radius:12px;padding:4px 6px;cursor:pointer}.talaav input:checked+span{border-color:var(--ac);background:var(--sf)}
 .talaav input:focus-visible+span{outline:2px solid var(--ac)}
+/* المقاطع المرئية للطلائع */
+.tvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:10px 0}
+.tvc{margin:0;background:var(--sf);border-radius:16px;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.tvc video{width:100%;display:block;background:#000;aspect-ratio:16/9}.tvc video.tall{aspect-ratio:9/16;max-height:70vh}
+.tvc figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 12px}
+.tvrules ul{padding-inline-start:1.2em;line-height:1.9}.tvform label{display:flex;flex-direction:column;gap:4px;margin:6px 0}.tvform label.inl{flex-direction:row;align-items:center}
+.talabk{border-bottom:1px dashed var(--line);padding:8px 0}.talabk .ok{color:#2e7d32;font-weight:700}

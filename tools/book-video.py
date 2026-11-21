@@ -36,7 +36,8 @@ KIND = {"summary": "ملخص", "review": "مراجعة واختبار", "benefit
         "part": "حديث مفصل عن الجزء أو الباب المحدد من الكتاب"}
 AUD = {"general": "عموم المسلمين", "students": "طلاب العلم", "youth": "الشباب", "kids": "الأطفال (بلغة سهلة جدًا)", "women": "النساء والفتيات"}
 TONE = {"calm": "هادئ وقور", "warm": "دافئ مؤثر", "lively": "حيوي حماسي معتدل", "teach": "تعليمي مبسط"}
-THEMES = {"green": {"bg": "#0f3d33", "c1": "#ffffff", "acc": "#d4af37", "c2": "#cfe6dc"}, "gold": {"bg": "#f6efe1", "c1": "#3b2a1a", "acc": "#a5782e", "c2": "#6b5440"},
+THEMES = {"kids_b": {"bg": "#0b4a8b", "c1": "#ffffff", "acc": "#ffd166", "c2": "#cfe8ff", "pat": "stars"}, "kids_g": {"bg": "#7a1f5c", "c1": "#ffffff", "acc": "#ffd6e8", "c2": "#f6d6ff", "pat": "stars"},
+          "kids": {"bg": "#1b5e57", "c1": "#ffffff", "acc": "#ffd166", "c2": "#d8f3dc", "pat": "stars"}, "green": {"bg": "#0f3d33", "c1": "#ffffff", "acc": "#d4af37", "c2": "#cfe6dc"}, "gold": {"bg": "#f6efe1", "c1": "#3b2a1a", "acc": "#a5782e", "c2": "#6b5440"},
           "night": {"bg": "#111827", "c1": "#f9fafb", "acc": "#60a5fa", "c2": "#cbd5e1"}}
 
 
@@ -71,6 +72,37 @@ FIX = """هذه مشاهد فيديو عن كتاب «{title}» (JSON). طبّق
 
 المشاهد:
 {scenes}"""
+
+
+# ———— الطلائع: تحويل القصص والفقرات والموضوعات العلمية إلى مقاطع مرئية لكل مرحلة (طلب المدير، ٢١ نوفمبر ٢٠٢٦) ————
+# المعرّف "tala-<قصة>" من data/tala-qasas.json بنص مرحلتها (age)، أو "tala-t<وقت>" بنص حر (text) يختاره المشرف من فقرة أو موضوع.
+# الإعداد لكل مرحلة (TALA_AGE): عدد المشاهد، وطول عبارة الراوي، والجمهور، والأسلوب؛ والضوابط الشرعية في docs/tala-media.md.
+TALA_AGE = {"t1": {"n": 4, "w": "١٥–٣٠", "aud": "أطفال ٥–٨ سنوات: جمل قصيرة جدًا، وكلمات سهلة، وتكرار لطيف للمعنى، وسؤال واحد بسيط في الختام"},
+            "t2": {"n": 6, "w": "٢٥–٥٠", "aud": "أطفال ٩–١٢ سنة: لغة سهلة، وتسلسل واضح للأحداث، وفائدة عملية في كل مشهد"},
+            "t3": {"n": 7, "w": "٣٥–٦٥", "aud": "ناشئة ١٢–١٥ سنة: عرض مشوّق، ودروس مستفادة، وربط بالواقع"},
+            "t4": {"n": 8, "w": "٤٠–٨٠", "aud": "شباب ١٥–٢٠ سنة: عمق علمي ميسّر، وأدلة، وتطبيق عملي"}}
+TALA_PROMPT = """أعدّ نص مقطع مرئي تعليمي لقسم «طلائع الدعوة السلفية» بعنوان «{title}»، في {n} مشاهد، للعرض على الشاشة مع راوٍ.
+الجمهور: {aud}. أسلوب الإلقاء: دافئ تربوي مشوّق، بعربية فصيحة سليمة مشكولة ما يُلتبس.
+أخرج JSON حرفيًا: {{"title": "عنوان المقطع", "scenes": [{{"h": "عنوان قصير", "pts": ["نقطة قصيرة على الشاشة (٢–٣ نقاط، أقل من ٨ كلمات)"], "say": "ما يقوله الراوي ({w} كلمة)", "icon": "…", "vis": "…"}}]}}
+- المشهد الأول تمهيد مشوّق، والأخير خلاصة الدرس ودعوة لطيفة إلى العمل به.
+- التزم النص المرسل وحده، ولا تضف أحداثًا ولا تفاصيل ليست فيه، وانقل الآيات والأحاديث بلفظها إن ذكرتها.
+- لكل مشهد "icon" من: {icons}، و"vis" وصف إنجليزي قصير لخلفية المشهد: {vis_rule}
+- لا موسيقى، ولا تجسيد لنبي ولا صحابي ولا ملَك بأي صورة، ولا ما يخدش الحياء.
+النص:
+{src}"""
+VIS_CARTOON = "رسم كرتوني تعليمي لطيف لأطفال أو حيوانات أو طبيعة يناسب المشهد (لا يمثل نبيًا ولا صحابيًا ولا ملَكًا ولا أي شخصية تاريخية)."
+VIS_SCENE = "مناظر وطبيعة وعمارة إسلامية وكتب وخط عربي فقط، بلا بشر ولا حيوانات."
+
+
+def tala_material(it):
+    """(العنوان، النص، كرتون؟) لعنصر الطلائع. الكرتون للمراحل حتى ١٥ سنة في الموضوعات العامة، لا في قصص الأنبياء والصحابة والتابعين."""
+    age = it.get("age") if it.get("age") in TALA_AGE else "t2"
+    if it.get("text"): return (it.get("title") or "درس للطلائع"), str(it["text"])[:12000], age != "t4"
+    Q = jl(os.path.join(ROOT, "data", "tala-qasas.json"), {}) or {}; sid = it["id"][5:]
+    x = next((y for y in Q.get("items") or [] if y.get("id") == sid), None)
+    if not x: return None
+    s = x.get("s") or {}; txt = s.get(age) or s.get("t2") or next(iter(s.values()), "")
+    return x.get("n") or sid, txt, False  # قصص الأنبياء والصحابة والتابعين: مناظر فقط
 
 
 # ———— المادة ————
@@ -378,6 +410,18 @@ async def make(it, cat, L):
         D["opts"] = {k: v for k, v in opts.items() if k not in ("phase", "script")}
         ok = await render_all(opts, D, L, it["draft"], it.get("replace"))
         draft_save(it["draft"], D); return ok
+    if bid.startswith("tala-"):  # مقاطع الطلائع: من القصة أو النص الحر بإعداد مرحلته
+        tm = tala_material(it)
+        if not tm or not tm[1].strip(): print("لا مادة للطلائع:", bid); return False
+        title, txt, cart = tm; age = it.get("age") if it.get("age") in TALA_AGE else "t2"; A = TALA_AGE[age]
+        it["cartoon"] = bool(cart and it.get("cartoon", 1)); it.setdefault("voice", "gemini:Orus"); it.setdefault("style", "story"); it.setdefault("theme", {"b": "kids_b", "g": "kids_g"}.get(it.get("g"), "kids"))
+        j = T.gemini(TALA_PROMPT.format(title=title, n=A["n"], aud=A["aud"], w=A["w"], icons="، ".join(ICONS), vis_rule=VIS_CARTOON if it["cartoon"] else VIS_SCENE, src=txt))
+        if not j or not j.get("scenes"): print("تعذر النص:", bid); return False
+        th = dict(THEMES.get(it.get("theme"), THEMES["kids"]))
+        did = "%s-%s" % (bid, datetime.datetime.now().strftime("%m%d%H%M%S"))
+        D = {"id": did, "book": bid, "title": j.get("title") or title, "theme": th, "opts": {k: v for k, v in it.items() if k not in ("phase", "err")}, "scenes": [x for x in j["scenes"] if x.get("say")][:A["n"] + 1], "at": str(datetime.date.today()), "tala": age}
+        if it.get("phase") == "script": draft_save(did, D); print("✓ مسودة", did); return True
+        ok = await render_all(it, D, L, did, None); draft_save(did, D); return ok
     m = material(bid, cat, it.get("topics"))
     if not m: print("لا مادة:", bid); return False
     title, au, src = m; style = it.get("style") or "summary"; n = int(it["scenes"]) if str(it.get("scenes") or "").isdigit() else (max(3, round(float(it["min"]) * 1.6)) if it.get("min") else N.get(it.get("len") or "medium", 9))
@@ -431,7 +475,7 @@ async def render_video(it, D, aspect, L, did, replace):
     for i, s in enumerate(sc):
         f = os.path.join(tmp, "bg%02d.mp4" % i)
         os.environ["VG_IDX"] = str(i)
-        bgs.append(f if engine != "none" and not (pages and s.get("page")) and VG.clip(engine, s.get("vis"), 8, aspect, f, spent) else None)
+        bgs.append(f if engine != "none" and not (pages and s.get("page")) and VG.clip(engine, s.get("vis"), 8, aspect, f, spent, kids=bool(it.get("cartoon"))) else None)
     render(sc, th, aspect, title, tmp, pages, [1 if b else 0 for b in bgs], reveal=bool(it.get("reveal", 1)))
     lex = lexicon(); want_sfx = bool(it.get("sfx") and pages)
     segs = []
@@ -480,6 +524,7 @@ async def render_video(it, D, aspect, L, did, replace):
     subprocess.run(["gh", "release", "upload", tag, "-R", REPO, "--clobber", outp], check=True)
     rec = {"f": fn, "t": title, "draft": did or "", "style": style, "aspect": aspect, "d": round(secs(outp)), "voice": voice, "pages": 1 if pages else 0,
            "at": str(datetime.date.today()), "scenes": [s.get("h", "") for s in sc], "ok": 0, "v420": 1}
+    if bid.startswith("tala-"): rec.update({"tala": it.get("age") or "t2", "g": it.get("g") or "", "cartoon": 1 if it.get("cartoon") else 0})
     lst_ = L.setdefault(bid, [])
     old = next((k for k, v in enumerate(lst_) if replace and v.get("f") == replace and not v.get("ok")), None)
     if old is not None:  # التصحيح يحل محل الفيديو غير المعتمد (ويُحذف ملفه القديم من الإصدار)

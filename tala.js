@@ -37,11 +37,12 @@ const TALA = (() => {
     if (sub === "parents") return parents();
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     if (sub === "furqan") return furqan(q);
+    if (sub === "video" && typeof TVID !== "undefined") return TVID.view(q, { head, view_, kid, sx });
     if (sub === "qasas" && typeof TQS !== "undefined") return TQS.view(q, { head, view_, star, kid, sx, vis, own, st });
     const sg = GEN[q.s] ? q.s : (q.s === "all" ? "" : ((kid() || {}).g || "")), sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
       ${regCard()}${kid() ? await daily() : ""}
-      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/talaea/qasas"><i aria-hidden="true">📚</i><b>قصص الأنبياء والصحابة والتابعين</b><span>قصص ممتعة لكل مرحلة، وأسئلة وألعاب ونشاط عملي</span></a><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
+      <h3>🎮 الألعاب والمسابقات</h3><div class="talag tgames"><a class="talac game" href="#/talaea/qasas"><i aria-hidden="true">📚</i><b>قصص الأنبياء والصحابة والتابعين</b><span>قصص ممتعة لكل مرحلة، وأسئلة وألعاب ونشاط عملي</span></a><a class="talac game" href="#/talaea/video"><i aria-hidden="true">🎬</i><b>المقاطع المرئية</b><span>قصص وموضوعات علمية في مقاطع مرئية بإخراج يناسب مرحلتك</span></a><a class="talac game" href="#/tamarin"><i aria-hidden="true">✏️</i><b>تمارين الأساس والبنيان</b><span>أسئلة دروس كتابي الأساس والبنيان بحسب مستواك</span></a>${(typeof TPLAY !== "undefined" ? TPLAY.GAMES : []).concat(GAMES).map(([g, n, d, ic]) => `<a class="talac game" href="#/talaea/games?g=${g}"><i aria-hidden="true">${ic}</i><b>${n}</b><span>${d}</span></a>`).join("")}</div>
       ${intro()}
       ${await manhajHome()}
       ${!locked() || /^t[34]$/.test(kid().track) ? FQ_CARD : ""}

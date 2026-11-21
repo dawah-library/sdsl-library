@@ -15,6 +15,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 USAGE = os.path.join(ROOT, "data", "video", "_gen-usage.json")
 SAFE = ("Cinematic, slow gentle camera movement, soft natural light, no text, no letters. "
         "Absolutely no people, no human figures, no faces, no hands, no animals, no birds, no religious figures, no crosses, no statues, no music instruments. ")
+# الطلائع (طلب المدير، ٢١ نوفمبر ٢٠٢٦، docs/tala-media.md): للمراحل الصغيرة (حتى ١٥ سنة) تجوز الرسوم الكرتونية التعليمية لذوات الأرواح
+# من باب لعب الأطفال (فتاوى الشيخ ياسر برهامي: sv100، sv2046، sv2240، sv3245) — بلا تجسيد لنبي ولا صحابي ولا ملَك قطعًا (sv1428)،
+# ولباس ساتر، ولا موسيقى، ولا تُركّب على تلاوة القرآن (sv22238). ولقصص الأنبياء والصحابة: مناظر فقط بلا شخصيات.
+SAFE_KIDS = ("Children's educational 2D cartoon illustration, soft bright friendly colors, gentle slow motion, no text, no letters. "
+             "Friendly cartoon children and animals are allowed; modest clothing (long sleeves; girls in modest dress and headscarf). "
+             "Absolutely no depiction of prophets, companions, angels or any religious figure, no faces of historical persons, no crosses, no statues, no idols, no music instruments, no violence. ")
 # تقديري بالدولار لكل ثانية مولَّدة (يُراجع من صفحة المزوّد)؛ يعرضه video.js قبل الطلب
 COST = {"veo:veo-3.0-fast-generate-001": 0.10, "veo:veo-3.0-generate-001": 0.40, "fal:fal-ai/kling-video/v2.1/standard/text-to-video": 0.05,
         "fal:fal-ai/wan/v2.2-a14b/text-to-video": 0.08, "fal:fal-ai/minimax/hailuo-02/standard/text-to-video": 0.045, "fal:fal-ai/luma-dream-machine/ray-2-flash": 0.08}
@@ -126,8 +132,9 @@ def budget_left(cap):
     return u
 
 
-def clip(engine, vis, secs, aspect, path, spent):
-    """engine = "<مزوّد>:<نموذج>". يعيد مسار اللقطة أو None (فتبقى الشريحة المرسومة). spent: قائمة يُجمع فيها ما وُلّد في هذا الفيديو."""
+def clip(engine, vis, secs, aspect, path, spent, kids=False):
+    """engine = "<مزوّد>:<نموذج>". يعيد مسار اللقطة أو None (فتبقى الشريحة المرسومة). spent: قائمة يُجمع فيها ما وُلّد في هذا الفيديو.
+    kids=True: ضوابط الرسوم الكرتونية التعليمية للطلائع (SAFE_KIDS) بدل ضوابط المناظر وحدها."""
     if not engine or engine == "none": return None
     prov, model = engine.split(":", 1)
     if prov == "local":  # مجاني بلا سقف
@@ -136,7 +143,7 @@ def clip(engine, vis, secs, aspect, path, spent):
     if not vis: return None
     cap = float(os.environ.get("VIDEO_GEN_MAX_SECONDS", "48") or 0); s = 5 if secs <= 6 else 10
     if sum(spent) + s > cap: return None
-    try: PROVIDERS[prov](model, SAFE + str(vis)[:600], s, os.environ.get("VG_ASPECT", ""), path)
+    try: PROVIDERS[prov](model, (SAFE_KIDS if kids else SAFE) + str(vis)[:600], s, os.environ.get("VG_ASPECT", ""), path)
     except Exception as e: print("  توليد اللقطة تعذر:", str(e)[:160]); return None
     spent.append(s)
     u = budget_left(cap); mon = datetime.date.today().strftime("%Y-%m"); e = u.setdefault(mon, {"secs": 0, "usd": 0, "clips": 0})

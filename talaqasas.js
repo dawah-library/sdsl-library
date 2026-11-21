@@ -57,6 +57,7 @@ const TQS = (() => {
       <nav class="chips">${tabs}</nav>
       <h2 class="talat"><span class="tqbig" aria-hidden="true">${f.ic}</span> ${esc(f.n)}</h2><p class="mut">${esc(f.lq)}</p>
       <div class="card tqstory${L === "t1" ? " big" : ""}">${para(f.s[L])}<p><button class="btn s" data-act="tqsay">🔊 استمع إلى القصة</button></p></div>
+      <div id="tvstory" data-id="${esc(f.id)}" data-a="${L}"></div>
       ${L === "t3" ? `<div class="card"><h3>💡 فوائد من القصة</h3><ul>${f.fa.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       <h3>❓ أسئلة القصة</h3>${qs}
       <h3>🧩 رتّب الأحداث</h3><p class="mut">اضغط الأحداث بترتيب وقوعها من الأول إلى الأخير.</p>
