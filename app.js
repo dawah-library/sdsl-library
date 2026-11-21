@@ -51,7 +51,7 @@ function loadFont(f){if(loadedFonts.has(f))return Promise.resolve();loadedFonts.
  return new Promise(ok=>{const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+":wght@400;700&display=swap";
   l.onload=ok;l.onerror=()=>{l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+"&display=swap";l.onerror=ok};document.head.appendChild(l)})}
 const PAGES=[["paper","ورقي","#fbf7ee","#2a241a"],["white","أبيض","#ffffff","#1a1a1a"],["ivory","عاجي","#f7f0dc","#2b2416"],["sand","رملي","#efe2c4","#3a2e18"],["sepia","سيبيا","#f1e4cc","#5b4636"],["mint","نعناعي","#e8f2ec","#1c2a22"],["sky","سماوي","#e8f0f6","#1b2633"],["gray","رمادي","#ececec","#222222"],["night","ليلي","#18231f","#d8e3dd"],["black","أسود","#000000","#cfcfcf"]];
-function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");const r=document.documentElement;if(S.skin&&S.skin!=="base")r.dataset.skin=S.skin;else r.removeAttribute("data-skin");r.dataset.hf=S.hf||"modern";{const h=hfOf(S.hf||"modern");if(h[0]==="modern")r.style.removeProperty("--hf");else{loadHF(h[0]);r.style.setProperty("--hf",`"${h[2]}","Readex Pro","IBM Plex Sans Arabic",sans-serif`)}};if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
+function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");document.body.classList.toggle("citeplain",!!S.citeplain);const r=document.documentElement;if(S.skin&&S.skin!=="base")r.dataset.skin=S.skin;else r.removeAttribute("data-skin");r.dataset.hf=S.hf||"modern";{const h=hfOf(S.hf||"modern");if(h[0]==="modern")r.style.removeProperty("--hf");else{loadHF(h[0]);r.style.setProperty("--hf",`"${h[2]}","Readex Pro","IBM Plex Sans Arabic",sans-serif`)}};if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
  const pg=PAGES.find(p=>p[0]===S.pg)||PAGES[0];loadFont(S.font);
  r.style.setProperty("--rf",`"${S.font}",serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
  const bg=S.bg||pg[2],ink=S.ink||pg[3],dark=lum(bg)<.4;
@@ -589,7 +589,7 @@ function pageHtml0(text,h,uw,bk){if(!String(text||"").trim())return`<p class="mu
  return (tocPg?tx:joinLines(tx)).split("\n").map(line=>{const tl=line.trim();if(/^\|.*\|$/.test(tl)){if(/^\|[\s:|-]+\|$/.test(tl))return"";return"<tr>"+tl.slice(1,-1).split("|").map(c=>"<td>"+esc(c.trim()).replace(/&lt;br&gt;/g,"<br>")+"</td>").join("")+"</tr>"}const tm=tocPg&&TOCL.exec(line.trim()),tp=tm&&pageByLabel(bk,arD(tm[2]));if(tp)return`<p class="tocl"><a href="#/book/${bk.id}/${tp}"><span>${esc(tm[1].replace(/^#+\s*/,""))}</span><em>${toAr(arD(tm[2]))}</em></a></p>`;let al="";if(/^%% /.test(line)){al="mtn";line=line.slice(3)}else if(/^@@ /.test(line)){al="pc";line=line.slice(3)}else if(/^<< /.test(line)){al="pe";line=line.slice(3)}else if(/^\s*(بِ?سْ?مِ?\s+(ٱ|ا)?للَّ?هِ?\s+(ٱ|ا)?لرَّ?حْ?مَ?[ـٰ]?ن?ِ?\s+(ٱ|ا)?لرَّ?حِ?يمِ?|\*\s*\*\s*\*|[*•۞✿❁]{1,5})\s*$/.test(strip(line)))al="pc";
   const bayt=!al&&/\S\s\.\.\.\s\S/.test(line)&&line.length<220;const h2=line.startsWith("## "),head=h2||line.startsWith("# "),l=h2?line.slice(3):head?line.slice(2):line;
   const mk=head?{sp:[],lead:0,p:""}:lineMarks(l);let pos=0;
-  const inner=l.split(/(\s+)/).map(w=>{const a=pos;pos+=w.length;if(!w.trim())return w;const mc=markOf(mk,a,pos);return`<span class="w${mc?" "+mc:""}${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<sup class="fnr" data-fn="$1">($1)</sup>'):esc(w)}</span>`}).join("");
+  const inner=l.split(/(\s+)/).map(w=>{const a=pos;pos+=w.length;if(!w.trim())return w;const mc=markOf(mk,a,pos);return`<span class="w${mc?" "+mc:""}${hs.length&&hs.some(k=>norm(w).includes(k))?" hit":""}${us.length&&us.some(k=>norm(w).includes(k))?" unc":""}">${fnt?esc(w).replace(/\(([\d٠-٩]{1,3})\)/g,'<span class="cit fnc"><sup class="fnr cbt" data-fn="$1">($1)</sup><button type="button" class="cbx cbn" data-fn="$1" aria-expanded="false" aria-label="الحاشية $1">$1</button></span>'):esc(w)}</span>`}).join("");
   if(bayt&&!head){const i2=inner.replace(/<span class="w[^"]*">\.\.\.<\/span>/,'</span><span class="bsep" aria-hidden="true"></span><span class="s2">');if(i2!==inner)return`<p class="bayt${mk.p?" "+mk.p:""}"><span class="s1">${i2}</span></p>`}
   const cls=[head?"ph"+(h2?" ph2":""):mk.p,al].filter(Boolean).join(" ");return head?`<p class="${cls}">${inner}</p>`:`<p${cls?` class="${cls}"`:""}>${inner}</p>`}).join("").replace(/(?:<tr>.*?<\/tr>)+/g,m=>`<div class="tblw"><table>${m}</table></div>`)+fnHtml}
 /* تصحيحات التمييز من الإدارة (data/marks/<الكتاب>.json): {p:{"<الصفحة>":{h:بصمة النص,m:[[فقرة,من,إلى,صنف]]}}}.
@@ -757,6 +757,7 @@ function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط
  <label class="inl"><input type="checkbox" id="lfmt"${S.fmt!=="plain"?" checked":""}> تنسيق الكتاب المطبوع (محاذاة الأسطر، وبداية الفقرة، وتوسيط العناوين)</label>
  <label class="inl"><input type="checkbox" id="lt"${S.tash?" checked":""}> إظهار التشكيل</label>
  <label class="inl"><input type="checkbox" id="lfn"${S.fn==="fold"?" checked":""}> طيّ الحواشي (تُفتح بالضغط)</label>
+ <label class="inl"><input type="checkbox" data-k="citeplain" data-t="bool"${S.citeplain?" checked":""}> المراجع والعزو وأرقام الحواشي داخل النص بالأسلوب المعتاد (بدل الصندوق الصغير الذي يُفتح بجوار النص)</label>
  ${lookMore()}`}
 // الباب ٦: إعدادات العرض الإضافية؛ كل عنصر data-k يُحفظ في S بنوعه (data-t)
 function lookMore(){const o=(k,arr)=>arr.map(([v,t])=>`<option value="${v}"${String(S[k]??"")===String(v)?" selected":""}>${t}</option>`).join("");
@@ -1223,8 +1224,30 @@ const AI={s:undefined,
   catch(e){if(e&&(e.code==="quota"||e.code==="fallback"))throw e;if(e.name==="AbortError"){if(acc)throw{text:acc};throw{code:"cancelled"}}if(acc)throw{text:acc};throw{code:"offline",message:"انقطع الاتصال أثناء الإجابة."}}
   if(err){if(acc)throw{text:acc};throw{code:"server",message:err}}return acc}};
 const AIERR={not_granted:"لم يُسمح لهذه الصفحة باستخدام الذكاء الاصطناعي.",sampling_disabled:"الذكاء الاصطناعي غير متاح لهذا الحساب.",rate_limited:"كثرت الأسئلة، انتظر قليلًا ثم أعد المحاولة.",refused:"تعذرت الإجابة عن هذا السؤال، أعد صياغته.",prompt_too_large:"المحادثة طويلة، ابدأ محادثة جديدة.",session_expired:"انتهت الجلسة، سجّل الدخول من جديد."};
+/* المراجع والحواشي في صندوق صغير ينبثق بجوار النص (طلب المدير ٢١ نوفمبر ٢٠٢٦، كصناديق الدرر السنية):
+   .cbt العزو بالأسلوب الكتابي المعتاد — يظهر إذا اختار القارئ «داخل النص» (S.citeplain) وفي الطباعة والتصدير؛ و.cbx زر الصندوق (رقم الحاشية في الكتب). */
+const CBXI='<svg viewBox="0 0 20 16" aria-hidden="true"><rect x="1" y="1.5" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 5.5h10M5 8.3h10M5 11h6.5" stroke="currentColor" stroke-width="1.3"/></svg>';
+function citeBox(plain,lbl){return`<span class="cit"><span class="cbt">${plain}</span><button type="button" class="cbx" aria-expanded="false" aria-label="${esc(lbl||"المرجع والعزو")}">${CBXI}</button></span>`}
+const CPOP={el:null,src:null};
+function cpopClose(){if(!CPOP.el)return;CPOP.el.remove();if(CPOP.src)CPOP.src.setAttribute("aria-expanded","false");CPOP.el=CPOP.src=null}
+function cpopOpen(src,html,txt){cpopClose();const d=document.createElement("div");d.className="cpop";d.setAttribute("role","dialog");
+ d.innerHTML=`<button type="button" class="cpcopy" aria-label="نسخ" title="نسخ"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6" y="6" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 13V4.5A1.5 1.5 0 0 1 5.5 3H13" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="cpb">${html}</div><span class="cpar"></span>`;
+ document.body.appendChild(d);CPOP.el=d;CPOP.src=src;src.setAttribute("aria-expanded","true");
+ d.querySelector(".cpcopy").onclick=ev=>{ev.stopPropagation();try{navigator.clipboard.writeText(txt||d.querySelector(".cpb").innerText);toast("نُسخ")}catch(x){}};
+ const r=src.getBoundingClientRect(),vw=document.documentElement.clientWidth,w=Math.min(360,vw-24);d.style.width=w+"px";
+ const left=Math.max(12,Math.min(vw-w-12,r.left+r.width/2-w/2));d.style.left=left+scrollX+"px";
+ const h=d.offsetHeight,up=r.top>h+16&&(innerHeight-r.bottom<h+16);d.classList.toggle("up",up);
+ d.style.top=(up?r.top-h-10:r.bottom+10)+scrollY+"px";d.querySelector(".cpar").style.left=Math.max(14,Math.min(w-14,r.left+r.width/2-left))+"px"}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")cpopClose()});addEventListener("resize",()=>cpopClose());addEventListener("popstate",()=>cpopClose());
+document.addEventListener("click",e=>{const cb=e.target.closest(".cbx");
+ if(!cb){if(CPOP.el&&(!e.target.closest(".cpop")||e.target.closest(".cpop a")))setTimeout(cpopClose,0);return}
+ e.preventDefault();e.stopPropagation();if(CPOP.src===cb)return cpopClose();
+ if(cb.dataset.fn){const dg=x=>String(x).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)),k=dg(cb.dataset.fn),fb=cb.closest(".rd")&&cb.closest(".rd").querySelector(".fnb");
+  const hit=fb&&[...fb.querySelectorAll("p")].find(x=>dg(x.textContent).replace(/[^\d]/g," ").trim().split(/\s+/)[0]===k);
+  return cpopOpen(cb,hit?`<p>${esc(hit.textContent)}</p>`:'<p class="mut">لم يُعثر على نص الحاشية في هذه الصفحة؛ قد تكون في الصفحة التالية.</p>',hit&&hit.textContent)}
+ const t=cb.parentNode.querySelector(".cbt");cpopOpen(cb,t?t.innerHTML:"",t&&t.innerText)},true);
 function md(t){const lines=esc(t).split("\n");let h="",inList=false;
- const inline=x=>x.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(m,id,p)=>{const b=B(id);if(!b||+p<1||(b.n&&+p>b.n))return'<span class="mut">[مرجع غير موجود]</span>';return`<a class="cite" href="#/book/${id}/${p}">(${esc(b.title)}${PL(b,+p-1)?"، "+esc(PL(b,+p-1)):""})</a>`});
+ const inline=x=>x.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\[\[([^\]\s]+?):(\d+)\]\]/g,(m,id,p)=>{const b=B(id);if(!b||+p<1||(b.n&&+p>b.n))return'<span class="mut">[مرجع غير موجود]</span>';return citeBox(`<a class="cite" href="#/book/${id}/${p}">(${esc(b.title)}${PL(b,+p-1)?"، "+esc(PL(b,+p-1)):""})</a>`)});
  for(const l of lines){const li=/^\s*[-*•]\s+(.*)/.exec(l)||/^\s*\d+[.)-]\s+(.*)/.exec(l);
   if(li){if(!inList){h+="<ul>";inList=true}h+="<li>"+inline(li[1])+"</li>";continue}
   if(inList){h+="</ul>";inList=false}

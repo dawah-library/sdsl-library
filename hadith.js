@@ -35,7 +35,8 @@ const HDS = (() => {
     return null;
   }
   const refLink = r => { const [v, p] = r.split(":"), bk = B(v); return `<a class="cite" href="#/book/${esc(v)}/${p}">(${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? "، ج" + toAr(bk.vol) : ""}، ص ${toAr(p)})</a>`; };
-  const sx = t => esc(t || "").replace(/\[\[([^\]\s]+?:\d+)\]\]/g, (m, r) => refLink(r)).replace(/\n+/g, "</p><p>");
+  const refBox = r => typeof citeBox === "function" ? citeBox(refLink(r)) : refLink(r);  // صندوق صغير ينبثق بجوار النص (أو العزو داخل النص بحسب إعداد القارئ)
+  const sx = t => esc(t || "").replace(/\[\[([^\]\s]+?:\d+)\]\]/g, (m, r) => refBox(r)).replace(/\n+/g, "</p><p>");
   const FW = [["fiqh", "فوائد فقهية"], ["aqida", "فوائد عقدية"], ["adab", "فوائد تربوية وأدبية"], ["ilm", "فوائد علمية"]];
   function sharhHtml(c, full) {
     const S_ = c.s || {}, li = a => (a || []).filter(Boolean).map(x => `<li>${sx(x)}</li>`).join("");
