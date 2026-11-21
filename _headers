@@ -109,6 +109,9 @@
 /ithra.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/khutab.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /kurrasa.js
   Cache-Control: public, max-age=60, must-revalidate
 

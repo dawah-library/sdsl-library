@@ -538,3 +538,9 @@
 - **الطلائع:** نموذج اشتراك (اسم، قسم، عمر، صورة)، وتمييز tala-b/tala-g، وfreshPick وأنشطة أسبوعية دوّارة، وTSFX.speak (سرعة/صوت/تقسيم) و٣٤ عبارة جديدة في clips.json، وtools/tala-bank.py + tala-bank.yml (مسودات تعتمدها الإدارة)، وtalavid.js (#/talaea/video) مع book-video.py (tala-<قصة> أو نص حر، TALA_AGE، SAFE_KIDS). docs/tala-media.md.
 - **الرفع والمفاتيح:** progress.py readiness() ← progress.json ready (لافتة الإدارة وبطاقة #/ops وتنبيه تليجرام عند تغيّر المستوى)؛ gkeys._rot (إزاحة لكل مهمة) وgkeys.Pool (دوران وفاصل وتهدئة) في tashjir.gemini وcurate.gemini وtts. docs/upload-readiness-keys.md.
 - **يُتابَع:** تشغيل voice-clips.yml (يعمل آليًّا عند تغير clips.json في main)، وأول جولة tala-bank.yml ثم اعتماد أسئلتها، وطلب أول مقطع مرئي للطلائع ومراجعة مسودته.
+
+## ٢١ نوفمبر: قسم «خطب الجمعة» (طلب المدير، claude/hopeful-mayer-63ih12)
+- **الواجهة:** khutab.js (#/khutab، صفحة الموضوع بالنماذج الثلاثة وأوضاعها الخمسة، /deliver وضع الإلقاء، التحميل بالترقيم الذكي، #/khutab/admin والمحرر)؛ الأنماط في آخر style.css.
+- **المعالجة:** tools/khutab.py (reindex، verify، gen، watch، materials) + khutab.yml (عند تغير الطابور أو الموضوعات أو المواد، وأسبوعيًّا للمتابعة). التفاصيل docs/khutab.md، والقرار ق-١٣.
+- **المحتوى:** النموذج التأسيسي «حفظ اللسان» بنماذجه الثلاثة (قيد المراجعة، صفر أخطاء تحقق).
+- **يُتابَع:** اعتماد النموذج التأسيسي من المحرر، وإضافة موضوعات إلى الطابور من «المقترحات» (٤٩٦ موضوعًا من موعظة الأسبوع غير مغطى).
