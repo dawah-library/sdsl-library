@@ -42,4 +42,4 @@ jobs:
         env:
           FB_TOKENS: ${{ secrets.FB_TOKENS }}
           FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
-      - run: bash tools/git-save.sh "منشورات فيسبوك: جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json
+      - run: bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json
