@@ -2,8 +2,12 @@
    الآداب والأخلاق، التربية، الأسرة، السياسة الشرعية؛ على نمط الموسوعات المحكمة: أبواب ← فصول ← مسائل، وكل مسألة مادة محررة بأقسام ثابتة
    عمادها كلام مشايخ الدعوة السلفية في كتبهم ومقالاتهم وفتاواهم، وتكميلها من المراجع المتخصصة، وكل فقرة معزوة إلى موضعها (tools/mawsua.py).
    المسودات للإدارة حتى تعتمدها؛ ومنها: اعتماد المادة، وطابور التحرير، وإعادة المخطط. */
+const MW_ICONS = { athar: "scroll-text", aqeeda: "shield-check", fiqh: "scale", tafsir: "book-open-text", quran: "book-marked", fikr: "compass", dawa: "megaphone", lugha: "type", tarikh: "history", adab: "heart-handshake", tarbiya: "sprout", usra: "house", siyasa: "landmark" },
+  MW_HUE = { athar: 35, aqeeda: 160, fiqh: 200, tafsir: 145, quran: 120, fikr: 260, dawa: 15, lugha: 225, tarikh: 30, adab: 330, tarbiya: 95, usra: 0, siyasa: 185 };
 const MAWS = (() => {
   const R = "data/mawsua/", TR = {}, EN = {};
+  // أيقونات معيارية (Lucide، icons.js) لكل موسوعة بدل الصور المصغرة والرموز التعبيرية، ولون مميز لكل منها
+  const MWI = MW_ICONS, MWH = k => MW_HUE[k] == null ? 160 : MW_HUE[k];
   const getJ = async p => { try { const r = await fetch(p + "?t=" + Math.floor(Date.now() / 120e3)); return r.ok ? await r.json() : null; } catch (e) { return null; } };
   const adm = () => isAdmin() || (typeof can === "function" && can("edit"));
   const tree = async k => TR[k] || (TR[k] = await getJ(R + k + "/_tree.json"));
@@ -16,20 +20,33 @@ const MAWS = (() => {
   async function home(q) {
     const I = await getJ(R + "_index.json"); if (!I) return view('<div class="note">تعذر تحميل الموسوعات.</div>');
     const tot = I.items.reduce((a, x) => a + x.m, 0), ok = I.items.reduce((a, x) => a + x.ok, 0), AX = await getJ("data/athar/_index.json");
-    // موسوعة آثار السلف ضمن «موسوعات الموقع» (طلب المدير): أول البطاقات، وصفحتها كما هي في #/athar
-    const ath = `<a class="mwcard mwath" href="#/athar"><i aria-hidden="true">📜</i><b>موسوعة آثار السلف</b><span>وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث وحكمهم ومواعظهم، بألفاظها من كتب السنة والتراجم والرقائق، معزوّة إلى مواضعها مع تخريجها</span><small>${AX ? `${toAr(AX.count || 0)} أثرًا من ${toAr((AX.people || []).length)} علمًا` : "آثار مرتبة بالأبواب والأعلام"}</small><em style="--p:100%"></em></a>`;
+    // البطاقات: موسوعة آثار السلف أولًا ثم الموسوعات المتخصصة؛ وطريقتا عرض (طلب المدير): «استعراض» بأيقونات كتطبيقات الهاتف، و«قائمة» مفصلة
+    const T = [{ k: "athar", h: "#/athar", n: "موسوعة آثار السلف", d: "وصايا الصحابة والتابعين ومن بعدهم إلى نهاية القرن الثالث وحكمهم ومواعظهم، بألفاظها معزوّة إلى مواضعها مع تخريجها", meta: AX ? `${toAr(AX.count || 0)} أثرًا من ${toAr((AX.people || []).length)} علمًا` : "آثار مرتبة بالأبواب والأعلام", p: 100 }]
+      .concat(I.items.map(x => ({ k: x.k, h: "#/mawsua/" + x.k, n: x.n, d: x.d, meta: x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد", p: x.m ? Math.round(100 * (adm() ? x.e : x.ok) / x.m) : 0 })));
+    window.__mwT = T;
     view(`<section class="cmhero mwhero"><div><h2>موسوعات الموقع</h2><p>موسوعة آثار السلف، والموسوعات العلمية المتخصصة: موسوعات محكمة في العلوم الشرعية، عمادها ومرجعيتها كتب مشايخ الدعوة السلفية ومؤلفاتهم ومقالاتهم وفتاواهم، وتُكمَّل أبوابها ومسائلها من المراجع العلمية المتخصصة المشهورة في كل فن؛
       مرتبة على أبواب وفصول ومسائل على نمط الموسوعات العلمية المحكمة، بتحرير متناسق، وعزو كل فقرة إلى كتابها وصفحتها، ومراجعة كل مادة قبل نشرها؛ ولكل موسوعة اختبارات «المِسبار» لقياس مستواك فيها.</p>
       <p class="mut">${toAr(I.items.length + 1)} موسوعة${tot ? ` • ${toAr(tot)} مسألة في المخططات • ${toAr(ok)} مادة معتمدة` : " • تُعد المخططات الآن"}</p></div></section>
       <form class="sbox" data-form="mwq" style="max-width:none"><input name="q" type="search" value="${esc(q.q || "")}" placeholder="ابحث عن مسألة في الموسوعات كلها" aria-label="بحث في الموسوعات"><button class="btn">بحث</button></form><div id="mwres"></div>
-      <div class="mwgrid">${ath}${I.items.map(x => `<a class="mwcard" href="#/mawsua/${x.k}"><i aria-hidden="true">${x.ic}</i><b>${esc(x.n)}</b><span>${esc(x.d)}</span><small>${x.m ? `${toAr(x.bab)} بابًا • ${toAr(x.m)} مسألة • ${toAr(adm() ? x.e : x.ok)} مادة ${adm() ? "محررة" : "منشورة"}` : "المخطط قيد الإعداد"}</small>${x.m ? `<em style="--p:${Math.round(100 * (adm() ? x.e : x.ok) / x.m)}%"></em>` : ""}</a>`).join("")}</div>
+      <div class="mwbar"><h3>الموسوعات</h3><div class="mwview" role="group" aria-label="طريقة العرض"><button type="button" data-mwv="apps" title="استعراض بالأيقونات">${ic("layout-grid", 18)}<span>استعراض</span></button><button type="button" data-mwv="list" title="قائمة مفصلة">${ic("list", 18)}<span>قائمة</span></button></div></div>
+      <div id="mwtiles"></div>
       <div id="msbhome"></div>
       <details class="card"><summary>منهج الموسوعات</summary><ul class="mwman"><li>المخطط: أبواب وفصول ومسائل على ترتيب كتب الفن المعتمدة، شاملة غير متداخلة، تراجعها الإدارة وتعدّلها.</li>
       <li>المادة: ${(I.secs || []).map(esc).join("، ")} — بأسلوب علمي متناسق.</li><li>العماد كلام مشايخ الدعوة بنصوصهم ومواضعهم، والتكميل من المراجع المتخصصة؛ ولا تُقبل فقرة بلا عزو إلى موضع في المكتبة، ولا اقتباس لا يوجد بحروفه في مصدره.</li>
       <li>كل مادة مسودة حتى يراجعها متخصص ويعتمدها؛ وما لم تكفِ مصادره يُترك حتى تُضاف مصادره.</li></ul></details>`);
+    tiles();
     if (typeof MSB !== "undefined") MSB.homeBlock($("#msbhome"));
     if (q.q) search(q.q, I);
   }
+  const mode = () => { try { return localStorage.getItem("mw_view") || "apps"; } catch (e) { return "apps"; } };
+  function tiles(m) {
+    const box = $("#mwtiles"), T = window.__mwT || []; if (!box) return; m = m || mode();
+    document.querySelectorAll("[data-mwv]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mwv === m));
+    box.innerHTML = m === "list"
+      ? `<div class="mwrows">${T.map(x => `<a class="mwrow" href="${x.h}" style="--h:${MWH(x.k)}"><span class="mwai">${ic(MWI[x.k] || "book-marked", 24)}</span><span class="mwrt"><b>${esc(x.n)}</b><span>${esc(x.d)}</span><small>${x.meta}</small></span>${x.p ? `<em style="--p:${x.p}%"></em>` : ""}</a>`).join("")}</div>`
+      : `<div class="mwapps">${T.map(x => `<a class="mwapp" href="${x.h}" style="--h:${MWH(x.k)}" title="${esc(x.d)}"><span class="mwai">${ic(MWI[x.k] || "book-marked", 30)}</span><b>${esc(x.n.replace(/^موسوعة\s+/, ""))}</b></a>`).join("")}</div>`;
+  }
+  document.addEventListener("click", e => { const b = e.target.closest("[data-mwv]"); if (!b) return; try { localStorage.setItem("mw_view", b.dataset.mwv); } catch (x) { } tiles(b.dataset.mwv); });
   async function search(term, I) {
     const box = $("#mwres"), w = norm(term).split(/\s+/).filter(Boolean); box.innerHTML = '<p class="mut">جارٍ البحث…</p>'; const out = [];
     for (const x of I.items) { if (!x.m) continue; const t = await tree(x.k); flat(t).forEach(m => { const h = norm(m.t + " " + (m.kw || []).join(" ") + " " + m.fasl + " " + m.bab); if (w.every(k => h.includes(k))) out.push([x, m]); }); }
@@ -37,9 +54,9 @@ const MAWS = (() => {
   }
   async function enc(k, q) {
     const t = await tree(k), I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k, ic: "📚", d: "" };
-    if (!t) { setTimeout(() => typeof MSB !== "undefined" && MSB.encBlock($("#msbenc"), k), 0); return view(crumbs([x.n]) + `<h2>${x.ic} ${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div><div id="msbenc"></div>${adm() ? admBar(k, null) : ""}`); }
+    if (!t) { setTimeout(() => typeof MSB !== "undefined" && MSB.encBlock($("#msbenc"), k), 0); return view(crumbs([x.n]) + `<h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div><div id="msbenc"></div>${adm() ? admBar(k, null) : ""}`); }
     const L = flat(t), done = L.filter(vis).length;
-    view(crumbs([x.n]) + `<section class="mwhead"><i aria-hidden="true">${x.ic}</i><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p></div></section>
+    view(crumbs([x.n]) + `<section class="mwhead" style="--h:${MWH(k)}"><span class="mwai">${ic(MWI[k] || "book-marked", 30)}</span><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p></div></section>
       <div id="msbenc"></div>${adm() ? admBar(k, t) : ""}
       <div class="mwtree">${t.b.map((b, i) => `<details${i === 0 || q.b == i + 1 ? " open" : ""}><summary><b>الباب ${ord(i + 1)}:</b> ${esc(b.t)} <small class="mut">${toAr(b.f.reduce((a, f) => a + f.m.filter(vis).length, 0))}/${toAr(b.f.reduce((a, f) => a + f.m.length, 0))}</small></summary>
         ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
