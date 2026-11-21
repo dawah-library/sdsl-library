@@ -957,7 +957,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:18.936Z",
+    "lastRun": "2026-11-21T13:26:20.530Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -989,9 +989,9 @@
     "seen": [
      "p17747466384226"
     ],
-    "lastRun": "2026-11-21T12:50:19.072Z",
+    "lastRun": "2026-11-21T13:26:20.531Z",
     "last": {
-     "added": 1,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -1018,7 +1018,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.072Z",
+    "lastRun": "2026-11-21T13:26:20.531Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1050,9 +1050,9 @@
     "seen": [
      "p90895983887587"
     ],
-    "lastRun": "2026-11-21T12:50:19.140Z",
+    "lastRun": "2026-11-21T13:26:20.531Z",
     "last": {
-     "added": 1,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -1080,7 +1080,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.140Z",
+    "lastRun": "2026-11-21T13:26:20.531Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1112,9 +1112,9 @@
     "seen": [
      "p25042484467194"
     ],
-    "lastRun": "2026-11-21T12:50:19.231Z",
+    "lastRun": "2026-11-21T13:26:20.532Z",
     "last": {
-     "added": 1,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -1142,9 +1142,9 @@
     "seen": [
      "p17487237918970"
     ],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "lastRun": "2026-11-21T13:26:20.532Z",
     "last": {
-     "added": 1,
+     "added": 0,
      "skipped": 0,
      "errs": 0
     }
@@ -1170,11 +1170,13 @@
    "delayMs": 1000,
    "aid": "w26",
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p44907877132765"
+    ],
+    "lastRun": "2026-11-21T13:26:20.668Z",
     "last": {
-     "added": 0,
+     "added": 1,
      "skipped": 0,
      "errs": 0
     }
@@ -1200,12 +1202,14 @@
    "delayMs": 1000,
    "aid": "w107",
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p01729956627531"
+    ],
+    "lastRun": "2026-11-21T13:26:20.669Z",
     "last": {
      "added": 0,
-     "skipped": 0,
+     "skipped": 1,
      "errs": 0
     }
    },
@@ -1229,11 +1233,13 @@
    "perRun": 25,
    "delayMs": 1000,
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p78463839038154"
+    ],
+    "lastRun": "2026-11-21T13:26:20.753Z",
     "last": {
-     "added": 0,
+     "added": 1,
      "skipped": 0,
      "errs": 0
     }
@@ -1258,12 +1264,14 @@
    "perRun": 25,
    "delayMs": 1000,
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p46279899230218"
+    ],
+    "lastRun": "2026-11-21T13:26:20.754Z",
     "last": {
      "added": 0,
-     "skipped": 0,
+     "skipped": 1,
      "errs": 0
     }
    },
@@ -1288,11 +1296,13 @@
    "delayMs": 1000,
    "aid": "w5",
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p01992232788904"
+    ],
+    "lastRun": "2026-11-21T13:26:20.846Z",
     "last": {
-     "added": 0,
+     "added": 1,
      "skipped": 0,
      "errs": 0
     }
@@ -1318,11 +1328,13 @@
    "delayMs": 1000,
    "aid": "a10",
    "state": {
-    "mode": "fb-notoken",
-    "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "mode": "fb-web",
+    "seen": [
+     "p10294410466334"
+    ],
+    "lastRun": "2026-11-21T13:26:20.938Z",
     "last": {
-     "added": 0,
+     "added": 1,
      "skipped": 0,
      "errs": 0
     }
@@ -1350,7 +1362,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "lastRun": "2026-11-21T13:26:20.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1380,7 +1392,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "lastRun": "2026-11-21T13:26:20.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1410,7 +1422,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "lastRun": "2026-11-21T13:26:20.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1440,7 +1452,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.330Z",
+    "lastRun": "2026-11-21T13:26:20.938Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1467,7 +1479,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1495,7 +1507,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1524,7 +1536,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1552,7 +1564,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1579,7 +1591,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1609,7 +1621,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1636,7 +1648,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1665,7 +1677,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1695,7 +1707,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1723,7 +1735,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1751,7 +1763,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1779,7 +1791,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1809,7 +1821,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1837,7 +1849,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1866,7 +1878,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1896,7 +1908,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1923,7 +1935,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1952,7 +1964,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -1981,7 +1993,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -2009,7 +2021,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -2036,7 +2048,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
@@ -2066,7 +2078,7 @@
    "state": {
     "mode": "fb-notoken",
     "seen": [],
-    "lastRun": "2026-11-21T12:50:19.331Z",
+    "lastRun": "2026-11-21T13:26:20.939Z",
     "last": {
      "added": 0,
      "skipped": 0,
