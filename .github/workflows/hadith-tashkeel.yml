@@ -1,0 +1,68 @@
+name: تشكيل أحاديث قسم الحديث
+# tools/hadith-tashkeel.py: تشكيل متون كتب السنة ومطالعها كلها تشكيلًا تامًّا (بلا تغيير حرف)، جزءًا بعد جزء بالأولوية (الكتب التسعة أولًا).
+# طلب المدير (٢١ نوفمبر ٢٠٢٦). مفتاح الإيقاف: hadith_tashkeel.
+on:
+  schedule:
+    - cron: "37 1 * * *"
+    - cron: "37 13 * * *"
+    - cron: "37 19 * * *"
+  workflow_dispatch:
+    inputs:
+      books: { description: "اختياري: كتب بعينها مفصولة بمسافة (bukhari muwatta …)", required: false, default: "" }
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: hadith-tashkeel
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" hadith_tashkeel)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  run:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      - name: التشكيل
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          HT_MINUTES: "150"
+        run: python3 tools/hadith-tashkeel.py ${{ github.event.inputs.books }}
+      - name: الحفظ
+        if: always()
+        run: bash tools/git-save.sh "تشكيل أحاديث قسم الحديث" data/hadith/k
+      - name: إشعار
+        if: always()
+        run: '[ -s .ht-report.txt ] && python3 tools/notify.py "$(cat .ht-report.txt)" || true'
