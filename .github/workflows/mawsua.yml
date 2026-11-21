@@ -1,7 +1,7 @@
 name: الموسوعات العلمية المتخصصة
 # tools/mawsua.py: مخطط كل موسوعة (أبواب ← فصول ← مسائل) وتحرير مسائلها من كتب مشايخ الدعوة ومقالاتهم وفتاواهم مع التكميل من المراجع،
 # بعزو كل فقرة إلى موضعها؛ وكل مادة مسودة حتى تعتمدها الإدارة من #/mawsua. ينفّذ ما تضعه الإدارة في data/mawsua/_queue.json فقط.
-# مفتاح الإيقاف: mawsua.
+# يوميًّا: grow (النمو بالجديد من مصادر مشايخ الدعوة، واستكمال المخططات والمسائل) ثم الطابور. مفتاح الإيقاف: mawsua.
 on:
   push:
     branches: [main]
@@ -62,9 +62,8 @@ jobs:
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           MAWSUA_MINUTES: "170"
         run: |
-          if [ ! -s data/mawsua/_queue.json ] || [ "$(python3 -c 'import json;print(len(json.load(open("data/mawsua/_queue.json")).get("items",[])))')" = "0" ]; then
-            [ -z "${{ github.event.inputs.args }}" ] && { echo "الطابور فارغ"; exit 0; }
-          fi
+          # النمو التلقائي أولًا: الجديد من كتب مشايخ الدعوة ومقالاتهم وشروحهم يُطابَق بالمسائل، وما بقي من المخططات والمسائل يُطلب
+          [ -z "${{ github.event.inputs.args }}" ] && python3 tools/mawsua.py grow
           python3 tools/mawsua.py ${{ github.event.inputs.args }}
       - name: الحفظ
         if: always()

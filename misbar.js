@@ -19,33 +19,33 @@ const MSB = (() => {
     const P = PR.get(), passed = Object.values(P).reduce((a, o) => a + [1, 2, 3].filter(l => (o[l] || 0) >= 70).length, 0);
     box.innerHTML = (`<section class="msbhero" id="misbar"><h2>المِسبار</h2><p>مقياس مستواك في العلوم الشرعية</p>${passed ? `<p class="msbme">✦ اجتزت ${toAr(passed)} اختبارًا من ${toAr(I.items.length * 3)}</p>` : ""}</section>
       <div class="msbgrid">${I.items.map(x => { const n = (x.c[1] || 0) + (x.c[2] || 0) + (x.c[3] || 0), on = n >= 10 && live(I, x), p = P[x.k] || {};
-        return `<a class="msbcard${on ? "" : " off"}" href="${on ? TU(x.k) : "#/mawsua/" + x.k}"${on ? "" : ' aria-disabled="true"'}>${on ? "" : '<em class="msbsoon">قيد الإعداد</em>'}${on && !x.ok ? '<em class="msbsoon">مسودة</em>' : ""}<i aria-hidden="true">${x.ic}</i><b>${esc(nm(x))}</b><span>${esc(x.d)}</span>
+        return `<a class="msbcard${on ? "" : " off"}" href="${on ? TU(x.k) : "#/mawsua/" + x.k}"${on ? "" : ' aria-disabled="true"'}>${on ? "" : '<em class="msbsoon">قيد الإعداد</em>'}${on && !x.ok ? '<em class="msbsoon">مسودة</em>' : ""}<i aria-hidden="true" style="--h:${(typeof MW_HUE !== "undefined" && MW_HUE[x.k]) || 160}">${ic((typeof MW_ICONS !== "undefined" && MW_ICONS[x.k]) || "book-marked", 30)}</i><b>${esc(nm(x))}</b><span>${esc(x.d)}</span>
           <span class="msblv">${[1, 2, 3].map(l => `<s class="${(p[l] || 0) >= 70 ? "ok" : open(x.k, l, P) ? "" : "lock"}" title="${LV[l]}${p[l] ? " — " + toAr(p[l]) + "٪" : ""}"></s>`).join("")}</span></a>`; }).join("")}</div>
       <h3 class="msbh">عن المِسبار</h3><div class="msbabout">
-        <div><i>💡</i><b>الفكرة</b><p>نافذة تقيس بها مستواك في العلوم الشرعية، وتطوّر حصيلتك العلمية في أقسام متنوعة؛ أسئلتها من كتب مشايخ الدعوة السلفية ومقالاتهم ومن المراجع العلمية في المكتبة.</p></div>
-        <div><i>⭐</i><b>الاختبارات</b><p>ثلاثة اختبارات في كل قسم تتفاوت صعوبتها: المبتدئ، والمتوسط، والمتقدم؛ في كل اختبار ${toAr(I.per || 10)} أسئلة تتجدد في كل مرة.</p></div>
-        <div><i>❔</i><b>طريقة المشاركة</b><p>اختر القسم الذي تريد قياس مستواك فيه، وابدأ بالاختبار الأول، ثم تقدّم في الاختبارات؛ ولا يلزم تسجيل الدخول.</p></div></div>
+        <div><i>${ic("lightbulb", 30)}</i><b>الفكرة</b><p>نافذة تقيس بها مستواك في العلوم الشرعية، وتطوّر حصيلتك العلمية في أقسام متنوعة؛ أسئلتها من كتب مشايخ الدعوة السلفية ومقالاتهم ومن المراجع العلمية في المكتبة.</p></div>
+        <div><i>${ic("clipboard-check", 30)}</i><b>الاختبارات</b><p>ثلاثة اختبارات في كل قسم تتفاوت صعوبتها: المبتدئ، والمتوسط، والمتقدم؛ في كل اختبار ${toAr(I.per || 10)} أسئلة تتجدد في كل مرة.</p></div>
+        <div><i>${ic("message-circle-question", 30)}</i><b>طريقة المشاركة</b><p>اختر القسم الذي تريد قياس مستواك فيه، وابدأ بالاختبار الأول، ثم تقدّم في الاختبارات؛ ولا يلزم تسجيل الدخول.</p></div></div>
       <h3 class="msbh">تعلّم مع المِسبار</h3><div class="msbabout">
-        <div><i>🏅</i><b>تخطي الاختبار</b><p>إذا أجبت عن ${toAr(I.pass || 70)}٪ من الأسئلة أو أكثر انفتح لك الاختبار التالي.</p></div>
-        <div><i>🔁</i><b>المثابرة</b><p>أعد الاختبار إن كانت نتيجتك أقل من ${toAr(I.pass || 70)}٪؛ فالأسئلة تتجدد، والعلم بالتكرار.</p></div>
-        <div><i>🔗</i><b>تثقّف أكثر</b><p>بعد كل جواب تعليله، ورابط موضعه في الكتاب، ومسألته في الموسوعة للتوسع.</p></div></div>`);
+        <div><i>${ic("trophy", 30)}</i><b>تخطي الاختبار</b><p>إذا أجبت عن ${toAr(I.pass || 70)}٪ من الأسئلة أو أكثر انفتح لك الاختبار التالي.</p></div>
+        <div><i>${ic("route", 30)}</i><b>المثابرة</b><p>أعد الاختبار إن كانت نتيجتك أقل من ${toAr(I.pass || 70)}٪؛ فالأسئلة تتجدد، والعلم بالتكرار.</p></div>
+        <div><i>${ic("book-open-text", 30)}</i><b>تثقّف أكثر</b><p>بعد كل جواب تعليله، ورابط موضعه في الكتاب، ومسألته في الموسوعة للتوسع.</p></div></div>`);
   }
   // في صفحة كل موسوعة: اختباراتها الثلاثة مختصرة
   async function encBlock(box, k) {
     if (!box) return; const I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k); if (!x) return;
     const n = (x.c[1] || 0) + (x.c[2] || 0) + (x.c[3] || 0), on = n >= 10 && (x.ok || adm()), P = PR.get(), p = P[k] || {};
-    box.innerHTML = `<section class="msbenc"><div><b>📏 المِسبار: قِس مستواك في ${esc(nm(x))}</b><span class="mut">${on ? "ثلاثة اختبارات متدرجة؛ النجاح في ٧٠٪ يفتح التالي" : "الاختبارات قيد الإعداد"}</span></div>
+    box.innerHTML = `<section class="msbenc"><div><b>${ic("gauge", 20)} المِسبار: قِس مستواك في ${esc(nm(x))}</b><span class="mut">${on ? "ثلاثة اختبارات متدرجة؛ النجاح في ٧٠٪ يفتح التالي" : "الاختبارات قيد الإعداد"}</span></div>
       ${on ? `<div class="msblv">${[1, 2, 3].map(l => `<s class="${(p[l] || 0) >= 70 ? "ok" : open(k, l, P) ? "" : "lock"}" title="${LV[l]}"></s>`).join("")}</div><a class="btn p" href="${TU(k)}">${Object.keys(p).length ? "تابع الاختبارات" : "ابدأ الاختبار"}</a>` : ""}</section>`;
   }
   async function sec(k) {
     const I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k), B = await bank(k); if (!x || !B) return view('<div class="note">هذا القسم قيد الإعداد.</div>');
     const P = PR.get(), p = P[k] || {}, qs = (B.qs || []).filter(q => !q.x);
-    view(`<p><a href="#/mawsua">الموسوعات العلمية</a> › <a href="#/mawsua/${k}">${esc(x.n)}</a> › المِسبار</p><section class="msbsec"><i aria-hidden="true">${x.ic}</i><div><h2>${esc(nm(x))}</h2><p class="mut">${esc(x.d)}</p></div></section>
+    view(`<p><a href="#/mawsua">موسوعات الموقع</a> › <a href="#/mawsua/${k}">${esc(x.n)}</a> › المِسبار</p><section class="msbsec mwhead" style="--h:${(typeof MW_HUE !== "undefined" && MW_HUE[k]) || 160}"><span class="mwai">${ic((typeof MW_ICONS !== "undefined" && MW_ICONS[k]) || "book-marked", 30)}</span><div><h2>${esc(nm(x))}</h2><p class="mut">${esc(x.d)}</p></div></section>
       ${!B.ok ? `<p class="note">بنك الأسئلة مسودة (${toAr(qs.length)} سؤالًا) تراجعه الإدارة.${adm() ? ` <button class="btn s p" data-msb="bok" data-k="${k}">اعتماد بنك الأسئلة</button> <span class="msbst mut"></span>` : ""}</p>` : ""}
       <div class="msblevels">${[1, 2, 3].map(l => { const n = qs.filter(q => q.l === l).length, o = open(k, l, P) && n >= 4, s = p[l];
         return `<div class="msbl${o ? "" : " lock"}${(s || 0) >= 70 ? " ok" : ""}"><b>الاختبار ${["", "الأول", "الثاني", "الثالث"][l]}</b><span>المستوى ${LV[l]}</span><small class="mut">${toAr(n)} سؤالًا في البنك${s != null ? ` • أفضل نتيجة ${toAr(s)}٪` : ""}</small>
-          ${o ? `<a class="btn ${(s || 0) >= 70 ? "" : "p"}" href="${TU(k, l)}">${s == null ? "ابدأ الاختبار" : (s || 0) >= 70 ? "أعد الاختبار" : "حاول مرة أخرى"}</a>` : `<span class="mut">🔒 ${n < 4 ? "قيد الإعداد" : "انجح في الاختبار السابق بـ٧٠٪ ليُفتح"}</span>`}</div>`; }).join("")}</div>
-      <p><a class="btn s" href="#/mawsua/${k}">📚 ${esc(x.n)}: تعلّم المسائل</a></p>`);
+          ${o ? `<a class="btn ${(s || 0) >= 70 ? "" : "p"}" href="${TU(k, l)}">${s == null ? "ابدأ الاختبار" : (s || 0) >= 70 ? "أعد الاختبار" : "حاول مرة أخرى"}</a>` : `<span class="mut">${ic("lock", 16)} ${n < 4 ? "قيد الإعداد" : "انجح في الاختبار السابق بـ٧٠٪ ليُفتح"}</span>`}</div>`; }).join("")}</div>
+      <p><a class="btn s" href="#/mawsua/${k}">${ic("book-open-text", 16)} ${esc(x.n)}: تعلّم المسائل</a></p>`);
   }
   async function test(k, l) {
     l = +l; const B = await bank(k), I = await getJ(R + "_index.json"), per = (I && I.per) || 10;
@@ -66,7 +66,7 @@ const MSB = (() => {
     document.querySelectorAll(".msbo").forEach((b, n) => { b.disabled = true; if (q.o[n] === q.a) b.classList.add("ok"); else if (n === +j) b.classList.add("no"); });
     const s = q.s || {};
     $("#msbfb").innerHTML = `<div class="msbfb ${ok ? "ok" : "no"}"><b>${ok ? "✓ أحسنت" : "✗ الجواب الصحيح: " + esc(q.a)}</b>${q.e ? `<p>${esc(q.e)}</p>` : ""}
-      <p class="msbmore">🔗 تثقّف أكثر: ${s.b ? `<a href="#/book/${esc(s.b)}/${s.p}">«${esc(s.t || "")}»${s.a ? " — " + esc(s.a) : ""}، ص ${toAr(s.p)}</a>` : ""}${q.m ? ` • <a href="#/mawsua/${r.k}/${esc(q.m)}" data-msb="mw">المسألة في الموسوعة: ${esc(q.mt || "")}</a>` : ""}</p>
+      <p class="msbmore">${ic("book-open-text", 16)} تثقّف أكثر: ${s.b ? `<a href="#/book/${esc(s.b)}/${s.p}">«${esc(s.t || "")}»${s.a ? " — " + esc(s.a) : ""}، ص ${toAr(s.p)}</a>` : ""}${q.m ? ` • <a href="#/mawsua/${r.k}/${esc(q.m)}" data-msb="mw">المسألة في الموسوعة: ${esc(q.mt || "")}</a>` : ""}</p>
       ${adm() ? `<button class="linkbtn" data-msb="hide" data-k="${r.k}" data-id="${esc(q.id)}">🛡️ إخفاء هذا السؤال من البنك</button> <span class="msbst mut"></span>` : ""}
       <p><button class="btn p" data-msb="next">${r.i + 1 < r.qs.length ? "السؤال التالي ←" : "النتيجة"}</button></p></div>`;
   }
