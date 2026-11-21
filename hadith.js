@@ -27,7 +27,37 @@ const HDS = (() => {
   const honor = t => String(t || "").replace(/[\uFD40-\uFD4A]/g, c => HON[c] || c);
   const clean = t => { t = honor(t).replace(/⦗[^⦘]*⦘/g, "").replace(/\s+/g, " ").trim(); return (LSG("hd_txt", {}) || {}).d === 0 ? t.replace(/[\u064B-\u0652\u0670]/g, "") : t; };
   // المتن بمطلعه: إن انتهى المطلع بفعل قول جاء المتن بين علامتي تنصيص، وإلا اتصل به
-  const withLead = (lead, m) => { m = clean(m); const paren = /\(/.test(m) && /\)/.test(m);
+  /* ===== رموز الترضي والسلام المرسومة (طلب المدير، ٢١ نوفمبر): كما تُرسم «ﷺ» يُرسم الترضي عن الصحابي والصحابية بصيغته الثابتة
+     (رضي الله عنه/عنها/عنهما/عنهم/عنهن)، و«عليه السلام» للأنبياء والملائكة، و«رحمه الله»؛ رمزًا مرسومًا (.hon) يُقرأ نصه كاملًا.
+     وما لم يُذكر في النص يُضاف عند أول ذكر الصحابي في المطلع، وبعد أسماء الأنبياء والملائكة في المتن، و«ﷺ» بعد «رسول الله»/«النبي»؛
+     ويُميَّز المضاف (.hon.add). الخياران في «خدمات النص». ===== */
+  const DI = "[\\u064B-\\u0652\\u0670]*", rxw = w => [...w].map(c => c === " " ? "\\s+" : c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + DI).join("");
+  const PH = [["رضي الله عنهما", "رَضِيَ اللهُ", "عَنْهُمَا"], ["رضي الله عنهن", "رَضِيَ اللهُ", "عَنْهُنَّ"], ["رضي الله عنهم", "رَضِيَ اللهُ", "عَنْهُمْ"], ["رضي الله عنها", "رَضِيَ اللهُ", "عَنْهَا"], ["رضي الله عنه", "رَضِيَ اللهُ", "عَنْهُ"],
+    ["رحمهما الله", "رَحِمَهُمَا", "اللهُ"], ["رحمه الله", "رَحِمَهُ", "اللهُ"], ["عليه الصلاة والسلام", "عَلَيْهِ الصَّلَاةُ", "وَالسَّلَامُ"], ["عليهما السلام", "عَلَيْهِمَا", "السَّلَامُ"], ["عليهم السلام", "عَلَيْهِمُ", "السَّلَامُ"], ["عليها السلام", "عَلَيْهَا", "السَّلَامُ"], ["عليه السلام", "عَلَيْهِ", "السَّلَامُ"]];
+  const PHRX = PH.map(([w, a, b]) => [new RegExp("[-–(]?\\s*" + rxw(w) + "(?![\\u0621-\\u064A])\\s*[-–)]?", "g"), a, b, w]);
+  const honSpan = (a, b, w, add) => `<span class="hon${add ? " add" : ""}" title="${w}" aria-label="${w}"><i>${a}</i><i>${b}</i></span>`;
+  const HONK = { h: "عنه", f: "عنها", d: "عنهما" };
+  const honOf = k => { const p = PH.find(x => x[0] === "رضي الله " + HONK[k]); return honSpan(p[1], p[2], p[0], 1); };
+  const SAL = honSpan("عَلَيْهِ", "السَّلَامُ", "عليه السلام", 1);
+  const FEM = /^(?:عائشة|أم |حفصة|أسماء|فاطمة|ميمونة|زينب|خديجة|صفية|سودة|جويرية|الربيع بنت|الشفاء|سهلة|نسيبة|خولة|رملة|هند|أميمة|بريرة|سبيعة|فاطمة بنت|أم$)/;
+  const DUAL = /^(?:عبد الله بن عمر|عبد الله بن عمرو|ابن عمر|ابن عمرو|عبد الله بن عباس|ابن عباس|عبد الله بن الزبير|ابن الزبير|النعمان بن بشير|جابر بن عبد الله|أسامة بن زيد|الحسن بن علي|الحسين بن علي|أسماء بنت أبي بكر)(?![\u0621-\u064A])/;
+  const PROPH = ["آدم", "نوح", "إبراهيم", "إسماعيل", "إسحاق", "يعقوب", "يوسف", "موسى", "هارون", "داود", "سليمان", "عيسى", "يونس", "أيوب", "زكريا", "يحيى", "إلياس", "إدريس", "هود", "صالح", "شعيب", "لوط", "جبريل", "جبرائيل", "ميكائيل", "إسرافيل"];
+  const PROPHRX = new RegExp("(^|[\\s«(])((?:" + PROPH.map(rxw).join("|") + "))(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])(?!\\s+(?:بن|ابن)" + DI + "\\s)(?!\\s*<span class=\"hon)", "g");
+  const RASRX = new RegExp("((?:" + rxw("رسول الله") + "|" + rxw("النبي") + "))(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])(?!\\s*(?:ﷺ|" + rxw("صلى") + "|<span|" + PROPH.map(rxw).join("|") + "))", "g");
+  const onText = (html, f) => html.split(/(<[^>]+>)/).map((t, i) => i % 2 ? t : f(t)).join("");
+  function sym(html, sah) { const T = txtSet(); if (T.h === 0) return html;
+    html = onText(html, t => { PHRX.forEach(([rx, a, b, w]) => { t = t.replace(rx, () => " " + honSpan(a, b, w)); }); return t.replace(new RegExp(rxw("صلى الله عليه وسلم"), "g"), "ﷺ"); });
+    if (T.ha === 0) return html;
+    if (sah) { const n = String(sah).replace(/^(?:أبي|أبو)\s+/, m => m), nn = n.replace(/[ً-ْٰ]/g, ""), k = FEM.test(nn) ? "f" : DUAL.test(nn) ? "d" : "h";
+      const rx = new RegExp("(" + rxw(nn.replace(/^أبو\s/, "أبي ")) + "|" + rxw(nn) + ")(?![\\u0621-\\u064A\\u064B-\\u0652\\u0670])", "");
+      const m = html.match(rx); if (m) { const e = m.index + m[0].length, after = html.slice(e, e + 40);
+        const hi = html.slice(e, e + 90).indexOf('<span class="hon'), stop = html.slice(e, e + 90).search(/[:؛]|قَ?الَ?|أَ?نَّ/);
+        if (!(hi >= 0 && (stop < 0 || hi < stop))) html = html.slice(0, e) + " " + honOf(k) + html.slice(e); } }
+    html = onText(html, t => t.replace(PROPHRX, (m0, pre, name, off, str) => { const before = str.slice(Math.max(0, off - 6), off + pre.length).replace(/[ً-ْٰ]/g, "");
+      return /(?:أبو|أبي|أبا|أم|بن|ابن|بنت)\s*$/.test(before) ? m0 : pre + name + " " + SAL; }).replace(RASRX, "$1 ﷺ"));
+    return html; }
+  const withLead = (lead, m, sah) => sym(withLead0(lead, m), sah);
+  const withLead0 = (lead, m) => { m = clean(m); const paren = /\(/.test(m) && /\)/.test(m);
     if (paren) m = m.replace(/\(/g, "«").replace(/\)/g, "»").replace(/»\s*\.$/, "»");  // نسخ البغا: المتن بين قوسين ← علامتا التنصيص
     const quoted = /^«/.test(m) && /»\s*\.?$/.test(m);
     if (!quoted) m = m.replace(/^[«"]\s*/, "").replace(/\s*[»"]\s*$/, "");
@@ -284,13 +314,13 @@ const HDS = (() => {
   // ===== خدمات النص في قسم الحديث (طلب المدير، ٢١ نوفمبر): الخط والحجم واللون وتباعد الأسطر وإظهار التشكيل، محفوظة على الجهاز (hd_txt) =====
   const HFONTS = ["Amiri", "Scheherazade New", "Noto Naskh Arabic", "Lateef", "Markazi Text", "Reem Kufi", "Cairo", "Tajawal", "Readex Pro"];
   const HCOL = [["", "الافتراضي"], ["#1b1b1b", "أسود"], ["#0b4a3b", "أخضر داكن"], ["#123a6b", "أزرق داكن"], ["#5a2d0c", "بني"], ["#6b1d4a", "خمري"]];
-  const txtSet = () => Object.assign({ f: "", z: 100, c: "", lh: 0, d: 1 }, LSG("hd_txt", {}));
+  const txtSet = () => Object.assign({ f: "", z: 100, c: "", lh: 0, d: 1, h: 1, ha: 1 }, LSG("hd_txt", {}));
   function txtApply() { const t = txtSet(), r = document.documentElement.style;
     if (t.f && typeof loadFont === "function") loadFont(t.f);
     r.setProperty("--hdf", t.f ? `"${t.f}", Amiri, serif` : ""); r.setProperty("--hdz", (t.z / 100) + ""); r.setProperty("--hdc", t.c || ""); r.setProperty("--hdlh", t.lh ? String(t.lh) : "");
     document.documentElement.classList.toggle("hd-nodia", !t.d); }
   // تغيير الإعداد يُعيد رسم الصفحة المفتوحة (لإظهار التشكيل أو إخفائه)
-  addEventListener("change", e => { if (e.target.closest("input[type=checkbox][data-hdt=d]") && typeof route === "function") setTimeout(route, 50); });
+  addEventListener("change", e => { if (e.target.closest("input[type=checkbox][data-hdt]") && typeof route === "function") setTimeout(route, 50); });
   const txtBtn = () => `<button class="btn s" data-act="hdtxt" title="الخط والحجم واللون">Aa خدمات النص</button>`;
   function txtPanel() { const t = txtSet();
     openSheet("خدمات النص في قسم الحديث", `<div class="hdtxtp" data-noswipe><label>الخط<select data-hdt="f"><option value="">الافتراضي (Amiri)</option>${HFONTS.map(f => `<option value="${f}"${t.f === f ? " selected" : ""} style="font-family:'${f}'">${f}</option>`).join("")}</select></label>
@@ -298,11 +328,13 @@ const HDS = (() => {
       <label>تباعد الأسطر<select data-hdt="lh">${[[0, "الافتراضي"], [1.8, "متقارب"], [2.2, "متوسط"], [2.6, "واسع"]].map(([v, n]) => `<option value="${v}"${+t.lh === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>
       <fieldset><legend>لون النص</legend><div class="hdcols">${HCOL.map(([v, n]) => `<button type="button" class="hdcol${t.c === v ? " on" : ""}" data-hdc="${v}" title="${n}" aria-label="${n}" style="${v ? "background:" + v : ""}">${v ? "" : "A"}</button>`).join("")}<input type="color" data-hdt="c" value="${t.c || "#1b1b1b"}" aria-label="لون مخصص"></div></fieldset>
       <label class="inl"><input type="checkbox" data-hdt="d"${t.d ? " checked" : ""}> إظهار التشكيل</label>
-      <p class="hdtxtprev">عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللهِ ﷺ: «الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ»</p>
+      <label class="inl"><input type="checkbox" data-hdt="h"${t.h !== 0 ? " checked" : ""}> رموز الترضي والسلام مرسومة (كـ«ﷺ»)</label>
+      <label class="inl"><input type="checkbox" data-hdt="ha"${t.ha !== 0 ? " checked" : ""}> إضافة الترضي والسلام حيث لم يُذكر في النص (مميَّزًا)</label>
+      <p class="hdtxtprev">${sym("عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللهِ ﷺ: «الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ»")}</p>
       <button class="btn s" data-act="hdtxtreset">إعادة الافتراضي</button></div>`); }
   const txtSave = (k, v) => { const t = txtSet(); t[k] = v; LSS("hd_txt", t); txtApply(); const z = document.getElementById("hdzv"); if (z) z.textContent = toAr(t.z) + "٪"; };
-  document.addEventListener("input", e => { const el = e.target.closest("[data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, k === "d" ? (el.checked ? 1 : 0) : k === "z" || k === "lh" ? +el.value : el.value); if (k === "c") document.querySelectorAll(".hdcol").forEach(b => b.classList.remove("on")); });
-  document.addEventListener("change", e => { const el = e.target.closest("select[data-hdt],input[type=checkbox][data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, k === "d" ? (el.checked ? 1 : 0) : k === "lh" ? +el.value : el.value); });
+  document.addEventListener("input", e => { const el = e.target.closest("[data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, /^(d|h|ha)$/.test(k) ? (el.checked ? 1 : 0) : k === "z" || k === "lh" ? +el.value : el.value); if (k === "c") document.querySelectorAll(".hdcol").forEach(b => b.classList.remove("on")); });
+  document.addEventListener("change", e => { const el = e.target.closest("select[data-hdt],input[type=checkbox][data-hdt]"); if (!el) return; const k = el.dataset.hdt; txtSave(k, /^(d|h|ha)$/.test(k) ? (el.checked ? 1 : 0) : k === "lh" ? +el.value : el.value); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-hdc],[data-act=hdtxt],[data-act=hdtxtreset]"); if (!b) return;
     if (b.dataset.act === "hdtxt") return txtPanel(); if (b.dataset.act === "hdtxtreset") { LSS("hd_txt", {}); txtApply(); return txtPanel(); }
     txtSave("c", b.dataset.hdc); document.querySelectorAll(".hdcol").forEach(x => x.classList.toggle("on", x === b)); });
@@ -338,7 +370,7 @@ const HDS = (() => {
     const rows = sl.map(x => { let h = ""; if (x[3] && x[3] !== lk) { h += `<h3 class="hrk">${esc(x[3])}</h3>`; lb = null; } if (x[4] && x[4] !== lb) h += `<h4 class="hrb">${esc(x[4])}</h4>`; lk = x[3]; lb = x[4];
       const m = MM[String(x[0])] || x[6], cite = (x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")";
       const sp = splitMatn(m), isn = mode === "tools" ? "" : isnBox(x[1], x[2], sp.matn, mode, sp.isnad);
-      return h + `<article class="hrh${one1 ? " hrone" : ""}" id="hr${esc(String(x[0]))}"><a class="hrn" href="#/hadith/k/${b}/${x[0]}" title="خدمات الحديث">${toAr(x[0])}</a>${LL[String(x[0])] ? "" : x[5] ? `<p class="hds">عن ${esc(x[5])}</p>` : ""}<p class="hdm">${LL[String(x[0])] ? withLead(LL[String(x[0])], sp.matn) : esc(clean(sp.matn))}</p>${isn}
+      return h + `<article class="hrh${one1 ? " hrone" : ""}" id="hr${esc(String(x[0]))}"><a class="hrn" href="#/hadith/k/${b}/${x[0]}" title="خدمات الحديث">${toAr(x[0])}</a>${LL[String(x[0])] ? "" : x[5] ? `<p class="hds">${sym("عن " + esc(x[5]), x[5])}</p>` : ""}<p class="hdm">${LL[String(x[0])] ? withLead(LL[String(x[0])], sp.matn, x[5]) : sym(esc(clean(sp.matn)))}</p>${isn}
         <div class="hra"><a class="btn s" href="#/hadith/k/${b}/${x[0]}">خدمات الحديث</a><button class="btn s" data-act="hdrsh" data-b="${b}" data-n="${esc(String(x[0]))}">📖 شرحه</button><a class="btn s" href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(String(x[6]).split(" ").slice(0, 4).join(" "))}" title="بإسناده في الكتاب">📚 بإسناده</a><button class="btn s" data-act="hkcopy" data-t="${esc(cite)}">نسخ</button></div><div class="hrsh" hidden></div></article>`; }).join("");
     const nav = top => one1 ? `<div class="pgn hrpg hrone-nav" data-noswipe>${pg > 1 ? `<a class="btn" href="${u(pg - 1)}" rel="prev">› السابق</a>` : "<span></span>"}<span class="mut">الحديث ${toAr(pg)} من ${toAr(np)}${sl[0] ? " • رقم " + toAr(sl[0][0]) : ""}</span>${pg < np ? `<a class="btn p" href="${u(pg + 1)}" rel="next">التالي ‹</a>` : "<span></span>"}</div>`
       : `<div class="pgn hrpg">${pg > 1 ? `<a class="btn s" href="${u(1)}" title="أول الكتاب">«</a><a class="btn s" href="${u(pg - 1)}">› السابقة</a>` : ""}<span class="mut">صفحة ${toAr(pg)} من ${toAr(np)} • الأحاديث ${toAr(sl[0][0])}–${toAr(sl[sl.length - 1][0])}</span>${pg < np ? `<a class="btn s" href="${u(pg + 1)}">التالية ‹</a><a class="btn s" href="${u(np)}" title="آخر الكتاب">»</a>` : ""}</div>`;
@@ -375,7 +407,7 @@ const HDS = (() => {
     await klist(); const x = D.items[k], M = await kmatn(b, Math.floor(k / 500)), LD = (await klead(b, Math.floor(k / 500)))[String(x[0])] || "", m = M[String(x[0])] || x[6], prev = D.items[k - 1], next = D.items[k + 1], SPX = splitMatn(m);
     window.__hdIsn = { bk: x[1], p: x[2], m: SPX.matn, inl: SPX.isnad };
     view(`<p><a href="#/hadith?t=kutub&kb=${b}&at=${encodeURIComponent(x[0])}">← ${esc(D.t)} (موضعه في الكتاب)</a>${x[3] ? " › " + esc(x[3]) : ""}</p>
-    <article class="hdone"><p class="hds"${LD ? " hidden" : ""}>${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">${withLead(LD, SPX.matn)}</p>${isnMode() === "tools" ? "" : isnBox(x[1], x[2], SPX.matn, isnMode(), SPX.isnad)}<p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
+    <article class="hdone"><p class="hds"${LD ? " hidden" : ""}>${x[5] ? "عن " + esc(x[5]) : ""}</p><p class="hdm">${withLead(LD, SPX.matn, x[5])}</p>${isnMode() === "tools" ? "" : isnBox(x[1], x[2], SPX.matn, isnMode(), SPX.isnad)}<p class="hdt"><b>${esc(D.t)}</b> • ${(KL && KL[b] && KL[b].seq) ? "تسلسله في نسخة المكتبة" : "رقمه"} ${toAr(x[0])}${x[4] ? " • " + esc(x[4]) : ""}</p>
     <p class="mut"><a href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(x[6].split(" ").slice(0, 4).join(" "))}">اقرأ الحديث بإسناده في موضعه من الكتاب ←</a></p></article>
     ${["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b) ? '<section class="stsec" id="hdgr"><p class="mut">…</p></section>' : ""}
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
