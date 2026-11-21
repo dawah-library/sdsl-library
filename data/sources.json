@@ -2039,7 +2039,7 @@
    "col": "dawah",
    "lic": "",
    "author": "شريف طه",
-   "on": true,
+   "on": false,
    "to": "posts",
    "minChars": 60,
    "perRun": 25,
@@ -2054,7 +2054,8 @@
      "skipped": 0,
      "errs": 0
     }
-   }
+   },
+   "note": "رابط مشاركة لم يُفتح (fb=share)؛ الحساب الصحيح fb-shryfth600832"
   },
   {
    "id": "islamweb",

@@ -278,6 +278,7 @@
 - **نافذة الحديث:** hdExtra في words.js: الشرح الإجمالي والفوائد (AI.viaServer mode explain للأعضاء)، والغريب (GL مع hdHead)، ومواضعه في كتب السنة (SX.search مع HD_SUNNA)، والشروح (القديم). لمس .w.hd مع mk-h يفتحها.
 - **التخريج:** tools/takhrij.py <كتاب> → data/takhrij/<كتاب>.json؛ الحقل tkh في الفهرس يُظهر الرابط؛ #/takhrij/<كتاب>. علو الهمة: ٦٩ حديثًا، وُجدت ٥٢.
 - **مطابقة المصورة:** tools/pdf-match.py + pdf-match.yml (أسبوعيًّا وعند تعديله): يجلب المصورة بـ OIDC، يقارن عينة صفحات (pdftotext أو Tesseract)، يصحح pdfOffset ويضيف الضعيفة إلى unrev. التقرير tools/match-report.md.
+- **فيسبوك (٢١ نوفمبر، ق-١٢):** «الزائر بلا حساب» tools/fb-harvest.js كل ساعة (fb-harvest.yml) ← data/fb-inbox.json ← source-import.js fb؛ بلا رمز ولا دخول، ويشمل الحسابات الشخصية العامة.
 - **فيسبوك:** حسابات type=facebook في sources.json من «مراجعة المستجلب»؛ fbDiscover عبر Graph API برمز السر FB_TOKENS (JSON) أو FB_PAGE_TOKEN؛ والحسابات الشخصية يدويًّا (نموذج mgfbpost). التفاصيل tools/facebook-sources.md.
 
 ## ٣١ أكتوبر (عصرًا): الطلائع والإثرائي والمطابقة
