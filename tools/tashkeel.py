@@ -166,16 +166,25 @@ def ghm1(prompt, url):
     return (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
 
 
+KCOOL, KLAST, GAP = {}, {}, float(os.environ.get("GKEYS_GAP", "4") or 4)  # تهدئة المفتاح بعد حد الدقيقة، وفاصل أدنى بين طلبين عليه
+
+
 def call(engine, prompt, slot=0):
-    """engine: g (Gemini flash) أو pro (Gemini Pro) أو ghm. يعيد النص أو None (نفاد الحصة)."""
+    """engine: g (Gemini flash) أو pro (Gemini Pro) أو ghm. يعيد النص أو None (نفاد الحصة).
+    موازنة المفاتيح (٢١ نوفمبر): المفتاح المرفوض بحد الدقيقة يُهدَّأ ويُنتقل فورًا إلى التالي، وما في التهدئة يؤخَّر إلى آخر الدور."""
     keys = list(range(len(GKEYS)))
     order = keys[slot % max(1, len(keys)):] + keys[:slot % max(1, len(keys))]
+    now = time.time(); order = [k for k in order if KCOOL.get(k, 0) <= now] + [k for k in order if KCOOL.get(k, 0) > now]
     tries = [("ghm", None)] if engine == "ghm" else [(engine, k) for k in order] + ([("g2", k) for k in order] if engine == "g" and G2 != GMODEL else [])
     for eng, k in tries:
         if (eng, k) in EXH:
             continue
         for attempt in range(5):
             try:
+                if k is not None:
+                    with LOCK:
+                        nxt = max(time.time(), KLAST.get(k, 0) + GAP, KCOOL.get(k, 0)); KLAST[k] = nxt
+                    if nxt > time.time(): time.sleep(min(60, nxt - time.time()))
                 if eng == "ghm":
                     t = ghm(prompt)
                 else:
@@ -196,6 +205,10 @@ def call(engine, prompt, slot=0):
                         EXH.add((eng, k))
                     log("  محرك غير متاح:", eng, e.code, msg[:120])
                     break
+                if e.code == 429 or e.code >= 500:  # حد الدقيقة أو ازدحام: تهدئة المفتاح والانتقال إلى التالي بدل الانتظار عليه
+                    with LOCK:
+                        KCOOL[k] = time.time() + (45 if e.code == 429 else 15)
+                    if any(KCOOL.get(x, 0) <= time.time() and (eng, x) not in EXH for x in order if x != k): break
                 time.sleep(min(90, 15 * (attempt + 1)))
             except Exception as e:
                 ERRS.append("%s %s" % (eng, str(e)[:160]))

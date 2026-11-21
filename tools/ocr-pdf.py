@@ -166,11 +166,21 @@ MEXH = set()  # (مفتاح، نموذج) نفدت حصته اليومية: لك
 LITE = set()  # صفحات قرأها النموذج الخفيف (حين نفدت حصة الأساسي): تُعاد قراءتها بالأساسي لاحقًا
 
 
+KCOOL = {}  # تهدئة المفتاح بعد رفض حد الدقيقة أو ازدحام الخادم (طلب المدير، ٢١ نوفمبر): ينتقل الطلب فورًا إلى مفتاح آخر بدل الانتظار عليه
+
+
 def _next_key(ki):
-    for d in range(1, len(GKEYS) + 1):
-        k = (ki + d) % len(GKEYS)
-        if k not in KEXH: return k
-    return None
+    """المفتاح التالي غير المستنفد، ويُقدَّم ما ليس في التهدئة."""
+    cand = [(ki + d) % len(GKEYS) for d in range(1, len(GKEYS) + 1)]
+    cand = [k for k in cand if k not in KEXH]
+    if not cand: return None
+    now = time.time(); free = [k for k in cand if KCOOL.get(k, 0) <= now]
+    return (free or cand)[0]
+
+
+def _set_key(nk):
+    if getattr(TL, "k", None) is not None: TL.k = nk
+    else: KI[0] = nk
 
 
 def ghm_call(parts, max_tokens):
@@ -222,10 +232,15 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
         spins += 1
         ki = getattr(TL, "k", None)
         ki = (KI[0] if ki is None else ki) % len(GKEYS)
-        if ki in KEXH:
+        if ki in KEXH or KCOOL.get(ki, 0) > time.time():  # مستنفد أو في التهدئة: إلى غيره إن وُجد
             nk = _next_key(ki)
             if nk is None: return None
-            ki = nk; TL.k = nk
+            if nk in KEXH or KCOOL.get(nk, 0) > time.time():
+                if ki in KEXH: ki = nk
+                w = min(KCOOL.get(k, 0) for k in range(len(GKEYS)) if k not in KEXH) - time.time()
+                if w > 0: time.sleep(min(w, 60))  # كل المفاتيح في التهدئة: انتظار أقربها فقط
+            else: ki = nk
+            _set_key(ki)
         mm = [m for m in models if (ki, m) not in MEXH]
         if not mm:  # كل نماذج هذا المفتاح نفدت اليوم
             KEXH.add(ki); models = list(models_all)
@@ -261,12 +276,17 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
                 attempt -= 1  # نفدت حصة هذا النموذج على هذا المفتاح اليوم: جرّب النموذج البديل ثم المفاتيح الأخرى
                 MEXH.add((ki, models[0])); print("    نفدت الحصة اليومية لـ %s على المفتاح %d" % (models[0], ki + 1), flush=True)
                 continue
-            if e.code == 429:  # حد الدقيقة: انتظر ثم أعد، وجرّب مفتاحًا آخر إن وُجد
-                nk = _next_key(ki)
-                if nk is not None and getattr(TL, "k", None) is not None: TL.k = nk
-                time.sleep(min(60, 10 * (attempt + 1))); continue
+            if e.code == 429:  # حد الدقيقة: تهدئة هذا المفتاح والانتقال فورًا إلى مفتاح آخر (لا انتظار إلا إن كانت كلها في التهدئة)
+                KCOOL[ki] = time.time() + 45; nk = _next_key(ki)
+                if nk is not None: _set_key(nk)
+                if nk is None or KCOOL.get(nk, 0) > time.time(): time.sleep(min(60, 10 * (attempt + 1)))
+                else: attempt -= 1  # الانتقال إلى مفتاح متاح لا يُحسب محاولة فاشلة
+                continue
             if e.code in (401, 403): fail[0] = 99; return None
             if e.code in (500, 503) and len(models) > 1 and attempt >= 2: models.append(models.pop(0))  # الازدحام: جرّب النموذج البديل (ويبقى الأول في آخر الدور)
+            if e.code in (500, 503):  # ازدحام الخادم: تهدئة قصيرة للمفتاح، وإلى مفتاح آخر إن كان متاحًا بدل الانتظار الطويل
+                KCOOL[ki] = time.time() + 15; nk = _next_key(ki)
+                if nk is not None and KCOOL.get(nk, 0) <= time.time(): _set_key(nk); time.sleep(2); continue
             time.sleep(min(90, 8 * 2 ** min(attempt, 3)))  # صبر متزايد على الازدحام المؤقت
         except Exception as e:
             ERRS["خطأ اتصال"] += 1
