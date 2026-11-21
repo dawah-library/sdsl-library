@@ -1,0 +1,18 @@
+name: فحص طرق جلب منشورات فيسبوك بلا رمز
+# يجرب أدوات التضمين الرسمية والصفحة العامة بلا دخول (tools/fb-probe.js)؛ التقرير في سجل المهمة.
+on:
+  workflow_dispatch:
+  push:
+    paths: ["tools/fb-probe.js", ".github/workflows/fb-probe.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright-core@1.47.2 >/dev/null
+      - run: node tools/fb-probe.js
