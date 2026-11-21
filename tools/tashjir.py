@@ -12,8 +12,9 @@ from frontmatter import content_range  # noqa: E402  صفحات العنوان �
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "tashjir")
-from gkeys import keys as _gkeys  # noqa: E402  خدمات الكتب تبدأ بالمفاتيح المحجوزة لها (tools/gkeys.py)
+from gkeys import keys as _gkeys, Pool as _Pool  # noqa: E402  خدمات الكتب تبدأ بالمفاتيح المحجوزة لها (tools/gkeys.py)
 KEYS = _gkeys("study")
+POOL = _Pool(KEYS)
 MODEL = os.environ.get("TJ_MODEL", "gemini-flash-latest")
 DIAC = re.compile(r"[ً-ْٰـ]")
 EXH = set()
@@ -32,16 +33,18 @@ MEXH = set()  # (مفتاح، نموذج) نفدت حصته اليومية أو 
 
 
 def gemini(prompt, schema_hint=""):
-    for k in range(len(KEYS)):
-        if k in EXH:
-            continue
-        for model in MODELS:
-            if (k, model) in MEXH:
-                continue
-            for attempt in range(3):
+    """طلب Gemini موزَّع على المفاتيح (gkeys.Pool): يبدأ كل طلب بالمفتاح التالي، وبفاصل أدنى على المفتاح الواحد، والمرفوض بحد الدقيقة
+    يُهدَّأ ويُنتقل فورًا إلى غيره؛ ونفاد الحصة اليومية لمفتاح/نموذج ينقل إلى النموذج البديل ثم إلى المفتاح التالي."""
+    for rnd in range(8):
+        for k in POOL.order(EXH):
+            if not POOL.ready(k): continue
+            for model in MODELS:
+                if (k, model) in MEXH:
+                    continue
                 if time.time() > DEADLINE[0] + 20 * 60:  # حد صارم قبل مهلة المهمة حتى لا تُلغى ويضيع المنجز
                     print("  تجاوز المهلة؛ أُوقفت طلبات Gemini", flush=True)
                     return None
+                POOL.pace(k)
                 try:
                     body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
                                        "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json", "maxOutputTokens": 30000}}).encode()
@@ -53,16 +56,20 @@ def gemini(prompt, schema_hint=""):
                     return json.loads(re.sub(r"^```json|```$", "", t.strip()))
                 except urllib.error.HTTPError as e:
                     msg = e.read()[:4000].decode("utf-8", "ignore")
-                    print("  Gemini", model, e.code, msg[:100], flush=True)
+                    print("  Gemini", model, "مفتاح#%d" % (k + 1), e.code, msg[:100], flush=True)
                     # نفاد الحصة اليومية (رسالته «exceeded your current quota» وتفصيلها PerDay في آخرها) أو نموذج غير متاح: إلى البديل فورًا
                     if (e.code == 429 and re.search(r"PerDay|per day|exceeded your current quota", msg, re.I) and not re.search(r"PerMinute", msg)) or e.code in (400, 403, 404):
-                        MEXH.add((k, model)); break  # إلى النموذج البديل
-                    time.sleep(20 * (attempt + 1))
+                        MEXH.add((k, model)); continue
+                    POOL.cool(k, 45 if e.code == 429 else 15); break  # حد الدقيقة أو خطأ الخادم: تهدئة المفتاح والانتقال إلى غيره
                 except Exception as e:
                     print("  خطأ", str(e)[:120], flush=True)
-                    time.sleep(5 * (attempt + 1))
-        if all((k, m) in MEXH for m in MODELS):
-            EXH.add(k)
+                    POOL.cool(k, 10); break
+            if all((k, m) in MEXH for m in MODELS):
+                EXH.add(k)
+        if len(EXH) >= len(KEYS):
+            break
+        w = POOL.wait(EXH)
+        if w > 0: time.sleep(min(w, 60))
     return ghm(prompt)
 
 

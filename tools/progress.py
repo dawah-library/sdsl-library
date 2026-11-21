@@ -23,6 +23,43 @@ def jl(p, d):
         return d
 
 
+# ---------- جاهزية الرفع (طلب المدير، ٢١ نوفمبر ٢٠٢٦) ----------
+# مؤشر يحدد ملاءمة رفع كتب مصورة وتفريغات جديدة بناءً على نسبة إنجاز المرفوع سابقًا: الصفحات المنتظرة للتدقيق، وسرعة التدقيق اليومية،
+# وصندوق التحويل، وطوابير التفريغ، ونسبة الكتب المصورة المكتملة تدقيقًا. الحدود قابلة للضبط من data/switches.json ← ready.
+READY_DEF = {"green_days": 3, "yellow_days": 10, "green_core": 85, "inbox_max": 3, "tf_max": 6, "horizon": 5}
+
+
+def readiness(books, out, inbox, pending, speed, prev):
+    cfg = dict(READY_DEF, **((jl(D("switches.json"), {}) or {}).get("ready") or {}))
+    ocr = [b for b in books if b.get("ocr")]
+    pages = sum(max(1, int(b.get("n") or 1)) for b in ocr) or 1
+    done_books = sum(1 for b in ocr if not int(b.get("unrev") or 0) and not int(b.get("lite") or 0))
+    core = round(100.0 * (1 - pending / pages), 1)  # نسبة صفحات الكتب المصورة المدققة
+    avg = round(sum(r["pct"] for r in out.values()) / max(1, len(out)), 1)  # متوسط إنجاز الكتب بكل خدماتها
+    tq = len((jl(D("transcribe", "_queue.json"), {}) or {}).get("items") or []) + len((jl(D("tfedit", "_queue.json"), {}) or {}).get("items") or [])
+    sp = speed if speed and speed > 0 else None
+    days = round(pending / sp, 1) if sp else (0 if not pending else None)
+    reasons = []
+    if days is None: reasons.append("سرعة التدقيق غير معروفة بعد (أقل من يومين من القياس) أو متوقفة")
+    elif days > cfg["yellow_days"]: reasons.append("الصفحات المنتظرة تحتاج نحو %s يومًا بالسرعة الحالية" % days)
+    if len(inbox) > cfg["inbox_max"]: reasons.append("%d كتابًا في صندوق التحويل لم يبدأ" % len(inbox))
+    if tq > cfg["tf_max"]: reasons.append("%d تفريغًا في طابور التجهيز" % tq)
+    if days is not None and days <= cfg["green_days"] and core >= cfg["green_core"] and len(inbox) <= cfg["inbox_max"] and tq <= cfg["tf_max"]: lv = "green"
+    elif days is not None and days <= cfg["yellow_days"] and len(inbox) <= cfg["inbox_max"] * 2: lv = "yellow"
+    else: lv = "red"
+    # السعة المقترحة: ما يمكن للتدقيق إنجازه في الأفق (horizon أيام) بعد المنتظر
+    cap = max(0, int((sp or 0) * cfg["horizon"] - pending)) if lv != "red" else 0
+    msg = {"green": "مناسب لرفع كتب مصورة وتفريغات جديدة", "yellow": "رفع محدود: يُرفع ما لا يتجاوز السعة المقترحة، والأولوية لإكمال المرفوع",
+           "red": "يُفضَّل تأجيل الرفع حتى ينخفض المنتظر"}[lv]
+    r = {"lv": lv, "msg": msg, "pending": pending, "speed": sp, "days": days, "core": core, "avg": avg, "ocr_books": len(ocr), "done_books": done_books,
+         "inbox": len(inbox), "tf_queue": tq, "cap_pages": cap, "cap_books": cap // 250, "why": reasons, "since": prev.get("since") if prev.get("lv") == lv else TODAY, "cfg": cfg}
+    if prev.get("lv") and prev.get("lv") != lv:  # تغيّر المستوى: إشعار للإدارة (progress.yml يرسله)
+        icon = {"green": "🟢", "yellow": "🟡", "red": "🔴"}[lv]
+        open(os.path.join(ROOT, ".ready-change"), "w", encoding="utf-8").write("%s <b>جاهزية الرفع: %s</b>\nالمنتظر للتدقيق %d صفحة • السرعة %s صفحة/يوم • نحو %s يومًا\nتدقيق المصورات %s%% • متوسط إنجاز الكتب %s%%%s%s" % (
+            icon, msg, pending, sp or "—", days if days is not None else "—", core, avg, ("\nالسعة المقترحة: نحو %d صفحة (%d كتابًا تقريبًا)" % (cap, cap // 250)) if cap else "", ("\n" + "؛ ".join(reasons)) if reasons else ""))
+    return r
+
+
 def main():
     cat = jl(D("catalog.json"), {"books": []})
     tk = jl(D("tashkeel", "_list.json"), {})
@@ -124,8 +161,9 @@ def main():
             left = int(b.get("lite") or 0) + int(b.get("unrev") or 0)
             if left:
                 r["eta"] = round(left / speed + 2, 1)  # + يومان تقريبًا للتشكيل والخدمات
+    ready = readiness(books, out, inbox, tot, speed, old.get("ready") or {})
     res = {"upd": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M"), "speed": speed, "pending_pages": tot, "lite_h": th,
-           "books": out, "inbox": inbox}
+           "ready": ready, "books": out, "inbox": inbox}
     json.dump(res, open(D("progress.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     open(os.path.join(ROOT, ".progress-dispatch"), "w").write("\n".join(sorted(dispatch)))
     for bid, r in sorted(out.items(), key=lambda kv: -kv[1]["pct"]):

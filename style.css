@@ -1787,3 +1787,9 @@ details.hisn>summary::before{content:"⛓ ";opacity:.7}details.hisn[open]>summar
 .hread.one.sw-n{animation:hdswn .25s ease}.hread.one.sw-p{animation:hdswp .25s ease}
 @keyframes hdswn{to{transform:translateX(40px);opacity:.3}}@keyframes hdswp{to{transform:translateX(-40px);opacity:.3}}
 @media (prefers-reduced-motion:reduce){.hread.one.sw-n,.hread.one.sw-p{animation:none}}
+/* جاهزية الرفع */
+.rdyban:empty{display:none}.rdyban{border:1px solid var(--line);border-inline-start:5px solid #999;border-radius:10px;padding:10px 14px;margin:0 0 12px;background:var(--sf)}
+.rdyban.rdy-green{border-inline-start-color:#2e8b57}.rdyban.rdy-yellow{border-inline-start-color:#d39b16}.rdyban.rdy-red{border-inline-start-color:#c0392b}
+.rdyh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.rdyg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 14px;margin-top:8px}.rdyg>div{display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.rdybar{height:7px;background:var(--line);border-radius:6px;overflow:hidden}.rdybar>span{display:block;height:100%;background:var(--ac)}.rdycap{margin:8px 0 0}

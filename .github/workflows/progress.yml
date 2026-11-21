@@ -18,6 +18,7 @@ on:
 permissions:
   contents: write
   actions: write
+  id-token: write
 concurrency:
   group: progress
   cancel-in-progress: false
@@ -29,4 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 tools/progress.py
       - run: bash tools/git-save.sh "متابعة إنجاز الكتب" data/progress.json
+      # تنبيه جاهزية الرفع عند تغيّر مستواه (أخضر/أصفر/أحمر) — tools/progress.py readiness()
+      - if: always()
+        run: '[ -s .ready-change ] && python3 tools/notify.py "$(cat .ready-change)" || true'
       # (أُلغي تشغيل التشجير والصوتيات آليًّا للكتب المكتملة تدقيقًا بقرار المدير ٢٠ نوفمبر: تُشغَّل من الإدارة يدويًّا)

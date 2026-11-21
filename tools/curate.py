@@ -12,8 +12,9 @@
 import datetime, hashlib, json, os, re, time, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)
+from gkeys import keys as _gkeys, Pool as _Pool  # noqa: E402  (tools/gkeys.py)
 KEYS = _gkeys("bulk")
+POOL = _Pool(KEYS)
 MODEL = os.environ.get("CUR_MODEL", "gemini-flash-latest")
 BUDGET = [int(os.environ.get("CUR_MAX", "80"))]
 # حد زمني يترك وقتًا للحفظ قبل مهلة المهمة (حين تتزاحم المهام على حصة Gemini نفسها)
@@ -24,14 +25,16 @@ REPORT = []
 
 
 def gemini(prompt):
+    """موزَّع على المفاتيح (gkeys.Pool): دوران وفاصل أدنى وتهدئة المرفوض بحد الدقيقة بدل الانتظار عليه."""
     if BUDGET[0] <= 0 or time.time() > DEADLINE:
         return None
-    for k in range(len(KEYS)):
-        if k in EXH:
-            continue
-        for attempt in range(4):
+    for rnd in range(6):
+        for k in POOL.order(EXH):
+            if not POOL.ready(k):
+                continue
             if time.time() > DEADLINE:
                 return None
+            POOL.pace(k)
             try:
                 body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json", "maxOutputTokens": 16000}}).encode()
                 req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body, headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
@@ -42,11 +45,16 @@ def gemini(prompt):
                 return json.loads(re.sub(r"^```json|```$", "", t.strip()))
             except urllib.error.HTTPError as e:
                 msg = e.read()[:300].decode("utf-8", "ignore")
-                if e.code == 429 and re.search(r"day|PerDay", msg, re.I):
-                    EXH.add(k); break
-                time.sleep(15 * (attempt + 1))
+                if e.code == 429 and re.search(r"day|PerDay", msg, re.I) and not re.search(r"PerMinute", msg):
+                    EXH.add(k); continue
+                POOL.cool(k, 45 if e.code == 429 else 15)
             except Exception:
-                time.sleep(5 * (attempt + 1))
+                POOL.cool(k, 10)
+        if len(EXH) >= len(KEYS):
+            return None
+        w = POOL.wait(EXH)
+        if w > 0:
+            time.sleep(min(w, 60))
     return None
 
 
