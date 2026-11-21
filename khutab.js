@@ -10,7 +10,8 @@
 const KHT = (() => {
   const P = "data/khutab/", MN = { 1: "الميسرة", 2: "العلمية التأصيلية", 3: "البلاغية المؤثرة" };
   const MD = { 1: "عبارات واضحة قريبة من عامة الناس، سهلة الحفظ والإلقاء", 2: "أوسع في الأدلة ووجوه الدلالة وكلام أهل العلم، بلا جفاف", 3: "استهلال قوي وتصوير بياني وانتقالات مؤثرة، مع الاعتدال والصدق" };
-  const MI = { 1: "🟢", 2: "📚", 3: "✨" };
+  const IC = (n, z) => (typeof ic === "function" && typeof ICONS !== "undefined" && ICONS[n]) ? ic(n, z || 18) : (n && !/^[a-z0-9-]+$/.test(n) ? E(n) : "");
+  const MIc = { 1: "book-text", 2: "layers", 3: "sparkles" }, MI = new Proxy({}, { get: (o, k) => IC(MIc[k], 16) });
   const STN = { draft: "مسودة", review: "قيد المراجعة", ok: "معتمدة", rej: "مرفوضة" };
   const SUR = "الفاتحة البقرة آل_عمران النساء المائدة الأنعام الأعراف الأنفال التوبة يونس هود يوسف الرعد إبراهيم الحجر النحل الإسراء الكهف مريم طه الأنبياء الحج المؤمنون النور الفرقان الشعراء النمل القصص العنكبوت الروم لقمان السجدة الأحزاب سبأ فاطر يس الصافات ص الزمر غافر فصلت الشورى الزخرف الدخان الجاثية الأحقاف محمد الفتح الحجرات ق الذاريات الطور النجم القمر الرحمن الواقعة الحديد المجادلة الحشر الممتحنة الصف الجمعة المنافقون التغابن الطلاق التحريم الملك القلم الحاقة المعارج نوح الجن المزمل المدثر القيامة الإنسان المرسلات النبأ النازعات عبس التكوير الانفطار المطففين الانشقاق البروج الطارق الأعلى الغاشية الفجر البلد الشمس الليل الضحى الشرح التين العلق القدر البينة الزلزلة العاديات القارعة التكاثر العصر الهمزة الفيل قريش الماعون الكوثر الكافرون النصر المسد الإخلاص الفلق الناس".split(" ").map(s => s.replace("_", " "));
   const A2 = n => (typeof toAr === "function" ? toAr(n) : String(n));
@@ -26,6 +27,7 @@ const KHT = (() => {
   const idx = async () => IDX || (IDX = ((await getJ(P + "index.json", FRESH)) || { items: [] }).items);
   const topic = async s => TP[s] || (TP[s] = await getJ(P + "t/" + encodeURIComponent(s) + ".json", FRESH));
   const catT = id => ((CATS && CATS.topics.concat(CATS.seasons).find(c => c.id === id)) || { t: id, ic: "" });
+  const cic = (c, z) => IC(catT(c).ic, z || 14);
   const pubOk = x => adm() || x.st === "ok" || Object.values(x.ms || {}).includes("ok") || (CATS && CATS.pub_review && x.st === "review");
   const modelsOf = (tp) => Object.keys(tp.models || {}).filter(k => (tp.models[k].body || "").trim() && (adm() || tp.models[k].st === "ok" || (CATS && CATS.pub_review && tp.models[k].st === "review"))).sort();
   const mins = w => Math.max(1, Math.round((w || 0) / 115));
@@ -182,7 +184,7 @@ const KHT = (() => {
   function card(x, why) {
     const ms = Object.keys(x.ms || {}).sort(), fav = ls.g("fav", []).includes(x.s);
     return `<a class="khcard" href="#/khutab/${encodeURIComponent(x.s)}">${x.feat ? '<span class="khfeat" title="مميزة">★</span>' : ""}<h4>${E(x.t)}${fav ? " <small>♥</small>" : ""}</h4>${x.sub ? `<p class="khsub">${E(x.sub)}</p>` : ""}${x.sum ? `<p class="mut khsum">${E(x.sum.slice(0, 170))}${x.sum.length > 170 ? "…" : ""}</p>` : ""}
-      <div class="khmeta">${(x.cats || []).slice(0, 3).map(c => `<span class="chip sm">${E(catT(c).ic || "")} ${E(catT(c).t)}</span>`).join("")}${(x.seas || []).map(c => `<span class="chip sm khseas">${E(catT(c).ic || "")} ${E(catT(c).t)}</span>`).join("")}</div>
+      <div class="khmeta">${(x.cats || []).slice(0, 3).map(c => `<span class="chip sm">${cic(c)} ${E(catT(c).t)}</span>`).join("")}${(x.seas || []).map(c => `<span class="chip sm khseas">${cic(c)} ${E(catT(c).t)}</span>`).join("")}</div>
       <div class="khmeta mut"><span>${ms.map(m => MI[m]).join(" ")} ${A2(ms.length)} ${ms.length === 1 ? "نموذج" : "نماذج"}</span>${x.n ? `<span>≈ ${A2(mins(x.n / Math.max(1, ms.length)))} دقيقة للنموذج</span>` : ""}${adm() && x.st !== "ok" ? badge(x.st) : ""}${adm() && x.qe ? `<span class="khbad">${A2(x.qe)} ملاحظة تحقق</span>` : ""}</div>
       ${why && why.length ? `<div class="khwhy">${why.map(w => `<span>${E(w)}</span>`).join("")}</div>` : ""}</a>`;
   }
@@ -199,8 +201,8 @@ const KHT = (() => {
       <select name="m" aria-label="النموذج"><option value="">كل النماذج</option>${[1, 2, 3].map(m => `<option value="${m}"${String(m) === q.m ? " selected" : ""}>${MN[m]}</option>`).join("")}</select>
       <label class="inl"><input type="checkbox" name="x"${q.x !== "0" ? " checked" : ""}> في المضمون كاملًا</label>${adm() ? `<select name="st" aria-label="الحالة"><option value="">كل الحالات</option>${Object.entries(STN).map(([k, v]) => `<option value="${k}"${k === q.st ? " selected" : ""}>${v}</option>`).join("")}</select>` : ""}</div></form>`;
     const nOk = L.filter(x => x.st === "ok").length, nK = L.reduce((s, x) => s + Object.keys(x.ms || {}).length, 0);
-    const hero = `<section class="khhero"><div><h2>🕌 خطب الجمعة</h2><p>مرجع متجدد للخطباء: لكل موضوع ثلاثة نماذج — <b>ميسرة</b> و<b>علمية تأصيلية</b> و<b>بلاغية مؤثرة</b> — بأدلة مرتبة، وشروح موجزة، ومراجع من مكتبة الدعوة السلفية، مع وضع للإلقاء وتحميل بمقاسات المنبر.</p>
-      <p class="mut">${A2(L.length)} موضوعًا • ${A2(nK)} خطبة${adm() ? ` • ${A2(nOk)} معتمد` : ""}${adm() ? ` • <a href="#/khutab/admin">⚙️ لوحة إدارة الخطب</a>` : ""}</p></div></section>`;
+    const hero = `<section class="khhero"><div><h2>${IC("mic-vocal", 30)} خطب الجمعة</h2><p>مرجع متجدد للخطباء: لكل موضوع ثلاثة نماذج — <b>ميسرة</b> و<b>علمية تأصيلية</b> و<b>بلاغية مؤثرة</b> — بأدلة مرتبة، وشروح موجزة، ومراجع من مكتبة الدعوة السلفية، مع وضع للإلقاء وتحميل بمقاسات المنبر.</p>
+      <p class="mut">${A2(L.length)} موضوعًا • ${A2(nK)} خطبة${adm() ? ` • ${A2(nOk)} معتمد` : ""}${adm() ? ` • <a href="#/khutab/admin">${IC("settings", 15)} لوحة إدارة الخطب</a>` : ""}</p></div></section>`;
     if (hasQ) {
       const R = await search(qs, { c: q.c, s: q.s, m: q.m, st: q.st, content: q.x !== "0" });
       const sug = (WATCH.sug || []).filter(s => qs && N(s.t).includes(N(qs).split(" ")[0])).slice(0, 4);
@@ -210,25 +212,25 @@ const KHT = (() => {
     }
     // الجمعة القادمة وتقويم الجمعات
     const F = fridays(6), up = upcoming(60);
-    const cal = `<section class="khcal"><h3>📅 الجمعات القادمة</h3><div class="khfri">${F.map((d, i) => { const ss = seasonsOn(d), iso = d.toISOString().slice(0, 10), sch = L.filter(x => x.sched === iso);
-      return `<div class="khday${i === 0 ? " now" : ""}"><b>${i === 0 ? "الجمعة القادمة" : E(gS(d))}</b><span>${i === 0 ? E(gS(d)) + " • " : ""}${E(hijS(d))}</span>${ss.map(s => `<a class="chip sm khseas" href="#/khutab?s=${s}">${E(catT(s).ic)} ${E(catT(s).t)}</a>`).join("")}${sch.map(x => `<a class="khsch" href="#/khutab/${encodeURIComponent(x.s)}">📌 ${E(x.t)}</a>`).join("")}</div>`; }).join("")}</div></section>`;
+    const cal = `<section class="khcal"><h3>${IC("calendar-days")} الجمعات القادمة</h3><div class="khfri">${F.map((d, i) => { const ss = seasonsOn(d), iso = d.toISOString().slice(0, 10), sch = L.filter(x => x.sched === iso);
+      return `<div class="khday${i === 0 ? " now" : ""}"><b>${i === 0 ? "الجمعة القادمة" : E(gS(d))}</b><span>${i === 0 ? E(gS(d)) + " • " : ""}${E(hijS(d))}</span>${ss.map(s => `<a class="chip sm khseas" href="#/khutab?s=${s}">${cic(s)} ${E(catT(s).t)}</a>`).join("")}${sch.map(x => `<a class="khsch" href="#/khutab/${encodeURIComponent(x.s)}">${IC("flag", 14)} ${E(x.t)}</a>`).join("")}</div>`; }).join("")}</div></section>`;
     const upS = Object.entries(up).sort((a, b) => a[1] - b[1]).map(([s, n]) => ({ S: catT(s), id: s, n, L: L.filter(x => (x.seas || []).includes(s)) }));
-    const seas = upS.length ? `<section><h3>🌙 مواسم قريبة</h3>${upS.map(u => `<div class="khup"><h4>${E(u.S.ic)} ${E(u.S.t)} <small class="mut">${u.n ? "بعد " + A2(u.n) + " يومًا" : "الآن"}</small></h4>${u.L.length ? `<div class="khgrid">${u.L.slice(0, 4).map(x => card(x)).join("")}</div>` : `<p class="mut">لم تُعتمد خطب لهذا الموسم بعد${(u.S.ideas || []).length ? "؛ موضوعات مقترحة: " + u.S.ideas.map(E).join("، ") : ""}.</p>`}</div>`).join("")}</section>` : "";
+    const seas = upS.length ? `<section><h3>${IC("moon-star")} مواسم قريبة</h3>${upS.map(u => `<div class="khup"><h4>${cic(u.id, 18)} ${E(u.S.t)} <small class="mut">${u.n ? "بعد " + A2(u.n) + " يومًا" : "الآن"}</small></h4>${u.L.length ? `<div class="khgrid">${u.L.slice(0, 4).map(x => card(x)).join("")}</div>` : `<p class="mut">لم تُعتمد خطب لهذا الموسم بعد${(u.S.ideas || []).length ? "؛ موضوعات مقترحة: " + u.S.ideas.map(E).join("، ") : ""}.</p>`}</div>`).join("")}</section>` : "";
     const seen = ls.g("seen", {}), pos = ls.g("pos", {}), favs = ls.g("fav", []);
     const recent = Object.entries(seen).sort((a, b) => b[1] - a[1]).map(([s]) => L.find(x => x.s === s)).filter(Boolean).slice(0, 4);
-    const mine = (favs.length || recent.length) ? `<section class="khmine">${recent.length ? `<h3>↩︎ تابع من حيث توقفت</h3><div class="khgrid">${recent.map(x => { const k = Object.keys(pos).find(p => p.startsWith(x.s + "/")); return card(x).replace("</a>", k ? `<span class="khres">استئناف ${MI[k.split("/")[1]] || ""} ${E(MN[k.split("/")[1]] || "")}</span></a>` : "</a>"); }).join("")}</div>` : ""}
-      ${favs.length ? `<h3>♥ مفضلتي</h3><div class="khgrid">${favs.map(s => L.find(x => x.s === s)).filter(Boolean).map(x => card(x)).join("")}</div>` : ""}</section>` : "";
+    const mine = (favs.length || recent.length) ? `<section class="khmine">${recent.length ? `<h3>${IC("history")} تابع من حيث توقفت</h3><div class="khgrid">${recent.map(x => { const k = Object.keys(pos).find(p => p.startsWith(x.s + "/")); return card(x).replace("</a>", k ? `<span class="khres">استئناف ${MI[k.split("/")[1]] || ""} ${E(MN[k.split("/")[1]] || "")}</span></a>` : "</a>"); }).join("")}</div>` : ""}
+      ${favs.length ? `<h3>${IC("heart")} مفضلتي</h3><div class="khgrid">${favs.map(s => L.find(x => x.s === s)).filter(Boolean).map(x => card(x)).join("")}</div>` : ""}</section>` : "";
     const feat = L.filter(x => x.feat).slice(0, 6), latest = L.slice().sort((a, b) => (b.upd || "").localeCompare(a.upd || "")).slice(0, 6);
     const cnt = id => L.filter(x => (x.cats || []).includes(id) || (x.seas || []).includes(id)).length;
-    const grid = (arr, k) => `<div class="khcats">${arr.map(c => `<a href="#/khutab?${k}=${E(c.id)}" class="${cnt(c.id) ? "" : "zero"}"><span>${E(c.ic || "")}</span><b>${E(c.t)}</b><small>${A2(cnt(c.id))}</small></a>`).join("")}</div>`;
+    const grid = (arr, k) => `<div class="khcats">${arr.map(c => `<a href="#/khutab?${k}=${E(c.id)}" class="${cnt(c.id) ? "" : "zero"}"><span class="khci">${IC(c.ic, 22)}</span><b>${E(c.t)}</b>${cnt(c.id) ? `<small class="khcn">${A2(cnt(c.id))}</small>` : ""}</a>`).join("")}</div>`;
     const sv = (typeof lib !== "undefined" ? lib.books.filter(b => b.topicId === "st15" && !b.hidden) : []).slice(-8).reverse();
     const sug = (WATCH.sug || []).filter(s => s.kind !== "season").slice(0, 8);
     view(`${hero}${form}${cal}${seas}${mine}
-      ${feat.length ? `<section><h3>★ خطب مختارة</h3><div class="khgrid">${feat.map(x => card(x)).join("")}</div></section>` : ""}
-      <section><h3>🗂️ التصنيف الموضوعي</h3>${grid(CATS.topics, "c")}</section><section><h3>🌙 التصنيف الموسمي</h3>${grid(CATS.seasons, "s")}</section>
-      ${latest.length ? `<section><h3>🆕 أحدث الموضوعات</h3><div class="khgrid">${latest.map(x => card(x)).join("")}</div></section>` : ""}
-      ${sv.length ? `<section><h3>🎙️ من «موعظة الأسبوع» بموقع صوت السلف</h3><p class="mut">من مصادر القسم الأولى: عناصر الخطب المقترحة لمشايخ الدعوة، بنصوصها في المكتبة.</p><ul class="khsv">${sv.map(b => `<li><a href="#/book/${E(b.id)}/1">${E(b.title)}</a></li>`).join("")}</ul></section>` : ""}
-      ${sug.length ? `<section><h3>💡 موضوعات تحتاج إلى إعداد</h3><p class="mut">مما رصدته المتابعة الدورية في مواد المكتبة ولم يُغطَّ بعد.</p><ul>${sug.map(s => `<li>${E(s.t)} <small class="mut">${E(s.why || "")}</small>${adm() ? ` <a href="javascript:void 0" data-kh="qadd" data-t="${E(s.t)}" data-src="${E((s.src || []).join(" "))}">أعدّ مسودة</a>` : ""}</li>`).join("")}</ul></section>` : ""}
+      ${feat.length ? `<section><h3>${IC("star")} خطب مختارة</h3><div class="khgrid">${feat.map(x => card(x)).join("")}</div></section>` : ""}
+      <section><h3>${IC("layout-grid")} التصنيف الموضوعي</h3>${grid(CATS.topics, "c")}</section><section><h3>${IC("calendar-heart")} التصنيف الموسمي</h3>${grid(CATS.seasons, "s")}</section>
+      ${latest.length ? `<section><h3>${IC("badge-plus")} أحدث الموضوعات</h3><div class="khgrid">${latest.map(x => card(x)).join("")}</div></section>` : ""}
+      ${sv.length ? `<section><h3>${IC("radio")} من «موعظة الأسبوع» بموقع صوت السلف</h3><p class="mut">من مصادر القسم الأولى: عناصر الخطب المقترحة لمشايخ الدعوة، بنصوصها في المكتبة.</p><ul class="khsv">${sv.map(b => `<li><a href="#/book/${E(b.id)}/1">${E(b.title)}</a></li>`).join("")}</ul></section>` : ""}
+      ${sug.length ? `<section><h3>${IC("lightbulb")} موضوعات تحتاج إلى إعداد</h3><p class="mut">مما رصدته المتابعة الدورية في مواد المكتبة ولم يُغطَّ بعد.</p><ul>${sug.map(s => `<li>${E(s.t)} <small class="mut">${E(s.why || "")}</small>${adm() ? ` <a href="javascript:void 0" data-kh="qadd" data-t="${E(s.t)}" data-src="${E((s.src || []).join(" "))}">أعدّ مسودة</a>` : ""}</li>`).join("")}</ul></section>` : ""}
       <p class="note">منهج القسم: المادة العلمية من مكتبة الدعوة السلفية أولًا ثم بقية المكتبة، ونص القرآن من المصحف المعتمد بالموقع، والأحاديث والنقول بنصوصها ومواضعها، ولا تُنشر خطبة إلا بعد مراجعة علمية وتحريرية.</p>`);
   }
 
@@ -247,20 +249,20 @@ const KHT = (() => {
     const L = await idx(), me = L.find(x => x.s === s) || { s, t: tp.t, cats: tp.cats, kw: tp.kw, ev: [] };
     const sim = similar(me, L, 4);
     const evL = evOrder(tp, M.body);
-    const tabs = [["k", "📜 الخطبة"], ["e", "🔗 الخطبة مع الأدلة"], ["d", "📌 أدلة الخطبة"], ["w", "📖 المعاني والشروح"], ["r", "📚 المراجع"]];
+    const tabs = [["k", "scroll-text", "الخطبة"], ["e", "network", "الخطبة مع الأدلة"], ["d", "list-checks", "أدلة الخطبة"], ["w", "book-a", "المعاني والشروح"], ["r", "library", "المراجع"]];
     const body = tab === "d" ? evList(tp, mk, evL) : tab === "w" ? meanings(tp, evL) : tab === "r" ? refList(tp, mk) :
       parts.map(p => `<section class="khpart" id="kp${p.n}"><h3 class="khpt">${E(p.title)}</h3>${joinItems(p.items)}</section>`).join("");
     const st = M.st !== "ok" ? `<div class="khwarn">⚠️ هذه الخطبة <b>${E(STN[M.st] || M.st)}</b> — ${M.st === "rej" ? "رُفضت ولم تُنشر." : "لم تُعتمد بعد للنشر، ولا يراها إلا المشرفون" + (CATS.pub_review ? " والزوار بهذه العلامة" : "") + "."}${(tp.qa || {}).errs && tp.qa.errs.length ? ` <b>${A2(tp.qa.errs.length)} ملاحظة تحقق</b>.` : ""}</div>` : "";
-    view(`<nav class="khcrumb"><a href="#/khutab">🕌 خطب الجمعة</a>${(tp.cats || []).slice(0, 1).map(c => ` › <a href="#/khutab?c=${E(c)}">${E(catT(c).t)}</a>`).join("")}</nav>
+    view(`<nav class="khcrumb"><a href="#/khutab">${IC("mic-vocal", 14)} خطب الجمعة</a>${(tp.cats || []).slice(0, 1).map(c => ` › <a href="#/khutab?c=${E(c)}">${E(catT(c).t)}</a>`).join("")}</nav>
       <header class="khhead"><h2>${E(tp.t)}</h2>${tp.sub ? `<p class="khsub">${E(tp.sub)}</p>` : ""}${tp.sum ? `<p class="mut">${E(tp.sum)}</p>` : ""}
-       <div class="khmeta">${(tp.cats || []).map(c => `<a class="chip sm" href="#/khutab?c=${E(c)}">${E(catT(c).ic || "")} ${E(catT(c).t)}</a>`).join("")}${(tp.seas || []).map(c => `<a class="chip sm khseas" href="#/khutab?s=${E(c)}">${E(catT(c).ic || "")} ${E(catT(c).t)}</a>`).join("")}</div></header>
+       <div class="khmeta">${(tp.cats || []).map(c => `<a class="chip sm" href="#/khutab?c=${E(c)}">${cic(c)} ${E(catT(c).t)}</a>`).join("")}${(tp.seas || []).map(c => `<a class="chip sm khseas" href="#/khutab?s=${E(c)}">${cic(c)} ${E(catT(c).t)}</a>`).join("")}</div></header>
       <div class="khmodels" role="tablist" aria-label="نماذج الخطبة">${MS.map(k => `<a role="tab" aria-selected="${k === mk}" class="khm${k === mk ? " on" : ""}" href="#/khutab/${encodeURIComponent(s)}?m=${k}${tab !== "k" ? "&v=" + tab : ""}"><b>${MI[k]} الخطبة ${MN[k]}</b><span>${E(tp.models[k].title || "")}</span><small>${E(MD[k])} • ≈ ${A2(mins(tp.models[k].words))} دقيقة${adm() && tp.models[k].st !== "ok" ? " • " + E(STN[tp.models[k].st] || "") : ""}</small></a>`).join("")}</div>
       ${st}
-      <div class="khbar"><button class="btn p" data-kh="deliver" data-s="${E(s)}" data-m="${mk}">🎤 إلقاء الخطبة</button><button class="btn" data-kh="export" data-s="${E(s)}" data-m="${mk}">⬇️ تحميل وطباعة</button>
-       <button class="btn" data-kh="fav" data-s="${E(s)}" aria-pressed="${fav}">${fav ? "♥ في المفضلة" : "♡ المفضلة"}</button><button class="btn" data-kh="share" data-t="${E(tp.t)}">🔗 مشاركة</button><button class="btn" data-kh="copy" data-s="${E(s)}" data-m="${mk}">📋 نسخ النص</button>
-       ${adm() ? `<a class="btn" href="#/khutab/edit/${encodeURIComponent(s)}?m=${mk}">✏️ تحرير</a>` : ""}${pos && pos.y > .03 ? `<button class="btn" data-kh="resume" data-y="${pos.y}">↩︎ تابع من موضعك (${A2(Math.round(pos.y * 100))}٪)</button>` : ""}</div>
-      <div class="khview"><div class="chips" role="tablist">${tabs.map(([k, t]) => `<a class="chip${k === tab ? " x" : ""}" href="#/khutab/${encodeURIComponent(s)}?m=${mk}&v=${k}">${t}</a>`).join("")}</div>
-       <div class="khtools" aria-label="خيارات العرض"><button data-kh="fs" data-d="-1" title="تصغير الخط">ا−</button><button data-kh="fs" data-d="1" title="تكبير الخط">ا+</button><button data-kh="lh" title="المسافات بين الأسطر">↕</button><button data-kh="gap" title="المسافات بين الفقرات">¶</button><button data-kh="theme" title="الوضع الليلي">🌙</button><button data-kh="refs" aria-pressed="${!!pf.refs}" title="إظهار المراجع أو إخفاؤها">${pf.refs ? "المراجع ✓" : "المراجع ✗"}</button><button data-kh="notes" aria-pressed="${!!pf.notes}" title="تنبيهات الخطيب">${pf.notes ? "التنبيهات ✓" : "التنبيهات ✗"}</button></div></div>
+      <div class="khbar"><button class="btn p" data-kh="deliver" data-s="${E(s)}" data-m="${mk}">${IC("mic-vocal", 16)} إلقاء الخطبة</button><button class="btn" data-kh="export" data-s="${E(s)}" data-m="${mk}">${IC("download", 16)} تحميل وطباعة</button>
+       <button class="btn" data-kh="fav" data-s="${E(s)}" aria-pressed="${fav}">${IC("heart", 16)} ${fav ? "في المفضلة" : "المفضلة"}</button><button class="btn" data-kh="share" data-t="${E(tp.t)}">${IC("rss", 16)} مشاركة</button><button class="btn" data-kh="copy" data-s="${E(s)}" data-m="${mk}">${IC("file-text", 16)} نسخ النص</button>
+       ${adm() ? `<a class="btn" href="#/khutab/edit/${encodeURIComponent(s)}?m=${mk}">${IC("pencil", 16)} تحرير</a>` : ""}${pos && pos.y > .03 ? `<button class="btn" data-kh="resume" data-y="${pos.y}">${IC("history", 16)} تابع من موضعك (${A2(Math.round(pos.y * 100))}٪)</button>` : ""}</div>
+      <div class="khview"><div class="chips" role="tablist">${tabs.map(([k, i, t]) => `<a class="chip${k === tab ? " x" : ""}" href="#/khutab/${encodeURIComponent(s)}?m=${mk}&v=${k}">${IC(i, 15)} ${t}</a>`).join("")}</div>
+       <div class="khtools" aria-label="خيارات العرض"><button data-kh="fs" data-d="-1" title="تصغير الخط">ا−</button><button data-kh="fs" data-d="1" title="تكبير الخط">ا+</button><button data-kh="lh" title="المسافات بين الأسطر">↕</button><button data-kh="gap" title="المسافات بين الفقرات">¶</button><button data-kh="theme" title="الوضع الليلي">${IC("moon-star", 15)}</button><button data-kh="refs" aria-pressed="${!!pf.refs}" title="إظهار المراجع أو إخفاؤها">${pf.refs ? "المراجع ✓" : "المراجع ✗"}</button><button data-kh="notes" aria-pressed="${!!pf.notes}" title="تنبيهات الخطيب">${pf.notes ? "التنبيهات ✓" : "التنبيهات ✗"}</button></div></div>
       ${tab === "k" || tab === "e" ? `<nav class="khparts">${parts.map(p => `<a href="javascript:void 0" data-kh="part" data-n="${p.n}">${E(p.title)}</a>`).join("")}<span class="mut">${A2(evL.length)} دليلًا • ≈ ${A2(mins(M.words))} دقيقة</span></nav>` : ""}
       <article class="khtext${pf.theme === "dark" ? " khdark" : ""}" style="--khfs:${pf.fs}rem;--khlh:${pf.lh};--khgap:${pf.gap}em" data-s="${E(s)}" data-m="${mk}">${body}</article>
       ${sim.length ? `<section><h3>خطب ذات صلة</h3><div class="khgrid">${sim.map(x => card(x)).join("")}</div></section>` : ""}
@@ -544,12 +546,12 @@ const KHT = (() => {
       if (!/الحمد|نحمده/.test(b.split("\n").find(l => l.trim() && !/^==/.test(l.trim())) || "")) warns.push(nm + ": الافتتاح لا يبدأ بالحمد"); });
     return { errs, warns };
   }
-  const AT = [["dash", "📊 اللوحة والمتابعة"], ["topics", "🗂️ الموضوعات"], ["new", "➕ موضوع جديد"], ["queue", "⚙️ طابور الإعداد"], ["mats", "📥 المواد"], ["cats", "🏷️ التصنيفات"]];
+  const AT = [["dash", "gauge", "اللوحة والمتابعة"], ["topics", "list", "الموضوعات"], ["new", "badge-plus", "موضوع جديد"], ["queue", "activity", "طابور الإعداد"], ["mats", "download", "المواد"], ["cats", "layout-grid", "التصنيفات"]];
   async function admin(q) {
     if (!adm()) return view('<p class="note">هذه الصفحة للإدارة.</p>');
     FRESH = true; CATS = null; IDX = null; WATCH = null; await cats(); const L = await idx(); const tab = q.tab || "dash";
-    const nav = `<nav class="chips">${AT.map(([k, t]) => `<a class="chip${k === tab ? " x" : ""}" href="${k === "new" ? "#/khutab/edit/_new" : "#/khutab/admin?tab=" + k}">${t}</a>`).join("")}</nav>`;
-    const hdr = `<p><a href="#/khutab">← خطب الجمعة</a></p><h2>⚙️ إدارة قسم خطب الجمعة</h2>${nav}${typeof GH !== "undefined" && !GH.on ? '<p class="note">للحفظ: فعّل «الإدارة المباشرة» بتسجيل الدخول بحساب الإدارة.</p>' : ""}`;
+    const nav = `<nav class="chips">${AT.map(([k, i, t]) => `<a class="chip${k === tab ? " x" : ""}" href="${k === "new" ? "#/khutab/edit/_new" : "#/khutab/admin?tab=" + k}">${IC(i, 15)} ${t}</a>`).join("")}</nav>`;
+    const hdr = `<p><a href="#/khutab">← خطب الجمعة</a></p><h2>${IC("settings", 24)} إدارة قسم خطب الجمعة</h2>${nav}${typeof GH !== "undefined" && !GH.on ? '<p class="note">للحفظ: فعّل «الإدارة المباشرة» بتسجيل الدخول بحساب الإدارة.</p>' : ""}`;
     if (tab === "topics") return view(hdr + topicsTable(L));
     if (tab === "cats") return view(hdr + catsEditor());
     if (tab === "mats") return view(hdr + await matsView());
@@ -559,7 +561,7 @@ const KHT = (() => {
     const Q = (await getJ(P + "queue.json", true)) || { items: [] }, LG = ((await getJ(P + "log.json", true)) || { items: [] }).items.slice(-6).reverse();
     const sugL = (W.sug || []).slice(0, 30);
     view(hdr + `<div class="khstats">${[["الموضوعات", L.length], ["معتمدة", cnt("ok")], ["قيد المراجعة", cnt("review")], ["مسودات", cnt("draft")], ["مكتملة النماذج الثلاثة", full], ["ناقصة", L.length - full], ["في طابور الإعداد", Q.items.length], ["مميزة", L.filter(x => x.feat).length]].map(([t, n]) => `<div><b>${A2(n)}</b><span>${t}</span></div>`).join("")}</div>
-      <section><h3>🌙 المواسم القادمة <small class="mut">(متابعة ${E(W.at || "—")})</small></h3>${(W.upcoming || []).length ? `<ul>${W.upcoming.map(u => `<li><b>${E(u.t)}</b> بعد ${A2(u.in)} يومًا (${E(u.from)}): ${A2(u.ready)} معتمدة${u.need ? ` — <span class="khbad">تحتاج ${A2(u.need)}</span>` : " ✓"}${(u.ideas || []).map(i => ` <a href="javascript:void 0" class="chip sm" data-kh="qadd" data-t="${E(i)}" data-seas="${E(u.id)}">+ ${E(i)}</a>`).join("")}</li>`).join("")}</ul>` : '<p class="mut">لا مواسم خلال الستين يومًا القادمة.</p>'}</section>
+      <section><h3>${IC("moon-star")} المواسم القادمة <small class="mut">(متابعة ${E(W.at || "—")})</small></h3>${(W.upcoming || []).length ? `<ul>${W.upcoming.map(u => `<li><b>${E(u.t)}</b> بعد ${A2(u.in)} يومًا (${E(u.from)}): ${A2(u.ready)} معتمدة${u.need ? ` — <span class="khbad">تحتاج ${A2(u.need)}</span>` : " ✓"}${(u.ideas || []).map(i => ` <a href="javascript:void 0" class="chip sm" data-kh="qadd" data-t="${E(i)}" data-seas="${E(u.id)}">+ ${E(i)}</a>`).join("")}</li>`).join("")}</ul>` : '<p class="mut">لا مواسم خلال الستين يومًا القادمة.</p>'}</section>
       ${(W.review || []).length ? `<section><h3>🔍 تحتاج إلى مراجعة أو تحسين</h3><ul>${W.review.map(r => `<li><a href="#/khutab/edit/${encodeURIComponent(r.s)}">${E(r.t)}</a> — <span class="mut">${E(r.why)}</span></li>`).join("")}</ul></section>` : ""}
       ${(W.enrich || []).length ? `<section><h3>➕ مواد جديدة لإثراء خطب قائمة</h3><ul>${W.enrich.map(r => `<li><a href="#/khutab/edit/${encodeURIComponent(r.s)}">${E(r.t)}</a>: ${r.src.map(x => `<a href="#/book/${E(x.b)}/1">${E(x.title)}</a>`).join("، ")}</li>`).join("")}</ul></section>` : ""}
       ${(W.dup || []).length ? `<section><h3>⚠️ موضوعات متقاربة (تجنب التكرار)</h3><ul>${W.dup.map(d => `<li>${d.map(s => `<a href="#/khutab/${encodeURIComponent(s)}">${E((L.find(x => x.s === s) || {}).t || s)}</a>`).join(" ↔ ")}</li>`).join("")}</ul></section>` : ""}
@@ -570,8 +572,9 @@ const KHT = (() => {
   }
   function topicsTable(L) {
     const ms = x => [1, 2, 3].map(m => { const s = (x.ms || {})[m]; return `<span class="khst khst-${s || "none"}" title="${MN[m]}: ${s ? STN[s] : "لم تُكتب"}">${MI[m]}</span>`; }).join("");
-    return `<p class="mut">${A2(L.length)} موضوعًا. ★ تمييز الموضوع، و📌 جدولته لجمعة بعينها.</p><div class="khtbl"><table><thead><tr><th>الموضوع</th><th>النماذج</th><th>الحالة</th><th>التحقق</th><th>★</th><th>📌 الجمعة</th><th></th></tr></thead><tbody>
-      ${L.slice().sort((a, b) => (b.upd || "").localeCompare(a.upd || "")).map(x => `<tr><td><a href="#/khutab/${encodeURIComponent(x.s)}">${E(x.t)}</a><br><small class="mut">${(x.cats || []).map(c => E(catT(c).t)).join("، ")}</small></td><td>${ms(x)}</td><td>${badge(x.st)}</td><td>${x.qe ? `<span class="khbad">${A2(x.qe)}</span>` : "✓"}</td>
+    const rv = L.filter(x => !x.qe && Object.values(x.ms || {}).includes("review")).length;
+    return `<p class="mut">${A2(L.length)} موضوعًا. ★ تمييز الموضوع، والتاريخ جدولته لجمعة بعينها.</p>${appr() ? `<div class="khwarn">${IC("clipboard-check", 16)} ${A2(rv)} موضوعًا قيد المراجعة سلمت من أخطاء التحقق العلمي. راجع ما تشاء منها ثم حدده و<button class="btn sm" data-kh="bulkok">اعتمد المحدد</button> <label class="inl"><input type="checkbox" data-kh-all> تحديد كل ما سلم من الأخطاء</label> <span id="khbst" class="mut"></span></div>` : ""}<div class="khtbl"><table><thead><tr>${appr() ? "<th></th>" : ""}<th>الموضوع</th><th>النماذج</th><th>الحالة</th><th>التحقق</th><th>★</th><th>📌 الجمعة</th><th></th></tr></thead><tbody>
+      ${L.slice().sort((a, b) => (b.upd || "").localeCompare(a.upd || "")).map(x => `<tr>${appr() ? `<td>${!x.qe && Object.values(x.ms || {}).includes("review") ? `<input type="checkbox" data-kh-ok="${E(x.s)}" aria-label="تحديد للاعتماد">` : ""}</td>` : ""}<td><a href="#/khutab/${encodeURIComponent(x.s)}">${E(x.t)}</a><br><small class="mut">${(x.cats || []).map(c => E(catT(c).t)).join("، ")}</small></td><td>${ms(x)}</td><td>${badge(x.st)}</td><td>${x.qe ? `<span class="khbad">${A2(x.qe)}</span>` : "✓"}</td>
        <td><button class="btn sm" data-kh="feat" data-s="${E(x.s)}" aria-pressed="${!!x.feat}">${x.feat ? "★" : "☆"}</button></td><td><input type="date" value="${E(x.sched || "")}" data-kh-sched="${E(x.s)}" aria-label="جدولة"></td><td><a class="btn sm" href="#/khutab/edit/${encodeURIComponent(x.s)}">تحرير</a> <button class="btn sm" data-kh="qadd" data-t="${E(x.t)}" data-s="${E(x.s)}">إعادة إعداد</button></td></tr>`).join("")}</tbody></table></div>`;
   }
   function catsEditor() {
@@ -714,6 +717,7 @@ const KHT = (() => {
   document.addEventListener("change", async e => {
     const t = e.target;
     if (t.dataset && t.dataset.khSched !== undefined) { try { const s = t.dataset.khSched, tp = await getJ(P + "t/" + s + ".json", true); tp.sched = t.value; await save(tp, "خطب الجمعة: جدولة «" + tp.t + "»"); toast("✓ جُدولت"); } catch (x) { toast(x.message); } }
+    if (t.dataset && t.dataset.khAll !== undefined) document.querySelectorAll("[data-kh-ok]").forEach(x => x.checked = t.checked);
     if (t.dataset && t.dataset.khUse) { try { await GH.editJSON(P + "materials.json", o => { const m = o.items.find(x => x.id === t.dataset.khUse); if (m) m.use = t.checked; return o; }, "خطب الجمعة: المواد في المنظومة"); toast("✓"); } catch (x) { toast(x.message); } }
   });
   document.addEventListener("click", async e => {
@@ -740,9 +744,14 @@ const KHT = (() => {
     else if (a === "deliver") location.hash = "#/khutab/" + encodeURIComponent(el.dataset.s) + "/deliver?m=" + el.dataset.m;
     else if (a === "export") exportSheet(el.dataset.s, el.dataset.m);
     else if (a === "copy") { const t = plainText(TP[el.dataset.s], el.dataset.m); try { await navigator.clipboard.writeText(t); toast("✓ نُسخ نص الخطبة مع مراجعها"); } catch (x) { toast("تعذّر النسخ"); } }
-    else if (a === "fav") { const F = ls.g("fav", []), s = el.dataset.s, i = F.indexOf(s); if (i >= 0) F.splice(i, 1); else F.unshift(s); ls.s("fav", F); el.textContent = i >= 0 ? "♡ المفضلة" : "♥ في المفضلة"; el.setAttribute("aria-pressed", i < 0); toast(i >= 0 ? "أزيلت من المفضلة" : "♥ أضيفت إلى المفضلة"); }
+    else if (a === "fav") { const F = ls.g("fav", []), s = el.dataset.s, i = F.indexOf(s); if (i >= 0) F.splice(i, 1); else F.unshift(s); ls.s("fav", F); el.innerHTML = IC("heart", 16) + (i >= 0 ? " المفضلة" : " في المفضلة"); el.setAttribute("aria-pressed", i < 0); toast(i >= 0 ? "أزيلت من المفضلة" : "♥ أضيفت إلى المفضلة"); }
     else if (a === "share") { const d = { title: el.dataset.t + " — خطب الجمعة", url: location.href }; if (navigator.share) navigator.share(d).catch(() => { }); else { try { await navigator.clipboard.writeText(d.url); toast("نُسخ الرابط"); } catch (x) { } } }
     else if (a === "qadd") { if (!el.dataset.t) { location.hash = "#/khutab/admin?tab=queue&cats=" + (el.dataset.cats || ""); return; } if (confirm("إضافة «" + el.dataset.t + "» إلى طابور الإعداد؟ تُعدّ مسودة بالنماذج الثلاثة من مصادر المكتبة.")) enqueue({ t: el.dataset.t, s: el.dataset.s || undefined, kw: [], seas: (el.dataset.seas || "").split(" ").filter(Boolean), cats: (el.dataset.cats || "").split(" ").filter(Boolean), srcs: [], hint: (el.dataset.src || "").split(" ").filter(Boolean), models: ["1", "2", "3"] }); }
+    else if (a === "bulkok") { const L2 = [...document.querySelectorAll("[data-kh-ok]:checked")].map(x => x.dataset.khOk), st = $("#khbst"); if (!L2.length) return st.textContent = "حدد موضوعات أولًا";
+      if (!confirm("اعتماد النماذج «قيد المراجعة» في " + L2.length + " موضوعًا ونشرها للعامة؟")) return; let n = 0;
+      for (const s of L2) { try { st.textContent = `جارٍ الاعتماد ${A2(++n)} من ${A2(L2.length)}…`; const tp = await getJ(P + "t/" + s + ".json", true); if (((tp.qa || {}).errs || []).length) continue;
+        Object.values(tp.models).forEach(M => { if (M.st === "review") { M.st = "ok"; M.rev = who(); M.rat = today(); } }); tp.st = "ok"; (tp.log = tp.log || []).push({ at: today(), by: who(), a: "اعتماد جماعي بعد المراجعة" }); await save(tp, "خطب الجمعة: اعتماد «" + tp.t + "»"); } catch (x) { st.textContent = "تعذّر: " + x.message; return; } }
+      st.textContent = "✓ اعتُمدت"; admin({ tab: "topics" }); }
     else if (a === "feat") { try { const tp = await getJ(P + "t/" + el.dataset.s + ".json", true); tp.feat = !tp.feat; await save(tp, "خطب الجمعة: تمييز «" + tp.t + "»"); el.textContent = tp.feat ? "★" : "☆"; } catch (x) { toast(x.message); } }
     else if (a === "ins") { const ta = $("#khed textarea[name=body]"); const x = el.dataset.x, line = /^(==|##|###|>>|!!|- |~ |% |\{)/.test(x); const s0 = ta.selectionStart; const sel = ta.value.slice(s0, ta.selectionEnd); const ins = x === "**نص**" && sel ? "**" + sel + "**" : (line && s0 && ta.value[s0 - 1] !== "\n" ? "\n" : "") + x; ta.setRangeText(ins, s0, ta.selectionEnd, "end"); ta.focus(); ta.dispatchEvent(new Event("input")); }
     else if (a === "addh") { const f = $("#khed"), hid = f.hid.value.trim(); if (!hid) return; const bk = hid.split("-")[0]; const H = await getJ("data/hadith/" + bk + ".json"); const x = H && H[hid]; if (!x) return toast("لم يوجد في قسم الحديث"); const tp = window.__khEdit; const j = JSON.parse(f.json.value); const id = "h" + hid.replace(/\D/g, ""); j.ev[id] = { k: "h", t: x.m, lib: hid, b: bk, src: (x.full.match(/(متفق عليه|رواه[^.]*)\.?\s*$/) || [, ""])[1], g: "" }; f.json.value = JSON.stringify(j, null, 1); f.json.dispatchEvent(new Event("change")); toast("أضيف الدليل " + id + " — أدرجه بـ{h:" + id + "}"); }

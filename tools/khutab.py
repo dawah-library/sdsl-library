@@ -526,6 +526,15 @@ STYLE = {
 }
 
 
+def example(mk):
+    """مثال على الصيغة والأسلوب من النموذج التأسيسي المعتمد في القسم (للشكل لا للمضمون)."""
+    tp = jl(os.path.join(T, "hifz-al-lisan.json")) or {}
+    b = ((tp.get("models") or {}).get(mk) or {}).get("body") or ""
+    if not b: return ""
+    b = "\n".join(b.split("\n")[:34])
+    return "## مثال على الصيغة والأسلوب لهذا النموذج من خطبة أخرى (لا تنقل منه شيئًا من المضمون ولا معرفاته):\n" + b + "\n…\n\n"
+
+
 def gen_item(it):
     title = it.get("t", "").strip(); kw = it.get("kw") or []
     q = title + " " + " ".join(kw)
@@ -547,7 +556,7 @@ def gen_item(it):
     out = {"models": {}, "quotes": {}}
     for mk in it.get("models") or ["1", "2", "3"]:
         mk = str(mk); pm = (plan.get("models") or {}).get(mk) or {}
-        r = gemini(base + ctx + "\n\n" + STYLE[mk] + "\nالخطة: " + json.dumps(pm, ensure_ascii=False) +
+        r = gemini(base + ctx + "\n\n" + example(mk) + STYLE[mk] + "\nالخطة: " + json.dumps(pm, ensure_ascii=False) +
                    "\nاكتب الخطبة كاملة جاهزة للإلقاء بالصيغة المذكورة: الأولى (افتتاح بالحمد والثناء والشهادتين والصلاة على النبي ﷺ بصياغة مناسبة للموضوع، ثم «أما بعد»، ثم المحاور) والثانية (حمد وصلاة، ثم تتمة عملية، ثم الدعاء). "
                    "من ١٢٠٠ إلى ٢٢٠٠ كلمة. لكل آية اذكر أول كلماتها في qcheck. لكل أثر أو نقل تريد إيراده بنصه أضف إلى quotes معرّفًا مثل S5x1 بنصه الحرفي المنسوخ من المقطع S5.\n"
                    'أعد JSON: {"title":"","body":"نص الخطبة","qcheck":{"السورة:الآية":"أول كلمات الآية"},"quotes":{"S5x1":{"s":"S5","t":"النص الحرفي","who":"القائل","src":"العزو كما في المصدر"}}}', .75, 16000)
@@ -570,7 +579,7 @@ def gen_item(it):
         def hsub(m):
             k, idd = m.group(1), m.group(2)
             if k == "h" and idd in HM:
-                e = dict(HM[idd]); e.pop("hid", None); nid = "h" + re.sub(r"\D", "", e["lib"])[-5:]; ev[nid] = e; return "{h:%s}" % nid
+                e = dict(HM[idd]); e.pop("hid", None); nid = "h" + e["lib"].split("-")[0][:2] + re.sub(r"\D", "", e["lib"]); ev[nid] = e; return "{h:%s}" % nid
             if k == "v" and idd in out["quotes"]:
                 qq = out["quotes"][idd]; src = PM.get(qq.get("s")) or {}
                 nid = "a%d" % (len([x for x in ev if x.startswith("a")]) + 1)
@@ -629,8 +638,9 @@ def cmd_gen():
     qp = os.path.join(K, "queue.json"); Q = jl(qp, {"items": []}) or {"items": []}
     lp = os.path.join(K, "log.json"); L = jl(lp, {"items": []}) or {"items": []}
     mx = int(os.environ.get("KH_MAX", "3")); done = 0; rest = []
+    t0 = time.time(); tmax = 60 * float(os.environ.get("KH_MINUTES", "70"))
     for it in Q.get("items", []):
-        if done >= mx: rest.append(it); continue
+        if done >= mx or time.time() - t0 > tmax or len(EXH) >= 20: rest.append(it); continue
         s = it.get("s") or slugify(it.get("t", "")); p = os.path.join(T, s + ".json")
         print("إعداد:", it.get("t"), s)
         r, err = gen_item(it); done += 1
@@ -649,9 +659,16 @@ def cmd_gen():
         tp["upd"] = today(); tp["log"].append({"at": today(), "by": "gemini", "a": "مسودة من %d مصدرًا" % len(r["src"])})
         if tp.get("st") == "ok" and tp.get("alt"): pass
         elif tp.get("st") != "ok": tp["st"] = "draft"
-        e, w = verify(tp); js(p, tp)
+        e, w = verify(tp)
+        if not e:  # ما سلم من أخطاء التحقق ينتقل إلى «قيد المراجعة» (ولا يُنشر إلا باعتماد)
+            for M in tp["models"].values():
+                if M.get("st") == "draft" and (M.get("body") or "").strip(): M["st"] = "review"
+            if tp.get("st") == "draft": tp["st"] = "review"
+        js(p, tp)
         L["items"].append({"id": it.get("id"), "s": s, "t": it.get("t"), "at": today(), "ok": True, "msg": "مسودة: %d خطأ، %d تنبيه" % (len(e), len(w))})
-    Q["items"] = rest; js(qp, Q); L["items"] = L["items"][-300:]; js(lp, L); reindex()
+    Q["items"] = rest; js(qp, Q)
+    ok = sum(1 for x in L["items"][-done:] if x.get("ok")) if done else 0
+    open(os.environ.get("KH_STATUS", "/tmp/kh-gen-status"), "w").write("%d %d" % (ok, len(rest)))  # للمهمة: هل تُستأنف الجولة التالية; L["items"] = L["items"][-300:]; js(lp, L); reindex()
 
 
 # ---------------- المتابعة الدورية ----------------
