@@ -1,7 +1,7 @@
 {
 "note": "موسوعة آثار السلف — tools/athar.py ثم tools/athar-ai.py",
 "count": 898,
-"checked": 2096,
+"checked": 2158,
 "candidates": 5831,
 "topics": [
 {
@@ -625,5 +625,5 @@
 "t": "شعب الإيمان"
 }
 ],
-"drafts": 190
+"drafts": 229
 }
