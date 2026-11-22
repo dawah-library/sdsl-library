@@ -1,14 +1,9 @@
 {
  "items": [
   {
-   "k": "fiqh",
-   "do": "build",
-   "n": 13
-  },
-  {
    "k": "tafsir",
    "do": "build",
-   "n": 40
+   "n": 39
   },
   {
    "k": "quran",
