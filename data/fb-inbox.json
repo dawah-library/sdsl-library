@@ -240,6 +240,14 @@
    "at": "2026-11-21T13:24:49.689Z"
   },
   {
+   "src": "fb-ehabalsharef",
+   "k": "p11922353823560",
+   "u": "https://www.facebook.com/ehab.alsharef/posts/pfbid0Pj4MYG41oLaddcWbQqKqiz4n978oq77AbTCmxmG5iwEUmWDvVpvBgDEwgYm7x85Cl",
+   "t": 1795042902,
+   "text": "يمين تغمس صاحبها في النار (5)\n\nالتفاصيل في بث الليلة في لقاء شرح الترغيب والترهيب \n\nتابعونا في البث المباشر \n\nالخميس بعد صلاة العشاء 🕘\n\nمع شيخنا الحبيب/ إيهاب الشريف",
+   "at": "2026-11-22T19:48:09.064Z"
+  },
+  {
    "src": "fb-salafiacall",
    "k": "p16508353850992",
    "u": "https://www.facebook.com/Salafiacall/posts/pfbid0ddMdMKcz7aLpx6VuY9yWTkKkxuQWAZvHKFQ5zJyfjrxiRiauRxzzrnQm1JEreNbEl",
@@ -390,21 +398,19 @@
    "lastSeen": "2026-11-22T18:52:39.674Z"
   },
   "fb-ehabalsharef": {
-   "at": "2026-11-21T18:06:32.331Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
-   "n": 1,
-   "lastNew": "2026-11-21T18:06:32.331Z",
-   "lastSeen": "2026-11-21T18:06:32.331Z"
+   "at": "2026-11-22T19:48:09.064Z",
+   "n": 2,
+   "lastNew": "2026-11-22T19:48:09.064Z",
+   "lastSeen": "2026-11-22T19:48:09.064Z"
   },
   "fb-ragababomo3awya": {
-   "at": "2026-11-21T18:06:58.563Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
+   "at": "2026-11-22T19:48:35.633Z",
    "n": 1,
    "lastNew": "2026-11-21T18:06:58.563Z",
-   "lastSeen": "2026-11-21T18:06:58.563Z"
+   "lastSeen": "2026-11-22T19:48:35.633Z"
   },
   "fb-engahmedtaherme": {
-   "at": "2026-11-21T18:07:25.140Z",
+   "at": "2026-11-22T19:48:51.821Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0
   },
@@ -514,7 +520,7 @@
    "n": 0
   }
  },
- "wall": "2026-11-22T11:24:06.633Z",
+ "wall": "2026-11-22T19:48:51.821Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -533,6 +539,6 @@
   "fb-ahmedalhamdon",
   "fb-musabamingaber"
  ],
- "lastRun": "2026-11-22T18:52:51.730Z",
- "lastAdded": 3
+ "lastRun": "2026-11-22T19:48:51.887Z",
+ "lastAdded": 1
 }
