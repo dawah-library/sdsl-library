@@ -3,7 +3,7 @@
   {
    "k": "tafsir",
    "do": "build",
-   "n": 39
+   "n": 24
   },
   {
    "k": "quran",
@@ -47,6 +47,11 @@
   },
   {
    "k": "siyasa",
+   "do": "build",
+   "n": 40
+  },
+  {
+   "k": "fiqh",
    "do": "build",
    "n": 40
   }
