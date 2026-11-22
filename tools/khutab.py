@@ -492,7 +492,7 @@ def gemini(prompt, temp=0.6, mx=16000):
             if not POOL.ready(k): continue
             POOL.pace(k)
             try:
-                body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": temp, "responseMimeType": "application/json", "maxOutputTokens": mx}}).encode()
+                body = json.dumps({"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": temp, "responseMimeType": "application/json", "maxOutputTokens": mx, "thinkingConfig": {"thinkingBudget": int(os.environ.get("KH_THINK", "1024"))}}}).encode()
                 req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % MODEL, data=body, headers={"content-type": "application/json", "x-goog-api-key": KEYS[k]})
                 with urllib.request.urlopen(req, timeout=300) as r: j = json.loads(r.read())
                 t = "".join(p.get("text", "") for p in j["candidates"][0]["content"]["parts"] if not p.get("thought"))
@@ -517,7 +517,7 @@ SPEC = """صيغة كتابة الخطبة (سطر لكل فقرة):
 - عنصر في تعداد       % صدر البيت *** عجزه       ~ دعاء
 {q:السورة:الآية} أو {q:السورة:من-إلى} في سطر مستقل لإدراج الآية من المصحف (لا تكتب نص الآية أبدًا)
 {h:H3} في سطر مستقل لإدراج حديث من قائمة الأحاديث بمعرّفه، و{v:S5x1} لنص من مقطع مصدر (أثر أو نقل) بعد تعريفه في quotes
-**عبارة** لتمييز ما يحتاج الخطيب إلى التنبه له، و[^S5] بعد الجملة المستفادة من المصدر S5 (علامة مرجع)."""
+**عبارة** لتمييز ما يحتاج الخطيب إلى التنبه له، و[^S5] بعد الجملة المستفادة من المصدر S5 (علامة مرجع): علامة واحدة (اثنتان على الأكثر) للفقرة، لا بعد كل جملة، ولا تُكدَّس العلامات."""
 
 STYLE = {
     "1": "النموذج الأول: خطبة ميسرة مباشرة؛ عبارات قصيرة واضحة قريبة من عامة الناس، سهلة الحفظ والإلقاء، بلا تعقيد ولا تكلف؛ ثلاثة محاور عملية في الغالب، وخاتمة بخطوات تطبيقية.",
@@ -559,7 +559,9 @@ def gen_item(it):
         r = gemini(base + ctx + "\n\n" + example(mk) + STYLE[mk] + "\nالخطة: " + json.dumps(pm, ensure_ascii=False) +
                    "\nاكتب الخطبة كاملة جاهزة للإلقاء بالصيغة المذكورة: الأولى (افتتاح بالحمد والثناء والشهادتين والصلاة على النبي ﷺ بصياغة مناسبة للموضوع، ثم «أما بعد»، ثم المحاور) والثانية (حمد وصلاة، ثم تتمة عملية، ثم الدعاء). "
                    "من ١٢٠٠ إلى ٢٢٠٠ كلمة. لكل آية اذكر أول كلماتها في qcheck. لكل أثر أو نقل تريد إيراده بنصه أضف إلى quotes معرّفًا مثل S5x1 بنصه الحرفي المنسوخ من المقطع S5.\n"
-                   'أعد JSON: {"title":"","body":"نص الخطبة","qcheck":{"السورة:الآية":"أول كلمات الآية"},"quotes":{"S5x1":{"s":"S5","t":"النص الحرفي","who":"القائل","src":"العزو كما في المصدر"}}}', .75, 16000)
+                   'أعد JSON: {"title":"","body":"نص الخطبة","qcheck":{"السورة:الآية":"أول كلمات الآية"},"quotes":{"S5x1":{"s":"S5","t":"النص الحرفي","who":"القائل","src":"العزو كما في المصدر"}}}', .75, 30000)
+        if not r or not r.get("body"):  # محاولة ثانية بمفتاح آخر
+            r = gemini(base + ctx + "\n\n" + example(mk) + STYLE[mk] + "\nالخطة: " + json.dumps(pm, ensure_ascii=False) + "\nاكتب الخطبة كاملة بالصيغة المذكورة (١٢٠٠–٢٠٠٠ كلمة) وأعد JSON: {\"title\":\"\",\"body\":\"\",\"qcheck\":{},\"quotes\":{}}", .7, 30000)
         if not r or not r.get("body"): continue
         body = r["body"]
         for ref, snip in (r.get("qcheck") or {}).items():  # تصحيح أرقام الآيات من لفظها
@@ -582,7 +584,7 @@ def gen_item(it):
                 e = dict(HM[idd]); e.pop("hid", None); nid = "h" + e["lib"].split("-")[0][:2] + re.sub(r"\D", "", e["lib"]); ev[nid] = e; return "{h:%s}" % nid
             if k == "v" and idd in out["quotes"]:
                 qq = out["quotes"][idd]; src = PM.get(qq.get("s")) or {}
-                nid = "a%d" % (len([x for x in ev if x.startswith("a")]) + 1)
+                nid = "a" + hashlib.md5(qq.get("t", "").encode()).hexdigest()[:5]  # معرّف من النص: لا تصادم مع أدلة نموذج سابق
                 ev[nid] = {"k": "a", "t": qq.get("t", ""), "who": qq.get("who", ""), "src": qq.get("src", ""), "vs": {"b": src.get("b"), "p": src.get("p")}}
                 return "{a:%s}" % nid
             return m.group(0)
@@ -595,6 +597,7 @@ def gen_item(it):
                 refs[nid] = {"b": x["b"], "p": x["p"], "t": x["title"]}; return "[^%s]" % nid
             return ""
         M["body"] = RTOK.sub(rsub, M["body"])
+        M["body"] = re.sub(r"((?:\s*\[\^[\w-]+\])+)", lambda m: "".join(list(dict.fromkeys(re.findall(r"\[\^[\w-]+\]", m.group(1))))[:2]), M["body"])
     # شرح الأدلة: المعاني ووجه الاستدلال والفوائد، مقيدة بنص الدليل والمختصر
     if ev or QTOK.search(" ".join(M["body"] for M in out["models"].values())):
         qs = sorted(set("%s:%s" % (m.group(1), m.group(2)) for M in out["models"].values() for m in QTOK.finditer(M["body"])))
@@ -645,7 +648,13 @@ def cmd_gen():
         print("إعداد:", it.get("t"), s)
         r, err = gen_item(it); done += 1
         if not r:
-            L["items"].append({"id": it.get("id"), "s": s, "t": it.get("t"), "at": today(), "ok": False, "msg": err}); continue
+            print("  ✗", err)
+            it["tries"] = it.get("tries", 0) + 1
+            if it["tries"] < 3: rest.append(it)  # يُعاد في جولة لاحقة (نفاد الحصة أو خلل عابر)
+            L["items"].append({"id": it.get("id"), "s": s, "t": it.get("t"), "at": today(), "ok": False, "msg": err + (" — يُعاد لاحقًا" if it["tries"] < 3 else "")}); continue
+        miss = [m for m in (it.get("models") or ["1", "2", "3"]) if str(m) not in r["models"]]
+        if miss and it.get("tries", 0) < 2:  # نموذج لم يكتمل: يُعاد وحده
+            rest.append(dict(it, models=miss, tries=it.get("tries", 0) + 1))
         tp = jl(p) or {"s": s, "t": it.get("t"), "cats": it.get("cats", []), "seas": it.get("seas", []), "st": "draft", "at": today(), "models": {}, "ev": {}, "refs": {}, "qn": {}, "log": []}
         tp.setdefault("models", {}); tp.setdefault("ev", {}); tp.setdefault("refs", {}); tp.setdefault("qn", {}); tp.setdefault("log", [])
         tp["sum"] = tp.get("sum") or (r["plan"] or {}).get("sum", ""); tp["sub"] = tp.get("sub") or (r["plan"] or {}).get("sub", "")
@@ -668,7 +677,8 @@ def cmd_gen():
         L["items"].append({"id": it.get("id"), "s": s, "t": it.get("t"), "at": today(), "ok": True, "msg": "مسودة: %d خطأ، %d تنبيه" % (len(e), len(w))})
     Q["items"] = rest; js(qp, Q)
     ok = sum(1 for x in L["items"][-done:] if x.get("ok")) if done else 0
-    open(os.environ.get("KH_STATUS", "/tmp/kh-gen-status"), "w").write("%d %d" % (ok, len(rest)))  # للمهمة: هل تُستأنف الجولة التالية; L["items"] = L["items"][-300:]; js(lp, L); reindex()
+    open(os.environ.get("KH_STATUS", "/tmp/kh-gen-status"), "w").write("%d %d\n" % (ok, len(rest)))  # للمهمة: هل تُستأنف الجولة التالية
+    L["items"] = L["items"][-300:]; js(lp, L); reindex()
 
 
 # ---------------- المتابعة الدورية ----------------
