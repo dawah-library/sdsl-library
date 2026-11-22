@@ -204,7 +204,7 @@ const STORY = (() => {
 .sty-leg{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px;font-size:.85rem;color:var(--mut)}
 .sty-end{text-align:center;margin:30px auto 8px;max-width:var(--sw);font-family:Amiri,serif;font-size:1.2rem}
 .sty .sty-nt{color:var(--mut);font-size:.86rem}
-@media print{.sty nav.chips,.sty .noprint,#side,.top,#ticker,.botnav{display:none!important}.sty-sc .bd{display:block!important}.sty-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{body:has(.sty) *{visibility:visible!important}body:has(.sty)>*:not(#app),body:has(.sty) #app>*:not(.sty){display:none!important}.sty nav.chips,.sty .noprint,#side,#sidebg,.top,#ticker,.botnav,footer,.fab,[class*=fab],#gdfab{display:none!important}body:has(.sty){background:#fff!important;padding:0!important}.sty,.sty *{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sty .sty-sc,.sty .sty-ev,.sty .sty-lc,.sty .sty-k,.sty-fu>div,.sty-ba>div{break-inside:avoid}.sty h3{break-after:avoid}.sty .sty-tl,.sty .sty-st{display:block}}
 `; document.head.appendChild(s); }
 
   const intro = `<div class="sty-prose">
@@ -274,7 +274,7 @@ const STORY = (() => {
   <div class="sty-fu">${FUTURE.map(([t, d, s]) => `<div><b>${t}</b> ${badge(s)}<p>${d}</p></div>`).join("")}</div>
 
   <p class="sty-end">نسأل الله أن يتقبل هذا العمل، وأن يبارك فيه، وأن يجعله خالصًا لوجهه الكريم، وأن يجعله في ميزان كل من أسهم فيه بجهد أو نصح أو دعم.</p>
-  <div class="row noprint" style="justify-content:center"><a class="btn" href="#/about">صفحة التعريف بالمكتبة</a><button class="btn" onclick="window.print()">طباعة السجل</button></div>
+  <div class="row noprint" style="justify-content:center"><a class="btn" href="#/about">صفحة التعريف بالمكتبة</a><button class="btn" onclick="STORY.print()">طباعة السجل وحفظه PDF</button></div>
 </div>`;
   }
 
@@ -301,5 +301,11 @@ const STORY = (() => {
     view(page());
     document.title = "قصة الموقع | النشأة والتطور والسجل التاريخي — مكتبة الدعوة السلفية";
   }
-  return { view: show, brief, STATIONS, TL, GIFTS, COSTS, FUTURE };
+  // الطباعة/الحفظ PDF: تُفتح المحطات المطوية أولًا (المحتوى المطوي لا يُطبع)، ثم تُعاد كما كانت
+  function print() {
+    const closed = [...document.querySelectorAll(".sty details:not([open])")]; closed.forEach(d => d.open = true);
+    const back = () => { closed.forEach(d => d.open = false); window.removeEventListener("afterprint", back); };
+    window.addEventListener("afterprint", back); setTimeout(() => window.print(), 60);
+  }
+  return { view: show, print, brief, STATIONS, TL, GIFTS, COSTS, FUTURE };
 })();
