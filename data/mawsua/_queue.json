@@ -3,7 +3,7 @@
   {
    "k": "tafsir",
    "do": "build",
-   "n": 24
+   "n": 22
   },
   {
    "k": "quran",
@@ -54,6 +54,37 @@
    "k": "fiqh",
    "do": "build",
    "n": 40
+  },
+  {
+   "k": "quran",
+   "do": "build",
+   "n": 8,
+   "ids": [
+    "quran-3-2-1",
+    "quran-3-2-2",
+    "quran-3-1-4",
+    "quran-3-2-4",
+    "quran-3-2-5",
+    "quran-3-2-6",
+    "quran-3-2-7",
+    "quran-3-2-8"
+   ],
+   "boost": [
+    "p26b6ca3f"
+   ],
+   "grow": "2026-11-23"
+  },
+  {
+   "k": "lugha",
+   "do": "build",
+   "n": 1,
+   "ids": [
+    "lugha-4-3-3"
+   ],
+   "boost": [
+    "p26b6ca3f"
+   ],
+   "grow": "2026-11-23"
   }
  ]
 }
