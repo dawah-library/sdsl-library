@@ -24,6 +24,19 @@
    "rows": 3496,
    "tables": 37,
    "errors": {}
+  },
+  {
+   "d": "2026-11-23",
+   "key": "backups/db/2026-11-23.json.gz",
+   "kb": 177.2,
+   "rows": 4134,
+   "tables": 37,
+   "errors": {
+    "comparisons": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.comparisons' in the schema cac",
+    "member_prefs": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.member_pages'\",\"message\":\"Could not find t",
+    "notify_state": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.notify_state' in the schema ca",
+    "subscribers": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.subscribers' in the schema cac"
+   }
   }
  ]
 }
