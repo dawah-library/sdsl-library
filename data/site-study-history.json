@@ -503,6 +503,62 @@
 "plan_n": 27,
 "search_console": false
 }
+},
+{
+"d": "2026-11-23",
+"o": 6.6,
+"s": {
+"tools": 9.0,
+"security": 8.5,
+"reader": 8.2,
+"auto": 8.0,
+"design": 7.2,
+"community": 6.5,
+"search": 6.0,
+"content": 5.4,
+"reliab": 6.7,
+"arch": 5.2,
+"seo": 5.0,
+"perf": 3.0
+},
+"m": {
+"books": 1612,
+"dawah": 60,
+"turath": 1552,
+"authors": 418,
+"topics": 123,
+"pdf": 81,
+"card": 58,
+"tash": 14,
+"lite": 21,
+"unrev": 28,
+"pending": 4351,
+"prep_avg": 62.4,
+"prep_done": 0,
+"prep_n": 58,
+"scripts": 66,
+"deferred": 0,
+"js_kb": 2635,
+"app_kb": 479,
+"fonts": 6,
+"services": 110,
+"seo_internal": false,
+"ai_bots_blocked": true,
+"opensearch": true,
+"hreflang": false,
+"jsonld": true,
+"sitemap": true,
+"terms": false,
+"cite": true,
+"doors": true,
+"server_search": false,
+"workflows": 91,
+"api": 13,
+"sw": "sdsl-v299",
+"plan_done": 4,
+"plan_n": 27,
+"search_console": false
+}
 }
 ]
 }
