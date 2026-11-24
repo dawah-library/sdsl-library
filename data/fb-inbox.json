@@ -177,6 +177,14 @@
    "at": "2026-11-23T23:21:20.172Z"
   },
   {
+   "src": "fb-tltmrzwq",
+   "k": "p35572880002532",
+   "u": "https://www.facebook.com/tl.t.mrzwq/posts/pfbid033jFFXBtTAkLvw4bBytTmaKNJLqCdexgJFDyVxgTgyjP5GBipQjmf2B2UDzAX7SQVl",
+   "t": 1795374784,
+   "text": "حكم محكمة العدل الدولية ضد ميانمار بجريمة الإبادة الجماعية للمسلمين الروهينجا.",
+   "at": "2026-11-24T11:50:43.455Z"
+  },
+  {
    "src": "fb-abobakrelkady",
    "k": "p11012115206713",
    "u": "https://www.facebook.com/abobakrelkady/posts/pfbid0MT8f7SLGL7SSCNs5TbuNNwVdvuDDXZaHy8sT9iMxkqPQCFuWei1TJXziX2V9MZzSl",
@@ -683,17 +691,17 @@
    "lastSeen": "2026-11-21T23:19:27.574Z"
   },
   "fb-drelsayedabdelhady7": {
-   "at": "2026-11-24T03:05:41.637Z",
+   "at": "2026-11-24T11:50:16.985Z",
    "n": 0
   },
   "fb-tltmrzwq": {
-   "at": "2026-11-24T03:06:07.940Z",
+   "at": "2026-11-24T11:50:43.455Z",
    "n": 2,
-   "lastNew": "2026-11-24T03:06:07.940Z",
-   "lastSeen": "2026-11-24T03:06:07.940Z"
+   "lastNew": "2026-11-24T11:50:43.455Z",
+   "lastSeen": "2026-11-24T11:50:43.455Z"
   },
   "fb-waellramadan": {
-   "at": "2026-11-24T03:06:24.199Z",
+   "at": "2026-11-24T11:50:59.636Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0
   },
@@ -741,7 +749,7 @@
    "n": 0
   }
  },
- "wall": "2026-11-24T10:54:59.230Z",
+ "wall": "2026-11-24T11:50:59.636Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -755,6 +763,6 @@
   "fb-ahmedalhamdon",
   "fb-musabamingaber"
  ],
- "lastRun": "2026-11-24T10:54:59.310Z",
- "lastAdded": 4
+ "lastRun": "2026-11-24T11:50:59.718Z",
+ "lastAdded": 1
 }
