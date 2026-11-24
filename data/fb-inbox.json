@@ -76,6 +76,15 @@
    "at": "2026-11-23T07:39:36.018Z"
   },
   {
+   "src": "fb-yasserabdrabelrasol",
+   "k": "p36304696028466",
+   "u": "https://www.facebook.com/yasser.abd.rab.elrasol/posts/pfbid0HykU6Bt46Uzmn6e6KeHbHQVzbjXwuGEqJHnv5R1sKpjNSwQjBzkyrBc4JTcE8Gf7l",
+   "t": 1795377247,
+   "text": "توضيح الشيخ ياسر برهامي حول سلسلة العروة الوثقى وما فيها من غلو وتكـ.فير",
+   "video": true,
+   "at": "2026-11-24T03:04:48.963Z"
+  },
+  {
    "src": "fb-drwaelsameir",
    "k": "p39787778990478",
    "u": "https://www.facebook.com/Dr.Waelsameir",
@@ -83,6 +92,14 @@
    "text": "توضيح الشيخ ياسر برهامي حول سلسلة العروة الوثقى وما فيها من غلو وتكـ/ـفير",
    "video": true,
    "at": "2026-11-23T23:21:20.172Z"
+  },
+  {
+   "src": "fb-tltmrzwq",
+   "k": "p35572880002532",
+   "u": "https://www.facebook.com/tl.t.mrzwq/posts/pfbid0zMm4uAXq958iQ1bDgbC6fw3xiVu84zE8rSy6Zh84w7HdkGLJAFbxLB5yHqyzQzBKl",
+   "t": 1795374784,
+   "text": "حكم محكمة العدل الدولية ضد ميانمار بجريمة الإبادة الجماعية للمسلمين الروهينجا.",
+   "at": "2026-11-24T03:06:07.940Z"
   },
   {
    "src": "fb-abobakrelkady",
@@ -560,31 +577,29 @@
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
   },
   "fb-yasserabdrabelrasol": {
-   "at": "2026-11-22T22:38:48.192Z",
-   "n": 0,
-   "lastNew": "2026-11-21T23:19:01.346Z",
-   "lastSeen": "2026-11-21T23:19:01.346Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
+   "at": "2026-11-24T03:04:48.963Z",
+   "n": 2,
+   "lastNew": "2026-11-24T03:04:48.963Z",
+   "lastSeen": "2026-11-24T03:04:48.963Z"
   },
   "fb-ahmdbdalslammady": {
-   "at": "2026-11-22T23:33:55.998Z",
+   "at": "2026-11-24T03:05:15.391Z",
    "n": 0,
    "lastNew": "2026-11-21T23:19:27.574Z",
-   "lastSeen": "2026-11-21T23:19:27.574Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
+   "lastSeen": "2026-11-21T23:19:27.574Z"
   },
   "fb-drelsayedabdelhady7": {
-   "at": "2026-11-23T00:29:02.425Z",
-   "n": 0,
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
-  },
-  "fb-tltmrzwq": {
-   "at": "2026-11-23T01:24:09.348Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
+   "at": "2026-11-24T03:05:41.637Z",
    "n": 0
   },
+  "fb-tltmrzwq": {
+   "at": "2026-11-24T03:06:07.940Z",
+   "n": 2,
+   "lastNew": "2026-11-24T03:06:07.940Z",
+   "lastSeen": "2026-11-24T03:06:07.940Z"
+  },
   "fb-waellramadan": {
-   "at": "2026-11-23T02:19:16.381Z",
+   "at": "2026-11-24T03:06:24.199Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0
   },
@@ -632,14 +647,13 @@
    "n": 0
   }
  },
- "wall": "2026-11-24T02:09:32.196Z",
+ "wall": "2026-11-24T03:06:24.199Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
   "fb-engahmedtaherme",
   "fb-mdarjup",
   "fb-drelsayedabdelhady7",
-  "fb-tltmrzwq",
   "fb-waellramadan",
   "fb-sdmnswr373216",
   "fb-ahmedgameel754",
@@ -648,6 +662,6 @@
   "fb-ahmedalhamdon",
   "fb-musabamingaber"
  ],
- "lastRun": "2026-11-24T02:09:32.253Z",
- "lastAdded": 0
+ "lastRun": "2026-11-24T03:06:24.260Z",
+ "lastAdded": 2
 }
