@@ -1,25 +1,6 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-24 14:17
+# مطابقة النسخ المصورة بالنصية — 2026-11-24 16:33
 
-## أخلاق العلماء
-- تعذر: max() iterable argument is empty
-
-## صحيح البخاري
-- تعذر: max() iterable argument is empty
-
-## رياض الصالحين
-- تعذر: max() iterable argument is empty
-
-## بلوغ المرام من أدلة الأحكام
-- تعذر: max() iterable argument is empty
-
-## ألفية ابن مالك
-- تعذر: max() iterable argument is empty
-
-## الأدب المفرد
-- تعذر: max() iterable argument is empty
-
-## سنن ابن ماجه
-- تعذر: max() iterable argument is empty
-
-## جامع بيان العلم وفضله
-- تعذر: max() iterable argument is empty
+## شرح العقيدة الطحاوية (sharhtahawiyya)
+- صفحات النص 537، المصورة 574، متوسط التطابق 71٪، إزاحة غالبة +2
+- صفحات لا تشبه صورتها: 8
+- التصحيح: خريطة صفحات (386 صفحة خارج الترتيب البسيط)؛ 8 صفحة لا تشبه صورتها ← إعادة القراءة
