@@ -1,9 +1,25 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-23 17:18
-
-## الشريعة (ajurrisharia)
-- صفحات النص 2386، المصورة 2920، متوسط التطابق 6٪، إزاحة غالبة +4
-- صفحات لا تشبه صورتها: 1574
-- التصحيح: خريطة صفحات (2174 صفحة خارج الترتيب البسيط)؛ 1574 صفحة لا تشبه صورتها ← إعادة القراءة
+# مطابقة النسخ المصورة بالنصية — 2026-11-24 14:17
 
 ## أخلاق العلماء
+- تعذر: max() iterable argument is empty
+
+## صحيح البخاري
+- تعذر: max() iterable argument is empty
+
+## رياض الصالحين
+- تعذر: max() iterable argument is empty
+
+## بلوغ المرام من أدلة الأحكام
+- تعذر: max() iterable argument is empty
+
+## ألفية ابن مالك
+- تعذر: max() iterable argument is empty
+
+## الأدب المفرد
+- تعذر: max() iterable argument is empty
+
+## سنن ابن ماجه
+- تعذر: max() iterable argument is empty
+
+## جامع بيان العلم وفضله
 - تعذر: max() iterable argument is empty
