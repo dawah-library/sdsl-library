@@ -768,7 +768,7 @@
    "k": "ops",
    "p": 1,
    "del": 0,
-   "st": "pending",
+   "st": "doing",
    "at": "2026-11-25T07:16:04.933Z",
    "eng": "auto",
    "auto": 0,
@@ -785,10 +785,10 @@
      "m": "تعذر إكمال التنفيذ في هذه الجولة (المحركات المتاحة: Claude=0، مفاتيح Gemini=20). يُعاد تلقائيًا في الجولة القادمة."
     }
    ],
-   "t0": "2026-11-25T07:17:24Z",
+   "t0": "2026-11-25T12:05:00Z",
    "br": "agent/dev/dmwvshzno",
-   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/45566811057",
-   "u": "2026-11-25T07:22:07Z"
+   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/45610157674",
+   "u": "2026-11-25T12:05:02Z"
   }
  ]
 }
