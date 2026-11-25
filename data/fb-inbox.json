@@ -19,6 +19,15 @@
    "at": "2026-11-25T08:37:27.718Z"
   },
   {
+   "src": "fb-ragababomo3awya",
+   "k": "p03543012632908",
+   "u": "https://www.facebook.com/ragab.abomo3awya",
+   "t": 1795551957,
+   "text": "إما خافضة وإما رافعة",
+   "video": true,
+   "at": "2026-11-25T09:33:23.621Z"
+  },
+  {
    "src": "fb-alnourpartyofficialpage",
    "k": "p18741856288256",
    "u": "https://www.facebook.com/AlnourPartyOfficialPage/posts/pfbid0rQnWxB5LB2kz813Rp5v3tLgPhM7dgjJgvcPdLTPPmPsJb7tgqZ5PoUPbYCYsZyFxl",
@@ -716,21 +725,20 @@
    "lastSeen": "2026-11-25T08:37:27.718Z"
   },
   "fb-ehabalsharef": {
-   "at": "2026-11-24T10:54:16.472Z",
+   "at": "2026-11-25T09:32:57.398Z",
    "n": 1,
    "lastNew": "2026-11-24T10:54:16.472Z",
-   "lastSeen": "2026-11-24T10:54:16.472Z"
+   "lastSeen": "2026-11-25T09:32:57.398Z"
   },
   "fb-ragababomo3awya": {
-   "at": "2026-11-24T10:54:42.883Z",
+   "at": "2026-11-25T09:33:23.621Z",
    "n": 1,
-   "lastNew": "2026-11-23T23:23:05.690Z",
-   "lastSeen": "2026-11-24T10:54:42.883Z"
+   "lastNew": "2026-11-25T09:33:23.621Z",
+   "lastSeen": "2026-11-25T09:33:23.621Z"
   },
   "fb-engahmedtaherme": {
-   "at": "2026-11-24T10:54:59.230Z",
-   "n": 0,
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
+   "at": "2026-11-25T09:33:50.083Z",
+   "n": 0
   },
   "fb-mdarjup": {
    "at": "2026-11-25T08:35:43.335Z",
@@ -781,17 +789,17 @@
    "lastSeen": "2026-11-21T23:19:27.574Z"
   },
   "fb-drelsayedabdelhady7": {
-   "at": "2026-11-24T11:50:16.985Z",
+   "at": "2026-11-25T09:34:16.097Z",
    "n": 0
   },
   "fb-tltmrzwq": {
-   "at": "2026-11-24T11:50:43.455Z",
+   "at": "2026-11-25T09:34:42.095Z",
    "n": 2,
    "lastNew": "2026-11-24T11:50:43.455Z",
-   "lastSeen": "2026-11-24T11:50:43.455Z"
+   "lastSeen": "2026-11-25T09:34:42.095Z"
   },
   "fb-waellramadan": {
-   "at": "2026-11-24T11:50:59.636Z",
+   "at": "2026-11-25T09:34:58.252Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0
   },
@@ -842,7 +850,7 @@
    "n": 0
   }
  },
- "wall": "2026-11-25T03:11:11.745Z",
+ "wall": "2026-11-25T09:34:58.252Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -856,6 +864,6 @@
   "fb-ahmedalhamdon",
   "fb-musabamingaber"
  ],
- "lastRun": "2026-11-25T08:37:39.781Z",
- "lastAdded": 4
+ "lastRun": "2026-11-25T09:34:58.316Z",
+ "lastAdded": 1
 }
