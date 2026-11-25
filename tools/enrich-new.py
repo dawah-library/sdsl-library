@@ -97,15 +97,10 @@ def main():
             for v in vs: v["tags"] = sorted(set(v.get("tags") or []) | {"tala:t3", "tala:t4"})
             changed = True; did.append("سلّم قراءة الطلائع الكبار")
         scan = any(v.get("ocr") or v.get("pdf") or v.get("img") for v in vs)  # كتاب مصوّر: تُفعَّل خدماته كلها أيًّا كان موضوعه
-        # خدمات الكتب للكتب المرفوعة حديثًا (طلب المدير، ٢١ نوفمبر ٢٠٢٦: «تفعيل خدمات الكتب على الكتب التي ترفع حديثًا مع ربطها بالموقع وأقسامه»):
-        # الكتاب الجديد وحده يدخل طوابير التشجير والاختبارات والمختصرات والكراسة (ولكتب الدعوة الصوت)؛ وقرار ٢٠ نوفمبر باقٍ على ما سبق رفعه (لا إعادة للطوابير القديمة).
-        # المفاتيح: enrich يوقفها كلها، وenrich_tts يوقف الصوت وحده، وenrich_kurrasa الكراسة وحدها.
+        # خدمات الكتب (طلب المدير، ٢٥ نوفمبر ٢٠٢٦: «لا تقدم تلقائيًا كتابًا للاختصار أو اختبار أو كراسة أو تشجير إلا بطلب من الإدارة»):
+        # الإضافة لهذه الطوابير صارت يدوية فقط من لوحة الإدارة.
         if svc and not b.get("noauto"):
             bid = vs[0]["id"]
-            if addq(os.path.join(D, "tashjir", "_queue.json"), {"id": bid, "auto": 1, "new": 1}): did.append("التشجير")
-            if addq(os.path.join(D, "study-queue.json"), {"id": bid, "do": ["quiz", "summ"], "auto": 1, "new": 1}): did.append("الاختبارات والمختصر")
-            if col == "dawah" and sw.get("enrich_kurrasa") is not False and addq(os.path.join(D, "kurrasa", "_queue.json"), {"id": bid, "auto": 1, "new": 1}): did.append("الكراسة")
-            if col == "dawah" and sw.get("enrich_tts") is not False and addq(os.path.join(D, "audio", "_queue.json"), {"id": bid, "new": 1}): did.append("الصوت")
             if (b.get("sharh") or b.get("matn") or re.match(r"\s*(شرح|تعليق|التعليق)", t)) and addq(os.path.join(D, "sharh-mark", "_queue.json"), {"id": bid}): did.append("تمييز المتن من الشرح")
             if col == "dawah": did.append("الموسوعات (تُطابَق مسائلها بالكتاب في جولة mawsua.yml اليومية)")
         if col == "turath":
