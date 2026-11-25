@@ -1,1 +1,34 @@
-{"items": [{"id": "lg471487b3-v01", "auto": 1, "new": 1}, {"id": "p1f08a935", "auto": 1, "new": 1}, {"id": "lg6fa766fd-v01", "auto": 1, "new": 1}, {"id": "lga7c95a2a-v01", "auto": 1, "new": 1}]}
+{
+ "items": [
+  {
+   "id": "lg471487b3-v01",
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "p1f08a935",
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "lg6fa766fd-v01",
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "lga7c95a2a-v01",
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "lgcd29d121-v01",
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "lgb50d4b5d-v01",
+   "auto": 1,
+   "new": 1
+  }
+ ]
+}
