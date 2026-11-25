@@ -1,12 +1,46 @@
 {
 "dec": {},
-"prop": {},
+"prop": {
+"darimi-1165": {
+"k": [
+"aqeeda",
+"sunna"
+],
+"fit": 0.0,
+"why": "الحديث يتناول ادعاءات اليهود حول المسلمين ولا يختص بالأخلاق بل يتعلق بالاعتقاد والرد على البدع",
+"old": [
+"akhlaq"
+]
+},
+"darimi-1187": {
+"k": [
+"akhlaq"
+],
+"fit": 0.0,
+"why": "النصيحة تتعلق بالعناية الشخصية وليس بالهمة أو السعي، لذا لا تتناسب مع باب الهمة",
+"old": [
+"himma"
+]
+}
+},
 "fitted": [
 "darimi-1015",
 "darimi-1133",
 "darimi-1135",
 "darimi-1138",
 "darimi-1157",
+"darimi-1165",
+"darimi-1187",
+"darimi-1197",
+"darimi-1202",
+"darimi-1205",
+"darimi-1206",
+"darimi-1219",
+"darimi-1357",
+"darimi-1550",
+"darimi-1705",
+"darimi-1723",
+"darimi-1895",
 "darimi-909",
 "darimi-910",
 "darimi-919",
