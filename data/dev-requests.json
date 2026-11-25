@@ -768,9 +768,9 @@
    "k": "ops",
    "p": 1,
    "del": 0,
-   "st": "doing",
+   "st": "review",
    "at": "2026-11-25T07:16:04.933Z",
-   "eng": "auto",
+   "eng": "gemini:gemini-flash-lite-latest",
    "auto": 0,
    "by": "admin",
    "h": [
@@ -788,7 +788,11 @@
    "t0": "2026-11-25T12:05:00Z",
    "br": "agent/dev/dmwvshzno",
    "run": "https://github.com/dawah-library/sdsl-library/actions/runs/45610157674",
-   "u": "2026-11-25T12:05:02Z"
+   "u": "2026-11-25T12:17:20Z",
+   "r": "تم بحمد الله إيقاف طوابير الاختصار والكراسات والتشجير والاختبارات وتفريغها بالكامل، ومنع الإضافة التلقائية لأي كتاب جديد أو محدث إليها؛ بحيث لا يتم تقديم أي كتاب لهذه الخدمات إلا يدوياً وبطلب صريح من الإدارة من خلال لوحة التحكم (#/posts).",
+   "diff": "https://github.com/dawah-library/sdsl-library/compare/main...agent/dev/dmwvshzno",
+   "files": "data/audio/_queue.json data/kurrasa/_queue.json data/study-queue.json data/tashjir/_queue.json tools/enrich-new.py ",
+   "chk": 1
   }
  ]
 }
