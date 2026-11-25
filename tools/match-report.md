@@ -1,25 +1,4 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-25 13:30
+# مطابقة النسخ المصورة بالنصية — 2026-11-25 16:02
 
-## أخلاق العلماء
-- تعذر: max() iterable argument is empty
-
-## صحيح البخاري
-- تعذر: max() iterable argument is empty
-
-## رياض الصالحين
-- تعذر: max() iterable argument is empty
-
-## بلوغ المرام من أدلة الأحكام
-- تعذر: max() iterable argument is empty
-
-## ألفية ابن مالك
-- تعذر: max() iterable argument is empty
-
-## الأدب المفرد
-- تعذر: max() iterable argument is empty
-
-## سنن ابن ماجه
-- تعذر: max() iterable argument is empty
-
-## جامع بيان العلم وفضله
+## عمدة الفقه
 - تعذر: max() iterable argument is empty

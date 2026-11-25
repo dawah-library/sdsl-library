@@ -1,8 +1,8 @@
 # ربط الكتب بمصورات طبعاتها
 
-## lalikai
-- لم يُربط: عدد الملفات (8) لا يوافق المجلدات (1): ShUIA_c.pdf|1، ShUIA_c.pdf|2، ShUIA_c.pdf|3، ShUIA_c.pdf|4، ShUIA_c.pdf|5، ShUIA_c.pdf|6، ShUIA_c.pdf|7، ShUIA_c.pdf|8
-## ibnbatta
-- لم يُربط: عدد الملفات (11) لا يوافق المجلدات (1): 00_110472.pdf، 01-02_110472.pdf|1، 01-02_110472.pdf|2، 03_110474.pdf، 04_110504.pdf، 05_110505.pdf، 06_110506.pdf، 07_110507.pdf
-## sharhtahawiyya
-- sharhtahawiyya ← https://files.turath.io/pdf/shamela/10549/161076.pdf (10 م.ب)
+## mughni
+- لم يُربط: مجلدات المكتبة مقسمة بالحجم لا بأجزاء المطبوع؛ يُعاد استيراده من تراث (TIO) ليُربط جزءًا جزءًا
+## rawdatnazir
+- لم يُربط: عدد الملفات (3) لا يوافق المجلدات (1): 00_155297.pdf|الغلاف، 01_155297.pdf، 02_155298.pdf
+## umdafiqh
+- umdafiqh ← https://files.turath.io/pdf/%D9%81%D9%82%D9%87%20%D8%AD%D9%86%D8%A8%D9%84%D9%8A/%D8%B9%D9%85%D8%AF%D8%A9%20%D8%A7%D9%84%D9%81%D9%82%D9%87%20-%20%D8%A7%D8%A8%D9%86%20%D9%82%D8%AF%D8%A7%D9%85%D8%A9%20-%20%D8%B7%20%D8%A7%D9%84%D8%B9%D8%B5%D8%B1%D9%8A%D8%A9/86952.pdf (3 م.ب)
