@@ -1096,27 +1096,40 @@ const GO=(()=>{
  const toks=q=>norm(q).split(" ").filter(w=>w&&!STOP.has(w));
  const RESUME=/(اخر|تابع|اكمل|استكمل|كمل|رجعني|ارجع).*(كتاب|قراء|اقرا|قرات|كنت)|^(تابع|اكمل|استكمل) ?(القراءه|قراءتي)?$/;
  const QUEST=/^(ما|ماذا|هل|كيف|لماذا|لم|متى|اين|اي|حكم|ما حكم|كم)\s|؟/;
- let SECS=null;
- const secs=()=>{if(SECS)return SECS;SECS=[];const seen=new Set();document.querySelectorAll('#mega a[href^="#/"]').forEach(a=>{const h=a.getAttribute("href"),t=a.textContent.replace(/[^\u0600-\u06FFa-zA-Z0-9\s:ـ()-]/g,"").trim();if(t&&!seen.has(h)){seen.add(h);SECS.push({t:a.textContent.trim(),n:norm(t),href:h})}});return SECS};
- const score=(name,tk,qn)=>{if(!tk.length)return 0;const n=norm(name);if(n===qn)return 100;if(tk.every(w=>n.includes(w))){const pre=n.startsWith(tk[0])?10:0;return 60+pre+Math.max(0,20-Math.abs(n.length-qn.length)/2)}return 0};
- function find(q){const qn=norm(q),tk=toks(q),out=[];if(!qn)return out;
-  if(RESUME.test(qn))out.push({t:"آخر كتاب قرأته",sub:"تابع من آخر صفحة",href:"#resume",s:200,k:"resume"});
-  if(tk.length){
-   secs().forEach(x=>{const s=score(x.n,tk,tk.join(" "));if(s)out.push({t:x.t,sub:"قسم",href:x.href,s:s+5,k:"sec"})});
-   lib.authors.forEach(a=>{if(a.mergedInto)return;const s=score(a.name,tk,tk.join(" "));if(s)out.push({t:a.name,sub:"مؤلف",href:"#/author/"+a.id,s,k:"author"})});
-   const seenSet=new Set();lib.books.forEach(b=>{if(b.hidden&&!isAdmin())return;if(b.set){if(seenSet.has(b.set))return;seenSet.add(b.set)}const s=score(b.setTitle||b.title,tk,tk.join(" "));if(s)out.push({t:b.setTitle||b.title,sub:(isArt(b)?"مقال":"كتاب")+" • "+((A(b.authorId)||{}).name||""),href:"#/book/"+b.id+(S.lastBy&&S.lastBy[b.id]>1?"":"/1"),s:s-(b.set?3:0),k:"book"})});
-  }
-  out.sort((a,b)=>b.s-a.s);return out.slice(0,6)}
+ const fold=w=>w.replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/ء/g,"").replace(/ظ/g,"ض").replace(/ذ/g,"ز").replace(/ث/g,"س").replace(/ص/g,"س").replace(/ط/g,"ت").replace(/ق/g,"ك").replace(/(.)\1+/g,"$1");
+ const al=w=>w.replace(/^ال(?=.{2,})/,"");
+ const lev=(a,b,mx)=>{if(Math.abs(a.length-b.length)>mx)return mx+1;let p=[];for(let j=0;j<=b.length;j++)p.push(j);for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){const v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));c[j]=v;if(v<lo)lo=v}if(lo>mx)return mx+1;p=c}return p[b.length]};
+ const sim=(a,b)=>{const x=al(a),y=al(b);return Math.max(x[0]===y[0]?sim0(a,b):(a===b?1:0),sim0(x,y))};
+ const sim0=(a,b)=>{if(a===b)return 1;if(a.length>=3&&b.includes(a))return a.length/b.length>.5?.97:.9;if(b.length>=4&&a.includes(b)&&b.length/a.length>.7)return .85;const tol=a.length<=3?0:a.length<=6?1:2;if(!tol||a[0]!==b[0])return 0;const d=lev(a,b,tol);return d>tol?0:1-d/Math.max(a.length,b.length)+.15};
+ const cat=a=>{const o=a.slice();for(let i=0;i<a.length-1;i++)o.push(a[i]+a[i+1]);return o};
+ let IDX=null,QAI=null,QAP=null;
+ const mk=(t,sub,href,k,b0)=>({t,sub,href,k,n:norm(t),nt:cat(norm(t).split(" ").filter(Boolean).map(fold)),b:b0||0});
+ const SURAS=["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس","التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
+ function build(){IDX=[];const seen=new Set();
+  document.querySelectorAll('#mega a[href^="#/"]').forEach(a=>{const h=a.getAttribute("href"),t=a.textContent.replace(/[^\u0600-\u06FFa-zA-Z0-9\s:ـ()-]/g,"").trim();if(t&&!seen.has(h)){seen.add(h);IDX.push(mk(t,"قسم",h,"sec",8))}});
+  lib.topics.forEach(t=>IDX.push(mk(t.name,"فرع في المكتبة","#/topic/"+t.id,"sec",6)));
+  try{FURQAN.forEach((f,k)=>IDX.push(mk(f[0],"قضية في الفرقان","#/furqan/"+(k+1),"sec",6)))}catch(e){}
+  SURAS.forEach((n,k)=>IDX.push(mk("سورة "+n,"المصحف","#/mushaf/"+(k+1),"sec",4)));
+  lib.authors.forEach(a=>{if(!a.mergedInto)IDX.push(mk(a.name,"مؤلف","#/author/"+a.id,"author",0))});
+  const ss=new Set();lib.books.forEach(b=>{if(b.hidden&&!isAdmin())return;if(b.set){if(ss.has(b.set))return;ss.add(b.set)}const o=mk(b.setTitle||b.title,(isArt(b)?"مقال":"كتاب")+" • "+((A(b.authorId)||{}).name||""),"#/book/"+b.id,"book",0);o.id=b.id;if(b.set)o.b=-3;IDX.push(o)})}
+ function loadQA(){if(QAP)return QAP;QAP=Promise.resolve(typeof QA!=="undefined"&&QA.index?QA.index():null).then(it=>{QAI=(it||[]).map(x=>mk(x[1],"سؤال وجواب","#/book/"+x[2]+"/"+(x[3]||1),"qa",-6))}).catch(()=>{QAI=[]});return QAP}
+ function rank(list,qt,qj,part){const out=[],mn=.7;for(const e of list){const ex=e.n===qj;let sum=0,hit=0;for(const t of qt){let b=0;for(const w of e.nt){const v=sim(t,w);if(v>b){b=v;if(b===1)break}}if(b>=mn){sum+=b;hit++}else if(!part){hit=-1;break}}if(hit<=0||(part&&hit*2<qt.length))continue;const avg=sum/qt.length,lenp=Math.min(14,Math.abs(e.n.split(" ").length-qt.length)*2);out.push({t:e.t,sub:e.sub,href:e.href,k:e.k,id:e.id,s:ex?100:Math.round(avg*80+e.b-lenp-(part?10:0)),fuzzy:!ex})}return out}
+ function find(q){const qn=norm(q),tk=toks(q),out=[];if(!qn)return{c:out,fuzzy:false};
+  if(RESUME.test(qn))out.push({t:"آخر كتاب قرأته",sub:"تابع من آخر صفحة",href:"#resume",s:300,k:"resume"});
+  if(tk.length){if(!IDX)build();const qt=tk.map(fold),qj=tk.join(" ");let all=rank(IDX,qt,qj);if(QAI)all=all.concat(rank(QAI,qt,qj));if(!all.length&&qt.length>1){all=rank(IDX,qt,qj,1);if(QAI)all=all.concat(rank(QAI,qt,qj,1))}all.sort((a,b)=>b.s-a.s);out.push(...all.slice(0,6))}
+  return{c:out,fuzzy:!!(out[0]&&out[0].fuzzy)}}
  async function last(){try{if(S.last&&S.last.id&&B(S.last.id))return{id:S.last.id,p:S.last.p||1}}catch(e){}
   try{if(typeof Auth!=="undefined"&&Auth.user&&Auth.sb){const{data}=await Auth.sb.from("book_reads").select("book_id,last_page,last_at").eq("user_id",Auth.user.id).order("last_at",{ascending:false}).limit(5);const r=(data||[]).find(x=>B(x.book_id));if(r)return{id:r.book_id,p:r.last_page||1}}}catch(e){}return null}
  async function openLast(){const l=await last();if(!l){toast("لا توجد جلسة قراءة محفوظة بعد. افتح كتابًا وسأحفظ موضعك.");return true}const b=B(l.id);toast("فتح «"+(b.setTitle||b.title)+"» من صفحة "+toAr(l.p));location.hash="#/book/"+l.id+"/"+l.p;return true}
- /* عند الإرسال: يفتح فورًا إن كانت النية «آخر كتاب» أو الاسم مطابقًا تمامًا لقسم أو مؤلف أو كتاب؛ وإلا يبقى البحث المعتاد */
+ const href=c=>c.k==="book"?c.href+(S.lastBy&&S.lastBy[c.id]>1?"":"/1"):c.href;
  function decide(q){const qn=norm(q);if(!qn)return false;if(RESUME.test(qn)){openLast();return true}
-  const c=find(q)[0];if(c&&c.s>=100&&c.k!=="resume"){location.hash=c.href;return true}return false}
+  const r=find(q),c=r.c[0],nx=r.c[1];if(!c||c.k==="resume"||c.k==="qa")return false;
+  if(c.s>=100){location.hash=href(c);return true}
+  if(c.fuzzy&&toks(q).length<=4&&c.s>=65&&(!nx||c.s-nx.s>=6)){toast("أقرب نتيجة: «"+c.t+"»");location.hash=href(c);return true}return false}
  let box=null;
  const hide=()=>{if(box){box.remove();box=null}};
- function show(inp){const q=inp.value.trim();hide();if(q.length<2)return;const c=find(q),f=inp.closest("form");if(!f)return;
-  const items=c.map(x=>`<a href="${x.href}" data-go="${x.k}"><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></a>`);
+ function show(inp){const q=inp.value.trim();hide();if(q.length<2)return;const r=find(q),c=r.c,f=inp.closest("form");if(!f)return;if(!QAI)loadQA().then(()=>{if(inp.value.trim()===q)show(inp)});
+  const items=(r.fuzzy&&c[0]?[`<div class="gomean">هل تقصد: «${esc(c[0].t)}»؟</div>`]:[]).concat(c.map(x=>`<a href="${href(x)}" data-go="${x.k}"><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></a>`));
   items.push(QUEST.test(norm(q))||q.length>25?`<a href="#/ask?q=${encodeURIComponent(q)}"><b>اسأل المساعد العلمي</b><span>إجابة موثقة من نصوص المكتبة</span></a>`:"",`<a href="#/search?q=${encodeURIComponent(q)}"><b>ابحث في المكتبة عن «${esc(q)}»</b><span>كل النتائج</span></a>`);
   box=document.createElement("div");box.className="gosug";box.setAttribute("role","listbox");box.innerHTML=items.join("");f.style.position="relative";f.appendChild(box)}
  document.addEventListener("input",e=>{const i=e.target;if(i&&i.matches&&i.matches('form[data-form="quick"] input[name="q"]')){clearTimeout(GO._t);GO._t=setTimeout(()=>show(i),160)}});
