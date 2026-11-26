@@ -43,6 +43,8 @@ const AP = {
     if (this.el) return this.el;
     const a = this.el = new Audio(); a.preload = "auto"; a.setAttribute("playsinline", "");
     a.addEventListener("ended", () => this.next(true));
+    /* قص دفقة التشويش «تش» في ختام المقاطع: بيان الصفحة يحمل e (زمن الإيقاف) من tools/audio-tail-scan.py */
+    setInterval(() => { if (this.endAt && !a.paused && a.currentTime >= this.endAt) { this.endAt = 0; this.next(true); } }, 40);
     a.addEventListener("timeupdate", () => this.tick());
     a.addEventListener("play", () => this.paint()); a.addEventListener("pause", () => this.paint());
     a.addEventListener("waiting", () => this.paint("loading")); a.addEventListener("playing", () => this.paint());
@@ -72,13 +74,13 @@ const AP = {
   },
   load(i, t, play) {
     const a = this.audio(), it = this.q[i]; if (!it) return this.stop();
-    this.i = i; a.src = it.u || AUDIO.url(it.bid, it.f); a.playbackRate = this.mode === "radio" ? 1 : this.rate;
+    this.i = i; this.endAt = 0; a.src = it.u || AUDIO.url(it.bid, it.f); a.playbackRate = this.mode === "radio" ? 1 : this.rate;
     const seekTo = () => { if (t) { try { a.currentTime = t; } catch (e) { } } a.removeEventListener("loadedmetadata", seekTo); };
     a.addEventListener("loadedmetadata", seekTo);
     if (play) a.play().catch(() => this.paint());
     this.sents = []; this.si = -1; this.meta(); this.paint(); this.loadText(it);
   },
-  async loadText(it) { if (it.u) { this.sents = []; this.si = -1; this.paintText(); return; } const m = await AUDIO.manifest(it.bid); if (this.cur() !== it) return; const pg = m && m.pages && m.pages[String(it.p)]; this.sents = (!it.rec && pg && pg.s) || []; this.si = -1; this.paintText(); },
+  async loadText(it) { if (it.u) { this.sents = []; this.si = -1; this.paintText(); return; } const m = await AUDIO.manifest(it.bid); if (this.cur() !== it) return; const pg = m && m.pages && m.pages[String(it.p)]; this.endAt = (!it.rec && pg && pg.e) || 0; this.sents = (!it.rec && pg && pg.s) || []; this.si = -1; this.paintText(); },
   meta() {
     const it = this.cur(); if (!it || !("mediaSession" in navigator)) return; const b = B(it.bid);
     try { navigator.mediaSession.metadata = new MediaMetadata({ title: it.title || it.rec || ((b ? b.setTitle || b.title : it.bid) + (it.rec ? "" : " — " + (b && PL(b, it.p - 1) || "صفحة " + it.p))), artist: this.mode === "radio" ? "راديو المكتبة: " + this.ch.n : b ? A(b.authorId).name : "", album: SITENAME, artwork: [{ src: "assets/logo-sdsl-128.png", sizes: "128x128", type: "image/png" }, { src: "assets/logo-sdsl.png", sizes: "512x512", type: "image/png" }] }); } catch (e) { }
