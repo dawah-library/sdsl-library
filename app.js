@@ -262,7 +262,7 @@ const HLAY={D:null,NAMES:{start:"ابدأ من هنا",quote:"عبارات فض�
 function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
  view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1 class="callig" aria-label="مكتبة الدعوة السلفية الرقمية">مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةُ</h1>
  <p class="ayah" lang="ar">﴿قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ <span style="white-space:nowrap">ٱلْمُشْرِكِينَ﴾ <span class="ayref">[يوسف: ١٠٨]</span></span></p>
- <form class="sbox" data-form="quick"><input name="q" type="search" placeholder="ابحث في الكتب والمقالات والمؤلفين" aria-label="بحث"><button class="btn p">بحث</button></form></section>${typeof PORTAL!=="undefined"?PORTAL.home():""}
+ <p class="gotitle">إلى أين تريد أن تذهب؟</p><form class="sbox gobox" data-form="quick"><input name="q" type="search" autocomplete="off" placeholder="اكتب أو قل: اسم كتاب، مؤلف، قسم، أو «افتح لي آخر كتاب كنت أقرأه»" aria-label="إلى أين تريد أن تذهب؟"><button class="btn p">اذهب</button></form></section>${typeof PORTAL!=="undefined"?PORTAL.home():""}
  <div data-hs="start"> <nav class="doors" aria-label="ابدأ من هنا"><a href="#/library?c=dawah"><b>أقرأ</b><span>كتب مشايخ الدعوة بالنص والمصورة، والتراث المعتمد</span></a><a href="#/search"><b>أبحث في مسألة</b><span>في نصوص الكتب والمقالات والفتاوى، أو اسأل المكتبة</span></a><a href="#/paths"><b>أتعلم بمسار</b><span>مسارات علمية متدرجة، واختبارات، وحفظ المتون</span></a></nav></div>
  <div data-hs="quote"> <section id="hquote" class="hquote" hidden aria-live="polite"></section></div>
  <div data-hs="study"> <div id="studyhome"></div></div>
@@ -1089,6 +1089,39 @@ async function vPrint(){
  $("#prcsv").onclick=()=>{const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"',rows=[["الإصدار","النوع","الأصل","الطبعة","التاريخ","عدد النسخ","المطبعة","ملاحظات"]];
   prData().items.forEach(it=>it.editions.length?it.editions.forEach(e=>rows.push([it.title,it.kind,it.origin,prName(e.n),e.date,e.copies,e.press,e.notes])):rows.push([it.title,it.kind,it.origin,"مسودة","","","",""]));dl("prints.csv",rows.map(r=>r.map(q).join(",")).join("\n"),"text/csv")};
  $("#primp").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.items))throw 0;const d=prData(),ids=new Set(d.items.map(x=>x.id));j.items.forEach(x=>{if(x&&x.id&&!ids.has(x.id))d.items.push(x)});prSave(d);list();stats();msg("استُورد دون حذف شيء.")}catch(x){msg("ملف غير صالح.")}}}
+/* ---------- «إلى أين تريد أن تذهب؟» (من مهام المساعد): توجيه فوري إلى قسم أو مؤلف أو كتاب أو مقال أو آخر جلسة قراءة، بالكتابة أو الصوت ---------- */
+const GO=(()=>{
+ const norm=s=>String(s||"").replace(/[ً-ْٰـ]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[^ء-ي0-9a-z\s]/gi," ").replace(/\s+/g," ").trim();
+ const STOP=new Set(["افتح","افتحي","لي","اذهب","روح","خذني","وديني","اريد","ابي","ابغي","اعرض","ورني","الي","الى","في","عن","من","كتاب","كتب","قسم","مؤلف","الشيخ","شيخ","مقال","صفحه","باب","اللي","هو","هي"]);
+ const toks=q=>norm(q).split(" ").filter(w=>w&&!STOP.has(w));
+ const RESUME=/(اخر|تابع|اكمل|استكمل|كمل|رجعني|ارجع).*(كتاب|قراء|اقرا|قرات|كنت)|^(تابع|اكمل|استكمل) ?(القراءه|قراءتي)?$/;
+ const QUEST=/^(ما|ماذا|هل|كيف|لماذا|لم|متى|اين|اي|حكم|ما حكم|كم)\s|؟/;
+ let SECS=null;
+ const secs=()=>{if(SECS)return SECS;SECS=[];const seen=new Set();document.querySelectorAll('#mega a[href^="#/"]').forEach(a=>{const h=a.getAttribute("href"),t=a.textContent.replace(/[^\u0600-\u06FFa-zA-Z0-9\s:ـ()-]/g,"").trim();if(t&&!seen.has(h)){seen.add(h);SECS.push({t:a.textContent.trim(),n:norm(t),href:h})}});return SECS};
+ const score=(name,tk,qn)=>{if(!tk.length)return 0;const n=norm(name);if(n===qn)return 100;if(tk.every(w=>n.includes(w))){const pre=n.startsWith(tk[0])?10:0;return 60+pre+Math.max(0,20-Math.abs(n.length-qn.length)/2)}return 0};
+ function find(q){const qn=norm(q),tk=toks(q),out=[];if(!qn)return out;
+  if(RESUME.test(qn))out.push({t:"آخر كتاب قرأته",sub:"تابع من آخر صفحة",href:"#resume",s:200,k:"resume"});
+  if(tk.length){
+   secs().forEach(x=>{const s=score(x.n,tk,tk.join(" "));if(s)out.push({t:x.t,sub:"قسم",href:x.href,s:s+5,k:"sec"})});
+   lib.authors.forEach(a=>{if(a.mergedInto)return;const s=score(a.name,tk,tk.join(" "));if(s)out.push({t:a.name,sub:"مؤلف",href:"#/author/"+a.id,s,k:"author"})});
+   const seenSet=new Set();lib.books.forEach(b=>{if(b.hidden&&!isAdmin())return;if(b.set){if(seenSet.has(b.set))return;seenSet.add(b.set)}const s=score(b.setTitle||b.title,tk,tk.join(" "));if(s)out.push({t:b.setTitle||b.title,sub:(isArt(b)?"مقال":"كتاب")+" • "+((A(b.authorId)||{}).name||""),href:"#/book/"+b.id+(S.lastBy&&S.lastBy[b.id]>1?"":"/1"),s:s-(b.set?3:0),k:"book"})});
+  }
+  out.sort((a,b)=>b.s-a.s);return out.slice(0,6)}
+ async function last(){try{if(S.last&&S.last.id&&B(S.last.id))return{id:S.last.id,p:S.last.p||1}}catch(e){}
+  try{if(typeof Auth!=="undefined"&&Auth.user&&Auth.sb){const{data}=await Auth.sb.from("book_reads").select("book_id,last_page,last_at").eq("user_id",Auth.user.id).order("last_at",{ascending:false}).limit(5);const r=(data||[]).find(x=>B(x.book_id));if(r)return{id:r.book_id,p:r.last_page||1}}}catch(e){}return null}
+ async function openLast(){const l=await last();if(!l){toast("لا توجد جلسة قراءة محفوظة بعد. افتح كتابًا وسأحفظ موضعك.");return true}const b=B(l.id);toast("فتح «"+(b.setTitle||b.title)+"» من صفحة "+toAr(l.p));location.hash="#/book/"+l.id+"/"+l.p;return true}
+ /* عند الإرسال: يفتح فورًا إن كانت النية «آخر كتاب» أو الاسم مطابقًا تمامًا لقسم أو مؤلف أو كتاب؛ وإلا يبقى البحث المعتاد */
+ function decide(q){const qn=norm(q);if(!qn)return false;if(RESUME.test(qn)){openLast();return true}
+  const c=find(q)[0];if(c&&c.s>=100&&c.k!=="resume"){location.hash=c.href;return true}return false}
+ let box=null;
+ const hide=()=>{if(box){box.remove();box=null}};
+ function show(inp){const q=inp.value.trim();hide();if(q.length<2)return;const c=find(q),f=inp.closest("form");if(!f)return;
+  const items=c.map(x=>`<a href="${x.href}" data-go="${x.k}"><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></a>`);
+  items.push(QUEST.test(norm(q))||q.length>25?`<a href="#/ask?q=${encodeURIComponent(q)}"><b>اسأل المساعد العلمي</b><span>إجابة موثقة من نصوص المكتبة</span></a>`:"",`<a href="#/search?q=${encodeURIComponent(q)}"><b>ابحث في المكتبة عن «${esc(q)}»</b><span>كل النتائج</span></a>`);
+  box=document.createElement("div");box.className="gosug";box.setAttribute("role","listbox");box.innerHTML=items.join("");f.style.position="relative";f.appendChild(box)}
+ document.addEventListener("input",e=>{const i=e.target;if(i&&i.matches&&i.matches('form[data-form="quick"] input[name="q"]')){clearTimeout(GO._t);GO._t=setTimeout(()=>show(i),160)}});
+ document.addEventListener("click",e=>{const a=e.target.closest(".gosug a");if(a){if(a.dataset.go==="resume"){e.preventDefault();openLast()}hide();const i=document.querySelector('form[data-form="quick"] input[name="q"]');return}if(!e.target.closest('form[data-form="quick"]'))hide()});
+ return{decide,find,openLast,hide}})();
 /* ---------- القبسات ---------- */
 let pendingQ=null;
 const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080",fz:100,fw:400,lh:1.8,al:"center",sa:true,sb:true,wm:"corner",url:true},ls.get("qset",{}));
@@ -2510,7 +2543,8 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const k=f.dataset.form,fd=new FormData(f);
  const qs=(skipNew)=>{const p=new URLSearchParams();fd.forEach((v,n)=>{if(v&&!(skipNew&&n==="s"&&v==="new"))p.set(n,v)});return p.toString()};
  if(k==="note")return noteSave(f);if(k==="bcast")return bcSend(f);if(k==="plan")return planSave(f);
- if(k==="quick"||k==="search")location.hash="#/search?"+qs();
+ if(k==="quick"&&GO.decide(String(fd.get("q")||""))){GO.hide();return}
+ if(k==="quick"||k==="search"){GO.hide();location.hash="#/search?"+qs()}
  else if(k==="libq"){const s=qs(true);location.hash="#/library"+(s?"?"+s:"")}
  else if(k==="artq"||k==="listq"){const s=qs(true);location.hash="#/"+(f.dataset.route||"articles")+(s?"?"+s:"")}
  else if(k==="pcomment"){const t=String(fd.get("t")||"").trim();if(!t)return;const btn=f.querySelector("button");btn.disabled=true;Social.comment(f.dataset.id,t,fd.get("parent")).then(()=>openComments(f.closest(".post"))).catch(x=>{alert(x.message);btn.disabled=false})}
