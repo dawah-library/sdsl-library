@@ -1714,13 +1714,13 @@
   {
    "id": "fb-mdarjup",
    "type": "facebook",
-   "name": "(غير معروف: mdarjup)",
+   "name": "مدارج",
    "fb": "mdarjup",
    "url": "https://www.facebook.com/mdarjup/",
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "(غير معروف: mdarjup)",
+   "author": "مدارج",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -1739,7 +1739,8 @@
     }
    },
    "note": "مُتجاهَل بطلب الإدارة",
-   "auto": true
+   "auto": true,
+   "aid": "w217"
   },
   {
    "id": "fb-mohamadalazhary1",
@@ -2153,7 +2154,7 @@
   {
    "id": "fb-bsmserver",
    "type": "facebook",
-   "name": "(غير معروف: bsm.server)",
+   "name": "باسم عبد رب الرسول",
    "fb": "bsm.server",
    "url": "https://www.facebook.com/bsm.server/",
    "kind": "person",
