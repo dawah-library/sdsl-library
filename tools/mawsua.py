@@ -12,6 +12,7 @@
 - الطابور: data/mawsua/_queue.json {"items": [{"k": "aqeeda", "do": "plan"}, {"k": "fiqh", "do": "build", "n": 30}]} — تضيفه الإدارة.
 الاستعمال: python3 tools/mawsua.py [plan|build <k> [n]] — بلا وسائط: ينفّذ الطابور.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("mawsua")  # يدوي فقط
 import datetime, json, os, re, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)

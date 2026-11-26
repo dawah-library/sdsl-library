@@ -8,6 +8,7 @@
              {"id": "<كتاب>", "rec": {"f": "au....mp3", "t": "عنوان التسجيل", "p": 1}}]}
 المتغيرات: TTS_MAX_MIN (حد دقائق التشغيل)، TTS_CONC (التوازي)، TTS_ONLY (كتب بعينها)، TTS_REFRESH=1 (إعادة الصفحات التي تغيّر نصها)
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("tts")  # يدوي فقط
 import asyncio, glob, hashlib, json, os, re, subprocess, sys, time, urllib.request
 
 # الموقع خلف جدار Cloudflare يرفض توقيع urllib الافتراضي (خطأ 1010): ترويسة متصفح لكل الطلبات

@@ -12,6 +12,7 @@
     موسومة «tafrigh» وروابط الأصل، ثم يُضاف إلى طابور «النسخة المحررة» (data/tfedit/_queue.json) فتُبنى منه نسخة مرتبة
     بعناوين وفقرات (وبأسلوب كتابي عند الطلب) — على منهج دليل معايير التحرير (#/standards).
 لا يُنشر للأعضاء إلا بعد مراجعة الإدارة (hidden حتى الاعتماد)."""
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("transcribe")  # يدوي فقط
 import shutil, json, os, re, subprocess, sys, time, tempfile, glob, base64, urllib.request, urllib.error, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); Q = os.path.join(D, "transcribe", "_queue.json")
 from gkeys import keys as _gkeys  # noqa: E402  (tools/gkeys.py)

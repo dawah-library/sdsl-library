@@ -8,6 +8,7 @@
 يُعلَّم المراجَع rv=2، فتُستأنف المراجعة من حيث توقفت إن نفدت الحصة أو المهلة. لا يُنشئ أسئلة جديدة.
 المتغيرات: QR_ONLY (كتب بعينها)، QR_MINUTES، QR_COMMIT=1.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("quiz_review")  # يدوي فقط
 import json, os, re, sys, time, subprocess, glob, random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
