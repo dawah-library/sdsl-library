@@ -30,8 +30,14 @@ const FBIN = (() => {
   const authorNames = () => (lib.authors || []).filter(a => !a.mergedInto && (a.col || "dawah") === "dawah").map(a => a.name).sort((x, y) => x.localeCompare(y, "ar"));
   function fbHandle(u) { const m = String(u).trim().match(/^https?:\/\/(?:www\.|m\.|web\.|mbasic\.)?(?:facebook\.com|fb\.com)\/(profile\.php\?id=\d+|[^/?#]+)/i); if (!m) return null; const h = m[1]; return /^(share|sharer|groups|watch|pages|story\.php|permalink\.php|photo)/i.test(h) ? null : h; }
   async function addAccount() {
-    const st = $("#fbast"), isNew = $("#fbanew").checked, nm = $("#fbaa").value.trim(), url = $("#fbau").value.trim(), h = fbHandle(url);
+    const st = $("#fbast"), isNew = $("#fbanew").checked, nm = $("#fbaa").value.trim(), url = $("#fbau").value.trim();
+    let h = fbHandle(url);
     if (!nm) return toast(isNew ? "اكتب اسم المؤلف الجديد" : "اختر الكاتب من القائمة");
+    if (!h && /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/share\//i.test(url)) { // رابط مشاركة: يُحلّ إلى الصفحة الفعلية
+      st.textContent = "جارٍ حلّ رابط المشاركة…";
+      try { const r = await fetch("/api/fbr?u=" + encodeURIComponent(url), { headers: { Authorization: "Bearer " + (Auth.token || "") } }), j = await r.json(); if (j && j.ok) h = fbHandle(j.url) || j.handle; } catch (e) { }
+      st.textContent = "";
+    }
     if (!h) return toast("رابط فيسبوك غير صالح: ضع رابط صفحة الحساب نفسها");
     let au = (lib.authors || []).find(a => !a.mergedInto && [a.name].concat(a.aliases || []).some(x => norm(x) === norm(nm)));
     if (!isNew && !au) return toast("الاسم ليس في قائمة المؤلفين: اخترْه من القائمة أو فعّل «مؤلف جديد»");
@@ -58,8 +64,7 @@ const FBIN = (() => {
     <details class="hfold"><summary>الطريقة الثانية: انسخ والصق (حاسوب أو جوال)</summary><div><p>في صفحة الشيخ بفيسبوك: حدد المنشورات (أو اضغط Ctrl+A) وانسخها، ثم الصقها هنا:</p><div id="fbpaste" class="fbpaste" contenteditable="true" aria-label="الصق هنا"></div></div></details>
     <details class="hfold" id="fbadd"><summary>➕ إضافة كاتب / حساب فيسبوك</summary><div>
       <p class="mut">اختر اسم صاحب الحساب من المؤلفين الموجودين في الموقع (اكتب بعض أحرف الاسم فتظهر الأسماء المطابقة)، وضع رابط حسابه. وإن لم يكن له اسم في الموقع فعّل «مؤلف جديد» واكتب الاسم.</p>
-      <div class="row"><label>الكاتب <input id="fbaa" list="fbal" placeholder="ابحث بالاسم…" autocomplete="off"></label>
-      <datalist id="fbal">${authorNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+      <div class="row"><label>الكاتب <input id="fbaa" placeholder="ابحث بالاسم…" autocomplete="off"></label><div id="fbsug" class="fbsug" hidden></div>
       <label><input type="checkbox" id="fbanew"> مؤلف جديد (غير موجود في القائمة)</label></div>
       <div class="row"><label>رابط الحساب في فيسبوك <input id="fbau" type="url" dir="ltr" placeholder="https://www.facebook.com/..." style="min-width:260px"></label></div>
       <button class="btn p" id="fbaok">إضافة الحساب</button> <span id="fbast" class="mut"></span>
@@ -67,6 +72,11 @@ const FBIN = (() => {
     <h3>المصادر المحددة</h3><div class="chips">${fbs.map(x => `<a class="chip" href="${esc(x.url || "https://www.facebook.com/" + (x.handle || ""))}" target="_blank" rel="noopener">${esc(x.name)} ↗</a>`).join("") || '<span class="mut">أضف الحسابات من «الإدارة ← مراجعة المستجلب».</span>'}</div>
     <div id="fbres"></div>`);
     $("#fbaok").onclick = addAccount;
+    { const inp = $("#fbaa"), box = $("#fbsug"), all = authorNames();
+      const upd = () => { const q = norm(inp.value); if (!q) { box.hidden = true; return; }
+        const hit = all.filter(n => norm(n).includes(q)).slice(0, 8); box.innerHTML = hit.map(n => `<button type="button" class="fbsg" data-n="${esc(n)}">${esc(n)}</button>`).join("") + (hit.some(n => norm(n) === q) ? "" : `<button type="button" class="fbsg fbsn" data-new="1">➕ إنشاء مؤلف جديد: «${esc(inp.value.trim())}»</button>`); box.hidden = false; };
+      inp.addEventListener("input", upd); inp.addEventListener("focus", upd);
+      box.addEventListener("click", e => { const b = e.target.closest(".fbsg"); if (!b) return; if (b.dataset.new) $("#fbanew").checked = true; else { inp.value = b.dataset.n; $("#fbanew").checked = false; } box.hidden = true; }); }
     if (DATA) show(DATA, fbs);
     const pz = $("#fbpaste"); pz.addEventListener("paste", e => { e.preventDefault(); const cd = e.clipboardData, posts = fromPaste(cd.getData("text/html"), cd.getData("text/plain"));
       if (!posts.length) return toast("لم أجد منشورات في المنسوخ"); show({ page: { name: "", url: "" }, posts }, fbs); });
