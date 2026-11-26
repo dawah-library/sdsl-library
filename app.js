@@ -171,12 +171,14 @@ async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
  if(!QUOTES){try{const r=await fetch("data/quotes.json");QUOTES=r.ok?(await r.json()).items||[]:[]}catch(e){QUOTES=[]}}
  const el=$("#hquote");if(!el||!QUOTES.length)return;
  /* بطاقة «من وصايا العلم والقراءة»: تصنيف، ونص بخط أميري، وقائله، ومصدره من كتب المكتبة؛ تتقلب آليًا مع شريط تقدّم (يتوقف عند المرور) */
- const CATS=[["","الكل"],["ilm","فضل العلم"],["qiraa","القراءة والكتب"],["adab","آداب الطالب"],["wasaya","وصايا"]],CI={ilm:"✦",qiraa:"📖",adab:"🌿",wasaya:"💡"};
+ const CATS=[["week","وصايا الأسبوع"],["","الكل"],["ilm","فضل العلم"],["qiraa","القراءة والكتب"],["adab","آداب الطالب"],["wasaya","وصايا"]],CI={ilm:"✦",qiraa:"📖",adab:"🌿",wasaya:"💡"};
  /* التمرير على مدار الساعة (طلب المدير): ترتيب ثابت لا يتغير بين الزيارات، والعبارة المعروضة تتبع الساعة (كل ١٤ ثانية عبارة)،
     فلا تبدأ كل زيارة من أول عبارة بل من حيث بلغ التمرير، كشريط المكتبة؛ والتنقل اليدوي إزاحة عن موضع الساعة */
  const PER=14000,clk=()=>Math.floor(Date.now()/PER),ord=QUOTES.map((q,k)=>[q,(k*2654435761+97)%4294967296]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
- let cat=(()=>{try{return localStorage.getItem("hqcat")||""}catch(e){return""}})(),L=[],i=0,off=0;
- const pick=()=>{L=ord.filter(q=>!cat||q.c===cat);if(!L.length){cat="";L=ord}off=0;i=clk()};
+ /* وصايا الأسبوع: مجموعة من ١٢ وصية تتبدل كل أسبوع (الاثنين) لكل الزوار بحساب رقم الأسبوع من التاريخ، بلا خادم ولا مهمة مجدولة؛ تدور على الترتيب الثابت فلا تتكرر عبارة قبل استنفاد المجموعة */
+ const WK=()=>{const w=Math.floor((Date.now()/864e5+3)/7),N=ord.length,n=Math.min(12,N);return Array.from({length:n},(_,k)=>ord[(w*n+k)%N])};
+ let cat=(()=>{try{const v=localStorage.getItem("hqcat");return v===null?"week":v}catch(e){return"week"}})(),L=[],i=0,off=0;
+ const pick=()=>{L=cat==="week"?WK():ord.filter(q=>!cat||q.c===cat);if(!L.length){cat="";L=ord}off=0;i=clk()};
  // القائل في الأعلى (أمر المدير): الآية «قال الله تعالى»، والحديث «قال رسول الله ﷺ»، والأثر والقول «قال فلان»؛ وما لم يُسمَّ قائله «ذكر <مؤلف الكتاب>» (قد ينقله عن غيره)
  const head=q=>q.k==="آية"?"قال الله تعالى:":q.k==="حديث"?"قال رسول الله ﷺ:":q.who?(/^(سُ?ئِ?ل|سئل|رُ?وي|روي|عن )/.test(q.who)?q.who+":":"قال "+q.who+":"):q.author?"ذكر "+q.author+":":"";
  const txt=q=>q.k==="آية"?`﴿${q.t}﴾`:q.k==="حديث"||q.k==="أثر"?`«${q.t}»`:q.t;
