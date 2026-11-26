@@ -146,6 +146,7 @@ REVIEW = """
 >>>
 اعتمد على الصورة أولًا، واستعن بالمسودة مرجعًا ثانيًا للمقارنة: إن اختلفت قراءتك عن المسودة في كلمة فتحقق منها في الصورة جيدًا، وإن بقي شك فضعها بين ⟪ ⟫."""
 STATS = {"gemini": 0, "tesseract": 0}
+USAGE = {}  # عداد طلبات Gemini الناجحة لكل نموذج في هذا التشغيل (لقياس الاستهلاك)
 HAND = set()  # صفحات مخطوطة بخط اليد: تُحال إلى المدقق الأقوى وتُعلَّم للمراجعة
 REPORT = []
 UNREVIEWED = []  # صفحات لم يراجعها Gemini (ازدحام أو نفاد الحصة)
@@ -259,7 +260,7 @@ def gemini_call(parts, max_tokens=8192, models=None, fail=None):
             t = "".join(p.get("text", "") for p in (c.get("content") or {}).get("parts", []) if not p.get("thought"))
             if t.strip():
                 fail[0] = 0
-                TL.model = models[0]
+                TL.model = models[0]; USAGE[models[0]] = USAGE.get(models[0], 0) + 1
                 return t
             ERRS["%s رد فارغ (%s)" % (models[0], c.get("finishReason"))] += 1
             raise RuntimeError("رد فارغ: %s" % c.get("finishReason"))
@@ -1322,6 +1323,7 @@ def main():
         print(f"   تم: {entry.get('n', '?')} صفحة")
         if ERRS: REPORT.append("- أخطاء Gemini: " + "، ".join("%s ×%d" % kv for kv in ERRS.most_common(6))); ERRS.clear()
         if STATS.get("digital"): REPORT.append("- منها إلكترونية: %d" % STATS["digital"])
+        if USAGE: REPORT.append("- طلبات Gemini الناجحة في هذا التشغيل: %d (%s)" % (sum(USAGE.values()), "، ".join("%s %d" % kv for kv in sorted(USAGE.items()))))
         REPORT.append("## %s (%s)\n- الصفحات: %s، راجعها Gemini: %d، دون مراجعة: %d، مواضع شك: %d" % (entry.get("title"), bid, entry.get("n", "?"), STATS["gemini"], STATS["tesseract"], sum(len(v) for v in UNCERTAIN.values())))
     cat["version"] = int(datetime.datetime.now().timestamp() * 1000)
     json.dump(cat, open(cat_path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
