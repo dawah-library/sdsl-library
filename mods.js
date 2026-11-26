@@ -1,0 +1,8 @@
+/* تحميل مؤجل لوحدات الأقسام: الصفحة الأولى تحتاج النواة فقط (config وapp وside…)، وبقية الوحدات (نحو ٧٠٠ك.ب مضغوطة) تُحمَّل بعد ظهور الصفحة بالترتيب نفسه.
+   أي قسم يحتاج وحدة لم تصل بعد ينتظر وصولها ثم يُعرض (route في app.js). */
+window.MODS=(()=>{const L=["askx.js", "social.js", "community.js", "audio.js", "words.js", "qa.js", "tashjir.js", "export.js", "docx.js", "hifz.js", "dm.js", "paths.js", "dawah.js", "manage.js", "eds.js", "team.js", "alam.js", "ithra.js", "releases.js", "majpress/core.js", "majpress/art.js", "majalla.js", "study.js", "kurrasa.js", "mutun.js", "learn.js", "cmpai.js", "sharh.js", "eleven.js", "outreach.js", "khutab.js", "story.js", "mawsua.js", "misbar.js", "tala.js", "talaplay.js", "talaqasas.js", "talavid.js", "qfix.js", "voice.js", "video.js", "stats.js", "groups.js", "standards.js", "guide.js", "mushaf.js", "hadith.js", "athar.js", "portal.js", "saff.js", "brain.js", "tamarin.js", "arabic.js", "fbin.js", "dev.js", "proof.js", "tr.js", "about.js"],core=new Set(["","book","library","search","articles","fatawa","bayanat","topic","topics","author","authors"]);
+ let res;const ready=new Promise(r=>res=r),M={done:false,ready,core,list:L};
+ const fin=()=>{if(M.done)return;M.done=true;res();try{if(typeof sideRe==="function")sideRe()}catch(e){}};
+ M.start=()=>{if(M.started)return;M.started=true;let n=L.length;if(!n)return fin();L.forEach(u=>{const s=document.createElement("script");s.src=u;s.async=false;s.onload=s.onerror=()=>{if(--n===0)fin()};document.head.appendChild(s)})};
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(M.start,0));else setTimeout(M.start,0);
+ return M})();
