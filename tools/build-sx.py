@@ -122,6 +122,12 @@ def main():
     (OUT / "_docs.json").write_text(json.dumps({"k": docs, "n": npages, "shards": SHARDS, "osh": OSH}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"sx: {len(docs)} مادة، {npages} صفحة، {len(term_doc)} كلمة، {size/1048576:.1f} م.ب، {time.time()-t0:.0f} ث")
+    # قياس الاسترجاع بعد بناء الفهرس (المرحلة أ، tools/ask-eval.js): تُنشر النتيجة مع الموقع في data/eval/ask-eval.json. لا يُفشل البناء أبدًا.
+    try:
+        import subprocess
+        r = subprocess.run(["node", str(R / "tools" / "ask-eval.js")], capture_output=True, text=True, timeout=240)
+        print("ask-eval:", (r.stdout or r.stderr)[-400:].strip())
+    except Exception as e: print("ask-eval تعذر:", e)
 
 if __name__ == "__main__":
     main()
