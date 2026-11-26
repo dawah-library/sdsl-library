@@ -192,6 +192,27 @@ def main():
         if who: it["who"] = who
         if ref: it["ref"] = ref
         out.append(it)
+    # مجموعات الوصايا (نحو ٥٠ وصية للمجموعة): الإسناد محفوظ في data/quotes-groups.json فلا ينتقل عنصر بين المجموعات
+    # عند الإضافة؛ والجديد يملأ المجموعة المفتوحة بتناوب التصنيفات حتى ٥٠، ثم تُفتح مجموعة جديدة
+    GS = 50; gf = os.path.join(ROOT, "data/quotes-groups.json")
+    gm = json.load(open(gf, encoding="utf-8")) if os.path.exists(gf) else {}
+    key = lambda it: it["b"] + "|" + str(it["p"]) + "|" + it["t"][:24]
+    cnt = {}
+    for it in out:
+        if key(it) in gm: cnt[gm[key(it)]] = cnt.get(gm[key(it)], 0) + 1
+    new = [it for it in out if key(it) not in gm]
+    by = {}
+    for it in new: by.setdefault(it["c"], []).append(it)
+    order = []
+    while any(by.values()):
+        for c in sorted(by):
+            if by[c]: order.append(by[c].pop(0))
+    g = max(cnt) if cnt else 1
+    for it in order:
+        if cnt.get(g, 0) >= GS: g += 1
+        gm[key(it)] = g; cnt[g] = cnt.get(g, 0) + 1
+    for it in out: it["g"] = gm[key(it)]
+    json.dump(gm, open(gf, "w", encoding="utf-8"), ensure_ascii=False, indent=0, sort_keys=True)
     json.dump({"note": "يولّده tools/quotes.py من نصوص الكتب؛ لا يُعدَّل يدويًا", "items": out},
               open(os.path.join(ROOT, "data/quotes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=0)
     print(len(out), "عبارة")
