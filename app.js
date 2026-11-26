@@ -985,6 +985,7 @@ const PRINT_STUDY=[
 ["يصلح الآن","التصدير بمقاسات المطابع من القارئ (متاح)، وأداة الأغلفة (هنا)، وتجهيز قوالب كراسات من الاختبارات، وتدوين الدراسة وعرضها."],
 ["يؤجل","التعاقد مع دار أو مطبعة، وأي بيع، وصندوق الوقف وحسابه، وطباعة كتب لمؤلفين قبل ثبوت الإذن، والمشاركة في المعارض."]];
 async function vPrint(){
+ if(!canPrint())return view(`<h2>المطبوعات</h2><p class="note">هذا القسم قيد الإعداد ويظهر حاليًا للإدارة فقط.</p>`);
  view(`<h2>المطبوعات</h2><p class="note">مشروع قيد الدراسة المبدئية: لا طباعة ولا بيع الآن. التنفيذ الفعلي بعد استقرار الموقع ووفرة المراجع وبقرار الإدارة.</p>
  ${PRINT_STUDY.map(([h,t])=>`<h3>${esc(h)}</h3><p>${esc(t)}</p>`).join("")}
  <h3>مقاسات المطابع المعتمدة في الموقع</h3><ul>${PRESS.map(p=>`<li>${esc(p[0])}: ${esc(p[1])}</li>`).join("")}</ul>
@@ -1385,8 +1386,10 @@ async function askSubmit(f){const ta=f.querySelector("[name=m]"),text=ta.value.t
 const NAVDEF=[...document.querySelectorAll("header nav a")].map(a=>[a.getAttribute("href"),a.textContent]);
 function applyLabels(){const L=CAT.labels||{};if(L.col_dawah)COL.dawah=L.col_dawah;if(L.col_turath)COL.turath=L.col_turath;
  $$("header nav a").forEach(a=>{const k="nav:"+a.getAttribute("href");if(L[k])a.textContent=L[k]});
- const adm=$('header nav a[href="#/admin"]');if(adm)adm.style.display=(isAdmin()||S.admin||(Cloud.perms||[]).length)?"":"none"}
+ $$('a[href="#/print"]').forEach(x=>x.style.display=canPrint()?"":"none");const adm=$('header nav a[href="#/admin"]');if(adm)adm.style.display=(isAdmin()||S.admin||(Cloud.perms||[]).length)?"":"none"}
 const isAdmin=()=>!!GH.token||Cloud.staff();
+/* المطبوعات مبدئيًا للإدارة ومن مُنح صلاحية print فقط (توجيه المستخدم 21561101) */
+const canPrint=()=>{try{return isAdmin()||(Cloud.perms||[]).includes("print")}catch(e){return false}};
 // صلاحية مفوَّضة لخدمة بعينها (profiles.perms): الكراسات، والتشجير، والتحويل؛ والخادم (api/gh) يقصر كتابة المفوَّض على ملفات خدمته
 const can=p=>isAdmin()||(Cloud.perms||[]).includes(p);
 const needGH=()=>GH.on?"":`<p class="note">الحفظ للجميع يحتاج تفعيل «الإدارة المباشرة» على هذا الجهاز (مفتاح المشرف أعلى الصفحة).</p>`;
