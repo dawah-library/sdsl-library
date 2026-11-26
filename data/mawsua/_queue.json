@@ -3,7 +3,7 @@
   {
    "k": "tafsir",
    "do": "build",
-   "n": 22
+   "n": 20
   },
   {
    "k": "quran",
@@ -109,6 +109,30 @@
     "sv25783"
    ],
    "grow": "2026-11-24"
+  },
+  {
+   "k": "aqeeda",
+   "do": "build",
+   "n": 13,
+   "ids": [
+    "aqeeda-5-1-2",
+    "aqeeda-5-2-2",
+    "aqeeda-6-1-3",
+    "aqeeda-6-2-3",
+    "aqeeda-7-1-1",
+    "aqeeda-7-1-2",
+    "aqeeda-7-2-2",
+    "aqeeda-8-1-1",
+    "aqeeda-6-2-4",
+    "aqeeda-5-1-4",
+    "aqeeda-2-3-4",
+    "aqeeda-2-3-5",
+    "aqeeda-8-2-4"
+   ],
+   "boost": [
+    "p1f08a935"
+   ],
+   "grow": "2026-11-26"
   }
  ]
 }
