@@ -147,7 +147,7 @@ AI.viaServer = async function (o) {
   const XO = typeof ASKX !== "undefined" ? ASKX.take() : { att: [], body: {} };  // مرفقات السؤال الأخير وخيارات النموذج والمصادر والأسلوب
   if (XO.att.length) contents[contents.length - 1].parts = XO.att.map(a => ({ inlineData: { mimeType: a.mime, data: a.data } })).concat(contents[contents.length - 1].parts);
   const label = (n, a) => n === "recall_knowledge" ? "يراجع ذاكرته العلمية عن: «" + (a.query || "") + "»" : n === "quran_ayah" ? "يراجع نص الآية في المصحف" : n === "find_ayah" ? "يحدد موضع الآية في المصحف" : n === "hadith_lookup" ? "يبحث عن الحديث في كتب السنة" : n === "word_meaning" ? "يراجع معنى «" + (a.word || "") + "» في المعاجم" : n === "person_bio" ? "يراجع ترجمة «" + (a.name || "") + "»" : n === "search_library" ? "يبحث في المكتبة عن: «" + (a.query || "") + "»" : n === "get_page" ? "يقرأ " + (a.ref || "") : n === "book_outline" ? "يطالع فهرس الكتاب" : "يراجع قائمة " + (n === "list_authors" ? "المؤلفين" : "الكتب");
-  let acc = "";
+  let acc = "", retries = 0;
   for (let round = 0; round < maxR; round++) {
     let r;
     try { r = await fetch(CFG.askEndpoint, { method: "POST", signal: o.signal, headers: Object.assign({ "content-type": "application/json" }, Auth.token ? { Authorization: "Bearer " + Auth.token } : {}), body: JSON.stringify(Object.assign({ v: 2, contents, mode: o.mode, col: o.col, bookId: o.bookId, round, last: round === maxR - 1 }, XO.body)) }); }
@@ -160,7 +160,9 @@ AI.viaServer = async function (o) {
       while ((nl = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1); if (!line) continue; let ev; try { ev = JSON.parse(line); } catch (e) { continue; }
         if (ev.t === "text") { acc += ev.v; o.onText(acc); } else if (ev.t === "replace") { acc = ev.v; o.onText(acc); } else if (ev.t === "calls") { calls = ev.calls; parts = ev.parts; } else if (ev.t === "status") o.onStatus(ev.v);
         else if (ev.t === "error") { err = ev; } } } }
-    catch (e) { if (e.name === "AbortError") { if (acc) throw { text: acc }; throw { code: "cancelled" }; } if (acc) throw { text: acc }; throw { code: "offline", message: "انقطع الاتصال أثناء الإجابة." }; }
+    catch (e) { if (e.name === "AbortError") { if (acc) throw { text: acc }; throw { code: "cancelled" }; } if (acc) throw { text: acc };
+      if (retries < 2) { retries++; o.onStatus("انقطع الاتصال، يعيد المحاولة تلقائيًا (" + toAr(retries) + ")…"); round--; continue; }
+      throw { code: "offline", message: "انقطع الاتصال أثناء الإجابة بعد محاولتين. جرّب سؤالًا أضيق أو أعد المحاولة." }; }
     if (err) { if (acc) throw { text: acc }; throw { code: err.code === "quota" ? "quota" : "fallback", reason: err.v + (err.detail ? " (" + err.detail + ")" : "") }; }
     if (!calls || !calls.length) { o.searches = used; return acc; }
     if (acc.trim()) o.onStatus(acc.trim().split("\n").pop().slice(0, 140));

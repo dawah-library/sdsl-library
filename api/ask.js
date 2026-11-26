@@ -260,6 +260,8 @@ module.exports = async (req, res) => {
   const tries = askTries();
   res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" });
   const send = o => res.write(JSON.stringify(o) + "\n");
+  // نبضة كل ٨ ثوانٍ: تفكير النماذج في الأسئلة الثقيلة قد يطول فيقطع الوسيط الاتصال الصامت (نحو ١٠٠ ثانية) قبل أول نص
+  const hb = setInterval(() => { try { send({ t: "ping" }); } catch (e) { } }, 8000), _end = res.end.bind(res); res.end = (...a) => { clearInterval(hb); return _end(...a); };
   if (dropped) send({ t: "status", v: "تحليل المرفقات غير مفعّل لحسابك؛ أُرسل السؤال بلا مرفقات." });
   if (engine === "groq" && process.env.GROQ_API_KEY) { if (await viaGroq(system, contents, body, deep, send)) return res.end(); }
   if (engine !== "gemini" && engine !== "groq" && process.env.ANTHROPIC_API_KEY && await require("../lib/switch").on("ask_claude")) {
@@ -287,7 +289,8 @@ module.exports = async (req, res) => {
       send({ t: "error", code: st === 429 ? "quota" : "server", detail: "Gemini " + st + " " + gm.trim(), v: st === 429 ? "نفدت الحصة المجانية للمساعد مؤقتًا. جرّب بعد قليل." : "تعذر الاتصال بنموذج الذكاء الاصطناعي." });
       return res.end();
     }
-    const parts = [], calls = []; let buf = ""; const dec = new TextDecoder();
+    const parts = [], calls = []; let buf = ""; const dec = new TextDecoder(); let broke = false;
+    try {
     for await (const chunk of r.body) {
       buf += dec.decode(chunk, { stream: true }); let nl;
       while ((nl = buf.indexOf("\n")) >= 0) {
@@ -297,6 +300,9 @@ module.exports = async (req, res) => {
         for (const p of c.content.parts || []) { parts.push(p); if (p.text && !p.thought) send({ t: "text", v: p.text }); if (p.functionCall) calls.push({ name: p.functionCall.name, args: p.functionCall.args || {} }); }
       }
     }
+    } catch (e) { broke = true; }  // انقطع بث النموذج: إن لم يصل نص جُرّب نموذج آخر، وإلا أُكمل بما وصل
+    if (broke && !parts.length && k < tries.length - 1) { send({ t: "status", v: "انقطع بث النموذج، يجرّب نموذجًا بديلًا…" }); continue; }
+    if (broke && !parts.length) { send({ t: "error", code: "server", v: "انقطع بث النموذج قبل أي نص. أعد المحاولة." }); return res.end(); }
     if (calls.length) send({ t: "calls", calls, parts: parts.filter(p => !p.thought || p.functionCall) });
     else { const full = parts.filter(p => p.text && !p.thought).map(p => p.text).join(""), rv = await review(full).catch(() => null); if (rv) send({ t: "replace", v: rv }); }
     send({ t: "done" });
