@@ -56,7 +56,15 @@ const SECTIONS = {
   search: ["البحث", "البحث في نصوص كتب المكتبة ومقالاتها."],
   qabasat: ["قبسات", "صمّم صورة من نص مختار من كتب المكتبة لمشاركتها."],
   ask: ["المساعد العلمي", "مساعد بالذكاء الاصطناعي يبحث في كتب المكتبة ويجيب مع الإحالة إلى الكتاب والصفحة."],
-  ai: ["المساعد العلمي", "مساعد بالذكاء الاصطناعي يبحث في كتب المكتبة ويجيب مع الإحالة إلى الكتاب والصفحة."]
+  ai: ["المساعد العلمي", "مساعد بالذكاء الاصطناعي يبحث في كتب المكتبة ويجيب مع الإحالة إلى الكتاب والصفحة."],
+  hadith: ["الحديث النبوي", "كتب الحديث النبوي بالمتن والتخريج والشرح والتبويب الموضوعي في مكتبة الدعوة السلفية الرقمية."],
+  mushaf: ["المصحف الشريف", "المصحف الشريف بالتفسير الميسر وشرح الغريب والاستماع، مع خدمات علمية مصاحبة."],
+  hifz: ["حفظ المتون", "حفظ المتون العلمية بالورد اليومي والمراجعة والاختبار."],
+  mawsua: ["الموسوعات", "موسوعات علمية وتربوية مرتبة بالموضوعات تجمع من كتب المكتبة."],
+  athar: ["الآثار", "آثار السلف مصنفة بالموضوعات مع العزو إلى مصادرها."],
+  misbar: ["مسبار", "البحث الموضوعي المعمّق في نصوص المكتبة."],
+  khutab: ["الخطب", "خطب منبرية مرتبة بالموضوعات والمناسبات."],
+  qa: ["الأسئلة والأجوبة", "أسئلة القراء وأجوبتها من فتاوى مشايخ الدعوة السلفية."],
 };
 async function build(p, q, base) {
   const seg = p.split("/").filter(Boolean).map(decodeURIComponent), v = (seg[0] || "").toLowerCase();
@@ -64,7 +72,7 @@ async function build(p, q, base) {
   if (v === "book" && seg[1]) {
     const it = await findItem(seg[1], base.replace(/\/$/, "")); if (!it) { r.noindex = true; r.title = "غير موجود — " + SITE; return r; }
     const b = it.b, a = author(b.authorId), art = b.type === "article", n = it.pages ? it.pages.length : (b.n || 1);
-    const pg = Math.min(Math.max(1, parseInt(seg[2]) || 1), n), lbl = it.pl && it.pl[pg - 1] ? it.pl[pg - 1] : (art ? "" : "ص " + pg);
+    const pg = Math.min(Math.max(1, parseInt(seg[2]) || 1), n), lbl = it.pl && it.pl[pg - 1] && !/^(?:ج\s*0\s*)?ص\s*0$/.test(String(it.pl[pg - 1]).trim()) ? it.pl[pg - 1] : (art ? "" : "ص " + pg);
     const name = b.setTitle ? b.title : b.title, txt = it.pages ? it.pages[pg - 1] : "";
     r.title = name + (lbl && n > 1 ? " — " + lbl : "") + (a.name ? " | " + a.name : "");
     r.desc = (pg === 1 && b.card && b.card.summary ? cut(b.card.summary, 180) : cut(txt, 180)) || [name, a.name, b.source].filter(Boolean).join(" — ");
