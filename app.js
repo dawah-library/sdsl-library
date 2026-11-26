@@ -876,6 +876,7 @@ async function vBook(id,p,h){
  const ahead=art?`<div class="ahead"><h1>${esc(b.title)}</h1><div><a href="#/author/${b.authorId}" data-author="${b.authorId}">${esc(a.name)}</a>${b.date?" • "+fmtDate(b.date):""} • <a href="#/articles?${bc(b)==="turath"?"c=turath&":""}t=${b.topicId}">${esc(T(b.topicId).name)}</a>${b.url?(b.url.startsWith("#/")?` • <a href="${esc(b.url)}">موضعه من «${esc(b.c||"الكتاب")}»</a>`:` • <a href="${esc(b.url)}" target="_blank" rel="noopener">المصدر</a>`):""}</div>${fatwa&&bc(b)!=="ithra"?'<div class="src-note">من فتاوى موقع صوت السلف</div>':""}${typeof ITHRA!=="undefined"?ITHRA.note(b):""}</div>`:"";
  const B_=(act,ic,txt,dis)=>`<button data-act="${act}"${dis?" disabled":""}>${svg(ic)}<span>${txt}</span></button>`;
  view(`${head}
+ <form class="ibsin" role="search" aria-label="البحث داخل ${art?"المقال":"الكتاب"}"><input type="search" name="q" value="${esc(IBS.bid===b.id?IBS.q:"")}" placeholder="🔍 ابحث داخل ${art?"المقال":"الكتاب"}" aria-label="كلمات البحث داخل ${art?"المقال":"الكتاب"}" autocomplete="off"><button type="submit" class="btn p">بحث</button></form>
  <div class="desk"><article class="paper${art?" art":""}${scroll?" scroll":""} ${scroll?"":dir}" id="paper" aria-label="صفحة ${p}">
   ${b.pdf?`<div class="seg pvseg" role="radiogroup" aria-label="طريقة العرض">${[["text","النص"],["pdf",Auth.user?"المصورة":"المصورة 🔒"],["both",Auth.user?"معًا":"معًا 🔒"]].map(([k,t])=>`<button type="button" role="radio" data-act="pv" data-pv="${k}" aria-checked="${pv===k}">${t}</button>`).join("")}</div>`:""}
   <button class="ribbon" id="ribbon" data-act="mark" aria-label="علامة الصفحة" title="ضع علامة على هذه الصفحة"></button>
@@ -1971,6 +1972,7 @@ const IBS={hits:null,bid:null,q:"",k:0,
   if(!on){if(el)el.hidden=true;return}if(!el){el=document.createElement("div");el.id="ibsbar";el.setAttribute("role","toolbar");el.setAttribute("aria-label","التنقل بين نتائج البحث");document.body.appendChild(el)}
   const at=H.findIndex(x=>x.b.id===c.b.id&&x.i+1===c.p);if(at>=0)IBS.k=at;
   el.innerHTML=`<button data-act="ibsnav" data-d="-1" aria-label="النتيجة السابقة">›</button><button data-act="ibs" class="ibst">«${esc(IBS.q.length>18?IBS.q.slice(0,18)+"…":IBS.q)}» ${toAr(IBS.k+1)} من ${toAr(H.length)}</button><button data-act="ibsnav" data-d="1" aria-label="النتيجة التالية">‹</button><button data-act="ibsx" aria-label="إنهاء البحث">✕</button>`;el.hidden=false}};
+document.addEventListener("submit",e=>{const f=e.target.closest&&e.target.closest("form.ibsin");if(!f)return;e.preventDefault();const c=cur();if(c)IBS.open(c.b,(f.q.value||"").trim())},true);
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="f"&&document.body.classList.contains("reading")){const c=cur();if(c){e.preventDefault();IBS.open(c.b)}}
  else if(e.key==="F3"&&IBS.hits){e.preventDefault();IBS.step(e.shiftKey?-1:1)}});
 async function paintNotes(rd){rd=rd||$("#rb");if(rd)paintMarks(rd);if(!rd||!Auth.user)return;const bid=rd.dataset.id,p=+rd.dataset.p;try{const l=(await Mine.notesOf(bid)).filter(n=>n.page===p&&n.kind!=="pg");if(l.length)hlWords(rd,l)}catch(e){}}

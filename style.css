@@ -1952,3 +1952,6 @@ body.khdl{overflow:hidden}body.khdl>*:not(.khdlv):not(#toast){display:none!impor
 .khcats a:hover .khci{background:var(--ac);color:var(--on)}.khcats a span{font-size:inherit}
 .khhero h2 .ic-svg{vertical-align:-4px;color:var(--gold)}.khm b .ic-svg,.chip .ic-svg,.btn .ic-svg,h3 .ic-svg,h4 .ic-svg{vertical-align:-3px}.chip.sm .ic-svg{color:var(--ac)}
 .khcn{background:var(--gold);color:#fff;border-radius:999px;padding:0 7px;font-size:.72rem!important;color:#fff!important}
+
+/* خانة البحث داخل الكتاب أعلى صفحة القراءة (بند 12) */
+.ibsin{display:flex;gap:8px;max-width:760px;margin:6px auto 10px;padding:0 10px}.ibsin input{flex:1;min-width:0;min-height:44px;padding:8px 12px;border:1px solid var(--bd,#cfd8d3);border-radius:12px;background:var(--card,#fff);color:inherit;font:inherit}.ibsin .btn{min-height:44px}body.reading-full .ibsin{display:none}
