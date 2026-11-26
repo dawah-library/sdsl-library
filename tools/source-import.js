@@ -144,11 +144,13 @@ async function runSource(s, ctx) {
   const conf = readJSON(SRC, { sources: [] }), only = process.argv[2];
   const ctx = { idx: readJSON(IDX, { items: [] }), q: readJSON(Q, { v: 1, items: [] }), errors: [] };
   const res = [];
-  for (const s of conf.sources) { if (only && (only === "fb" ? s.type !== "facebook" : s.id !== only)) continue; if (s.on === false || !((s.lists || []).length || s.base || s.type === "facebook")) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
+  // المصادر الإثرائية (col=ithra) تُجدَّد أسبوعيًا يوم الجمعة (UTC) بدل اليوم؛ ويبقى التشغيل اليدوي أو بمعرّف المصدر متاحًا في أي وقت
+  const ev = process.env.GITHUB_EVENT_NAME || "", ithraDue = !!only || !ev || ev === "workflow_dispatch" || new Date().getUTCDay() === 5;
+  for (const s of conf.sources) { if (only && (only === "fb" ? s.type !== "facebook" : s.id !== only)) continue; if (s.col === "ithra" && !ithraDue) { res.push({ id: s.id, weekly: true }); continue; } if (s.on === false || !((s.lists || []).length || s.base || s.type === "facebook")) { res.push({ id: s.id, off: true }); continue; } res.push(await runSource(s, ctx)); }
   ctx.q.items = ctx.q.items.slice(-3000); ctx.q.errors = ctx.errors.slice(-200); ctx.q.lastRun = new Date().toISOString(); ctx.q.results = res;
   // ترقية المنشور ملخصًا إلى النص الكامل حين يصير مصدره «كاملًا» (lic فارغ): يُجلب نص كل مادة من رابطها مرة واحدة
   const full = new Map(conf.sources.filter(s => s.col === "ithra" && s.lic !== "link" && s.on !== false).map(s => [s.id, s])); let up = 0;
-  for (const it of ctx.idx.items) { const s = full.get(it.src); if (only || !s || it.lic !== "link" || up >= 60) continue;
+  for (const it of ctx.idx.items) { const s = full.get(it.src); if (only || !ithraDue || !s || it.lic !== "link" || up >= 60) continue;
     try { let text = "";
       const wp = (it.id.match(/wp(\d+)$/) || [])[1];
       if (wp && s.base) { const j = JSON.parse(await get(s.base.replace(/\/$/, "") + "/wp-json/wp/v2/posts/" + wp + "?_fields=content", 1)); text = htmlText((j.content || {}).rendered || ""); }
