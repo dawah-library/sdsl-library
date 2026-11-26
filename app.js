@@ -1455,6 +1455,7 @@ const AISVC=[
  ["lugha","تحليل لغوي وإعراب","معاني المفردات من المعاجم، والإعراب، والصرف، والبلاغة.","أعرب وحلّل لغويًّا: ",'<path d="M4 7h16M4 12h10M4 17h7"/><path d="M17 14l3 6M17 14l-3 6M15 18h4"/>'],
  ["alam","التعريف بعَلَم","ترجمة العالم أو الراوي وأقوال الأئمة فيه من كتب التراجم والجرح والتعديل.","عرّف بـ: ",'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
  ["solve","حلول عملية","يعرض مشكلتك على توجيهات العلماء ويقترح خطوات عملية (ليست فتوى).","عندي مشكلة: ",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>']];
+const AISHORT=["ask","fatwa","hadith","tafsir","research","summarize","explain"];
 const AIEX=["ما شروط التوبة؟","اجمع ما ورد في المكتبة عن علو الهمة","قارن بين أقوال العلماء في حكم تارك الصلاة","ضع لي منهجًا لدراسة العقيدة وأنا مبتدئ","لخّص كتاب رياض الصالحين","كيف أنظّم وقتي لطلب العلم مع العمل؟"];
 const AISTEPS=["يفهم السؤال ويخطط للبحث…","يبحث في الكتب والمقالات…","يقرأ سياق النصوص…","يوازن بين النصوص ويحلّلها…","يرتّب الإجابة ويوثّقها…"];
 const svcIcon=d=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -1472,12 +1473,12 @@ async function vAsk(q){
  view(`<div class="aiwrap${fresh?" fresh":""}">
  <section class="aihero" id="aihub"${fresh?"":" hidden"}><div class="orb" aria-hidden="true"><i></i><i></i><i></i></div>
   <h2>المساعد العلمي</h2><p>نموذج ذكاء اصطناعي مرجعه كتب المكتبة ومقالاتها وفتاواها: يبحث ويجمع ويحلّل ويناقش ويقترح الحلول، ويوثّق كل نقل بالكتاب والصفحة.</p><span class="aistat">${aiStats()}</span></section>
- <div id="aisvcw"${fresh?"":" hidden"}><h3 class="aih">الخدمات</h3><div class="aisvc">${AISVC.map(([m,t,d,,ic])=>`<button data-act="aisvc" data-m="${m}" aria-pressed="${CONV.mode===m}"><span class="ic">${svcIcon(ic)}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>
+ <div id="aisvcw"${fresh?"":" hidden"}>
   <h3 class="aih">جرّب أن تسأل</h3><div class="aiex">${AIEX.map(t=>`<button data-act="aiex">${esc(t)}</button>`).join("")}</div>${recent}</div>
  ${fresh?"":`<div class="askhead"><h2>المساعد العلمي</h2><div class="row" style="flex:none"><a class="btn s nf" href="#/ask?new=1">محادثة جديدة</a>${Auth.user?'<a class="btn s nf" href="#/account">محادثاتي</a>':""}</div></div>`}
  ${CONV.ctx&&B(CONV.ctx.b)?`<p class="note">النص المرفق: ${esc(B(CONV.ctx.b).title)}${B(CONV.ctx.b).n>1?"، صفحة "+CONV.ctx.p:""}</p>`:""}
  <div id="msgs" aria-live="polite"></div>
- <form data-form="ask" class="askbox"><div class="aiopts"><button type="button" class="axtog" data-act="axtog" aria-label="خيارات إضافية" aria-expanded="false">⋯</button><select id="am" aria-label="نوع الخدمة">${AISVC.map(([m,t])=>so(m,t,CONV.mode)).join("")}</select>
+ <form data-form="ask" class="askbox"><div class="aiopts"><button type="button" class="axtog" data-act="axtog" aria-label="خيارات إضافية" aria-expanded="false">⋯</button><select id="am" aria-label="نوع الخدمة">${AISVC.filter(x=>AISHORT.includes(x[0])||x[0]===CONV.mode).map(([m,t])=>so(m,t,CONV.mode)).join("")}</select>
   <select id="ac" aria-label="نطاق البحث">${so("","كل المكتبة",CONV.bookId?"x":CONV.col)}${so("dawah",COL.dawah+" فقط (كامل القسم)",CONV.bookId?"x":CONV.col)}${so("turath",COL.turath,CONV.bookId?"x":CONV.col)}${so("ithra",COL.ithra,CONV.bookId?"x":CONV.col)}${CONV.col&&CONV.col.includes(",")?`<option value="${esc(CONV.col)}" selected>${CONV.col.split(",").map(c=>COL[c]).join(" + ")}</option>`:""}<option value="multi">اختيار متعدد…</option>${cb?`<option value="book:${cb.id}" selected>${isArt(cb)?"هذا المقال":"هذا الكتاب"}: ${esc(cb.title)}</option>`:""}<option value="pick">اختيار كتاب…</option></select></div>
   <div class="aiin"><textarea name="m" rows="2" data-voice data-nosubmit placeholder="اسأل، أو اطلب بحثًا أو دراسة أو خطة…" aria-label="رسالتك">${esc(pre)}</textarea><button class="aisend" id="asend" aria-label="إرسال">${svcIcon('<path d="M20 12H5M11 6l-6 6 6 6"/>')}</button><button type="button" class="aisend stop" id="astop" hidden aria-label="إيقاف">${svcIcon('<rect x="7" y="7" width="10" height="10" rx="1.5"/>')}</button></div>
   <span id="ast" class="mut aist"></span></form>
