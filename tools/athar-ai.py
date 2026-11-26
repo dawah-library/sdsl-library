@@ -6,6 +6,7 @@
 ثم يُقتطع القول من نص المصدر نفسه بين أوله وآخره (فلا يُنشر إلا نص موجود بلفظه)، وإلا رُفض.
 المتغيرات: GROQ_API_KEY، GROQ_MODELS، ATHAR_MAX (حد المرشحات في الجولة)، ATHAR_MINUTES.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("athar")  # يدوي فقط
 import json, os, re, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importlib.util

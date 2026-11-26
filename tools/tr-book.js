@@ -3,6 +3,7 @@
 // تُترجَم الصفحات الناقصة بالنواة نفسها التي تستعملها الدالة (lib/trcore.js) وتُحفظ في data/tr/<اللغة>/<المعرّف>.json
 // فتُقرأ للجميع بلا تكلفة متكررة، وتتاح للتحميل كاملة. الصفحات المراجَعة علميًّا (s:"r") لا تُمس أبدًا.
 // البيئة: GEMINI_API_KEY…_20 (بلا المفاتيح المحجوزة لخدمات الكتب)، TR_PAGES (حد الجولة)، TR_ONLY=<id> اختياري.
+require("./manual-guard")("tr_batch");
 const fs = require("fs"), path = require("path"), TRC = require("../lib/trcore");
 const ROOT = path.join(__dirname, ".."), rd = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), "utf8"));
 const wr = (f, o, c) => { fs.mkdirSync(path.dirname(path.join(ROOT, f)), { recursive: true }); fs.writeFileSync(path.join(ROOT, f), JSON.stringify(o, null, c ? 0 : 1)); };

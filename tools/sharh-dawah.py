@@ -10,6 +10,7 @@
 المخرج: data/sharh/dawah/<كتاب>.json = {رقم: [{w, an, sb, p, pz, f: [{k: faida|tarjih, m, q}], fst: draft|ok, at}]}
 المتغيرات: DAWAH_MAX (عدد الأحاديث التي تُستخرج فوائدها في التشغيل، ٢٥)، DAWAH_AI=0 للربط وحده.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("sharh_ai")  # يدوي فقط
 import importlib.util, json, os, re, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

@@ -17,6 +17,7 @@
 المتغيرات: GROQ_API_KEY، GEMINI_API_KEY…، SUPABASE_URL وSUPABASE_SERVICE_ROLE_KEY (للتعلّم من المحادثات)،
 BRAIN_MINUTES، BRAIN_CHUNKS (حد المقاطع في الجولة)، BRAIN_ENGINES (ترتيب المحركات، الافتراضي groq,gemini).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("brain")  # يدوي فقط
 import json, os, re, sys, time, zlib, random, urllib.request, urllib.error, importlib.util, collections
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)

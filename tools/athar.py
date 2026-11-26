@@ -11,6 +11,7 @@
 - التكرار: يُعرف بتقارب الألفاظ لنفس القائل؛ فيُحفظ أول ما ورد (بأولوية المصدر) وتصير بقية المواضع تخريجًا له.
 المخرجات: data/athar/_index.json (الأعلام والأبواب والعدد والمصادر) وdata/athar/<باب>.json (المواد).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("athar")  # يدوي فقط
 import json, os, re, sys, unicodedata
 from collections import defaultdict
 

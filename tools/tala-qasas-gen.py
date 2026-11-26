@@ -7,6 +7,7 @@
 تُحفظ في data/tala-qasas-gen.json غير معتمدة (rev=0)، ولا تظهر للأطفال حتى يعتمدها المدير من صفحة القصص (data/tala-qasas-ok.json).
 TQ_MAX: أقصى عدد شخصيات في التشغيل (الافتراضي ١٢)، TQ_ONLY: معرّفات بعينها، TQ_LIST=1 يطبع الفصول المكتشفة فقط.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("tala_qasas")  # يدوي فقط
 import json, os, re, sys, time, datetime, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tashjir as T  # noqa: E402  (gemini ومفاتيح خدمات الكتب)

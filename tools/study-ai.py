@@ -12,6 +12,7 @@
 الطابور: data/study-queue.json {"items": [{"id": "<كتاب>", "do": ["quiz", "summ"]}]}، ثم كتب مكتبة الدعوة الأقصر فالأطول.
 المتغيرات: ST_ONLY (كتب بعينها)، ST_DO (quiz,summ)، ST_MINUTES، ST_MAX، ST_COMMIT=1.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("study_ai")  # يدوي فقط
 import json, math, os, re, sys, time, random, subprocess, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

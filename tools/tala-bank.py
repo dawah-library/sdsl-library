@@ -10,6 +10,7 @@
 - كل سؤال جديد مسودة (ok=0) حتى تعتمده الإدارة من «الإدارة ← الطلائع ← بنك الأسئلة»؛ ثم تسحب الألعاب منه ما لم يره الطفل.
 - المحرك: tashjir.gemini (مفاتيح خدمات الكتب موزَّعة بـ gkeys.Pool). الحد: TB_MAX مصدرًا في الجولة (الافتراضي ١٢).
 الاستعمال: python3 tools/tala-bank.py [--max N]"""
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("tala_bank")  # يدوي فقط
 import datetime, hashlib, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)

@@ -17,6 +17,7 @@
 الاستعمال: python3 tools/sharh-align.py [معرف المشروع…] [--redo]   (بلا معرفات: كل مشروع فيه مجلدات لم تُعالج)
 المتغيرات: SHP_LLM=0 لإيقاف الترجيح بالنموذج، SHP_EMB=0 لإيقاف التضمينات، SHP_MAXLLM (أقصى طلبات الترجيح في الجولة، ٦٠).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("sharh_projects")  # يدوي فقط
 import datetime, hashlib, json, math, os, re, sys, time, urllib.request, collections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data"); SHP = os.path.join(D, "shp")

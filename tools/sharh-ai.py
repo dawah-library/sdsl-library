@@ -18,6 +18,7 @@
 جولتان يوميًّا (٣٠ حديثًا بعناقيدها لكل جولة)، وتتنحى إذا نفدت حصة نصف المفاتيح (تفعيل ٢٠ نوفمبر بطلب المدير).
 المتغيرات: SHARH_MAX (عدد العناقيد في التشغيل، ١٢)، SHARH_MINUTES (٦٠)، SHARH_ONLY (عنقود بعينه «bukhari:1»).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("sharh_ai")  # يدوي فقط
 import glob, json, os, re, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tashjir as T  # noqa: E402  gemini بالمفاتيح المحجوزة لخدمات الكتب وبدائل النماذج

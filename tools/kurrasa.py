@@ -8,6 +8,7 @@
 الطابور: data/kurrasa/_queue.json (تختار الإدارة الكتب). المخرجات: data/kurrasa/<كتاب>.json و _list.json (ok=1 منشور).
 المتغيرات: KR_ONLY، KR_MINUTES، KR_MAX، KR_COMMIT=1.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("edu_ai")  # يدوي فقط
 import json, math, os, re, sys, time, subprocess, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

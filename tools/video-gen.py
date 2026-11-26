@@ -9,6 +9,7 @@
 والصوت من الراوي وحده (اللقطة تُكتم)، ولا موسيقى. السقف لكل فيديو VIDEO_GEN_MAX_SECONDS (الافتراضي ٤٨ ثانية مولَّدة)، والاستهلاك يُسجَّل في
 data/video/_gen-usage.json، والتكلفة التقديرية تُعرض في الواجهة قبل الطلب (video.js) من COST هنا.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("video")  # يدوي فقط
 import json, os, time, urllib.request, urllib.error, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

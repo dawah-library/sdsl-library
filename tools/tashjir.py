@@ -6,6 +6,7 @@
 وما لم يُعثر عليه يُعلَّم v=0 للمراجعة. ثم جولة تدقيق علمي ثانية تقارن كل نقطة بنص صفحتها وتصحح أو تحذف.
 المخرجات: data/tashjir/<كتاب>.json و data/tashjir/_list.json (ok=1: يُنشر مباشرة، وللإدارة إيقافه).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("tashjir")  # يدوي فقط
 import json, os, re, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frontmatter import content_range  # noqa: E402  صفحات العنوان والنشر والفهارس لا تُشجَّر

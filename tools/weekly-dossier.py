@@ -8,6 +8,7 @@
 - الاستعمال: python3 tools/weekly-dossier.py [معرّف…] [--next] [--force]
   بلا معرّف: كتب السلسلة كلها التي لا ملف لها؛ --next: الأسبوع الحالي والقادم وحدهما؛ --force: إعادة البناء.
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("weekly")  # يدوي فقط
 import datetime, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)

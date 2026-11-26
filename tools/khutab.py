@@ -15,6 +15,7 @@
 - المراجع ([^r1]) تشير إلى مصدر من المصادر المسترجعة وصفحته، ونصها المنقول يُطابَق في الصفحة.
 - لا يُنشر شيء آليًّا: المخرج مسودة (st=draft) حتى يراجعها المشرف ويعتمدها من لوحة الإدارة؛ والنموذج المعتمد لا يُستبدل، بل تُحفظ المسودة الجديدة بجواره (alt).
 """
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("khutab")  # يدوي فقط
 import datetime, glob, hashlib, json, math, os, re, sys, time, urllib.error, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
