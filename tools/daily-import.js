@@ -46,6 +46,9 @@ async function main() {
 
   const LOG = []; const log = m => { console.log(m); LOG.push(m); };
   const authorId = name => {
+    // حارس الاستيراد: ما ليس اسم مؤلف (عنوان أو مقدمة أو تاريخ أو أرقام أو أطول من ٤٥ حرفًا) لا يُنشأ له مؤلف، ويُنسب إلى حساب صوت السلف a8
+    if (name) name = String(name).replace(/\s*\([^)]*\d[^)]*\)\s*$/, "").replace(/^[\s\/\\*\-]+/, "").trim();
+    if (name && (String(name).trim().length > 45 || /تمهيد|مقدمة|بين يدي|إعداد|\d{2,}|^[\s\/\\*\-]/.test(name))) { name = ""; }
     const b = bare(name || "صوت السلف"); if (!b) return "a8";
     // الأسماء البديلة (aliases) تطابَق تامًّا أولًا، ثم الاسم الرسمي بالاحتواء
     const live = cat.authors.filter(a => (a.col || "dawah") === "dawah" && !a.mergedInto); // المدموج يُطابَق باسمه البديل في السجل الموحَّد
