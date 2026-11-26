@@ -130,6 +130,9 @@
 /misbar.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/mods.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /mushaf.js
   Cache-Control: public, max-age=60, must-revalidate
 
