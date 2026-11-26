@@ -1970,3 +1970,18 @@ form:has(.gosug){position:relative}
 .clk{font-size:.78rem;padding:4px 8px;white-space:nowrap;line-height:1.1}.clk .clkz{opacity:.8;font-size:.7rem}.clk b{font-weight:700;font-variant-numeric:tabular-nums}
 
 .post.phid{opacity:.72;outline:2px dashed #b88a2e;outline-offset:-2px}.post.phid::before{content:"مخفي عن الجمهور (تراه الإدارة فقط)";display:block;background:#fbf4dd;color:#8a6a1f;font-size:.8rem;padding:4px 10px;border-radius:8px 8px 0 0}
+
+/* شاشة المساعد على الجوال: الإجابة تأخذ معظم الشاشة، وخانة السؤال مضغوطة أسفلها لا فوقها (طلب المستخدم ٢٦ نوفمبر) */
+.axtog{display:none}
+@media (max-width:900px){
+ .axtog{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;border:1px solid var(--line);background:var(--sf);color:var(--ink);border-radius:12px;font-size:1.1rem;cursor:pointer}
+ .askbox{padding-top:4px}
+ .askbox .aiopts{margin-bottom:4px}.askbox .aiopts select{padding:4px 6px;font-size:.74rem;max-width:42vw}
+ .askbox .axbar,.askbox .aist:empty{display:none}.askbox.ax-open .axbar{display:flex}
+ .askbox .aiin textarea{min-height:42px;max-height:30vh;font-size:.9rem;line-height:1.5;padding-block:9px}.askbox .aiin textarea::placeholder{font-size:.82rem}
+ .aidisc{font-size:.72rem;margin:2px 0 0}
+ #msgs{margin-inline:-6px}
+ #msgs .msg,#msgs .aimsg{max-width:100%}
+ body.has-dock:has(.askbox:focus-within) #dock{display:none!important}
+ body.has-dock:has(.askbox:focus-within) .askbox{bottom:0}
+}
