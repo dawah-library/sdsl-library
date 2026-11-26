@@ -857,6 +857,7 @@ function moreSheet(){const c=cur();if(!c)return;const b=c.b,art=isArt(b),fav=S.f
   <button data-act="qhint">صمّم الاقتباس</button>
   ${b.pages.length>1?'<button data-act="goto">الانتقال لصفحة</button>':""}
   <button data-act="share">مشاركة الرابط</button>
+  ${prBtn("كتاب مجهَّز")}
   <button data-act="citefmt">توثيق المرجع (APA، شيكاغو، BibTeX)</button>
   ${isAdmin()||can("edit")?'<button data-act="editp">تعديل النص</button>':'<button data-act="corr">اقتراح تصحيح</button>'}${isAdmin()?'<button data-act="bookmeta">بيانات الكتاب وقسمه</button><button data-act="eds">طبعات الكتاب</button><button data-act="edup">＋ إضافة طبعة جديدة (مصورة أو نصية)</button><a class="btn" href="#/admin?t=vols${b.set?"&s="+encodeURIComponent(b.set):""}" data-act="closeSheet">${b.set?"مجلدات الكتاب وترتيبها":"إضافة مجلد (تحويله إلى عمل متعدد المجلدات)"}</a>':""}
  </div>
@@ -1016,16 +1017,15 @@ const prData=()=>ls.get("prints",{items:[]});const prSave=d=>ls.set("prints",d);
 const ORD_AR=["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة","التاسعة","العاشرة"];
 const prName=n=>"الطبعة "+(ORD_AR[n-1]||toAr(n));
 function prAdd(o){const d=prData(),id="p"+Date.now().toString(36);d.items.push(Object.assign({id,kind:"أخرى",origin:"",link:"",refs:"",created:today(),editions:[],cover:null,identity:SITENAME,src:"manual",bodyFont:"smart",log:[{t:today(),ev:"تسجيل الإصدار ("+(o.src==="auto"?"تلقائي من النظام":"يدوي")+")"}]},o));prSave(d);return id}
-/* «حوّل إلى المطبوعات» من أي قسم: زر عائم للإدارة ومن عنده صلاحية print، يسجّل الصفحة الحالية أصلًا للإصدار */
-function prFab(){let b=$("#prfab");if(!canPrint()||/^#\/(print)?$/.test(location.hash.split("?")[0])){if(b)b.remove();document.body.style.paddingBottom="";return}
- if(!b){b=document.createElement("button");b.id="prfab";b.className="btn s";b.textContent="🖨️ حوّل إلى المطبوعات";b.dataset.act="toprint";b.style.cssText="position:fixed;left:12px;bottom:78px;z-index:30;opacity:.92";document.body.appendChild(b)}document.body.style.paddingBottom="130px"}
-function prDlg(){const h=$("#app h1,#app h2"),t=(h&&h.textContent||document.title||"").trim().slice(0,120),sec=(parse().p[0]||"home");
+/* «حوّل إلى المطبوعات»: خيار ضمن خيارات كل ملف يُنشئه الموقع (كراسة، تشجير، مختصر، اختبار، موسوعة، شرح، خطبة، كتاب) لمن يملك صلاحية print؛ لا زر عائم */
+const prBtn=(kind,cls)=>{try{return canPrint()?`<button type="button" class="btn s ${cls||""}" data-act="toprint" data-pk="${kind||"أخرى"}">🖨️ حوّل إلى المطبوعات</button>`:""}catch(e){return ""}};
+(()=>{const f=document.getElementById("prfab");if(f)f.remove();document.body.style.paddingBottom=""})();
+function prDlg(kind){const h=$("#app h1,#app h2"),t=(h&&h.textContent||document.title||"").trim().slice(0,120),sec=(parse().p[0]||"home");
  window.__prAuto=null;let t2=t,r2="";try{if(sec==="book"){const b=B(parse().p[1]);if(b){t2=b.title;r2=A(b.authorId).name+" — "+b.title;window.__prAuto={pages:b.pages?b.pages.length:0,author:A(b.authorId).name,col:bc(b)}}}}catch(e){}
- openDlg(`<h3>تحويل إلى المطبوعات</h3><label>عنوان الإصدار</label><input id="prt" value="${esc(t2)}"><label>نوع الإصدار</label><select id="prk">${PR_KINDS.map(k=>`<option>${k}</option>`).join("")}</select>
+ openDlg(`<h3>تحويل إلى المطبوعات</h3><label>عنوان الإصدار</label><input id="prt" value="${esc(t2)}"><label>نوع الإصدار</label><select id="prk">${PR_KINDS.map(k=>`<option${k===kind?" selected":""}>${k}</option>`).join("")}</select>
  <label>الأصل (القسم والرابط)</label><input id="pro" value="${esc(sec+" — "+(location.hash||"#"+location.pathname+location.search))}"><label>المراجع (مصادر المنتج، سطر لكل مرجع)</label><textarea id="prr" style="min-height:70px">${esc(r2)}</textarea><p class="mut">يُسجَّل تلقائيًا: التاريخ، القسم، وعدد صفحات الكتاب ومؤلفه إن كان الأصل كتابًا.</p><button class="btn p" id="prok" style="margin-top:10px">إضافة إلى المطبوعات (مسودة)</button>`);
  $("#prok").onclick=()=>{const o=$("#pro").value.split(" — "),au=window.__prAuto||null;prAdd({title:$("#prt").value.trim()||"بلا عنوان",kind:$("#prk").value,origin:o[0],link:o.slice(1).join(" — "),refs:$("#prr").value.trim(),src:"auto",auto:au});dlg().close();toast("أُضيف إلى المطبوعات كمسودة.")}}
-document.addEventListener("click",e=>{const b=e.target.closest('[data-act="toprint"]');if(b){e.preventDefault();prDlg()}});
-window.addEventListener("hashchange",()=>setTimeout(prFab,300));setTimeout(prFab,2500);
+document.addEventListener("click",e=>{const b=e.target.closest('[data-act="toprint"]');if(b){e.preventDefault();prDlg(b.dataset.pk)}});
 async function vPrint(){
  if(!canPrint())return view(`<h2>المطبوعات</h2><p class="note">هذا القسم قيد الإعداد ويظهر حاليًا للإدارة فقط.</p>`);
  const COVS=MODS_COV.concat(IDS.map(n=>"تقليدي: "+n));
