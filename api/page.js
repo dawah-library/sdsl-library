@@ -122,7 +122,7 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
   }
   if (v === "post" && seg[1]) {
     let posts = []; try { posts = read("data/posts.json").items || []; } catch (e) { }
-    const x = posts.find(y => y.id === seg[1]);
+    const x = posts.find(y => y.id === seg[1] && !y.hide);
     if (x) { const a = author(x.authorId); r.title = (a.name || SITE) + ": " + cut(x.text, 60); r.desc = cut(x.text, 180); r.type = "article"; if (x.image) r.image = /^https?:/.test(x.image) ? x.image : base + x.image.replace(/^\//, ""); r.body = `<article><h1>${esc(a.name || SITE)}</h1>${plain(x.text).split("\n").map(l => `<p>${esc(l)}</p>`).join("")}</article>`; }
     return r;
   }

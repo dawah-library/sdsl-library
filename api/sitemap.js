@@ -11,7 +11,7 @@ module.exports = (req, res) => {
   }
   const cat = read("data/catalog.json"); let arts = [], posts = [];
   try { arts = read("data/articles/index.json").items || []; } catch (e) { }
-  try { posts = read("data/posts.json").items || []; } catch (e) { }
+  try { posts = (read("data/posts.json").items || []).filter(p => !p.hide); } catch (e) { }
   const urls = [];
   const add = (p, d, pr) => urls.push(`<url><loc>${x(base + p)}</loc>${d ? `<lastmod>${x(String(d).slice(0, 10))}</lastmod>` : ""}${pr ? `<priority>${pr}</priority>` : ""}</url>`);
   const upd = cat.version ? new Date(+cat.version).toISOString() : null; // آخر تحديث للفهرس: يدعو محركات البحث لإعادة الزحف
