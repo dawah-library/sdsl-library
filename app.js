@@ -1039,10 +1039,11 @@ let ORGIMG=null;
 function quoteText(){const t=$("#qt").value.trim(),s=qSrc($("#qs").value.trim());const link=Q.url?siteLink(pendingQ&&pendingQ.ref?`#/book/${pendingQ.ref.b}/${pendingQ.ref.p}`:""):"";
  return`«${t}»`+(s?`\n— ${s}`:"")+`\n${SITENAME}`+(link?`\n${link}`:"")}
 async function vQabasat(q){const pq=pendingQ;
- view(`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
+ const back=pq&&pq.ref?`<p><a class="btn s" href="#/book/${pq.ref.b}/${pq.ref.p}">↩ العودة إلى الكتاب</a></p>`:"";
+ const SUGH=`<h2>قبسات</h2><p class="mut">اختر مقتطفًا يرشحه الموقع، أو اكتب قبستك، أو حدّد نصًا في أي كتاب واضغط «اجعل المحدد قبسة».</p>
  <div class="row"><select id="qf" aria-label="مصدر المقتطفات" style="max-width:260px"><option value="">كل المكتبة</option><option value="dawah">مكتبة الدعوة</option><option value="articles">المقالات</option><option value="turath">المكتبة العامة</option></select><button class="btn" data-act="moreSug">مقتطفات أخرى</button></div>
  <div id="sugl"><p class="mut">جارٍ اختيار مقتطفات…</p></div>
- <h2>صمّم الاقتباس</h2><div class="studio">
+ `,STH=`<h2>صمّم الاقتباس</h2><div class="studio">
  <label for="qt">النص</label><textarea id="qt"></textarea>
  <details class="qorg"><summary>هوية جهتك على التصميم (للدعاة والمراكز والصفحات)</summary><div class="row"><div><label for="qorgn">اسم الجهة</label><input id="qorgn" maxlength="60" value="${esc((ls.get("qorg",{})).n||"")}" placeholder="مثال: مسجد التوحيد"></div><div><label for="qorgl">شعار الجهة</label><input id="qorgl" type="file" accept="image/*"></div></div><button class="btn s" type="button" data-act="qorgx">إزالة هوية الجهة</button><p class="mut" style="font-size:.8rem">تُحفظ على جهازك وتظهر أعلى التصميم بجوار شعار المكتبة.</p></details>
  <div class="row"><div><label for="qs">المصدر (الكاتب والكتاب)</label><input id="qs"></div><div><label for="qc">تعليق (اختياري)</label><input id="qc" placeholder="تعليق قصير يظهر أسفل القبسة"></div></div>
@@ -1058,7 +1059,10 @@ async function vQabasat(q){const pq=pendingQ;
  <canvas id="cv" width="1080" height="1080" aria-label="معاينة القبسة"></canvas>
  <p class="mut" style="text-align:center">العلامة المائية لشعار المكتبة واسمها ثابتة في زاوية كل قبسة.</p>
  <div class="row"><button class="btn p" id="shr">مشاركة أو حفظ الصورة</button><button class="btn" id="cpi">نسخ الصورة</button><button class="btn" id="cpq">نسخ القبسة نصًا</button></div><span id="qmsg" class="mut" role="status"></span>
- <img id="out" alt="" style="width:100%;display:none;margin-top:10px"></div>`);
+ <img id="out" alt="" style="width:100%;display:none;margin-top:10px"></div>`;
+ view(pq?back+STH+SUGH:SUGH+STH);
+ {const cv=$("#cv"),rw=$("#qs").closest(".row");rw.after(cv);const ar=$("#shr").closest(".row");cv.after(ar);ar.after($("#qmsg"));}
+ if(pq)setTimeout(()=>window.scrollTo(0,0),0);
  if(q&&q.f)$("#qf").value=q.f;
  $("#qt").value=pq?pq.t:"";$("#qs").value=pq?pq.src:"";$("#qz").value=Q.size;$("#qi").value=Q.ink;
  const ids=$("#qp-id");IDS.forEach((n,i)=>{const b=document.createElement("button");b.setAttribute("aria-pressed",Q.bg==="id"&&Q.idx===i);b.innerHTML=`<canvas width="216" height="216"></canvas><span>${n}</span>`;b.onclick=()=>{Q.bg="id";Q.idx=i;saveQ();sync();draw()};ids.appendChild(b);
