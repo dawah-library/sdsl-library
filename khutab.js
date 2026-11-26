@@ -433,7 +433,7 @@ const KHT = (() => {
       <label>الجزء<select name="part"><option value="0">الخطبة كاملة</option><option value="1">الخطبة الأولى</option><option value="2">الخطبة الثانية</option></select></label></div>
       <div class="row"><label class="inl"><input type="checkbox" name="head" checked> العنوان وترويسة الصفحات</label><label class="inl"><input type="checkbox" name="np" checked> الخطبة الثانية في صفحة جديدة</label><label class="inl"><input type="checkbox" name="notes"> تنبيهات الخطيب</label></div>
       <p class="mut khexph">يُعاد ضبط الخط والهوامش والمسافات لكل مقاس (لا تصغير آلي)؛ والمقاسات الصغيرة مهيأة لحملها على المنبر.</p>
-      <div class="khprev" aria-label="معاينة"></div><button class="btn p">⬇️ تحميل</button> <span class="mut" id="khexst" role="status"></span></form>`;
+      <div class="khprev" aria-label="معاينة"></div><button class="btn p">⬇️ تحميل</button> ${typeof prBtn==="function"?prBtn("أخرى"):""} <span class="mut" id="khexst" role="status"></span></form>`;
     openSheet("تحميل الخطبة وطباعتها", h, () => {
       const f = $("#khexp"); const sync = () => { const P0 = PAPER[f.paper.value]; if (!f.fs.dataset.touched) f.fs.value = P0.fs; prev(); };
       let pt = 0; const prev = () => { clearTimeout(pt); pt = setTimeout(async () => { if (!["pdf", "img"].includes(f.fmt.value)) { f.querySelector(".khprev").innerHTML = ""; return; } const o = optsFrom(f), pg = await paginate(tp, mk, o);
