@@ -8,6 +8,12 @@
    "id": "dmwrr2h47",
    "act": "run",
    "ok": false,
+   "at": "2026-11-26T14:54:34Z"
+  },
+  {
+   "id": "dmwrr2h47",
+   "act": "run",
+   "ok": false,
    "at": "2026-11-26T11:16:16Z"
   },
   {
@@ -150,14 +156,8 @@
    "ok": true,
    "eng": "gemini:gemini-3-flash-preview",
    "at": "2026-11-16T09:39:13Z"
-  },
-  {
-   "id": "dmw8rv443",
-   "act": "run",
-   "ok": false,
-   "at": "2026-11-14T18:54:21Z"
   }
  ],
- "at": "2026-11-26T11:16:16Z",
+ "at": "2026-11-26T14:54:34Z",
  "quota_until": ""
 }
