@@ -2776,6 +2776,30 @@
      "errs": 0
     }
    }
+  },
+  {
+   "id": "fb-saidabdelfattahkhairy",
+   "type": "facebook",
+   "name": "الشيخ سعيد عبدالفتاح",
+   "fb": "saidabdelfattahkhairy",
+   "url": "https://www.facebook.com/saidabdelfattahkhairy/",
+   "kind": "page",
+   "col": "dawah",
+   "lic": "",
+   "author": "الشيخ سعيد عبدالفتاح",
+   "on": true,
+   "to": "posts",
+   "minChars": 60,
+   "perRun": 25,
+   "delayMs": 1000,
+   "aid": "w218",
+   "state": {
+    "mode": "fb-web",
+    "seen": []
+   },
+   "lists": [],
+   "base": "",
+   "auto": true
   }
  ]
 }
