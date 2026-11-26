@@ -984,32 +984,91 @@ const PRINT_STUDY=[
 ["التكلفة الصفرية","كل ما يُبنى الآن يعمل في المتصفح بلا خادم ولا خدمة مدفوعة: التصدير بصيغ PDF وWord ونص، وأداة الأغلفة. الطباعة والتوزيع الفعليان بعد المرحلة ٢ لهما تكلفة تدفعها الجهة المنفذة لا الموقع، ولا يُنفَّذ شيء منها دون قرار الإدارة."],
 ["يصلح الآن","التصدير بمقاسات المطابع من القارئ (متاح)، وأداة الأغلفة (هنا)، وتجهيز قوالب كراسات من الاختبارات، وتدوين الدراسة وعرضها."],
 ["يؤجل","التعاقد مع دار أو مطبعة، وأي بيع، وصندوق الوقف وحسابه، وطباعة كتب لمؤلفين قبل ثبوت الإذن، والمشاركة في المعارض."]];
+/* أنماط الأغلفة العصرية (بحثية ومجلاتية): تُرسم على لوحة افتراضية عرضها ١٠٨٠ ثم تُكبَّر لمقاس الطباعة؛ ثم الأنماط التقليدية القديمة في آخر القائمة */
+const MODS_COV=["شبكة بيضاء بحثية","كتلة لونية هندسية","خطوط هندسية عربية","مجلة","بحثي بكعب جانبي","ليلي حديث"];
+function star8(c,x,y,r,rot){c.beginPath();for(let i=0;i<16;i++){const a=rot+i*Math.PI/8,rr=i%2?r*.62:r;c[i?"lineTo":"moveTo"](x+rr*Math.cos(a),y+rr*Math.sin(a))}c.closePath()}
+function modCover(c,vw,vh,k,emb){const T="#0f5c4d";let L={ink:"#101820",acc:T,mi:"#101820",ty:vh*.3,sy:0};
+ if(k===0){c.fillStyle="#fbfbf8";c.fillRect(0,0,vw,vh);c.strokeStyle="#e3e6e0";c.lineWidth=1.5;for(let x=0;x<=vw;x+=90){c.beginPath();c.moveTo(x,0);c.lineTo(x,vh);c.stroke()}for(let y=0;y<=vh;y+=90){c.beginPath();c.moveTo(0,y);c.lineTo(vw,y);c.stroke()}
+  c.fillStyle=T;c.fillRect(vw-270,0,270,180);c.fillStyle="#e86a4a";c.fillRect(vw-270,180,90,90);c.fillStyle="#101820";c.fillRect(0,vh-24,vw,24);if(emb)c.drawImage(emb,vw-230,26,130,130)}
+ else if(k===1){c.fillStyle=T;c.fillRect(0,0,vw,vh);c.fillStyle="#e86a4a";c.beginPath();c.arc(vw*.78,vh*.17,260,0,7);c.fill();c.strokeStyle="rgba(255,255,255,.35)";c.lineWidth=3;for(let i=1;i<5;i++){c.beginPath();c.arc(vw*.78,vh*.17,260+i*60,0,7);c.stroke()}
+  c.fillStyle="#f2c66d";c.fillRect(0,vh*.8,vw*.45,14);L={ink:"#ffffff",acc:"#f2c66d",mi:"#ffffff",ty:vh*.47}}
+ else if(k===2){c.fillStyle="#f3efe6";c.fillRect(0,0,vw,vh);c.lineWidth=2;for(let i=0;i<7;i++){c.strokeStyle=`rgba(15,92,77,${.55-i*.07})`;star8(c,vw*.82,vh*.16,130+i*70,i*Math.PI/16);c.stroke()}
+  c.strokeStyle="#b4532a";c.lineWidth=5;c.beginPath();c.moveTo(vw-140,vh*.42);c.lineTo(vw-440,vh*.42);c.stroke();L={ink:"#10201c",acc:"#b4532a",mi:"#10201c",ty:vh*.5}}
+ else if(k===3){const g=c.createLinearGradient(0,0,vw,vh*.6);g.addColorStop(0,"#0b1f33");g.addColorStop(1,T);c.fillStyle=g;c.fillRect(0,0,vw,vh*.64);c.fillStyle="#ffffff";c.fillRect(0,vh*.64,vw,vh*.36);
+  c.fillStyle="#e3be6a";c.fillRect(0,vh*.64,vw,10);c.fillStyle="rgba(255,255,255,.08)";c.beginPath();c.arc(150,vh*.5,300,0,7);c.fill();if(emb)c.drawImage(emb,vw-210,vh*.64+40,130,130);L={ink:"#ffffff",acc:"#e3be6a",mi:"#101820",ty:vh*.2,sy:"top"}}
+ else if(k===4){c.fillStyle="#ffffff";c.fillRect(0,0,vw,vh);c.fillStyle=T;c.fillRect(vw-40,0,40,vh);c.fillStyle="#d9dfd9";c.fillRect(70,vh*.14,vw-190,3);c.fillRect(70,vh*.86,vw-190,3);
+  c.fillStyle=T;for(let i=0;i<6;i++)for(let j=0;j<4;j++){c.beginPath();c.arc(90+i*34,vh*.14-60+j*14*0+j*16-20+30,4,0,7);c.fill()}if(emb)c.drawImage(emb,vw-210,vh*.14-110,110,110);L={ink:"#101820",acc:T,mi:"#101820",ty:vh*.3}}
+ else{const g=c.createLinearGradient(0,0,0,vh);g.addColorStop(0,"#0a0f1a");g.addColorStop(1,"#12263a");c.fillStyle=g;c.fillRect(0,0,vw,vh);const r=c.createRadialGradient(vw*.2,vh*.25,10,vw*.2,vh*.25,600);r.addColorStop(0,"rgba(61,220,151,.28)");r.addColorStop(1,"rgba(61,220,151,0)");c.fillStyle=r;c.fillRect(0,0,vw,vh);
+  c.strokeStyle="#3ddc97";c.lineWidth=2;for(let i=0;i<9;i++){c.globalAlpha=.5-i*.045;c.beginPath();c.moveTo(0,vh*.55+i*34);c.lineTo(vw,vh*.4+i*34);c.stroke()}c.globalAlpha=1;L={ink:"#ffffff",acc:"#3ddc97",mi:"#ffffff",ty:vh*.26}}
+ return L}
+const PR_KINDS=["كراسة مراجعة","اختبارات","ملخص","مقارنة","شرح","مجلة","منتج الطلائع","موسوعة","كتاب مجهَّز","أخرى"];
+const prData=()=>ls.get("prints",{items:[]});const prSave=d=>ls.set("prints",d);
+const ORD_AR=["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة","التاسعة","العاشرة"];
+const prName=n=>"الطبعة "+(ORD_AR[n-1]||toAr(n));
+function prAdd(o){const d=prData(),id="p"+Date.now().toString(36);d.items.push(Object.assign({id,kind:"أخرى",origin:"",link:"",refs:"",created:today(),editions:[],cover:null,identity:SITENAME},o));prSave(d);return id}
+/* «حوّل إلى المطبوعات» من أي قسم: زر عائم للإدارة ومن عنده صلاحية print، يسجّل الصفحة الحالية أصلًا للإصدار */
+function prFab(){let b=$("#prfab");if(!canPrint()||/^#\/(print)?$/.test(location.hash.split("?")[0])){if(b)b.remove();return}
+ if(!b){b=document.createElement("button");b.id="prfab";b.className="btn s";b.textContent="🖨️ حوّل إلى المطبوعات";b.dataset.act="toprint";b.style.cssText="position:fixed;left:12px;bottom:78px;z-index:30;opacity:.92";document.body.appendChild(b)}}
+function prDlg(){const h=$("#app h1,#app h2"),t=(h&&h.textContent||document.title||"").trim().slice(0,120),sec=(parse().p[0]||"home");
+ openDlg(`<h3>تحويل إلى المطبوعات</h3><label>عنوان الإصدار</label><input id="prt" value="${esc(t)}"><label>نوع الإصدار</label><select id="prk">${PR_KINDS.map(k=>`<option>${k}</option>`).join("")}</select>
+ <label>الأصل (القسم والرابط)</label><input id="pro" value="${esc(sec+" — "+(location.hash||"#"+location.pathname+location.search))}"><label>المراجع (مصادر المنتج، سطر لكل مرجع)</label><textarea id="prr" style="min-height:70px"></textarea><button class="btn p" id="prok" style="margin-top:10px">إضافة إلى المطبوعات (مسودة)</button>`);
+ $("#prok").onclick=()=>{const o=$("#pro").value.split(" — ");prAdd({title:$("#prt").value.trim()||"بلا عنوان",kind:$("#prk").value,origin:o[0],link:o.slice(1).join(" — "),refs:$("#prr").value.trim()});dlg().close();toast("أُضيف إلى المطبوعات كمسودة.")}}
+document.addEventListener("click",e=>{const b=e.target.closest('[data-act="toprint"]');if(b){e.preventDefault();prDlg()}});
+window.addEventListener("hashchange",()=>setTimeout(prFab,300));setTimeout(prFab,2500);
 async function vPrint(){
  if(!canPrint())return view(`<h2>المطبوعات</h2><p class="note">هذا القسم قيد الإعداد ويظهر حاليًا للإدارة فقط.</p>`);
- view(`<h2>المطبوعات</h2><p class="note">مشروع قيد الدراسة المبدئية: لا طباعة ولا بيع الآن. التنفيذ الفعلي بعد استقرار الموقع ووفرة المراجع وبقرار الإدارة.</p>
+ const COVS=MODS_COV.concat(IDS.map(n=>"تقليدي: "+n));
+ view(`<h2>المطبوعات</h2><p class="note">مشروع قيد الدراسة المبدئية: لا طباعة ولا بيع الآن. التنفيذ الفعلي بعد استقرار الموقع ووفرة المراجع وبقرار الإدارة. يظهر هذا القسم للإدارة ومن مُنح صلاحية print فقط.</p>
+ <h2>سجل الإصدارات</h2><p class="mut">كل إصدار: أصله ومراجعه وهوية الموقع وطبعاته (رقم الطبعة والتاريخ وعدد النسخ والمطبعة). يُحفظ على هذا الجهاز وللإدارة فقط، فاحتفظ بنسخة احتياطية (تصدير) ولا يُعرض شيء للزوار. لتحويل أي صفحة أو منتج من أي قسم: زر «🖨️ حوّل إلى المطبوعات» العائم.</p>
+ <div id="prl"></div><div class="row"><button class="btn" id="prnew">＋ إصدار جديد</button><button class="btn" id="prexp">نسخة احتياطية JSON</button><button class="btn" id="prcsv">جدول CSV</button><label class="btn" style="cursor:pointer">استيراد<input id="primp" type="file" accept=".json" hidden></label></div><span id="prm" class="mut" role="status"></span>
  ${PRINT_STUDY.map(([h,t])=>`<h3>${esc(h)}</h3><p>${esc(t)}</p>`).join("")}
  <h3>مقاسات المطابع المعتمدة في الموقع</h3><ul>${PRESS.map(p=>`<li>${esc(p[0])}: ${esc(p[1])}</li>`).join("")}</ul>
- <h2>أداة الأغلفة</h2><p class="mut">غلاف أمامي بهوية المكتبة بمقاس المطبعة (٣٠٠ نقطة للبوصة، مع تجاوز قص ٣ مم). يصلح للكراسات والمجلة والمنتجات.</p>
+ <h2>أداة الأغلفة</h2><p class="mut">غلاف أمامي بهوية المكتبة بمقاس المطبعة (٣٠٠ نقطة للبوصة، مع تجاوز قص ٣ مم). الأنماط الستة الأولى عصرية بحثية، والباقي تقليدي.</p>
  <div class="studio"><label for="pct">عنوان الغلاف</label><input id="pct" value="عنوان الكراسة"><label for="pcs">عنوان فرعي (اختياري)</label><input id="pcs" value="كراسة المراجعة">
  <div class="row"><div><label for="pca">المؤلف أو الجهة</label><input id="pca" value="مكتبة الدعوة السلفية"></div><div><label for="pcn">السلسلة أو الرقم (اختياري)</label><input id="pcn" placeholder="مثال: الجزء الأول"></div></div>
- <div class="row"><div><label for="pcz">المقاس</label><select id="pcz">${PRESS.map((p,i)=>`<option value="${i}">${esc(p[0])}: ${esc(p[1])}</option>`).join("")}</select></div><div><label for="pck">النمط</label><select id="pck">${IDS.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}</select></div></div>
+ <div class="row"><div><label for="pcz">المقاس</label><select id="pcz">${PRESS.map((p,i)=>`<option value="${i}">${esc(p[0])}: ${esc(p[1])}</option>`).join("")}</select></div><div><label for="pck">النمط</label><select id="pck">${COVS.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}</select></div></div>
  <canvas id="pcv" style="max-width:340px;width:100%;display:block;margin:10px auto;border:1px solid #ccc" aria-label="معاينة الغلاف"></canvas>
  <div class="row"><button class="btn p" id="pcd">حفظ الغلاف PNG للطباعة</button></div><span id="pcm" class="mut" role="status"></span></div>`);
+ const NM=MODS_COV.length;
  const draw2=async(full)=>{const z=PRESS[+$("#pcz").value],bl=full?Math.round(3*300/25.4):0,pw=Math.round(z[2]*(full?300:60)/25.4),ph=Math.round(z[3]*(full?300:60)/25.4),W=pw+2*bl,H=ph+2*bl,cv=full?document.createElement("canvas"):$("#pcv");
   await loadFont("Amiri");try{await document.fonts.load('60px "Amiri"');await document.fonts.load('600 26px "IBM Plex Sans Arabic"')}catch(e){}
   const emb=await img("assets/logo-sdsl.png");cv.width=W;cv.height=H;const c=cv.getContext("2d");c.direction="rtl";
-  const vw=1080,vh=Math.round(1080*H/W),k=W/vw;c.save();c.scale(k,k);
-  const st=drawId(c,vw,vh,+$("#pck").value,emb);c.textAlign="center";const mx=140;
-  const put=(t,font,col,y,max,lh)=>{c.font=font;c.fillStyle=col;const L=wrap(c,t,max);L.forEach((l,i)=>c.fillText(l,vw/2,y+i*lh));return y+L.length*lh};
-  let y=vh*.28;const ti=$("#pct").value.trim()||"…";let fs=120;for(;fs>50;fs-=6){c.font=`700 ${fs}px "Amiri", serif`;if(wrap(c,ti,vw-2*mx).length*fs*1.5<=vh*.34)break}
+  const vw=1080,vh=Math.round(1080*H/W),k=W/vw,sk=+$("#pck").value,modern=sk<NM;c.save();c.scale(k,k);
+  const st=modern?modCover(c,vw,vh,sk,emb):drawId(c,vw,vh,sk-NM,emb);if(!modern){st.mi=st.ink;st.ty=vh*.28}
+  const mx=140,ra=modern;c.textAlign=ra?"right":"center";const X=ra?vw-mx:vw/2;
+  const put=(t,font,col,y,max,lh)=>{c.font=font;c.fillStyle=col;const L=wrap(c,t,max);L.forEach((l,i)=>c.fillText(l,X,y+i*lh));return y+L.length*lh};
+  let y=st.ty;const ti=$("#pct").value.trim()||"…";let fs=120;for(;fs>50;fs-=6){c.font=`700 ${fs}px "Amiri", serif`;if(wrap(c,ti,vw-2*mx).length*fs*1.5<=vh*.34)break}
   y=put(ti,`700 ${fs}px "Amiri", serif`,st.ink,y,vw-2*mx,fs*1.5)+20;
   const su=$("#pcs").value.trim();if(su)y=put(su,`400 52px "Amiri", serif`,st.acc,y,vw-2*mx,80)+10;
   const nn=$("#pcn").value.trim();if(nn)put(nn,`600 36px "IBM Plex Sans Arabic", sans-serif`,st.ink,y+30,vw-2*mx,56);
-  put($("#pca").value.trim(),`600 44px "IBM Plex Sans Arabic", sans-serif`,st.ink,vh-190,vw-2*mx,64);
-  c.font=`500 28px "IBM Plex Sans Arabic", sans-serif`;c.fillStyle=+$("#pck").value===2?"#e3be6a":st.acc;c.fillText(SITENAME+" — "+SITEHOST(),vw/2,vh-60);c.restore();return cv};
+  put($("#pca").value.trim(),`600 44px "IBM Plex Sans Arabic", sans-serif`,st.mi,vh-190,vw-2*mx,64);
+  c.font=`500 28px "IBM Plex Sans Arabic", sans-serif`;c.fillStyle=sk===2||sk===1||sk===5||sk===3?st.mi:st.acc;if(sk===1)c.fillStyle="#f2c66d";c.fillText(SITENAME+" — "+SITEHOST(),X,vh-60);c.restore();return cv};
  const pre=()=>draw2(false);["#pct","#pcs","#pca","#pcn"].forEach(i=>$(i).oninput=pre);["#pcz","#pck"].forEach(i=>$(i).onchange=pre);
  $("#pcd").onclick=async()=>{$("#pcm").textContent="جارٍ التوليد…";const cv=await draw2(true);cv.toBlob(async b=>{await dl("cover-"+PRESS[+$("#pcz").value][0]+".png",b);$("#pcm").textContent="حُفظ الغلاف بمقاس المطبعة مع تجاوز القص.";setTimeout(()=>{if($("#pcm"))$("#pcm").textContent=""},3000)})};
- pre()}
+ pre();
+ /* سجل الإصدارات */
+ const msg=t=>{const m=$("#prm");if(m){m.textContent=t;setTimeout(()=>{if($("#prm"))$("#prm").textContent=""},3000)}};
+ const list=()=>{const d=prData(),el=$("#prl");if(!el)return;el.innerHTML=d.items.length?d.items.map(it=>{const tot=it.editions.reduce((a,e)=>a+(+e.copies||0),0);
+  return`<div class="card" style="margin:8px 0"><b>${esc(it.title)}</b> <span class="mut">— ${esc(it.kind)} — ${it.editions.length?esc(prName(it.editions.length))+"، "+toAr(tot)+" نسخة مطبوعة":"مسودة"}</span>
+  <div class="mut">الأصل: ${esc(it.origin||"—")} ${it.link?`<a href="${esc(it.link)}">فتح</a>`:""} | الهوية: ${esc(it.identity)} | سُجّل ${esc(it.created)}</div>${it.refs?`<div class="mut">المراجع: ${esc(it.refs).replace(/\n/g," ؛ ")}</div>`:""}
+  ${it.editions.length?`<ol>${it.editions.map(e=>`<li>${esc(prName(e.n))}: ${esc(e.date)}، ${toAr(e.copies)} نسخة${e.press?"، "+esc(e.press):""}${e.notes?" ("+esc(e.notes)+")":""}</li>`).join("")}</ol>`:""}
+  <div class="row"><button class="btn s" data-pe="ed" data-id="${it.id}">تسجيل إتمام طباعة طبعة</button><button class="btn s" data-pe="cv" data-id="${it.id}">حفظ الغلاف الحالي معه</button>${it.cover?`<button class="btn s" data-pe="lc" data-id="${it.id}">تحميل غلافه في الأداة</button>`:""}<button class="btn s" data-pe="rn" data-id="${it.id}">تعديل البيانات</button></div></div>`}).join(""):'<p class="mut">لا إصدارات بعد.</p>'};
+ list();
+ const eform=(id)=>{const d=prData(),it=d.items.find(x=>x.id===id);if(!it)return;const n=it.editions.length+1;
+  openDlg(`<h3>تسجيل طباعة: ${esc(it.title)}</h3><p>رقم الطبعة: <b>${esc(prName(n))}</b></p><label>التاريخ</label><input id="edd" type="date" value="${today()}"><label>عدد النسخ المطبوعة</label><input id="edc" type="number" min="1"><label>المطبعة (اختياري)</label><input id="edp"><label>ملاحظات (اختياري)</label><input id="edn"><button class="btn p" id="edok" style="margin-top:10px">حفظ</button>`);
+  $("#edok").onclick=()=>{const c=+$("#edc").value;if(!(c>0))return toast("اكتب عدد النسخ.");it.editions.push({n,date:$("#edd").value||today(),copies:c,press:$("#edp").value.trim(),notes:$("#edn").value.trim()});prSave(d);dlg().close();list()}};
+ const rform=id=>{const d=prData(),it=d.items.find(x=>x.id===id);if(!it)return;
+  openDlg(`<h3>بيانات الإصدار</h3><label>العنوان</label><input id="rt" value="${esc(it.title)}"><label>النوع</label><select id="rk">${PR_KINDS.map(k=>`<option${k===it.kind?" selected":""}>${k}</option>`).join("")}</select><label>الأصل</label><input id="ro" value="${esc(it.origin)}"><label>رابط الأصل</label><input id="rl" value="${esc(it.link)}"><label>المراجع</label><textarea id="rr" style="min-height:70px">${esc(it.refs)}</textarea><button class="btn p" id="rok" style="margin-top:10px">حفظ</button>`);
+  $("#rok").onclick=()=>{Object.assign(it,{title:$("#rt").value.trim()||it.title,kind:$("#rk").value,origin:$("#ro").value.trim(),link:$("#rl").value.trim(),refs:$("#rr").value.trim()});prSave(d);dlg().close();list()}};
+ $("#prl").onclick=e=>{const b=e.target.closest("[data-pe]");if(!b)return;const a=b.dataset.pe,id=b.dataset.id,d=prData(),it=d.items.find(x=>x.id===id);if(!it)return;
+  if(a==="ed")eform(id);else if(a==="rn")rform(id);
+  else if(a==="cv"){it.cover={t:$("#pct").value,s:$("#pcs").value,a:$("#pca").value,n:$("#pcn").value,z:$("#pcz").value,k:$("#pck").value};prSave(d);list();msg("حُفظ الغلاف مع الإصدار.")}
+  else if(a==="lc"&&it.cover){$("#pct").value=it.cover.t;$("#pcs").value=it.cover.s;$("#pca").value=it.cover.a;$("#pcn").value=it.cover.n;$("#pcz").value=it.cover.z;$("#pck").value=it.cover.k;pre();$("#pcv").scrollIntoView({behavior:"smooth",block:"center"})}};
+ $("#prnew").onclick=()=>{const id=prAdd({title:"إصدار جديد"});list();rform(id)};
+ $("#prexp").onclick=()=>{dl("prints-backup.json",JSON.stringify(prData(),null,1),"application/json");msg("حُفظت النسخة الاحتياطية.")};
+ $("#prcsv").onclick=()=>{const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"',rows=[["الإصدار","النوع","الأصل","الطبعة","التاريخ","عدد النسخ","المطبعة","ملاحظات"]];
+  prData().items.forEach(it=>it.editions.length?it.editions.forEach(e=>rows.push([it.title,it.kind,it.origin,prName(e.n),e.date,e.copies,e.press,e.notes])):rows.push([it.title,it.kind,it.origin,"مسودة","","","",""]));dl("prints.csv",rows.map(r=>r.map(q).join(",")).join("\n"),"text/csv")};
+ $("#primp").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.items))throw 0;const d=prData(),ids=new Set(d.items.map(x=>x.id));j.items.forEach(x=>{if(x&&x.id&&!ids.has(x.id))d.items.push(x)});prSave(d);list();msg("استُورد دون حذف شيء.")}catch(x){msg("ملف غير صالح.")}}}
 /* ---------- القبسات ---------- */
 let pendingQ=null;
 const Q=Object.assign({bg:"id",plain:"#0f5c4d",idx:0,dim:.45,font:"Amiri",ink:"auto",logo:true,size:"1080x1080",fz:100,fw:400,lh:1.8,al:"center",sa:true,sb:true,wm:"corner",url:true},ls.get("qset",{}));
