@@ -1023,7 +1023,7 @@ const prBtn=(kind,cls)=>{try{return canPrint()?`<button type="button" class="btn
 function prDlg(kind){const h=$("#app h1,#app h2"),t=(h&&h.textContent||document.title||"").trim().slice(0,120),sec=(parse().p[0]||"home");
  window.__prAuto=null;let t2=t,r2="";try{if(sec==="book"){const b=B(parse().p[1]);if(b){t2=b.title;r2=A(b.authorId).name+" — "+b.title;window.__prAuto={pages:b.pages?b.pages.length:0,author:A(b.authorId).name,col:bc(b)}}}}catch(e){}
  openDlg(`<h3>تحويل إلى المطبوعات</h3><label>عنوان الإصدار</label><input id="prt" value="${esc(t2)}"><label>نوع الإصدار</label><select id="prk">${PR_KINDS.map(k=>`<option${k===kind?" selected":""}>${k}</option>`).join("")}</select>
- <label>الأصل (القسم والرابط)</label><input id="pro" value="${esc(sec+" — "+(location.hash||"#"+location.pathname+location.search))}"><label>المراجع (مصادر المنتج، سطر لكل مرجع)</label><textarea id="prr" style="min-height:70px">${esc(r2)}</textarea><p class="mut">يُسجَّل تلقائيًا: التاريخ، القسم، وعدد صفحات الكتاب ومؤلفه إن كان الأصل كتابًا.</p><button class="btn p" id="prok" style="margin-top:10px">إضافة إلى المطبوعات (مسودة)</button>`);
+ <label>الأصل (القسم والرابط)</label><input id="pro" value="${esc((typeof SECN!=="undefined"&&SECN[sec]||sec)+" — "+(location.hash||"#"+location.pathname+location.search))}"><label>المراجع (مصادر المنتج، سطر لكل مرجع)</label><textarea id="prr" style="min-height:70px">${esc(r2)}</textarea><p class="mut">يُسجَّل تلقائيًا: التاريخ، القسم، وعدد صفحات الكتاب ومؤلفه إن كان الأصل كتابًا.</p><button class="btn p" id="prok" style="margin-top:10px">إضافة إلى المطبوعات (مسودة)</button>`);
  $("#prok").onclick=()=>{const o=$("#pro").value.split(" — "),au=window.__prAuto||null;prAdd({title:$("#prt").value.trim()||"بلا عنوان",kind:$("#prk").value,origin:o[0],link:o.slice(1).join(" — "),refs:$("#prr").value.trim(),src:"auto",auto:au});dlg().close();toast("أُضيف إلى المطبوعات كمسودة.")}}
 document.addEventListener("click",e=>{const b=e.target.closest('[data-act="toprint"]');if(b){e.preventDefault();prDlg(b.dataset.pk)}});
 async function vPrint(){
@@ -1112,8 +1112,19 @@ const GO=(()=>{
   SURAS.forEach((n,k)=>IDX.push(mk("سورة "+n,"المصحف","#/mushaf/"+(k+1),"sec",4)));
   lib.authors.forEach(a=>{if(!a.mergedInto)IDX.push(mk(a.name,"مؤلف","#/author/"+a.id,"author",0))});
   const ss=new Set();lib.books.forEach(b=>{if(b.hidden&&!isAdmin())return;if(b.set){if(ss.has(b.set))return;ss.add(b.set)}const o=mk(b.setTitle||b.title,(isArt(b)?"مقال":"كتاب")+" • "+((A(b.authorId)||{}).name||""),"#/book/"+b.id,"book",0);o.id=b.id;if(b.set)o.b=-3;IDX.push(o)})}
- function loadQA(){if(QAP)return QAP;QAP=Promise.resolve(typeof QA!=="undefined"&&QA.index?QA.index():null).then(it=>{QAI=(it||[]).map(x=>mk(x[1],"سؤال وجواب","#/book/"+x[2]+"/"+(x[3]||1),"qa",-6))}).catch(()=>{QAI=[]});return QAP}
- function rank(list,qt,qj,part){const out=[],mn=.7;for(const e of list){const ex=e.n===qj;let sum=0,hit=0;for(const t of qt){let b=0;for(const w of e.nt){const v=sim(t,w);if(v>b){b=v;if(b===1)break}}if(b>=mn){sum+=b;hit++}else if(!part){hit=-1;break}}if(hit<=0||(part&&hit*2<qt.length))continue;const avg=sum/qt.length,lenp=Math.min(14,Math.abs(e.n.split(" ").length-qt.length)*2);out.push({t:e.t,sub:e.sub,href:e.href,k:e.k,id:e.id,s:ex?100:Math.round(avg*80+e.b-lenp-(part?10:0)),fuzzy:!ex})}return out}
+ function loadQA(){if(QAP)return QAP;const J=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  QAP=Promise.all([Promise.resolve(typeof QA!=="undefined"&&QA.index?QA.index():null).catch(()=>null),J("data/hadith/index.json"),J("data/khutab/index.json"),J("data/mutun.json"),J("data/quizzes/index.json"),J("data/tarajim.json")]).then(([qa,hd,kh,mt,qz,tj])=>{const o=[];
+   (qa||[]).forEach(x=>o.push(mk(x[1],"سؤال وجواب","#/book/"+x[2]+"/"+(x[3]||1),"qa",-6)));
+   if(hd){const bk=hd.books||{};(hd.items||[]).forEach(x=>o.push(mk((bk[x[1]]||"")+" "+(x[4]||"")+" "+String(x[6]||"").slice(0,60),"حديث","#/hadith/x/"+x[0],"hadith",-4)))}
+   if(kh)(kh.items||[]).forEach(x=>o.push(mk(x.t+(x.sub?" "+x.sub:""),"خطبة جمعة","#/khutab/"+encodeURIComponent(x.s),"khutba",-2)));
+   if(mt)(mt.items||[]).forEach(x=>o.push(mk(x.t,"متن للحفظ","#/hifz/m/"+x.id,"matn",2)));
+   if(qz)(qz.items||[]).forEach(x=>{const b=B(x.b);if(b)o.push(mk("اختبار "+(b.setTitle||b.title),"اختبار","#/quizzes/"+x.b,"quiz",-1))});
+   if(tj&&tj.items)Object.keys(tj.items).forEach(id=>{const a=A(id);if(a)o.push(mk("ترجمة "+a.name,"ترجمة الشيخ","#/tarjama/"+id,"tarjama",2))});
+   QAI=o}).catch(()=>{QAI=[]});return QAP}
+ const vocab=l=>{if(l._v)return l._v;const v=new Map();l.forEach((e,i)=>e.nt.forEach(w=>{let a=v.get(w);if(!a)v.set(w,a=[]);a.push(i)}));Object.defineProperty(l,"_v",{value:v});return v};
+ function rank(list,qt,qj,part){const out=[],mn=.7,v=vocab(list),tms=qt.map(t=>{const m=new Map();for(const[w,ids]of v){const sv=sim(t,w);if(sv>=mn)for(const i of ids)if(!(m.get(i)>=sv))m.set(i,sv)}return m});
+  const cand=new Map();tms.forEach((m,k)=>{for(const[i,sv]of m){const c=cand.get(i)||{h:0,sum:0};c.h++;c.sum+=sv;cand.set(i,c)}});
+  for(const[i,c]of cand){if(!part&&c.h<qt.length)continue;if(part&&c.h*2<qt.length)continue;const e=list[i],ex=e.n===qj,avg=c.sum/qt.length,lenp=Math.min(14,Math.abs(e.n.split(" ").length-qt.length)*2);out.push({t:e.t,sub:e.sub,href:e.href,k:e.k,id:e.id,s:ex?(e.k==="sec"||e.k==="author"||e.k==="book"?100:92):Math.round(avg*80+e.b-lenp-(part?10:0)),fuzzy:!ex})}return out}
  function find(q){const qn=norm(q),tk=toks(q),out=[];if(!qn)return{c:out,fuzzy:false};
   if(RESUME.test(qn))out.push({t:"آخر كتاب قرأته",sub:"تابع من آخر صفحة",href:"#resume",s:300,k:"resume"});
   if(tk.length){if(!IDX)build();const qt=tk.map(fold),qj=tk.join(" ");let all=rank(IDX,qt,qj);if(QAI)all=all.concat(rank(QAI,qt,qj));if(!all.length&&qt.length>1){all=rank(IDX,qt,qj,1);if(QAI)all=all.concat(rank(QAI,qt,qj,1))}all.sort((a,b)=>b.s-a.s);out.push(...all.slice(0,6))}
@@ -1123,7 +1134,7 @@ const GO=(()=>{
  async function openLast(){const l=await last();if(!l){toast("لا توجد جلسة قراءة محفوظة بعد. افتح كتابًا وسأحفظ موضعك.");return true}const b=B(l.id);toast("فتح «"+(b.setTitle||b.title)+"» من صفحة "+toAr(l.p));location.hash="#/book/"+l.id+"/"+l.p;return true}
  const href=c=>c.k==="book"?c.href+(S.lastBy&&S.lastBy[c.id]>1?"":"/1"):c.href;
  function decide(q){const qn=norm(q);if(!qn)return false;if(RESUME.test(qn)){openLast();return true}
-  const r=find(q),c=r.c[0],nx=r.c[1];if(!c||c.k==="resume"||c.k==="qa")return false;
+  const r=find(q),c=r.c[0],nx=r.c[1];if(!c||c.k==="resume"||c.k==="qa"||c.k==="hadith")return false;
   if(c.s>=100){location.hash=href(c);return true}
   if(c.fuzzy&&toks(q).length<=4&&c.s>=65&&(!nx||c.s-nx.s>=6)){toast("أقرب نتيجة: «"+c.t+"»");location.hash=href(c);return true}return false}
  let box=null;
