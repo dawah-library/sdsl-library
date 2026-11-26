@@ -1017,8 +1017,8 @@ const ORD_AR=["الأولى","الثانية","الثالثة","الرابعة",
 const prName=n=>"الطبعة "+(ORD_AR[n-1]||toAr(n));
 function prAdd(o){const d=prData(),id="p"+Date.now().toString(36);d.items.push(Object.assign({id,kind:"أخرى",origin:"",link:"",refs:"",created:today(),editions:[],cover:null,identity:SITENAME,src:"manual",bodyFont:"smart",log:[{t:today(),ev:"تسجيل الإصدار ("+(o.src==="auto"?"تلقائي من النظام":"يدوي")+")"}]},o));prSave(d);return id}
 /* «حوّل إلى المطبوعات» من أي قسم: زر عائم للإدارة ومن عنده صلاحية print، يسجّل الصفحة الحالية أصلًا للإصدار */
-function prFab(){let b=$("#prfab");if(!canPrint()||/^#\/(print)?$/.test(location.hash.split("?")[0])){if(b)b.remove();return}
- if(!b){b=document.createElement("button");b.id="prfab";b.className="btn s";b.textContent="🖨️ حوّل إلى المطبوعات";b.dataset.act="toprint";b.style.cssText="position:fixed;left:12px;bottom:78px;z-index:30;opacity:.92";document.body.appendChild(b)}}
+function prFab(){let b=$("#prfab");if(!canPrint()||/^#\/(print)?$/.test(location.hash.split("?")[0])){if(b)b.remove();document.body.style.paddingBottom="";return}
+ if(!b){b=document.createElement("button");b.id="prfab";b.className="btn s";b.textContent="🖨️ حوّل إلى المطبوعات";b.dataset.act="toprint";b.style.cssText="position:fixed;left:12px;bottom:78px;z-index:30;opacity:.92";document.body.appendChild(b)}document.body.style.paddingBottom="130px"}
 function prDlg(){const h=$("#app h1,#app h2"),t=(h&&h.textContent||document.title||"").trim().slice(0,120),sec=(parse().p[0]||"home");
  window.__prAuto=null;let t2=t,r2="";try{if(sec==="book"){const b=B(parse().p[1]);if(b){t2=b.title;r2=A(b.authorId).name+" — "+b.title;window.__prAuto={pages:b.pages?b.pages.length:0,author:A(b.authorId).name,col:bc(b)}}}}catch(e){}
  openDlg(`<h3>تحويل إلى المطبوعات</h3><label>عنوان الإصدار</label><input id="prt" value="${esc(t2)}"><label>نوع الإصدار</label><select id="prk">${PR_KINDS.map(k=>`<option>${k}</option>`).join("")}</select>
