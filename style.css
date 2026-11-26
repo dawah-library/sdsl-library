@@ -1968,3 +1968,5 @@ form:has(.gosug){position:relative}
 .gosug .gomean{padding:6px 12px;font-size:.85em;color:#8a6a1f;background:#fbf4dd;border-bottom:1px solid #eadfb8}
 
 .clk{font-size:.78rem;padding:4px 8px;white-space:nowrap;line-height:1.1}.clk .clkz{opacity:.8;font-size:.7rem}.clk b{font-weight:700;font-variant-numeric:tabular-nums}
+
+.post.phid{opacity:.72;outline:2px dashed #b88a2e;outline-offset:-2px}.post.phid::before{content:"مخفي عن الجمهور (تراه الإدارة فقط)";display:block;background:#fbf4dd;color:#8a6a1f;font-size:.8rem;padding:4px 10px;border-radius:8px 8px 0 0}
