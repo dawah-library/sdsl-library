@@ -11,6 +11,9 @@ app, about, idx = rd("app.js"), rd("about.js"), rd("index.html")
 routes = set(r for c in re.findall(r'if\(((?:v==="[a-z]+"\|?\|?)+)\)\s*return\s+v[A-Z]', app) for r in re.findall(r'"([a-z]+)"', c)) | set(re.findall(r'href="#/([a-z]+)', idx))
 covered = set(" ".join(re.findall(r'\["[^"]+", "[^"]+", "([a-z ]+)"\]', about)).split())
 mods = set(re.findall(r'<script src="([a-z0-9-]+)\.js"', idx))
+try: mods |= set(re.findall(r'"([a-z0-9-]+)\.js"', rd("mods.js")))  # الوحدات المؤجلة (mods.js)
+except OSError: pass
+mods.discard("mods")  # مُحمِّل الوحدات نفسه ليس خدمة
 mcov = set(re.search(r'ABOUT_MODULES = "([^"]*)"', about).group(1).split())
 miss_r, miss_m = sorted(routes - covered - IGNORE), sorted(mods - mcov)
 out = []
