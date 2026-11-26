@@ -4,5 +4,5 @@ window.MODS=(()=>{const L=["askx.js", "social.js", "community.js", "audio.js", "
  let res;const ready=new Promise(r=>res=r),M={done:false,ready,core,list:L};
  const fin=()=>{if(M.done)return;M.done=true;res();try{if(typeof sideRe==="function")sideRe()}catch(e){}};
  M.start=()=>{if(M.started)return;M.started=true;let n=L.length;if(!n)return fin();L.forEach(u=>{const s=document.createElement("script");s.src=u;s.async=false;s.onload=s.onerror=()=>{if(--n===0)fin()};document.head.appendChild(s)})};
- if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(M.start,0));else setTimeout(M.start,0);
+ setTimeout(M.start,12000); /* احتياطًا فقط: البدء المعتاد من app.js بعد عرض أول صفحة (حتى لا تزاحم الوحدات تحميل الفهرس) */
  return M})();
