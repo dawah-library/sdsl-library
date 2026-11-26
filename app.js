@@ -372,7 +372,7 @@ function vAuthor(id,q){const mi=(CAT.authors.find(x=>x.id===id)||{}).mergedInto;
  const NAMES={books:"الكتب",articles:"المقالات",fatawa:"الفتاوى",bayanat:"البيانات",tafrighat:"التفريغات"},ROUTE={articles:"articles",fatawa:"fatawa",bayanat:"bayanat"};
  const shown=Object.keys(T_).filter(k=>k==="books"||k==="articles"||T_[k].length);
  const k=shown.includes(q.k)?q.k:(shown.find(x=>T_[x].length)||"books"),items=T_[k];
- const tt=tj(id);view(`<div class="ahero">${avatar(a,"big")}<h2>${esc(a.name)}${died(a)}</h2>${typeof followBtn==="function"&&Cloud.on()?followBtn("a:"+id,false):""}${isAdmin()&&GH.on?`<button class="btn s nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button>`:""}</div>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
+ const tt=tj(id);view(`<div class="ahero">${avatar(a,"big")}<h2>${esc(a.name)}${died(a)}</h2>${typeof followBtn==="function"&&Cloud.on()?followBtn("a:"+id,false):""}${isAdmin()&&GH.on?`<button class="btn s nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button> <button class="btn s nf" data-act="aedit" data-id="${id}">✏️ تعديل البيانات</button>`:""}</div>${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
  <div class="tabs" role="tablist">${shown.map(x=>`<a role="tab" aria-selected="${k===x}" href="#/author/${id}?k=${x}">${NAMES[x]} (${T_[x].length})</a>`).join("")}<a role="tab" aria-selected="false" href="#/posts?a=${id}">المنشورات</a></div>
  ${items.slice(0,40).map(anyCard).join("")||`<p class="mut">لا توجد ${NAMES[k]} بعد.</p>`}
  ${items.length>40&&ROUTE[k]?`<p><a href="#/${ROUTE[k]}?a=${id}">عرض كل ${NAMES[k]} (${items.length})</a></p>`:""}
@@ -1381,6 +1381,11 @@ async function saveAuthor(f){const st=$("#aest"),fd=new FormData(f),id=fd.get("i
  const apply=c=>{const a=c.authors.find(x=>x.id===id);if(!a)throw new Error("المؤلف غير موجود في الفهرس المنشور (ربما أُضيف على هذا الجهاز فقط).");Object.assign(a,up);if(a.photo==="")delete a.photo;if(d)a.died=d;else delete a.died;c.version=Date.now();return c};
  try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات مؤلف: "+up.name,true);try{apply(CAT)}catch(e){}merge();st.textContent="✓ حُفظ.";toast("حُفظت بيانات المؤلف")}catch(e){st.textContent=e.message}}
 /* صورة المؤلف من معرض صور الهاتف: اختيار، ثم تحريك وتكبير داخل الإطار الدائري، ثم حفظ */
+function authorEditDlg(id){const a=A(id);if(!GH.on)return alert("سجّل الدخول بحساب الإدارة أولًا.");
+ openDlg(`<h3>تعديل بيانات المؤلف</h3><label>الاسم</label><input id="aen" value="${esc(a.name)}"><label>نبذة تعريفية</label><textarea id="aeb" rows="5">${esc(a.bio||"")}</textarea><label>سنة الوفاة (اتركها فارغة للحي أو غير المعروف)</label><input id="aed" value="${esc(a.died||"")}" inputmode="numeric"><div class="row" style="margin-top:10px"><button class="btn p" id="aesave">حفظ</button></div><p id="aest" class="mut"></p>`);
+ $("#aesave").onclick=async()=>{const nm=$("#aen").value.trim(),bio=$("#aeb").value.trim(),died=$("#aed").value.trim();if(!nm)return $("#aest").textContent="الاسم مطلوب";$("#aest").textContent="جارٍ الحفظ…";
+  const apply=x=>{const y=x.authors.find(q=>q.id===id);if(!y)throw new Error("المؤلف غير موجود في الفهرس المنشور.");if(y.name!==nm){y.aliases=[...new Set([...(y.aliases||[]),y.name])].filter(n=>n!==nm);y.name=nm}y.bio=bio;if(died)y.died=/^\d+$/.test(died)?+died:died;else y.died=null;x.version=Date.now();return x};
+  try{await GH.editJSON("data/catalog.json",apply,"تعديل بيانات المؤلف: "+nm,true);try{apply(CAT)}catch(e){}merge();dlg().close();toast("حُفظت البيانات، وتظهر للجميع خلال دقيقة.");route()}catch(e){$("#aest").textContent="تعذّر: "+(e.message||e)}}}
 function photoDlg(id){const a=A(id);if(!GH.on)return alert("سجّل الدخول بحساب الإدارة أولًا.");
  openDlg(`<h3>صورة ${esc(a.name)}</h3><p class="mut">اختر صورة من معرض الصور أو التقط صورة، ثم حرّكها بإصبعك وكبّرها حتى يكون الوجه في وسط الدائرة.</p>
  <label class="btn p nf" style="display:inline-block;cursor:pointer">اختيار صورة<input type="file" id="phf" accept="image/*" hidden></label>
@@ -1804,7 +1809,9 @@ const findPost=id=>(typeof MP!=="undefined"&&MP.get(id))||(POSTS||[]).find(x=>x.
 const pName=x=>x.authorId?A(x.authorId).name:x.member?(x.name||"عضو"):(x.name||"مكتبة الدعوة السلفية الرقمية");
 const Cloud={role:"member",realRole:"member",author:null,isPremium(){return this.on()&&!!Auth.user&&/^(premium|sheikh|editor|admin)$/.test(this.role)},isFounder(){return this.on()&&!!Auth.user&&this.realRole==="admin"},isSheikh(){return this.on()&&!!Auth.user&&this.role==="sheikh"},on(){return Auth.mode==="cloud"&&!!Auth.sb},staff(){return this.on()&&!!Auth.user&&/^(admin|editor)$/.test(this.role)},
  async loadRole(){this.role="member";this.perms=[];if(!this.on()||!Auth.user){sideRe();return}Prefs.pull();try{const {data}=await Auth.sb.from("profiles").select("role,author_id,perms").eq("id",Auth.user.id).maybeSingle();if(data&&data.role){this.realRole=data.role;this.role=data.role==="partner"?"admin":data.role;this.author=data.author_id||null;this.perms=typeof SECTEAMS!=="undefined"?SECTEAMS.expand(data.perms||[]):(data.perms||[])}}catch(e){}
-  if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}sideRe()}};
+  if(this.staff()){if(!S.admin){S.admin=true;saveS()}applyLabels();merge();let first=false;try{first=!sessionStorage.getItem("admOpen");sessionStorage.setItem("admOpen","1")}catch(e){}if(first&&!parse().p[0])location.hash="#/admin"}sideRe();reAuthorView()}};
+// صلاحية الحساب تُحمَّل بعد رسم الصفحة: تُعاد صفحة المؤلف والمنشور مرة واحدة ليظهر لصاحب الصلاحية أدوات الإدارة (كانت تظهر بعد تحديث الصفحة فقط)
+var RAV=null;function reAuthorView(){try{const v=parse().p[0],k=v+"|"+parse().p[1]+"|"+(Cloud.role||"")+"|"+(Cloud.perms||[]).length;if(!["author","tarjama","post"].includes(v)||(!isAdmin()&&!(Cloud.perms||[]).length)||RAV===k)return;RAV=k;route()}catch(e){}}
 // الشريط الجانبي الثابت على الحاسوب يُرسم قبل معرفة صلاحية الحساب؛ يعاد رسمه بعد تحميلها فتظهر مجموعة «الإدارة»
 function sideRe(){try{if(typeof SIDE!=="undefined"&&document.getElementById("side"))SIDE.render();if(typeof DEV!=="undefined"&&DEV.badge)setTimeout(DEV.badge,200)}catch(e){}}
 const Social={
@@ -2312,7 +2319,7 @@ document.addEventListener("click",async e=>{const el=e.target.closest("[data-act
  else if(a==="ghout"){GH.token="";toast("خرجت من وضع الإدارة المباشرة.");route()}
  else if((a==="pview"||a==="pv")&&!Auth.user&&(a==="pview"||el.dataset.pv!=="text")){needLogin("عرض النسخة المصورة بجوار النص متاح لأعضاء المكتبة المسجلين، والتسجيل مجاني.")}
  else if(a==="pview"){S.pv=(S.pv&&S.pv!=="text")?"text":"pdf";saveS();LASTREAD=null;route()}
- else if(a==="aphoto"){photoDlg(el.dataset.id)}
+ else if(a==="aphoto"){photoDlg(el.dataset.id)}else if(a==="aedit"){authorEditDlg(el.dataset.id)}
  else if(a==="nbexp"){nbExport(el.dataset.f)}
  else if(a==="pdfdl"){const c=cur();if(c)pdfDl(c.b).catch(e=>toast(e.message))}
  else if(a==="pv"){S.pv=el.dataset.pv;saveS();LASTREAD=null;route()}
