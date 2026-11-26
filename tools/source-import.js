@@ -8,6 +8,17 @@
 const fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, ".."), DATA = path.join(ROOT, "data");
 const SRC = path.join(DATA, "sources.json"), Q = path.join(DATA, "import-review.json"), IDX = path.join(DATA, "articles", "index.json");
+const FA = require("./fb-author.js"), CATP = path.join(DATA, "catalog.json"); let _cat = null;
+// نسبة منشور فيسبوك إلى صاحبه: aid المصدر، وإلا مطابقة الاسم، وإلا مؤلف مقترح جديد (لا يُنشر باسم المكتبة)؛ لا يمس الجلب نفسه
+function fbAuthor(s) {
+  if (s.aid) return s.aid;
+  _cat = _cat || readJSON(CATP, null); if (!_cat) return "";
+  const r = FA.resolveAuthor(s, _cat); if (!r) return "";
+  s.aid = r.aid;
+  if (r.created) { _cat.version = Date.now(); fs.writeFileSync(CATP, JSON.stringify(_cat)); }
+  if (r.near && r.near.length) FA.saveReview([{ src: s.id, aid: r.aid, name: s.author || s.name, near: r.near, at: new Date().toISOString() }]);
+  return r.aid;
+}
 const readJSON = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return d; } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const norm = s => String(s || "").replace(/[ً-ْـ​-‏‪-‮﻿]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim();
@@ -119,7 +130,7 @@ async function runSource(s, ctx) {
       if (dup) { skipped++; L(`مكرر (${dup}): ${title}`); continue; }
       if (s.type === "facebook" && (s.to || "posts") === "posts" && s.auto) { // نشر تلقائي في «المنشورات» دون مراجعة (باختيار الإدارة لهذا الحساب)
         const pp = path.join(DATA, "posts.json"), P = readJSON(pp, { items: [] }), pid = "fb" + s.id.replace(/^fb-/, "").slice(0, 12) + key;
-        if (!P.items.some(x => x.id === pid || (x.url && x.url === u))) { P.items.unshift(Object.assign({ id: pid, date: date || new Date().toISOString().slice(0, 10), text: text.slice(0, 20000), url: u, src: "فيس بوك" }, s.aid ? { authorId: s.aid } : {})); fs.writeFileSync(pp, JSON.stringify(P)); }
+        if (!P.items.some(x => x.id === pid || (x.url && x.url === u))) { P.items.unshift(Object.assign({ id: pid, date: date || new Date().toISOString().slice(0, 10), text: text.slice(0, 20000), url: u, src: "فيس بوك" }, (s.aid || fbAuthor(s)) ? { authorId: s.aid } : {})); fs.writeFileSync(pp, JSON.stringify(P)); }
         added++; L(`+ نُشر في المنشورات: ${title}`); continue; }
       ctx.q.items.push({ id: s.id + key, src: s.id, srcName: s.name, col: s.col || "dawah", u, t: title, author, d: date, text: text.slice(0, 60000), st: "pending", at: new Date().toISOString(), lic: s.lic || "", to: s.type === "facebook" ? (s.to || "posts") : "" });
       added++; L(`+ للمراجعة: ${title}${author ? " — " + author : ""}`);
