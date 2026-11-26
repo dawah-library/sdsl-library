@@ -27,6 +27,25 @@ const FBIN = (() => {
     if (!out.length && text) text.split(/\n{3,}/).map(x => x.trim()).filter(x => x.length >= 60).forEach(x => out.push({ text: x, u: "", img: "", when: "" }));
     return out;
   }
+  const authorNames = () => (lib.authors || []).filter(a => !a.mergedInto && (a.col || "dawah") === "dawah").map(a => a.name).sort((x, y) => x.localeCompare(y, "ar"));
+  function fbHandle(u) { const m = String(u).trim().match(/^https?:\/\/(?:www\.|m\.|web\.|mbasic\.)?(?:facebook\.com|fb\.com)\/(profile\.php\?id=\d+|[^/?#]+)/i); if (!m) return null; const h = m[1]; return /^(share|sharer|groups|watch|pages|story\.php|permalink\.php|photo)/i.test(h) ? null : h; }
+  async function addAccount() {
+    const st = $("#fbast"), isNew = $("#fbanew").checked, nm = $("#fbaa").value.trim(), url = $("#fbau").value.trim(), h = fbHandle(url);
+    if (!nm) return toast(isNew ? "اكتب اسم المؤلف الجديد" : "اختر الكاتب من القائمة");
+    if (!h) return toast("رابط فيسبوك غير صالح: ضع رابط صفحة الحساب نفسها");
+    let au = (lib.authors || []).find(a => !a.mergedInto && [a.name].concat(a.aliases || []).some(x => norm(x) === norm(nm)));
+    if (!isNew && !au) return toast("الاسم ليس في قائمة المؤلفين: اخترْه من القائمة أو فعّل «مؤلف جديد»");
+    if (isNew && au && !confirm("يوجد مؤلف بهذا الاسم: «" + au.name + "». موافق: يُنسب الحساب إليه، إلغاء: توقف.")) return;
+    const sid = "fb-" + h.replace(/^profile\.php\?id=/, "id").replace(/[^A-Za-z0-9]/g, "").toLowerCase(), clean = h.startsWith("profile.php") ? "https://www.facebook.com/" + h : "https://www.facebook.com/" + h + "/";
+    st.textContent = "جارٍ الحفظ…";
+    try {
+      if (!au) { const n = Math.max(0, ...lib.authors.filter(a => /^w\d+$/.test(a.id)).map(a => +a.id.slice(1))) + 1; au = { id: "w" + n, name: nm, col: "dawah", bio: "", auto: true, status: "مقترح", fb: clean }; await ghSaveAuthor(au); }
+      let dup = false;
+      await GH.editJSON("data/sources.json", o => { o = o || { sources: [] }; o.sources = o.sources || []; if (o.sources.some(x => x.id === sid || (x.type === "facebook" && x.url && fbHandle(x.url) === h))) { dup = true; return o; }
+        o.sources.push({ id: sid, type: "facebook", name: au.name, fb: h, url: clean, kind: "page", col: "dawah", lic: "", author: au.name, on: true, to: "posts", minChars: 60, perRun: 25, delayMs: 1000, aid: au.id, state: { mode: "fb-web", seen: [] }, lists: [], base: "", auto: true }); return o; }, "حساب فيسبوك: " + au.name, true);
+      SRC = null; st.innerHTML = dup ? "هذا الحساب مضاف من قبل." : "✓ أُضيف حساب «" + esc(au.name) + "» وسيُنسب إليه ما يُستجلب منه."; if (!dup) setTimeout(page, 900);
+    } catch (e) { st.textContent = "تعذّر: " + (e.message || e); }
+  }
   async function page() {
     if (!isAdmin()) return view('<div class="note">هذه الصفحة للإدارة.</div>');
     take(); if (!SRC) { try { SRC = (await GH.get("data/sources.json")).text; SRC = JSON.parse(SRC).sources || []; } catch (e) { SRC = []; } }
@@ -37,8 +56,17 @@ const FBIN = (() => {
       <li>افتح صفحة الشيخ في فيسبوك وأنت داخل بحسابك، ومرّر الصفحة حتى تظهر المنشورات التي تريدها.</li><li>اضغط «جلب إلى المكتبة» من شريط الإشارات، فتُفتح هذه الصفحة بالمنشورات.</li></ol>
       <p class="mut">الزر يعمل في متصفحك وحده؛ لا يحفظ كلمة مرورك ولا يرسل شيئًا إلا إلى هذه الصفحة.</p></div></details>
     <details class="hfold"><summary>الطريقة الثانية: انسخ والصق (حاسوب أو جوال)</summary><div><p>في صفحة الشيخ بفيسبوك: حدد المنشورات (أو اضغط Ctrl+A) وانسخها، ثم الصقها هنا:</p><div id="fbpaste" class="fbpaste" contenteditable="true" aria-label="الصق هنا"></div></div></details>
+    <details class="hfold" id="fbadd"><summary>➕ إضافة كاتب / حساب فيسبوك</summary><div>
+      <p class="mut">اختر اسم صاحب الحساب من المؤلفين الموجودين في الموقع (اكتب بعض أحرف الاسم فتظهر الأسماء المطابقة)، وضع رابط حسابه. وإن لم يكن له اسم في الموقع فعّل «مؤلف جديد» واكتب الاسم.</p>
+      <div class="row"><label>الكاتب <input id="fbaa" list="fbal" placeholder="ابحث بالاسم…" autocomplete="off"></label>
+      <datalist id="fbal">${authorNames().map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+      <label><input type="checkbox" id="fbanew"> مؤلف جديد (غير موجود في القائمة)</label></div>
+      <div class="row"><label>رابط الحساب في فيسبوك <input id="fbau" type="url" dir="ltr" placeholder="https://www.facebook.com/..." style="min-width:260px"></label></div>
+      <button class="btn p" id="fbaok">إضافة الحساب</button> <span id="fbast" class="mut"></span>
+      <p class="mut">يُنسب كل منشور يُستجلب من هذا الحساب إلى صاحبه، وتُفتح له صفحة شخصية مع أول منشور وتُرتَّب كباقي المؤلفين.</p></div></details>
     <h3>المصادر المحددة</h3><div class="chips">${fbs.map(x => `<a class="chip" href="${esc(x.url || "https://www.facebook.com/" + (x.handle || ""))}" target="_blank" rel="noopener">${esc(x.name)} ↗</a>`).join("") || '<span class="mut">أضف الحسابات من «الإدارة ← مراجعة المستجلب».</span>'}</div>
     <div id="fbres"></div>`);
+    $("#fbaok").onclick = addAccount;
     if (DATA) show(DATA, fbs);
     const pz = $("#fbpaste"); pz.addEventListener("paste", e => { e.preventDefault(); const cd = e.clipboardData, posts = fromPaste(cd.getData("text/html"), cd.getData("text/plain"));
       if (!posts.length) return toast("لم أجد منشورات في المنسوخ"); show({ page: { name: "", url: "" }, posts }, fbs); });
