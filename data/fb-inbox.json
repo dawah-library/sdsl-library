@@ -2,6 +2,14 @@
  "v": 1,
  "items": [
   {
+   "src": "fb-memara60",
+   "k": "p15577518576108",
+   "u": "https://www.facebook.com/memara60/posts/pfbid02JSj2UjKXVHBhjQf8ierGH1MZUcTMiRrJ9YZfZxsp9zFUFAfmFdNKMkELgJ46T44cl",
+   "t": 1795692543,
+   "text": "رحمهم الله رحمة واسعة واسكنهم فسيح جناته",
+   "at": "2026-11-26T13:02:59.902Z"
+  },
+  {
    "src": "fb-salafiacall",
    "k": "p25805002921327",
    "u": "https://www.facebook.com/Salafiacall/posts/pfbid0njPYPPxoybY67NN7jd8WcNsEyBKDzxkxRXiKWmiXv3jPfwArGkPN7K8U17H31qhgl",
@@ -879,17 +887,17 @@
    "lastSeen": "2026-11-26T11:12:18.774Z"
   },
   "fb-memara60": {
-   "at": "2026-11-26T01:30:40.408Z",
-   "n": 0,
-   "lastNew": "2026-11-25T01:20:39.718Z",
-   "lastSeen": "2026-11-25T01:20:39.718Z",
-   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
+   "at": "2026-11-26T13:02:59.902Z",
+   "n": 2,
+   "lastNew": "2026-11-26T13:02:59.902Z",
+   "lastSeen": "2026-11-26T13:02:59.902Z"
   },
   "fb-abdelghaffartaha3": {
-   "at": "2026-11-26T02:25:58.467Z",
-   "n": 1,
+   "at": "2026-11-26T13:03:16.174Z",
+   "n": 0,
    "lastNew": "2026-11-21T13:24:49.689Z",
-   "lastSeen": "2026-11-26T02:25:58.467Z"
+   "lastSeen": "2026-11-26T02:25:58.467Z",
+   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
   },
   "fb-naderalssaqqa": {
    "at": "2026-11-26T02:26:24.543Z",
@@ -1058,7 +1066,7 @@
    "n": 0
   }
  },
- "wall": "2026-11-26T12:07:40.365Z",
+ "wall": "2026-11-26T13:03:16.174Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -1073,6 +1081,6 @@
   "fb-musabamingaber",
   "fb-saidabdelfattahkhairy"
  ],
- "lastRun": "2026-11-26T12:07:40.469Z",
- "lastAdded": 0
+ "lastRun": "2026-11-26T13:03:16.256Z",
+ "lastAdded": 1
 }
