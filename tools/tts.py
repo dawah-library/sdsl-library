@@ -359,6 +359,12 @@ def speak_gemini(text, voice, path, style=""):
             req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent", data=body, headers={"content-type": "application/json", "x-goog-api-key": k})
             j = _j.load(urllib.request.urlopen(req, timeout=300))
             pcm = base64.b64decode(j["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+            try:  # يقص دفقة التشويش «تش» التي يضيفها Gemini في آخر المقطع (tools/audio_tail.py)
+                import struct as _st; from audio_tail import find_cut
+                _x = _st.unpack("<%dh" % (len(pcm) // 2), pcm[:len(pcm) // 2 * 2]); _x = [v / 32768 for v in _x[-24000 * 10:]]
+                _t = find_cut(_x, 24000)
+                if _t is not None: pcm = pcm[:2 * (len(pcm) // 2 - len(_x) + int(_t * 24000))]
+            except Exception: pass
             with tempfile.NamedTemporaryFile(suffix=".pcm", delete=False) as f: f.write(pcm)
             af = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.4,areverse,loudnorm=I=-18:TP=-1.5:LRA=9"
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", f.name, "-af", af, "-ar", "24000", "-b:a", "48k", path], check=True)
