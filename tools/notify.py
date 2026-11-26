@@ -13,6 +13,21 @@ SITE = os.environ.get("SITE_URL", "https://dawahlibrary.org").rstrip("/")
 def esc(s): return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def ocr_brief(t):
+    """ملخص قصير لتقرير التحويل: اسم كل كتاب ونتيجته فقط (دون أسماء النماذج وأخطاء الحصص وعدد إعادة القراءة)."""
+    out = []
+    for sec in re.split(r"(?m)^## ", t)[1:]:
+        head, _, rest = sec.partition("\n")
+        title = re.sub(r"\s*\([A-Za-z0-9_]{5,}\)\s*$", "", head).strip()
+        title = re.sub(r"^(تدقيق|تحويل)\s+", "", title)
+        m = re.search(r"مواضع شك:\s*(\d+)", rest); doubt = int(m.group(1)) if m else 0
+        m = re.search(r"بقي دون مراجعة:\s*(\d+)", rest); left = int(m.group(1)) if m else 0
+        line = "📘 " + esc(title) + (": ✅ اكتمل" if not doubt else ": ⚠️ يحتاج مراجعة %d موضع" % doubt)
+        if left: line += " (بقي %d صفحة للتدقيق لاحقًا)" % left
+        out.append(line)
+    return "\n".join(out)
+
+
 def send(text):
     try:
         u = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sdsl-library"
@@ -30,6 +45,8 @@ if __name__ == "__main__":
     if a and a[0] == "--file":
         path, title = a[1], (a[2] if len(a) > 2 else "")
         t = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+        if os.path.basename(path) == "ocr-report.md":
+            send(("<b>" + esc(title) + "</b>\n" if title else "") + (ocr_brief(t) or "تم تحديث الكتب.")[:3300]); sys.exit(0)
         t = re.sub(r"^# .*\n", "", t).strip()
         t = re.sub(r"^## (.*)$", lambda m: "<b>📘 " + esc(m.group(1)) + "</b>", esc(t), flags=re.M)
         send(("<b>" + esc(title) + "</b>\n" if title else "") + t[:3300])
