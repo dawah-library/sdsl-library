@@ -1171,7 +1171,7 @@
    "kind": "page",
    "col": "dawah",
    "lic": "",
-   "author": "سامح محمد بسيونى",
+   "author": "سامح بسيوني",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -1196,7 +1196,7 @@
    "lists": [],
    "base": "",
    "auto": true,
-   "aid": "w209"
+   "aid": "w44"
   },
   {
    "id": "fb-ywnsmkhywn152345",
@@ -2158,7 +2158,7 @@
    "kind": "person",
    "col": "dawah",
    "lic": "",
-   "author": "(غير معروف: bsm.server)",
+   "author": "باسم عبد رب الرسول",
    "on": true,
    "to": "posts",
    "minChars": 60,
@@ -2177,7 +2177,8 @@
     }
    },
    "note": "مُتجاهَل بطلب الإدارة",
-   "auto": true
+   "auto": true,
+   "aid": "w143"
   },
   {
    "id": "fb-ayhabshahyn79828",
