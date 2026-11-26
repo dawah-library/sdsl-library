@@ -707,7 +707,7 @@
 "scripts": 66,
 "deferred": 0,
 "js_kb": 2635,
-"app_kb": 479,
+"app_kb": 480,
 "fonts": 6,
 "services": 110,
 "seo_internal": false,
@@ -722,7 +722,7 @@
 "server_search": false,
 "workflows": 91,
 "api": 13,
-"sw": "sdsl-v301",
+"sw": "sdsl-v302",
 "plan_done": 4,
 "plan_n": 27,
 "search_console": false
