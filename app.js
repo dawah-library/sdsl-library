@@ -2675,3 +2675,10 @@ document.addEventListener("submit",async e=>{const f=e.target.closest("#srcf");i
 document.addEventListener("click",async e=>{const el=e.target.closest('[data-act="srcimp"]');if(!el)return;const d=el.dataset;if(!confirm("استيراد «"+d.t+"» إلى المكتبة العامة؟"))return;
  const id=(d.src==="turath"?"tio":"kt")+d.id,w=d.src==="turath"?"import-turathio.yml":"import-ketab.yml",inputs=d.src==="turath"?{book:d.id,id,title:d.t,author_id:"ta_"+id,author:d.a,topic:d.tp}:{book:d.id,id,author:d.a,topic:d.tp};
  try{await GH.editJSON("data/run-requests.json",o=>{o=o&&o.items?o:{items:[]};o.items.push({w,inputs,at:new Date().toISOString(),by:"المدير"});return o},"استيراد كتاب: "+d.t);el.disabled=true;el.textContent="✓ أُرسل";toast("بدأ الاستيراد؛ يظهر الكتاب في المكتبة العامة بعد اكتمال المهمة")}catch(x){toast(x.message)}});
+
+/* ساعة رقمية دائمة في الشريط العلوي: توقيت مكة المكرمة أو القاهرة باختيار القارئ (يُحفظ على جهازه) */
+(()=>{const Z={mk:["مكة","Asia/Riyadh"],cr:["القاهرة","Africa/Cairo"]};
+ const cur=()=>{const k=ls.get("clkz","mk");return Z[k]?k:"mk"};
+ const tick=()=>{const b=document.getElementById("clk");if(!b)return;const k=cur();let t="";try{t=new Date().toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit",timeZone:Z[k][1]})}catch(e){t=new Date().toTimeString().slice(0,5)}b.innerHTML=`<span class="clkz">${Z[k][0]}</span> <b>${t}</b>`};
+ document.addEventListener("click",e=>{if(e.target.closest('[data-act="clk"]')){e.preventDefault();ls.set("clkz",cur()==="mk"?"cr":"mk");tick();toast("الساعة بتوقيت "+(cur()==="mk"?"مكة المكرمة":"القاهرة"))}});
+ tick();setInterval(tick,15000);document.addEventListener("visibilitychange",tick)})();
