@@ -1,9 +1,10 @@
 {
  "v": 1,
  "at": "2026-11-25T13:26:31.762Z",
- "by": "admin",
+ "by": "agent",
  "s": {
   "translate": false,
-  "i18n": false
+  "i18n": false,
+  "ask_review": false
  }
 }

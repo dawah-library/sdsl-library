@@ -141,13 +141,20 @@ const SX = (() => {
 })();
 
 /* الحلقة: سؤال ← Gemini (عبر الخادم) ← أدوات في المتصفح ← Gemini … حتى الإجابة */
+// التحقق من النقول: كل نص بين «» (من ١٥ حرفًا) يجب أن يوجد حرفيًّا (بعد توحيد الرسم) في نتائج الأدوات؛ وما لم يوجد يُنبَّه عليه
+const _qn = t => SS.norm(String(t || "")).replace(/[^ء-ي0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+function quoteCheck(ans, pool) {
+  if (!pool || !ans) return ""; const P = " " + _qn(pool) + " ", bad = [];
+  (String(ans).match(/«[^»]{15,}»/g) || []).forEach(q => { const n = _qn(q.slice(1, -1)); if (n.length >= 12 && !P.includes(n)) bad.push(q.slice(1, 60).trim() + (q.length > 61 ? "…" : "")); });
+  return bad.length ? "\n\n> تنبيه توثيق: لم تُطابَق حرفيًّا في النصوص المسترجعة " + (bad.length === 1 ? "العبارة" : "العبارات") + ": " + bad.slice(0, 4).map(x => "«" + x + "»").join("، ") + ". تحقق منها في الكتاب قبل الاعتماد عليها." : "";
+}
 AI.viaServer = async function (o) {
   const scope = { col: o.col, bookId: o.bookId }, used = [], deep = ["research", "compare", "gather", "summarize", "plan", "quiz"].includes(o.mode), maxR = deep ? 9 : 7;  // أدوات المصادر (الآيات والحديث واللغة والأعلام) تزيد جولات البحث
   const contents = o.turns.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const XO = typeof ASKX !== "undefined" ? ASKX.take() : { att: [], body: {} };  // مرفقات السؤال الأخير وخيارات النموذج والمصادر والأسلوب
   if (XO.att.length) contents[contents.length - 1].parts = XO.att.map(a => ({ inlineData: { mimeType: a.mime, data: a.data } })).concat(contents[contents.length - 1].parts);
   const label = (n, a) => n === "recall_knowledge" ? "يراجع ذاكرته العلمية عن: «" + (a.query || "") + "»" : n === "quran_ayah" ? "يراجع نص الآية في المصحف" : n === "find_ayah" ? "يحدد موضع الآية في المصحف" : n === "hadith_lookup" ? "يبحث عن الحديث في كتب السنة" : n === "word_meaning" ? "يراجع معنى «" + (a.word || "") + "» في المعاجم" : n === "person_bio" ? "يراجع ترجمة «" + (a.name || "") + "»" : n === "search_library" ? "يبحث في المكتبة عن: «" + (a.query || "") + "»" : n === "get_page" ? "يقرأ " + (a.ref || "") : n === "book_outline" ? "يطالع فهرس الكتاب" : "يراجع قائمة " + (n === "list_authors" ? "المؤلفين" : "الكتب");
-  let acc = "", retries = 0;
+  let acc = "", retries = 0, POOL = "";
   for (let round = 0; round < maxR; round++) {
     let r;
     try { r = await fetch(CFG.askEndpoint, { method: "POST", signal: o.signal, headers: Object.assign({ "content-type": "application/json" }, Auth.token ? { Authorization: "Bearer " + Auth.token } : {}), body: JSON.stringify(Object.assign({ v: 2, contents, mode: o.mode, col: o.col, bookId: o.bookId, round, last: round === maxR - 1 }, XO.body)) }); }
@@ -164,16 +171,19 @@ AI.viaServer = async function (o) {
       if (retries < 2) { retries++; o.onStatus("انقطع الاتصال، يعيد المحاولة تلقائيًا (" + toAr(retries) + ")…"); round--; continue; }
       throw { code: "offline", message: "انقطع الاتصال أثناء الإجابة بعد محاولتين. جرّب سؤالًا أضيق أو أعد المحاولة." }; }
     if (err) { if (acc) throw { text: acc }; throw { code: err.code === "quota" ? "quota" : "fallback", reason: err.v + (err.detail ? " (" + err.detail + ")" : "") }; }
-    if (!calls || !calls.length) { o.searches = used; return acc; }
+    if (!calls || !calls.length) { o.searches = used; return acc + quoteCheck(acc, POOL); }
     if (acc.trim()) o.onStatus(acc.trim().split("\n").pop().slice(0, 140));
     o.onText("");
     contents.push({ role: "model", parts });
     const resp = [];
-    for (const c of calls) {
-      o.onStatus(label(c.name, c.args || {}));
+    const runs = await Promise.all(calls.map(async c => {
       let result; try { result = await SX.runTool(c.name, c.args || {}, scope); } catch (e) { result = { error: e.message }; }
+      return { c, result };
+    }));
+    for (let i = 0; i < runs.length; i++) {
+      let { c, result } = runs[i]; o.onStatus(label(c.name, c.args || {}));
       if (c.name === "search_library") used.push(String((c.args || {}).query || ""));
-      let txt = JSON.stringify(result); if (txt.length > 24000) result = { truncated: txt.slice(0, 24000) };
+      let txt = JSON.stringify(result); POOL += " " + txt; if (txt.length > 24000) result = { truncated: txt.slice(0, 24000) };
       resp.push({ functionResponse: Object.assign({ name: c.name, response: { result } }, c.id ? { id: c.id } : {}) });
     }
     contents.push({ role: "user", parts: resp });
