@@ -254,6 +254,19 @@ const HDS = (() => {
       <nav class="chips"><a class="chip${!src ? " on" : ""}" href="#/hadith?t=topic&g=${q.g}">كل المصادر</a>${srcs.map(b => `<a class="chip${b === src ? " on" : ""}" href="#/hadith?t=topic&g=${q.g}&src=${b}">${esc(D.books[b] || b)}</a>`).join("")}</nav>
       ${Object.entries(by).map(([k, l]) => `<details class="hfold"${Object.keys(by).length <= 3 ? " open" : ""}><summary>${esc(k)} <span class="mut">(${toAr(l.reduce((n, [x]) => n + x[3].length, 0))})</span></summary><div class="hdgl">${l.map(([x, i]) => `<a href="#/hadith?t=topic&g=${q.g}&ab=${i}">${esc(x[0] || x[2] || "أحاديث")} <span class="mut">${toAr(x[3].length)}</span></a>`).join("")}</div></details>`).join("")}`;
   }
+  // مسند الصحابي: العدد الحقيقي لما نُسب إليه في كتب السنة المعروضة (data/hadith/sahabi ← tools/hadith-sahabi.py)
+  const RAWSAH = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/hadith/sahabi/" + p, SAHC = {}, saget = p => SAHC[p] || (SAHC[p] = fetch(RAWSAH(p)).then(r => r.json()).catch(() => null));
+  async function sahabiView(q) {
+    const idx = await saget("_index.json"); if (!idx) return '<p class="mut">تعذّر تحميل المسانيد.</p>';
+    if (q.sh == null || q.sh === "") return `<p class="mut">العدد الحقيقي لما نُسب إلى كل صحابي في كتب السنة المعروضة هنا (${toAr(idx.reduce((n, x) => n + x[1], 0))} حديثًا لـ${toAr(idx.length)} صحابيًّا معروفًا)، يُحسب من بيانات الكتب نفسها ويتحدث بتحديثها. اضغط الصحابي لتفتح مسنده.</p><div class="hdgl hdun">${idx.map(([n, c, k], i) => `<a href="#/hadith?t=sahabi&sh=${i}">${esc(n)} <span class="mut">${toAr(c)} حديثًا • ${toAr(k)} كتابًا</span></a>`).join("")}</div>`;
+    const me = idx[+q.sh], L = await saget(q.sh + ".json"); if (!me || !L) return "";
+    const PG = 60, pg = Math.max(1, +q.pg || 1), part = L.slice((pg - 1) * PG, pg * PG), bySrc = {}; part.forEach(([b, id]) => (bySrc[b] = bySrc[b] || []).push(id));
+    const KL_ = await klist(); let rows = "";
+    for (const b of Object.keys(bySrc)) { const K = await kidx(b), set = new Set(bySrc[b].map(String));
+      rows += `<div class="hsrcg"><span class="hsrc">${esc((KL_[b] && KL_[b].t) || K.t || b)}</span>${(K.items || []).filter(y => set.has(String(y[0]))).map(y => `<a class="hdc" href="#/hadith/k/${b}/${y[0]}"><span class="hds">${y[5] ? "عن " + esc(y[5]) : ""}</span><b>${esc(y[6])}…</b><span class="mut">${esc(K.t || b)} • ${toAr(y[0])}</span></a>`).join("")}</div>`; }
+    const nav = L.length > PG ? `<p class="hpg">${pg > 1 ? `<a class="btn s" href="#/hadith?t=sahabi&sh=${q.sh}&pg=${pg - 1}">السابق</a> ` : ""}صفحة ${toAr(pg)} من ${toAr(Math.ceil(L.length / PG))}${pg * PG < L.length ? ` <a class="btn s p" href="#/hadith?t=sahabi&sh=${q.sh}&pg=${pg + 1}">التالي</a>` : ""}</p>` : "";
+    return `<p><a href="#/hadith?t=sahabi">← الصحابة</a></p><h3>مسند ${esc(me[0])}</h3><p class="mut">${toAr(me[1])} حديثًا في ${toAr(me[2])} كتابًا، بترتيب الكتب (الصحيحان فالسنن فالمسانيد)</p>${nav}${rows}${nav}`;
+  }
   async function kutub(q) {
     const L = await klist(), b = q.kb, qq = (q.q || "").trim(), pg = Math.max(1, +q.pg || 1), u = o => "#/hadith?" + new URLSearchParams(Object.assign({ t: "kutub" }, b ? { kb: b } : {}, o)).toString();
     let body = "";
@@ -421,6 +434,7 @@ const HDS = (() => {
     if (t === "topic" && !qq) { side = await topics(q); L = []; }
     else if (t === "book") { if (q.b) L = L.filter(x => x.b === q.b); else side = `<div class="grid">${Object.entries(BK).map(([b, n]) => `<a class="card" href="${u({ b })}"><b>${esc(n)}</b><span>${toAr(IX.filter(r => r[1] === b).length)} حديثًا</span></a>`).join("")}</div>`; }
     else if (t === "atraf") { const l = q.l || "ا"; side = `<nav class="chips hdlet">${LET.map(c => `<a class="chip${c === l ? " on" : ""}" href="${u({ l })}">${c}</a>`.replace(`l=${encodeURIComponent(l)}`, "l=" + encodeURIComponent(c))).join("")}</nav>`; L = L.filter(x => first(x.tarf) === l).sort((a, b) => a.tarf.localeCompare(b.tarf, "ar")); }
+    else if (t === "sahabi" && !q.s) { side = await sahabiView(q); L = []; }
     else if (t === "sahabi") { const c = {}; L.forEach(x => { const k = x.sah.replace(/^(أمير المؤمنين|أبي|أبى)\s+/, m => m).trim(); if (k) (c[k] = c[k] || []).push(x); });
       if (q.s) L = c[q.s] || []; else side = `<div class="hdgl">${Object.entries(c).sort((a, b) => b[1].length - a[1].length).slice(0, 300).map(([k, l]) => `<a href="${u({ s: k })}">${esc(k)} <span class="mut">${toAr(l.length)}</span></a>`).join("")}</div>`; }
     if (t === "kutub") { side = await kutub(q); L = []; }
