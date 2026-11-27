@@ -106,7 +106,14 @@ def main():
     out = {"note": "tools/tala-audit.py — تصنيف أسئلة الطلائع بالمرحلة والباب والصعوبة (آلي بقواعد صريحة؛ لا يعدّل المصادر)", "m": M,
            "keys": {"tr": TRN, "sub": dict(SN, riddle="ألغاز", other="غير مصنف")}, "c": {r[1]: [r[2], r[3], r[4]] for r in rows}}
     json.dump(out, open(os.path.join(ROOT, "data", "tala-audit.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    for t in lessons: lessons[t].sort(key=lambda k: (k[0] != "asas", k[1], k[3]))
+    for t in lessons: lessons[t].sort(key=lambda k: ({"asas": 0, "bunyan": 1}.get(k[0], 2), k[1], k[3]))
+    for t in pool:  # بلا تكرار: السؤال نفسه من مصدرين (تمارين الكتاب الرسمي ودروس البداية المولَّدة أو البنك) يبقى مرة
+        seenq, keep = set(), []
+        for it in pool[t]:
+            k = norm(it["q"])
+            if k in seenq: continue
+            seenq.add(k); keep.append(it)
+        pool[t] = keep
     json.dump({"note": "tools/tala-audit.py — مجمع «سؤال اليوم» (المعتمد ذو الإجابة) ودروس «القادم لك» لكل مرحلة، لواجهة الطلائع (talahome.js)", "at": M["at"],
                "sub": dict(SN, riddle="ألغاز", other="متنوع"), "pool": pool, "lessons": {t: [{"s": k[0], "v": k[1], "b": k[2], "p": k[3], "l": k[4]} for k in L_] for t, L_ in lessons.items()}},
               open(os.path.join(ROOT, "data", "tala-home.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))

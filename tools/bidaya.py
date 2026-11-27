@@ -195,8 +195,53 @@ def check(out, pack):
     out["qs"] = [q for q in out.get("qs") or [] if isinstance(q, dict) and q.get("q") and (q.get("k") == "open" or q.get("a") is not None)]
     return out, warn
 
+# ===== الدمج مع كتب «البداية» الرسمية إذا رُفعت (طلب المدير، ٢٧ نوفمبر): الرسمي مقدَّم، والمولَّد لا يُكرره =====
+STOPW = {"في", "من", "على", "عن", "الى", "الي", "مع", "بين", "ما", "لا", "او", "ثم", "التي", "الذي", "وهو", "هو", "ان", "حتي", "كل", "درس", "الدرس", "باب"}
+def toks(t): return {w[2:] if w.startswith("ال") and len(w) > 4 else w for w in norm(re.sub(r"[()«»\[\]:–\-]", " ", t)).split() if len(w) > 2 and w not in STOPW}
+def official():
+    out = []
+    for b in cat()["b"].values():
+        t = norm(b.get("setTitle") or b.get("title"))
+        if b.get("type") == "article" or not t.startswith("البدايه") or "النهايه" in t: continue  # لا «البداية والنهاية» لابن كثير
+        if "الهدايه" in t or b.get("authorId") == "w5" or "سلك" in t: out.append(b)
+    return sorted(out, key=lambda b: (b.get("set") or b["id"], b.get("vol") or 0))
+def off_lessons(books):
+    ids = {b["id"] for b in books}; L, seen = [], set()
+    try: ex = J(os.path.join(ROOT, "data", "tala-ex.json"))["items"]
+    except Exception: ex = []
+    for x in ex:
+        if x.get("b") in ids and (x["b"], x.get("l")) not in seen: seen.add((x["b"], x.get("l"))); L.append({"b": x["b"], "p": x.get("lp") or x.get("p"), "l": x.get("l"), "v": x.get("v")})
+    if not L:  # قبل استخراج التمارين: فهرس الكتاب نفسه
+        for b in books:
+            for t in book(b["id"]).get("toc") or []:
+                if 3 <= len(t.get("t", "")) <= 80 and (t["t"], b["id"]) not in seen: seen.add((t["t"], b["id"])); L.append({"b": b["id"], "p": t.get("p", 1), "l": t["t"], "v": b.get("vol") or 1})
+    return L
+def merge(plan):
+    books = official(); mp = os.path.join(D, "merge.json")
+    if not books:
+        if os.path.exists(mp): os.remove(mp)
+        return {}
+    OL = off_lessons(books); dup = {}
+    for pt in plan["parts"]:
+        for L in pt["lessons"]:
+            a = toks(L["t"]); best = (0, None)
+            for o in OL:
+                b_ = toks(o["l"] or ""); sc = len(a & b_) / max(1, min(len(a), len(b_))) if a and b_ else 0
+                sura = next((s_.get("ayat") for s_ in L["src"] if "ayat" in s_), None)
+                if sura:  # درس تفسير: السورة نفسها في الكتاب الرسمي
+                    nm = norm(quran()["suras"][sura[0] - 1].get("name", "")).replace("سوره", "").strip()
+                    if nm and nm in norm(o["l"] or ""): sc = max(sc, .9)
+                if sc > best[0]: best = (sc, o)
+            if best[0] >= .6: dup[L["id"]] = dict(best[1], score=round(best[0], 2))
+    W(mp, {"note": "دروس «البداية» المولَّدة التي يغطيها الكتاب الرسمي (tools/bidaya.py --merge)؛ لا تُصاغ، وصفحتها تحيل إلى الرسمي، والمصوغ منها قبلُ يبقى «إثراء»",
+           "at": time.strftime("%Y-%m-%d"), "books": [b["id"] for b in books], "official": OL, "dup": dup})
+    print("الكتب الرسمية:", len(books), "• دروسها:", len(OL), "• دروس مولَّدة يغطيها الرسمي:", len(dup))
+    return dup
+
 def main():
     plan = J(os.path.join(D, "plan.json")); args = sys.argv[1:]
+    dup = merge(plan)
+    if "--merge" in args: return
     only = args[args.index("--only") + 1] if "--only" in args else None
     mx = int(args[args.index("--max") + 1]) if "--max" in args else int(os.environ.get("BD_MAX", "6"))
     LS = [(pi, pt, L) for pi, pt in enumerate(plan["parts"]) for L in pt["lessons"] if not only or L["id"] == only]
@@ -210,6 +255,7 @@ def main():
         if "--extract" in args: continue
         lp = os.path.join(D, "l", L["id"] + ".json")
         if os.path.exists(lp) and not only: continue
+        if L["id"] in dup and not only: continue  # يغطيه كتاب البداية الرسمي: لا تكرار
         if made >= mx or time.time() - t0 > 60 * float(os.environ.get("BD_MINUTES", "40")): break
         pack = J(sp)["pack"]
         if not pack: rep.append("- %s: لا مصادر؛ تُراجع كلمات البحث في الخطة" % L["id"]); continue
