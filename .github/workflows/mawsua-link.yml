@@ -1,0 +1,48 @@
+name: الإثراء المستمر للموسوعات (ربط الجديد بالمسائل)
+# tools/mawsua.py link (طلب المدير، ٢٧ نوفمبر ٢٠٢٦): كل ما يُضاف إلى المكتبة — كتب مشايخ الدعوة ومقالات المعتمدين وفتاوى صوت السلف والبيانات
+# أولًا، ثم مراجع كل فن والكتب الجديدة المتصلة بالموسوعة (_feed.json) — يُربط بمسائل الموسوعات كلها في data/mawsua/<k>/_links.json،
+# فيظهر في صفحة المسألة «إضافات حديثة في المكتبة متصلة بالمسألة». بلا Gemini ولا حصة؛ ودمجه في نص المادة يتولاه grow في mawsua.yml.
+# مفتاح الإيقاف: mawsua_link.
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_run:
+    workflows: ["تغذية الموسوعات بالجديد"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write   # تشغيل النشر على Cloudflare بعد الحفظ (إيداعات المهام الآلية لا تشغّله وحدها)
+concurrency:
+  group: mawsua-link
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" mawsua_link)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  link:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: ربط الجديد بالمسائل
+        run: python3 tools/mawsua.py link
+      - name: الحفظ والنشر
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          before=$(git rev-parse HEAD)
+          bash tools/git-save.sh "الموسوعات: ربط الجديد من المكتبة بالمسائل" data/mawsua/_link_seen.json data/mawsua/aqeeda data/mawsua/fiqh data/mawsua/tafsir data/mawsua/quran data/mawsua/fikr data/mawsua/dawa data/mawsua/lugha data/mawsua/tarikh data/mawsua/adab data/mawsua/tarbiya data/mawsua/usra data/mawsua/siyasa
+          if [ "$(git rev-parse HEAD)" != "$before" ]; then gh workflow run cf-deploy.yml -R "${{ github.repository }}" --ref main || echo "تعذر تشغيل النشر"; fi

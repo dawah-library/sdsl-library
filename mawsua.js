@@ -12,6 +12,10 @@ const MAWS = (() => {
   const adm = () => isAdmin() || (typeof can === "function" && can("edit"));
   const tree = async k => TR[k] || (TR[k] = await getJ(R + k + "/_tree.json"));
   const entry = async (k, id) => EN[id] || (EN[id] = await getJ(R + k + "/e/" + id + ".json"));
+  // الإثراء المستمر (tools/mawsua.py link، بلا نموذج): ما يُضاف إلى المكتبة من كتب الدعوة ومقالاتها وفتاواها ومراجع الفن متصلًا بالمسألة
+  const LKS = {}, links = async k => LKS[k] || (LKS[k] = (await getJ(R + k + "/_links.json")) || { m: {} });
+  const LKT = { f: "فتوى صوت السلف", a: "مقال", s: "بيان", b: "كتاب", o: "كتاب دعوي", madh: "الفقه المذهبي", muq: "الفقه المقارن", sharh: "شروح السنة", asl: "مرجع أصلي", tahqiq: "كتب المحققين", sanad: "مرجع مساند" };
+  const linksHtml = L => (L || []).length ? `<section class="card mwlinks"><h3>${ic("sparkles", 18)} إضافات حديثة في المكتبة متصلة بالمسألة</h3><p class="mut">رُبطت آليًّا بالمسألة عند إضافتها إلى المكتبة، وتُدمج في المادة بعد التحقق من صلتها وسياقها.</p><ul class="mwlist">${L.map(x => `<li><span class="tag">${esc(LKT[x.s] || "مصدر")}</span> <a href="#/book/${esc(x.b)}/${x.p || 1}">«${esc(x.t)}»${x.a ? " — " + esc(x.a) : ""}</a> <small class="mut">${esc(x.at || "")}</small></li>`).join("")}</ul></section>` : "";
   const flat = t => { const L = []; (t && t.b || []).forEach((b, i) => b.f.forEach((f, j) => f.m.forEach(m => L.push(Object.assign({ bi: i, fi: j, bab: b.t, fasl: f.t }, m))))); return L; };
   const vis = m => m.e && (m.ok || adm());
   const crumbs = (...l) => `<p class="mwcr"><a href="#/mawsua">موسوعات الموقع</a>${l.map(([t, h]) => " › " + (h ? `<a href="${h}">${esc(t)}</a>` : esc(t))).join("")}</p>`;
@@ -107,11 +111,11 @@ const MAWS = (() => {
   async function enc(k, q) {
     const t = await tree(k), I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k, ic: "📚", d: "" };
     if (!t) { setTimeout(() => typeof MSB !== "undefined" && MSB.encBlock($("#msbenc"), k), 0); return view(crumbs([x.n]) + `<h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div><div id="msbenc"></div>${adm() ? admBar(k, null) : ""}`); }
-    const L = flat(t), done = L.filter(vis).length;
+    const L = flat(t), done = L.filter(vis).length, LKm = (await links(k)).m || {};
     view(crumbs([x.n]) + `<section class="mwhead" style="--h:${MWH(k)}"><span class="mwai">${ic(MWI[k] || "book-marked", 30)}</span><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p>${typeof prBtn==="function"?prBtn("موسوعة"):""}</div></section>
       <div id="msbenc"></div>${adm() ? admBar(k, t) + revList(k, L) : ""}${k === "fiqh" ? fiqhMethod(I, false) : discMethod(I, k)}
       <div class="mwtree">${t.b.map((b, i) => `<details${i === 0 || q.b == i + 1 ? " open" : ""}><summary><b>الباب ${ord(i + 1)}:</b> ${esc(b.t)} <small class="mut">${toAr(b.f.reduce((a, f) => a + f.m.filter(vis).length, 0))}/${toAr(b.f.reduce((a, f) => a + f.m.length, 0))}</small></summary>
-        ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}${m.rev && adm() ? ' <em class="tag">تحديث مقترح</em>' : ""}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
+        ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}${m.rev && adm() ? ' <em class="tag">تحديث مقترح</em>' : ""}` : (LKm[m.id] || []).length ? `<a class="mwpend" href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a> <em class="tag">مصادر جديدة</em>` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
     if (typeof MSB !== "undefined") MSB.encBlock($("#msbenc"), k);
   }
   // التحديثات المقترحة بانتظار المراجعة (التحديث المحافظ): للإدارة وحدها
@@ -124,7 +128,8 @@ const MAWS = (() => {
     const NE = m && m.rev && adm() ? await getJ(R + k + "/e/" + id + ".new.json") : null;
     let E = m && m.e ? await entry(k, id) : null; const showNew = NE && q.rev; if (showNew) E = NE;
     const I = await getJ(R + "_index.json"), x = ((I || {}).items || []).find(y => y.k === k) || { n: k };
-    if (!E || !(E.ok || m.ok || adm())) return view(crumbs([x.n, "#/mawsua/" + k]) + '<div class="note">هذه المسألة قيد التحرير والمراجعة.</div>');
+    const LK = ((await links(k)).m || {})[id] || [];
+    if (!E || !(E.ok || m.ok || adm())) return view(crumbs([x.n, "#/mawsua/" + k]) + (m ? `<h2>${esc(m.t)}</h2>` : "") + '<div class="note">هذه المسألة قيد التحرير والمراجعة.</div>' + linksHtml(LK));
     const tags = Object.keys(E.src || {}), num = Object.fromEntries(tags.map((g, n) => [g, n + 1])), sup = c => c.map(g => `<button type="button" class="mwfn linkbtn" data-mw="fn" data-n="${num[g]}" title="${esc(E.src[g].t)}">${toAr(num[g])}</button>`).join("");
     const where = s => `«${esc(s.t)}»${s.a ? " — " + esc(s.a) : ""}${s.v ? "، ج " + toAr(s.v) : ""}، ص ${toAr(s.p)}${s.d ? " (" + esc(s.d) + ")" : ""}`;
     const prev = L.slice(0, i).reverse().find(vis), next = L.slice(i + 1).find(vis), seeL = (E.see || []).map(s => L.find(y => norm(y.t) === norm(s))).filter(y => y && vis(y) && y.id !== id);
@@ -138,7 +143,7 @@ const MAWS = (() => {
       ${E.fq ? (E.meth === "disc3" ? dqView(E, sup, ((I || {}).disc || {})[k]) : fqView(E, sup, where, num)) : (E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${p.ty === "نقل" ? "«" + esc(p.t) + "»" : esc(p.t)}${sup(p.c)}${p.ty && p.ty !== "تحرير" ? tyB(p.ty) : ""}</p>`).join("")}</section>`).join("")}
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
       ${E.fq ? fqRefs(E, where, num) : `<section class="mwsrc"><h3>المصادر</h3><ol>${tags.map(g => `<li id="mwsrc-${num[g]}"><span class="tag">${srcTag(E.src[g])}</span> <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a></li>`).join("")}</ol></section>`}
-      ${nvHtml(E)}${histHtml(E)}
+      ${linksHtml(LK)}${nvHtml(E)}${histHtml(E)}
       ${seeL.length ? `<p><b>مسائل ذات صلة:</b> ${seeL.map(y => `<a class="chip" href="#/mawsua/${k}/${y.id}">${esc(y.t)}</a>`).join(" ")}</p>` : ""}
       <div class="row"><button class="btn s" data-mw="copy">نسخ المادة بالعزو</button>${adm() && !(E.ok || m.ok) ? `<button class="btn s p" data-mw="ok" data-k="${k}" data-id="${esc(id)}">✓ اعتماد المادة ونشرها</button>` : ""}${adm() ? `<button class="btn s" data-mw="redo" data-k="${k}" data-id="${esc(id)}">إعادة التحرير</button><button class="btn s" data-mw="edit">✎ تعديل يدوي</button>` : ""} <span class="mwst mut"></span></div>
       ${adm() ? `<div class="mwedit card" hidden><p class="mut">تعديل المادة (JSON): lead التمهيد، s الأقسام وفقراتها (t النص، c رموز المصادر)، q النصوص المختارة، src المصادر. المادة المعدلة يدويًّا لا يغيرها التحرير التلقائي، بل يقترح تحديثها بجوارها.</p><textarea rows="18" dir="rtl" style="width:100%;font-family:monospace">${esc(JSON.stringify(E, null, 1))}</textarea><div class="row"><button class="btn s p" data-mw="esave" data-k="${k}" data-id="${esc(id)}">حفظ ونشر</button> <span class="mwst mut"></span></div></div>` : ""}
