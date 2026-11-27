@@ -70,12 +70,20 @@ async function harvest(br, s) {
   let added = 0;
   for (const s of turn) {
     const r = await harvest(br, s), st = box.st[s.id] || (box.st[s.id] = {});
-    if (/الدخول/.test(r.err)) { console.log(`[${s.id}] حوّل فيسبوك إلى صفحة الدخول؛ تتوقف الجولة ويُكمل الدور في الجولة التالية`); box.wall = st.at = new Date().toISOString(); st.err = r.err; st.n = 0; break; } // يُسجَّل زائرًا فينتقل إلى آخر الدور (لا يعلق الدور عند حساب مقيّد)
+    if (/الدخول/.test(r.err)) {
+      // التحويل إلى الدخول غالبًا حدّ إيقاع من فيسبوك لا قيد على الحساب: لا نحسبه زائرًا (يبقى دوره) إلا إذا تكرر معه تحويلان متتاليان،
+      // فينتقل حينئذ إلى آخر الدور حتى لا يعلق الدور عند حساب مقيّد فعلًا. وتتوقف الجولة احترامًا للحد.
+      st.wn = (st.wn || 0) + 1; st.err = r.err; box.wall = new Date().toISOString();
+      console.log(`[${s.id}] حوّل فيسبوك إلى صفحة الدخول (مرة ${st.wn})؛ تتوقف الجولة ويُكمل الدور في الجولة التالية`);
+      if (st.wn >= 2) { st.at = box.wall; st.n = 0; st.wn = 0; }
+      break;
+    }
+    st.wn = 0; const before = added;
     st.at = new Date().toISOString(); st.err = r.err || undefined; st.n = r.n;
     for (const x of r.posts || []) { if (have.has(x.src + "|" + x.k)) continue; have.add(x.src + "|" + x.k); box.items.push(Object.assign(x, { at: st.at })); added++; st.lastNew = st.at; }
     if (r.n) st.lastSeen = st.at;
     console.log(`[${s.id}] ${r.err ? "خطأ: " + r.err : "منشورات ظاهرة: " + r.n}`);
-    await sleep(GAP);
+    await sleep(added > before ? GAP : Math.min(GAP, 3000)); // لا جديد: ننتقل سريعًا إلى الاسم التالي
   }
   await br.close();
   // الحسابات التي لم يظهر منها منشور أسبوعًا (تغيّر في فيسبوك أو حساب مقيّد) — تُعرض في التقرير

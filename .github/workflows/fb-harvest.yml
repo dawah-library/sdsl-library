@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 355
     env:
-      ROUNDS: ${{ github.event_name == 'push' && '1' || '6' }}
+      ROUNDS: ${{ github.event_name == 'push' && '1' || '3' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,5 +52,5 @@ jobs:
             node tools/source-import.js fb || true
             bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json || true
             echo "::endgroup::"
-            if [ "$r" -lt "$ROUNDS" ]; then sleep 3300; fi
+            if [ "$r" -lt "$ROUNDS" ]; then sleep 6300; fi
           done
