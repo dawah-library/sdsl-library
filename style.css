@@ -2087,3 +2087,13 @@ form:has(.gosug){position:relative}
 .bd h3{margin:18px 0 8px}.bd .bdintro{font-size:1.05rem;line-height:2}.bdn{border-inline-start:4px solid #b88a2e;background:color-mix(in srgb,#b88a2e 7%,var(--sf));margin:8px 0;padding:8px 12px;border-radius:8px;font-family:Amiri,serif;font-size:1.12rem;line-height:2}
 .bdn small{display:block;font-family:inherit;font-size:.78rem;margin-top:4px}.bdc{font-size:.75em;color:var(--ac);text-decoration:none;margin-inline-start:3px}.bdu{border:1px solid var(--line);border-radius:12px;padding:6px 12px;margin:6px 0;background:var(--sf)}
 .bdu summary{cursor:pointer;font-weight:700;min-height:36px}.bdu ol{line-height:2}.bdq{margin:8px 0}.bdw{color:var(--mut);font-size:.9rem}
+/* عرض المقالات والفتاوى (fmt.js): هوية مكتبة الدعوة */
+.rd.fmtd{border-inline-start:4px solid var(--gold,#b8892b);padding-inline-start:.9em;border-radius:6px;background-image:linear-gradient(to left,color-mix(in srgb,var(--gold,#b8892b) 6%,transparent),transparent 35%)}
+.rd.fmtd p{line-height:2.1;margin-bottom:.7em}
+.rd.fmtd p.fq{background:color-mix(in srgb,var(--gold,#b8892b) 12%,transparent);border-radius:10px;padding:.5em .8em;text-indent:0;font-weight:700}
+.rd.fmtd p.fa{border-top:1px dashed color-mix(in srgb,var(--gold,#b8892b) 60%,transparent);padding-top:.6em;text-indent:0;font-weight:700;color:var(--green,#0f5d46)}
+.rd.fmtd .w.vcard{color:var(--green,#0f5d46);font-weight:600;background:color-mix(in srgb,var(--green,#0f5d46) 8%,transparent)}
+.rd.fmtd .w.hcard{color:#7a4b00;background:color-mix(in srgb,var(--gold,#b8892b) 12%,transparent)}
+.rd.fmtd a.vref,.rd.fmtd a.href{display:inline-block;font-size:.72em;font-weight:700;padding:.05em .55em;margin:0 .3em;border-radius:99px;text-decoration:none;vertical-align:middle;border:1px solid currentColor;color:var(--green,#0f5d46)}
+.rd.fmtd a.href{color:#7a4b00}
+html[data-theme=dark] .rd.fmtd .w.vcard{color:#8fd0b2}html[data-theme=dark] .rd.fmtd .w.hcard{color:#e6c27a}html[data-theme=dark] .rd.fmtd a.vref{color:#8fd0b2}html[data-theme=dark] .rd.fmtd a.href{color:#e6c27a}
