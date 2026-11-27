@@ -2395,7 +2395,8 @@ const SECS=[
  {h:"#/library?c=turath",n:"العامة",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
  {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"},
  {h:"#/community",n:"المجتمع",i:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 14.3c3.2-.5 6.5 1.6 6.5 5.7"/>',is:(p)=>p[0]==="community"},
- {h:"#/ask",n:"المساعد",i:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',is:(p)=>p[0]==="ask"||p[0]==="ai"}];
+ {h:"#/ask",n:"المساعد",i:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',is:(p)=>p[0]==="ask"||p[0]==="ai"},
+ {h:"#/radio",n:"الراديو",i:'<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M7 8l10-5"/><circle cx="15.5" cy="14.5" r="3"/><path d="M6.5 12.5h4M6.5 16.5h4"/>',is:(p)=>p[0]==="radio"}];
 const Pager={idx:-1,dir:0,t:null,
  reduce:()=>matchMedia("(prefers-reduced-motion: reduce)").matches,
  at(){const{p,q}=parse();return SECS.findIndex(x=>x.is(p,q))},
