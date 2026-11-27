@@ -144,7 +144,9 @@
    "lv": 1,
    "ord": 1,
    "kind": "nathr",
-   "b": "arbain"
+   "b": "arbain",
+   "from": 5,
+   "to": 59
   },
   {
    "id": "umdaahkam",
