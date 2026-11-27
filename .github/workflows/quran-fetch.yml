@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       extra: { description: "مفاتيح QuranEnc إضافية مفصولة بفاصلة", required: false, default: "" }
+      tafsir: { description: "إعادة بناء التفاسير المطولة وتدقيق التفاسير على المصحف (tools/tafsir-build.py)", type: boolean, default: false }
   push:
     branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
     paths: ["tools/quran-fetch.py"]
@@ -14,9 +15,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - name: التفاسير المطولة وتدقيقها
+        if: github.event.inputs.tafsir == 'true'
+        run: |
+          python3 tools/tafsir-build.py --fetch && bash tools/git-save.sh "المصحف: التفاسير المطولة وتدقيقها" vols/tafsir data/quran/tafsir data/quran-check/tafsir-audit.json
       - name: الجلب
+        if: github.event.inputs.tafsir != 'true'
         env:
           QF_EXTRA: ${{ github.event.inputs.extra }}
         run: python3 tools/quran-fetch.py
-      - run: |
+      - if: github.event.inputs.tafsir != 'true'
+        run: |
           bash tools/git-save.sh "المصحف: الصفحات والأجزاء والتفسير المختصر" data/quran tools/quranenc-list.md
