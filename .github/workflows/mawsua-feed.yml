@@ -1,0 +1,23 @@
+name: تغذية الموسوعات بالجديد
+# tools/mawsua_feed.py: يرصد كتب المكتبة (العامة والدعوة السلفية) المضافة حديثًا ويربطها بالموسوعات في data/mawsua/_feed.json. بلا Gemini ولا حصة.
+on:
+  push:
+    branches: [main]
+    paths: ["data/catalog.json"]
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: mawsua-feed
+  cancel-in-progress: false
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/mawsua_feed.py
+      - run: bash tools/git-save.sh "تغذية الموسوعات بالجديد" data/mawsua/_feed.json data/mawsua/_feed_seen.json
