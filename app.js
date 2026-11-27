@@ -1906,7 +1906,8 @@ async function offline(){const st=$("#offst");const all=lib.books.filter(b=>!b.v
 let TJ={items:{}};
 const tj=id=>TJ.items[id];
 const counts=id=>{const all=lib.books.filter(b=>b.authorId===id&&!b.demo&&!VOL2(b)),k=x=>all.filter(b=>kindOf(b)===x).length;return{books:k("book"),arts:k("article"),fatwas:k("fatwa"),st:k("statement")}};
-const countLine=id=>{const c=counts(id),p=[];if(c.books)p.push(c.books+" كتاب");if(c.arts)p.push(c.arts+" مقال");if(c.fatwas)p.push(c.fatwas+" فتوى");if(c.st)p.push(c.st+" بيان");return p.join(" • ")||"لا توجد مواد بعد"};
+const arN=(n,one,two,few,many)=>n===1?one:n===2?two:n>=3&&n<=10?toAr(n)+" "+few:toAr(n)+" "+many;
+const countLine=id=>{const c=counts(id),p=[];if(c.books)p.push(arN(c.books,"كتاب","كتابان","كتب","كتابًا"));if(c.arts)p.push(arN(c.arts,"مقال","مقالان","مقالات","مقالًا"));if(c.fatwas)p.push(arN(c.fatwas,"فتوى","فتويان","فتاوى","فتوى"));if(c.st)p.push(arN(c.st,"بيان","بيانان","بيانات","بيانًا"));return p.join(" • ")||"لا توجد مواد بعد"};
 function authorBrief(id){const a=A(id),t=tj(id);if(!a||!a.name||a.name==="—")return;try{getSelection().removeAllRanges()}catch(e){}
  // نافذة في وسط الشاشة (لا تختفي خلف شريط المتصفح السفلي في الآيفون)
  openDlg(`<div class="abr"><div class="ahero">${avatar(a,"big")}<h3>${esc(a.name)}${died(a)}</h3></div>`+`${t&&t.born?`<p class="mut" style="margin:0">المولد: ${esc(t.born)}</p>`:""}
