@@ -5,7 +5,7 @@ msg="$1"; shift
 # لا يحفظ في main إلا تشغيل على main: تشغيل فرع (طلب دمج أو فرع وكيل) كان يرفع إيداعات الفرع نفسها إلى main
 if [ -n "${GITHUB_REF:-}" ] && [ "${GITHUB_REF}" != "refs/heads/main" ] && [ "${GIT_SAVE_ANY_BRANCH:-}" != "1" ]; then echo "تشغيل على ${GITHUB_REF}: لا يُحفظ في main"; exit 0; fi
 git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
-for p in "$@"; do [ -e "$p" ] && git add -A "$p"; done
+for p in "$@" data/usage; do [ -e "$p" ] && git add -A "$p"; done
 git diff --cached --quiet && { echo "لا تغييرات"; exit 0; }
 git commit -q -m "$msg"
 for i in 1 2 3 4 5 6; do
