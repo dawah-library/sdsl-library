@@ -2058,3 +2058,6 @@ form:has(.gosug){position:relative}
 .wstf .wsim img{width:34px;height:46px;object-fit:cover;border-radius:4px}
 .wsset ol{margin:8px 0;padding-inline-start:22px;line-height:1.9}.wsset li .lnk{font-size:.85rem}
 .wsset input[type=datetime-local]{padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem}
+/* ربط العضو بصفحة المؤلف (claims.js) */
+.clmbar{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}.ebadge.ver{background:color-mix(in srgb,#2e7d32 12%,transparent);color:#2e7d32;border-color:color-mix(in srgb,#2e7d32 35%,transparent)}
+.clmrow p{margin:4px 0}
