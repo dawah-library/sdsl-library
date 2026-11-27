@@ -56,7 +56,14 @@
       hits.push({ b, i, s });
     }));
     hits.sort((x, y) => y.s - x.s);
-    return hits.slice(0, k).map(h => ({ ref: h.b.id + ":" + (h.i + 1), book: h.b.title, kind: kind(h.b), author: ((lib.authors.find(a => a.id === h.b.authorId) || {}).name) || "", collection: colName(h.b), page: label(h.b, h.i), date: h.b.date || undefined, text: excerpt(h.b.pages[h.i], ts, max) }));
+    // تنويع المصادر: لا يزيد ما يؤخذ من الكتاب الواحد على ثلث العدد (وثلاثة على الأقل) ما دامت كتب أخرى تطابق، ثم يُملأ الباقي بالترتيب
+    let top = hits;
+    if (!opts.bookId && hits.length > k) {
+      const cap = Math.max(3, Math.ceil(k / 3)), cnt = {}, first = [], rest = [];
+      for (const h of hits) { const n = cnt[h.b.id] = (cnt[h.b.id] || 0) + 1; (n <= cap ? first : rest).push(h); if (first.length >= k) break; }
+      top = first.length >= k ? first : first.concat(rest.slice(0, k - first.length));
+    }
+    return top.slice(0, k).map(h => ({ ref: h.b.id + ":" + (h.i + 1), book: h.b.title, kind: kind(h.b), author: ((lib.authors.find(a => a.id === h.b.authorId) || {}).name) || "", collection: colName(h.b), page: label(h.b, h.i), date: h.b.date || undefined, text: excerpt(h.b.pages[h.i], ts, max) }));
   }
   function getPage(lib, ref) {
     const m = /^([^:]+):(\d+)$/.exec(String(ref || "").trim()); if (!m) throw new Error("صيغة المرجع غير صحيحة، مثال: riyad:30");
