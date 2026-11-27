@@ -399,7 +399,7 @@ const HDS = (() => {
     <p class="mut"><a href="#/book/${esc(x[1])}/${x[2]}?h=${encodeURIComponent(x[6].split(" ").slice(0, 4).join(" "))}">اقرأ الحديث بإسناده في موضعه من الكتاب ←</a></p></article>
     ${["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b) ? '<section class="stsec" id="hdgr"><p class="mut">…</p></section>' : ""}
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
-    <section class="stsec"><h3>شرح الحديث</h3><div class="row"><button class="btn s" data-act="hdbrief" data-b="${b}" data-n="${esc(String(x[0]))}" aria-pressed="false">📘 شرح موجز من الشروح المشهورة</button></div><div id="hdds"><p class="mut">…</p></div></section>
+    <section class="stsec"><h3>شرح الحديث</h3><div id="hdds"><p class="mut">…</p></div></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه</h3><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc(m.split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين من الموسوعة الحديثية</button></div></section>
     <div class="row">${txtBtn()}${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
     <div class="mnav mnb">${next ? `<a class="btn s" href="#/hadith/k/${b}/${next[0]}">‹ التالي</a>` : "<span></span>"}${prev ? `<a class="btn s" href="#/hadith/k/${b}/${prev[0]}">السابق ›</a>` : ""}</div>`);
@@ -451,7 +451,7 @@ const HDS = (() => {
     ${d.sh ? `<details open><summary><b>شرح موجز من الكتاب</b></summary><p class="hdsh">${esc(d.sh)}</p></details>` : ""}
     <details><summary><b>النص كما في الكتاب</b></summary><p class="hdsh">${esc(d.full || "")}</p></details></article>
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
-    <section class="stsec"><h3>شرح الحديث</h3><div class="row"><button class="btn s" data-act="hdbrief" data-b="${x.b}" data-n="${esc(String(id))}" aria-pressed="false">📘 شرح موجز من الشروح المشهورة</button></div><div id="hdds"><p class="mut">…</p></div></section>
+    <section class="stsec"><h3>شرح الحديث</h3><div id="hdds"><p class="mut">…</p></div></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه في كتب السنة</h3><p class="mut">من «الموسوعة الحديثية» في الدرر السنية: روايات الحديث في المصادر، وحكم كل محدث عليه من المتقدمين والمعاصرين.</p><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc((d.m || x.tarf).split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين</button></div></section>
     <div class="row"><button class="btn p" data-act="hdexp" data-id="${id}">تصدير بقالب</button><button class="btn" data-act="hdcopy" data-id="${id}">نسخ</button>${typeof hadithSheet === "function" ? `<button class="btn" data-act="hdsharh" data-id="${id}">شروح الحديث في المكتبة</button>` : ""}<a class="btn" href="#/ask?q=${encodeURIComponent("أعرب الحديث: «" + (d.m || x.tarf).slice(0, 300) + "» إعرابًا مفصلًا، واذكر أهم ما يستفاد منه من شروح الحديث في المكتبة مع الإحالة")}">الإعراب وما يستفاد منه (المساعد)</a></div>`);
     linksBox(x.b, id); sharhInto($("#hdds"), x.b, id, true);
@@ -495,7 +495,6 @@ const HDS = (() => {
     else if (a === "shedit") sharhEdit(el.dataset.b, el.dataset.n);
     else if (a === "dwok") dawahSet(el.dataset.b, el.dataset.n, +el.dataset.i, e => { e.fst = "ok"; e.fby = "admin"; }, "شروح مشايخ الدعوة: اعتماد فوائد الحديث " + el.dataset.n).catch(x => toast(x.message));
     else if (a === "dwdel") dawahSet(el.dataset.b, el.dataset.n, +el.dataset.i, e => { e.f.splice(+el.dataset.k, 1); }, "شروح مشايخ الدعوة: حذف فائدة من الحديث " + el.dataset.n).catch(x => toast(x.message));
-    else if (a === "hdbrief") { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); el.textContent = on ? "📖 الشرح الكامل" : "📘 شرح موجز من الشروح المشهورة"; sharhInto($("#hdds"), el.dataset.b, el.dataset.n, !on); }
     else if (a === "hdrsh") { const box = el.closest(".hrh").querySelector(".hrsh"); if (!box.hidden && box.dataset.f) { box.hidden = true; return; } box.dataset.f = 1; sharhInto(box, el.dataset.b, el.dataset.n, false); }
     if (a === "hdoff") offSave("hadith", async say => { say("جارٍ تجهيز القائمة…"); const L = await klist(), out = ["data/hadith/index.json", "data/hadith/arbain.json", "data/hadith/riyad.json", "data/hadith/bulugh.json", RAWK("_list.json"), RAWT("_index.json")];
       Object.entries(L).forEach(([b, v]) => { out.push(RAWK(b + ".json"), RAWL(b + ".json")); for (let i = 0; i < Math.ceil((v.n || 0) / 500); i++) out.push(RAWK(b + "/m" + i + ".json")); if (["abudawud", "tirmidhi", "nasai", "ibnmajah"].includes(b)) out.push(RAWK("").replace("/k/", "/grades/") + b + ".json"); });
