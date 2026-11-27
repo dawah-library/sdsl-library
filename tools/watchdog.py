@@ -6,6 +6,10 @@
 import glob, json, os, re, subprocess, datetime
 REPO = os.environ.get('GITHUB_REPOSITORY', 'dawah-library/sdsl-library'); ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKIP = {'watchdog.yml', 'turathio-batch.yml'}
+def manual_keys():
+    try: return set(json.load(open(os.path.join(ROOT, 'data', 'manual-only.json'), encoding='utf-8')).get('keys', []))
+    except Exception: return set()
+MANUAL = manual_keys()  # «يدوي فقط» (PR 143): لا يشغّلها الحارس بدل المجدول، فذلك يخالف قرار صاحب الموقع
 def gh(*a):
     r = subprocess.run(['gh', *a], capture_output=True, text=True); return r.stdout if r.returncode == 0 else ''
 def gap_hours(crons):
@@ -38,6 +42,7 @@ now = datetime.datetime.now(datetime.timezone.utc); fired = []
 for f in sorted(glob.glob(os.path.join(ROOT, '.github', 'workflows', '*.yml'))):
     name = os.path.basename(f); src = open(f, encoding='utf-8').read()
     if name in SKIP or 'workflow_dispatch' not in src: continue
+    if MANUAL & set(re.findall(r'"\$j"\s+(\w+)', src) + re.findall(r'guard\("(\w+)"', src)): continue
     crons = re.findall(r'cron:\s*"([^"]+)"', src); g = gap_hours(crons)
     if not g: continue
     j = gh('api', f'repos/{REPO}/actions/workflows/{name}/runs?per_page=1', '-q', '.workflow_runs[0] | [.created_at, .status] | @tsv').strip()
