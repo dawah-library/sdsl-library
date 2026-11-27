@@ -23,10 +23,14 @@ const SX = (() => {
     let cand = [...score].map(([k, v]) => [k, v.s * Math.pow(v.m.size / ts.length, 2), v.m.size]).filter(([k]) => ok(k.split(":")[0]));
     const full = cand.filter(c => c[2] === ts.length); if (ts.length > 1 && full.length >= 4) cand = full;
     const byBook = new Map(); cand.sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const id = k.split(":")[0], l = byBook.get(id) || []; if (l.length < 3) l.push(v); byBook.set(id, l); });
-    const books = [...byBook].map(([id, l]) => [id, l.reduce((a, b) => a + b, 0) + l[0]]).sort((a, b) => b[1] - a[1]).slice(0, o.bookId ? 1 : 8).map(x => x[0]);
+    const tfrac = id => { const bk = B(id); if (!bk) return 0; const tn = SS.norm((bk.setTitle || bk.title || "") + " " + (bk.title || "")); return ts.filter(t => tn.includes(t)).length / ts.length; };  // الكتاب الذي يحمل عنوانُه كلمات السؤال أولى من كتاب مرّ بها في متنه
+    const books = [...byBook].map(([id, l]) => [id, (l.reduce((a, b) => a + b, 0) + l[0]) * (1 + 2 * tfrac(id))]).sort((a, b) => b[1] - a[1]).slice(0, o.bookId ? 1 : 8).map(x => x[0]);
+    // كتاب أو مقال عنوانه يجمع كلمات السؤال (كلها أو كلها إلا واحدة) يدخل المرشحين ولو لم تبلغه صفحاته درجة الفهرس: «معنى الولاء والبراء» تجد مقالات الولاء والبراء لا كتب الميراث
+    const tmatch = ts.length >= 2 && !o.bookId ? lib.books.filter(bk => bk && !bk.hidden && !bk.demo && ok(bk.id) && !books.includes(bk.id)).map(bk => { const tn = SS.norm(bk.setTitle || bk.title || ""); return [bk.id, ts.filter(t => tn.includes(t)).length]; }).filter(x => x[1] >= Math.max(2, ts.length - 1)).sort((x, y) => y[1] - x[1]).slice(0, 3).map(x => x[0]) : [];
+    tmatch.reverse().forEach(id => books.unshift(id));
     // السرعة: الصفحات المرشحة وحدها تُجلب بطلبات نطاق (Range) وتُخزَّن على الجهاز، بدل تحميل الكتب كاملة؛ وعند التعذر يُحمَّل الكتاب كما كان
     const want = new Map(); cand.forEach(([k]) => { const [id, p] = k.split(":"); if (!books.includes(id)) return; const L = want.get(id) || []; if (L.length < 6) L.push(+p); want.set(id, L); });
-    const loaded = (await Promise.all(books.map(id => pagesOf(id, want.get(id) || []).catch(() => loadBook(id).catch(() => null))))).filter(Boolean);
+    const loaded = (await Promise.all(books.map(id => (tmatch.includes(id) && !(want.get(id) || []).length ? loadBook(id) : pagesOf(id, want.get(id) || [])).catch(() => loadBook(id).catch(() => null))))).filter(Boolean);
     return SS.search({ books: loaded, authors: lib.authors, topics: lib.topics }, q, { col: o.col, bookId: o.bookId, k: o.k || 8, includeDemo: false });
   }
   /* مخزن الصفحات: مواضع كل صفحة بالبايت (data/sx/o، يُبنى مع الفهرس) ← طلب نطاق للصفحة وحدها ← تخزين دائم في المتصفح (Cache Storage)
