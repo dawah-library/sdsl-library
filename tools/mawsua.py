@@ -60,9 +60,11 @@ ENTRY = """أنت محرر علمي متخصص في «{name}» تحرر مادة
 - «{dsec}»: ما قرره مشايخ الدعوة في المواضع [د…] معروضًا تقريرًا علميًّا بلا أسماء. و«{msec}»: النصوص والأقوال المشهورة من المواضع [م…]، وإن تعددت الأقوال فاعرضها أقوالًا («القول الأول…») بلا أسماء. وإن لم تكف المواضع لقسم فاتركه فارغًا.
 - الأسطر الموسومة [المتن] في كتب الشروح هي نص الكتاب المشروح لا كلام الشارح: اعرضها متنًا يُشرح، والتقرير ما قاله الشارح بعدها؛ وراعِ سياق كل موضع ومراده (تقرير، أو حكاية قول، أو رد على مخالف) فلا تجعل القول المردود عليه تقريرًا.
 - إن أُرسلت «المادة الحالية» فهي المنشورة: احفظ صحيحها وعزوها، وأضف إليها ما في المواضع الجديدة من زيادة أو دليل أو تفصيل أو قول، وادمجه في موضعه من الأقسام بلا تكرار ولا حذف لمعلومة معزوة صحيحة.
+- المنهج (طلب المدير، ٢٧ نوفمبر): لا تكتفِ بأول موضع؛ اجمع من المواضع كلها أكثرها تخصصًا واتصالًا بالمسألة، ورتبها وادمجها في سياق علمي متماسك. والمطولات والأصول والشروح والحواشي والتحقيقات مقدمة على المختصرات إذا توافرت. ولا تضحِّ بالاستيعاب لأجل الاختصار: استوفِ ما في المواضع من الأقسام والشروط والأركان والأحكام والفروع والأدلة ومآخذ الأقوال، ولك أن تزيد أقسامًا بعناوينها عند الحاجة.
+- ميّز نوع كل فقرة في "ty": "نقل" (نص حرفي من الموضع بلا تغيير)، أو "تلخيص" (معنى موضع بعبارة أخرى)، أو "تحرير" (صياغة علمية جامعة)؛ ولا تصغ كلامًا من عندك ثم تنسبه إلى عالم، وما تعذر التحقق من نسبته اذكره في "nv".
 - "q": اقتباسات قصيرة (١٠–٤٠ كلمة) منسوخة بحروفها من المواضع، مع رمز موضعها.
 - إن كانت المواضع لا تتعلق بالمسألة حقيقة فأخرج {{"skip": true}}.
-أخرج JSON: {{"lead": "تمهيد في سطرين", "s": [{{"h": "عنوان القسم", "p": [{{"t": "فقرة", "c": ["د1"]}}]}}], "q": [{{"t": "اقتباس", "c": "د1"}}], "see": ["عنوان مسألة ذات صلة"]}}
+أخرج JSON: {{"lead": "تمهيد في سطرين", "s": [{{"h": "عنوان القسم", "p": [{{"t": "فقرة", "c": ["د1"], "ty": "تحرير"}}]}}], "q": [{{"t": "اقتباس", "c": "د1"}}], "see": ["عنوان مسألة ذات صلة"], "nv": []}}
 
 {cur}المواضع:
 {ctx}"""
@@ -83,7 +85,10 @@ KLBL.setdefault("o", "كتاب دعوي"); KLBL.setdefault("i", "كتب المح
 KW.setdefault("o", 0); KCAP.setdefault("o", 2)
 # المحققون من أهل السنة (طلب المدير، ٢١ نوفمبر): كتبهم مقدَّمة في التكميل على سائر المراجع (صنف i)
 IMAMS = POL.get("imams") or ["ابن تيمية", "ابن رجب", "ابن قيم الجوزية", "ابن القيم", "ابن كثير", "الذهبي", "الشاطبي", "ابن حجر", "النووي", "ابن عبد البر", "البغوي", "القرطبي", "الطبري", "السعدي", "ابن منظور", "ابن هشام", "سيبويه", "ابن جني", "ابن قتيبة", "الجاحظ", "المبرد", "عبد القاهر الجرجاني", "ابن مالك", "ابن عقيل", "السيوطي"]
-IW, ICAP, MCAP = int(POL.get("imam_weight") or 3), int(POL.get("imam_cap") or 5), int(POL.get("ref_cap") or 8)
+IW, ICAP, MCAP = int(POL.get("imam_weight") or 3), int(POL.get("imam_cap") or 6), int(POL.get("ref_cap") or 12)
+# التحديث المحافظ (طلب المدير، ٢٧ نوفمبر): تحديث مادة منشورة يُقترح بجوارها بسجل ما أُضيف وما تغير وسببه حتى تعتمده الإدارة
+REVIEW = POL.get("review_updates", True) is not False
+import mawsua_fiqh as F  # noqa: E402  منهج الموسوعة الفقهية المقارنة
 
 
 def _ntok(s):
@@ -183,7 +188,7 @@ def find(C, m, boost=None):
     for r in C:
         n = r[6]; s = sum((3 if j <= 1 else 1) * min(3, n.count(w)) for j, w in enumerate(kws) if len(w) > 2)
         if s >= 3 and any(w in n for w in kws[:3]):  # عنوان المصدر بالمسألة أقوى، ثم وزن الصنف (الكتب أصل، ثم البيانات والفتاوى، ثم المقالات)
-            sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0) + (8 if boost and r[1] in boost else 0) + (IW if r[7] == "i" else KW.get(r[7], 0)), r))
+            sc.append((s + (4 if any(w in nz(r[2]) for w in kws[:3]) else 0) + (8 if boost and r[1] in boost else 0) + (IW if r[7] == "i" else KW.get(r[7], 0)) - (3 if r[0] == "m" and re.match(r"\s*(مختصر|تهذيب مختصر)", r[2]) else 0), r))  # الأصول مقدمة على المختصرات
     sc.sort(key=lambda x: -x[0]); out, per, cnt, kc = [], {}, {"d": 0, "m": 0}, {}
     for s, r in sc:
         if per.get(r[1], 0) >= 2 or cnt[r[0]] >= (10 if r[0] == "d" else MCAP) or (r[0] == "d" and kc.get(r[7], 0) >= KCAP.get(r[7], 10)) or (r[7] == "i" and kc.get("i", 0) >= ICAP): continue
@@ -196,7 +201,7 @@ def _mark_matn(t):
     return re.sub(r"^%%\s*", "[المتن] ", t, flags=re.M) if "%%" in t else t
 
 
-def window(r, m, w=1400):
+def window(r, m, w=1800):
     t, n = _mark_matn(r[5]), nz(r[5]); kw = next((nz(x) for x in (m.get("kw") or []) + [m["t"]] if nz(x) in n), "")
     k = n.find(kw) if kw else 0; k = int(k * len(t) / max(1, len(n)))
     a = max(0, k - w // 3); return ("…" if a else "") + t[a:a + w].strip()
@@ -219,9 +224,14 @@ def _name_rx(names):
     return "|".join(sorted(alts, key=len, reverse=True))
 
 
-def unname(t, names):
-    """يزيل ذكر الشيخ أو المؤلف من سياق الفقرة: «يقرر الشيخ فلان أن…» ← «المقرر أن…»، و«عند الشيخ فلان» ← حذف."""
-    alt = _name_rx(list(names or []) + IMAMS + list(POL.get("authors") or []))
+def unname(t, names, keep=None):
+    """يزيل ذكر الشيخ أو المؤلف من سياق الفقرة: «يقرر الشيخ فلان أن…» ← «المقرر أن…»، و«عند الشيخ فلان» ← حذف.
+    keep (الموسوعة الفقهية، طلب المدير ٢٧ نوفمبر): أسماء ثبتت نسبة الكلام إليها (مؤلف المصدر المعزو إليه أو من ورد اسمه فيه) تبقى،
+    لأن بيان «اختيار فلان» و«ترجيح فلان» من صلب المنهج المقارن؛ وما سواها يُحذف كما كان."""
+    kz = [_ntok(k) for k in keep or [] if k]
+    def kept(n):
+        w = _ntok(n); return any(w and (w == k or (len(w) >= 2 and w[-1] == k[-1] and w[-2:] == k[-2:]) or (len(w) == 1 and w[0] in k)) for k in kz if k)
+    alt = _name_rx([n for n in list(names or []) + IMAMS + list(POL.get("authors") or []) if not kept(n)])
     if not t or not alt: return t
     who = r"(?:%s\s+)?(?:%s)(?:\s+(?:رحمه\s+الله|حفظه\s+الله))?" % (_HON, alt)
     V = r"(?:(?:و|ف)?(?:قد|لقد)\s+)?" + _VERB
@@ -230,13 +240,14 @@ def unname(t, names):
     t = re.sub(r"%s\s+%s%s(?:إلى\s+|على\s+)?(?=أن|أنه|أنها|بأن)" % (V, who, IN), "والمقرر ", t)
     t = re.sub(r"(%s)\s+%s%s[،,]?\s*" % (V, who, IN), r"\1 ", t)  # «وحذر الشيخ فلان من…» ← «وحذر من…»
     # اسم غير معروف بعد لقب: «وذكر الشيخ فلان الفلاني أن…» (حتى أربع كلمات قبل «أن»)
-    t = re.sub(r"%s\s+%s\s+(?:[^\s،:.«»]+\s+){0,3}?[^\s،:.«»]+(?:\s+(?:رحمه|حفظه)\s+الله)?%s(?:إلى\s+|على\s+)?(?=أن\b|أنه|أنها|بأن)" % (V, _HON, IN), "والمقرر ", t)
-    t = re.sub(r"(%s)\s+%s\s+(?:[^\s،:.«»]+\s+){0,4}?[^\s،:.«»]+(?:\s+(?:رحمه|حفظه)\s+الله)?\s+(?=(?:من|إلى|على|عن|في)\s)" % (V, _HON), r"\1 ", t)
+    if keep is None:  # في المنهج الفقهي المقارن لا يُحذف اسم غير معروف بعد لقب (قد يكون صاحب الاختيار المعزو إليه)
+        t = re.sub(r"%s\s+%s\s+(?:[^\s،:.«»]+\s+){0,3}?[^\s،:.«»]+(?:\s+(?:رحمه|حفظه)\s+الله)?%s(?:إلى\s+|على\s+)?(?=أن\b|أنه|أنها|بأن)" % (V, _HON, IN), "والمقرر ", t)
+        t = re.sub(r"(%s)\s+%s\s+(?:[^\s،:.«»]+\s+){0,4}?[^\s،:.«»]+(?:\s+(?:رحمه|حفظه)\s+الله)?\s+(?=(?:من|إلى|على|عن|في)\s)" % (V, _HON), r"\1 ", t)
     t = re.sub(r"(?:عند|لدى|بحسب|وفق|حسب|كما\s+(?:يقول|قال|ذكر|يذكر|قرر|يقرر))\s+%s\s*[،,]?\s*" % who, "", t)
     t = re.sub(r"(?:،\s*)?%s\s+(?:%s)\s*[،,]?" % (_HON, alt), "", t)
     t = re.sub(r"\s{2,}", " ", t).strip(" ،,")
     t = re.sub(r"(في\s+حين|بينما|كما)\s+والمقرر\s+أن", r"\1 أن", t)
-    t = re.sub(r"^\s*(?:%s\s+[^:.]{3,40}:\s*)?[:،\s]*" % _HON, "", t)  # «الشيخ فلان: …» عنوانًا للفقرة
+    if keep is None: t = re.sub(r"^\s*(?:%s\s+[^:.]{3,40}:\s*)?[:،\s]*" % _HON, "", t)  # «الشيخ فلان: …» عنوانًا للفقرة
     t = re.sub(r"^(?:قرر|أوضح|بين|بيّن|أكد|ذكر|نبه|أشار)\s+(?:إلى\s+)?أن", "المقرر أن", t)
     t = re.sub(r"(^|[.؛]\s*)والمقرر ", r"\1المقرر ", t)
     return t
@@ -263,12 +274,14 @@ def plan(e, force=False):
 
 
 # ---------- تحرير المسائل ----------
-def build(e, n=20, ids=None, boost=None):
+def build(e, n=20, ids=None, boost=None, why=""):
     k = e[0]; tp = os.path.join(OUT, k, "_tree.json"); tree = jl(tp)
     if not tree: print("  لا مخطط لـ", k, "— يُبنى أولًا"); plan(e); tree = jl(tp)
     if not tree: return 0
     todo = [(b, f, m) for b in tree["b"] for f in b["f"] for m in f["m"] if ((m["id"] in ids) if ids else (not m.get("e") and not m.get("skip")))][:n]
     if not todo: print("  اكتملت مسائل", k); return 0
+    if k == "fiqh":  # المنهج الفقهي المقارن (طلب المدير، ٢٧ نوفمبر): المسارات الثلاثة ومشايخ الدعوة، والهيكل التسعي، وضبط النسبة
+        d, _ = F.build(e, tree, todo, boost, why); return d
     C = corpus(e); done = 0
     for b, f, m in todo:
         if time.time() - T0 > LIMIT: break
@@ -305,7 +318,10 @@ def build(e, n=20, ids=None, boost=None):
             ps = []
             for p in s.get("p") or []:
                 c = [x for x in (p.get("c") or []) if x in tags]
-                if p.get("t") and c: ps.append({"t": unname(p["t"].strip(), [tags[x][3] for x in c]), "c": c}); used.update(c)
+                if p.get("t") and c:
+                    ty = p.get("ty") if p.get("ty") in ("نقل", "تلخيص", "تحرير") else "تحرير"
+                    if ty == "نقل" and not any(len(nz(p["t"])) > 12 and nz(p["t"].strip(" «»\"")) in tags[x][6] for x in c): ty = "تلخيص"  # النقل الحرفي يُتحقق منه
+                    ps.append({"t": unname(p["t"].strip(), [tags[x][3] for x in c]), "c": c, "ty": ty}); used.update(c)
             if ps: secs.append({"h": (s.get("h") or "").strip(), "p": ps})
         qs = []
         for q in r.get("q") or []:
@@ -314,17 +330,22 @@ def build(e, n=20, ids=None, boost=None):
         if not secs:
             if not m.get("e"): m["skip"] = "لم تُعزَ الفقرات"
             continue
-        src = {tg: {"k": h[0], "s": h[7], "b": h[1], "t": h[2], "a": h[3], "p": h[4]} for tg, h in tags.items() if tg in used}
+        src = {tg: dict({"k": h[0], "s": h[7], "b": h[1], "t": h[2], "a": h[3], "p": h[4]}, **({"v": (BOOKS.get(h[1]) or {}).get("vol")} if (BOOKS.get(h[1]) or {}).get("vol") else {})) for tg, h in tags.items() if tg in used}
         # الاعتماد والنشر تلقائيان (طلب المدير، ٢١ نوفمبر): المادة تُنشر فور تحريرها، وتبقى للإدارة المراجعة والتعديل اليدوي
         ent = {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": unname(r.get("lead", ""), [h[3] for h in tags.values()]), "s": secs, "q": qs, "src": src,
-               "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 1, "auto": 1, "v2": 1}
+               "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:6], "built": str(datetime.date.today()), "ok": 1, "auto": 1, "v2": 1, "v": 2}
+        nvl = [x for x in (r.get("nv") or []) if isinstance(x, str) and x.strip()][:10]
+        if nvl: ent["nv"] = nvl
         old = old or jl(ep)
         nb = sorted({h["b"] for h in src.values()} & set(boost or []))
         if nb: ent["upd"] = str(datetime.date.today()); ent["new"] = nb
-        if old and old.get("man"):  # مادة عدّلتها الإدارة يدويًّا: التحديث مقترح بجوارها حتى تعتمده، والمنشور باقٍ
+        w = why or ("مصدر جديد" if nb else ("إعادة التحرير" if old else "التحرير الأول"))
+        if old: ent["chg"] = F.changes(old, ent, w)
+        ent["hist"] = F.hist(old, ent, w)
+        if old and (old.get("man") or REVIEW):  # التحديث المحافظ: المنشور باقٍ، والتحديث مقترح بجواره بسجل تغييره حتى تعتمده الإدارة
             ent["ok"] = 0
             jw(os.path.join(OUT, k, "e", m["id"] + ".new.json"), ent); m["rev"] = 1; done += 1; print("  ↻ تحديث مقترح:", m["t"], flush=True)
-            jw(tp, tree); continue
+            glog({"k": k, "id": m["id"], "t": m["t"], "do": "rev", "b": nb}); jw(tp, tree); continue
         if old: jw(os.path.join(OUT, k, "e", m["id"] + ".prev.json"), old)  # النسخة السابقة محفوظة للمقارنة والاسترجاع
         jw(ep, ent)
         m["e"] = 1; m["ok"] = 1; m.pop("skip", None); m.pop("rev", None); done += 1; print("  ✓", m["t"], "— مواضع", len(src), flush=True)
@@ -374,6 +395,9 @@ def ensure(n=40):
             if not any(x.get("k") == k and x.get("do") == "plan" for x in it): it.insert(0, {"k": k, "do": "plan"})  # المخططات أولًا قبل أن تستهلك المسائل الحصة
         elif any(not m.get("e") and not m.get("skip") for b in tree["b"] for f in b["f"] for m in f["m"]) and not any(x.get("k") == k and x.get("do") == "build" and not x.get("ids") for x in it):
             it.append({"k": k, "do": "build", "n": n})
+        if k == "fiqh" and tree:  # المنهج الفقهي المقارن: المخطط الموسع أولًا، ثم ترقية المواد السابقة مقترحاتٍ بجوار المنشور
+            if tree.get("v") != 3 and not any(x.get("k") == k and x.get("do") == "plan2" for x in it): it.insert(0, {"k": k, "do": "plan2"})
+            if F.upgrade_ids(tree, 1) and not any(x.get("k") == k and x.get("do") == "upgrade" for x in it): it.append({"k": k, "do": "upgrade", "n": 20})
     jw(qp, Q)
 
 
@@ -453,23 +477,27 @@ def grow(cap=25):
     الكتاب المصوَّر لا يُعدّ «مقروءًا» حتى يكتمل تدقيقه، فيُتناول عند جاهزيته. الحالة: data/mawsua/_seen.json، والسجل: _growth.json."""
     ensure()
     sp = os.path.join(OUT, "_seen.json"); seen = jl(sp); now = dawah_sources()
-    if seen is None: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now)}); print("  النمو: بُدئت الحالة بـ%d مصدرًا" % len(now)); return
-    new = sorted(now - set(seen.get("ids") or []))
-    if not new: print("  النمو: لا مصادر جديدة"); return
-    C = new_corpus(set(new)); print("  النمو: %d مصدرًا جديدًا (%d موضعًا)" % (len(new), len(C)), flush=True)
+    refs_now = set(F.registry()[1])  # مراجع الموسوعة الفقهية (المذهبية والمقارنة وشروح السنة): ما يُضاف منها يُطابَق بمسائل الفقه كذلك
+    if seen is None: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now), "refs": sorted(refs_now)}); print("  النمو: بُدئت الحالة بـ%d مصدرًا" % len(now)); return
+    if "refs" not in seen: seen["refs"] = sorted(refs_now); jw(sp, seen)  # أول تشغيل بالسجل: الموجود يغطيه التحرير بالمنهج الجديد
+    new = sorted(now - set(seen.get("ids") or [])); new_refs = sorted(refs_now - set(seen.get("refs") or []))
+    if not new and not new_refs: print("  النمو: لا مصادر جديدة"); return
+    C = new_corpus(set(new)); CR = F.ref_corpus(new_refs) if new_refs else []
+    print("  النمو: %d مصدرًا جديدًا (%d موضعًا)، و%d مجلدًا من مراجع الفقه (%d موضعًا)" % (len(new), len(C), len(new_refs), len(CR)), flush=True)
     newbooks = [x for x in new if x in BOOKS]
-    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0; done_ids = set(new)
+    qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0; done_ids = set(new); died = False
     for e in ENC:
         tp = os.path.join(OUT, e[0], "_tree.json"); tree = jl(tp)
         if not tree: continue
-        cand = []
+        cand = []; CE = C + (CR if e[0] == "fiqh" else [])
+        if not CE: continue
         for b in tree["b"]:
             for f in b["f"]:
                 for m in f["m"]:
-                    for h in find(C, m)[:3]: cand.append((m, h, b["t"]))
+                    for h in find(CE, m)[:3]: cand.append((m, h, b["t"]))
         cand.sort(key=lambda x: -len(x[0].get("kw") or []))
         okm = verify(e, cand[:cap * 3]) if cand else {}
-        if cand and not okm and dead(): done_ids = set(); print("  النمو: نفدت الحصة قبل التحقق؛ يعاد غدًا"); break
+        if cand and not okm and dead(): done_ids = set(); died = True; print("  النمو: نفدت الحصة قبل التحقق؛ يعاد غدًا"); break
         ids = list(okm)[:cap]; boost = set().union(*okm.values()) if okm else set()
         from collections import Counter
         rel = Counter(b_ for v in okm.values() for b_ in v)  # كتب جديدة ثبتت صلتها بالموسوعة بالمعنى (مسألتان فأكثر) أو بموضوعها: تُستخرج منها مسائل جديدة
@@ -485,7 +513,7 @@ def grow(cap=25):
             jw(tp, tree); Q["items"].append({"k": e[0], "do": "build", "n": len(ids), "ids": ids, "boost": sorted(boost), "grow": str(datetime.date.today())}); added += len(ids)
             print("  %s: %d مسألة تتعلق بالجديد (بعد التحقق بالمعنى)" % (e[0], len(ids)))
     jw(qp, Q)
-    if done_ids: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(set(seen.get("ids") or []) | done_ids)})
+    if done_ids or new_refs: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(set(seen.get("ids") or []) | done_ids), "refs": sorted(set(seen.get("refs") or []) | (set() if died else set(new_refs)))})
     print("  النمو: %d مسألة في الطابور" % added)
 
 
@@ -493,13 +521,15 @@ def index():
     items = []
     for e in ENC:
         t = jl(os.path.join(OUT, e[0], "_tree.json"), {}) or {}; ms = [m for b in t.get("b", []) for f in b["f"] for m in f["m"]]
-        items.append({"k": e[0], "n": e[1], "d": e[2], "ic": e[3], "bab": len(t.get("b", [])), "m": len(ms), "e": sum(1 for m in ms if m.get("e")), "ok": sum(1 for m in ms if m.get("ok"))})
+        items.append({"k": e[0], "n": e[1], "d": e[2], "ic": e[3], "bab": len(t.get("b", [])), "m": len(ms), "e": sum(1 for m in ms if m.get("e")), "ok": sum(1 for m in ms if m.get("ok")), "rev": sum(1 for m in ms if m.get("rev"))})
     pol = {"order": POL.get("order") or [], "authors": POL.get("authors") or [], "n": {}}
     from collections import Counter
     pol["n"] = dict(Counter(k for _, k in art_items())); pol["n"]["b"] = sum(1 for b in CAT["books"] if is_src_book(b))
     recent = [x for x in (jl(os.path.join(OUT, "_growth.json"), {}) or {}).get("items", [])][:30]
     for x in recent: x["bt"] = [(BOOKS.get(b) or {}).get("setTitle") or (BOOKS.get(b) or {}).get("title", b) for b in x.get("b") or []][:3]
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "items": items, "recent": recent})
+    try: fqp = F.policy()
+    except Exception as x: fqp = {}; print("  تعذر سجل مصادر الفقه:", x)
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS3), "review": REVIEW, "items": items, "recent": recent})
 
 
 def fix_existing():
@@ -528,10 +558,19 @@ def fix_existing():
     print("  أُصلحت ونُشرت %d مادة، وأعيد تحريرها في الطابور: %d" % (n, sum(len(x["ids"]) for x in rq)))
 
 
+class _G:
+    """واجهة الوحدة لـ mawsua_fiqh (تعمل كذلك إذا حُمِّلت هذه الوحدة بـ importlib كما في misbar.py)."""
+    def __getattr__(self, k): return globals()[k]
+
+
+F.init(_G())
+
+
 def main():
     a = sys.argv[1:]; E = {e[0]: e for e in ENC}
     if a and a[0] == "fix": fix_existing(); index(); return
     if a and a[0] == "grow": grow(); index(); return
+    if a and a[0] == "plan2": F.plan2(E["fiqh"]); index(); return
     if a and a[0] == "plan": [plan(E[k], "--force" in a) for k in (a[1:2] if len(a) > 1 and a[1] in E else E)]
     elif a and a[0] == "build" and len(a) > 1: build(E[a[1]], int(a[2]) if len(a) > 2 else 20)
     else:
@@ -542,6 +581,13 @@ def main():
             if time.time() - T0 > LIMIT or dead(): rest.append(it); continue  # نفدت المهلة أو حصة المفاتيح كلها: يبقى للجولة القادمة
             if it.get("do") == "plan":
                 if plan(e, bool(it.get("force"))) is False: rest.append(it)
+            elif it.get("do") == "plan2":  # المخطط الموسع للفقه على كتبه الثمانية عشر (يُستأنف حتى يتم)
+                if e[0] == "fiqh" and not F.plan2(e): rest.append(it)
+            elif it.get("do") == "upgrade":  # ترقية المواد السابقة إلى المنهج الفقهي المقارن: مقترحات بجوار المنشور
+                tr_ = jl(os.path.join(OUT, e[0], "_tree.json")); ids_ = F.upgrade_ids(tr_, int(it.get("n") or 20)) if tr_ and e[0] == "fiqh" else []
+                if ids_:
+                    d = build(e, len(ids_), ids_, None, "ترقية المادة إلى منهج الموسوعة الفقهية المقارنة")
+                    if d < len(ids_) or F.upgrade_ids(jl(os.path.join(OUT, e[0], "_tree.json")), 1): rest.append(it)
             else:
                 n = int(it.get("n") or 20); d = build(e, n, it.get("ids"), it.get("boost"))
                 if it.get("ids"):
