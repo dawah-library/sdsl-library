@@ -20,9 +20,9 @@ const MAWS = (() => {
   // سياسة المصادر (طلب المدير، ٢١ نوفمبر): الكتب أصل، ثم البيانات، ثم فتاوى صوت السلف، ثم مقالات المعتمدين وحدهم
   const SRCK = { b: "كتاب", s: "بيان", f: "فتوى صوت السلف", a: "مقال", o: "كتاب دعوي", m: "مرجع", i: "كتب المحققين" };
   // منهج الموسوعة الفقهية المقارنة (طلب المدير، ٢٧ نوفمبر): المسارات ومذاهب المراجع ودرجة ثبوت النسبة (tools/mawsua_fiqh.py)
-  const TRK = { dawah: "مشايخ الدعوة السلفية", madh: "الفقه المذهبي", muq: "الفقه المقارن", sharh: "شروح السنة" },
+  const TRK = { dawah: "مشايخ الدعوة السلفية", madh: "الفقه المذهبي", muq: "الفقه المقارن", sharh: "شروح السنة", asl: "المصادر الأصلية المعتمدة", tahqiq: "كتب المحققين", sanad: "مصادر مساندة" },
     MDH = { ha: "الحنفية", ma: "المالكية", sh: "الشافعية", hb: "الحنابلة", zh: "الظاهرية" },
-    ROLE = { mu: "معتمد المذهب", um: "أمهات المذهب", mq: "كتاب مذهبي مقارن", cm: "مقارن جامع", ik: "اختيارات المحققين", sh: "شرح حديث" },
+    ROLE = { mu: "معتمد المذهب", um: "أمهات المذهب", mq: "كتاب مذهبي مقارن", cm: "مقارن جامع", ik: "تحريرات المحققين", sh: "شرح", asl: "أصل معتمد", mt: "متن معتمد", rd: "ردود ومناقشة", lg: "معجم ولغة", ms: "معاصر موثوق" },
     VL = ["منقول عن غير كتب المذهب — لم يُتحقق منه من كتبه", "من كتب المذهب", "من كتب المعتمد في المذهب"],
     TYD = { "نقل": "نص حرفي من المصدر", "تلخيص": "معنى المصدر بعبارة أخرى", "تحرير": "صياغة علمية جامعة بين المصادر" },
     DKD = { "صريح": "اختيار صريح", "ظاهر": "ظاهر اختياره من السياق", "عرض": "عرض للمسألة دون ترجيح صريح" };
@@ -47,6 +47,16 @@ const MAWS = (() => {
       <li>الترجيح: فتاوى صوت السلف أولًا — وفي مقدمتها اختيارات الشيخ ياسر برهامي بتاريخها وسياقها — ثم كتبه وشروحه (شرح صحيح مسلم، شرح فقه السنة…)، ثم سائر كتب المشايخ، مع إثبات الخلاف السائغ.</li>
       ${["madh", "muq", "sharh"].map(tr => by(tr).length ? `<li><b>${TRK[tr]}</b> في المكتبة: ${by(tr).map(li).join("، ")}.</li>` : "").join("")}
       ${(P.want || []).length ? `<li><b>مراجع يُستحسن إضافتها إلى المكتبة</b> لتمام التحرير المذهبي والمقارن: ${P.want.map(esc).join("؛ ")}.</li>` : ""}</ul></details>`;
+  }
+  // منهج الموسوعة (غير الفقه): أقسام مادتها ومراجعها المعتمدة بمساراتها والمراجع المطلوب إضافتها (data/mawsua/_disc.json)
+  function discMethod(I, k) {
+    const P = I && I.disc && I.disc[k]; if (!P) return "";
+    const by = tr => (P.have || []).filter(x => x.tr === tr), li = x => `${esc(x.t)}${x.r && ROLE[x.r] ? ` <small class="mut">(${ROLE[x.r]})</small>` : ""}`;
+    return `<details class="card mwfm"><summary>منهج هذه الموسوعة ومراجعها</summary><ul class="mwman">
+      <li>أقسام المادة: ${(P.secs || []).map((h, i) => toAr(i + 1) + ". " + esc(h)).join("، ")}، ثم ${esc(P.aq || "الأقوال")} بأدلتها ومناقشتها، والترجيح بنصه، وتقريرات مشايخ الدعوة واختياراتهم — بحسب ما تتطلبه المسألة وتوفره المصادر.</li>
+      <li>مشايخ الدعوة السلفية أولًا (كتبهم وشروحهم وفتاوى صوت السلف للشيخ ياسر برهامي بتاريخها)، ثم المصادر الأصلية المعتمدة في الفن، ثم كتب المحققين، ثم المصادر المساندة؛ ولا يُنسب قول ولا ترجيح ولا اختيار إلا بنصه في موضعه.</li>
+      ${["asl", "tahqiq", "sanad"].map(tr => by(tr).length ? `<li><b>${TRK[tr]}</b>: ${by(tr).map(li).join("، ")}.</li>` : "").join("")}
+      ${(P.want || []).length ? `<li><b>مراجع يُستحسن إضافتها إلى المكتبة:</b> ${P.want.map(esc).join("؛ ")}.</li>` : ""}</ul></details>`;
   }
   async function home(q) {
     const I = await getJ(R + "_index.json"); if (!I) return view('<div class="note">تعذر تحميل الموسوعات.</div>');
@@ -99,7 +109,7 @@ const MAWS = (() => {
     if (!t) { setTimeout(() => typeof MSB !== "undefined" && MSB.encBlock($("#msbenc"), k), 0); return view(crumbs([x.n]) + `<h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><div class="note">يُعد مخطط هذه الموسوعة الآن (الأبواب والفصول والمسائل)، ثم تُحرر مسائلها تباعًا.</div><div id="msbenc"></div>${adm() ? admBar(k, null) : ""}`); }
     const L = flat(t), done = L.filter(vis).length;
     view(crumbs([x.n]) + `<section class="mwhead" style="--h:${MWH(k)}"><span class="mwai">${ic(MWI[k] || "book-marked", 30)}</span><div><h2>${esc(x.n)}</h2><p class="mut">${esc(x.d)}</p><p class="mut">${toAr(t.b.length)} بابًا • ${toAr(L.length)} مسألة • ${toAr(done)} مادة ${adm() ? "محررة" : "منشورة"}${t.ok ? "" : adm() ? ' • <em class="tag">المخطط مسودة</em>' : ""}</p>${typeof prBtn==="function"?prBtn("موسوعة"):""}</div></section>
-      <div id="msbenc"></div>${adm() ? admBar(k, t) + revList(k, L) : ""}${k === "fiqh" ? fiqhMethod(I, false) : ""}
+      <div id="msbenc"></div>${adm() ? admBar(k, t) + revList(k, L) : ""}${k === "fiqh" ? fiqhMethod(I, false) : discMethod(I, k)}
       <div class="mwtree">${t.b.map((b, i) => `<details${i === 0 || q.b == i + 1 ? " open" : ""}><summary><b>الباب ${ord(i + 1)}:</b> ${esc(b.t)} <small class="mut">${toAr(b.f.reduce((a, f) => a + f.m.filter(vis).length, 0))}/${toAr(b.f.reduce((a, f) => a + f.m.length, 0))}</small></summary>
         ${b.f.map((f, j) => `<div class="mwf"><h4>الفصل ${ord(j + 1)}: ${esc(f.t)}</h4><ol>${f.m.map(m => `<li>${vis(m) ? `<a href="#/mawsua/${k}/${m.id}">${esc(m.t)}</a>${m.ok ? "" : ' <em class="tag">مسودة</em>'}${m.rev && adm() ? ' <em class="tag">تحديث مقترح</em>' : ""}` : `<span class="mwpend">${esc(m.t)}</span>${adm() && m.skip ? ` <small class="mut">(${esc(m.skip)})</small>` : ""}`}</li>`).join("")}</ol></div>`).join("")}</details>`).join("")}</div>`);
     if (typeof MSB !== "undefined") MSB.encBlock($("#msbenc"), k);
@@ -125,7 +135,7 @@ const MAWS = (() => {
         <div class="row">${showNew ? `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}">عرض المنشور</a>` : `<a class="btn s" href="#/mawsua/${k}/${encodeURIComponent(id)}?rev=1">عرض التحديث</a>`}<button class="btn s p" data-mw="rev" data-k="${k}" data-id="${esc(id)}">✓ اعتماد التحديث ونشره</button><button class="btn s" data-mw="norev" data-k="${k}" data-id="${esc(id)}">رفض التحديث</button> <span class="mwst mut"></span></div></div>` : ""}
       ${E.upd && (E.new || []).length && !NE ? `<p class="mut mwupd">${ic("sparkles", 14)} دُعِّمت هذه المادة في ${esc(E.upd)} من: ${E.new.map(b => `«${esc(((typeof B === "function" && B(b)) || {}).title || b)}»`).join("، ")}</p>` : ""}
       ${E.lead ? `<p class="mwlead">${esc(E.lead)}</p>` : ""}
-      ${E.fq ? fqView(E, sup, where, num) : (E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${p.ty === "نقل" ? "«" + esc(p.t) + "»" : esc(p.t)}${sup(p.c)}${p.ty && p.ty !== "تحرير" ? tyB(p.ty) : ""}</p>`).join("")}</section>`).join("")}
+      ${E.fq ? (E.meth === "disc3" ? dqView(E, sup, ((I || {}).disc || {})[k]) : fqView(E, sup, where, num)) : (E.s || []).map(s => `<section><h3>${esc(s.h)}</h3>${s.p.map(p => `<p>${p.ty === "نقل" ? "«" + esc(p.t) + "»" : esc(p.t)}${sup(p.c)}${p.ty && p.ty !== "تحرير" ? tyB(p.ty) : ""}</p>`).join("")}</section>`).join("")}
       ${(E.q || []).length ? `<section><h3>نصوص مختارة</h3>${E.q.map(q => `<blockquote class="mwq">«${esc(q.t)}» <small>— ${where(E.src[q.c])} <a href="#/book/${esc(E.src[q.c].b)}/${E.src[q.c].p}?h=${encodeURIComponent(q.t.slice(0, 40))}">موضعه</a></small></blockquote>`).join("")}</section>` : ""}
       ${E.fq ? fqRefs(E, where, num) : `<section class="mwsrc"><h3>المصادر</h3><ol>${tags.map(g => `<li id="mwsrc-${num[g]}"><span class="tag">${srcTag(E.src[g])}</span> <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a></li>`).join("")}</ol></section>`}
       ${nvHtml(E)}${histHtml(E)}
@@ -158,10 +168,23 @@ const MAWS = (() => {
       + H("وجه الاستدلال والمناقشة", wjH) + H("سبب الخلاف", P(F.sabab)) + H("الترجيح", tjH) + H("اختيارات مشايخ الدعوة السلفية", dwH)
       + (F.extra || []).map(x => `<section class="mwfq"><h3>${esc(x.h)}</h3>${P(x.p)}</section>`).join("") + (F.jm ? `<p class="note mwwarn">${esc(F.jm)}</p>` : "");
   }
+  // عرض مادة سائر الموسوعات بالمنهج الموسع (meth=disc3): أقسام الفن، ثم الأقوال وأدلتها ومناقشتها، والترجيح، واختيارات مشايخ الدعوة
+  function dqView(E, sup, P) {
+    FQN[0] = 0; const F = E.fq, AQ = F.aqwal || [], H = (t, body) => body ? `<section class="mwfq"><h3><span class="mwn">${toAr(++FQN[0])}</span> ${esc(t)}</h3>${body}</section>` : "";
+    const Pp = ps => (ps || []).map(p => `<p>${p.ty === "نقل" ? "«" + esc(p.t) + "»" : esc(p.t)}${sup(p.c)}${tyB(p.ty)}</p>`).join("");
+    const X = F.extra || [], aqH = AQ.length ? AQ.map(a => `<div class="mwqawl"><h4>${esc(a.n)}</h4><p>${esc(a.t)}${sup(a.c)}</p>${a.by.length ? `<p class="mwchips">${a.by.map(x => `<span class="chip mwby">${esc(x.kind)}: ${esc(x.who)}${sup(x.c)}</span>`).join(" ")}</p>` : ""}
+      ${a.adl.length ? `<p class="mut">الأدلة والشواهد:</p><ol class="mwadl">${a.adl.map(d => `<li><span class="tag">${esc(d.ty)}</span> ${esc(d.t)}${d.takh ? ` <small class="mut">(${esc(d.takh)})</small>` : ""}${sup(d.c)}${d.nf ? ' <small class="mwwarn">— بالمعنى</small>' : ""}</li>`).join("")}</ol>` : ""}
+      ${a.wajh.length ? `<p class="mut">وجه الاستدلال:</p>${Pp(a.wajh)}` : ""}${a.mun.length ? `<p class="mut">المناقشة والرد:</p>${Pp(a.mun)}` : ""}</div>`).join("") : "";
+    const tjH = (F.tarjih || []).map(x => `<div class="mwtj"><p><b>${esc(x.who)}:</b> ${esc(x.t)}${sup(x.c)}</p><blockquote class="mwq">«${esc(x.nass)}»</blockquote></div>`).join("");
+    const dwH = (F.dawah || []).map(x => `<div class="mwdw" data-k="${esc(x.kind)}"><p><b>${esc(x.who)}</b> <span class="tag">${DKD[x.kind] || ""}</span>${x.d ? ` <small class="mut">${esc(x.d)}</small>` : ""}${x.u ? ` <a class="mut" href="${esc(x.u)}" target="_blank" rel="noopener">صوت السلف ↗</a>` : ""}</p><p>${esc(x.t)}${sup(x.c)}</p>${x.nass ? `<blockquote class="mwq">«${esc(x.nass)}»</blockquote>` : ""}</div>`).join("")
+      + (F.dawah_diff ? `<p class="note">${ic("history", 16)} ${esc(F.dawah_diff.t)}${sup(F.dawah_diff.c)}</p>` : "");
+    return X.slice(0, 2).map(x => H(x.h, Pp(x.p))).join("") + H((P && P.aq) || "الأقوال وأدلتها ومناقشتها", aqH) + X.slice(2).map(x => H(x.h, Pp(x.p))).join("")
+      + H("الترجيح", tjH) + H("تقريرات مشايخ الدعوة السلفية واختياراتهم", dwH);
+  }
   // المراجع مجموعة بالمسارات، ثم «للتوسع»: مواضع أخرى من المسألة في المراجع لم يُنقل منها (E.more)
   function fqRefs(E, where, num) {
-    const tags = Object.keys(E.src || {}), grp = ["dawah", "madh", "muq", "sharh"], li = g => `<li id="mwsrc-${num[g]}" value="${num[g]}"><span class="tag">${srcTag(E.src[g])}</span>${E.src[g].r && ROLE[E.src[g].r] ? ` <small class="mut">${ROLE[E.src[g].r]}</small>` : ""} <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a>${E.src[g].u ? ` <a class="mut" href="${esc(E.src[g].u)}" target="_blank" rel="noopener">↗</a>` : ""}</li>`;
-    const by = tr => tags.filter(g => (E.src[g].tr || (E.src[g].k === "d" ? "dawah" : "muq")) === tr);
+    const tags = Object.keys(E.src || {}), grp = ["dawah", "madh", "muq", "sharh", "asl", "tahqiq", "sanad"], li = g => `<li id="mwsrc-${num[g]}" value="${num[g]}"><span class="tag">${srcTag(E.src[g])}</span>${E.src[g].r && ROLE[E.src[g].r] ? ` <small class="mut">${ROLE[E.src[g].r]}</small>` : ""} <a href="#/book/${esc(E.src[g].b)}/${E.src[g].p}">${where(E.src[g])}</a>${E.src[g].u ? ` <a class="mut" href="${esc(E.src[g].u)}" target="_blank" rel="noopener">↗</a>` : ""}</li>`;
+    const by = tr => tags.filter(g => (E.src[g].tr || (E.src[g].k === "d" ? "dawah" : E.meth === "disc3" ? "asl" : "muq")) === tr);
     const more = E.more || [];
     return `<section class="mwsrc mwfq"><h3><span class="mwn">${toAr(FQN[0] + 1)}</span> المراجع والتوسعات</h3>${grp.map(tr => by(tr).length ? `<h4>${TRK[tr]}</h4><ol>${by(tr).map(li).join("")}</ol>` : "").join("")}
       ${more.length ? `<details><summary>للتوسع: مواضع أخرى للمسألة في المراجع (${toAr(more.length)})</summary><ul class="mwlist">${more.map(x => `<li><span class="tag">${TRK[x.tr] || "مرجع"}${MDH[x.m] ? " — " + MDH[x.m] : ""}</span> <a href="#/book/${esc(x.b)}/${x.p}">«${esc(x.t)}»${x.a ? " — " + esc(x.a) : ""}${x.v ? "، ج " + toAr(x.v) : ""}، ص ${toAr(x.p)}</a></li>`).join("")}</ul></details>` : ""}</section>`;

@@ -89,6 +89,7 @@ IW, ICAP, MCAP = int(POL.get("imam_weight") or 3), int(POL.get("imam_cap") or 6)
 # التحديث المحافظ (طلب المدير، ٢٧ نوفمبر): تحديث مادة منشورة يُقترح بجوارها بسجل ما أُضيف وما تغير وسببه حتى تعتمده الإدارة
 REVIEW = POL.get("review_updates", True) is not False
 import mawsua_fiqh as F  # noqa: E402  منهج الموسوعة الفقهية المقارنة
+import mawsua_disc as DS  # noqa: E402  المنهج الموسع لسائر الموسوعات (data/mawsua/_disc.json)
 
 
 def _ntok(s):
@@ -282,6 +283,8 @@ def build(e, n=20, ids=None, boost=None, why=""):
     if not todo: print("  اكتملت مسائل", k); return 0
     if k == "fiqh":  # المنهج الفقهي المقارن (طلب المدير، ٢٧ نوفمبر): المسارات الثلاثة ومشايخ الدعوة، والهيكل التسعي، وضبط النسبة
         d, _ = F.build(e, tree, todo, boost, why); return d
+    if DS.has(k):  # سائر الموسوعات بالمنهج الموسع (طلب المدير، ٢٧ نوفمبر): مراجع الفن بأدوارها، والأقوال والترجيح واختيارات المشايخ بضبط النسبة
+        d, _ = F.build(e, tree, todo, boost, why, DS.profile(e)); return d
     C = corpus(e); done = 0
     for b, f, m in todo:
         if time.time() - T0 > LIMIT: break
@@ -395,7 +398,7 @@ def ensure(n=40):
             if not any(x.get("k") == k and x.get("do") == "plan" for x in it): it.insert(0, {"k": k, "do": "plan"})  # المخططات أولًا قبل أن تستهلك المسائل الحصة
         elif any(not m.get("e") and not m.get("skip") for b in tree["b"] for f in b["f"] for m in f["m"]) and not any(x.get("k") == k and x.get("do") == "build" and not x.get("ids") for x in it):
             it.append({"k": k, "do": "build", "n": n})
-        if k == "fiqh" and tree:  # المنهج الفقهي المقارن: المخطط الموسع أولًا، ثم ترقية المواد السابقة مقترحاتٍ بجوار المنشور
+        if (k == "fiqh" or DS.has(k)) and tree:  # المنهج الموسع: المخطط الموسع أولًا، ثم ترقية المواد السابقة مقترحاتٍ بجوار المنشور
             if tree.get("v") != 3 and not any(x.get("k") == k and x.get("do") == "plan2" for x in it): it.insert(0, {"k": k, "do": "plan2"})
             if F.upgrade_ids(tree, 1) and not any(x.get("k") == k and x.get("do") == "upgrade" for x in it): it.append({"k": k, "do": "upgrade", "n": 20})
     jw(qp, Q)
@@ -477,19 +480,21 @@ def grow(cap=25):
     الكتاب المصوَّر لا يُعدّ «مقروءًا» حتى يكتمل تدقيقه، فيُتناول عند جاهزيته. الحالة: data/mawsua/_seen.json، والسجل: _growth.json."""
     ensure()
     sp = os.path.join(OUT, "_seen.json"); seen = jl(sp); now = dawah_sources()
-    refs_now = set(F.registry()[1])  # مراجع الموسوعة الفقهية (المذهبية والمقارنة وشروح السنة): ما يُضاف منها يُطابَق بمسائل الفقه كذلك
+    REGS = {"fiqh": F.registry()[1]}; REGS.update({e[0]: DS.registry(e[0]) for e in ENC if DS.has(e[0])})
+    refs_now = set().union(*REGS.values())  # مراجع الموسوعات (الفقه وسائر الفنون): ما يُضاف منها يُطابَق بمسائل موسوعته كذلك
     if seen is None: jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now), "refs": sorted(refs_now)}); print("  النمو: بُدئت الحالة بـ%d مصدرًا" % len(now)); return
     if "refs" not in seen: seen["refs"] = sorted(refs_now); jw(sp, seen)  # أول تشغيل بالسجل: الموجود يغطيه التحرير بالمنهج الجديد
     new = sorted(now - set(seen.get("ids") or [])); new_refs = sorted(refs_now - set(seen.get("refs") or []))
     if not new and not new_refs: print("  النمو: لا مصادر جديدة"); return
-    C = new_corpus(set(new)); CR = F.ref_corpus(new_refs) if new_refs else []
-    print("  النمو: %d مصدرًا جديدًا (%d موضعًا)، و%d مجلدًا من مراجع الفقه (%d موضعًا)" % (len(new), len(C), len(new_refs), len(CR)), flush=True)
+    C = new_corpus(set(new))
+    CR = {k_: F.ref_corpus([x for x in new_refs if x in by_], by_) for k_, by_ in REGS.items()} if new_refs else {}
+    print("  النمو: %d مصدرًا جديدًا (%d موضعًا)، و%d مجلدًا من مراجع الموسوعات" % (len(new), len(C), len(new_refs)), flush=True)
     newbooks = [x for x in new if x in BOOKS]
     qp = os.path.join(OUT, "_queue.json"); Q = jl(qp, {"items": []}) or {"items": []}; added = 0; done_ids = set(new); died = False
     for e in ENC:
         tp = os.path.join(OUT, e[0], "_tree.json"); tree = jl(tp)
         if not tree: continue
-        cand = []; CE = C + (CR if e[0] == "fiqh" else [])
+        cand = []; CE = C + (CR.get(e[0]) or [])
         if not CE: continue
         for b in tree["b"]:
             for f in b["f"]:
@@ -529,7 +534,12 @@ def index():
     for x in recent: x["bt"] = [(BOOKS.get(b) or {}).get("setTitle") or (BOOKS.get(b) or {}).get("title", b) for b in x.get("b") or []][:3]
     try: fqp = F.policy()
     except Exception as x: fqp = {}; print("  تعذر سجل مصادر الفقه:", x)
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS3), "review": REVIEW, "items": items, "recent": recent})
+    disc = {}
+    for e in ENC:
+        if DS.has(e[0]):
+            try: disc[e[0]] = DS.policy(e[0])
+            except Exception as x: print("  تعذر سجل", e[0], x)
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS3), "disc": disc, "review": REVIEW, "items": items, "recent": recent})
 
 
 def fix_existing():
@@ -563,14 +573,16 @@ class _G:
     def __getattr__(self, k): return globals()[k]
 
 
-F.init(_G())
+F.init(_G()); DS.init(_G())
 
 
 def main():
     a = sys.argv[1:]; E = {e[0]: e for e in ENC}
     if a and a[0] == "fix": fix_existing(); index(); return
     if a and a[0] == "grow": grow(); index(); return
-    if a and a[0] == "plan2": F.plan2(E["fiqh"]); index(); return
+    if a and a[0] == "plan2":
+        for k in (a[1:2] if len(a) > 1 and a[1] in E else ["fiqh"]): (F.plan2 if k == "fiqh" else DS.plan2)(E[k])
+        index(); return
     if a and a[0] == "plan": [plan(E[k], "--force" in a) for k in (a[1:2] if len(a) > 1 and a[1] in E else E)]
     elif a and a[0] == "build" and len(a) > 1: build(E[a[1]], int(a[2]) if len(a) > 2 else 20)
     else:
@@ -581,12 +593,12 @@ def main():
             if time.time() - T0 > LIMIT or dead(): rest.append(it); continue  # نفدت المهلة أو حصة المفاتيح كلها: يبقى للجولة القادمة
             if it.get("do") == "plan":
                 if plan(e, bool(it.get("force"))) is False: rest.append(it)
-            elif it.get("do") == "plan2":  # المخطط الموسع للفقه على كتبه الثمانية عشر (يُستأنف حتى يتم)
-                if e[0] == "fiqh" and not F.plan2(e): rest.append(it)
+            elif it.get("do") == "plan2":  # المخطط الموسع: الفقه على كتبه الثمانية عشر، وسائر الموسوعات على أقسام فنونها (يُستأنف حتى يتم)
+                if (F.plan2(e) if e[0] == "fiqh" else DS.plan2(e) if DS.has(e[0]) else True) is False: rest.append(it)
             elif it.get("do") == "upgrade":  # ترقية المواد السابقة إلى المنهج الفقهي المقارن: مقترحات بجوار المنشور
-                tr_ = jl(os.path.join(OUT, e[0], "_tree.json")); ids_ = F.upgrade_ids(tr_, int(it.get("n") or 20)) if tr_ and e[0] == "fiqh" else []
+                tr_ = jl(os.path.join(OUT, e[0], "_tree.json")); ids_ = F.upgrade_ids(tr_, int(it.get("n") or 20)) if tr_ and (e[0] == "fiqh" or DS.has(e[0])) else []
                 if ids_:
-                    d = build(e, len(ids_), ids_, None, "ترقية المادة إلى منهج الموسوعة الفقهية المقارنة")
+                    d = build(e, len(ids_), ids_, None, "ترقية المادة إلى منهج الموسوعة الفقهية المقارنة" if e[0] == "fiqh" else "ترقية المادة إلى المنهج العلمي الموسع")
                     if d < len(ids_) or F.upgrade_ids(jl(os.path.join(OUT, e[0], "_tree.json")), 1): rest.append(it)
             else:
                 n = int(it.get("n") or 20); d = build(e, n, it.get("ids"), it.get("boost"))

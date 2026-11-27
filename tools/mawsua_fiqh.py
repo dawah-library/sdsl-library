@@ -39,8 +39,9 @@ KUTUB = [  # (المفتاح، العنوان، ألفاظ عناوين «الك
 KNAME = {k: t for k, t, _ in KUTUB}
 MDH = {"ha": "الحنفية", "ma": "المالكية", "sh": "الشافعية", "hb": "الحنابلة", "zh": "الظاهرية"}
 ROLE = {"mu": "معتمد المذهب", "um": "أمهات المذهب ونص الإمام", "mq": "كتاب مذهبي يحكي الخلاف واختيار مؤلفه", "cm": "كتاب مقارن جامع",
-        "ik": "اختيارات المحققين", "sh": "شرح حديث"}
-TRK = {"dawah": "مشايخ الدعوة السلفية", "madh": "الفقه المذهبي", "muq": "الفقه المقارن", "sharh": "شروح السنة"}
+        "ik": "اختيارات المحققين", "sh": "شرح", "asl": "أصل معتمد في الفن", "mt": "متن معتمد", "rd": "ردود ومناقشة للمخالف", "lg": "معجم ولغة", "ms": "كتابة معاصرة موثوقة"}
+TRK = {"dawah": "مشايخ الدعوة السلفية", "madh": "الفقه المذهبي", "muq": "الفقه المقارن", "sharh": "شروح السنة",
+       "asl": "المصادر الأصلية المعتمدة", "tahqiq": "كتب المحققين", "sanad": "مصادر مساندة"}
 LVL = {"معتمد", "مشهور", "رواية", "وجه", "قول الإمام", "اختيار", "قول"}
 TY = {"نقل", "تلخيص", "تحرير"}
 DK = {"صريح", "ظاهر", "عرض"}
@@ -229,9 +230,9 @@ def refs_hits(todo, per_set=3, boost=None):
     return res
 
 
-def ref_corpus(ids):
-    """مواضع مجلدات مراجع الفقه المعطاة (للنمو بما يُضاف منها) بصيغة المواضع مع بيانها في الحقل التاسع."""
-    R, by = registry(); out = []
+def ref_corpus(ids, by=None):
+    """مواضع مجلدات المراجع المعطاة (للنمو بما يُضاف منها) بصيغة المواضع مع بيانها في الحقل التاسع؛ by: سجل موسوعة غير الفقه."""
+    by = by if by is not None else registry()[1]; out = []
     for bid in ids:
         r = by.get(bid)
         if not r: continue
@@ -276,7 +277,7 @@ def fatwa_kitab(c):
     return _FK[c]
 
 
-def dawah_pick(DC, m, boost=None, AM=None, ks=None):
+def dawah_pick(DC, m, boost=None, AM=None, ks=None, cat_rx=None):
     """فتاوى صوت السلف أولًا (عنوان الفتوى سؤال المسألة غالبًا)، ثم كتب الشيخ ياسر برهامي وشروحه، ثم سائر كتب المشايخ، ثم المقالات."""
     R, _ = registry(); P = R.get("dawah") or {}; lead = M.nz(P.get("lead", "ياسر برهامي"))
     caps = {"f": int(P.get("fatwa_cap") or 8), "lead": int(P.get("lead_book_cap") or 4), "b": int(P.get("other_cap") or 3), "o": 2, "s": 2, "a": int(P.get("article_cap") or 2)}
@@ -284,11 +285,14 @@ def dawah_pick(DC, m, boost=None, AM=None, ks=None):
     for r in DC:
         same = False
         if r[7] == "f" and ks: same = bool(fatwa_kitab((AM.get(r[1]) or {}).get("c") or "") & ks)
+        elif r[7] == "f" and cat_rx is not None: same = bool(cat_rx.search((AM.get(r[1]) or {}).get("c") or ""))
         s = _score(kws, r[6], core if same else None)  # الفتوى في تصنيف كتاب المسألة: يكفي اجتماع ألفاظها الدالة
         if not s: continue
         ttl = M.nz(r[2])
         if any(w in ttl for w in kws[:4]) or sum(1 for w in core if w in ttl) >= 2: s += 6
-        if r[7] == "f":
+        if r[7] == "f" and cat_rx is not None:  # غير الفقه: الفتوى مقدمة إن كانت من تصنيف الموسوعة في صوت السلف، ومؤخرة إن لم تكن
+            s += 7 if same else -4
+        elif r[7] == "f":
             s += 6 + (4 if same else (-2 if ks else 0)); c = (AM.get(r[1]) or {}).get("c") or ""
             s += 3 if FIQH_CAT.search(c) else (-3 if re.search(r"العقيدة|المنهج", c) else 0)
         if lead and lead in M.nz(r[3]): s += 4
@@ -382,7 +386,7 @@ def who_ok(who, hs):
     return any(any(a in M.nz(h[3]) or (" " + a) in (" " + h[6]) for a in al) for h in hs)
 
 
-def validate(r, tags, AM):
+def validate(r, tags, AM, fiqh=True):
     """المخرج المنضبط fq، وما سقط بسبب التحقق في nv."""
     nv = [x.strip() for x in (r.get("nv") or []) if isinstance(x, str) and x.strip()][:12]
     used = set()
@@ -501,7 +505,7 @@ def validate(r, tags, AM):
     # «الجمهور» بلا مذاهب ثابتة من كتبها
     vm = {x["m"] for a in aq for x in a["mdh"] if x["v"] >= 1}
     blob = " ".join(p["t"] for k in ("tasw", "hukm", "sabab") for p in fq[k]) + " ".join(a["t"] for a in aq)
-    if "جمهور" in blob and len(vm & {"ha", "ma", "sh", "hb"}) < 3:
+    if fiqh and "جمهور" in blob and len(vm & {"ha", "ma", "sh", "hb"}) < 3:
         fq["jm"] = "نسبة القول إلى الجمهور منقولة عن المصادر المعزو إليها، ولم تثبت في هذه المادة مذاهب ثلاثة فأكثر من كتبها."
     fq["nv"] = list(dict.fromkeys(nv))[:20]
     return fq, used
@@ -560,18 +564,28 @@ def hist(old, new, why):
 
 
 # ---------- التحرير الفقهي ----------
-def build(e, tree, todo, boost=None, why=""):
-    """تحرير مسائل الفقه بالمنهج المقارن. يعيد (المنجز، هل نفدت الحصة)."""
+def fiqh_profile():
+    R, by = registry()
+    return {"hits": lambda todo, boost: refs_hits(todo, boost=boost), "pick": pick_refs,
+            "dpick": lambda DC, m, boost, AM, b, f: dawah_pick(DC, m, boost, AM, keys_of(f["t"], b["t"]) or keys_of(m["t"])),
+            "prompt": lambda m, b, f, cur, ctx: FIQH_ENTRY.replace("{t}", m["t"]).replace("{bab}", b["t"]).replace("{fasl}", f["t"]).replace("{cur}", cur).replace("{ctx}", ctx),
+            "flat": flatten, "accept": lambda fq, S: bool(S) and bool(fq["aqwal"] or fq["hukm"]), "fiqh": True, "meth": "fiqh3", "by": by,
+            "review": R.get("review_updates", True) is not False, "deftr": "muq"}
+
+
+def build(e, tree, todo, boost=None, why="", P=None):
+    """تحرير المسائل بالمنهج الموسع (الفقه افتراضًا، وغيره بملف منهجه P من mawsua_disc). يعيد (المنجز، هل نفدت الحصة)."""
     tp = os.path.join(M.OUT, e[0], "_tree.json")
     if not todo: return 0, False
+    P = P or fiqh_profile()
     DC = M.dawah_corpus(None); AM = art_meta(); ix = {(r[1], r[4]): r for r in DC}
-    RH = refs_hits(todo, boost=set(boost or []))
-    R, by = registry(); review = R.get("review_updates", True) is not False
+    RH = P["hits"](todo, set(boost or []))
+    by = P["by"]; review = P["review"]
     done = 0
     for b, f, m in todo:
         if time.time() - M.T0 > M.LIMIT: return done, False
-        dh = dawah_pick(DC, m, set(boost or []), AM, keys_of(f["t"], b["t"]) or keys_of(m["t"]))
-        rh, more = pick_refs(RH.get(m["id"]) or [])
+        dh = P["dpick"](DC, m, set(boost or []), AM, b, f)
+        rh, more = P["pick"](RH.get(m["id"]) or [])
         ep = os.path.join(M.OUT, e[0], "e", m["id"] + ".json"); old = M.jl(ep) if m.get("e") else None
         hits = dh + rh
         if old:  # التحديث يضيف ولا يُسقط: مواضع المادة المنشورة تبقى في السياق
@@ -584,7 +598,7 @@ def build(e, tree, todo, boost=None, why=""):
                     pg = M.pages_of(v.get("b")); p_ = int(v.get("p") or 0)
                     if 0 < p_ <= len(pg):
                         t = M.body(pg[p_ - 1]); rr = by.get(v.get("b")) or {}
-                        r_ = ("m", v["b"], v.get("t", ""), v.get("a", ""), p_, t, M.nz(t), "m", {"m": rr.get("m") or v.get("m"), "r": rr.get("r") or v.get("r"), "tr": rr.get("tr") or v.get("tr") or "muq", "vol": rr.get("vol") or v.get("v") or 0, "sec": ""})
+                        r_ = ("m", v["b"], v.get("t", ""), v.get("a", ""), p_, t, M.nz(t), "m", {"m": rr.get("m") or v.get("m"), "r": rr.get("r") or v.get("r"), "tr": rr.get("tr") or v.get("tr") or P["deftr"], "vol": rr.get("vol") or v.get("v") or 0, "sec": ""})
                 if r_: hits.append(r_); have.add(k_)
         if not dh and len(rh) < 3:
             if not m.get("e"): m["skip"] = "قلة المواضع"
@@ -602,20 +616,21 @@ def build(e, tree, todo, boost=None, why=""):
             cur = "المادة الحالية (المنشورة) — احفظ صحيحها وعزوها، وأعد بناءها على الهيكل المطلوب، وأضف إليها ما في المواضع الجديدة بلا حذف لمعلومة معزوة صحيحة:\n" + "\n".join(lines)[:7000] + "\n\n"
             newt = sorted({tg for tg, h in tags.items() if h[1] in set(boost or [])})
             if newt: cur += "المواضع الجديدة المطلوب إدخالها: " + "، ".join(newt) + "\n\n"
-        prompt = FIQH_ENTRY.replace("{t}", m["t"]).replace("{bab}", b["t"]).replace("{fasl}", f["t"]).replace("{cur}", cur).replace("{ctx}", "\n\n".join(ctx))
+        prompt = P["prompt"](m, b, f, cur, "\n\n".join(ctx))
         r = M.T.gemini(prompt)
         if not r: return done, True
         if r.get("skip"):
             if not m.get("e"): m["skip"] = "المواضع لا تتعلق بالمسألة"
             else: m["upf"] = today()
             continue
-        fq, used = validate(r, tags, AM)
-        S = flatten(fq)
+        if P.get("norm"): r = P["norm"](r)
+        fq, used = validate(r, tags, AM, P["fiqh"])
+        S = P["flat"](fq)
         qs = []
         for q in r.get("q") or []:
             c = q.get("c") if isinstance(q, dict) else None; t = ((q or {}).get("t") or "").strip(" «»\"") if isinstance(q, dict) else ""
             if c in tags and t and M.nz(t) in tags[c][6]: qs.append({"t": t, "c": c}); used.add(c)
-        if not S or not (fq["aqwal"] or fq["hukm"]):
+        if not P["accept"](fq, S):
             if not m.get("e"): m["skip"] = "لم تُعزَ الفقرات"
             else: m["upf"] = today()
             print("  ✗ لم تُعزَ:", m["t"]); continue
@@ -632,10 +647,10 @@ def build(e, tree, todo, boost=None, why=""):
             src[tg] = s_
         mo = [{"b": h[1], "t": h[2], "a": h[3], "p": h[4], "tr": h[8]["tr"], "m": h[8]["m"], "v": h[8]["vol"]} for h in more if (h[1], h[4]) not in {(v["b"], v["p"]) for v in src.values()}][:16]
         ent = {"id": m["id"], "t": m["t"], "bab": b["t"], "fasl": f["t"], "lead": M.unname(r.get("lead", ""), [], keep=[h[3] for h in tags.values()]), "fq": fq, "s": S, "q": qs, "src": src, "more": mo,
-               "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:8], "built": today(), "ok": 1, "auto": 1, "v": 3, "meth": "fiqh3"}
+               "see": [x for x in (r.get("see") or []) if isinstance(x, str)][:8], "built": today(), "ok": 1, "auto": 1, "v": 3, "meth": P["meth"]}
         nb = sorted({h["b"] for h in src.values()} & set(boost or []))
         if nb: ent["upd"] = today(); ent["new"] = nb
-        w = why or ("مصدر جديد" if nb else ("ترقية إلى منهج الموسوعة الفقهية المقارنة" if old else "التحرير الأول"))
+        w = why or ("مصدر جديد" if nb else (("ترقية إلى منهج الموسوعة الفقهية المقارنة" if P["fiqh"] else "ترقية إلى المنهج العلمي الموسع") if old else "التحرير الأول"))
         if old:
             ent["chg"] = changes(old, ent, w); ent["hist"] = hist(old, ent, w)
             if review or old.get("man"):  # التحديث المحافظ: المنشور باقٍ، والمقترح بجواره حتى تراجعه الإدارة وتعتمده
@@ -648,7 +663,7 @@ def build(e, tree, todo, boost=None, why=""):
             ent["hist"] = hist(None, ent, w)
         M.jw(ep, ent)
         m["e"] = 1; m["ok"] = 1; m["v"] = 3; m.pop("skip", None); m.pop("rev", None); done += 1
-        print("  ✓", m["t"], "— مواضع", len(src), "(أقوال %d، مذاهب ثابتة %d، الدعوة %d)" % (len(fq["aqwal"]), len({x["m"] for a in fq["aqwal"] for x in a["mdh"] if x["v"]}), len(fq["dawah"])), flush=True)
+        print("  ✓", m["t"], "— مواضع", len(src), "(أقسام %d، أقوال %d، مذاهب ثابتة %d، الدعوة %d)" % (len(S), len(fq["aqwal"]), len({x["m"] for a in fq["aqwal"] for x in a["mdh"] if x["v"]}), len(fq["dawah"])), flush=True)
         if nb or m.get("add") or not old: M.glog({"k": e[0], "id": m["id"], "t": m["t"], "do": "upd" if old else "new", "b": nb})
         M.jw(tp, tree)
     M.jw(tp, tree)
