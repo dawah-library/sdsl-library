@@ -24,3 +24,4 @@
 - المرحلة ٩ (منجزة): outreach.js (#/awael، #/weekly، #/masala، #/newsletter)، tools/weekly.py، tools/newsletter.py، جدول subscribers؛ docs/community.md.
 - الختام (منجز ٢٧ نوفمبر): تحديث «دراسة الموقع» بالمستجدات والمقارنات (القسم ٥ج وصفوف جديدة في جدول المقارنة) وصفحة التعريف.
 - قسم «خطب الجمعة» (منجز، طلب المدير ٢١ نوفمبر): khutab.js، tools/khutab.py، khutab.yml، data/khutab — docs/khutab.md، ق-١٣.
+- الموسوعة الفقهية المقارنة وسائر الموسوعات بالمنهج الموسع (منجز، طلب المدير ٢٧ نوفمبر): tools/mawsua_fiqh.py، tools/mawsua_disc.py، data/mawsua/_fiqh.json، _disc.json، ق-١٤، docs/mawsua.md؛ التحديث المحافظ (.new.json بسجل chg) لكل الموسوعات.

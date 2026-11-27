@@ -1987,3 +1987,12 @@ form:has(.gosug){position:relative}
 }
 /* سهولة الضغط على اللمس: حد أدنى لارتفاع الأزرار والشارات (WCAG 2.5.8) */
 @media (pointer:coarse){.btn,.chip,button.tab,.tabs a,.seg button{min-height:40px}}
+/* الموسوعة الفقهية المقارنة (طلب المدير، ٢٧ نوفمبر): الهيكل التسعي، جدول المذاهب ودرجة ثبوت النسبة، اختيارات مشايخ الدعوة، سجل التغيير */
+.mwfq .mwn{display:inline-grid;place-items:center;min-width:1.7em;height:1.7em;margin-inline-end:4px;border-radius:50%;background:color-mix(in srgb,var(--ac) 14%,transparent);font-size:.85em}
+.mwfq h4{margin:12px 0 4px;color:var(--gold,#b88a2e)}.mwty{font-size:.7rem;padding:0 5px;border-radius:6px;border:1px solid var(--line);color:var(--mut,#777);white-space:nowrap}.mwty[data-ty="نقل"]{border-color:var(--gold,#b88a2e);color:var(--gold,#b88a2e)}
+.mwmdt{width:100%}.mwmdt th,.mwmdt td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:start}.mwmdt thead th{background:color-mix(in srgb,var(--ac) 8%,transparent)}.tblw .mwmdt tr:first-child td{background:none;font-weight:400}
+.mwv{font-size:.75rem;padding:0 4px;border-radius:5px;background:color-mix(in srgb,#16a34a 14%,transparent);color:#15803d}.mwv[data-v="1"]{background:color-mix(in srgb,#2563eb 12%,transparent);color:#1d4ed8}.mwv[data-v="0"]{background:color-mix(in srgb,#d97706 16%,transparent);color:#b45309}
+:root[data-theme=dark] .mwv{color:#86efac}:root[data-theme=dark] .mwv[data-v="1"]{color:#93c5fd}:root[data-theme=dark] .mwv[data-v="0"]{color:#fcd34d}
+.mwleg{font-size:.8rem}.mwqawl{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--sf)}.mwqawl h4{margin:2px 0}.mwchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.mwchips .chip{font-size:.82rem}
+.mwadl{line-height:2.1}.mwtj{margin:8px 0}.mwdw{margin:10px 0;padding:8px 12px;border-inline-start:4px solid var(--ac);border-radius:8px;background:color-mix(in srgb,var(--ac) 5%,transparent)}.mwdw[data-k="عرض"]{border-inline-start-color:var(--line)}
+.mwwarn{color:#b45309}:root[data-theme=dark] .mwwarn{color:#fcd34d}.mwchg{margin:6px 0;line-height:1.9;font-size:.9rem}.mwnv ul,.mwhist ul{line-height:1.9;font-size:.88rem}.mwrevl ol{line-height:2}.mwfm{margin:10px 0}
