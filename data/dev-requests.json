@@ -698,7 +698,7 @@
    "k": "fix",
    "p": 2,
    "del": 0,
-   "st": "pending",
+   "st": "doing",
    "at": "2026-11-22T11:24:56.743Z",
    "eng": "auto",
    "auto": 0,
@@ -719,10 +719,10 @@
    "img": [
     "data/dev-att/dmwrr2h47-1.jpg"
    ],
-   "t0": "2026-11-27T13:55:49Z",
+   "t0": "2026-11-27T14:05:03Z",
    "br": "agent/dev/dmwrr2h47",
-   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/46011167408",
-   "u": "2026-11-27T14:03:08Z"
+   "run": "https://github.com/dawah-library/sdsl-library/actions/runs/46012491414",
+   "u": "2026-11-27T14:05:04Z"
   },
   {
    "id": "dmwso0f0k",
