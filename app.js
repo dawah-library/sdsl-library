@@ -21,7 +21,7 @@ const saveS=()=>ls.set("set",S);
 if(!S.lk2){S.mkq=true;S.mkh=true;S.mkt=true;S.lk2=1;saveS()}
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
 const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
-const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl"]),t:0,
+const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl","prints"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
   await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
@@ -1040,7 +1040,8 @@ function smartFont(kind,text,role){const n=(text||"").length,heritage=["شرح",
 const SECN={book:"الكتب",qabasat:"قبسات",majalla:"مجلة المكتبة",tala:"الطلائع",talaea:"الطلائع",articles:"المقالات",article:"المقالات",fatawa:"الفتاوى",khutab:"خطب الجمعة",hifz:"الحفظ والمتون",quiz:"الاختبارات",quizzes:"الاختبارات",bayanat:"بيانات الدعوة",posts:"منشورات المشايخ",mawsua:"الموسوعات",hadith:"الحديث",tafrighat:"التفريغات",library:"المكتبة"};const secN=k=>SECN[k]||k;
 const fontPick=(v,kind,text,role)=>v&&v!=="smart"?v:smartFont(kind,text,role);
 const fontSel=(id,cur)=>`<select id="${id}"><option value="smart"${!cur||cur==="smart"?" selected":""}>اختيار ذكي (يختاره الموقع)</option>${fontOpts(cur)}</select>`;
-const prData=()=>ls.get("prints",{items:[]});const prSave=d=>ls.set("prints",d);
+// سجل الإصدارات مع حساب العضو (Prefs: prints) فيتشاركه كل أجهزته، مع نسخة على الجهاز (البند ١٨، ٢٧ نوفمبر)
+const prData=()=>{if(!S.prints||!Array.isArray(S.prints.items)){S.prints=ls.get("prints",{items:[]})}return S.prints};const prSave=d=>{S.prints=d;ls.set("prints",d);saveS();try{Prefs.push()}catch(e){}};
 const ORD_AR=["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة","التاسعة","العاشرة"];
 const prName=n=>"الطبعة "+(ORD_AR[n-1]||toAr(n));
 function prAdd(o){const d=prData(),id="p"+Date.now().toString(36);d.items.push(Object.assign({id,kind:"أخرى",origin:"",link:"",refs:"",created:today(),editions:[],cover:null,identity:SITENAME,src:"manual",bodyFont:"smart",log:[{t:today(),ev:"تسجيل الإصدار ("+(o.src==="auto"?"تلقائي من النظام":"يدوي")+")"}]},o));prSave(d);return id}
