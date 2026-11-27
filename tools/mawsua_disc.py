@@ -45,6 +45,7 @@ def registry(k):
             if r["t"] in t and (not r.get("a") or r["a"] in an):
                 if M.ready(b): by[b["id"]] = dict(r, title=t, author=an, vol=b.get("vol") or 0, m=None)
                 break
+    F.feed_refs(k, by, {"m": None, "r": "ms", "tr": "sanad"})  # الكتب الجديدة المتصلة بالموسوعة (_feed.json)
     _REG[k] = by; return by
 
 
