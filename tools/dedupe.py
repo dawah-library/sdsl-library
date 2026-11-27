@@ -29,7 +29,7 @@ def sameish(x, y):
     if not a or not b: return 0
     if a == b: return 2
     s, l = (a, b) if len(a) <= len(b) else (b, a)
-    return 1 if len(s) >= 2 and set(s) <= set(l) and s[0] == l[0] and s[-1] == l[-1] else 0
+    return 1 if len(s) >= 2 and set(s) <= set(l) and s[0] == l[0] and (s[-1] == l[-1] or l[:len(s)] == s) else 0  # الاسم الناقص بادئة الكامل (مصعب أمين ← مصعب أمين جابر)
 
 def load():
     cat = rd("catalog.json"); idx = rd("articles/index.json")
