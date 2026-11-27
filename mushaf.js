@@ -473,5 +473,13 @@ const MUSX = (() => {
     else if (k === "cite") { try { await navigator.clipboard.writeText("المصحف الشريف — " + c.su + (c.n ? "، الصفحة " + c.n : "") + "\n" + location.origin + c.url); toast("نُسخت الإحالة"); } catch (x) { } }
     else if (k === "share") { const d = { title: "المصحف الشريف", text: c.su, url: location.origin + c.url }; if (navigator.share) navigator.share(d).catch(() => { }); else { navigator.clipboard.writeText(d.url); toast("نُسخ الرابط"); } } });
   new MutationObserver(() => { const on = !!document.querySelector(".mpage,.qtext"), f = document.getElementById("musfab"); if (on && !f) document.body.insertAdjacentHTML("beforeend", '<button id="musfab" class="hdfab" data-act="musxmenu" aria-label="أدوات المصحف">▦</button>'); else if (!on && f) f.remove(); }).observe(document.documentElement, { childList: true, subtree: true });
+  // التمرير التلقائي بسرعات (بند 7د): زر عائم فوق زر الأدوات؛ كل ضغطة تبدّل السرعة (١ ثم ٢ ثم ٣ ثم ٤ ثم إيقاف)، ويتوقف بلمس الشاشة أو العجلة أو تغيير الصفحة
+  let ASP = 0, ATM = null;
+  const asStop = () => { ASP = 0; clearInterval(ATM); ATM = null; const b = document.getElementById("musas"); if (b) { b.textContent = "▶︎"; b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); } };
+  if (!document.getElementById("musas-css")) document.head.insertAdjacentHTML("beforeend", '<style id="musas-css">#musas{position:fixed;bottom:88px;inset-inline-end:18px;z-index:56;width:44px;height:44px;border-radius:50%;border:1px solid #c9b27a;background:#fff;color:#3b2a20;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}#musas.on{background:#3b2a20;color:#fff}</style>');
+  new MutationObserver(() => { const on = !!document.querySelector(".mpage,.qtext"), f = document.getElementById("musas"); if (on && !f) document.body.insertAdjacentHTML("beforeend", '<button id="musas" aria-pressed="false" aria-label="تمرير تلقائي بسرعات">▶︎</button>'); else if (!on && f) { asStop(); f.remove(); } }).observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#musas"); if (!b) return; ASP = (ASP + 1) % 5; clearInterval(ATM); ATM = null; if (!ASP) { asStop(); return; } b.textContent = "▶︎" + ["", "¹", "²", "³", "⁴"][ASP]; b.classList.add("on"); b.setAttribute("aria-pressed", "true"); ATM = setInterval(() => { const x = ASP * .5; window.scrollBy(0, x < 1 ? 1 : x); if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) asStop(); }, 30); });
+  ["wheel", "touchstart", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (ASP) asStop(); }, { passive: true }));
+  window.addEventListener("hashchange", asStop);
   return { menu };
 })();
