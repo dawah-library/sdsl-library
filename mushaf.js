@@ -485,16 +485,21 @@ const MUSX = (() => {
   const SECC = {}, secGet = n => SECC[n] || (SECC[n] = fetch("data/quran/sections/" + n + ".json").then(r => r.ok ? r.json() : null).catch(() => null));
   const secHue = (n, i) => (i * 47 + n * 13) % 360;
   let secSig = "", secT = null;
+  // الافتراضي: مخفي (قراءة نظيفة للمصحف)، ويختاره القارئ ويُحفظ على جهازه
+  const secOn = () => { try { return localStorage.getItem("mus_sec") === "1"; } catch (e) { return false; } };
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-sectg]"); if (!b) return; try { localStorage.setItem("mus_sec", secOn() ? "0" : "1"); } catch (x) { } secSig = ""; secPaint().catch(() => { }); });
   if (!document.getElementById("msec-css")) document.head.insertAdjacentHTML("beforeend", '<style id="msec-css">[data-sec]{background:hsl(var(--sh) 60% 55% / .10);box-shadow:inset 0 -2px 0 hsl(var(--sh) 55% 45% / .55);border-radius:3px}.msecbar{margin:8px 0;border:1px solid var(--line);border-radius:10px;background:var(--sf);padding:4px 10px;font-size:.88rem}.msecbar summary{cursor:pointer;font-weight:600}.msecbar ol{margin:6px 0;padding-inline-start:0;list-style:none}.msecbar li{display:flex;gap:8px;align-items:center;padding:3px 0}.msecbar li i{flex:none;width:12px;height:12px;border-radius:3px;background:hsl(var(--sh) 60% 55% / .55)}.msecbar li small{opacity:.65;white-space:nowrap}.msecbar .mq{margin:4px 0;opacity:.85}</style>');
   async function secPaint() {
     const root = document.querySelector(".mpage,.qtext"); if (!root) { secSig = ""; return; }
     const app = document.getElementById("app") || document, els = [...app.querySelectorAll("[data-s][data-a],.may")];
+    const on = secOn(), tg = `<div class="msecbar msectg"><button type="button" class="btn s" data-sectg aria-pressed="${on}">🧩 التقسيم الموضوعي: ${on ? "ظاهر، اضغط للإخفاء" : "مخفي، اضغط للإظهار"}</button></div>`;
+    if (!on) { if (app.querySelector(".msectg") && !app.querySelector("[data-sec],.msecbar:not(.msectg)")) return; els.forEach(e => { if (e.dataset && e.dataset.sec != null) { delete e.dataset.sec; e.style.removeProperty("--sh"); } }); app.querySelectorAll(".msecbar").forEach(b => b.remove()); root.insertAdjacentHTML("beforebegin", tg); secSig = ""; return; }
     const key = e => { if (e.dataset && e.dataset.s && e.dataset.a) return [+e.dataset.s, +e.dataset.a]; const m = /^ay(\d+)_(\d+)$/.exec(e.id || ""); return m ? [+m[1], +m[2]] : null; };
     const sig = els.length + ":" + (els[0] ? els[0].outerHTML.length : 0) + ":" + (app.querySelector(".msecbar") ? 1 : 0); if (sig === secSig) return;
     const suras = [...new Set(els.map(key).filter(Boolean).map(k => k[0]))].slice(0, 3), D = {};
     await Promise.all(suras.map(async n => { D[n] = await secGet(n); }));
     els.forEach(e => { const k = key(e); if (!k || !D[k[0]] || e.dataset.sec != null) return; const sec = D[k[0]].sec, i = sec.findIndex(x => k[1] >= x[0] && k[1] <= x[1]); if (i >= 0) { e.dataset.sec = i; e.style.setProperty("--sh", secHue(k[0], i)); } });
-    app.querySelectorAll(".msecbar").forEach(b => b.remove());
+    app.querySelectorAll(".msecbar").forEach(b => b.remove()); root.insertAdjacentHTML("beforebegin", tg);
     suras.filter(n => D[n]).forEach(n => { const d = D[n], vis = new Set(els.map(key).filter(k => k && k[0] === n).map(k => k[1]));
       const rows = d.sec.map((x, i) => [x, i]).filter(([x]) => [...vis].some(a => a >= x[0] && a <= x[1]));
       root.insertAdjacentHTML("beforebegin", `<details class="msecbar"><summary>🧩 مقاطع السورة وموضوعاتها${d.draft ? " (مسودة آلية للمراجعة)" : ""}</summary>${d.maqsad ? `<p class="mq"><b>المقصد العام:</b> ${esc(d.maqsad)}</p>` : ""}<ol>${rows.map(([x, i]) => `<li style="--sh:${secHue(n, i)}"><i></i><a href="#/mushaf/${n}?a=${x[0]}">${esc(x[2])}</a><small>الآيات ${toAr(x[0])}–${toAr(x[1])}</small></li>`).join("")}</ol></details>`); });
