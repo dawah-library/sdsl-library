@@ -2118,3 +2118,24 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .hubg.few .happ b{font-size:1.02rem}.hubg.few .happ small{font-size:.8rem}
 .hsrcg{margin:10px 0}.hsrc{display:inline-block;font-size:.78rem;color:var(--ac,#0b4f43);background:color-mix(in srgb,var(--ac,#0b4f43) 10%,transparent);padding:2px 10px;border-radius:99px;margin:6px 0 4px}
 .hdun a{display:block}.hpg{text-align:center;margin:10px 0}
+
+/* لوحة التفسير والشرح بجوار الآية والحديث، وتمييز موحد للعناوين في النصوص المقروءة */
+.rd .w.vcardend::after{content:"تفسير";font-size:.62em;font-weight:700;margin:0 .35em;padding:.05em .5em;border-radius:99px;border:1px solid currentColor;vertical-align:middle;cursor:pointer;font-family:var(--hf,inherit)}
+.rd .w.hcardend::after{content:"شرح";font-size:.62em;font-weight:700;margin:0 .35em;padding:.05em .5em;border-radius:99px;border:1px solid currentColor;vertical-align:middle;cursor:pointer;font-family:var(--hf,inherit)}
+.rd .w.vcard,.rd .w.hcard{cursor:pointer}
+#fmtp{position:fixed;z-index:60;background:var(--sf,#fff);color:var(--tx,#222);border:1px solid var(--line,#ddd);box-shadow:0 8px 30px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;font-size:.95rem;line-height:1.9}
+#fmtp.on{display:flex}
+#fmtp header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:3px solid var(--gold,#b8892b);background:color-mix(in srgb,var(--gold,#b8892b) 10%,transparent)}
+#fmtp header b{color:var(--green,#0f5d46);font-family:Amiri,serif;font-size:1.15rem}
+#fmtp .fmtx{background:none;border:0;font-size:1.1rem;cursor:pointer;color:inherit}
+#fmtp nav{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px 0}
+#fmtp nav button{border:1px solid var(--line,#ccc);background:none;border-radius:99px;padding:2px 10px;cursor:pointer;color:inherit;font:inherit;font-size:.82rem}
+#fmtp nav button.on{background:var(--green,#0f5d46);color:#fff;border-color:transparent}
+#fmtp .fmtb{padding:8px 14px;overflow:auto;flex:1}
+#fmtp .fmtb dt{font-family:Amiri,serif;color:var(--green,#0f5d46);font-weight:700}#fmtp .fmtb dd{margin:0 0 6px}
+#fmtp .fmtf{padding:8px 12px;border-top:1px solid var(--line,#ddd)}
+@media(min-width:900px){#fmtp{top:120px;left:16px;width:380px;max-height:78vh;border-radius:14px}}
+@media(max-width:899px){#fmtp{left:0;right:0;bottom:0;max-height:62vh;border-radius:16px 16px 0 0}}
+.rd.fmtd h1,.rd.fmtd h2,.rd.fmtd h3,.rd.fmtd .h1,.rd.fmtd .h2,.rd.fmtd .h3{color:var(--green,#0f5d46);font-family:Amiri,serif}
+.rd.fmtd h1,.rd.fmtd h2{border-bottom:2px solid var(--gold,#b8892b);padding-bottom:.2em;margin-top:1.4em}
+.rd.fmtd h3{border-inline-start:4px solid var(--gold,#b8892b);padding-inline-start:.6em;margin-top:1.2em}
