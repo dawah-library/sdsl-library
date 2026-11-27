@@ -158,6 +158,7 @@ ${r.noindex ? '<meta name="robots" content="noindex">' : ""}${r.ld ? `<script ty
     html = html.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(r.title)}</title>`)
       .replace(/<meta name="description"[^>]*>/, () => `<meta name="description" content="${esc(r.desc)}">`)
       .replace(/<!--og-->[\s\S]*?<!--\/og-->/, "")
+      .replace(/<!--home-->[\s\S]*?<!--\/home-->/, "")
       .replace("</head>", () => head + "\n</head>");
     if (r.body) html = html.replace(/(<main id="app"[^>]*>)[\s\S]*?(<\/main>)/, (m, a, b) => a + '<div class="ssr">' + r.body + "</div>" + b);
     res.setHeader("content-type", "text/html; charset=utf-8");
