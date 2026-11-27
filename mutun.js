@@ -152,12 +152,12 @@ const sico=(k,fb)=>SCI_SVG[k||"all"]?`<svg class="sci" viewBox="0 0 24 24" aria-
     const g = ss[k]; if (!g) return location.hash = "#/hifz/m/" + id;
     const m = MODES.some(z => z[0] === q.m) ? q.m : "read", nazm = it_kind(g);
     SES = { x, ss, k, g, nazm, lvl: +q.lv || 1, rep: 0 };
-    const units = g.u.map(u => S.tash ? u.t : strip(u.t));
+    const LK = look(), units = g.u.map(u => LK.tash ? u.t : strip(u.t));
     const show = t => esc(t).replace(/ \.\.\. /, '<span class="sep">۝</span>');
     let inner = "";
     if (m === "read") inner = `<p class="mut">اقرأ الورد بتأنٍّ مع فهم معناه، واستمع إليه، وكرّره حتى تحفظه (يُقترح ١٠ مرات فأكثر). تحفظ ${nazm ? "البيت بعد البيت ثم تجمعها" : "الجملة بعد الجملة ثم تصلها"}.</p>
-      <div class="mtext">${units.map((t, i) => `<p data-u="${i}">${show(t)} <button class="lnk" data-mt="say" data-u="${i}" aria-label="استمع">🔊</button></p>`).join("")}</div>
-      <div class="row mrep"><button class="btn p" data-mt="sayall">🔊 استمع للورد</button><button class="btn" data-mt="rep">تكرار: <b id="mrc">٠</b> / ١٠</button><button class="btn" data-mt="rec">🎙 سجّل تلاوتك</button><audio id="mrecp" controls hidden></audio></div>`;
+      ${lookBar(LK)}<div class="mtext" style="${lookCss(LK)}">${units.map((t, i) => `<p class="mu" data-u="${i}"><button type="button" class="pl" data-mt="say" data-u="${i}" aria-label="استمع لهذه الفقرة">${PLAY}</button><span class="mt">${show(t)}</span></p>`).join("")}</div>
+      <div class="row mrep"><button class="btn p" data-mt="sayall">▶ استمع للورد كاملًا</button><button class="btn" data-mt="stop">■ إيقاف</button><button class="btn" data-mt="rep">تكرار: <b id="mrc">٠</b> / ١٠</button><button class="btn" data-mt="rec">🎙 سجّل تلاوتك</button><audio id="mrecp" controls hidden></audio></div>`;
     else if (m === "hide" || m === "first") { const lv = SES.lvl;
       inner = `<p class="mut">${m === "hide" ? "تُخفى كلمات أكثر في كل مستوى؛ استحضر المخفي من حفظك ثم اضغط الكلمة لتراها." : "تظهر الحروف الأولى من كل كلمة؛ استرجع الكلمة كاملة، واضغطها لتظهر."}</p>
       ${m === "hide" ? `<div class="seg">${[1, 2, 3, 4].map(n => `<a href="#/hifz/m/${esc(id)}/${k}?m=hide&lv=${n}" class="${n === lv ? "on" : ""}">${["", "ربع", "نصف", "ثلاثة أرباع", "الكل"][n]}</a>`).join("")}</div>` : ""}
@@ -175,13 +175,32 @@ const sico=(k,fb)=>SCI_SVG[k||"all"]?`<svg class="sci" viewBox="0 0 24 24" aria-
   }
   const hid = (i, j, lv) => ((i * 7 + j * 13) % 8) < lv * 2;
   const firstOf = w => { const m = strip(w).match(/[ء-ي]/); return m ? m[0] : w.slice(0, 1); };
-  const say = t => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(strip(t).replace(/\.\.\./g, "،")); u.lang = "ar-SA"; const v = speechSynthesis.getVoices().find(x => /^ar/i.test(x.lang)); if (v) u.voice = v; u.rate = .85; speechSynthesis.speak(u); return u; } catch (e) { toast("المتصفح لا يدعم القراءة الصوتية"); } };
+  /* مظهر الورد (يحفظه القارئ على جهازه): حجم الخط، تباعد الأسطر، التشكيل، سرعة القراءة الصوتية */
+  const LOOK0 = { fs: 1.25, lh: 2.3, tash: null, rate: .85, voice: "" };
+  const look = () => { let o = {}; try { o = JSON.parse(localStorage.getItem("hz_look") || "{}"); } catch (e) { } const l = Object.assign({}, LOOK0, o); if (l.tash === null) l.tash = !!S.tash; return l; };
+  const setLook = p => { try { localStorage.setItem("hz_look", JSON.stringify(Object.assign({}, JSON.parse(localStorage.getItem("hz_look") || "{}"), p))); } catch (e) { } };
+  const lookCss = l => `--hfs:${l.fs}rem;--hlh:${l.lh}`;
+  const lookBar = l => `<div class="hzlook" role="group" aria-label="مظهر النص"><button type="button" class="ic" data-mt="look" data-k="fs" data-d="-.1" aria-label="تصغير الخط">أ-</button><button type="button" class="ic" data-mt="look" data-k="fs" data-d=".1" aria-label="تكبير الخط">أ+</button><button type="button" class="ic" data-mt="look" data-k="lh" data-d="-.2" aria-label="تضييق الأسطر">≡</button><button type="button" class="ic" data-mt="look" data-k="lh" data-d=".2" aria-label="توسيع الأسطر">☰</button><button type="button" class="ic${l.tash ? " on" : ""}" data-mt="look" data-k="tash" aria-pressed="${l.tash}">التشكيل</button><select data-mt="voice" aria-label="القارئ">${[["", "القارئ: الأفضل تلقائيًا"]].concat(arVoices().map(v => [v.name, v.name.replace(/Microsoft |Google /, "").slice(0, 28)])).map(([v, n]) => `<option value="${esc(v)}"${v === (l.voice || "") ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><select data-mt="rate" aria-label="سرعة القراءة">${[[.7, "بطيئة"], [.85, "عادية"], [1, "سريعة"]].map(([v, n]) => `<option value="${v}"${v === l.rate ? " selected" : ""}>${n}</option>`).join("")}</select></div>`;
+  const PLAY = '<svg class="pli" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+  const arVoices = () => speechSynthesis.getVoices().filter(x => /^ar/i.test(x.lang));
+  const bestVoice = () => { const vs = arVoices(); const pick = look().voice && vs.find(v => v.name === look().voice); if (pick) return pick; const sc = v => (/neural|natural|premium|enhanced|online/i.test(v.name) ? 4 : 0) + (/google|microsoft|majed|tarik|hoda|shakir|laila/i.test(v.name) ? 2 : 0) + (/SA|EG|AE/i.test(v.lang) ? 1 : 0) + (v.localService ? 0 : 1); return vs.sort((a, b) => sc(b) - sc(a))[0]; };
+  let SAYQ = 0;
+  const say = (t, onstart, onend) => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(strip(t).replace(/\.\.\./g, "،")); u.lang = "ar-SA"; const v = bestVoice(); if (v) u.voice = v; u.rate = look().rate; if (onstart) u.onstart = onstart; if (onend) u.onend = onend; u.onerror = onend || null; speechSynthesis.speak(u); return u; } catch (e) { toast("المتصفح لا يدعم القراءة الصوتية"); } };
+  const mark = i => { document.querySelectorAll(".mtext p.mu.sp").forEach(p => p.classList.remove("sp")); if (i != null) { const p = document.querySelector('.mtext p.mu[data-u="' + i + '"]'); if (p) { p.classList.add("sp"); p.scrollIntoView({ block: "nearest", behavior: "smooth" }); } } };
+  const sayOne = i => say(SES.g.u[i].t, () => mark(i), () => mark(null));
+  // القراءة المتصلة: الورد يُقرأ بمقاطع كبيرة (حتى نحو ٤٥٠ حرفًا تنتهي بنهاية فقرة)، لا سطرًا سطرًا؛ ويتحرك التمييز مع المقطع
+  const chunks = us => { const out = []; let cur = null; us.forEach((u, i) => { const t = strip(u.t).replace(/\.\.\./g, "،"); if (!cur || cur.t.length + t.length > 450) { cur = { t: "", ix: [] }; out.push(cur); } cur.t += (cur.t ? " " : "") + t; cur.ix.push(i); }); return out; };
+  const markMany = ix => { document.querySelectorAll(".mtext p.mu.sp").forEach(p => p.classList.remove("sp")); ix.forEach((i, k) => { const p = document.querySelector('.mtext p.mu[data-u="' + i + '"]'); if (p) { p.classList.add("sp"); if (!k) p.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }); };
+  const sayAll = () => { const my = ++SAYQ, cs = chunks(SES.g.u); const go = i => { if (my !== SAYQ || i >= cs.length) { mark(null); if (my === SAYQ) { SES.rep++; const c = $("#mrc"); if (c) c.textContent = toAr(SES.rep); } return; } say(cs[i].t, () => markMany(cs[i].ix), () => setTimeout(() => go(i + 1), 200)); }; go(0); };
   let REC = null;
+  document.addEventListener("change", e => { const r = e.target.closest && e.target.closest('select[data-mt="rate"]'); if (r) setLook({ rate: +r.value }); const v = e.target.closest && e.target.closest('select[data-mt="voice"]'); if (v) setLook({ voice: v.value }); });
   document.addEventListener("click", async e => {
     const w = e.target.closest(".mw"); if (w) { w.outerHTML = `<b class="mrev">${esc(w.dataset.w)}</b>`; return; }
     const el = e.target.closest("[data-mt]"); if (!el) return; e.preventDefault(); const a = el.dataset.mt;
-    if (a === "say" && SES) say(SES.g.u[+el.dataset.u].t);
-    else if (a === "sayall" && SES) { const u = say(SES.g.u.map(x => x.t).join("، ")); if (u) u.onend = () => { SES.rep++; const c = $("#mrc"); if (c) c.textContent = toAr(SES.rep); }; }
+    if (a === "say" && SES) { SAYQ++; sayOne(+el.dataset.u); }
+    else if (a === "stop") { SAYQ++; try { speechSynthesis.cancel(); } catch (e) { } mark(null); }
+    else if (a === "look") { const l = look(), k = el.dataset.k; if (k === "tash") setLook({ tash: !l.tash }); else setLook({ [k]: Math.max(k === "fs" ? 1 : 1.6, Math.min(k === "fs" ? 2.2 : 3.2, +(l[k] + +el.dataset.d).toFixed(2))) }); dispatchEvent(new HashChangeEvent("hashchange")); }
+    else if (a === "sayall" && SES) sayAll();
     else if (a === "rep" && SES) { SES.rep++; $("#mrc").textContent = toAr(SES.rep); if (SES.rep === 10) toast("أحسنت؛ جرّب الآن «الإخفاء التدريجي»"); }
     else if (a === "rec") { try { if (REC && REC.state === "recording") { REC.stop(); el.textContent = "🎙 سجّل تلاوتك"; return; } const st = await navigator.mediaDevices.getUserMedia({ audio: true }), ch = []; REC = new MediaRecorder(st); REC.ondataavailable = x => ch.push(x.data); REC.onstop = () => { st.getTracks().forEach(t => t.stop()); const au = $("#mrecp"); au.src = URL.createObjectURL(new Blob(ch, { type: REC.mimeType })); au.hidden = false; }; REC.start(); el.textContent = "⏹ أوقف التسجيل"; } catch (x) { toast("تعذر الوصول إلى الميكروفون"); } }
     else if (a === "ord" && SES) { const out = $("#mordout"), i = +el.dataset.i, n = out.children.length; const ok = i === n; out.insertAdjacentHTML("beforeend", `<li class="${ok ? "ok" : "no"}">${esc(strip(SES.g.u[i].t))}</li>`); el.remove(); if (!$("#mord").children.length) { const bad = out.querySelectorAll(".no").length; $("#mres").innerHTML = bad ? `<span class="warn">${toAr(bad)} في غير موضعه؛ أعد المحاولة.</span>` : "✔ الترتيب صحيح"; } }

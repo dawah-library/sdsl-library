@@ -2100,3 +2100,15 @@ html[data-theme=dark] .rd.fmtd .w.vcard{color:#8fd0b2}html[data-theme=dark] .rd.
 /* أيقونات العلوم (mutun.js): خطية موحدة */
 svg.sci{width:1.15em;height:1.15em;vertical-align:-.22em;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .mic svg.sci{width:1em;height:1em;color:var(--green,#0f5d46)}.mic.big svg.sci{stroke-width:1.5}
+/* جلسة الورد: مظهر قابل للتخصيص وزر تشغيل لكل فقرة */
+.mtext{font-size:var(--hfs,1.25rem);line-height:var(--hlh,2.3)}
+.mtext p.mu{display:flex;gap:10px;align-items:flex-start;padding:4px 6px;border-radius:10px;transition:background .2s}
+.mtext p.mu .mt{flex:1}
+.mtext p.mu.sp{background:color-mix(in srgb,var(--gold,#b8892b) 18%,transparent)}
+.mtext button.pl{flex:none;width:34px;height:34px;margin-top:.45em;border-radius:50%;border:1px solid color-mix(in srgb,var(--green,#0f5d46) 35%,transparent);background:color-mix(in srgb,var(--green,#0f5d46) 10%,transparent);color:var(--green,#0f5d46);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.mtext button.pl:hover,.mtext p.mu.sp button.pl{background:var(--green,#0f5d46);color:#fff}
+svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transform:scaleX(-1)}
+.hzlook{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.hzlook button.ic{min-width:38px;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--paper,#fffdf7);color:inherit;font:inherit;font-size:.9rem;cursor:pointer}
+.hzlook button.ic.on{background:var(--green,#0f5d46);color:#fff;border-color:transparent}
+.hzlook select{height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper,#fffdf7);font:inherit;font-size:.9rem;padding:0 8px}
