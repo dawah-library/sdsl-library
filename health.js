@@ -49,12 +49,24 @@ const ADMH = (() => {
       });
     } catch (e) { return null }
   }
+  async function crew() {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/commits?per_page=100`); if (!r.ok) throw 0;
+      const by = new Map();
+      for (const c of await r.json()) {
+        const m0 = c.commit.message || "", n0 = (c.commit.author && c.commit.author.name) || "؟", n = /Agent: |Co-authored-by: sdsl-agent/.test(m0) ? "sdsl-agent (وكيل التطوير)" : n0, e = by.get(n) || { n, k: 0, at: c.commit.author.date, last: m0.split("\n")[0] };
+        e.k++; by.set(n, e);
+      }
+      return [...by.values()].sort((a, b) => b.k - a.k);
+    } catch (e) { return null }
+  }
+  const KIND = n => /github-actions|actions-user|bot/i.test(n) ? "آلي (مهمة مجدولة)" : /agent|instinct/i.test(n) ? "وكيل ذكاء اصطناعي" : "شخص أو حساب مشرف";
   async function queue() {
     try { const r = await fetch("data/turathio-queue.json?t=" + Date.now()); const d = await r.json(); const done = Array.isArray(d.done) ? d.done : Object.keys(d.done || {}); const items = d.items || []; const dn = new Set(done); return { total: items.length, done: items.filter(i => dn.has(i.id)).length, wait: items.filter(i => !dn.has(i.id)).map(i => i.id) } } catch (e) { return null }
   }
   async function render(el) {
     el.innerHTML = '<p class="mut">جارٍ الفحص الحي…</p>';
-    const [D, R, Q, RN] = await Promise.all([db(), runs(), queue(), runner()]);
+    const [D, R, Q, RN, C] = await Promise.all([db(), runs(), queue(), runner(), crew()]);
     const badRuns = (R || []).filter(x => x.st === "bad"), attn = [];
     if (D.bad) attn.push(`${D.bad} عنصرا ناقصا في قاعدة البيانات (ترحيل لم يُطبَّق)`);
     badRuns.forEach(x => attn.push(`مهمة «${x.name}»: ${x.concl === "queued" ? "عالقة في الطابور" : "فشلت"} منذ ${ago(x.at)}`));
@@ -65,7 +77,8 @@ const ADMH = (() => {
     const order = { bad: 0, run: 1, warn: 2, ok: 3 }, ico = { ok: "✅", bad: "❌", warn: "⚠️", run: "⏳" };
     const rh = `<h3 style="font-size:1rem">المهام الآلية (آخر تشغيل لكل مهمة)</h3>${R ? `<div class="card">${[...R].sort((a, b) => order[a.st] - order[b.st]).map(x => `<div class="row" style="gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><span aria-hidden="true">${ico[x.st]}</span><a style="flex:1" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a><span class="mut">${esc(x.concl)} · منذ ${ago(x.at)}</span></div>`).join("")}</div><p class="mut"><a href="https://github.com/${REPO}/actions" target="_blank" rel="noopener">كل المهام وتشغيلها يدويا ↗</a> (إعادة تشغيل المهمة العالقة: افتحها ثم Re-run أو ألغها ليبدأ التالي).</p>` : '<p class="mut">تعذر قراءة واجهة GitHub العامة الآن (حد الطلبات). أعد المحاولة بعد قليل.</p>'}`;
     const qh = `<h3 style="font-size:1rem">طابور استيراد الكتب</h3>${Q ? `<div class="card">${row(Q.wait.length ? null : true, `${Q.done} من ${Q.total} دخلت`, Q.wait.length ? "ينتظر: " + Q.wait.slice(0, 8).join("، ") + (Q.wait.length > 8 ? " …" : "") : "لا انتظار")}</div>` : '<p class="mut">تعذر قراءة الطابور.</p>'}`;
-    el.innerHTML = head + dbh + rh + qh + '<div class="row"><button class="btn" id="admh-r">↻ إعادة الفحص</button></div>';
+    const ch = `<h3 style="font-size:1rem">نشاط الفريق والوكلاء (آخر 100 تغيير في المستودع)</h3>${C ? `<div class="card">${C.map(x => `<div class="row" style="gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><b style="flex:1">${esc(x.n)}</b><span class="mut">${KIND(x.n)} · ${x.k} تغييرا · آخرها منذ ${ago(x.at)}</span></div>`).join("")}</div><p class="mut">الأدوار والصلاحيات المفوضة للأعضاء: <a href="#/team?t=people">مساحة الفريق ← الأعضاء</a>. المهام والنقاشات والقرارات: <a href="#/team">مساحة الفريق</a>.</p>` : '<p class="mut">تعذر قراءة النشاط الآن.</p>'}`;
+    el.innerHTML = head + dbh + rh + qh + ch + '<div class="row"><button class="btn" id="admh-r">↻ إعادة الفحص</button></div>';
     const b = el.querySelector("#admh-r"); if (b) b.onclick = () => render(el);
     el.querySelectorAll("[data-mig]").forEach(x => x.onclick = () => apply(x.dataset.mig, x, el));
   }
