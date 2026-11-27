@@ -1,0 +1,1521 @@
+{
+ "at": "2026-11-27T10:43:46.534Z",
+ "n": 100,
+ "pagesIndexed": 845455,
+ "summary": {
+  "full": {
+   "book_at8": 35,
+   "page_at10": 37,
+   "page_at30": 43,
+   "missing": 24
+  },
+  "short": {
+   "book_at8": 18,
+   "page_at10": 21,
+   "page_at30": 25,
+   "missing": 38
+  }
+ },
+ "rows": [
+  {
+   "id": "c53a453687",
+   "book": "sv4894",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 558,
+    "pageRank": 922
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 159,
+    "pageRank": 232
+   }
+  },
+  {
+   "id": "70388838c8",
+   "book": "sv6919",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 127,
+    "pageRank": 249
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "be5506e8f8",
+   "book": "sv6588",
+   "page": 1,
+   "full": {
+    "terms": 15,
+    "bookRank": 378,
+    "pageRank": 138
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 111,
+    "pageRank": 89
+   }
+  },
+  {
+   "id": "01799d6974",
+   "book": "sv9814",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 24,
+    "pageRank": 8
+   }
+  },
+  {
+   "id": "fe09abb043",
+   "book": "sv1356",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": 48,
+    "pageRank": 49
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 141,
+    "pageRank": 124
+   }
+  },
+  {
+   "id": "e924551d08",
+   "book": "sv3042",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 10,
+    "pageRank": 7
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 279,
+    "pageRank": 368
+   }
+  },
+  {
+   "id": "d41e334410",
+   "book": "sv6754",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 7,
+    "pageRank": 4
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 114,
+    "pageRank": 90
+   }
+  },
+  {
+   "id": "b0b01ea6c1",
+   "book": "sv2232",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "445a1c1eb1",
+   "book": "sv2417",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 120,
+    "pageRank": 61
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "dea463e342",
+   "book": "sv19854",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 27,
+    "pageRank": 26
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 119,
+    "pageRank": 234
+   }
+  },
+  {
+   "id": "b2d066666d",
+   "book": "sv3957",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": 153,
+    "pageRank": 233
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 100,
+    "pageRank": 75
+   }
+  },
+  {
+   "id": "16dcc4fe8d",
+   "book": "sv6379",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 117,
+    "pageRank": 15
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 32,
+    "pageRank": 6
+   }
+  },
+  {
+   "id": "58fa3d9e18",
+   "book": "sv10886",
+   "page": 1,
+   "full": {
+    "terms": 9,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "b47dff5bc3",
+   "book": "sv6098",
+   "page": 1,
+   "full": {
+    "terms": 19,
+    "bookRank": 4,
+    "pageRank": 3
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 124,
+    "pageRank": 159
+   }
+  },
+  {
+   "id": "baae257bd3",
+   "book": "sv6808",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 8,
+    "pageRank": 8
+   }
+  },
+  {
+   "id": "aaf0b2eb4d",
+   "book": "sv5487",
+   "page": 1,
+   "full": {
+    "terms": 16,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "d23d6f610f",
+   "book": "sv2442",
+   "page": 1,
+   "full": {
+    "terms": 15,
+    "bookRank": 50,
+    "pageRank": 68
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 132,
+    "pageRank": 188
+   }
+  },
+  {
+   "id": "5962538180",
+   "book": "sv4787",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 196,
+    "pageRank": 162
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "eb9b93eb35",
+   "book": "sv1712",
+   "page": 1,
+   "full": {
+    "terms": 15,
+    "bookRank": 4,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 137,
+    "pageRank": 218
+   }
+  },
+  {
+   "id": "2f68b727a8",
+   "book": "sv6377",
+   "page": 1,
+   "full": {
+    "terms": 18,
+    "bookRank": 730,
+    "pageRank": 756
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "f812e6d3e4",
+   "book": "sv4121",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": 3,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "a232bd6b91",
+   "book": "sv2513",
+   "page": 1,
+   "full": {
+    "terms": 20,
+    "bookRank": 2,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "84b06c7548",
+   "book": "sv5434",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": 2,
+    "pageRank": 3
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "64519f4591",
+   "book": "sv22850",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 667,
+    "pageRank": 984
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 261,
+    "pageRank": 402
+   }
+  },
+  {
+   "id": "976f7eb4ba",
+   "book": "sv3526",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "51b7f3f9e3",
+   "book": "sv12784",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 298,
+    "pageRank": 637
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "d93ba80998",
+   "book": "sv6769",
+   "page": 1,
+   "full": {
+    "terms": 15,
+    "bookRank": 8,
+    "pageRank": 5
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 2,
+    "pageRank": 2
+   }
+  },
+  {
+   "id": "2a69d9c005",
+   "book": "sv2576",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "fbd68159dd",
+   "book": "sv5717",
+   "page": 1,
+   "full": {
+    "terms": 19,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 226,
+    "pageRank": 278
+   }
+  },
+  {
+   "id": "578a1ae2bd",
+   "book": "sv4172",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 18,
+    "pageRank": 17
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 13,
+    "pageRank": 14
+   }
+  },
+  {
+   "id": "b7764aed85",
+   "book": "sv9644",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "a2899ace3b",
+   "book": "sv6552",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 234,
+    "pageRank": 383
+   }
+  },
+  {
+   "id": "4cf3516d36",
+   "book": "sv24617",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "fb7babafe8",
+   "book": "sv4960",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "51a36f0b87",
+   "book": "sv11542",
+   "page": 1,
+   "full": {
+    "terms": 16,
+    "bookRank": 5,
+    "pageRank": 3
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "586687fdaf",
+   "book": "sv6639",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 273,
+    "pageRank": 304
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 185,
+    "pageRank": 209
+   }
+  },
+  {
+   "id": "de2e1893a7",
+   "book": "sv1811",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "4e67254792",
+   "book": "sv10279",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 20,
+    "pageRank": 22
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 201,
+    "pageRank": 279
+   }
+  },
+  {
+   "id": "b37548682d",
+   "book": "sv6305",
+   "page": 1,
+   "full": {
+    "terms": 19,
+    "bookRank": 527,
+    "pageRank": 1229
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 97,
+    "pageRank": 232
+   }
+  },
+  {
+   "id": "d221e4a295",
+   "book": "sv9963",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 281,
+    "pageRank": 633
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 226,
+    "pageRank": 342
+   }
+  },
+  {
+   "id": "f69354412c",
+   "book": "sv10932",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "c0bca57ea8",
+   "book": "sv3195",
+   "page": 1,
+   "full": {
+    "terms": 9,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "9969a5e712",
+   "book": "sv5858",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 18,
+    "pageRank": 19
+   }
+  },
+  {
+   "id": "9619844de2",
+   "book": "sv4433",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "ec46dda894",
+   "book": "sv17245",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": 383,
+    "pageRank": 530
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 204,
+    "pageRank": 319
+   }
+  },
+  {
+   "id": "9cd338971f",
+   "book": "sv10790",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": 103,
+    "pageRank": 44
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 42,
+    "pageRank": 17
+   }
+  },
+  {
+   "id": "7515e945f0",
+   "book": "sv7095",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "24f864d2c8",
+   "book": "sv1819",
+   "page": 1,
+   "full": {
+    "terms": 17,
+    "bookRank": 16,
+    "pageRank": 11
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "6ba52d6796",
+   "book": "sv11274",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 409,
+    "pageRank": 677
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 145,
+    "pageRank": 244
+   }
+  },
+  {
+   "id": "311a9052a4",
+   "book": "sv18352",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 3,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "8b6c8772e7",
+   "book": "sv5131",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "e560bf1503",
+   "book": "sv3884",
+   "page": 1,
+   "full": {
+    "terms": 18,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "664a028432",
+   "book": "sv7040",
+   "page": 1,
+   "full": {
+    "terms": 9,
+    "bookRank": 222,
+    "pageRank": 147
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "b7188e8043",
+   "book": "sv22248",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "594be37f4c",
+   "book": "sv625",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "75479e9225",
+   "book": "sv3736",
+   "page": 1,
+   "full": {
+    "terms": 16,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "6695fec99a",
+   "book": "sv21125",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "b8949f1aed",
+   "book": "sv12616",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": 20,
+    "pageRank": 22
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 71,
+    "pageRank": 44
+   }
+  },
+  {
+   "id": "a4c2fb407a",
+   "book": "sv15375",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 340,
+    "pageRank": 574
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 164,
+    "pageRank": 263
+   }
+  },
+  {
+   "id": "a9df970cbe",
+   "book": "sv22967",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": 8,
+    "pageRank": 6
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 78,
+    "pageRank": 67
+   }
+  },
+  {
+   "id": "0787a93dda",
+   "book": "sv7205",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": 657,
+    "pageRank": 1314
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 214,
+    "pageRank": 288
+   }
+  },
+  {
+   "id": "49c50dd36c",
+   "book": "sv24075",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 5,
+    "pageRank": 7
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 2,
+    "pageRank": 2
+   }
+  },
+  {
+   "id": "508b13cbae",
+   "book": "sv6211",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 2,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "0e06633e89",
+   "book": "sv249",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "83d6b0ab88",
+   "book": "sv12617",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "6d4135e1e1",
+   "book": "sv6245",
+   "page": 1,
+   "full": {
+    "terms": 18,
+    "bookRank": 2,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "9cef78230d",
+   "book": "sv23351",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 23,
+    "pageRank": 3
+   }
+  },
+  {
+   "id": "abbb7d97f2",
+   "book": "sv2603",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "6142de4b46",
+   "book": "sv6669",
+   "page": 2,
+   "full": {
+    "terms": 14,
+    "bookRank": 3,
+    "pageRank": 3
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "fff1a4634c",
+   "book": "sv10801",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "68fc97387c",
+   "book": "sv1273",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": 334,
+    "pageRank": 474
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 276,
+    "pageRank": 349
+   }
+  },
+  {
+   "id": "3ef7b79c5e",
+   "book": "sv10548",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": 110,
+    "pageRank": 56
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 96,
+    "pageRank": 53
+   }
+  },
+  {
+   "id": "d0fee210ad",
+   "book": "sv22914",
+   "page": 1,
+   "full": {
+    "terms": 17,
+    "bookRank": 41,
+    "pageRank": 63
+   },
+   "short": {
+    "terms": 2,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "95b4293851",
+   "book": "sv2597",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": 326,
+    "pageRank": 112
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 61,
+    "pageRank": 20
+   }
+  },
+  {
+   "id": "fe76b747c8",
+   "book": "sv1674",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "1f98392e42",
+   "book": "sv10748",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "165566409f",
+   "book": "sv10624",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "0230f2df69",
+   "book": "sv22962",
+   "page": 1,
+   "full": {
+    "terms": 13,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 94,
+    "pageRank": 72
+   }
+  },
+  {
+   "id": "7717c046ca",
+   "book": "sv25110",
+   "page": 1,
+   "full": {
+    "terms": 12,
+    "bookRank": 262,
+    "pageRank": 146
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 67,
+    "pageRank": 36
+   }
+  },
+  {
+   "id": "3f4b6362ff",
+   "book": "sv6543",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "e0c9a0b789",
+   "book": "sv7014",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "f9b53cd7c5",
+   "book": "sv12797",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 2,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "2e55728c02",
+   "book": "sv10899",
+   "page": 1,
+   "full": {
+    "terms": 14,
+    "bookRank": 490,
+    "pageRank": 892
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 105,
+    "pageRank": 85
+   }
+  },
+  {
+   "id": "17365feecf",
+   "book": "sv5565",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 286,
+    "pageRank": 456
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 139,
+    "pageRank": 240
+   }
+  },
+  {
+   "id": "4aa3902925",
+   "book": "sv3481",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "e0208f329f",
+   "book": "sv6894",
+   "page": 1,
+   "full": {
+    "terms": 16,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 162,
+    "pageRank": 252
+   }
+  },
+  {
+   "id": "0d6069958b",
+   "book": "sv4690",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 182,
+    "pageRank": 233
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 117,
+    "pageRank": 87
+   }
+  },
+  {
+   "id": "c1fc30469a",
+   "book": "sv10744",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "3249af996b",
+   "book": "sv6026",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 220,
+    "pageRank": 184
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 128,
+    "pageRank": 88
+   }
+  },
+  {
+   "id": "2f724bcb0c",
+   "book": "sv5792",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "9058f9ff8e",
+   "book": "sv1263",
+   "page": 1,
+   "full": {
+    "terms": 10,
+    "bookRank": 7,
+    "pageRank": 7
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "792ff3ca19",
+   "book": "sv17049",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 285,
+    "pageRank": 529
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 194,
+    "pageRank": 334
+   }
+  },
+  {
+   "id": "3d36e07a13",
+   "book": "sv7303",
+   "page": 1,
+   "full": {
+    "terms": 6,
+    "bookRank": 9,
+    "pageRank": 7
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 142,
+    "pageRank": 137
+   }
+  },
+  {
+   "id": "3e20ac3e7e",
+   "book": "sv2866",
+   "page": 1,
+   "full": {
+    "terms": 4,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "1cd12132e5",
+   "book": "sv5598",
+   "page": 1,
+   "full": {
+    "terms": 11,
+    "bookRank": 2,
+    "pageRank": 2
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 233,
+    "pageRank": 335
+   }
+  },
+  {
+   "id": "f4531e6f57",
+   "book": "sv12642",
+   "page": 1,
+   "full": {
+    "terms": 9,
+    "bookRank": 521,
+    "pageRank": 996
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 129,
+    "pageRank": 136
+   }
+  },
+  {
+   "id": "ddc1aef8d2",
+   "book": "sv3128",
+   "page": 1,
+   "full": {
+    "terms": 5,
+    "bookRank": 416,
+    "pageRank": 702
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 244,
+    "pageRank": 389
+   }
+  },
+  {
+   "id": "506a83f81c",
+   "book": "sv10753",
+   "page": 1,
+   "full": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  },
+  {
+   "id": "85569f5b66",
+   "book": "sv9936",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 3,
+    "pageRank": 3
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   }
+  },
+  {
+   "id": "00b400daad",
+   "book": "sv11592",
+   "page": 1,
+   "full": {
+    "terms": 8,
+    "bookRank": 114,
+    "pageRank": 77
+   },
+   "short": {
+    "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   }
+  }
+ ]
+}
