@@ -208,6 +208,7 @@ def main():
                 for key, c in hit.items():
                     if c >= 3: THM.setdefault(key, []).append((c, vol, i + 1))
     rep, made = [], 0
+    if not DRY and os.environ.get("SHARH_UPG", "1") == "1": made += upgrade(max(1, MAX // 3), cat, rep)  # ثلث الجولة لتعزيز ما شُرح سابقًا (زيادة فوائده)
     for b, n in todo:
         if made >= MAX or time.time() > T.DEADLINE[0]: break
         # خدمة غير مستعجلة: تتنحى عند أول علامة على ضيق الحصة (نفاد حصة يومية لأي مفتاح أو نموذج)، فلا تزاحم تجهيز الكتب وسائر الخدمات
@@ -288,14 +289,72 @@ PROMPT = """أنت شارح للحديث النبوي على منهج أهل ا�
    ويختار أشهر ما قيل دون تفاصيل الخلاف والاعتراضات. ويدخل فيه — إن وُجد في الشروح وحدها — بيان المبهم، والنسخ، والتخصيص والتقييد، والمجمل والمبيَّن؛
    ولا تذكر شيئًا من ذلك إن لم يرد في الشروح (فليس لكل حديث ناسخ أو مخصص).
 ٣) ما تزيده الروايات الأخرى من ألفاظ ومعانٍ، منسوبًا إلى كتابها، إن وُجد.
-٤) أهم الفوائد المستنبطة: فقهية وعقدية وتربوية وعلمية، موجزة.
-الشروط: كل ما تكتبه من النصوص المرسلة وحدها، لا تضف من عندك قولًا ولا حكمًا على حديث ولا اسمًا؛ وأتبع كل جملة مأخوذة من شرح بعزوها [[المرجع]] كما في النصوص؛ عربية فصيحة بلا حشو.
+٤) الفوائد المستنبطة، مرتبةً بحسب الأهمية في كل قسم (الأعم الأشهر أولًا): عقدية، فقهية، تربوية وأدبية، علمية، لغوية، بلاغية. الفوائد البلاغية (المعاني والبيان والبديع: كالتقديم والتأخير والحصر والتشبيه والاستعارة والكناية والطباق) لا تذكر إلا ما نصّ عليه الشراح في النصوص المرسلة.
+الجمع والانتقاء: خذ من كل الشروح المرسلة أجود ما قيل وأشهره، واعرضه في مكان واحد بلا تكرار؛ فإن اتفقت فائدتان معنًى فاذكرها مرة واحدة وأتبعها بمرجعيها معًا. لا تكرر فائدة بين الأقسام ولا بينها وبين الشرح الإجمالي حرفيًا.
 أخرج JSON وحده:
 {{"gharib": [{{"w": "الكلمة", "m": "معناها [[مرجع]]"}}],
  "ijmali": "الشرح الإجمالي الجامع: فقرات متصلة بترتيب جمل الحديث، بعزو كل جملة",
  "riwayat": "ما تزيده الروايات الأخرى، أو فارغ",
- "fawaid": {{"fiqh": ["فائدة [[مرجع]]"], "aqida": [], "adab": [], "ilm": []}}}}
+ "fawaid": {{"aqida": ["فائدة [[مرجع]]"], "fiqh": [], "adab": [], "ilm": [], "lugha": [], "balagha": []}}}}
 """
+
+
+UPG_REV = 2  # رقم نسخة القالب: ما شُرح بنسخة أقدم يُعزَّز (تُضاف فوائده ولا يُستبدل شرحه)
+UPG = """أنت تعزز شرحًا موجودًا لحديث نبوي. لك نصوص الشروح المعتمدة نفسها (قبل) وما كُتب من فوائد (بعد). مهمتك زيادة ما فات لا إعادة ما كُتب.
+
+الحديث وفوائده القائمة:
+{cur}
+
+نصوص الشروح من المكتبة (كل نص مسبوق بمرجعه [[...]]):
+{ex}
+
+المطلوب: فوائد جديدة لم تُذكر في القائمة، منتقاة من أجود ما في النصوص المرسلة وحدها، بلا تكرار لمعنى قائم ولا فيما بينها، وكل فائدة معزوة [[المرجع]]، موجزة، مرتبة من الأهم. وأهم ما يُطلب: الفوائد البلاغية (المعاني والبيان والبديع) واللغوية والعقدية والفقهية والتربوية والعلمية، مما نصّ عليه الشراح. لا تضف من عندك. إن لم تجد شيئًا جديدًا فاترك القسم فارغًا.
+أخرج JSON وحده:
+{{"fawaid": {{"aqida": [], "fiqh": [], "adab": [], "ilm": [], "lugha": [], "balagha": []}}}}
+"""
+
+
+def sig(t): return set(shingles(words(re.sub(r"\[\[[^\]]*\]\]", "", t)), 3)) or {t}
+def dup(t, seen):
+    a = sig(t)
+    return any(len(a & b) / max(1, min(len(a), len(b))) > .6 for b in seen)
+
+
+def upgrade(limit, cat, rep):
+    """يعزز العناقيد المشروحة بنسخة أقدم: يضيف فوائد جديدة (لا يستبدل الشرح) بعد حذف المكرر، ثم يرفع rev."""
+    n = 0
+    for fp in sorted(glob.glob(os.path.join(OUT, "c", "*.json"))):
+        if n >= limit or time.time() > T.DEADLINE[0]: break
+        C = jl(fp, {}); changed = False
+        for cid, rec in C.items():
+            if n >= limit or time.time() > T.DEADLINE[0]: break
+            if rec.get("rev", 0) >= UPG_REV or not rec.get("refs"): continue
+            if len(T.EXH) >= max(1, len(T.KEYS) // 2): rep.append("- ضاقت الحصة؛ يتوقف التعزيز"); js(fp, C) if changed else None; return n
+            ex, budget = [], 50000
+            for r in rec["refs"]:
+                vol, _, pg = r.rpartition(":")
+                t = book_page(vol, int(pg)) if pg.isdigit() else ""
+                if t and budget > 0: ex.append("[[%s]] (%s)\n%s" % (r, title_of(cat, vol), t[:4000])); budget -= min(len(t), 4000)
+            if not ex: rec["rev"] = UPG_REV; changed = True; continue
+            s = rec.get("s") or {}; fw = s.get("fawaid") or {}
+            cur = "الشرح الإجمالي: " + (s.get("ijmali") or "")[:2500] + "\n" + "\n".join("- [%s] %s" % (k, v) for k, vs in fw.items() for v in vs)
+            out = T.gemini(UPG.format(cur=cur, ex="\n\n".join(ex)))
+            if out is None: rep.append("- تعذّر النموذج أثناء التعزيز"); js(fp, C) if changed else None; return n
+            if not isinstance(out, dict) or not isinstance(out.get("fawaid"), dict): continue
+            ok = set(rec["refs"]); add = 0
+            seen = [sig(v) for vs in fw.values() for v in vs]
+            for k, vs in out["fawaid"].items():
+                if k not in ("aqida", "fiqh", "adab", "ilm", "lugha", "balagha") or not isinstance(vs, list): continue
+                for v in vs:
+                    if not isinstance(v, str): continue
+                    v = re.sub(r"\[\[([^\]]+)\]\]", lambda m: m.group(0) if m.group(1) in ok else "", v).strip()
+                    if len(v) < 12 or not re.search(r"\[\[", v) or dup(v, seen): continue
+                    fw.setdefault(k, []).append(v); seen.append(sig(v)); add += 1
+            s["fawaid"] = fw; rec["s"] = s; rec["rev"] = UPG_REV; rec["upg"] = time.strftime("%Y-%m-%d"); changed = True; n += 1
+            rep.append("- تعزيز %s: +%d فائدة" % (cid, add)); print(rep[-1], flush=True)
+        if changed: js(fp, C)
+    return n
+
 
 if __name__ == "__main__":
     main()

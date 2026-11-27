@@ -67,7 +67,7 @@ const HDS = (() => {
   const refLink = r => { const [v, p] = r.split(":"), bk = B(v); return `<a class="cite" href="#/book/${esc(v)}/${p}">(${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? "، ج" + toAr(bk.vol) : ""}، ص ${toAr(p)})</a>`; };
   const refBox = r => typeof citeBox === "function" ? citeBox(refLink(r)) : refLink(r);  // صندوق صغير ينبثق بجوار النص (أو العزو داخل النص بحسب إعداد القارئ)
   const sx = t => esc(t || "").replace(/\[\[([^\]\s]+?:\d+)\]\]/g, (m, r) => refBox(r)).replace(/\n+/g, "</p><p>");
-  const FW = [["fiqh", "فوائد فقهية"], ["aqida", "فوائد عقدية"], ["adab", "فوائد تربوية وأدبية"], ["ilm", "فوائد علمية"]];
+  const FW = [["aqida", "فوائد عقدية"], ["fiqh", "فوائد فقهية"], ["adab", "فوائد تربوية وأدبية"], ["ilm", "فوائد علمية"], ["lugha", "فوائد لغوية"], ["balagha", "فوائد بلاغية"]];
   function sharhHtml(c, full) {
     const S_ = c.s || {}, li = a => (a || []).filter(Boolean).map(x => `<li>${sx(x)}</li>`).join("");
     const riw = (c.riw || []).map(([b2, n2]) => `<a class="chip" href="#/hadith/k/${b2}/${encodeURIComponent(n2)}">${esc(bname(b2))} (${toAr(n2)})</a>`).join("");
