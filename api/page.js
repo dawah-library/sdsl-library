@@ -69,6 +69,14 @@ const SECTIONS = {
 async function build(p, q, base) {
   const seg = p.split("/").filter(Boolean).map(decodeURIComponent), v = (seg[0] || "").toLowerCase();
   const r = { title: SITE, desc: "", body: "", ld: null, type: "website", noindex: false };
+  if (!v) { // الرئيسية: بيانات منظمة للموقع والجهة، ونص ورابط داخلي لأهم الأقسام يقرؤه الزاحف
+    const logo = base + "assets/logo-sdsl-128.png";
+    r.ld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SITE, url: base, inLanguage: "ar" },
+      { "@context": "https://schema.org", "@type": "Organization", name: SITE, url: base, logo }];
+    const links = [["library?c=dawah", "كتب مشايخ الدعوة السلفية"], ["library?c=turath", "المكتبة العامة: كتب التراث"], ["articles", "المقالات"], ["fatawa", "الفتاوى"], ["hadith", "الحديث النبوي"], ["mushaf", "المصحف الشريف"], ["hifz", "حفظ المتون"], ["mawsua", "الموسوعات"], ["ask", "المساعد العلمي"], ["search", "البحث في نصوص المكتبة"]];
+    r.body = `<h1>${esc(SITE)}</h1><p>المكتبة الرقمية للدعوة السلفية: كتب المشايخ ومقالاتهم وفتاواهم، والمكتبة العامة لكتب التراث، مع القراءة والبحث في النصوص والحديث والمصحف وحفظ المتون.</p><nav aria-label="أقسام الموقع"><ul>${links.map(([h, t]) => `<li><a href="/${h}">${esc(t)}</a></li>`).join("")}</ul></nav>`;
+    return r;
+  }
   if (v === "book" && seg[1]) {
     const it = await findItem(seg[1], base.replace(/\/$/, "")); if (!it) { r.noindex = true; r.title = "غير موجود — " + SITE; return r; }
     const b = it.b, a = author(b.authorId), art = b.type === "article", n = it.pages ? it.pages.length : (b.n || 1);
@@ -83,6 +91,7 @@ async function build(p, q, base) {
     const toc = (it.toc || []).slice(0, 80).map(t => `<li><a href="/book/${b.id}/${t.p}">${esc(t.t)}</a></li>`).join("");
     r.body = `<article><h1>${esc(b.setTitle ? b.title : b.title)}</h1><p><a href="/author/${esc(b.authorId)}">${esc(a.name || "")}</a>${topic(b.topicId).name ? " • " + esc(topic(b.topicId).name) : ""}${lbl ? " • " + esc(lbl) : ""}</p>
 ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Boolean).map(l => `<p>${esc(l)}</p>`).join("\n")}${nav}${toc && pg === 1 ? `<h2>الفهرس</h2><ul>${toc}</ul>` : ""}</article>`;
+    r.ld = [r.ld, { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: SITE, item: base }, ...(a.name ? [{ "@type": "ListItem", position: 2, name: a.name, item: base + "author/" + b.authorId }] : []), { "@type": "ListItem", position: a.name ? 3 : 2, name: b.setTitle || b.title, item: base + "book/" + b.id + "/1" }] }];
     return r;
   }
   // المصحف: صفحة لكل سورة بنصها وبياناتها المنظمة (Chapter من كتاب «القرآن الكريم»)
@@ -123,11 +132,11 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
   if (v === "post" && seg[1]) {
     let posts = []; try { posts = read("data/posts.json").items || []; } catch (e) { }
     const x = posts.find(y => y.id === seg[1] && !y.hide);
-    if (x) { const a = author(x.authorId); r.title = (a.name || SITE) + ": " + cut(x.text, 60); r.desc = cut(x.text, 180); r.type = "article"; if (x.image) r.image = /^https?:/.test(x.image) ? x.image : base + x.image.replace(/^\//, ""); r.body = `<article><h1>${esc(a.name || SITE)}</h1>${plain(x.text).split("\n").map(l => `<p>${esc(l)}</p>`).join("")}</article>`; }
+    if (x) { const a = author(x.authorId); r.title = (a.name || SITE) + ": " + cut(x.text, 60); r.desc = cut(x.text, 180); r.type = "article"; r.ld = { "@context": "https://schema.org", "@type": "SocialMediaPosting", headline: cut(x.text, 100), articleBody: cut(x.text, 1500), author: { "@type": "Person", name: a.name || SITE }, datePublished: x.date || undefined, inLanguage: "ar", url: base + "post/" + x.id, isPartOf: { "@type": "WebSite", name: SITE, url: base } }; if (x.image) r.image = /^https?:/.test(x.image) ? x.image : base + x.image.replace(/^\//, ""); r.body = `<article><h1>${esc(a.name || SITE)}</h1>${plain(x.text).split("\n").map(l => `<p>${esc(l)}</p>`).join("")}</article>`; }
     return r;
   }
   if (v === "library" && q.c) { const c = COL()[q.c] || "المكتبة"; r.title = c + " — " + SITE; const list = cat().books.filter(b => (b.col || "dawah") === q.c && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))); r.desc = q.c === "turath" ? "المكتبة العامة: كتب التراث الإسلامي في الحديث والتفسير والعقيدة والفقه بترقيم الطبعات المطبوعة، وكتب العلماء والباحثين من خارج الدعوة السلفية." : "كتب مشايخ الدعوة السلفية بمصر."; r.body = `<h1>${esc(c)}</h1><ul>${list.map(b => `<li><a href="/book/${b.id}/1">${esc(b.setTitle || b.title)}</a> — ${esc(author(b.authorId).name || "")}</li>`).join("")}</ul>`; return r; }
-  if (SECTIONS[v]) { r.title = SECTIONS[v][0] + " — " + SITE; r.desc = SECTIONS[v][1]; r.body = `<h1>${esc(SECTIONS[v][0])}</h1><p>${esc(SECTIONS[v][1])}</p>`; if (["account", "admin", "favs"].includes(v)) r.noindex = true; return r; }
+  if (SECTIONS[v]) { r.title = SECTIONS[v][0] + " — " + SITE; r.desc = SECTIONS[v][1]; r.body = `<h1>${esc(SECTIONS[v][0])}</h1><p>${esc(SECTIONS[v][1])}</p>`; if (["account", "admin", "favs"].includes(v)) r.noindex = true; else r.ld = { "@context": "https://schema.org", "@type": "CollectionPage", name: SECTIONS[v][0], description: SECTIONS[v][1], inLanguage: "ar", url: base + v, isPartOf: { "@type": "WebSite", name: SITE, url: base } }; return r; }
   if (["account", "admin", "favs"].includes(v)) { r.noindex = true; r.title = SITE; return r; }
   return r;
 }
