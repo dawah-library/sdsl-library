@@ -231,11 +231,23 @@ const HDS = (() => {
     if (q.g == null || q.g === "") return `<p class="mut">أحاديث كتب السنة ورياض الصالحين وبلوغ المرام مجموعة على الكتب العلمية الكبرى كما رتّبها المصنفون، وتحت كل كتاب أبوابه من كل مصدر.</p><div class="grid hdtop">${idx.map(([t, n, a], i) => n ? `<a class="card" href="#/hadith?t=topic&g=${i}"><b>${esc(t)}</b><span>${toAr(n)} حديثًا • ${toAr(a)} بابًا</span></a>` : "").join("")}</div>`;
     const D = await tget(q.g + ".json"); if (!D) return "";
     const srcs = [...new Set(D.a.map(x => x[1]))], src = q.src || "", A_ = D.a.map((x, i) => [x, i]).filter(([x]) => !src || x[1] === src);
-    if (q.ab != null && q.ab !== "") { const x = D.a[+q.ab]; if (!x) return ""; const [b, sb, kt, ids] = x;
+    if (q.ab != null && q.ab !== "") { const xs = String(q.ab).split(",").map(i => D.a[+i]).filter(Boolean); if (!xs.length) return ""; const b = xs[0][0] || xs[0][2], PG = 60, pg = Math.max(1, +q.pg || 1);
+      // أحاديث الباب مجمّعة من كل المصادر في قائمة واحدة، مرتبة بترتيب المصادر ثم ترتيب المصنف، ويُنسب كل حديث لمصدره
+      const all = []; xs.forEach(x => x[3].forEach(id => all.push([x[1], id]))); const PR = ["bukhari", "muslim", "muwatta", "abudawud", "tirmidhi", "nasai", "ibnmajah", "darimi", "musnadahmad"], pr = z => { const i = PR.indexOf(z); return i < 0 ? 99 : i }; all.sort((p, q) => pr(p[0]) - pr(q[0])); const tot = all.length, part = all.slice((pg - 1) * PG, pg * PG);
+      const bySrc = {}; part.forEach(([sb, id]) => (bySrc[sb] = bySrc[sb] || []).push(id));
       let rows = "";
-      if (BK[sb]) { await load(); rows = ids.map(id => IX.find(r => r[0] === id)).filter(Boolean).map(r => card(F(r))).join(""); }
-      else { const K = await kidx(sb), set = new Set(ids.map(String)); rows = (K.items || []).filter(y => set.has(String(y[0]))).map(y => `<a class="hdc" href="#/hadith/k/${sb}/${y[0]}"><span class="hds">${y[5] ? "عن " + esc(y[5]) : ""}</span><b>${esc(y[6])}…</b><span class="mut">${esc(K.t || sb)} • ${toAr(y[0])}</span></a>`).join(""); }
-      return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a> › <a href="#/hadith?t=topic&g=${q.g}">${esc(D.t)}</a></p><h3>${esc(b || kt)}</h3><p class="mut">${esc(D.books[sb] || sb)}${kt ? " • " + esc(kt) : ""} • ${toAr(ids.length)} حديثًا</p>${rows}`; }
+      for (const sb of Object.keys(bySrc)) { const ids = bySrc[sb], nm = D.books[sb] || sb; let h = "";
+        if (BK[sb]) { await load(); h = ids.map(id => IX.find(r => r[0] === id)).filter(Boolean).map(r => card(F(r))).join(""); }
+        else { const K = await kidx(sb), set = new Set(ids.map(String)); h = (K.items || []).filter(y => set.has(String(y[0]))).map(y => `<a class="hdc" href="#/hadith/k/${sb}/${y[0]}"><span class="hds">${y[5] ? "عن " + esc(y[5]) : ""}</span><b>${esc(y[6])}…</b><span class="mut">${esc(K.t || sb)} • ${toAr(y[0])}</span></a>`).join(""); }
+        rows += `<div class="hsrcg"><span class="hsrc">${esc(nm)}</span>${h}</div>`; }
+      const nav = (tot > PG ? `<p class="hpg">${pg > 1 ? `<a class="btn s" href="#/hadith?t=topic&g=${q.g}&ab=${q.ab}&pg=${pg - 1}">السابق</a> ` : ""}صفحة ${toAr(pg)} من ${toAr(Math.ceil(tot / PG))}${pg * PG < tot ? ` <a class="btn s p" href="#/hadith?t=topic&g=${q.g}&ab=${q.ab}&pg=${pg + 1}">التالي</a>` : ""}</p>` : "");
+      return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a> › <a href="#/hadith?t=topic&g=${q.g}">${esc(D.t)}</a></p><h3>${esc(b)}</h3><p class="mut">${toAr(tot)} حديثًا من ${toAr(new Set(xs.map(x => x[1])).size)} مصدرًا، مجموعة بترتيب أبواب العلماء</p>${nav}${rows}${nav}`; }
+    if (!src) { // الافتراضي: أبواب الموضوع موحَّدة عبر كل المصادر (يُدمج الباب المتشابه العنوان) فتعرض أحاديثه مباشرة
+      const nk = t => String(t || "").replace(/[\u064b-\u065f\u0670\u0640]/g, "").replace(/^\s*(باب|بابُ)\s+/, "").replace(/[\s:،.؟?!-]+$/g, "").replace(/\s+/g, " ").trim(), U = new Map();
+      D.a.forEach((x, i) => { const t = x[0] || x[2] || "أحاديث", k = nk(t); if (!U.has(k)) U.set(k, { t, ix: [], n: 0, s: new Set() }); const u = U.get(k); u.ix.push(i); u.n += x[3].length; u.s.add(x[1]) });
+      return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a></p><h3>${esc(D.t)}</h3><p class="mut">كل أبواب الموضوع مجموعة من كتب السنة في قائمة واحدة؛ اضغط الباب لترى أحاديثه من كل المصادر. وللتضييق اختر مصدرًا:</p>
+      <nav class="chips"><a class="chip on" href="#/hadith?t=topic&g=${q.g}">كل المصادر</a>${srcs.map(b => `<a class="chip" href="#/hadith?t=topic&g=${q.g}&src=${b}">${esc(D.books[b] || b)}</a>`).join("")}</nav>
+      <div class="hdgl hdun">${[...U.values()].map(u => `<a href="#/hadith?t=topic&g=${q.g}&ab=${u.ix.join(",")}">${esc(u.t)} <span class="mut">${toAr(u.n)} • ${toAr(u.s.size)} مصدرًا</span></a>`).join("")}</div>`; }
     // أبواب الكتاب مجمّعة بكتاب المصنف في كل مصدر
     const by = {}; A_.forEach(([x, i]) => { const k = (D.books[x[1]] || x[1]) + (x[2] ? " — " + x[2] : ""); (by[k] = by[k] || []).push([x, i]); });
     return `<p><a href="#/hadith?t=topic">← الكتب الموضوعية</a></p><h3>${esc(D.t)}</h3>
