@@ -1,5 +1,5 @@
 {
- "at": "2026-11-27T10:43:46.534Z",
+ "at": "2026-11-27T10:57:23.919Z",
  "n": 100,
  "pagesIndexed": 845455,
  "summary": {
@@ -14,6 +14,12 @@
    "page_at10": 21,
    "page_at30": 25,
    "missing": 38
+  },
+  "relaxed": {
+   "book_at8": 35,
+   "page_at10": 37,
+   "page_at30": 43,
+   "missing": 24
   }
  },
  "rows": [
@@ -30,6 +36,11 @@
     "terms": 3,
     "bookRank": 159,
     "pageRank": 232
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 558,
+    "pageRank": 922
    }
   },
   {
@@ -45,6 +56,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 127,
+    "pageRank": 249
    }
   },
   {
@@ -60,6 +76,11 @@
     "terms": 3,
     "bookRank": 111,
     "pageRank": 89
+   },
+   "relaxed": {
+    "terms": 15,
+    "bookRank": 378,
+    "pageRank": 138
    }
   },
   {
@@ -75,6 +96,11 @@
     "terms": 3,
     "bookRank": 24,
     "pageRank": 8
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -90,6 +116,11 @@
     "terms": 3,
     "bookRank": 141,
     "pageRank": 124
+   },
+   "relaxed": {
+    "terms": 11,
+    "bookRank": 48,
+    "pageRank": 49
    }
   },
   {
@@ -105,6 +136,11 @@
     "terms": 3,
     "bookRank": 279,
     "pageRank": 368
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 10,
+    "pageRank": 7
    }
   },
   {
@@ -120,6 +156,11 @@
     "terms": 3,
     "bookRank": 114,
     "pageRank": 90
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 7,
+    "pageRank": 4
    }
   },
   {
@@ -133,6 +174,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 4,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -150,6 +196,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 120,
+    "pageRank": 61
    }
   },
   {
@@ -165,6 +216,11 @@
     "terms": 3,
     "bookRank": 119,
     "pageRank": 234
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 27,
+    "pageRank": 26
    }
   },
   {
@@ -180,6 +236,11 @@
     "terms": 3,
     "bookRank": 100,
     "pageRank": 75
+   },
+   "relaxed": {
+    "terms": 4,
+    "bookRank": 153,
+    "pageRank": 233
    }
   },
   {
@@ -195,6 +256,11 @@
     "terms": 3,
     "bookRank": 32,
     "pageRank": 6
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 117,
+    "pageRank": 15
    }
   },
   {
@@ -208,6 +274,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 9,
     "bookRank": null,
     "pageRank": null
    }
@@ -225,6 +296,11 @@
     "terms": 3,
     "bookRank": 124,
     "pageRank": 159
+   },
+   "relaxed": {
+    "terms": 19,
+    "bookRank": 4,
+    "pageRank": 3
    }
   },
   {
@@ -240,6 +316,11 @@
     "terms": 3,
     "bookRank": 8,
     "pageRank": 8
+   },
+   "relaxed": {
+    "terms": 12,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -253,6 +334,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 16,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -270,6 +356,11 @@
     "terms": 3,
     "bookRank": 132,
     "pageRank": 188
+   },
+   "relaxed": {
+    "terms": 15,
+    "bookRank": 50,
+    "pageRank": 68
    }
   },
   {
@@ -285,6 +376,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 196,
+    "pageRank": 162
    }
   },
   {
@@ -300,6 +396,11 @@
     "terms": 3,
     "bookRank": 137,
     "pageRank": 218
+   },
+   "relaxed": {
+    "terms": 15,
+    "bookRank": 4,
+    "pageRank": 2
    }
   },
   {
@@ -315,6 +416,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 18,
+    "bookRank": 730,
+    "pageRank": 756
    }
   },
   {
@@ -330,6 +436,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 11,
+    "bookRank": 3,
+    "pageRank": 2
    }
   },
   {
@@ -345,6 +456,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 20,
+    "bookRank": 2,
+    "pageRank": 2
    }
   },
   {
@@ -360,6 +476,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 14,
+    "bookRank": 2,
+    "pageRank": 3
    }
   },
   {
@@ -375,6 +496,11 @@
     "terms": 3,
     "bookRank": 261,
     "pageRank": 402
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 667,
+    "pageRank": 984
    }
   },
   {
@@ -388,6 +514,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 6,
     "bookRank": null,
     "pageRank": null
    }
@@ -405,6 +536,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 298,
+    "pageRank": 637
    }
   },
   {
@@ -420,6 +556,11 @@
     "terms": 3,
     "bookRank": 2,
     "pageRank": 2
+   },
+   "relaxed": {
+    "terms": 15,
+    "bookRank": 8,
+    "pageRank": 5
    }
   },
   {
@@ -433,6 +574,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 12,
     "bookRank": null,
     "pageRank": null
    }
@@ -450,6 +596,11 @@
     "terms": 3,
     "bookRank": 226,
     "pageRank": 278
+   },
+   "relaxed": {
+    "terms": 19,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -465,6 +616,11 @@
     "terms": 3,
     "bookRank": 13,
     "pageRank": 14
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 18,
+    "pageRank": 17
    }
   },
   {
@@ -478,6 +634,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
     "bookRank": null,
     "pageRank": null
    }
@@ -495,6 +656,11 @@
     "terms": 3,
     "bookRank": 234,
     "pageRank": 383
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -508,6 +674,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
     "bookRank": null,
     "pageRank": null
    }
@@ -525,6 +696,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -540,6 +716,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 16,
+    "bookRank": 5,
+    "pageRank": 3
    }
   },
   {
@@ -555,6 +736,11 @@
     "terms": 3,
     "bookRank": 185,
     "pageRank": 209
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 273,
+    "pageRank": 304
    }
   },
   {
@@ -568,6 +754,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 8,
     "bookRank": null,
     "pageRank": null
    }
@@ -585,6 +776,11 @@
     "terms": 3,
     "bookRank": 201,
     "pageRank": 279
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 20,
+    "pageRank": 22
    }
   },
   {
@@ -600,6 +796,11 @@
     "terms": 3,
     "bookRank": 97,
     "pageRank": 232
+   },
+   "relaxed": {
+    "terms": 19,
+    "bookRank": 527,
+    "pageRank": 1229
    }
   },
   {
@@ -615,6 +816,11 @@
     "terms": 3,
     "bookRank": 226,
     "pageRank": 342
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 281,
+    "pageRank": 633
    }
   },
   {
@@ -628,6 +834,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 4,
     "bookRank": null,
     "pageRank": null
    }
@@ -645,6 +856,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 9,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -660,6 +876,11 @@
     "terms": 3,
     "bookRank": 18,
     "pageRank": 19
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -673,6 +894,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 11,
     "bookRank": null,
     "pageRank": null
    }
@@ -690,6 +916,11 @@
     "terms": 3,
     "bookRank": 204,
     "pageRank": 319
+   },
+   "relaxed": {
+    "terms": 11,
+    "bookRank": 383,
+    "pageRank": 530
    }
   },
   {
@@ -705,6 +936,11 @@
     "terms": 3,
     "bookRank": 42,
     "pageRank": 17
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": 103,
+    "pageRank": 44
    }
   },
   {
@@ -718,6 +954,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 14,
     "bookRank": null,
     "pageRank": null
    }
@@ -735,6 +976,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 17,
+    "bookRank": 16,
+    "pageRank": 11
    }
   },
   {
@@ -750,6 +996,11 @@
     "terms": 3,
     "bookRank": 145,
     "pageRank": 244
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 409,
+    "pageRank": 677
    }
   },
   {
@@ -765,6 +1016,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 3,
+    "pageRank": 2
    }
   },
   {
@@ -778,6 +1034,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
     "bookRank": null,
     "pageRank": null
    }
@@ -795,6 +1056,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 18,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -810,6 +1076,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 9,
+    "bookRank": 222,
+    "pageRank": 147
    }
   },
   {
@@ -823,6 +1094,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 14,
     "bookRank": null,
     "pageRank": null
    }
@@ -840,6 +1116,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 14,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -853,6 +1134,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 16,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -870,6 +1156,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -885,6 +1176,11 @@
     "terms": 3,
     "bookRank": 71,
     "pageRank": 44
+   },
+   "relaxed": {
+    "terms": 12,
+    "bookRank": 20,
+    "pageRank": 22
    }
   },
   {
@@ -900,6 +1196,11 @@
     "terms": 3,
     "bookRank": 164,
     "pageRank": 263
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 340,
+    "pageRank": 574
    }
   },
   {
@@ -915,6 +1216,11 @@
     "terms": 3,
     "bookRank": 78,
     "pageRank": 67
+   },
+   "relaxed": {
+    "terms": 11,
+    "bookRank": 8,
+    "pageRank": 6
    }
   },
   {
@@ -930,6 +1236,11 @@
     "terms": 3,
     "bookRank": 214,
     "pageRank": 288
+   },
+   "relaxed": {
+    "terms": 12,
+    "bookRank": 657,
+    "pageRank": 1314
    }
   },
   {
@@ -945,6 +1256,11 @@
     "terms": 3,
     "bookRank": 2,
     "pageRank": 2
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 5,
+    "pageRank": 7
    }
   },
   {
@@ -960,6 +1276,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 2,
+    "pageRank": 2
    }
   },
   {
@@ -973,6 +1294,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 6,
     "bookRank": null,
     "pageRank": null
    }
@@ -990,6 +1316,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -1004,6 +1335,11 @@
    "short": {
     "terms": 3,
     "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 18,
+    "bookRank": 2,
     "pageRank": 1
    }
   },
@@ -1020,6 +1356,11 @@
     "terms": 3,
     "bookRank": 23,
     "pageRank": 3
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -1033,6 +1374,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 14,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -1050,6 +1396,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 14,
+    "bookRank": 3,
+    "pageRank": 3
    }
   },
   {
@@ -1065,6 +1416,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -1080,6 +1436,11 @@
     "terms": 3,
     "bookRank": 276,
     "pageRank": 349
+   },
+   "relaxed": {
+    "terms": 4,
+    "bookRank": 334,
+    "pageRank": 474
    }
   },
   {
@@ -1095,6 +1456,11 @@
     "terms": 3,
     "bookRank": 96,
     "pageRank": 53
+   },
+   "relaxed": {
+    "terms": 4,
+    "bookRank": 110,
+    "pageRank": 56
    }
   },
   {
@@ -1110,6 +1476,11 @@
     "terms": 2,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 17,
+    "bookRank": 41,
+    "pageRank": 63
    }
   },
   {
@@ -1125,6 +1496,11 @@
     "terms": 3,
     "bookRank": 61,
     "pageRank": 20
+   },
+   "relaxed": {
+    "terms": 14,
+    "bookRank": 326,
+    "pageRank": 112
    }
   },
   {
@@ -1138,6 +1514,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 6,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -1155,6 +1536,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 12,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -1168,6 +1554,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 8,
     "bookRank": null,
     "pageRank": null
    }
@@ -1185,6 +1576,11 @@
     "terms": 3,
     "bookRank": 94,
     "pageRank": 72
+   },
+   "relaxed": {
+    "terms": 13,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -1200,6 +1596,11 @@
     "terms": 3,
     "bookRank": 67,
     "pageRank": 36
+   },
+   "relaxed": {
+    "terms": 12,
+    "bookRank": 262,
+    "pageRank": 146
    }
   },
   {
@@ -1213,6 +1614,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": 1,
+    "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 5,
     "bookRank": 1,
     "pageRank": 1
    }
@@ -1230,6 +1636,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
+    "bookRank": null,
+    "pageRank": null
    }
   },
   {
@@ -1245,6 +1656,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 2,
+    "pageRank": 1
    }
   },
   {
@@ -1260,6 +1676,11 @@
     "terms": 3,
     "bookRank": 105,
     "pageRank": 85
+   },
+   "relaxed": {
+    "terms": 14,
+    "bookRank": 490,
+    "pageRank": 892
    }
   },
   {
@@ -1275,6 +1696,11 @@
     "terms": 3,
     "bookRank": 139,
     "pageRank": 240
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 286,
+    "pageRank": 456
    }
   },
   {
@@ -1288,6 +1714,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 5,
     "bookRank": null,
     "pageRank": null
    }
@@ -1305,6 +1736,11 @@
     "terms": 3,
     "bookRank": 162,
     "pageRank": 252
+   },
+   "relaxed": {
+    "terms": 16,
+    "bookRank": 1,
+    "pageRank": 1
    }
   },
   {
@@ -1320,6 +1756,11 @@
     "terms": 3,
     "bookRank": 117,
     "pageRank": 87
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 182,
+    "pageRank": 233
    }
   },
   {
@@ -1333,6 +1774,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
     "bookRank": null,
     "pageRank": null
    }
@@ -1350,6 +1796,11 @@
     "terms": 3,
     "bookRank": 128,
     "pageRank": 88
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 220,
+    "pageRank": 184
    }
   },
   {
@@ -1363,6 +1814,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
     "bookRank": null,
     "pageRank": null
    }
@@ -1380,6 +1836,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 10,
+    "bookRank": 7,
+    "pageRank": 7
    }
   },
   {
@@ -1395,6 +1856,11 @@
     "terms": 3,
     "bookRank": 194,
     "pageRank": 334
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 285,
+    "pageRank": 529
    }
   },
   {
@@ -1410,6 +1876,11 @@
     "terms": 3,
     "bookRank": 142,
     "pageRank": 137
+   },
+   "relaxed": {
+    "terms": 6,
+    "bookRank": 9,
+    "pageRank": 7
    }
   },
   {
@@ -1423,6 +1894,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 4,
     "bookRank": null,
     "pageRank": null
    }
@@ -1440,6 +1916,11 @@
     "terms": 3,
     "bookRank": 233,
     "pageRank": 335
+   },
+   "relaxed": {
+    "terms": 11,
+    "bookRank": 2,
+    "pageRank": 2
    }
   },
   {
@@ -1455,6 +1936,11 @@
     "terms": 3,
     "bookRank": 129,
     "pageRank": 136
+   },
+   "relaxed": {
+    "terms": 9,
+    "bookRank": 521,
+    "pageRank": 996
    }
   },
   {
@@ -1470,6 +1956,11 @@
     "terms": 3,
     "bookRank": 244,
     "pageRank": 389
+   },
+   "relaxed": {
+    "terms": 5,
+    "bookRank": 416,
+    "pageRank": 702
    }
   },
   {
@@ -1483,6 +1974,11 @@
    },
    "short": {
     "terms": 3,
+    "bookRank": null,
+    "pageRank": null
+   },
+   "relaxed": {
+    "terms": 7,
     "bookRank": null,
     "pageRank": null
    }
@@ -1500,6 +1996,11 @@
     "terms": 3,
     "bookRank": 1,
     "pageRank": 1
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 3,
+    "pageRank": 3
    }
   },
   {
@@ -1515,6 +2016,11 @@
     "terms": 3,
     "bookRank": null,
     "pageRank": null
+   },
+   "relaxed": {
+    "terms": 8,
+    "bookRank": 114,
+    "pageRank": 77
    }
   }
  ]
