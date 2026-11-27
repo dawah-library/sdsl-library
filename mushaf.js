@@ -10,10 +10,25 @@ const MUS = (() => {
     if (META) { PG = {}; Object.entries(META).forEach(([s, L]) => L.forEach((m, i) => (PG[m[0]] = PG[m[0]] || []).push([+s, i + 1]))); } };
   const pageOf = (s, a) => META && META[s] ? META[s][a - 1][0] : 0;
   const TAF = {}, tf = async (k, s) => TAF[k + s] || (TAF[k + s] = fetch("data/quran/tafsir/" + k + "/" + s + ".json").then(r => r.ok ? r.json() : {}).catch(() => ({}))), mukh = s => tf("mokhtasar", s);
-  const TFS = [["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["siraj", "السراج في غريب القرآن"]];
+  // التفاسير المطولة (طلب المدير، ٢٧ نوفمبر): ملف لكل صفحة من صفحات المصحف في vols/tafsir/<المفتاح>/<الصفحة>.json
+  //  {"g": [[سورة، من، إلى، نص]…]} يبنيه tools/tafsir-build.py بعد تدقيق شموله ومحاذاته للآيات؛ و«المختصر» أول الخيارات وأولاها بالظهور.
+  const BIG = { ibnkathir: "تفسير ابن كثير", tabari: "تفسير الطبري", qurtubi: "تفسير القرطبي" }, BGP = {};
+  const bigPage = (k, p) => BGP[k + p] || (BGP[k + p] = (async () => { for (const u of ["https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/vols/tafsir/" + k + "/" + p + ".json", "vols/tafsir/" + k + "/" + p + ".json"]) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { } } delete BGP[k + p]; return { g: [] }; })());
+  // تفسير الآية ومقطعها: {t: النص، a: أول آيات المقطع، b: آخرها} (المكرر المتتالي في النسخ الصغيرة مقطع واحد)
+  async function tfa(k, s, a) {
+    if (BIG[k]) { await load(); const D = await bigPage(k, pageOf(s, a)), g = (D.g || []).find(x => x[0] === s && x[1] <= a && a <= x[2]); return g ? { t: g[3], a: g[1], b: g[2] } : { t: "" }; }
+    const T = await tf(k, s), t = T[a]; if (!t || typeof t !== "string") return { t: t || "" }; let x = a, y = a; while (T[x - 1] === t) x--; while (T[y + 1] === t) y++; return { t, a: x, b: y }; }
+  const TFS = [["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["ibnkathir", "تفسير ابن كثير"], ["tabari", "تفسير الطبري"], ["qurtubi", "تفسير القرطبي"], ["siraj", "السراج في غريب القرآن"]];
+  // عرض نص التفسير: ﴿الآيات﴾ و{الآيات} بخط المصحف، والحواشي [[…]] أرقامًا مرفوعة مع قائمتها في آخر المقطع
+  function tfHtml(t) { t = String(t || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").trim(); const fn = [];
+    const body = t.split(/(\[\[[\s\S]*?\]\])/).map(x => { if (/^\[\[[\s\S]*\]\]$/.test(x)) { fn.push(x.slice(2, -2).trim()); return `<sup class="tfn">${AR(fn.length)}</sup>`; }
+      return esc(x).replace(/﴿([^﴾]{1,600})﴾/g, '<span class="ptq">﴿$1﴾</span>').replace(/\{\s*([^{}\d][^{}]{0,400}?)\s*\}/g, '<span class="ptq">﴿$1﴾</span>'); }).join("");
+    const P = body.split(/\n{2,}/).map(x => x.trim()).filter(Boolean).map(x => `<p>${x.replace(/\n/g, "<br>")}</p>`).join("");
+    return P + (fn.length ? `<details class="tfns"><summary>الحواشي (${AR(fn.length)})</summary><ol>${fn.map(x => `<li>${esc(x).replace(/\n+/g, "<br>")}</li>`).join("")}</ol></details>` : ""); }
+  const grpLbl = (g, s) => g.b > g.a ? `<p class="tfgr">تفسير الآيات ${AR(g.a)}–${AR(g.b)} معًا${pageOf(s, g.a) !== pageOf(s, g.b) ? ` <small>(الصفحات ${AR(pageOf(s, g.a))}–${AR(pageOf(s, g.b))})</small>` : ""}</p>` : "";
   const sjTxt = v => Array.isArray(v) ? v.map(([w, m]) => "﴿" + w + "﴾: " + m).join("\n") : (v || "");
   const sk = t => strip(String(t || "")).replace(/[^\u0621-\u064A]/g, "").replace(/[أإآٱ]/g, "ا").replace(/[اوىي]/g, "");  // «السراج في بيان غريب القرآن»: يُضاف متى وُجد مصدر موثوق (نسخة spa5k الموسومة به هي تفسير السعدي في الحقيقة)
-  const tfk = () => { try { return localStorage.getItem("mus_tf") || "mokhtasar"; } catch (e) { return "mokhtasar"; } };
+  const tfk = () => "mokhtasar";  // نافذة الآية تُفتح على «المختصر في التفسير» دائمًا (طلب المدير، ٢٧ نوفمبر)، والبقية بالاختيار
   const nm = s => Q.suras[s - 1].name.replace(/^سُورَةُ\s*/, ""), nmP = s => strip(nm(s)).replace(/ٱ/g, "ا");
   // البسملة تُفصل عن الآية الأولى في كل سورة (عدا الفاتحة، فهي آيتها الأولى)، وتُعرض سطرًا مستقلًا
   const BASM = /^بِسْمِ\s+[ٱا]للَّهِ\s+[ٱا]لرَّحْمَ[ٰـ]?نِ\s+[ٱا]لرَّحِيمِ\s*/;
@@ -136,22 +151,26 @@ const MUS = (() => {
     return `<div class="qpage" dir="rtl">${html}</div>`;
   }
   // «تفسير الصفحة» (طلب المدير، ١٥ نوفمبر): آيات الصفحة بخط المصحف ومع كل آية تفسيرها المختار، أو غريب كلماتها من «السراج»
-  const QD = {}, PTF = [["", "بلا تفسير"], ["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["siraj", "غريب القرآن (السراج)"]];
+  const QD = {}, PTF = [["", "بلا تفسير"], ["mokhtasar", "المختصر في التفسير"], ["muyassar", "التفسير الميسر"], ["saddi", "تفسير السعدي"], ["ibnkathir", "تفسير ابن كثير"], ["tabari", "تفسير الطبري"], ["qurtubi", "تفسير القرطبي"], ["siraj", "غريب القرآن (السراج)"]];
   const ptk = () => { try { const v = localStorage.getItem("mus_ptf") || ""; return PTF.some(x => x[0] === v) ? v : ""; } catch (e) { return ""; } };
   // كلمات الآية من بيانات أسطر الصفحة نفسها (بخطوطها المحمَّلة)، وإلا فالنص العثماني بخط المصحف
   const qcfAyah = (n, s, a) => { const D = QD[n]; if (!D) return ""; const k = s + ":" + a, out = [];
     D.l.forEach(l => l.forEach(w => { if (w[2] !== k || (w[0] !== "w" && w[0] !== "e")) return; const f = (w.find(v => typeof v === "string" && v.startsWith("@")) || "@" + D.f).slice(1);
       out.push(w[0] === "w" ? `<span class="qg" style="font-family:'${f}'" data-act="musw" data-s="${s}" data-a="${a}" data-k="${k}" data-t="${esc(w[3] || "")}">${w[1]}</span>` : `<span class="qg qe" style="font-family:'${f}'" data-act="musay" data-s="${s}" data-a="${a}" data-k="${k}">${w[1]}</span>`); }));
     return out.join(""); };
-  const tfBody = t => esc(String(t || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").trim()).replace(/\{\s*([^{}]{1,400}?)\s*\}/g, '<span class="ptq">﴿$1﴾</span>').replace(/\n+/g, "<br>");
-  async function ptfHtml(n, k, q4) { if (!k) return ""; const L = PG[n] || [], T = {}; for (const s of new Set(L.map(x => x[0]))) T[s] = await tf(k, s);
+  async function ptfHtml(n, k, q4) { if (!k) return ""; const L = PG[n] || [], T = {}, big = !!BIG[k];
+    if (big) await bigPage(k, n); else for (const s of new Set(L.map(x => x[0]))) T[s] = await tf(k, s);
+    const G = {}; for (const [s, a] of L) G[s + ":" + a] = await tfa(k, s, a);
     const name = (PTF.find(x => x[0] === k) || [, ""])[1];
-    return `<h3 class="pth">${k === "siraj" ? "غريب كلمات الصفحة" : "تفسير الصفحة"} <small>${esc(name)} • الصفحة ${AR(n)}</small></h3>` + L.map(([s, a]) => {
-      const g = q4 && qcfAyah(n, s, a), v = T[s] && T[s][a];
+    return `<h3 class="pth">${k === "siraj" ? "غريب كلمات الصفحة" : "تفسير الصفحة"} <small>${esc(name)} • الصفحة ${AR(n)}</small></h3>` + L.map(([s, a], i) => {
+      const g = q4 && qcfAyah(n, s, a), v = T[s] && T[s][a], gr = G[s + ":" + a] || { t: "" }, nx = L[i + 1];
       const ay = g ? `<div class="pta qcf" dir="rtl">${g}</div>` : `<div class="pta">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}">${AR(a)}</button></div>`;
+      // المقطع الواحد (آيات فُسرت معًا) يُعرض مرة بعد آخر آياته في الصفحة
+      const last = !gr.b || a >= gr.b || !nx || nx[0] !== s;
+      const intro = a === 1 && T[s] && typeof T[s][0] === "string" && T[s][0] ? `<details class="tfin"><summary>مقدمة السورة (${esc(name)})</summary>${tfHtml(T[s][0])}</details>` : "";
       const body = k === "siraj" ? (Array.isArray(v) && v.length ? `<dl class="qgr ptg">${v.map(([w, m]) => `<dt>﴿${esc(w)}﴾</dt><dd>${esc(m)}</dd>`).join("")}</dl>` : `<p class="mut ptn">لا غريب في هذه الآية في «السراج».</p>`)
-        : (v ? `<p class="ptt">${tfBody(v)}</p>` : `<p class="mut ptn">غير متاح لهذه الآية بعد.</p>`);
-      return `${a === 1 ? `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>` : ""}<div class="pti"><div class="ptr">${esc(nmP(s))}: ${AR(a)}</div>${ay}${body}</div>`; }).join(""); }
+        : !last ? "" : gr.t ? `${grpLbl(gr, s)}<div class="ptt${big ? " tfbig" : ""}">${tfHtml(gr.t)}</div>` : `<p class="mut ptn">غير متاح لهذه الآية بعد.</p>`;
+      return `${a === 1 ? `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${intro}` : ""}<div class="pti${last ? "" : " ptc"}"><div class="ptr">${esc(nmP(s))}: ${AR(a)}</div>${ay}${body}</div>`; }).join(""); }
   async function ptfShow(n) { const box = $("#mptfb"), k = ptk(), q4 = !!$(".qpage"); if (!box) return; document.querySelector(".mpin") && document.querySelector(".mpin").classList.toggle("on", !!k);
     if (!k) { box.innerHTML = ""; return; } box.innerHTML = '<p class="mut">…</p>'; const h = await ptfHtml(n, k, q4); if (curPage() === n && ptk() === k) box.innerHTML = h; }
   async function mpage(n) {
@@ -210,8 +229,12 @@ const MUS = (() => {
   async function gharib(s, a, to) { const g = (await tf("siraj", s)) || {}, out = []; for (let k = a; k <= Math.max(a, to || a); k++) (Array.isArray(g[k]) ? g[k] : []).forEach(([w, m]) => w && m && out.push([w, m, k])); return out; }
   async function gharibHtml(s, a, to) { let L = []; try { L = await gharib(s, a, to); } catch (e) { }
     return L.length ? `<dl class="qgr">${L.map(([w, m, k]) => `<dt>﴿${esc(w)}﴾${to > a ? ` <small class="mut">(${AR(k)})</small>` : ""}</dt><dd>${esc(m)}</dd>`).join("")}</dl>` : "لا كلمات غريبة في هذه الآية في «السراج»."; }
-  async function showTf(k, s, a) { const t = await tf(k, s), el = $("#musmk"); if (!el) return; el.textContent = sjTxt(t[a]) || (k === "siraj" ? "لا غريب في هذه الآية في «السراج»، أو لم يُستخرج بعد." : "غير متاح لهذه الآية بعد.");
-    document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k)); }
+  async function showTf(k, s, a) { let el = $("#musmk"); if (!el) return; showTf.k = k; document.querySelectorAll("#mustk .chip").forEach(c => c.classList.toggle("on", c.dataset.k === k));
+    el.classList.toggle("tfbig", !!BIG[k]); el.innerHTML = '<p class="mut">جارٍ تحميل ' + esc((TFS.find(x => x[0] === k) || [, ""])[1]) + "…</p>";
+    if (k === "siraj") { const t = await tf(k, s); el = $("#musmk"); if (el && showTf.k === k) el.textContent = sjTxt(t[a]) || "لا غريب في هذه الآية في «السراج»، أو لم يُستخرج بعد."; return; }
+    const g = await tfa(k, s, a); el = $("#musmk"); if (!el || showTf.k !== k) return;
+    el.innerHTML = g.t ? grpLbl(g, s) + tfHtml(g.t) + (BIG[k] ? `<p class="mut tfsrc">${esc(BIG[k])} — نسخة مدققة على آيات مصحف المدينة (المصدر: QUL/tarteel).</p>` : "") : '<p class="mut">غير متاح لهذه الآية بعد.</p>';
+    if (BIG[k]) el.scrollTop = 0; }
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);
     const inMus = /^#\/mushaf/.test(location.hash), until = +(sheet.to || 0) > a ? +sheet.to : 0; sheet.to = 0;
@@ -247,10 +270,12 @@ const MUS = (() => {
      <button class="btn p">تصدير</button></form>`, () => { $("#musx").addEventListener("submit", e => { e.preventDefault(); run(e.target); }); });
   }
   async function run(f) {
-    const l = SEL().map(k => k.split(":").map(Number)).sort((x, y) => x[0] - y[0] || x[1] - y[1]), withC = f.c.value === "ac", notes = NOTE(), M = withC ? await meta() : {};
+    run.seen = new Set(); const l = SEL().map(k => k.split(":").map(Number)).sort((x, y) => x[0] - y[0] || x[1] - y[1]), withC = f.c.value === "ac", notes = NOTE(), M = withC ? await meta() : {};
     const blocks = [];
     for (const [s, a] of l) { const C = withC ? await cites(s) : {}, cs = withC ? (C[a] || []).filter(x => M[x[0]] && x[2]).slice(0, 2).map(x => ({ t: x[2], src: M[x[0]][0] + (A(M[x[0]][1]).name ? "، " + A(M[x[0]][1]).name : "") })) : [];
-      const T = f.tf.value ? await tf(f.tf.value, s) : {}, Gr = f.g.checked ? await tf("siraj", s) : {}, tx = (T[a] || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").trim();
+      // المقطع المفسر جملةً يُصدَّر مرة واحدة، والحواشي [[…]] تُختصر بين معقوفين
+      const gg = f.tf.value ? await tfa(f.tf.value, s, a) : { t: "" }, gk = s + ":" + (gg.a || a), dupG = gg.t && gg.b > gg.a && run.seen && run.seen.has(gk); if (gg.t) (run.seen = run.seen || new Set()).add(gk);
+      const Gr = f.g.checked ? await tf("siraj", s) : {}, tx = dupG ? "" : (gg.b > gg.a ? `(تفسير الآيات ${AR(gg.a)}–${AR(gg.b)}) ` : "") + String(gg.t || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").replace(/\[\[([\s\S]*?)\]\]/g, " [$1]").trim();
       blocks.push({ t: ayah(s, a), ref: `[${nmP(s)}: ${AR(a)}]`, cs, tf: tx, g: sjTxt(Gr[a]), n: f.n.checked ? notes[s + ":" + a] || "" : "" }); }
     const TFN = f.tf.value ? (TFS.find(t => t[0] === f.tf.value) || [, ""])[1] : "";
     const ref = f.r.checked, F = f.f.value, ff = f.ff.value, fs = +f.fs.value || 22;
@@ -287,7 +312,7 @@ const MUS = (() => {
     else if (a === "musretry") { Object.keys(FONTS).forEach(k => delete FONTS[k]); QERR.length = 0; const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "musw") wsheet(el.dataset.t || el.textContent, +el.dataset.s, +el.dataset.a);
     else if (a === "musmode") { try { localStorage.setItem("mus_mode2", qmode() === "qcf" ? "text" : "qcf"); } catch (x) { } const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
-    else if (a === "mustk") { try { localStorage.setItem("mus_tf", el.dataset.k); } catch (x) { } showTf(el.dataset.k, +el.dataset.s, +el.dataset.a); }
+    else if (a === "mustk") showTf(el.dataset.k, +el.dataset.s, +el.dataset.a);
     else if (a === "muswlex") { closeSheet(); setTimeout(() => typeof wordSheet === "function" && wordSheet(el.dataset.w, ayah(+el.dataset.s, +el.dataset.a), "lug"), 150); }
     else if (a === "musadd") { const l = SEL(), k = el.dataset.k, i = l.indexOf(k); if (i >= 0) l.splice(i, 1); else l.push(k); setSel(l); const sp = $("#ay" + k.split(":")[1]); if (sp) sp.classList.toggle("sel", i < 0); el.textContent = i >= 0 ? "＋ أضفها إلى التصدير" : "✓ في التصدير (إزالة)"; }
     else if (a === "muscopy") { const [s, n] = el.dataset.k.split(":").map(Number); navigator.clipboard && navigator.clipboard.writeText(`﴿${ayah(s, n)}﴾ [${nmP(s)}: ${n}]`).then(() => toast("نُسخت")); }
