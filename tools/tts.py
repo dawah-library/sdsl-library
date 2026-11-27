@@ -595,7 +595,7 @@ async def tts_book(item, lst):
                     done.append((p, tx, path, sents))
                     return
                 except QuotaOut as e:
-                    STOP.append(str(e)); log("  توقف «%s»: حصة الصوت نفدت، ويكمل في الجولة التالية بالصوت نفسه" % man["title"]); return
+                    STOP.append(str(e)); log("  توقف «%s»: حصة الصوت نفدت، ويكمل في الجولة التالية بالصوت نفسه (%s)" % (man["title"], str(e)[:200])); return
                 except Exception as e:
                     log("  ص %d محاولة %d: %s" % (p, attempt + 1, str(e)[:120]))
                     await asyncio.sleep(3 * (attempt + 1))
