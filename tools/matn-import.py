@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """استيراد متن للحفظ من الشاملة (turath.io) نصًّا حرفيًّا بمصدره، مسودةً مخفية حتى تراجعه الإدارة (طلب المدير، ٢٧ نوفمبر).
 
-الاستعمال: python3 tools/matn-import.py <معرف المتن في data/mutun.json> <رقم الكتاب في الشاملة> <معرف المؤلف> [المجلد المؤقت]
+الاستعمال: python3 tools/matn-import.py <معرف المتن في data/mutun.json> <رقم الكتاب في الشاملة> <معرف المؤلف> [--pages من-إلى] [--title العنوان]
+  --pages: صفحات الشاملة التي فيها المتن وحده إن كان مطبوعًا في أول شرح (مثل منظومة السعدي في 9846: 9-11).
 - يُنقل النص كما هو في المصدر دون أي تعديل (القاعدة: النص الشرعي حرفيًّا مع مصدره)، صفحةً لكل صفحة من المطبوع (ترقيم الكتاب موافق للمطبوع).
 - يُضاف الكتاب إلى الفهرس مخفيًّا (hidden) فلا يراه إلا المشرفون، ويُربط بمتنه في «حفظ المتون» (الحقل b).
 - تُكتب المواضع المشتبه في خطئها الطباعي في الحقل draft.sus للمراجعة، ولا يُصحَّح منها شيء آليًّا.
@@ -33,10 +34,12 @@ SUS = [(re.compile(r"(?<![ء-ي])[ةى](?=[ء-ي])"), "تاء مربوطة أو 
 def main():
     if len(sys.argv) < 4: raise SystemExit(__doc__)
     mid, bid, aid = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+    opt = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else None
+    rng = [int(x) for x in opt("--pages").split("-")] if opt("--pages") else [1, 399]
     if not any(a["id"] == aid for a in json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))["authors"]): raise SystemExit("المؤلف غير موجود في الفهرس: " + aid)
     meta = get("%s/book?id=%d&ver=3" % (API, bid)).get("meta") or {}
     pages, toc, pl, sus, cur = [], [], [], [], None
-    for pg in range(1, 400):
+    for pg in range(rng[0], rng[-1] + 1):
         j = get("%s/page?book_id=%d&pg=%d&ver=3" % (API, bid, pg))
         if not j or "text" not in j: break
         m = json.loads(j.get("meta") or "{}"); pp = str(m.get("page") or "")
@@ -53,14 +56,14 @@ def main():
             for rx, why in SUS:
                 for x in rx.finditer(ln):
                     sus.append({"p": len(pages), "l": ln.strip()[:120], "w": why})
-        if pg > 2 and not j.get("text"): break
+        if pg > rng[0] + 1 and not j.get("text"): break
     if not pages: raise SystemExit("لا نص")
     book = {"id": mid, "pages": pages, "toc": toc, "pl": pl}
     json.dump(book, open(os.path.join(ROOT, "data", "books", mid + ".json"), "w", encoding="utf-8"), ensure_ascii=False)
     cp = os.path.join(ROOT, "data", "catalog.json"); cat = json.load(open(cp, encoding="utf-8"))
     cat["books"] = [b for b in cat["books"] if b["id"] != mid]
-    cat["books"].append({"id": mid, "title": (meta.get("name") or mid).split(" = ")[0].strip(), "authorId": aid, "topicId": "t4", "col": "turath", "type": "book",
-                         "n": len(pages), "added": time.strftime("%Y-%m-%d"), "size": sum(len(p) for p in pages), "source": "المكتبة الشاملة (turath.io) الكتاب %d" % bid,
+    cat["books"].append({"id": mid, "title": opt("--title") or (meta.get("name") or mid).split(" = ")[0].strip(), "authorId": aid, "topicId": "t4", "col": "turath", "type": "book",
+                         "n": len(pages), "added": time.strftime("%Y-%m-%d"), "size": sum(len(p) for p in pages), "source": "المكتبة الشاملة (turath.io) الكتاب %d%s" % (bid, " «%s»، صفحات الشاملة %s" % (meta.get("name"), opt("--pages")) if opt("--pages") else ""),
                          "license": "نص المكتبة الشاملة عبر turath.io (الكتاب %d)" % bid, "edInfo": {"info": meta.get("info") or ""}, "hidden": True,
                          "draft": {"why": "متن للحفظ: مسودة حتى تراجع الإدارة نصه على المطبوع", "sus": sus[:200], "at": time.strftime("%Y-%m-%d")}})
     open(cp, "w", encoding="utf-8").write(json.dumps(cat, ensure_ascii=False, separators=(",", ":")))
