@@ -21,4 +21,14 @@ jobs:
           git config user.name "sdsl-bot"; git config user.email "bot@dawahlibrary.org"
           git add sw.js tools/sw-hash.txt
           git commit -m "رفع إصدار عامل الخدمة آليًا ($(cat /tmp/out))"
-          for i in 1 2 3; do git pull --rebase -q && git push && exit 0; sleep 5; done; exit 1
+          git push && exit 0
+          # تسابق مع إيداع آخر غيّر sw.js أو sw-hash.txt: نبدأ من main الأحدث ونعيد الحساب بدل حل التعارض
+          for i in 1 2 3 4; do
+            sleep $((i*5)); git rebase --abort 2>/dev/null || true
+            git fetch -q origin main && git reset -q --hard origin/main
+            python3 tools/sw-bump.py | tee /tmp/out
+            if git diff --quiet; then exit 0; fi
+            git add sw.js tools/sw-hash.txt
+            git commit -q -m "رفع إصدار عامل الخدمة آليًا ($(cat /tmp/out))"
+            git push && exit 0
+          done; exit 1

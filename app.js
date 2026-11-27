@@ -1544,7 +1544,9 @@ function structBody(){const L=CAT.labels||{};
  <h3>المؤلفون</h3><form data-form="authedit"><label>اختر المؤلف</label><select name="id" id="aesel"><option value="">— اختر —</option>${[...lib.authors].sort((x,y)=>x.name.localeCompare(y.name,"ar")).map(a=>`<option value="${a.id}">${esc(a.name)} (${a.col==="turath"?"العامة":"الدعوة"})</option>`).join("")}</select>
  <div id="aefields" hidden><div class="row"><div><label>الاسم</label><input name="name"></div><div><label>سنة الوفاة (هـ، للمتوفين)</label><input name="died" type="number"></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="turath">${esc(COL.turath)}</option></select></div></div>
  <div class="row" style="align-items:center"><div id="aeprev"></div><div><label>الصورة المصغرة (اختياري)</label><input type="file" name="photo" accept="image/*"><label class="inl"><input type="checkbox" name="nophoto" value="1"> إزالة الصورة واستعمال الحرف الأول</label></div></div>
- <label>نبذة مختصرة</label><textarea name="bio" style="min-height:90px"></textarea><button class="btn p" style="margin-top:8px">حفظ بيانات المؤلف</button> <span id="aest" class="mut"></span></div></form>`}
+ <label>نبذة مختصرة</label><textarea name="bio" style="min-height:90px"></textarea><button class="btn p" style="margin-top:8px">حفظ بيانات المؤلف</button> <span id="aest" class="mut"></span></div></form>
+ <h3>إضافة مؤلف جديد (بلا مواد)</h3><form data-form="authadd"><div class="row"><div><label>الاسم</label><input name="name" required></div><div><label>سنة الوفاة (هـ، اختياري)</label><input name="died" type="number"></div><div><label>القسم</label><select name="col"><option value="dawah">${esc(COL.dawah)}</option><option value="turath">${esc(COL.turath)}</option></select></div></div>
+ <label>نبذة مختصرة (اختياري)</label><textarea name="bio" style="min-height:60px"></textarea><p class="mut">يظهر المؤلف في قائمته ولو لم تُنسب إليه مادة بعد.</p><button class="btn p">إضافة المؤلف</button> <span id="aast" class="mut"></span></form>`}
 function wireStruct(){const sel=$("#aesel");if(!sel)return;sel.onchange=()=>{const a=lib.authors.find(x=>x.id===sel.value),f=sel.form,box=$("#aefields");box.hidden=!a;if(!a)return;f.name.value=a.name;f.died.value=a.died||"";f.col.value=a.col||"dawah";f.bio.value=a.bio||"";$("#aeprev").innerHTML=avatar(a,"big")}}
 async function squareJpeg(file,size){const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file)});
  const c=document.createElement("canvas");c.width=c.height=size;const k=Math.min(img.width,img.height);c.getContext("2d").drawImage(img,(img.width-k)/2,(img.height-k)/2,k,k,0,0,size,size);
@@ -1559,6 +1561,11 @@ async function saveStruct(f){const st=$("#structst"),btn=f.querySelector(".saveb
   Object.keys(c.labels).forEach(k=>{if(k.startsWith("nav:")&&!labels[k])delete c.labels[k]});c.version=Date.now();return c};
  try{await GH.editJSON("data/catalog.json",apply,"تعديل الأقسام والأسماء من صفحة الإدارة",true);apply(CAT);merge();applyLabels();renderTicker();toast("حُفظت الأقسام والأسماء، وتظهر للجميع خلال دقيقة.");vAdmin({t:"struct"})}
  catch(e){st.textContent=e.message;btn.disabled=false}}
+async function addAuthorOnly(f){const st=$("#aast"),fd=new FormData(f),n=String(fd.get("name")||"").trim();if(!n){st.textContent="اكتب الاسم.";return}if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
+ const ex=lib.authors.find(a=>[a.name].concat(a.aliases||[]).some(x=>norm(x)===norm(n)));if(ex){st.textContent="المؤلف موجود: "+ex.name;return}
+ const near=typeof MG!=="undefined"&&MG.sameish?lib.authors.find(a=>[a.name].concat(a.aliases||[]).some(x=>MG.sameish(x,n))):null;if(near&&!confirm("يوجد مؤلف باسم قريب: «"+near.name+"». أتريد إنشاء مؤلف جديد رغم ذلك؟"))return;
+ const au={id:"u_a"+Date.now().toString(36),name:n,col:fd.get("col")||"dawah",bio:String(fd.get("bio")||"").trim()};const d=+fd.get("died");if(d)au.died=d;
+ try{await ghSaveAuthor(au);toast("أُضيف المؤلف.");vAdmin({t:"struct"})}catch(e){st.textContent=e.message}}
 async function saveAuthor(f){const st=$("#aest"),fd=new FormData(f),id=fd.get("id");if(!id)return;if(!GH.on){st.textContent="فعّل الإدارة المباشرة أولًا.";return}
  const up={name:String(fd.get("name")).trim(),col:fd.get("col"),bio:String(fd.get("bio")||"").trim()},d=+fd.get("died");st.textContent="جارٍ الحفظ…";
  const ph=fd.get("photo");if(ph&&ph.size){try{const bytes=await squareJpeg(ph,320),path="assets/authors/"+id+".jpg";await GH.put(path,bytes,"صورة المؤلف: "+up.name);up.photo=path+"?v="+Date.now().toString(36)}catch(e){st.textContent="تعذر رفع الصورة: "+e.message;return}}
@@ -2473,12 +2480,20 @@ const NAV=(()=>{const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getI
  openSheet=function(){const r=_os.apply(this,arguments);NAV.mopen();return r};
  closeSheet=function(){const sh=$("#sheet"),was=sh&&!sh.hidden;const r=_cs.apply(this,arguments);if(was)NAV.mclose();return r};
  const d=$("#dlg");if(d)d.addEventListener("close",()=>NAV.mclose())}
+/* تحديث الواجهة بعد نشر جديد: لا تُعاد الصفحة في منتصف القراءة أو الكتابة؛ يُطبَّق الإصدار الجديد مع أول انتقال تالٍ
+   (تحميل كامل للصفحة المطلوبة من الصفحة الثابتة / فلا تُستهلك حصة الدوال)، أو حين تُخفى النافذة ولا نص مكتوب لم يُحفظ، أو فورًا إن فُتحت الصفحة للتو. */
+const SWU={pend:false,dirty:false,t0:Date.now(),
+ hit(){if(Date.now()-SWU.t0<8000&&!SWU.dirty){location.reload();return}SWU.pend=true},
+ nav(h){if(!SWU.pend)return false;SWU.pend=false;location.href="/#"+toPath(h);return true}};
+document.addEventListener("input",e=>{if(e.target&&e.target.matches&&e.target.matches("textarea,[contenteditable],input:not([type=search]):not([type=range]):not([type=checkbox]):not([type=radio])"))SWU.dirty=true},true);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&SWU.pend&&!SWU.dirty){SWU.pend=false;location.reload()}});
 function go(h,replace){if(history.state&&history.state.m&&NAV.skip){addEventListener("popstate",()=>setTimeout(()=>go(h,replace),0),{once:true});return} // إغلاق نافذة للتو: يُنتظر رجوعها أولًا وإلا أعاد الرجوعُ الصفحةَ السابقة
+ if(SWU.nav(h))return;SWU.dirty=false;
  const sameBook=(a,b)=>{const m=x=>(String(x).match(/^\/book\/([^/?]+)/)||[])[1];return m(a)&&m(a)===m(b)};
  // تقليب صفحات الكتاب نفسه لا يضيف خطوات، فالرجوع يعود إلى ما قبل الكتاب لا إلى الصفحة السابقة
  if(sameBook(toPath(h),location.pathname))replace=true;
  if(replace)history.replaceState(null,"",toPath(h));else history.pushState(null,"",toPath(h));route();NAV.ui()}
-window.addEventListener("hashchange",()=>{if(NAV.skip&&location.hash.startsWith("#/")){const h=location.hash;addEventListener("popstate",()=>setTimeout(()=>go(h),0),{once:true});return}if(location.hash.startsWith("#/")){history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
+window.addEventListener("hashchange",()=>{if(NAV.skip&&location.hash.startsWith("#/")){const h=location.hash;addEventListener("popstate",()=>setTimeout(()=>go(h),0),{once:true});return}if(location.hash.startsWith("#/")){if(SWU.nav(location.hash))return;SWU.dirty=false;history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
 window.addEventListener("popstate",()=>{
  if(NAV.skip){NAV.skip=false;NAV.mark();return}
  // زر رجوع الجهاز مع نافذة مفتوحة: تُغلق النافذة؛ فإن كانت الخطوة خطوتها (m) انتهى الأمر، وإلا أُعيد الرابط كما كان
@@ -2574,7 +2589,7 @@ document.addEventListener("submit",e=>{const f=e.target.closest("[data-form]");i
  else if(k==="artq"||k==="listq"){const s=qs(true);location.hash="#/"+(f.dataset.route||"articles")+(s?"?"+s:"")}
  else if(k==="pcomment"){const t=String(fd.get("t")||"").trim();if(!t)return;const btn=f.querySelector("button");btn.disabled=true;Social.comment(f.dataset.id,t,fd.get("parent")).then(()=>openComments(f.closest(".post"))).catch(x=>{alert(x.message);btn.disabled=false})}
  else if(k==="corrsend")corrSend(f);
- else if(k==="struct")saveStruct(f);else if(k==="authedit")saveAuthor(f);else if(k==="bookmeta")saveBookMeta(f);
+ else if(k==="struct")saveStruct(f);else if(k==="authedit")saveAuthor(f);else if(k==="authadd")addAuthorOnly(f);else if(k==="bookmeta")saveBookMeta(f);
  else if(k==="ghlogin")ghLogin(f);else if(k==="ghpdf")ghPdf(f);else if(k==="addpost")addPost(f);
  else if(k==="contact"){window.open(waLink(`${fd.get("k")} — من: ${fd.get("n")}\n\n${fd.get("m")}\n\n(مرسلة من مكتبة الدعوة السلفية الرقمية)`),"_blank","noopener")}
  else if(k==="goto"){const b=B(f.dataset.id),n=(b&&b.pages&&b.pages.length)||1,raw=String(fd.get("p")||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)),v=parseInt(raw.replace(/[^0-9]/g,""),10);if(!v)return toast("اكتب رقم الصفحة");
@@ -2610,7 +2625,7 @@ async function boot(){if(location.hash.startsWith("#/"))history.replaceState(nul
  merge();
  if(S.seen&&CAT.version&&S.seen!==CAT.version){const b=$("#banner");b.hidden=false;b.textContent="تم تحديث المكتبة بمحتوى جديد."}
  S.seen=CAT.version;saveS();
- if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;location.reload()}});navigator.serviceWorker.register("sw.js").then(r=>{r.update&&r.update();
+ if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;SWU.hit()}});navigator.serviceWorker.register("sw.js").then(r=>{r.update&&r.update();
   // التطبيق المثبت على الهاتف يعود من الخلفية دون إعادة تحميل: يُفحص وجود إصدار جديد عند كل عودة (مرة كل ١٠ دقائق على الأكثر)
   let last=Date.now();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-last>600e3){last=Date.now();try{r.update()}catch(e){}}})}).catch(()=>{})}
  renderTicker();await Auth.init();route();if(window.MODS)setTimeout(MODS.start,300);setTimeout(loginNudge,2500)}

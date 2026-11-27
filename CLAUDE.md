@@ -22,6 +22,6 @@
 - المرحلة ٧: الواجهة الثلاثية (portal.js) نفّذها وكيل آخر في main — تُراجَع فقط. 
 - المرحلة ٨ (منجزة): الآثار — باب المصدر، fit، مسودات، refit، مصادر مبوبة وخارجية؛ docs/athar.md.
 - المرحلة ٩ (منجزة): outreach.js (#/awael، #/weekly، #/masala، #/newsletter)، tools/weekly.py، tools/newsletter.py، جدول subscribers؛ docs/community.md.
-- الختام (التالي): تحديث «دراسة الموقع» بالمستجدات والمقارنات.
+- الختام (منجز ٢٧ نوفمبر): تحديث «دراسة الموقع» بالمستجدات والمقارنات (القسم ٥ج وصفوف جديدة في جدول المقارنة) وصفحة التعريف.
 - قسم «خطب الجمعة» (منجز، طلب المدير ٢١ نوفمبر): khutab.js، tools/khutab.py، khutab.yml، data/khutab — docs/khutab.md، ق-١٣.
 - الموسوعة الفقهية المقارنة (منجز، طلب المدير ٢٧ نوفمبر): tools/mawsua_fiqh.py، data/mawsua/_fiqh.json، ق-١٤، docs/mawsua.md؛ التحديث المحافظ (.new.json بسجل chg) لكل الموسوعات.
