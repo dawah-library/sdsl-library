@@ -2113,3 +2113,6 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .hzlook button.ic.on{background:var(--green,#0f5d46);color:#fff;border-color:transparent}
 .hzlook select{height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper,#fffdf7);font:inherit;font-size:.9rem;padding:0 8px}
 .nitem .nhelp{display:block;margin-top:4px;font-size:.82em;color:#5b6b64;border-top:1px dashed #cfd9d3;padding-top:4px}
+.hubg.few{display:flex;justify-content:center;gap:20px 36px}
+.hubg.few .happ{width:150px}.hubg.few .hai{width:92px;height:92px;border-radius:28px}.hubg.few .hai svg{width:42px;height:42px}
+.hubg.few .happ b{font-size:1.02rem}.hubg.few .happ small{font-size:.8rem}
