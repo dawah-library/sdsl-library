@@ -52,6 +52,8 @@ const TALA = (() => {
     if (sub === "furqan") return furqan(q);
     if (sub === "video" && typeof TVID !== "undefined") return TVID.view(q, { head, view_, kid, sx });
     if (sub === "qasas" && typeof TQS !== "undefined") return TQS.view(q, { head, view_, star, kid, sx, vis, own, st });
+    // الواجهة الجديدة (talahome.js، البند ١٦): «القادم لك» وأزرار كبيرة وسؤال اليوم؛ والصفحة الكاملة في «كل محتوى القسم» (?all=1)
+    if (!sub && !q.all && !q.s && typeof TLH !== "undefined") return TLH.home(q, { head, view_, kid });
     const sg = GEN[q.s] ? q.s : (q.s === "all" ? "" : ((kid() || {}).g || "")), sq = sg ? "&s=" + sg : "";
     view_(head(sg ? GEN[sg].n : "تربيةٌ على صحيح الدين، وعلمٌ نافع يبني جيلًا ربانيًّا") + (sg ? "" : HERO) + `<h2 class="talat">${sg ? GEN[sg].ic + " " + GEN[sg].n : "مرحبًا بك في قسم «طلائع الدعوة السلفية»"}</h2><p>${sg ? esc(GEN[sg].d) : "«جيلٌ سلفيٌّ ربانيٌّ متميز»: نتربّى على صحيح الدين عقيدةً وعبادةً وخُلُقًا وسلوكًا، ونتعلّم القرآن والسنة والمعرفة النافعة من كتب مشايخنا."}</p>
       ${regCard()}${kid() ? await daily() : ""}

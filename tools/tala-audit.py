@@ -31,8 +31,14 @@ def main():
     EX = [(k, re.compile(rx)) for k, rx in EXTRA]
     SN = dict({k: n for k, n, _ in SUB}, kawn="آيات الله في الكون")
 
-    def subj(*txt):
-        t = norm(" ".join(txt))
+    def subj(*txt):  # عنوان الدرس أولًا ثم نص السؤال: الباب يتبع الدرس
+        for part in [txt[0]] + [" ".join(txt)] if txt and txt[0] else [" ".join(t for t in txt if t)]:
+            k = subj1(part)
+            if k != "other": return k
+        return "other"
+
+    def subj1(t):
+        t = norm(t)
         for k, n, rx in SUB:
             if rx.search(t): return k
         for k, rx in EX:
@@ -47,6 +53,9 @@ def main():
         return max(1, min(3, d))
 
     okmap = (J("data/tala-ex-ok.json").get("ok") or {})
+    pool = {t: [] for t in ("t1", "t2", "t3", "t4")}   # أسئلة معتمدة لها إجابة (صح/خطأ واختيار) لواجهة «سؤال اليوم»
+    lessons = {t: [] for t in ("t1", "t2", "t3", "t4")}  # دروس المنهج مرتبة لـ«القادم لك»
+    seenL = set()
     rows = []  # (المصدر، المعرّف، المرحلة، الباب، الصعوبة، معتمد، له إجابة، له مصدر، نص)
     for x in J("data/tala-ex.json")["items"]:
         tr = "t3" if x.get("s") == "bunyan" else "t4" if x.get("s") == "bidaya" else ("t1" if int(x.get("v") or 1) <= 2 else "t2")
@@ -54,8 +63,19 @@ def main():
         ok = bool(x.get("ok")) or bool(okmap.get(key))
         iid = "ex:" + hashlib.md5(("%s|%s|%s" % (x.get("b"), x.get("p"), x.get("q"))).encode()).hexdigest()[:10]
         rows.append(("ex", iid, tr, subj(x.get("l"), x.get("q")), diff(x.get("k"), x.get("q"), tr), ok, x.get("a") not in (None, ""), bool(x.get("b")), norm(x.get("q"))))
+        sb, df = rows[-1][3], rows[-1][4]
+        lk = (x.get("s"), int(x.get("v") or 1), x.get("b"), int(x.get("lp") or x.get("p") or 1), x.get("l"))
+        if lk not in seenL: seenL.add(lk); lessons[tr].append(lk)
+        if ok and x.get("k") in ("tf", "mcq") and x.get("a") not in (None, ""):
+            it = {"q": x["q"], "k": x["k"], "a": x["a"], "b": x.get("b"), "p": x.get("p"), "l": x.get("l"), "s": sb, "d": df}
+            if x.get("o"): it["o"] = x["o"]
+            if x.get("why"): it["w"] = x["why"]
+            pool[tr].append(it)
     for x in J("data/tala-bank.json")["items"]:
         if x.get("x"): continue
+        if x.get("ok") and x.get("t") == "mc" and x.get("a"):
+            for t in (x.get("k") or ["t2"]):
+                if t in pool: pool[t].append({"q": x["q"], "k": "mcq", "a": 0, "o": [x["a"]] + (x.get("o") or []), "src": (x.get("src") or {}).get("u"), "st": (x.get("src") or {}).get("t"), "s": subj(x.get("q")), "d": 2, "w": x.get("why") or ""})
         for tr in (x.get("k") or ["t2"])[:1]:
             rows.append(("bank", "bank:" + x["id"], tr, subj(x.get("q"), (x.get("src") or {}).get("t")), diff(x.get("t"), x.get("q"), tr), bool(x.get("ok")), bool(x.get("a")), bool(x.get("src")), norm(x.get("q"))))
     for x in J("data/tala-riddles.json")["items"]:
@@ -73,6 +93,10 @@ def main():
     out = {"note": "tools/tala-audit.py — تصنيف أسئلة الطلائع بالمرحلة والباب والصعوبة (آلي بقواعد صريحة؛ لا يعدّل المصادر)", "m": M,
            "keys": {"tr": TRN, "sub": dict(SN, riddle="ألغاز", other="غير مصنف")}, "c": {r[1]: [r[2], r[3], r[4]] for r in rows}}
     json.dump(out, open(os.path.join(ROOT, "data", "tala-audit.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    for t in lessons: lessons[t].sort(key=lambda k: (k[0] != "asas", k[1], k[3]))
+    json.dump({"note": "tools/tala-audit.py — مجمع «سؤال اليوم» (المعتمد ذو الإجابة) ودروس «القادم لك» لكل مرحلة، لواجهة الطلائع (talahome.js)", "at": M["at"],
+               "sub": dict(SN, riddle="ألغاز", other="متنوع"), "pool": pool, "lessons": {t: [{"s": k[0], "v": k[1], "b": k[2], "p": k[3], "l": k[4]} for k in L_] for t, L_ in lessons.items()}},
+              open(os.path.join(ROOT, "data", "tala-home.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
     pc = lambda a: "%d٪" % round(100 * a / max(1, n))
     L = ["# فحص قسم الطلائع (tools/tala-audit.py)", "", "آخر تشغيل: %s. الأرقام «قبل» التطوير؛ يُعاد التشغيل بعده للمقارنة." % M["at"], "",

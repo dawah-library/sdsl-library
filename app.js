@@ -21,7 +21,7 @@ const saveS=()=>ls.set("set",S);
 if(!S.lk2){S.mkq=true;S.mkh=true;S.mkt=true;S.lk2=1;saveS()}
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
 const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
-const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl","prints"]),t:0,
+const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl","prints","talaH"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
   await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
