@@ -1168,7 +1168,15 @@ const GO=(()=>{
  function show(inp){const q=inp.value.trim();hide();if(q.length<2)return;const r=find(q),c=r.c,f=inp.closest("form");if(!f)return;if(!QAI)loadQA().then(()=>{if(inp.value.trim()===q)show(inp)});
   const items=(r.fuzzy&&c[0]?[`<div class="gomean">هل تقصد: «${esc(c[0].t)}»؟</div>`]:[]).concat(c.map(x=>`<a href="${href(x)}" data-go="${x.k}"><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></a>`));
   items.push(QUEST.test(norm(q))||q.length>25?`<a href="#/ask?q=${encodeURIComponent(q)}"><b>اسأل المساعد العلمي</b><span>إجابة موثقة من نصوص المكتبة</span></a>`:"",`<a href="#/search?q=${encodeURIComponent(q)}"><b>ابحث في المكتبة عن «${esc(q)}»</b><span>كل النتائج</span></a>`);
-  box=document.createElement("div");box.className="gosug";box.setAttribute("role","listbox");box.innerHTML=items.join("");f.style.position="relative";f.appendChild(box)}
+  box=document.createElement("div");box.className="gosug";box.setAttribute("role","listbox");box.innerHTML=items.join("");f.style.position="relative";f.appendChild(box);
+  if(tk3(q))clearTimeout(GO._x),GO._x=setTimeout(()=>sxAdd(inp,q,c.length),350)}
+ /* محرك توجيه واحد (طلب المدير، ٢٧ نوفمبر): بعد العناوين والأقسام، يبحث «إلى أين تريد أن تذهب؟» في نصوص المكتبة بالمحرك نفسه الذي يعمل به المساعد العلمي
+    (SX في askx.js: الفهرس المقلوب data/sx)، فيقترح الكتاب والصفحة التي يرد فيها ما كتبه القارئ */
+ const tk3=q=>norm(q).length>=4;
+ async function sxAdd(inp,q,nLocal){if(typeof SX==="undefined"||!SX.search){if(typeof MODS!=="undefined"&&MODS.start)MODS.start();return}
+  const r=await SX.search(q,{k:nLocal>=4?2:4}).catch(()=>null);if(!r||!r.length||!box||inp.value.trim()!==q)return;const seen=new Set();
+  const h=r.filter(x=>{const id=x.ref.split(":")[0];if(seen.has(id))return false;seen.add(id);return true}).map(x=>{const[id,p]=x.ref.split(":");return`<a href="#/book/${encodeURIComponent(id)}/${p}?h=${encodeURIComponent(q.slice(0,60))}" data-go="sx"><b>${esc(x.book)}${x.page?" — "+esc(x.page):""}</b><span>${esc(String(x.text||"").replace(/\s+/g," ").slice(0,100))}</span></a>`}).join("");
+  if(!h)return;const html=`<div class="gomean">في نصوص المكتبة</div>`+h,end=box.querySelector('a[href^="#/ask"],a[href^="#/search"]');end?end.insertAdjacentHTML("beforebegin",html):box.insertAdjacentHTML("beforeend",html)}
  document.addEventListener("input",e=>{const i=e.target;if(i&&i.matches&&i.matches('form[data-form="quick"] input[name="q"]')){clearTimeout(GO._t);GO._t=setTimeout(()=>show(i),160)}});
  document.addEventListener("click",e=>{const a=e.target.closest(".gosug a");if(a){if(a.dataset.go==="resume"){e.preventDefault();openLast()}hide();const i=document.querySelector('form[data-form="quick"] input[name="q"]');return}if(!e.target.closest('form[data-form="quick"]'))hide()});
  return{decide,find,openLast,hide}})();
