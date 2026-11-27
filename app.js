@@ -1675,7 +1675,7 @@ async function readyBanner(){const el=$("#rdyban");if(!el)return;let R=null;try{
  el.className="rdyban rdy-"+R.lv;el.innerHTML=`<div class="rdyh"><b>${ic} جاهزية الرفع: ${esc(R.msg)}</b><small class="mut">منذ ${esc(R.since||"")}</small></div>
  <div class="rdyg"><div><span>تدقيق المصورات</span>${bar(R.core,"نسبة صفحات الكتب المصورة المدققة")}<small>${toAr(R.core)}٪ • ${toAr(R.done_books)} من ${toAr(R.ocr_books)} كتابًا مكتمل التدقيق</small></div>
  <div><span>متوسط إنجاز الكتب بخدماتها</span>${bar(R.avg,"")}<small>${toAr(R.avg)}٪</small></div>
- <div><span>المنتظر للتدقيق</span><small>${toAr(R.pending)} صفحة${R.speed?` • ${toAr(Math.round(R.speed))} صفحة/يوم • نحو ${toAr(R.days)} يوم`:""}</small></div>
+ <div><span>المنتظر للتدقيق</span><small>${toAr(R.pending)} صفحة${R.speed?` • ${toAr(Math.round(R.speed))} صفحة/يوم • نحو ${toAr(R.days)} يوم`:""}${R.stall_days?` • لا انخفاض منذ ${toAr(R.stall_days)} أيام`:""}</small></div>
  <div><span>الطوابير</span><small>صندوق التحويل ${toAr(R.inbox)} • التفريغات ${toAr(R.tf_queue)}</small></div></div>
  ${R.cap_pages?`<p class="rdycap">السعة المقترحة الآن: نحو <b>${toAr(R.cap_pages)}</b> صفحة (≈ ${toAr(Math.max(1,R.cap_books))} كتاب متوسط الحجم) خلال ${toAr((R.cfg||{}).horizon||5)} أيام.</p>`:""}${(R.why||[]).length?`<p class="mut">${R.why.map(esc).join("؛ ")}</p>`:""}`}
 async function progAdmin(){const el=$("#progadm");if(!el)return;let P=null,runs=[];
