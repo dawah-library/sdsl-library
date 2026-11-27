@@ -3,7 +3,7 @@ name: قياس استرجاع المساعد العلمي
 on:
   push:
     branches: [main]
-    paths: ["data/eval/ask-questions.json", "tools/ask-eval.js", "search.js"]
+    paths: ["data/eval/ask-questions.json", "tools/ask-eval.js", "tools/build-sx.py", "search.js"]
   workflow_dispatch:
 permissions:
   contents: write

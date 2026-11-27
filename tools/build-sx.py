@@ -71,16 +71,16 @@ def main():
         if k in docs and docs[k] != i: print("تصادم مفتاح:", i, docs[k]); return None
         docs[k] = i; codes.setdefault(k, len(codes)); return codes[k]
     term_doc, term_tf = collections.defaultdict(lambda: array.array("Q")), collections.defaultdict(lambda: array.array("B"))
-    npages = 0; offs = [dict() for _ in range(OSH)]
+    npages = 0; offs = [dict() for _ in range(OSH)]; plen = {}  # طول كل صفحة بالكلمات (لاختيار أفضل الصفحات لكل كلمة بتطبيع الطول)
     def index(i, pages):
         nonlocal npages
         d = add_doc(i)
         if d is None: return
         for p, txt in enumerate(pages):
             body = re.split(r"^\s*_{4,}\s*$", txt or "", maxsplit=1, flags=re.M)[0]
-            c = collections.Counter(stems(body))
+            st_ = stems(body); c = collections.Counter(st_)
             npages += 1
-            code = (d << 20) | p
+            code = (d << 20) | p; plen[code] = len(st_)
             for t, n in c.items():
                 term_doc[t].append(code); term_tf[t].append(min(n, 255))
     for b in cat["books"]:
@@ -107,11 +107,16 @@ def main():
     inv = {v: k for k, v in codes.items()}
     shards = [dict() for _ in range(SHARDS)]
     limit = max(50, int(npages * 0.25))           # كلمة في أكثر من ربع الصفحات لا تفيد البحث
+    av = (sum(plen.values()) / max(1, len(plen))) or 1
     for t, ds in term_doc.items():
         df = len(ds)
         if df > limit: continue
         tf = term_tf[t]
-        idx = sorted(range(df), key=lambda j: -tf[j])[:CAP] if df > CAP else range(df)
+        if df > CAP:  # اختيار أفضل CAP صفحة بتشبّع التكرار وتطبيع الطول (BM25) لا بالتكرار الخام، فلا تطغى صفحات الكتب الطويلة على الفتاوى القصيرة
+            def sc(j):
+                pl = plen.get(ds[j], av); return -(tf[j] * 2.2 / (tf[j] + 1.2 * (0.25 + 0.75 * pl / av)))
+            idx = sorted(range(df), key=sc)[:CAP]
+        else: idx = range(df)
         post = " ".join(f"{inv[ds[j] >> 20]}.{(ds[j] & 0xFFFFF) + 1}.{tf[j]}" for j in idx)
         shards[zlib.crc32(t.encode()) % SHARDS][t] = [df, post]
     OUT.mkdir(parents=True, exist_ok=True)
