@@ -25,6 +25,7 @@
   "/athar.js",
   "/audio.js",
   "/brain.js",
+  "/claims.js",
   "/cmpai.js",
   "/community.js",
   "/config.js",
@@ -61,8 +62,10 @@
   "/portal.js",
   "/privacy.html",
   "/proof.js",
+  "/prt.js",
   "/qa.js",
   "/qfix.js",
+  "/related.js",
   "/releases.js",
   "/robots.txt",
   "/saff.js",
@@ -80,6 +83,7 @@
   "/style.css",
   "/sw.js",
   "/tala.js",
+  "/talahome.js",
   "/talaplay.js",
   "/talaqasas.js",
   "/talavid.js",
@@ -89,6 +93,7 @@
   "/tr.js",
   "/video.js",
   "/voice.js",
-  "/words.js"
+  "/words.js",
+  "/wsx.js"
  ]
 }

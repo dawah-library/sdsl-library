@@ -123,7 +123,8 @@ async function main() {
       const text = a.text.length > 7000 ? a.text.split(/\n/).reduce((ps, l) => { const last = ps[ps.length - 1]; if (last.length + l.length > 5000) ps.push(l); else ps[ps.length - 1] = last ? last + "\n" + l : l; return ps; }, [""]) : [a.text];
       loadGroup(g)[sid] = { pages: text };
       const aid0 = authorId(a.author), fat = st.fatwaAuthor && aid0 === "a8" && isFatwa(a.category) && isQA(a.text);
-      idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : aid0, ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
+      const iss = aid0 === "a8" && !fat ? require("./issuer.js").issuer(a.title) : null;  // الجهة المصدرة المعلنة لا «صوت السلف»
+      idx.items.push({ id: sid, t: a.title, a: fat ? st.fatwaAuthor : iss ? iss.a : aid0, ...(iss ? { iss: "a8" } : {}), ...(iss && iss.co ? { co: iss.co } : {}), ...(fat ? { fa: 1 } : {}), tp: topicId(a.category, a.title, a.text), c: a.category || "", d: a.date || "", u: url, f: g, n: text.length, ad: new Date().toISOString().slice(0, 10) });
       have.add(sid); got++; log(`${id}: ✓ ${a.title} — ${a.author || "؟"} [${a.category || "بلا قسم"}]`);
       return "ok";
     } catch (e) { log(`${id}: خطأ ${e.message}`); errs++; if (/HTTP 4(03|29)/.test(e.message) || errs >= 8) { log("توقف مؤقتًا: الموقع يرفض الطلبات أو لا يستجيب الآن."); stop = true; } await sleep(st.delayMs); return "err"; }

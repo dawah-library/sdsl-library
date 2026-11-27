@@ -55,6 +55,9 @@
 /brain.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/claims.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /cmpai.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -151,10 +154,16 @@
 /proof.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/prt.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /qa.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /qfix.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/related.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /releases.js
@@ -199,6 +208,9 @@
 /tala.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/talahome.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /talaplay.js
   Cache-Control: public, max-age=60, must-revalidate
 
@@ -227,6 +239,9 @@
   Cache-Control: public, max-age=60, must-revalidate
 
 /words.js
+  Cache-Control: public, max-age=60, must-revalidate
+
+/wsx.js
   Cache-Control: public, max-age=60, must-revalidate
 
 /sw.js
