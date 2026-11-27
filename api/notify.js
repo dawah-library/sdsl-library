@@ -45,6 +45,19 @@ async function subs(req, res, out) {
 }
 module.exports = async (req, res) => {
   const out = (c, o) => { res.statusCode = c; res.setHeader("content-type", "application/json; charset=utf-8"); res.end(JSON.stringify(o)); };
+  // إحصاءات النشرة والإشعارات للمدير فقط (عدّ فقط، بلا عناوين ولا بيانات أشخاص): GET مع رمز الجلسة
+  if (req.method === "GET" && req.headers["x-admin"] === "stats") {
+    try {
+      const url = process.env.SUPABASE_URL, ak = process.env.SUPABASE_ANON_KEY, tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      if (!url || !ak || !tok) return out(401, { ok: false });
+      const u = await fetch(url + "/auth/v1/user", { headers: { apikey: ak, Authorization: "Bearer " + tok } }); if (!u.ok) return out(401, { ok: false });
+      const user = await u.json(), p = await fetch(url + "/rest/v1/profiles?select=role&id=eq." + encodeURIComponent(user.id), { headers: { apikey: ak, Authorization: "Bearer " + tok } });
+      const role = ((p.ok ? await p.json() : [])[0] || {}).role; if (!/^(admin|partner)$/.test(role || "")) return out(403, { ok: false });
+      const H = sbH(), cnt = async q => { const r = await fetch(process.env.SUPABASE_URL + "/rest/v1/" + q, { method: "HEAD", headers: Object.assign({}, H, { Prefer: "count=exact", Range: "0-0" }) }); const m = /\/(\d+)$/.exec(r.headers.get("content-range") || ""); return r.ok && m ? +m[1] : null; };
+      const [subs_, subsOk, unsub, prefs, pushOff, mailOff, pushSubs, hifz, comps] = await Promise.all([cnt("subscribers?select=id"), cnt("subscribers?select=id&confirmed=eq.true&unsub_at=is.null"), cnt("subscribers?select=id&unsub_at=not.is.null"), cnt("member_prefs?select=user_id"), cnt("member_prefs?select=user_id&push=eq.false"), cnt("member_prefs?select=user_id&mail=eq.false"), cnt("push_subs?select=endpoint"), cnt("hifz_plans?select=user_id&active=eq.true"), cnt("comparisons?select=id&status=eq.pending")]);
+      return out(200, { ok: true, subscribers: subs_, active: subsOk, unsubscribed: unsub, members_with_prefs: prefs, push_off: pushOff, mail_off: mailOff, push_devices: pushSubs, hifz_active: hifz, comparisons_pending: comps });
+    } catch (e) { return out(500, { ok: false }); }
+  }
   if (req.method === "GET" && /[?&](confirm|unsub)=/.test(req.url || "")) return subs(req, res, out);
   if (req.method !== "POST") return out(405, { ok: false });
   if (req.headers["x-sub"] === "1") return subs(req, res, out);
