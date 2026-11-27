@@ -1,6 +1,9 @@
 name: مقاطع السور وأقسامها
 # مسودات التقسيم الموضوعي للسور والمقصد العام (tools/quran-sections.py) بحصة Gemini المجانية، يوميًّا؛ تتنحى عند ضيق الحصة. مفتاح الإيقاف: quran_sections
 on:
+  push:
+    branches: [main]
+    paths: ["tools/quran-sections.py", ".github/workflows/quran-sections.yml"]
   schedule:
     - cron: "37 10 * * *"
   workflow_dispatch:
