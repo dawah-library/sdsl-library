@@ -2000,3 +2000,7 @@ form:has(.gosug){position:relative}
 .mwleg{font-size:.8rem}.mwqawl{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--sf)}.mwqawl h4{margin:2px 0}.mwchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.mwchips .chip{font-size:.82rem}
 .mwadl{line-height:2.1}.mwtj{margin:8px 0}.mwdw{margin:10px 0;padding:8px 12px;border-inline-start:4px solid var(--ac);border-radius:8px;background:color-mix(in srgb,var(--ac) 5%,transparent)}.mwdw[data-k="عرض"]{border-inline-start-color:var(--line)}
 .mwwarn{color:#b45309}:root[data-theme=dark] .mwwarn{color:#fcd34d}.mwchg{margin:6px 0;line-height:1.9;font-size:.9rem}.mwnv ul,.mwhist ul{line-height:1.9;font-size:.88rem}.mwrevl ol{line-height:2}.mwfm{margin:10px 0}
+
+/* الشريط السفلي بسبعة أقسام (عاد الراديو): أعمدة متساوية بلا تمرير على الجوال، وخط أصغر */
+@media (max-width:520px){#dock a{flex:1 1 0;min-width:0;padding-inline:0;font-size:.58rem;letter-spacing:-.1px}#dock a svg{width:20px;height:20px}#dock{padding-inline:3px}}
+@media (max-width:340px){#dock a{font-size:.54rem}#dock a svg{width:18px;height:18px}}
