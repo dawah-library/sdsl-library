@@ -2112,3 +2112,4 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .hzlook button.ic{min-width:38px;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--paper,#fffdf7);color:inherit;font:inherit;font-size:.9rem;cursor:pointer}
 .hzlook button.ic.on{background:var(--green,#0f5d46);color:#fff;border-color:transparent}
 .hzlook select{height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper,#fffdf7);font:inherit;font-size:.9rem;padding:0 8px}
+.nitem .nhelp{display:block;margin-top:4px;font-size:.82em;color:#5b6b64;border-top:1px dashed #cfd9d3;padding-top:4px}
