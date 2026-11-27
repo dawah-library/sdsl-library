@@ -2116,7 +2116,13 @@ const Mine={uid:null,marks:null,notes:{},plans:null,
   delete this.notes[n.book_id];return n},
  async delNote(n){if(this.cloud()){const {error}=await Auth.sb.from("notes").delete().eq("id",n.id);if(error)throw this.err(error)}else ls.set(this.k("notes"),ls.get(this.k("notes"),[]).filter(x=>x.id!==n.id));delete this.notes[n.book_id]},
  async loadPlans(){this.reset();if(!Auth.user)return[];if(this.plans)return this.plans;let l=[];
-  if(this.cloud()){const {data,error}=await Auth.sb.from("reading_plans").select("*").eq("user_id",Auth.user.id).order("created_at");if(error)throw this.err(error);l=data||[]}else l=ls.get(this.k("plans"),[]);return this.plans=l},
+  if(this.cloud()){const {data,error}=await Auth.sb.from("reading_plans").select("*").eq("user_id",Auth.user.id).order("created_at");if(error)throw this.err(error);l=data||[]}else l=ls.get(this.k("plans"),[]);this.hz=l.find(x=>x.book_id==="hifz")||null;return this.plans=l.filter(x=>x.book_id!=="hifz")},
+ /* تذكير ورد «حفظ المتون» في الوقت الذي يختاره العضو (طلب المدير، ٢٧ نوفمبر): صف واحد في reading_plans بالمعرّف hifz يقرؤه remind.js كل ساعة؛ يُوقف بإلغاء التفعيل */
+ async hifzRem(){await this.loadPlans();return this.hz},
+ async setHifzRem(on,at){if(!Auth.user||!this.cloud())throw new Error("التذكير يحتاج تسجيل الدخول");const [h,m]=String(at||"20:00").split(":").map(Number),off=-new Date().getTimezoneOffset();
+  const p={user_id:Auth.user.id,book_id:"hifz",title:"حفظ المتون",daily:1,remind_at:at||"20:00",tz_offset:off,hour_utc:((h*60+(m||0)-off)/60%24+24|0)%24,active:!!on};
+  const {error}=await Auth.sb.from("reading_plans").upsert(p);if(error)throw this.err(error);this.hz=Object.assign(this.hz||{},p);return this.hz},
+ async hifzTouch(){try{if(!Auth.user||!this.cloud())return;await this.loadPlans();if(!this.hz||!this.hz.active)return;const t=new Date().toISOString();if(this.hz.last_read&&new Date(this.hz.last_read).toDateString()===new Date().toDateString())return;this.hz.last_read=t;await Auth.sb.from("reading_plans").update({last_read:t}).eq("user_id",Auth.user.id).eq("book_id","hifz")}catch(e){}},
  async savePlan(p){await this.loadPlans();const [h,m]=String(p.remind_at||"20:00").split(":").map(Number),off=-new Date().getTimezoneOffset();p.tz_offset=off;p.hour_utc=((h*60+(m||0)-off)/60%24+24|0)%24;
   if(this.cloud()){const {error}=await Auth.sb.from("reading_plans").upsert(Object.assign({user_id:Auth.user.id},p));if(error)throw this.err(error)}
   const i=this.plans.findIndex(x=>x.book_id===p.book_id);if(i>=0)this.plans[i]=Object.assign(this.plans[i],p);else this.plans.push(Object.assign({start_date:today(),created_at:new Date().toISOString()},p));if(!this.cloud())ls.set(this.k("plans"),this.plans)},

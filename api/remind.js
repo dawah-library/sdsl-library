@@ -117,6 +117,11 @@ module.exports = async (req, res) => {
     if (due.length) {
       const subs = await sb("push_subs?select=*&user_id=in." + inList([...new Set(due.map(p => p.user_id))]));
       for (const p of due) {
+        if (p.book_id === "hifz") {  // تذكير ورد «حفظ المتون» في وقت العضو (طلب المدير، ٢٧ نوفمبر)
+          const title = "وردك اليوم في حفظ المتون", body = "أتمّ وردك الجديد وراجع ما حان من محفوظك.", url = "/hifz?t=mine";
+          await sb("notifications", { method: "POST", body: JSON.stringify({ user_id: p.user_id, title, body, url: "#" + url }) }); log.notified++;
+          await pushTo((subs || []).filter(s => s.user_id === p.user_id), { title, body, url, tag: "hifz" }); continue;
+        }
         const at = p.last_page || p.start_page || 1, url = "/book/" + p.book_id + "/" + at;
         const title = "وردك اليوم من «" + (p.title || "كتابك") + "»", body = (p.daily === 1 ? "صفحة واحدة" : p.daily === 2 ? "صفحتان" : p.daily <= 10 ? p.daily + " صفحات" : p.daily + " صفحة") + " — تابع من صفحة " + at;
         await sb("notifications", { method: "POST", body: JSON.stringify({ user_id: p.user_id, title, body, url: "#" + url }) });

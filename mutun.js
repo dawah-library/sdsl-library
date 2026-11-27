@@ -81,12 +81,21 @@ const MTN = (() => {
         <p class="mut">الترتيب المقترح: ابدأ بالمرحلة الأولى في العلم الذي تحتاجه، ولا تنتقل إلى ما بعدها حتى تتقن ما قبلها. المتن غير المتاح بعد في المكتبة يُضاف من الإدارة.</p>
         ${d.lv.map(([lv, ln, ld]) => { const its = d.items.filter(x => !x.own && x.lv === lv && (!s0 || x.sci === s0)).sort((x, y) => d.sci.findIndex(s => s[0] === x.sci) - d.sci.findIndex(s => s[0] === y.sci) || (x.ord || 0) - (y.ord || 0)); return its.length ? `<section class="mlv"><h3>${esc(ln)} <small class="mut">— ${esc(ld)}</small></h3><div class="mgrid">${its.map(x => card(d, x)).join("")}</div></section>` : ""; }).join("")}`;
     } else if (tab === "mine") {
-      body = mine.length ? `<div class="mgrid">${mine.map(x => card(d, x, 1)).join("")}</div><div id="mtoday"></div>` : `<p class="note">لم تبدأ حفظ متن بعد. اختر من <a href="#/hifz?t=ladder">سلّم المتون</a> ثم «ابدأ الحفظ».</p>`;
-      setTimeout(() => today(d, mine), 0);
+      body = (mine.length ? `<div class="mgrid">${mine.map(x => card(d, x, 1)).join("")}</div><div id="mtoday"></div>` : `<p class="note">لم تبدأ حفظ متن بعد. اختر من <a href="#/hifz?t=ladder">سلّم المتون</a> ثم «ابدأ الحفظ».</p>`) + '<div id="mtrem"></div>';
+      setTimeout(() => { today(d, mine); remBox(); }, 0);
     } else if (tab === "cards") { setTimeout(() => cardsTab(), 0); body = '<div id="hzold"></div>'; }
     else if (tab === "add") body = ownForm(d, q);
     else if (tab === "admin" && isAdmin()) body = adminForm(d);
     view(head + tabs + `<div style="margin-top:10px">${body}</div><div id="hzbox"></div>`);
+  }
+  // تذكير الورد اليومي في الوقت الذي يختاره العضو، مع إمكان إيقافه (طلب المدير، ٢٧ نوفمبر) — يحفظه Mine.setHifzRem في حسابه، ويرسله remind.js كل ساعة
+  async function remBox() {
+    const el = $("#mtrem"); if (!el) return;
+    if (!Auth.user) { el.innerHTML = '<p class="mut mtrem">🔔 <a href="#/account?next=%23%2Fhifz%3Ft%3Dmine">سجّل الدخول</a> ليصلك تذكير بوردك اليومي في الوقت الذي تختاره، ويُحفظ وردك وجدول مراجعتك مع حسابك على كل أجهزتك.</p>'; return; }
+    let r = null; try { r = await Mine.hifzRem(); } catch (e) { }
+    el.innerHTML = `<form class="mtrem" data-form="noop"><b>🔔 تذكير الورد</b><label class="inl"><input type="checkbox" name="on"${r && r.active ? " checked" : ""}> ذكّرني بوردي يوميًّا</label><label class="inl">الساعة <input type="time" name="at" value="${esc((r && r.remind_at) || "20:00")}"></label><button class="btn s p">حفظ</button> ${typeof pushBtn === "function" ? pushBtn() : ""}<span class="mut" id="mtremst" role="status"></span></form>`;
+    el.querySelector("form").onsubmit = async e => { e.preventDefault(); const f = e.target, st = $("#mtremst"); st.textContent = "جارٍ الحفظ…";
+      try { await Mine.setHifzRem(f.on.checked, f.at.value); st.textContent = f.on.checked ? "✓ يصلك التذكير يوميًّا الساعة " + f.at.value + " ما لم تُتمّ وردك قبلها" : "✓ أُوقف التذكير"; } catch (x) { st.textContent = x.message; } };
   }
   function card(d, x, mine) {
     const s = d.sci.find(z => z[0] === x.sci) || ["", "", "📘"], p = P()[x.id], ok = x.b && B(x.b);
@@ -171,7 +180,7 @@ const MTN = (() => {
     else if (a === "rep" && SES) { SES.rep++; $("#mrc").textContent = toAr(SES.rep); if (SES.rep === 10) toast("أحسنت؛ جرّب الآن «الإخفاء التدريجي»"); }
     else if (a === "rec") { try { if (REC && REC.state === "recording") { REC.stop(); el.textContent = "🎙 سجّل تلاوتك"; return; } const st = await navigator.mediaDevices.getUserMedia({ audio: true }), ch = []; REC = new MediaRecorder(st); REC.ondataavailable = x => ch.push(x.data); REC.onstop = () => { st.getTracks().forEach(t => t.stop()); const au = $("#mrecp"); au.src = URL.createObjectURL(new Blob(ch, { type: REC.mimeType })); au.hidden = false; }; REC.start(); el.textContent = "⏹ أوقف التسجيل"; } catch (x) { toast("تعذر الوصول إلى الميكروفون"); } }
     else if (a === "ord" && SES) { const out = $("#mordout"), i = +el.dataset.i, n = out.children.length; const ok = i === n; out.insertAdjacentHTML("beforeend", `<li class="${ok ? "ok" : "no"}">${esc(strip(SES.g.u[i].t))}</li>`); el.remove(); if (!$("#mord").children.length) { const bad = out.querySelectorAll(".no").length; $("#mres").innerHTML = bad ? `<span class="warn">${toAr(bad)} في غير موضعه؛ أعد المحاولة.</span>` : "✔ الترتيب صحيح"; } }
-    else if (a === "done" && SES) { const p = P(), id = SES.x.id; p[id] = p[id] || { pd: 1, d: 0, st: day() }; if (SES.k >= (p[id].d || 0)) { p[id].d = SES.k + 1; p[id].log = p[id].log || {}; p[id].log[day()] = (p[id].log[day()] || 0) + 1; const ks = Object.keys(p[id].log); if (ks.length > 60) delete p[id].log[ks[0]]; } p[id].n = SES.ss.length; push();
+    else if (a === "done" && SES) { const p = P(), id = SES.x.id; p[id] = p[id] || { pd: 1, d: 0, st: day() }; if (SES.k >= (p[id].d || 0)) { p[id].d = SES.k + 1; p[id].log = p[id].log || {}; p[id].log[day()] = (p[id].log[day()] || 0) + 1; const ks = Object.keys(p[id].log); if (ks.length > 60) delete p[id].log[ks[0]]; } p[id].n = SES.ss.length; push(); try { Mine.hifzTouch(); } catch (x) { }
       if (typeof HZ !== "undefined") HZ.add([{ id: "m" + id + ":" + SES.k, b: SES.x.b, p: SES.g.p, cue: (SES.g.h ? SES.g.h + " — " : "") + strip(SES.g.u[0].t).split(/\s+/).slice(0, 5).join(" ") + " …", text: SES.g.u.map(u => u.t).join("\n") }]);
       toast("أحسنت! أُضيف الورد إلى المراجعة المتباعدة"); location.hash = SES.k < SES.ss.length - 1 && ((p[id].log || {})[day()] || 0) < (+p[id].pd || 1) ? "#/hifz/m/" + id + "/" + (SES.k + 1) : "#/hifz?t=mine"; }
     else if (a === "stop") { if (!confirm("إيقاف حفظ هذا المتن؟ يبقى ما حفظته في بطاقات المراجعة.")) return; delete P()[el.dataset.id]; push(); location.hash = "#/hifz?t=mine"; }

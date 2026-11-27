@@ -2037,3 +2037,4 @@ form:has(.gosug){position:relative}
 .elist{display:grid;gap:8px}
 @media(max-width:520px){.ehead{justify-content:center;text-align:center}.eid{min-width:100%}.eact{justify-content:center;width:100%}.ecover{height:96px}}
 .ent h2::before{display:none}
+.mtrem{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--sf)}.mtrem input[type=time]{padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
