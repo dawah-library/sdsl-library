@@ -92,3 +92,55 @@ class Pool:
     def report(self):
         """توزيع الطلبات على المفاتيح في هذه المهمة (للسجل): «مفتاح#ترتيبه: عدد»."""
         return "، ".join("#%d:%d" % (k + 1, v) for k, v in sorted(self.n.items()))
+
+
+# ---- قياس الاستهلاك (للقياس فقط: لا يغيّر الطلبات ولا نتائجها) ----
+# يعدّ طلبات generativelanguage لكل نموذج وحالة في هذا التشغيل، ويطبع سطر «USAGE {…}» في سجل التشغيل عند الخروج،
+# ويكتب data/usage/<تاريخ>-<مهمة>-<رقم التشغيل>.json (يُثبَّت في المستودع فقط حيث تضيف خطوة الحفظ data/usage).
+def _install_usage_counter():
+    import atexit, json, urllib.request, urllib.error
+    if getattr(urllib.request, "_sdsl_usage", False): return
+    urllib.request._sdsl_usage = True
+    stats = {}
+    orig = urllib.request.urlopen
+
+    def _count(req, code):
+        try:
+            u = req.full_url if hasattr(req, "full_url") else str(req)
+            if "generativelanguage.googleapis.com" not in u: return
+            m = u.split("/models/")[-1].split(":")[0].split("?")[0] if "/models/" in u else "other"
+            k = "%s|%s" % (m, code)
+            stats[k] = stats.get(k, 0) + 1
+        except Exception:
+            pass
+
+    def wrapped(req, *a, **kw):
+        try:
+            r = orig(req, *a, **kw)
+        except urllib.error.HTTPError as e:
+            _count(req, e.code); raise
+        except Exception:
+            _count(req, "err"); raise
+        _count(req, getattr(r, "status", 200))
+        return r
+    urllib.request.urlopen = wrapped
+
+    def _dump():
+        if not stats: return
+        try:
+            wf = os.environ.get("GITHUB_WORKFLOW", "local")
+            tot = sum(stats.values()); ok = sum(v for k, v in stats.items() if k.endswith("|200"))
+            rec = {"workflow": wf, "run": os.environ.get("GITHUB_RUN_ID", ""), "at": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()),
+                   "total": tot, "ok": ok, "by_model_status": stats}
+            print("USAGE " + json.dumps(rec, ensure_ascii=False))
+            d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "usage")
+            os.makedirs(d, exist_ok=True)
+            fn = "%s-%s-%s.json" % (time.strftime("%Y%m%d", time.gmtime()), "".join(c if c.isalnum() else "_" for c in wf)[:30], rec["run"] or "x")
+            json.dump(rec, open(os.path.join(d, fn), "w", encoding="utf-8"), ensure_ascii=False)
+        except Exception:
+            pass
+    atexit.register(_dump)
+
+
+if os.environ.get("USAGE_LOG", "1") != "0":
+    _install_usage_counter()
