@@ -80,12 +80,19 @@ def main():
     else: cands = candidates(); json.dump(cands, open(CF, "w"))
     print("مرشحون:", len(cands), "بيانات بالعنوان:", sum(1 for v in cands.values() if kind(v[2])))
     groups = {}; got = {"party": 0, "dawah": 0}; today = datetime.date.today().isoformat(); seen_t = set()
+    from concurrent.futures import ThreadPoolExecutor
+    todo = [u for u, (src, i, slug) in cands.items() if kind(slug) and u not in haveu and norm(slug)[:35] not in pre]
+    def safe(u):
+        try: return article(u)
+        except Exception as e: return None
+    with ThreadPoolExecutor(8) as ex: PF = dict(zip(todo, ex.map(safe, todo)))
+    print("جُلب:", len(PF))
     for u, (src, i, slug) in cands.items():
         if got["party"] + got["dawah"] >= MAXN: break
         k = kind(slug)
         if not k or u in haveu or norm(slug)[:35] in pre: continue
-        try: t, d, text = article(u)
-        except Exception as e: print("خطأ", u, e); continue
+        if PF.get(u) is None: continue
+        t, d, text = PF[u]
         k = kind(t) or k; nt = norm(t); d = ""  # التاريخ في الصفحة تاريخ تعديل لا نشر، فلا يُسجَّل
         if not t or len(text) < 150 or nt in have or nt in seen_t or is_dup_text(text, idx): continue
         seen_t.add(nt); sid = ("as" if src == "anasalafy" else "an") + i
@@ -94,7 +101,6 @@ def main():
         groups[g][sid] = {"pages": [text]}
         idx["items"].append({"id": sid, "t": t, "a": "a10" if k == "party" else "a9", "tp": "at17", "c": "بيانات " + ("حزب النور" if k == "party" else "الدعوة السلفية"), "d": d, "u": u, "f": g, "n": 1, "ad": today, "src": src})
         _oldsh.append(shing(text)); got[k] += 1; print("✓", k, d, t[:70])
-        time.sleep(1.5)
     print("الجديد:", got)
     if DRY or not any(got.values()): return
     for g, o in groups.items(): json.dump(o, open(os.path.join(ADIR, g + ".json"), "w", encoding="utf8"), ensure_ascii=False, separators=(",", ":"))
