@@ -61,12 +61,15 @@ const ADMH = (() => {
     } catch (e) { return null }
   }
   const KIND = n => /github-actions|actions-user|bot/i.test(n) ? "آلي (مهمة مجدولة)" : /agent|instinct/i.test(n) ? "وكيل ذكاء اصطناعي" : "شخص أو حساب مشرف";
+  async function nstats() {
+    try { const t = typeof Auth !== "undefined" && Auth.sb && (await Auth.sb.auth.getSession()).data.session; if (!t) return null; const r = await fetch("api/notify", { headers: { "x-admin": "stats", Authorization: "Bearer " + t.access_token } }); return r.ok ? await r.json() : null } catch (e) { return null }
+  }
   async function queue() {
     try { const r = await fetch("data/turathio-queue.json?t=" + Date.now()); const d = await r.json(); const done = Array.isArray(d.done) ? d.done : Object.keys(d.done || {}); const items = d.items || []; const dn = new Set(done); return { total: items.length, done: items.filter(i => dn.has(i.id)).length, wait: items.filter(i => !dn.has(i.id)).map(i => i.id) } } catch (e) { return null }
   }
   async function render(el) {
     el.innerHTML = '<p class="mut">جارٍ الفحص الحي…</p>';
-    const [D, R, Q, RN, C] = await Promise.all([db(), runs(), queue(), runner(), crew()]);
+    const [D, R, Q, RN, C, N] = await Promise.all([db(), runs(), queue(), runner(), crew(), nstats()]);
     const badRuns = (R || []).filter(x => x.st === "bad"), attn = [];
     if (D.bad) attn.push(`${D.bad} عنصرا ناقصا في قاعدة البيانات (ترحيل لم يُطبَّق)`);
     badRuns.forEach(x => attn.push(`مهمة «${x.name}»: ${x.concl === "queued" ? "عالقة في الطابور" : "فشلت"} منذ ${ago(x.at)}`));
@@ -78,7 +81,8 @@ const ADMH = (() => {
     const rh = `<h3 style="font-size:1rem">المهام الآلية (آخر تشغيل لكل مهمة)</h3>${R ? `<div class="card">${[...R].sort((a, b) => order[a.st] - order[b.st]).map(x => `<div class="row" style="gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><span aria-hidden="true">${ico[x.st]}</span><a style="flex:1" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a><span class="mut">${esc(x.concl)} · منذ ${ago(x.at)}</span></div>`).join("")}</div><p class="mut"><a href="https://github.com/${REPO}/actions" target="_blank" rel="noopener">كل المهام وتشغيلها يدويا ↗</a> (إعادة تشغيل المهمة العالقة: افتحها ثم Re-run أو ألغها ليبدأ التالي).</p>` : '<p class="mut">تعذر قراءة واجهة GitHub العامة الآن (حد الطلبات). أعد المحاولة بعد قليل.</p>'}`;
     const qh = `<h3 style="font-size:1rem">طابور استيراد الكتب</h3>${Q ? `<div class="card">${row(Q.wait.length ? null : true, `${Q.done} من ${Q.total} دخلت`, Q.wait.length ? "ينتظر: " + Q.wait.slice(0, 8).join("، ") + (Q.wait.length > 8 ? " …" : "") : "لا انتظار")}</div>` : '<p class="mut">تعذر قراءة الطابور.</p>'}`;
     const ch = `<h3 style="font-size:1rem">نشاط الفريق والوكلاء (آخر 100 تغيير في المستودع)</h3>${C ? `<div class="card">${C.map(x => `<div class="row" style="gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><b style="flex:1">${esc(x.n)}</b><span class="mut">${KIND(x.n)} · ${x.k} تغييرا · آخرها منذ ${ago(x.at)}</span></div>`).join("")}</div><p class="mut">الأدوار والصلاحيات المفوضة للأعضاء: <a href="#/team?t=people">مساحة الفريق ← الأعضاء</a>. المهام والنقاشات والقرارات: <a href="#/team">مساحة الفريق</a>.</p>` : '<p class="mut">تعذر قراءة النشاط الآن.</p>'}`;
-    el.innerHTML = head + dbh + rh + qh + ch + '<div class="row"><button class="btn" id="admh-r">↻ إعادة الفحص</button></div>';
+    const nh = N && N.ok ? `<h3 style="font-size:1rem">النشرة والإشعارات (أعداد فقط)</h3><div class="card">${[["مشتركو النشرة الفعّالون", N.active + " من " + N.subscribers], ["ألغوا الاشتراك", N.unsubscribed], ["أعضاء لهم تفضيلات", N.members_with_prefs], ["أوقفوا إشعارات الجهاز", N.push_off], ["أوقفوا البريد", N.mail_off], ["أجهزة مشتركة بإشعارات الجهاز", N.push_devices], ["خطط حفظ فعّالة", N.hifz_active], ["مقارنات بانتظار اعتمادك", N.comparisons_pending]].map(([k, v]) => `<div class="row" style="gap:8px;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><b style="flex:1">${esc(k)}</b><span>${esc(v == null ? "؟" : v)}</span></div>`).join("")}</div><p class="mut">إرسال رسالة أو جدولتها: <a href="#/admin?t=notify">لسان الإشعارات</a>.</p>` : "";
+    el.innerHTML = head + dbh + rh + qh + nh + ch + '<div class="row"><button class="btn" id="admh-r">↻ إعادة الفحص</button></div>';
     const b = el.querySelector("#admh-r"); if (b) b.onclick = () => render(el);
     el.querySelectorAll("[data-mig]").forEach(x => x.onclick = () => apply(x.dataset.mig, x, el));
   }
