@@ -44,7 +44,8 @@
     const idf = df.map(d => Math.log(1 + (N + 1) / (d + 0.5)));
     const phrase = ts.length > 1 ? norm(q).replace(/\s+/g, " ").trim() : "";
     const pairs = []; for (let i = 0; i + 1 < ts.length && pairs.length < 6; i++) { try { pairs.push(new RegExp(ts[i] + "\\s+(?:ال)?" + ts[i + 1])); } catch (e) { } }
-    const hits = [];
+    const hits = [], tf = new Map(); // عنوان الكتاب أو المقال إن حمل كلمات السؤال رفع صفحاته على صفحات مرّت بالكلمات عرضًا في مجلدات ضخمة
+    books.forEach(b => { const tn = norm((b.setTitle || "") + " " + (b.title || "")); tf.set(b.id, ts.filter(t => tn.includes(t)).length / ts.length); });
     books.forEach(b => pn(b).forEach((p, i) => {
       let s = 0, m = 0;
       ts.forEach((t, j) => { const c = p.split(t).length - 1; if (c) { m++; s += idf[j] * (1 + Math.log(c)); } });
@@ -53,6 +54,7 @@
       if (phrase && p.includes(phrase)) s *= 2;
       if (pairs.length) { let pm = 0; for (const r of pairs) if (r.test(p)) pm++; if (pm) s *= 1 + Math.min(1.2, 0.4 * pm); }  // تجاور كلمات السؤال («ولي الأمر») أدل على المطابقة من تفرقها
       if (p.length < 120) s *= 0.6;
+      s *= 1 + 1.5 * (tf.get(b.id) || 0);
       hits.push({ b, i, s });
     }));
     hits.sort((x, y) => y.s - x.s);
