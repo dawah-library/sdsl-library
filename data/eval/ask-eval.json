@@ -1,7 +1,7 @@
 {
- "at": "2026-11-27T11:45:04.443Z",
+ "at": "2026-11-27T11:56:18.315Z",
  "n": 100,
- "pagesIndexed": 845455,
+ "pagesIndexed": 859756,
  "summary": {
   "full": {
    "book_at8": 60,
@@ -49,8 +49,8 @@
    "page": 1,
    "full": {
     "terms": 5,
-    "bookRank": 117,
-    "pageRank": 181
+    "bookRank": 122,
+    "pageRank": 193
    },
    "short": {
     "terms": 3,
@@ -59,8 +59,8 @@
    },
    "relaxed": {
     "terms": 5,
-    "bookRank": 117,
-    "pageRank": 181
+    "bookRank": 122,
+    "pageRank": 193
    }
   },
   {
@@ -69,8 +69,8 @@
    "page": 1,
    "full": {
     "terms": 15,
-    "bookRank": 312,
-    "pageRank": 93
+    "bookRank": 313,
+    "pageRank": 92
    },
    "short": {
     "terms": 3,
@@ -79,8 +79,8 @@
    },
    "relaxed": {
     "terms": 15,
-    "bookRank": 312,
-    "pageRank": 93
+    "bookRank": 313,
+    "pageRank": 92
    }
   },
   {
@@ -189,7 +189,7 @@
    "page": 1,
    "full": {
     "terms": 5,
-    "bookRank": 81,
+    "bookRank": 82,
     "pageRank": 52
    },
    "short": {
@@ -199,7 +199,7 @@
    },
    "relaxed": {
     "terms": 5,
-    "bookRank": 81,
+    "bookRank": 82,
     "pageRank": 52
    }
   },
@@ -229,17 +229,17 @@
    "page": 1,
    "full": {
     "terms": 4,
-    "bookRank": 139,
+    "bookRank": 140,
     "pageRank": 135
    },
    "short": {
     "terms": 3,
-    "bookRank": 77,
+    "bookRank": 79,
     "pageRank": 47
    },
    "relaxed": {
     "terms": 4,
-    "bookRank": 139,
+    "bookRank": 140,
     "pageRank": 135
    }
   },
@@ -249,18 +249,18 @@
    "page": 1,
    "full": {
     "terms": 7,
-    "bookRank": 98,
-    "pageRank": 13
+    "bookRank": 99,
+    "pageRank": 14
    },
    "short": {
     "terms": 3,
-    "bookRank": 27,
+    "bookRank": 30,
     "pageRank": 6
    },
    "relaxed": {
     "terms": 7,
-    "bookRank": 98,
-    "pageRank": 13
+    "bookRank": 99,
+    "pageRank": 14
    }
   },
   {
@@ -269,7 +269,7 @@
    "page": 1,
    "full": {
     "terms": 9,
-    "bookRank": 300,
+    "bookRank": 304,
     "pageRank": 229
    },
    "short": {
@@ -279,7 +279,7 @@
    },
    "relaxed": {
     "terms": 9,
-    "bookRank": 300,
+    "bookRank": 304,
     "pageRank": 229
    }
   },
@@ -395,7 +395,7 @@
    "short": {
     "terms": 3,
     "bookRank": 97,
-    "pageRank": 107
+    "pageRank": 106
    },
    "relaxed": {
     "terms": 15,
@@ -514,8 +514,8 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 199,
-    "pageRank": 284
+    "bookRank": 200,
+    "pageRank": 283
    },
    "relaxed": {
     "terms": 6,
@@ -529,8 +529,8 @@
    "page": 1,
    "full": {
     "terms": 7,
-    "bookRank": 248,
-    "pageRank": 355
+    "bookRank": 249,
+    "pageRank": 356
    },
    "short": {
     "terms": 3,
@@ -539,8 +539,8 @@
    },
    "relaxed": {
     "terms": 7,
-    "bookRank": 248,
-    "pageRank": 355
+    "bookRank": 249,
+    "pageRank": 356
    }
   },
   {
@@ -569,8 +569,8 @@
    "page": 1,
    "full": {
     "terms": 12,
-    "bookRank": 773,
-    "pageRank": 1396
+    "bookRank": 768,
+    "pageRank": 1366
    },
    "short": {
     "terms": 3,
@@ -579,8 +579,8 @@
    },
    "relaxed": {
     "terms": 12,
-    "bookRank": 773,
-    "pageRank": 1396
+    "bookRank": 768,
+    "pageRank": 1366
    }
   },
   {
@@ -629,18 +629,18 @@
    "page": 1,
    "full": {
     "terms": 5,
-    "bookRank": 216,
-    "pageRank": 510
+    "bookRank": 219,
+    "pageRank": 511
    },
    "short": {
     "terms": 3,
     "bookRank": 123,
-    "pageRank": 303
+    "pageRank": 302
    },
    "relaxed": {
     "terms": 5,
-    "bookRank": 216,
-    "pageRank": 510
+    "bookRank": 219,
+    "pageRank": 511
    }
   },
   {
@@ -654,8 +654,8 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 190,
-    "pageRank": 262
+    "bookRank": 182,
+    "pageRank": 238
    },
    "relaxed": {
     "terms": 8,
@@ -689,18 +689,18 @@
    "page": 1,
    "full": {
     "terms": 6,
-    "bookRank": 266,
-    "pageRank": 346
+    "bookRank": 267,
+    "pageRank": 347
    },
    "short": {
     "terms": 3,
-    "bookRank": 158,
-    "pageRank": 198
+    "bookRank": 159,
+    "pageRank": 199
    },
    "relaxed": {
     "terms": 6,
-    "bookRank": 266,
-    "pageRank": 346
+    "bookRank": 267,
+    "pageRank": 347
    }
   },
   {
@@ -789,18 +789,18 @@
    "page": 1,
    "full": {
     "terms": 19,
-    "bookRank": 17,
-    "pageRank": 19
+    "bookRank": 16,
+    "pageRank": 18
    },
    "short": {
     "terms": 3,
-    "bookRank": 122,
+    "bookRank": 123,
     "pageRank": 203
    },
    "relaxed": {
     "terms": 19,
-    "bookRank": 17,
-    "pageRank": 19
+    "bookRank": 16,
+    "pageRank": 18
    }
   },
   {
@@ -809,18 +809,18 @@
    "page": 1,
    "full": {
     "terms": 6,
-    "bookRank": 227,
-    "pageRank": 458
+    "bookRank": 230,
+    "pageRank": 460
    },
    "short": {
     "terms": 3,
-    "bookRank": 140,
-    "pageRank": 194
+    "bookRank": 142,
+    "pageRank": 195
    },
    "relaxed": {
     "terms": 6,
-    "bookRank": 227,
-    "pageRank": 458
+    "bookRank": 230,
+    "pageRank": 460
    }
   },
   {
@@ -850,7 +850,7 @@
    "full": {
     "terms": 9,
     "bookRank": 548,
-    "pageRank": 1309
+    "pageRank": 1335
    },
    "short": {
     "terms": 3,
@@ -860,7 +860,7 @@
    "relaxed": {
     "terms": 9,
     "bookRank": 548,
-    "pageRank": 1309
+    "pageRank": 1335
    }
   },
   {
@@ -929,7 +929,7 @@
    "page": 1,
    "full": {
     "terms": 7,
-    "bookRank": 76,
+    "bookRank": 78,
     "pageRank": 43
    },
    "short": {
@@ -939,7 +939,7 @@
    },
    "relaxed": {
     "terms": 7,
-    "bookRank": 76,
+    "bookRank": 78,
     "pageRank": 43
    }
   },
@@ -954,8 +954,8 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 228,
-    "pageRank": 366
+    "bookRank": 229,
+    "pageRank": 370
    },
    "relaxed": {
     "terms": 14,
@@ -989,17 +989,17 @@
    "page": 1,
    "full": {
     "terms": 10,
-    "bookRank": 28,
+    "bookRank": 27,
     "pageRank": 30
    },
    "short": {
     "terms": 3,
     "bookRank": 128,
-    "pageRank": 138
+    "pageRank": 131
    },
    "relaxed": {
     "terms": 10,
-    "bookRank": 28,
+    "bookRank": 27,
     "pageRank": 30
    }
   },
@@ -1074,7 +1074,7 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 265,
+    "bookRank": 264,
     "pageRank": 320
    },
    "relaxed": {
@@ -1174,7 +1174,7 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 68,
+    "bookRank": 65,
     "pageRank": 22
    },
    "relaxed": {
@@ -1449,18 +1449,18 @@
    "page": 1,
    "full": {
     "terms": 4,
-    "bookRank": 62,
-    "pageRank": 34
+    "bookRank": 63,
+    "pageRank": 36
    },
    "short": {
     "terms": 3,
-    "bookRank": 58,
-    "pageRank": 33
+    "bookRank": 59,
+    "pageRank": 35
    },
    "relaxed": {
     "terms": 4,
-    "bookRank": 62,
-    "pageRank": 34
+    "bookRank": 63,
+    "pageRank": 36
    }
   },
   {
@@ -1494,8 +1494,8 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 50,
-    "pageRank": 20
+    "bookRank": 51,
+    "pageRank": 21
    },
    "relaxed": {
     "terms": 14,
@@ -1769,7 +1769,7 @@
    "page": 1,
    "full": {
     "terms": 7,
-    "bookRank": 264,
+    "bookRank": 265,
     "pageRank": 400
    },
    "short": {
@@ -1779,7 +1779,7 @@
    },
    "relaxed": {
     "terms": 7,
-    "bookRank": 264,
+    "bookRank": 265,
     "pageRank": 400
    }
   },
@@ -1789,17 +1789,17 @@
    "page": 1,
    "full": {
     "terms": 5,
-    "bookRank": 154,
+    "bookRank": 153,
     "pageRank": 74
    },
    "short": {
     "terms": 3,
-    "bookRank": 90,
+    "bookRank": 89,
     "pageRank": 35
    },
    "relaxed": {
     "terms": 5,
-    "bookRank": 154,
+    "bookRank": 153,
     "pageRank": 74
    }
   },
@@ -1849,18 +1849,18 @@
    "page": 1,
    "full": {
     "terms": 6,
-    "bookRank": 287,
-    "pageRank": 439
+    "bookRank": 289,
+    "pageRank": 438
    },
    "short": {
     "terms": 3,
-    "bookRank": 183,
-    "pageRank": 269
+    "bookRank": 181,
+    "pageRank": 268
    },
    "relaxed": {
     "terms": 6,
-    "bookRank": 287,
-    "pageRank": 439
+    "bookRank": 289,
+    "pageRank": 438
    }
   },
   {
@@ -1914,8 +1914,8 @@
    },
    "short": {
     "terms": 3,
-    "bookRank": 148,
-    "pageRank": 213
+    "bookRank": 149,
+    "pageRank": 214
    },
    "relaxed": {
     "terms": 11,
@@ -1929,8 +1929,8 @@
    "page": 1,
    "full": {
     "terms": 9,
-    "bookRank": 481,
-    "pageRank": 641
+    "bookRank": 484,
+    "pageRank": 634
    },
    "short": {
     "terms": 3,
@@ -1939,8 +1939,8 @@
    },
    "relaxed": {
     "terms": 9,
-    "bookRank": 481,
-    "pageRank": 641
+    "bookRank": 484,
+    "pageRank": 634
    }
   },
   {
@@ -1949,18 +1949,18 @@
    "page": 1,
    "full": {
     "terms": 5,
-    "bookRank": 310,
-    "pageRank": 550
+    "bookRank": 312,
+    "pageRank": 551
    },
    "short": {
     "terms": 3,
-    "bookRank": 209,
+    "bookRank": 210,
     "pageRank": 346
    },
    "relaxed": {
     "terms": 5,
-    "bookRank": 310,
-    "pageRank": 550
+    "bookRank": 312,
+    "pageRank": 551
    }
   },
   {
@@ -1989,8 +1989,8 @@
    "page": 1,
    "full": {
     "terms": 8,
-    "bookRank": 275,
-    "pageRank": 249
+    "bookRank": 273,
+    "pageRank": 247
    },
    "short": {
     "terms": 3,
@@ -1999,8 +1999,8 @@
    },
    "relaxed": {
     "terms": 8,
-    "bookRank": 275,
-    "pageRank": 249
+    "bookRank": 273,
+    "pageRank": 247
    }
   },
   {
@@ -2009,8 +2009,8 @@
    "page": 1,
    "full": {
     "terms": 8,
-    "bookRank": 82,
-    "pageRank": 66
+    "bookRank": 84,
+    "pageRank": 65
    },
    "short": {
     "terms": 3,
@@ -2019,8 +2019,8 @@
    },
    "relaxed": {
     "terms": 8,
-    "bookRank": 82,
-    "pageRank": 66
+    "bookRank": 84,
+    "pageRank": 65
    }
   }
  ]
