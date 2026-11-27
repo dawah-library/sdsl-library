@@ -550,7 +550,7 @@ def index():
         if DS.has(e[0]):
             try: disc[e[0]] = DS.policy(e[0])
             except Exception as x: print("  تعذر سجل", e[0], x)
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS3), "disc": disc, "review": REVIEW, "items": items, "recent": recent})
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS_SHOW), "disc": disc, "review": REVIEW, "items": items, "recent": recent})
 
 
 def fix_existing():

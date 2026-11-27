@@ -164,7 +164,10 @@ const MAWS = (() => {
     const tjH = (F.tarjih || []).map(x => `<div class="mwtj"><p><b>${esc(x.who)}:</b> ${esc(x.t)}${sup(x.c)}</p><blockquote class="mwq">«${esc(x.nass)}»</blockquote></div>`).join("");
     const dwH = (F.dawah || []).map(x => `<div class="mwdw" data-k="${esc(x.kind)}"><p><b>«${esc(x.src || (E.src[(x.c || [])[0]] || {}).t || "")}»</b> <span class="tag">${DKD[x.kind] || ""}</span>${x.d ? ` <small class="mut">${esc(x.d)}</small>` : ""}${x.u ? ` <a class="mut" href="${esc(x.u)}" target="_blank" rel="noopener">صوت السلف ↗</a>` : ""}</p><p>${esc(x.t)}${sup(x.c)}</p>${x.nass ? `<blockquote class="mwq">«${esc(x.nass)}»</blockquote>` : ""}</div>`).join("")
       + (F.dawah_diff ? `<p class="note">${ic("history", 16)} ${esc(F.dawah_diff.t)}${sup(F.dawah_diff.c)}</p>` : "");
-    return H("تصوير المسألة وتحرير محل النزاع", P(F.tasw)) + H("حكم المسألة إجمالًا", P(F.hukm)) + H("أقوال الفقهاء", aqH) + H("الأدلة", adlH)
+    // الإجماع: مضمونه، وحاله (ثابت بنقل فقيهين فأكثر، أو نقله واحد، أو حُكي فيه خلاف)، وكل ناقل بصيغته ونصه وموضعه
+    const IJS = { "ثابت": "إجماع ثابت: نقله أكثر من فقيه", "نقله واحد": "حكاه ناقل واحد — لم يثبت بعد", "حُكي فيه خلاف": "حُكي فيه خلاف أو تُعقِّب" };
+    const ijH = (F.ijma || []).map(x => `<div class="mwij" data-st="${esc(x.st)}"><p><b>${esc(x.t)}</b> <span class="tag">${esc(IJS[x.st] || x.st)}</span></p><ul>${x.naql.map(q => `<li><b>${esc(q.who)}</b>${q.f ? ` <small class="mut">(${esc(q.f)})</small>` : ""}: «${esc(q.nass)}»${sup(q.c)}</li>`).join("")}</ul>${x.khilaf ? `<p class="mwwarn">${esc(x.khilaf.t)}${sup(x.khilaf.c)}</p>` : ""}</div>`).join("");
+    return H("تصوير المسألة وتحرير محل النزاع", P(F.tasw)) + H("حكم المسألة إجمالًا", P(F.hukm)) + H("الإجماع", ijH) + H("أقوال الفقهاء", aqH) + H("الأدلة", adlH)
       + H("وجه الاستدلال والمناقشة", wjH) + H("سبب الخلاف", P(F.sabab)) + H("الترجيح", tjH) + H("اختيارات مشايخ الدعوة السلفية", dwH)
       + (F.extra || []).map(x => `<section class="mwfq"><h3>${esc(x.h)}</h3>${P(x.p)}</section>`).join("") + (F.jm ? `<p class="note mwwarn">${esc(F.jm)}</p>` : "");
   }
