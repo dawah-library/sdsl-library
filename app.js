@@ -2683,7 +2683,8 @@ async function boot(){if(location.hash.startsWith("#/"))history.replaceState(nul
  const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
  const covP=fetch("data/covers.json").then(r=>r.ok?r.json():{}).then(j=>{COVERS=new Map((j.ids||[]).map(i=>[i,(j.v||{})[i]||""]))}).catch(()=>{});
  try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}await Promise.race([covP,new Promise(r=>setTimeout(r,800))]);await Promise.race([fetch(RAWGH+"data/author-photos.json?t="+Math.floor(Date.now()/3e5)).then(r=>r.ok?r.json():{}).then(m=>{(CAT.authors||[]).forEach(a=>{const f=m&&m[a.id];if(f&&a.photo!==f)a.photo=/^https?:/.test(f)?f:RAWGH+f.replace(/^\.?\//,"")});if(m&&typeof m==="object")window.__PHOTOS__=m}).catch(()=>{}),new Promise(r=>setTimeout(r,1200))]);
- ARTS_IDX=((await ai).items||[]).map(artFromIdx);
+ const homeH=!location.hash||/^#\/?(home)?$/.test(location.hash);let idxLate=false;
+ if(homeH){idxLate=true;ai.then(j=>{ARTS_IDX=(j.items||[]).map(artFromIdx);merge();const h=location.hash;if(!h||/^#\/?(home)?$/.test(h))route()})}else ARTS_IDX=((await ai).items||[]).map(artFromIdx);
  try{const r=await fetch("data/tarajim.json",{cache:"no-cache"});if(r.ok)TJ=await r.json()}catch(e){}
  merge();
  if(S.seen&&CAT.version&&S.seen!==CAT.version){const b=$("#banner");b.hidden=false;b.textContent="تم تحديث المكتبة بمحتوى جديد."}
