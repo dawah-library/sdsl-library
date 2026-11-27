@@ -1986,4 +1986,4 @@ form:has(.gosug){position:relative}
  body.has-dock:has(.askbox:focus-within) .askbox{bottom:0}
 }
 /* سهولة الضغط على اللمس: حد أدنى لارتفاع الأزرار والشارات (WCAG 2.5.8) */
-@media (pointer:coarse){.btn,.chip,button.tab,.tabs a,.seg button{min-height:40px}.chip,.tabs a{display:inline-flex;align-items:center}}
+@media (pointer:coarse){.btn,.chip,button.tab,.tabs a,.seg button{min-height:40px}}
