@@ -1111,6 +1111,7 @@ create table if not exists public.author_drafts (
   admin_note text check (length(admin_note) <= 500),
   created_at timestamptz not null default now(), reviewed_at timestamptz
 );
+create index if not exists author_drafts_user_idx on public.author_drafts (user_id); -- فهرس المفتاح الأجنبي (الصيانة التلقائية ٢٧ نوفمبر)
 alter table public.author_drafts enable row level security;
 drop policy if exists "drafts read" on public.author_drafts;
 create policy "drafts read" on public.author_drafts for select using ((select auth.uid()) = user_id or public.is_staff());
