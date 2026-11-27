@@ -116,6 +116,15 @@
    ],
    "auto": 1,
    "new": 1
+  },
+  {
+   "id": "fiqhsunna-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
   }
  ]
 }
