@@ -2,6 +2,7 @@
 // تعيد صفحة الموقع نفسها (index.html) مع عنوان ووصف وصورة مناسبة لكل كتاب أو مقال أو مؤلف،
 // ونص الصفحة مكتوبًا داخلها ليقرأه محرك البحث، ثم يكمل الموقع عمله عاديًا في المتصفح.
 const fs = require("../lib/fs"), path = require("path");
+const REL = require("../related.js");
 const ROOT = process.cwd(), SITE = "مكتبة الدعوة السلفية الرقمية";
 let TPL = null, CAT = null, AIDX = null;
 const read = p => JSON.parse(fs.readFileSync(path.join(ROOT, p), "utf8"));
@@ -66,6 +67,9 @@ const SECTIONS = {
   khutab: ["الخطب", "خطب منبرية مرتبة بالموضوعات والمناسبات."],
   qa: ["الأسئلة والأجوبة", "أسئلة القراء وأجوبتها من فتاوى مشايخ الدعوة السلفية."],
 };
+// الكتب المتصلة (الأصل وشروحه، والتفريغات، والطبعات، وكتب المؤلف) روابط داخلية لمحركات البحث — related.js المشترك مع الواجهة
+function relHtml(b) { let G = []; try { G = REL.of(b, cat().books); } catch (e) { return ""; } if (!G.length) return "";
+  return `<nav aria-label="كتب متصلة">${G.map(g => `<h2>${esc(g.t)}</h2><ul>${g.items.map(x => `<li><a href="/book/${esc(x.id)}/1">${esc(x.setTitle || x.title)}</a>${x.authorId !== b.authorId && author(x.authorId).name ? " — " + esc(author(x.authorId).name) : ""}</li>`).join("")}</ul>`).join("")}</nav>`; }
 async function build(p, q, base) {
   const seg = p.split("/").filter(Boolean).map(decodeURIComponent), v = (seg[0] || "").toLowerCase();
   const r = { title: SITE, desc: "", body: "", ld: null, type: "website", noindex: false };
@@ -90,7 +94,7 @@ async function build(p, q, base) {
     const nav = `<p>${pg > 1 ? `<a rel="nofollow" href="/book/${b.id}/${pg - 1}">الصفحة السابقة</a> ` : ""}${pg < n ? `<a rel="nofollow" href="/book/${b.id}/${pg + 1}">الصفحة التالية</a>` : ""}</p>`;
     const toc = (it.toc || []).slice(0, 80).map(t => `<li><a href="/book/${b.id}/${t.p}">${esc(t.t)}</a></li>`).join("");
     r.body = `<article><h1>${esc(b.setTitle ? b.title : b.title)}</h1><p><a href="/author/${esc(b.authorId)}">${esc(a.name || "")}</a>${topic(b.topicId).name ? " • " + esc(topic(b.topicId).name) : ""}${lbl ? " • " + esc(lbl) : ""}</p>
-${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Boolean).map(l => `<p>${esc(l)}</p>`).join("\n")}${nav}${toc && pg === 1 ? `<h2>الفهرس</h2><ul>${toc}</ul>` : ""}</article>`;
+${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Boolean).map(l => `<p>${esc(l)}</p>`).join("\n")}${nav}${toc && pg === 1 ? `<h2>الفهرس</h2><ul>${toc}</ul>` : ""}${art ? "" : relHtml(b)}</article>`;
     r.ld = [r.ld, { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: SITE, item: base }, ...(a.name ? [{ "@type": "ListItem", position: 2, name: a.name, item: base + "author/" + b.authorId }] : []), { "@type": "ListItem", position: a.name ? 3 : 2, name: b.setTitle || b.title, item: base + "book/" + b.id + "/1" }] }];
     return r;
   }

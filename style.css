@@ -1987,3 +1987,39 @@ form:has(.gosug){position:relative}
 }
 /* سهولة الضغط على اللمس: حد أدنى لارتفاع الأزرار والشارات (WCAG 2.5.8) */
 @media (pointer:coarse){.btn,.chip,button.tab,.tabs a,.seg button{min-height:40px}}
+/* المنشور بتصميم أزرق مميز وشارة نوع المصدر (طلب المدير، ٢٧ نوفمبر) */
+:root{--pb:#1f5fa8;--pb2:#e9f1fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--pb:#6ea8e8;--pb2:#132233}}
+:root[data-theme=dark]{--pb:#6ea8e8;--pb2:#132233}
+.post{border-color:color-mix(in srgb,var(--pb) 28%,var(--line));border-top:4px solid var(--pb);background:linear-gradient(180deg,var(--pb2),var(--sf) 120px)}
+.post header b .pau,.post header b a{color:var(--pb)}
+.post .plink{color:var(--pb)}
+.post .pact button[aria-pressed=true]{color:var(--pb)}
+.psrc{display:inline-flex;align-items:center;gap:4px;margin:8px 0 2px;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:600;background:color-mix(in srgb,var(--pb) 12%,transparent);color:var(--pb);border:1px solid color-mix(in srgb,var(--pb) 30%,transparent)}
+.psrc i{font-style:normal}
+.psrc-fb{--pb:#1877f2}
+.psrc-f{background:color-mix(in srgb,#8a5a00 12%,transparent);color:#8a5a00;border-color:color-mix(in srgb,#8a5a00 30%,transparent)}
+.psrc-s{background:color-mix(in srgb,#7a2e2e 12%,transparent);color:#7a2e2e;border-color:color-mix(in srgb,#7a2e2e 30%,transparent)}
+.psrc-t{background:color-mix(in srgb,#5a3d8a 12%,transparent);color:#5a3d8a;border-color:color-mix(in srgb,#5a3d8a 30%,transparent)}
+:root[data-theme=dark] .psrc-f,:root[data-theme=dark] .psrc-s,:root[data-theme=dark] .psrc-t{color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .psrc-f,:root:not([data-theme]) .psrc-s,:root:not([data-theme]) .psrc-t{color:var(--ink)}}
+.post.pfb{border-top-color:#1877f2}
+/* التمرير التلقائي في المصحف */
+.masw{display:inline-flex;gap:4px;align-items:center}.masw select{padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--sf);color:var(--ink);font:inherit;font-size:.85rem}
+[data-act=musas][aria-pressed=true]{background:var(--ac);color:var(--on)}
+/* شبكة أيقونات الإدارة (طلب المدير، ٢٧ نوفمبر) */
+.admnav{border:1px solid var(--line);border-radius:14px;background:var(--sf);padding:8px 12px;margin:12px 0}
+.admnav>summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 2px;list-style:none;min-height:44px}
+.admnav>summary::-webkit-details-marker{display:none}
+.admcur{font-weight:700;font-size:1.05rem}
+.admg h3{font-size:.95rem;margin:12px 2px 6px;color:var(--mut)}
+.admgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.admt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:92px;padding:10px 6px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:inherit;text-decoration:none;text-align:center;font-size:.86rem;line-height:1.35;transition:transform .12s,box-shadow .12s}
+.admt i{font-style:normal;font-size:1.7rem;line-height:1}
+.admt:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.admt.on{border-color:var(--ac);box-shadow:0 0 0 2px color-mix(in srgb,var(--ac) 35%,transparent);background:color-mix(in srgb,var(--ac) 8%,var(--bg))}
+@media(max-width:480px){.admgrid{grid-template-columns:repeat(3,1fr)}.admt{min-height:84px;font-size:.8rem}}
+/* الكتب المتصلة في صفحة الكتاب */
+.relnav{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--sf);display:grid;gap:8px}
+.relnav b{font-size:.9rem}.relnav .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.relnav summary{cursor:pointer;min-height:32px}
+.post .pcard{border-color:color-mix(in srgb,var(--pb) 25%,var(--line));background:color-mix(in srgb,var(--pb) 5%,var(--bg))}.post .pcard span{color:var(--pb)}

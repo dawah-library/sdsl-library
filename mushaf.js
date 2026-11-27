@@ -154,6 +154,8 @@ const MUS = (() => {
       return `${a === 1 ? `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>` : ""}<div class="pti"><div class="ptr">${esc(nmP(s))}: ${AR(a)}</div>${ay}${body}</div>`; }).join(""); }
   async function ptfShow(n) { const box = $("#mptfb"), k = ptk(), q4 = !!$(".qpage"); if (!box) return; document.querySelector(".mpin") && document.querySelector(".mpin").classList.toggle("on", !!k);
     if (!k) { box.innerHTML = ""; return; } box.innerHTML = '<p class="mut">…</p>'; const h = await ptfHtml(n, k, q4); if (curPage() === n && ptk() === k) box.innerHTML = h; }
+  const AS = { on: false }, AS_SP = [["1", "بطيء جدًّا"], ["2", "بطيء"], ["3", "متوسط"], ["4", "سريع"], ["5", "سريع جدًّا"]], asSpeed = () => { try { return String(Math.max(1, Math.min(5, +localStorage.getItem("mus_as") || 2))); } catch (e) { return "2"; } };
+  window.addEventListener("hashchange", () => { if (AS.on && !window.__musAS) { cancelAnimationFrame(AS.raf); clearTimeout(AS.nx); AS.nx = 0; AS.on = false; } });
   async function mpage(n) {
     await load(); if (!PG) return sura(1, {});
     n = Math.max(1, Math.min(604, +n || 1)); const L = PG[n] || [], m0 = META[L[0][0]][L[0][1] - 1], suras = [...new Set(L.map(x => x[0]))];
@@ -162,8 +164,8 @@ const MUS = (() => {
     L.forEach(([s, a]) => { if (a === 1) body += `<div class="msban"><span>${esc(Q.suras[s - 1].name)}</span></div>${s !== 1 && s !== 9 ? `<p class="mbasm">${BASMT}</p>` : ""}`;
       const sj = META[s][a - 1][3]; body += `<span class="may" id="ay${s}_${a}">${words(ayah(s, a), s, a)} <button class="mno" data-act="musay" data-s="${s}" data-a="${a}" aria-label="الآية ${a}">${AR(a)}</button>${sj ? '<span class="msj" title="موضع سجدة">۩</span>' : ""}</span> `; });
     const Q4 = qmode() === "qcf" ? await qcfPage(n) : null;
-    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><button class="btn s" data-act="musfull" title="ملء الشاشة لقراءة صفحات المصحف">⛶ تكبير</button><select id="mptf" aria-label="التفسير مع الصفحة" title="تفسير الصفحة أو غريب كلماتها">${PTF.map(([k, t]) => `<option value="${k}"${k === ptk() ? " selected" : ""}>${k ? "📚 " + t : "📚 تفسير الصفحة: لا"}</option>`).join("")}</select><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>${playerHtml()}
-    <div class="mfbar"><button data-act="musfull" aria-label="خروج من ملء الشاشة">✕</button><button data-act="muszoom" data-d="-1" aria-label="تصغير">－</button><button data-act="muszoom" data-d="1" aria-label="تكبير">＋</button>${n > 1 ? `<a href="#/mushaf/p/${n - 1}" aria-label="الصفحة السابقة">›</a>` : ""}<span>${AR(n)}</span>${n < 604 ? `<a href="#/mushaf/p/${n + 1}" aria-label="الصفحة التالية">‹</a>` : ""}<button data-act="musplay" data-n="${n}" aria-label="تلاوة">▶</button><button data-act="musxmenu" aria-label="تفسير الصفحة وأدوات المصحف">📚</button></div>
+    view(`<div class="mnav"><a class="btn s" href="#/mushaf">☰ الفهرس</a><button class="btn s" data-act="musmode">${Q4 ? "Aa نص عادي" : "📖 خط المصحف"}</button><a class="btn s" href="#/mushaf/${suras[0]}">${esc(nm(suras[0]))} (سورة كاملة)</a><button class="btn s p" id="mplay" data-act="musplay" data-n="${n}">▶ تلاوة</button><button class="btn s" data-act="musfull" title="ملء الشاشة لقراءة صفحات المصحف">⛶ تكبير</button><span class="masw"><button class="btn s" data-act="musas" aria-pressed="false" title="تمرير تلقائي للصفحة ثم الانتقال إلى التالية">⇣ تمرير تلقائي</button><select id="masv" aria-label="سرعة التمرير">${AS_SP.map(([v, t]) => `<option value="${v}"${v === asSpeed() ? " selected" : ""}>${t}</option>`).join("")}</select></span><select id="mptf" aria-label="التفسير مع الصفحة" title="تفسير الصفحة أو غريب كلماتها">${PTF.map(([k, t]) => `<option value="${k}"${k === ptk() ? " selected" : ""}>${k ? "📚 " + t : "📚 تفسير الصفحة: لا"}</option>`).join("")}</select><select id="mrec" aria-label="القارئ">${RECS.map(([k, t]) => `<option value="${k}"${k === rec() ? " selected" : ""}>${t}</option>`).join("")}</select><form id="mpj" data-form="noop" class="row" style="gap:4px"><input name="p" type="number" min="1" max="604" value="${n}" style="width:6em" aria-label="رقم الصفحة"><button class="btn s">انتقل</button></form></div>${playerHtml()}
+    <div class="mfbar"><button data-act="musfull" aria-label="خروج من ملء الشاشة">✕</button><button data-act="musas" aria-pressed="false" aria-label="تمرير تلقائي">⇣</button><button data-act="muszoom" data-d="-1" aria-label="تصغير">－</button><button data-act="muszoom" data-d="1" aria-label="تكبير">＋</button>${n > 1 ? `<a href="#/mushaf/p/${n - 1}" aria-label="الصفحة السابقة">›</a>` : ""}<span>${AR(n)}</span>${n < 604 ? `<a href="#/mushaf/p/${n + 1}" aria-label="الصفحة التالية">‹</a>` : ""}<button data-act="musplay" data-n="${n}" aria-label="تلاوة">▶</button><button data-act="musxmenu" aria-label="تفسير الصفحة وأدوات المصحف">📚</button></div>
     <div class="mpwrap"><div class="mpin${ptk() ? " on" : ""}"><div class="mpage mp"><div class="mph"><span>${suras.map(s => esc(nm(s))).join(" • ")}</span><span>الجزء ${AR(m0[1])} • الحزب ${AR(Math.ceil(m0[2] / 4))}</span></div>
     ${!Q4 && qmode() === "qcf" ? `<p class="note mqerr">تعذّر تحميل خط المصحف على هذا الجهاز الآن، فعُرض النص العثماني. <button class="btn s p" data-act="musretry">إعادة المحاولة</button>${QERR.length ? `<small class="mut" dir="ltr">${esc(QERR.slice(-2).join(" | ").slice(0, 160))}</small>` : ""}</p>` : ""}
     ${Q4 || `<div class="qtext">${body}</div>`}<div class="mpf"><span>${AR(n)}</span></div></div><aside id="mptfb" class="mptf" aria-live="polite"></aside></div></div>
@@ -176,10 +178,23 @@ const MUS = (() => {
     if (window.__musAuto === n) { window.__musAuto = 0; setTimeout(() => $("#mplay") && $("#mplay").click(), 400); }
     if (window.__musCont && window.__musCont.n === n) { const c = window.__musCont; window.__musCont = null; setTimeout(() => playList(c.L, c.i, c.onEnd, 0, c.loop), 300); }
     applyFull();
+    $("#masv").onchange = e => { try { localStorage.setItem("mus_as", e.target.value); } catch (x) { } };
+    if (window.__musAS) { window.__musAS = 0; scrollTo(0, 0); setTimeout(asStart, 600); }
     let x0 = null; const pg = $(".mpage"); pg.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
     pg.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 70) location.hash = "#/mushaf/p/" + Math.max(1, Math.min(604, n + (dx > 0 ? 1 : -1))); x0 = null; }, { passive: true });
     bar();
   }
+  /* التمرير التلقائي (طلب المدير، ٢٧ نوفمبر): ينزل بالصفحة بالسرعة التي يختارها القارئ، فإذا بلغ آخرها انتظر مهلة تقصر بزيادة السرعة ثم انتقل إلى الصفحة التالية وتابع */
+  function asStart() { if (AS.on) return; AS.on = true; AS.last = 0; AS.acc = 0; AS.dw = 0; asPaint(); AS.raf = requestAnimationFrame(asTick); }
+  function asStop() { AS.on = false; cancelAnimationFrame(AS.raf); clearTimeout(AS.nx); AS.nx = 0; asPaint(); }
+  function asPaint() { document.querySelectorAll("[data-act=musas]").forEach(b => { b.setAttribute("aria-pressed", AS.on); b.textContent = b.closest(".mfbar") ? (AS.on ? "⏸" : "⇣") : (AS.on ? "⏸ إيقاف التمرير" : "⇣ تمرير تلقائي"); }); }
+  function asTick(t) { if (!AS.on) return; const dt = AS.last ? Math.min(100, t - AS.last) : 16; AS.last = t; const sp = +asSpeed();
+    AS.acc += sp * dt * 0.012; const px = Math.floor(AS.acc), se = document.scrollingElement || document.documentElement;
+    if (px) { AS.acc -= px; const y = se.scrollTop; scrollBy(0, px);
+      if (se.scrollTop <= y) { AS.dw += dt; const n = curPage();
+        if (!n || n >= 604) { if (AS.dw > 4000) asStop(); }
+        else if (!AS.nx) AS.nx = setTimeout(() => { AS.nx = 0; if (!AS.on || curPage() !== n) return; cancelAnimationFrame(AS.raf); AS.on = false; window.__musAS = 1; location.hash = "#/mushaf/p/" + (n + 1); }, Math.round(14000 / sp)); } }
+    AS.raf = requestAnimationFrame(asTick); }
   // الكلمة: غريبها (السراج إن توفر، ثم المعاجم) وتفسير آيتها من «المختصر»
   // كتب الغريب المرتبة على الجذور (tools/gharib.py): جذر الكلمة من المدونة القرآنية ثم مدخله في «المفردات» و«عمدة الحفاظ»
   const JC = {}, jget = u => JC[u] || (JC[u] = fetch(u).then(r => r.ok ? r.json() : {}).catch(() => ({})));
@@ -279,6 +294,7 @@ const MUS = (() => {
     if (a === "musoff") { const t = el.dataset.v === "text"; return offSave(t ? "mushaf-text" : "mushaf-pages", t ? offText() : offPages, el, t ? "نص المصحف والمختصر والسراج" : "صفحات المصحف بخطه"); }
     if (a === "musplay") { if (PLAY) return stopAu(); const n = +el.dataset.n, sc = PO().scope; el.textContent = "⏸ إيقاف";
       playList(scopeList(n), 0, sc === "page" ? () => { if (n < 604) { window.__musAuto = n + 1; location.hash = "#/mushaf/p/" + (n + 1); } } : null); }
+    else if (a === "musas") { AS.on ? asStop() : asStart(); }
     else if (a === "musone") { stopAu(); playList([[+el.dataset.s, +el.dataset.a]], 0); }
     else if (a === "musfull") { const on = !document.body.classList.contains("mfull"); try { localStorage.setItem("mus_full", on ? "1" : ""); } catch (x) { } applyFull(true); }
     else if (a === "muszoom") { const z = Math.max(1, Math.min(3, (+localStorage.getItem("mus_zoom") || 1) + 0.25 * +el.dataset.d)); try { localStorage.setItem("mus_zoom", z); } catch (x) { } applyFull(); }
