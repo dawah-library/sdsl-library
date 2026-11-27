@@ -1062,7 +1062,7 @@ def plan():
             need = [b for b in cat["books"] if b.get("ocr") and (b.get("unrev") or b.get("lite") or b.get("unc") or nbad.get(b["id"]) or b["id"] in req) and (b.get("img") == "r2" or os.path.exists(os.path.join(ROOT, b.get("pdfLocal") or "pdf/%s.pdf" % b["id"])))]
             # الإنجاز أولًا: الأقرب إلى الاكتمال يُتم قبل غيره ليتأهل للنشر المدقق والتسجيل الصوتي، بدل توزيع الحصة على كل الكتب فلا يكتمل منها شيء
             rem = lambda b: (b.get("unrev") or 0) + (b.get("lite") or 0) + (b.get("unc") or 0) + nbad.get(b["id"], 0)
-            need.sort(key=lambda b: (reql.index(b["id"]) if b["id"] in req else len(reql), 0 if (b.get("col") or "dawah") == "dawah" or b.get("upl") else 1, rem(b)))
+            need.sort(key=lambda b: (reql.index(b["id"]) if b["id"] in req else len(reql), 0 if b.get("unc") else 1, 0 if (b.get("col") or "dawah") == "dawah" or b.get("upl") else 1, rem(b)))  # الكتب التي فيها مواضع شك أولًا
             books += ["rereview:" + b["id"] for b in need][:int(os.environ.get("OCR_REREVIEW_BOOKS", "10"))]  # التدقيق أولًا: عشرة كتب في الجولة
         if os.environ.get("OCR_TESS", "0") != "1" and os.environ.get("OCR_QARI", "0") != "1":  # المسودات اختيارية: Gemini يقرأ الصور مباشرة
             jobs = []
@@ -1120,7 +1120,7 @@ def rereview(bid):
     bad = [i for i in range(len(sh["pages"])) if page_bad(sh["pages"][i])]  # الصفحات المشوهة أولًا (كاشف الجودة) ولو لم تكن معلَّمة
     unrev = sorted(set(unrev) | set(bad))
     focus = [i for i in (sh.get("focus") or []) if 0 <= i < len(sh["pages"])]  # صفحات طلب المدير إعادة قراءتها أولًا (مثل امتداد تعليق الشارح)
-    order = focus + [i for i in bad if i not in focus] + [i for i in unrev if i not in bad and i not in focus] + [i for i in uncp if i not in focus] + [i for i in lite if i not in unrev and i not in uncp and i not in focus]
+    order = focus + [i for i in bad if i not in focus] + [i for i in uncp if i not in focus and i not in bad] + [i for i in unrev if i not in bad and i not in focus and i not in uncp] + [i for i in lite if i not in unrev and i not in uncp and i not in focus]
     idx = sorted(order[:int(os.environ.get("OCR_REREVIEW_MAX", "320"))])
     pmap = sh.get("pmap") or []  # صفحة النص ← صفحة المصورة (من أداة المطابقة) إن اختلف الترتيب
     cat_path = os.path.join(DATA, "catalog.json"); cat = json.load(open(cat_path, encoding="utf-8"))
