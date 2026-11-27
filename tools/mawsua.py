@@ -18,6 +18,17 @@ import datetime, json, os, re, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE); D = os.path.join(ROOT, "data"); OUT = os.path.join(D, "mawsua")
 import tashjir as T  # noqa: E402  محرك Gemini بمفاتيح خدمات الكتب
+# المحرر المحلي (MAWSUA_LOCAL=<مجلد>): بدل Gemini يُكتب كل طلب في <مجلد>/<بصمته>.prompt.txt، ويُقرأ جوابه من <بصمته>.answer.json إن وُجد
+# (يحرره وكيل برمجي أو محرر بشري)، وإلا توقفت الجولة كأن الحصة نفدت — والتحقق والنشر والتحديث المحافظ كما هي تمامًا.
+_LOCAL = os.environ.get("MAWSUA_LOCAL")
+if _LOCAL:
+    import hashlib
+    def _local_gemini(prompt, *a, **k):
+        h = hashlib.sha1(prompt.encode("utf-8")).hexdigest()[:12]; os.makedirs(_LOCAL, exist_ok=True)
+        ap = os.path.join(_LOCAL, h + ".answer.json")
+        if os.path.exists(ap): return json.load(open(ap, encoding="utf-8"))
+        open(os.path.join(_LOCAL, h + ".prompt.txt"), "w", encoding="utf-8").write(prompt); print("  ✎ طلب محلي:", h, flush=True); return None
+    T.gemini = _local_gemini; T.KEYS = []
 T0, LIMIT = time.time(), int(os.environ.get("MAWSUA_MINUTES", "150")) * 60
 T.DEADLINE[0] = T0 + LIMIT - 25 * 60
 jl = lambda p, d=None: json.load(open(p, encoding="utf-8")) if os.path.exists(p) else d

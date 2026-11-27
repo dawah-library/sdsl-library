@@ -99,6 +99,37 @@ def keys_of(*titles):
 
 
 # ---------- السجل ----------
+def feed(k):
+    """data/mawsua/_feed.json (tools/mawsua_feed.py، بلا Gemini): primary المراجع الأولى للموسوعة من مكتبة الدعوة (كتب السياسة الشرعية
+    للشيخ ياسر برهامي وغيره)، وnew الكتب الجديدة المتصلة بالموسوعة؛ تقرؤه مراحل التحرير (التسليم من جلسة التغذية، ٢٧ نوفمبر)."""
+    return ((M.jl(os.path.join(M.OUT, "_feed.json"), {}) or {}).get("enc") or {}).get(k) or {}
+
+
+def feed_refs(k, by, meta):
+    """الكتب الجديدة من غير مكتبة الدعوة (enc[k].new) تُضم مراجعَ مساندة للموسوعة، فتدخل الاسترجاع والنمو تلقائيًّا."""
+    ids = set(feed(k).get("new") or [])
+    for b in M.CAT["books"]:
+        if b["id"] in ids and b["id"] not in by and (b.get("col") or "dawah") != "dawah" and not b.get("hidden") and M.ready(b) and (b.get("size") or 0) >= 3000:
+            by[b["id"]] = dict(meta, t=b.get("setTitle") or b["title"], title=b.get("setTitle") or b["title"], author=M.AUTH.get(b.get("authorId"), ""), vol=b.get("vol") or 0, feed=1)
+    return by
+
+
+_OPN = [None]
+
+
+def opinion_ok(name):
+    """أصحاب الآراء والترجيحات المعتمدون (opinion_authors في _sources.json، قائمة المستخدم ٢٣ اسمًا): من سواهم مصدر معلومات لا ترجيح."""
+    if _OPN[0] is None: _OPN[0] = [M._ntok(n) for n in (M.POL.get("opinion_authors") or M.POL.get("authors") or [])]
+    if not _OPN[0]: return True
+    t = M._ntok(name)
+    for w in _OPN[0]:
+        i = 0
+        for x in t:
+            if i < len(w) and x == w[i]: i += 1
+        if w and i == len(w): return True
+    return False
+
+
 def registry():
     """{معرّف الكتاب: بيان المرجع} من data/mawsua/_fiqh.json: كل مجلدات الكتاب، بعد جاهزية نصه؛ ويُتجاوز مجلد الفهرس الصغير."""
     if _REG[0] is not None: return _REG[0]
@@ -112,6 +143,7 @@ def registry():
             if r["t"] in t and (not r.get("a") or r["a"] in an):
                 if M.ready(b): by[b["id"]] = dict(r, title=t, author=an, vol=b.get("vol") or 0)
                 break
+    feed_refs("fiqh", by, {"m": "0", "r": "cm", "tr": "muq"})
     _REG[0] = (R, by); return _REG[0]
 
 
@@ -396,8 +428,8 @@ def validate(r, tags, AM, fiqh=True):
         return [g for g in L if isinstance(g, str) and g in tags]
 
     def kp(c):  # الأسماء المسموح بها في سياق الفقرة: مؤلفو مصادرها، ومن ورد اسمه أو لقبه المشهور في نصوصها
-        hs = [tags[g] for g in c]
-        return [h[3] for h in hs] + [n for n in M.IMAMS if who_ok(n, hs)]
+        hs = [tags[g] for g in c]  # أسماء مشايخ الدعوة لا تُذكر في سياق الكلام (قرار المستخدم ٢٧ نوفمبر): العزو بالمرجع
+        return [h[3] for h in hs if h[0] != "d"] + [n for n in M.IMAMS if who_ok(n, hs)]
 
     def paras(L):
         out = []
@@ -487,8 +519,10 @@ def validate(r, tags, AM, fiqh=True):
         ns = (x.get("nass") or "").strip(" «»\""); kd = x.get("kind") if x.get("kind") in DK else "عرض"
         if kd in ("صريح", "ظاهر") and not (ns and any(_in(ns, h) for h in hs)):
             nv.append("لم يوجد نص يدل على اختيار %s في الموضع المعزو إليه؛ فعُرض قوله عرضًا لا ترجيحًا" % w); kd = "عرض"; ns = ns if ns and any(_in(ns, h) for h in hs) else ""
+        if kd != "عرض" and not opinion_ok(au):  # الترجيح والاختيار للمعتمدين وحدهم؛ وغيرهم مصدر معلومات
+            nv.append("مصدر «%s» من غير قائمة المعتمدين للآراء والترجيحات؛ فعُرض معلومةً لا ترجيحًا" % hs[0][2][:60]); kd = "عرض"
         a = AM.get(hs[0][1]) or {}
-        dw.append({"who": w, "kind": kd, "t": M.unname(t, [], keep=[w, au]), "nass": ns, "c": xc, "d": _fmt_date(a.get("d")), "u": a.get("u") or ""}); used.update(xc)
+        dw.append({"who": w, "kind": kd, "t": M.unname(t, [w, au]), "nass": ns, "c": xc, "d": _fmt_date(a.get("d")), "u": a.get("u") or "", "src": hs[0][2]}); used.update(xc)
     R, _ = registry(); lead = M.nz((R.get("dawah") or {}).get("lead", "ياسر برهامي"))
     dw.sort(key=lambda y: (0 if lead and lead in M.nz(y["who"]) else 1, {"صريح": 0, "ظاهر": 1, "عرض": 2}[y["kind"]], y.get("d") or "9999"))
     fq["dawah"] = dw
@@ -574,17 +608,18 @@ def fiqh_profile():
 
 
 def build(e, tree, todo, boost=None, why="", P=None):
+    prefer = set(feed(e[0]).get("primary") or [])  # المراجع الأولى للموسوعة من التغذية: مقدمة في المواضع، ولا تُعد «مصدرًا جديدًا»
     """تحرير المسائل بالمنهج الموسع (الفقه افتراضًا، وغيره بملف منهجه P من mawsua_disc). يعيد (المنجز، هل نفدت الحصة)."""
     tp = os.path.join(M.OUT, e[0], "_tree.json")
     if not todo: return 0, False
     P = P or fiqh_profile()
     DC = M.dawah_corpus(None); AM = art_meta(); ix = {(r[1], r[4]): r for r in DC}
-    RH = P["hits"](todo, set(boost or []))
+    RH = P["hits"](todo, set(boost or []) | prefer)
     by = P["by"]; review = P["review"]
     done = 0
     for b, f, m in todo:
         if time.time() - M.T0 > M.LIMIT: return done, False
-        dh = P["dpick"](DC, m, set(boost or []), AM, b, f)
+        dh = P["dpick"](DC, m, set(boost or []) | prefer, AM, b, f)
         rh, more = P["pick"](RH.get(m["id"]) or [])
         ep = os.path.join(M.OUT, e[0], "e", m["id"] + ".json"); old = M.jl(ep) if m.get("e") else None
         hits = dh + rh
