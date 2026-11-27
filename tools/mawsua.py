@@ -12,7 +12,9 @@
 - الطابور: data/mawsua/_queue.json {"items": [{"k": "aqeeda", "do": "plan"}, {"k": "fiqh", "do": "build", "n": 30}]} — تضيفه الإدارة.
 الاستعمال: python3 tools/mawsua.py [plan|build <k> [n]] — بلا وسائط: ينفّذ الطابور.
 """
-import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard; manual_guard.guard("mawsua")  # يدوي فقط
+import os as _o, sys as _s; _s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__))); import manual_guard
+if _s.argv[1:2] != ["link"]: manual_guard.guard("mawsua")  # يدوي فقط؛ والربط (link) بلا نموذج فيعمل دائمًا
+else: _o.environ["GITHUB_EVENT_NAME"] = "link"  # لهذه العملية وحدها: حارس «يدوي فقط» في الوحدات المستوردة (tashjir) لا يوقف الربط الذي لا يستدعي نموذجًا
 import datetime, json, os, re, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -533,6 +535,57 @@ def grow(cap=25):
     print("  النمو: %d مسألة في الطابور" % added)
 
 
+def link(per=12):
+    """الإثراء المستمر بلا نموذج (طلب المدير، ٢٧ نوفمبر): كل ما يُضاف إلى المكتبة — كتب مشايخ الدعوة ومقالات المعتمدين وفتاوى صوت السلف
+    والبيانات أولًا، ثم مراجع كل فن (السجلات) والكتب الجديدة المتصلة بالموسوعة (_feed.json) — يُطابَق بمسائل الموسوعات كلها، ويُكتب في
+    data/mawsua/<k>/_links.json فيظهر في صفحة المسألة فورًا «إضافات حديثة في المكتبة متصلة بالمسألة»، محررة كانت أو قيد التحرير.
+    ودمجه في نص المادة (تحديثًا مقترحًا بسجل تغييره) يتولاه grow في mawsua.yml حين تعمل. الحالة مستقلة: _link_seen.json."""
+    sp = os.path.join(OUT, "_link_seen.json"); S = jl(sp)
+    REGS = {"fiqh": F.registry()[1]}; REGS.update({e[0]: DS.registry(e[0]) for e in ENC if DS.has(e[0])})
+    now_d = dawah_sources(); now_r = set().union(*REGS.values())
+    if S is None:
+        jw(sp, {"at": str(datetime.date.today()), "ids": sorted(now_d), "refs": sorted(now_r)}); print("  الربط: بُدئت الحالة"); return
+    new_d = sorted(now_d - set(S.get("ids") or [])); new_r = sorted(now_r - set(S.get("refs") or []))
+    if not new_d and not new_r: print("  الربط: لا جديد"); return
+    C = new_corpus(set(new_d)) if new_d else []
+    kinds = {a["id"]: k for a, k in art_items()}
+    print("  الربط: %d مصدرًا دعويًّا جديدًا، و%d مجلدًا من المراجع" % (len(new_d), len(new_r)), flush=True)
+    today, tot = str(datetime.date.today()), 0
+    for e in ENC:
+        tree = jl(os.path.join(OUT, e[0], "_tree.json"))
+        if not tree: continue
+        CE = C + (F.ref_corpus([x for x in new_r if x in REGS.get(e[0], {})], REGS.get(e[0], {})) if new_r else [])
+        if not CE: continue
+        lp = os.path.join(OUT, e[0], "_links.json"); LK = jl(lp, {"m": {}}) or {"m": {}}; n = 0
+        for b in tree["b"]:
+            for f in b["f"]:
+                for m in f["m"]:
+                    kws = [nz(x) for x in [m["t"]] + (m.get("kw") or []) if len(nz(x)) > 2]
+                    core = F._core(m)
+                    def ok_(h):  # الصلة بالمسألة: عنوان المصدر (أو باب الكتاب في فهرسه) يوافقها، أو ثلاثة من ألفاظها مجتمعة في الموضع
+                        hd = nz(h[2] + " " + ((h[8] or {}).get("sec", "") if len(h) > 8 else ""))
+                        ww = lambda w: re.search(r"(?:^| )(?:و|ف|ب|ل|ك)?(?:ال)?" + re.escape(re.sub(r"^ال", "", w)) + r"(?= |$)", hd)  # كلمة كاملة لا جزء كلمة
+                        th = any(ww(w) for w in kws) or sum(1 for w in core if ww(w)) >= 2
+                        if h[0] == "d" and h[7] in ("f", "a", "s"): return th  # الفتوى والمقال والبيان: عنوانها دال على موضوعها فيُشترط موافقته
+                        return th or (any(w in h[6] for w in kws[:2]) and sum(1 for w in kws if w in h[6]) >= 3)
+                    hits, seen_b = [], set()
+                    for h in find(CE, m)[:6]:
+                        if h[1] in seen_b or not ok_(h): continue
+                        seen_b.add(h[1]); hits.append(h)
+                    hits = hits[:4]
+                    if not hits: continue
+                    cur = LK["m"].setdefault(m["id"], []); have = {(x["b"], x["p"]) for x in cur}
+                    for h in hits:
+                        if (h[1], h[4]) in have: continue
+                        x = {"b": h[1], "t": h[2], "a": h[3], "p": h[4], "s": h[7] if h[0] == "d" else ((h[8] or {}).get("tr") if len(h) > 8 else "m"), "at": today}
+                        if h[0] == "d" and h[1] in kinds: x["s"] = kinds[h[1]]
+                        cur.insert(0, x); n += 1
+                    del cur[per:]
+        if n: LK["at"] = today; jw(lp, LK); tot += n; print("  %s: %d ربطًا جديدًا" % (e[0], n), flush=True)
+    jw(sp, {"at": today, "ids": sorted(now_d), "refs": sorted(now_r)})
+    print("  الربط: %d ربطًا في الموسوعات" % tot)
+
+
 def index():
     items = []
     for e in ENC:
@@ -550,7 +603,7 @@ def index():
         if DS.has(e[0]):
             try: disc[e[0]] = DS.policy(e[0])
             except Exception as x: print("  تعذر سجل", e[0], x)
-    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS3), "disc": disc, "review": REVIEW, "items": items, "recent": recent})
+    jw(os.path.join(OUT, "_index.json"), {"note": "tools/mawsua.py — الموسوعات العلمية المتخصصة", "secs": SECS, "src": pol, "fiqh": dict(fqp, secs=F.SECS_SHOW), "disc": disc, "review": REVIEW, "items": items, "recent": recent})
 
 
 def fix_existing():
@@ -591,6 +644,7 @@ def main():
     a = sys.argv[1:]; E = {e[0]: e for e in ENC}
     if a and a[0] == "fix": fix_existing(); index(); return
     if a and a[0] == "grow": grow(); index(); return
+    if a and a[0] == "link": link(); return
     if a and a[0] == "plan2":
         for k in (a[1:2] if len(a) > 1 and a[1] in E else ["fiqh"]): (F.plan2 if k == "fiqh" else DS.plan2)(E[k])
         index(); return
