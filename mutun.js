@@ -37,6 +37,7 @@ const MTN = (() => {
     b.pages.forEach((pg, i) => { if (i + 1 < from || i + 1 > to || (!it.from && fmPage(pg))) return;
       String(pg || "").split(/^\s*_{4,}\s*$/m)[0].split("\n").forEach(l => {
       l = l.trim(); if (!l || /^\[(رسم|صورة|جدول)/.test(l) || TOCL_.test(l)) return;
+      if (!units.some(u => u.t) && l.length < 140 && /(تأليف|تصنيف|نظم|للإمام|للشيخ|لشيخ الإسلام)/.test(l) && norm(strip(l)).replace(/[^ء-ي]/g, "").includes(norm(b.title || "").replace(/[^ء-ي]/g, "").slice(0, 8))) return; // سطر العنوان مع اسم المؤلف ليس من المتن
       if (/^#{1,3}\s/.test(l)) { head = l.replace(/^#+\s*/, ""); const hn = strip(head).trim();
         const isT = norm(hn).replace(/[^ء-ي]/g, "") && norm(b.title || "").replace(/[^ء-ي]/g, "").includes(norm(hn).replace(/[^ء-ي]/g, "").slice(0, 12));
         if (!it.from && (INTRO.test(hn) || ENDX.test(hn))) { skip = i + 1; return; }
