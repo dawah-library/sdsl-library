@@ -41,6 +41,7 @@ const VIDX = (() => {
     const vids = Object.entries(L).flatMap(([id, l]) => l.map((v, k) => Object.assign({ id, k }, v))).filter(v => (v.ok || adm) && (!bid || v.id === bid) && !GONE.has(v.f)).reverse();
     view(`<div class="cmhero"><div><h2>🎬 مراجعات الكتب بالفيديو</h2><p>استعراض الكتب في فيديوهات تعليمية: ملخصها، ومراجعتها، ومميزاتها ومنهجها، وقراءة نقدية منصفة لها، والحديث عن بعض أبوابها؛ تعدّها إدارة المكتبة ومن تفوّضه، للمشاهدة والتنزيل والمشاركة.</p></div></div>
       ${adm ? `<details class="card"${bid ? " open" : ""}><summary><b>＋ إعداد فيديو جديد</b></summary><form id="vidf" data-form="noop" class="vidform">
+        <label>أو اختر درسًا من سلاسل الطلائع (الأساس والبنيان) <small class="mut">— فهرس الدروس: data/video/lessons.json</small></label><div class="row" id="vidles"><select id="vls" style="flex:1"><option value="">…جارٍ تحميل فهرس الدروس</option></select><select id="vll" style="flex:2" disabled><option value="">اختر السلسلة أولًا</option></select></div><div id="vlinfo" class="mut"></div>
         <label>الكتاب أو المقال</label><input name="t" autocomplete="off" value="${esc(bid && B(bid) ? (B(bid).setTitle || B(bid).title) : "")}" placeholder="اكتب جزءًا من اسم الكتاب أو المقال ثم اختره" required><div id="vidsug" class="vidsug" hidden></div>
         <label>نمط الفيديو <span class="mut">(يمكن الجمع بين أكثر من نمط)</span></label>${checks("style", ["summary"])}
         <label>المدة بالدقائق (حرة، من دقيقة واحدة)</label><div class="row"><input name="min" type="number" min="1" max="60" step="0.5" value="4" style="max-width:140px" required><span id="vidrec" class="mut"></span></div><input name="scenes" type="number" min="1" max="40" placeholder="أو عدد المشاهد (اختياري)" style="max-width:220px">
@@ -81,6 +82,15 @@ const VIDX = (() => {
       let T = []; try { const bb = await loadBook(b.id); T = (bb.toc || []).filter(x => x.t).slice(0, 80); } catch (e) { }
       el.innerHTML = T.length ? T.map(x => { const t = String(x.t).replace(/^#+\s*/, ""); return `<label class="chip"><input type="checkbox" name="topics" value="${esc(t)}"> ${esc(t.slice(0, 60))}</label>`; }).join("") : '<span class="mut">لا فهرس لهذا الكتاب؛ اكتب الموضوعات في الخانة.</span>'; };
     f.t.addEventListener("change", toc); if (bid) toc();
+    // فهرس الدروس (بند 8أ/8ب): السلسلة ← الدرس ← يملأ الكتاب (المجلد) والموضوع والهدف والصفحات المرجعية
+    getj("data/video/lessons.json", { series: [] }).then(LS => { const a = document.getElementById("vls"), c = document.getElementById("vll"), inf = document.getElementById("vlinfo"); if (!a) return;
+      a.innerHTML = '<option value="">— بلا (أكتب الكتاب بنفسي) —</option>' + (LS.series || []).map((x, i) => `<option value="${i}">${esc(x.title)} (${toAr(x.lessons.length)} درسًا)</option>`).join("");
+      a.onchange = () => { const s = (LS.series || [])[+a.value]; c.disabled = !s; c.innerHTML = s ? '<option value="">اختر الدرس</option>' + s.lessons.map((l, j) => `<option value="${j}">${esc("ج" + toAr(l.v) + " • " + l.t)} (ص${toAr(l.p)})</option>`).join("") : '<option value="">اختر السلسلة أولًا</option>'; };
+      c.onchange = async () => { const s = (LS.series || [])[+a.value], l = s && s.lessons[+c.value]; if (!l) return; const b = B(l.b); if (!b) { inf.textContent = "مجلد هذا الدرس غير متاح في المكتبة."; return; }
+        picked = b; f.t.value = TT(b); sug.hidden = true; await toc(); rec();
+        const m = [...f.querySelectorAll("[name=topics]")].find(x => x.value === l.t); if (m) m.checked = true; else f.topics2.value = l.t;
+        if (!f.ideas.value.trim()) f.ideas.value = (l.goals && l.goals.length ? "أهداف الدرس: " + l.goals.join("، ") + ". " : "") + "المرجع: " + s.title + " المجلد " + l.v + " الصفحات " + l.p + "–" + l.e + ".";
+        inf.innerHTML = `الدرس: <b>${esc(l.t)}</b> • ${esc(s.title)} ج${toAr(l.v)} • الصفحات ${toAr(l.p)}–${toAr(l.e)} ${l.goals && l.goals.length ? "• " + toAr(l.goals.length) + " أهداف" : ""} <a href="#/book/${esc(l.b)}/${l.p}">افتح الدرس</a>`; }; });
     // تناسب المدة مع حجم الكتاب: مدى مقترح (لا اختزال مخل ولا حشو)، والتكلفة التقديرية للقطات المولَّدة قبل الطلب
     const rec = () => { const b = bookOf(), el = document.getElementById("vidrec"); if (!b || !el) return; const n = b.set ? lib.books.filter(x => x.set === b.set).reduce((s, x) => s + (x.n || 0), 0) : (b.n || 1), lo = Math.max(1, Math.min(3, Math.round(n / 120))), hi = Math.max(lo + 1, Math.min(30, Math.round(n / 12))), m = +f.min.value || 0;
       el.innerHTML = `المقترح لحجم ${toAr(n)} صفحة: ${toAr(lo)}–${toAr(hi)} دقيقة${m && m < lo ? ' — <b class="warn">قصيرة: سيُقتصر على أهم الأفكار</b>' : m > hi ? ' — <b class="warn">طويلة على حجم الكتاب: قد لا تكفي مادته (لا حشو)</b>' : ""} • نحو ${toAr(Math.round(m * 130))} كلمة للراوي`; };
