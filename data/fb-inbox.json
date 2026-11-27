@@ -1188,13 +1188,13 @@
    "wn": 0
   },
   "fb-saidabdelfattahkhairy": {
-   "at": "2026-11-26T12:07:40.365Z",
+   "at": "2026-11-27T13:56:23.268Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0,
-   "wn": 1
+   "wn": 0
   }
  },
- "wall": "2026-11-27T12:06:49.276Z",
+ "wall": "2026-11-27T13:56:23.268Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -1209,6 +1209,6 @@
   "fb-musabamingaber",
   "fb-saidabdelfattahkhairy"
  ],
- "lastRun": "2026-11-27T12:06:49.348Z",
- "lastAdded": 2
+ "lastRun": "2026-11-27T13:56:23.335Z",
+ "lastAdded": 0
 }
