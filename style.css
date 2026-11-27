@@ -2116,3 +2116,5 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .hubg.few{display:flex;justify-content:center;gap:20px 36px}
 .hubg.few .happ{width:150px}.hubg.few .hai{width:92px;height:92px;border-radius:28px}.hubg.few .hai svg{width:42px;height:42px}
 .hubg.few .happ b{font-size:1.02rem}.hubg.few .happ small{font-size:.8rem}
+.hsrcg{margin:10px 0}.hsrc{display:inline-block;font-size:.78rem;color:var(--ac,#0b4f43);background:color-mix(in srgb,var(--ac,#0b4f43) 10%,transparent);padding:2px 10px;border-radius:99px;margin:6px 0 4px}
+.hdun a{display:block}.hpg{text-align:center;margin:10px 0}
