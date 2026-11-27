@@ -2051,3 +2051,10 @@ form:has(.gosug){position:relative}
 .elist{display:grid;gap:8px}
 @media(max-width:520px){.ehead{justify-content:center;text-align:center}.eid{min-width:100%}.eact{justify-content:center;width:100%}.ecover{height:96px}}
 .ent h2::before{display:none}
+/* الوصايا قالبًا و«مجموعاتي» (wsx.js) */
+.wstf .wsprev{display:flex;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}
+.wstf .wsprev img{max-width:100%;max-height:52vh;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.wstf .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.wstf .chip{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.wstf .wsim img{width:34px;height:46px;object-fit:cover;border-radius:4px}
+.wsset ol{margin:8px 0;padding-inline-start:22px;line-height:1.9}.wsset li .lnk{font-size:.85rem}
+.wsset input[type=datetime-local]{padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem}

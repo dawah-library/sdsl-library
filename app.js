@@ -21,7 +21,7 @@ const saveS=()=>ls.set("set",S);
 if(!S.lk2){S.mkq=true;S.mkh=true;S.mkt=true;S.lk2=1;saveS()}
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
 const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
-const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio"]),t:0,
+const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
   await Auth.sb.auth.updateUser({data:{prefs:{at:S.prefsAt,v}}})}catch(e){}},2000)},
@@ -190,7 +190,7 @@ async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
   <blockquote class="hqt${q.k==="آية"?" ay":""}${q.t.length>110?" lg":""}">${esc(txt(q))}</blockquote>
   ${q.ref?`<p class="hqref">${esc(q.ref)}</p>`:""}
   <div class="hqm"><a class="hqsrc" href="#/book/${q.b}/${q.p}?h=${encodeURIComponent(q.t.slice(0,40))}" title="موضعها في المكتبة">📚 ${esc(q.title)}${q.author?" — "+esc(q.author):""}، ص ${toAr(q.p)}</a>
-  <span class="hqbtn"><button type="button" data-hq="prev" aria-label="السابقة">‹</button><span class="hqn">${toAr(((i%L.length)+L.length)%L.length+1)} / ${toAr(L.length)}</span><button type="button" data-hq="next" aria-label="التالية">›</button><button type="button" data-hq="copy" aria-label="نسخ" title="نسخ">⧉</button>${navigator.share?`<button type="button" data-hq="share" aria-label="مشاركة" title="مشاركة">⤴</button>`:""}</span></div>`;
+  <span class="hqbtn"><button type="button" data-hq="prev" aria-label="السابقة">‹</button><span class="hqn">${toAr(((i%L.length)+L.length)%L.length+1)} / ${toAr(L.length)}</span><button type="button" data-hq="next" aria-label="التالية">›</button><button type="button" data-hq="copy" aria-label="نسخ" title="نسخ">⧉</button><button type="button" data-hq="tpl" aria-label="مشاركة كقالب" title="مشاركة كقالب (صورة)">🖼</button><button type="button" data-hq="save" aria-label="إلى مجموعاتي" title="إلى مجموعاتي">＋</button>${navigator.share?`<button type="button" data-hq="share" aria-label="مشاركة" title="مشاركة">⤴</button>`:""}</span></div>`;
   el.hidden=false;body.classList.remove("fade");void body.offsetWidth;body.classList.add("fade");
   bar.style.animation="none";void bar.offsetWidth;bar.style.animation="";bar.style.animationDelay=sync?-(Date.now()%PER)+"ms":"0ms"};
  pick();show(1);
@@ -201,6 +201,7 @@ async function homeExtras(){const sw=await swx(),on=k=>sw[k]!==false;hitVisit();
  el.onclick=e=>{const c=e.target.closest("[data-hqc]");if(c){cat=c.dataset.hqc;try{localStorage.setItem("hqcat",cat)}catch(x){}pick();show(1);return}
   const b=e.target.closest("[data-hq]");if(!b)return;const q=L[((i%L.length)+L.length)%L.length],a=b.dataset.hq;
   if(a==="next"){i++;off=i-clk();show()}else if(a==="prev"){i--;off=i-clk();show()}
+  else if(a==="tpl"||a==="save"){if(typeof WSX==="undefined"){toast("لحظة… تُحمَّل الأداة");if(typeof MODS!=="undefined")MODS.start();return}a==="tpl"?WSX.template(q):WSX.addTo(q)}
   else if(a==="share")navigator.share({text:line(q)}).catch(()=>{});
   else navigator.clipboard&&navigator.clipboard.writeText(line(q)).then(()=>{b.textContent="✓";setTimeout(()=>b.textContent="⧉",1500)})}}
 const fmtN=n=>toAr(Number(n).toLocaleString("en-US")).replace(/,/g,"٬");
@@ -2134,6 +2135,7 @@ function planStat(pl,b){const n=b&&b.pages?b.pages.length:(b&&b.n)||0,days=Math.
  return{n,target,at,behind:Math.max(0,target-at),done:n&&at>=n,readToday,due,pct:n?Math.round(at/n*100):0}}
 /* جرس الإشعارات */
 const Bell={items:[],async load(){const out=[];if(!Auth.user)return this.items=out;
+  try{if(typeof WSX!=="undefined")out.push(...WSX.due())}catch(e){}
   try{if(typeof HZ!=="undefined"){const d=HZ.due().length;if(d)out.push({id:"hifz:"+today(),title:"حان وقت مراجعة محفوظك",body:toAr(d)+" بطاقة مستحقة في «حفظ المتون»",url:"#/hifz",at:new Date().toISOString(),local:1})}}catch(e){}
   try{(await Mine.loadPlans()).filter(p=>p.active!==false).forEach(p=>{const b=B(p.book_id),s=planStat(p,b);if(s.due)out.push({id:"plan:"+p.book_id+":"+today(),title:"وردك اليوم من «"+(p.title||(b&&b.title)||"")+"»",body:`${pgs(p.daily)}${s.behind>p.daily?` (متأخر ${pgs(s.behind)})`:""} — أنت في صفحة ${toAr(s.at)}`,url:"#/book/"+p.book_id+"/"+s.at,at:new Date().toISOString(),local:1})})}catch(e){}
   if(Cloud.on()){try{const [n,bc]=await Promise.all([Auth.sb.from("notifications").select("*").eq("user_id",Auth.user.id).order("created_at",{ascending:false}).limit(30),Auth.sb.from("broadcasts").select("*").order("created_at",{ascending:false}).limit(15)]);
@@ -2260,10 +2262,11 @@ async function planSave(f){const fd=new FormData(f),b=B(f.dataset.id),old=(Mine.
  $("#plst").textContent="جارٍ الحفظ…";try{await Mine.savePlan(p);dlg().close();toast("بدأ مشروع القراءة. يصلك التذكير في "+p.remind_at);Bell.paint()}catch(e){$("#plst").textContent=e.message}}
 /* صفحة «مكتبتي» */
 async function vMine(q){if(!Auth.user&&!["stats","shelves"].includes(q.t))return view(`<h2>مكتبتي</h2><p class="note">العلامات والتعليقات الخاصة ومشاريع القراءة للأعضاء. <a href="#/account?next=%23%2Fmine">سجّل الدخول أو أنشئ حسابًا</a> (مجانًا).</p>`);
- const t=q.t||"book",tabs=[["book","📒 دفتري"],["stats","🌱 إنجازي"],["shelves","📚 رفوفي"],["marks","العلامات"],["notes","تعليقاتي بالكتب"],["plans","مشاريع القراءة"],["log","📈 سجل قراءتي"],["saved","★ محفوظاتي"],["off","دون إنترنت"]];
+ const t=q.t||"book",tabs=[["book","📒 دفتري"],["stats","🌱 إنجازي"],["shelves","📚 رفوفي"],["marks","العلامات"],["notes","تعليقاتي بالكتب"],["plans","مشاريع القراءة"],["log","📈 سجل قراءتي"],["saved","★ محفوظاتي"],["wsets","💡 مجموعاتي"],["off","دون إنترنت"]];
  view(`<h2>مكتبتي</h2><div class="tabs" role="tablist">${tabs.map(([k,n])=>`<a role="tab" href="#/mine?t=${k}" aria-selected="${k===t}">${n}</a>`).join("")}</div><div id="minebox" class="mut">جارٍ التحميل…</div>`);
  const box=$("#minebox");box.className="";const bk=(id,p)=>`#/book/${id}/${p}`;
  try{if(t==="log"){await STATS.mine(box);return}
+  if(t==="wsets"){if(typeof WSX==="undefined"){box.innerHTML='<p class="mut">جارٍ التحميل…</p>';await (typeof MODS!=="undefined"?(MODS.start(),MODS.ready):0)}if(typeof WSX!=="undefined")WSX.mine(box);return}
   // «محفوظاتي» في حساب العضو (طلب المدير، ٢٧ نوفمبر): المنشورات التي حفظها بتفاعلها كاملًا
   if(t==="saved"){await loadPosts();const l=(await Social.savedIds()).map(findPost).filter(Boolean).slice(0,80);
    if(!l.length){box.innerHTML='<p>لم تحفظ منشورًا بعد. اضغط «☆ حفظ» تحت أي منشور في <a href="#/posts">المنشورات</a> فيظهر هنا.</p>';return}
