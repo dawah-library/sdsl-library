@@ -2097,3 +2097,6 @@ form:has(.gosug){position:relative}
 .rd.fmtd a.vref,.rd.fmtd a.href{display:inline-block;font-size:.72em;font-weight:700;padding:.05em .55em;margin:0 .3em;border-radius:99px;text-decoration:none;vertical-align:middle;border:1px solid currentColor;color:var(--green,#0f5d46)}
 .rd.fmtd a.href{color:#7a4b00}
 html[data-theme=dark] .rd.fmtd .w.vcard{color:#8fd0b2}html[data-theme=dark] .rd.fmtd .w.hcard{color:#e6c27a}html[data-theme=dark] .rd.fmtd a.vref{color:#8fd0b2}html[data-theme=dark] .rd.fmtd a.href{color:#e6c27a}
+/* أيقونات العلوم (mutun.js): خطية موحدة */
+svg.sci{width:1.15em;height:1.15em;vertical-align:-.22em;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mic svg.sci{width:1em;height:1em;color:var(--green,#0f5d46)}.mic.big svg.sci{stroke-width:1.5}
