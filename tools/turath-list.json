@@ -2001,6 +2001,42 @@
    "authorName": "الطبراني",
    "topic": "t3",
    "batch": "hadith-2026-11-13"
+  },
+  {
+   "id": "qawaidarba",
+   "died": 1206,
+   "author": "IbnCabdWahhab",
+   "book": "QawacidArbaca",
+   "title": "القواعد الأربع",
+   "authorName": "محمد بن عبد الوهاب",
+   "topic": "t1"
+  },
+  {
+   "id": "zadmustaqni",
+   "died": 968,
+   "author": "Hajjawi",
+   "book": "ZadMustaqnic|ZadMustaqni",
+   "title": "زاد المستقنع في اختصار المقنع",
+   "authorName": "الحجاوي",
+   "topic": "t4"
+  },
+  {
+   "id": "nukhbatfikar",
+   "died": 852,
+   "author": "IbnHajar",
+   "book": "NukhbatFikar",
+   "title": "نخبة الفكر في مصطلح أهل الأثر",
+   "authorName": "ابن حجر العسقلاني",
+   "topic": "t13"
+  },
+  {
+   "id": "jazariyya",
+   "died": 833,
+   "author": "IbnJazari",
+   "book": "ManzumaJazariyya",
+   "title": "المقدمة الجزرية (المنظومة الجزرية)",
+   "authorName": "ابن الجزري",
+   "topic": "t12"
   }
  ]
 }
