@@ -415,7 +415,7 @@ def who_ok(who, hs):
     """العالم المسمى مؤلفُ المصدر المعزو إليه، أو ورد اسمه (أو لقبه المشهور) في نص موضعه."""
     if not who: return False
     al = [M.nz(a) for a in _names(who) if len(M.nz(a)) >= 3]
-    return any(any(a in M.nz(h[3]) or (" " + a) in (" " + h[6]) for a in al) for h in hs)
+    return any(any(a in M.nz(h[3]) or re.search(r"(?:^| )[وفبل]?" + re.escape(a) + r"(?= |$)", h[6]) for a in al) for h in hs)  # «والأوزاعي» ونحوه
 
 
 def validate(r, tags, AM, fiqh=True):
