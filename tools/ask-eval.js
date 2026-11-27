@@ -16,8 +16,8 @@ if (process.argv.includes("--make")) {
   const cat = rj(path.join(R, "data", "catalog.json")), ok = new Set(cat.books.filter(b => !b.hidden && !b.demo && (b.col || "dawah") === "dawah").map(b => b.id).concat(rj(path.join(R, "data", "articles", "index.json")).items.filter(a => !a.h && a.col !== "turath").map(a => a.id)));
   const items = rj(path.join(R, "data", "qa", "_index.json")).items.filter(x => ["fatwa", "suil", "sj"].includes(x[4]) && ok.has(x[2]) && x[1].length >= 30 && x[1].length <= 150 && !/^سُئل عن\s/.test(x[1]) || false);
   const seen = new Set(), pick = [];
-  for (const x of items.sort((a, b) => crc(a[0]) - crc(b[0]))) { if (seen.has(x[2])) continue; seen.add(x[2]); pick.push({ id: x[0], q: x[1], book: x[2], page: x[3], kind: x[4] }); if (pick.length >= 20) break; }
-  fs.writeFileSync(path.join(OUT, "ask-questions.json"), JSON.stringify({ note: "مجموعة التقييم الأولى (20 سؤالًا من فتاوى المكتبة بمرجع كتاب/صفحة): اختارها المساعد التنفيذي بترتيب ثابت وتنتظر مراجعة المستخدم.", items: pick }, null, 1)); console.log("أسئلة:", pick.length); process.exit(0);
+  for (const x of items.sort((a, b) => crc(a[0]) - crc(b[0]))) { if (seen.has(x[2])) continue; seen.add(x[2]); pick.push({ id: x[0], q: x[1], book: x[2], page: x[3], kind: x[4] }); if (pick.length >= 100) break; }
+  fs.writeFileSync(path.join(OUT, "ask-questions.json"), JSON.stringify({ note: "مجموعة التقييم (100 سؤال من فتاوى المكتبة بمرجع كتاب/صفحة): اختارها المساعد التنفيذي بترتيب ثابت وتنتظر مراجعة المستخدم.", items: pick }, null, 1)); console.log("أسئلة:", pick.length); process.exit(0);
 }
 const D = rj(path.join(SX, "_docs.json")), shards = new Map();
 const shard = t => { const n = crc(t) % (D.shards || 2048); if (!shards.has(n)) { const f = path.join(SX, n + ".json"); shards.set(n, fs.existsSync(f) ? rj(f) : {}); } return shards.get(n)[t]; };
