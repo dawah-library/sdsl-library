@@ -2,13 +2,16 @@
 // صفحة index.html مع عنوان ووصف ونص مناسب لكل كتاب أو مقال (api/page.js) لمحركات البحث ومعاينة الروابط.
 // الملفات الثابتة (js/css/data/الصور…) مستثناة من هذه الدالة في _routes.json فلا تُحسب طلباتها.
 import { run } from "./_lib/adapter.js";
+import { secure } from "./_lib/sec.js";
 import page from "../api/page.js";
 import sitemap from "../api/sitemap.js";
 
 const SCAN = /(?:\.(?:php|asp|aspx|jsp|cgi|env|ini|bak|sql)$|^\/(?:wp-|\.git|\.env|cgi-bin|xmlrpc))/i;
 const REDIR = [[/^\/author\/w73\/?$/, "/author/w53", 301], [/^\/book\/umda(?:\/.*)?$/, "/book/umdafiqh/1", 302]];
 
-export async function onRequest(ctx) {
+export async function onRequest(ctx) { return secure(await handle(ctx)); }
+
+async function handle(ctx) {
   const u = new URL(ctx.request.url), p = u.pathname;
   if (u.hostname === "www.dawahlibrary.org" || u.hostname.endsWith(".pages.dev") && ctx.env.CANONICAL_REDIRECT === "1")
     return Response.redirect("https://dawahlibrary.org" + p + u.search, 301);

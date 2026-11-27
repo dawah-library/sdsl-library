@@ -1,5 +1,6 @@
 // كل طلبات /api/* على Cloudflare Pages: تُوجَّه إلى ملفات api/*.js نفسها عبر المهايئ.
 import { run } from "../_lib/adapter.js";
+import { SEC } from "../_lib/sec.js";
 import ask from "../../api/ask.js";
 import gh from "../../api/gh.js";
 import imp from "../../api/import.js";
@@ -25,5 +26,6 @@ export async function onRequest(ctx) {
   if (!h) return new Response(JSON.stringify({ message: "غير موجود" }), { status: 404, headers: { "content-type": "application/json; charset=utf-8" } });
   const res = await run(h, ctx, { preload: DATA[name] || [], retry: name === "page" || name === "sitemap" });
   res.headers.set("x-robots-tag", "noindex");
+  for (const k in SEC) if (!res.headers.has(k)) res.headers.set(k, SEC[k]);
   return res;
 }

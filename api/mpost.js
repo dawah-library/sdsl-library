@@ -30,6 +30,7 @@ const out = (res, code, o) => { res.statusCode = code; res.setHeader("content-ty
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return out(res, 405, { message: "POST فقط" });
+  if (require("../lib/rate").limited(req, "mpost", 30, 10 * 60e3)) return out(res, 429, { message: "طلبات كثيرة، حاول بعد قليل." });
   if (!process.env.SUPABASE_URL || !sbKey()) return out(res, 503, { message: "الخادم غير مهيأ للنشر بعد." });
   const tok = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   if (!tok) return out(res, 401, { message: "سجّل الدخول أولًا." });
