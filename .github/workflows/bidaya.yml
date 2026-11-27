@@ -1,0 +1,70 @@
+name: منهج البداية للطلائع (١٥–٢٠ سنة) من نصوص المكتبة
+# tools/bidaya.py: يجمع نصوص كل درس من مصادره حرفيًّا، ثم يصوغه بأسلوب سلسلة «البداية» مسودةً تعتمدها الإدارة (طلب المدير، ٢٧ نوفمبر ٢٠٢٦).
+# بطلب صريح فقط (قرار إيقاف التوليد التلقائي): التشغيل اليدوي، أو تعديل الخطة data/bidaya/plan.json. لا جدول زمني. لا يعيد صياغة ما صيغ. مفتاح الإيقاف: bidaya.
+on:
+  push:
+    branches: [main]
+    paths: ["data/bidaya/plan.json"]
+  workflow_dispatch:
+    inputs:
+      max: { description: "عدد الدروس في الجولة", required: false, default: "8" }
+      only: { description: "معرّف درس لإعادة صياغته (اختياري)", required: false, default: "" }
+permissions:
+  contents: write
+concurrency:
+  group: bidaya
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.s.outputs.on }}
+    steps:
+      - id: s
+        run: |
+          j=$(curl -sf --max-time 15 "https://raw.githubusercontent.com/${{ github.repository }}/main/data/switches.json" || echo '{}')
+          on=$(python3 -c 'import json,sys
+          try: s=(json.loads(sys.argv[1]) or {}).get("s") or {}
+          except Exception: s={}
+          print("false" if s.get("all_jobs") is False or s.get(sys.argv[2]) is False else "true")' "$j" bidaya)
+          echo "on=$on" >> "$GITHUB_OUTPUT"
+  run:
+    needs: gate
+    if: ${{ needs.gate.outputs.on == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: الصياغة
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          GEMINI_API_KEY_6: ${{ secrets.GEMINI_API_KEY_6 }}
+          GEMINI_API_KEY_7: ${{ secrets.GEMINI_API_KEY_7 }}
+          GEMINI_API_KEY_8: ${{ secrets.GEMINI_API_KEY_8 }}
+          GEMINI_API_KEY_9: ${{ secrets.GEMINI_API_KEY_9 }}
+          GEMINI_API_KEY_10: ${{ secrets.GEMINI_API_KEY_10 }}
+          GEMINI_API_KEY_11: ${{ secrets.GEMINI_API_KEY_11 }}
+          GEMINI_API_KEY_12: ${{ secrets.GEMINI_API_KEY_12 }}
+          GEMINI_API_KEY_13: ${{ secrets.GEMINI_API_KEY_13 }}
+          GEMINI_API_KEY_14: ${{ secrets.GEMINI_API_KEY_14 }}
+          GEMINI_API_KEY_15: ${{ secrets.GEMINI_API_KEY_15 }}
+          GEMINI_API_KEY_16: ${{ secrets.GEMINI_API_KEY_16 }}
+          GEMINI_API_KEY_17: ${{ secrets.GEMINI_API_KEY_17 }}
+          GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
+          GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
+          GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          BD_MAX: ${{ github.event.inputs.max || '8' }}
+          BD_MINUTES: "45"
+          ONLY: ${{ github.event.inputs.only }}
+        run: |
+          if [ -n "$ONLY" ]; then python3 tools/bidaya.py --only "$ONLY"; else python3 tools/bidaya.py; fi
+      - name: الحفظ
+        if: always()
+        run: bash tools/git-save.sh "منهج البداية — دروس مسودة" data/bidaya
+      - name: إشعار
+        if: always()
+        run: '[ -s .bidaya-report.txt ] && python3 tools/notify.py "$(cat .bidaya-report.txt)" || true'

@@ -44,10 +44,15 @@ const TLH = (() => {
     if (!k || q.stage) return stagePick(ctx);
     const S0 = STG.find(s => s[0] === k), kd = ctx.kid && ctx.kid(), nl = nextLesson(D, k), Q = todayQ(D, k), sts = stats(D), SN = D.sub || {};
     const best = Object.keys(sts.by).sort((x, y) => sts.by[y][0] / sts.by[y][1] - sts.by[x][0] / sts.by[x][1])[0], weak = weakest(D);
-    const next = nl.x ? `<div class="tlhnext"><small>القادم لك في «${SERIES[nl.x.s] || nl.x.s}» ${nl.x.s === "asas" ? "المستوى " + toAr(nl.x.v) : "الجزء " + toAr(nl.x.v)}</small><h3>${esc(nl.x.l)}</h3><div class="bar"><i style="width:${nl.pct}%"></i></div><small>أتممت ${toAr(nl.pct)}٪ من منهج مرحلتك (${toAr(nl.i)} من ${toAr(nl.L.length)} درسًا)</small>
+    // ١٥–٢٠: «القادم لك» من منهج البداية (الدروس المعتمدة، والمسودات للمشرفين)
+    let bdNext = null; if (k === "t4") { const plan = await getB("plan.json"), idx = (await getB("index.json")) || { lessons: {} }, dn4 = st().done.t4 || [];
+      if (plan) { const all = plan.parts.flatMap(p => p.lessons.map(l => Object.assign({ pt: p.t }, l))), vis = all.filter(x => (idx.lessons[x.id] || {}).st === "ok" || (staff() && idx.lessons[x.id]));
+        bdNext = { x: vis.find(x => !dn4.includes("bd:" + x.id)), n: all.length, d: all.filter(x => dn4.includes("bd:" + x.id)).length, v: vis.length }; } }
+    const next = bdNext ? `<div class="tlhnext"><small>القادم لك في «البداية»${bdNext.x ? " — " + esc(bdNext.x.pt) : ""}</small><h3>${bdNext.x ? esc(bdNext.x.t) : bdNext.v ? "أتممت المتاح من البداية! 🎉" : "منهج البداية قيد الإعداد"}</h3><div class="bar"><i style="width:${Math.round(100 * bdNext.d / Math.max(1, bdNext.n))}%"></i></div><small>أتممت ${toAr(bdNext.d)} من ${toAr(bdNext.n)} درسًا</small>
+        <div class="row">${bdNext.x ? `<a class="btn" href="#/talaea/bidaya?l=${bdNext.x.id}">▶ ادرس الدرس</a>` : ""}<a class="btn s" href="#/talaea/bidaya">📗 فهرس البداية</a></div></div>` : nl.x ? `<div class="tlhnext"><small>القادم لك في «${SERIES[nl.x.s] || nl.x.s}» ${nl.x.s === "asas" ? "المستوى " + toAr(nl.x.v) : "الجزء " + toAr(nl.x.v)}</small><h3>${esc(nl.x.l)}</h3><div class="bar"><i style="width:${nl.pct}%"></i></div><small>أتممت ${toAr(nl.pct)}٪ من منهج مرحلتك (${toAr(nl.i)} من ${toAr(nl.L.length)} درسًا)</small>
         <div class="row"><a class="btn" href="#/book/${esc(nl.x.b)}/${nl.x.p}">▶ ادرس الدرس</a><button class="btn s" data-tlh="done" data-k="${k}" data-id="${esc(nl.x.b + ":" + nl.x.p)}">✓ أتممته</button></div></div>`
       : `<div class="tlhnext"><small>القادم لك</small><h3>${nl.L.length ? "أتممت منهج مرحلتك! 🎉" : "سُلّم القراءة لمرحلتك"}</h3><p>${nl.L.length ? "تابع القراءة من سُلّم مرحلتك، أو انتقل إلى المرحلة التالية." : "تمارين «البداية» قيد الإعداد؛ ابدأ بقراءات مرحلتك المختارة."}</p><a class="btn" href="#/talaea/ladder?k=${k}">📚 سُلّم القراءة</a></div>`;
-    const T = [["📖", "درسي", `#/talaea/manhaj?k=${k}`], ["❓", "سؤال اليوم", "#tlhq", Q && !answered(Q) ? "جديد" : ""], ["📚", "قصص", "#/talaea/qasas"], ["🎮", "ألعاب", "#/talaea/games?g=quiz&k=" + k], ["🎬", "مقاطع", "#/talaea/video"], ["🧩", "ألغاز", "#/talaea/games?g=lughz&k=" + k],
+    const T = [["📖", "درسي", k === "t4" ? "#/talaea/bidaya" : `#/talaea/manhaj?k=${k}`], ["❓", "سؤال اليوم", "#tlhq", Q && !answered(Q) ? "جديد" : ""], ["📚", "قصص", "#/talaea/qasas"], ["🎮", "ألعاب", "#/talaea/games?g=quiz&k=" + k], ["🎬", "مقاطع", "#/talaea/video"], ["🧩", "ألغاز", "#/talaea/games?g=lughz&k=" + k],
       ["✅", "صح أم خطأ", "#/talaea/games?g=tf"], ["📿", "أذكاري", "#/talaea/games?g=adhkar"], ["📚", "سُلّم القراءة", `#/talaea/ladder?k=${k}`], ["🛤️", "مساري", `#/talaea/track?k=${k}`], ["👨‍👩‍👧", "للوالدين", "#/talaea/parents"], ["🗂️", "كل محتوى القسم", "#/talaea?all=1"]];
     const path = (D.lessons || {})[k] || [], groups = [...new Map(path.map(x => [x.s + x.v, x])).values()], dn = st().done[k] || [];
     const pathHtml = groups.length ? `<h4>مساري في المنهج</h4><div class="tlhpath">${groups.map(g => { const L = path.filter(x => x.s === g.s && x.v === g.v), d = L.filter(x => dn.includes(x.b + ":" + x.p)).length, cur = nl.x && nl.x.s === g.s && nl.x.v === g.v;
@@ -69,6 +74,44 @@ const TLH = (() => {
       ${opts.map(([v, t]) => `<button class="tlhopt${a ? (v === right ? " ok" : v === a.v ? " no" : "") : ""}" data-tlh="ans" data-v="${esc(v)}"${a ? " disabled" : ""}>${esc(t)}</button>`).join("")}
       ${a ? `<p class="${a.ok ? "okm" : "nom"}">${a.ok ? "أحسنت! ⭐" : "ليست هذه؛ والصواب ما ظُلِّل بالأخضر."}</p>${Q.w ? `<p class="mut">لماذا؟ ${esc(Q.w)}</p>` : ""}${Q.b ? `<a class="lnk" href="#/book/${esc(Q.b)}/${Q.p}">موضعه من الدرس ←</a>` : Q.src ? `<a class="lnk" href="${esc(Q.src)}">من «${esc(Q.st || "المصدر")}» ←</a>` : ""}` : ""}</div>`;
   }
+  /* ===== «البداية» (١٥–٢٠ سنة): منهج من نصوص المكتبة (tools/bidaya.py ← data/bidaya) — المسودات للمشرفين، والمعتمد (st=ok) للجميع ===== */
+  const RAWB = p => "https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/bidaya/" + p;
+  const getB = async p => { for (const u of [RAWB(p) + "?t=" + Math.floor(Date.now() / 300e3), "data/bidaya/" + p]) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { } } return null; };
+  const staff = () => typeof isAdmin === "function" && isAdmin();
+  const cite = (t, L) => esc(t || "").replace(/\[\[([^\]]+)\]\]/g, (m, r) => { const s_ = (L.src || []).find(x => x.ref === r); const [id, pg] = r.split(":"); return /^(q|tf|arbain)$/.test(id) ? `<sup class="bdc" title="${esc(s_ ? s_.src : r)}">[${esc(s_ ? s_.src : r)}]</sup>` : `<a class="bdc" href="#/book/${esc(id)}/${esc(pg || 1)}" title="${esc(s_ ? s_.src : r)}">[${esc(s_ ? s_.src : r)}]</a>`; });
+  async function bidaya(q, ctx) {
+    const plan = await getB("plan.json"), idx = (await getB("index.json")) || { lessons: {} }; if (!plan) return ctx.view_(ctx.head("البداية", true) + '<p class="note">تعذّر تحميل المنهج.</p></div>');
+    const ok = id => (idx.lessons[id] || {}).st === "ok", vis = id => ok(id) || (staff() && idx.lessons[id]);
+    if (q.l) return lesson(q.l, plan, idx, ctx);
+    const U = plan.units, dn = st().done.t4 || [];
+    ctx.view_(ctx.head("البداية", true) + `<section class="tlh bd"><h2 class="talat">📗 البداية لمن سلك طريق الهداية</h2><p>منهج المرحلة ١٥–٢٠ سنة بعد «الأساس» و«البنيان»: عقيدة، وتفسير، وحديث وفوائده، وأعلام وقدوات، وفقه العبادات والمعاملات، وآداب وقضايا الشباب، وقضايا منهجية — من كتب مشايخ الدعوة والمكتبة العامة بنصوصها وعزوها.</p>
+      ${staff() ? `<p class="note">للمشرفين: ${toAr(Object.keys(idx.lessons).length)} درسًا مصوغًا من ${toAr(plan.parts.reduce((n, p) => n + p.lessons.length, 0))}، المعتمد منها ${toAr(Object.values(idx.lessons).filter(x => x.st === "ok").length)}. المسودات تظهر لك وحدك حتى تعتمدها.</p>` : ""}
+      ${plan.parts.map(pt => `<h3>${esc(pt.t)} <span class="mut">(${esc(pt.age)})</span></h3>${Object.keys(U).map(u => { const L = pt.lessons.filter(x => x.u === u); return L.length ? `<details class="bdu"${pt === plan.parts[0] ? " open" : ""}><summary>${U[u][1]} ${esc(U[u][0])} <span class="mut">(${toAr(L.filter(x => vis(x.id)).length)}/${toAr(L.length)})</span></summary><ol>${L.map(x => `<li>${vis(x.id) ? `<a href="#/talaea/bidaya?l=${x.id}">${esc(x.t)}</a>${ok(x.id) ? "" : ' <em class="tag">مسودة</em>'}${dn.includes("bd:" + x.id) ? " ✓" : ""}` : `<span class="mut">${esc(x.t)} — قيد الإعداد</span>`}</li>`).join("")}</ol></details>` : ""; }).join("")}`).join("")}</section></div>`);
+  }
+  async function lesson(id, plan, idx, ctx) {
+    const L = await getB("l/" + id + ".json"); if (!L || (L.st !== "ok" && !staff())) return ctx.view_(ctx.head("البداية", true) + '<p class="note">الدرس قيد الإعداد والمراجعة.</p></div>');
+    const all = plan.parts.flatMap(p => p.lessons), i = all.findIndex(x => x.id === id), nx = all.slice(i + 1).find(x => (idx.lessons[x.id] || {}).st === "ok" || (staff() && idx.lessons[x.id])), U = plan.units[L.u] || ["", ""];
+    const qs = (L.qs || []).map((x, k) => `<div class="tlhq bdq" data-k="${k}"><p><b>${toAr(k + 1)}.</b> ${esc(x.q)}</p>${x.k === "open" ? `<details><summary>عناصر الإجابة</summary><p>${cite(x.a, L)}</p></details>` : (x.k === "tf" ? [["true", "✓ صح"], ["false", "✗ خطأ"]] : (x.o || []).map((o, j) => [String(j), o])).map(([v, t]) => `<button class="tlhopt" data-bdq="${k}" data-v="${esc(v)}">${esc(t)}</button>`).join("") + `<p class="bdw" hidden>${cite(x.w, L)}</p>`}</div>`).join("");
+    ctx.view_(ctx.head("البداية", true) + `<article class="tlh bd bdl" data-id="${esc(id)}"><p class="mut"><a href="#/talaea/bidaya">📗 البداية</a> › ${U[1]} ${esc(U[0])} › الجزء ${toAr(L.part)}</p><h2 class="talat">${esc(L.t)}</h2>
+      ${L.st !== "ok" ? `<div class="note"><b>مسودة للمراجعة</b> — لا يراها الطلاب حتى تعتمدها. ${(L.warn || []).length ? "تنبيهات الفحص الآلي: " + L.warn.map(esc).join("؛ ") : "اجتاز الفحص الآلي (النصوص المنقولة موجودة حرفيًّا في مصادرها، والآيات مطابقة للمصحف)."}${L.by ? " • " + esc(L.by) : ""}${typeof GH !== "undefined" && GH.on ? ` <button class="btn s p" data-bdok="${esc(id)}">✓ اعتماد الدرس</button>` : " (الاعتماد بمفتاح الإدارة المباشرة)"}</div>` : ""}
+      <p class="bdintro">${cite(L.intro, L)}</p>
+      ${(L.goals || []).length ? `<h3>🎯 أهداف الدرس</h3><ul>${L.goals.map(g => `<li>${esc(g)}</li>`).join("")}</ul>` : ""}
+      ${(L.nusus || []).length ? `<h3>📜 النصوص</h3>${L.nusus.map(n => `<blockquote class="bdn">${esc(n.t)}<small>${cite("[[" + n.ref + "]]", L)}</small></blockquote>`).join("")}` : ""}
+      ${(L.sharh || []).map(x => `<h3>${esc(x.h)}</h3><p>${cite(x.p, L)}</p>`).join("")}
+      ${L.qissa ? `<h3>🐪 من سير السلف</h3><p>${cite(L.qissa, L)}</p>` : ""}
+      ${(L.fawaid || []).length ? `<h3>💡 الفوائد</h3><ol>${L.fawaid.map(f => `<li>${cite(f, L)}</li>`).join("")}</ol>` : ""}
+      ${L.nashat ? `<h3>🛠️ نشاط عملي</h3><p>${esc(L.nashat)}</p>` : ""}
+      ${qs ? `<h3>📝 التقويم</h3>${qs}` : ""}
+      <h3>📚 مصادر الدرس</h3><ul class="mut">${(L.src || []).map(x => `<li>${esc(x.src)}</li>`).join("")}</ul>
+      <div class="row"><button class="btn p" data-tlh="done" data-k="t4" data-id="bd:${esc(id)}">✓ أتممت الدرس</button>${nx ? `<a class="btn" href="#/talaea/bidaya?l=${nx.id}">الدرس التالي ←</a>` : ""}<a class="btn s" href="#/talaea/bidaya">فهرس البداية</a></div></article></div>`);
+  }
+  document.addEventListener("click", async e => {
+    const q = e.target.closest("[data-bdq]"); if (q) { const box = q.closest(".bdq"), id = q.closest(".bdl").dataset.id, L = await getB("l/" + id + ".json"), x = (L.qs || [])[+q.dataset.bdq]; if (!x) return;
+      const right = x.k === "tf" ? String(!!x.a) : String(x.a); box.querySelectorAll("[data-bdq]").forEach(b => { b.disabled = true; if (b.dataset.v === right) b.classList.add("ok"); else if (b === q) b.classList.add("no"); }); const w = box.querySelector(".bdw"); if (w) w.hidden = false; return; }
+    const ok = e.target.closest("[data-bdok]"); if (ok) { const id = ok.dataset.bdok; if (!confirm("اعتماد الدرس وإظهاره للطلاب؟")) return;
+      try { await GH.editJSON("data/bidaya/l/" + id + ".json", o => { o.st = "ok"; o.okby = (Auth.user && Auth.user.name) || "admin"; o.okat = today(); return o; }, "البداية: اعتماد " + id);
+        await GH.editJSON("data/bidaya/index.json", o => { o.lessons[id] = Object.assign(o.lessons[id] || {}, { st: "ok" }); return o; }, "البداية: فهرس " + id); toast("اعتُمد، ويظهر للطلاب خلال دقائق"); } catch (x) { toast(x.message); } return; }
+  });
   document.addEventListener("click", async e => {
     const b = e.target.closest("[data-tlh]"); if (!b) return; e.preventDefault(); const a = b.dataset.tlh, s = st();
     if (a === "stage") { s.stage = b.dataset.k; save(); location.hash = "#/talaea"; if (typeof route === "function") route(); return; }
@@ -80,5 +123,5 @@ const TLH = (() => {
       if (ok) { const T = S.tala = S.tala || { stars: 0, done: {} }; T.stars = (T.stars || 0) + 2; const el = $("#tstars"); if (el) el.textContent = toAr(T.stars); }
       save(); $("#tlhqb").innerHTML = qCard(Q, k, D.sub || {}); }
   });
-  return { home };
+  return { home, bidaya };
 })();

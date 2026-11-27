@@ -48,6 +48,7 @@ const TALA = (() => {
     if (sub === "track") { PLc = await plan(); return track(own(q.k || (kid() || {}).track || "t1")); }
     if (sub === "ladder") return ladder(q.k || (kid() || {}).track || "t1", q);
     if (sub === "parents") return parents();
+    if (sub === "bidaya" && typeof TLH !== "undefined") return TLH.bidaya(q, { head, view_ });
     if (sub === "manhaj") return manhaj(q.k || (kid() || {}).track || "t1");
     if (sub === "furqan") return furqan(q);
     if (sub === "video" && typeof TVID !== "undefined") return TVID.view(q, { head, view_, kid, sx });
