@@ -61,7 +61,7 @@ const PORTAL = (() => {
     const h = H(k); if (!h) return location.hash = "#/";
     document.title = h.t + " — " + SITENAME;
     view(`<section class="hub hub-${h.k}"><header class="hubh"><span class="pic">${ic(h.ic, 40)}</span><div><h1>${esc(h.t)} <small>${esc(h.s)}</small></h1><p>${esc(h.d)}</p></div></header>
-      <div class="hubg">${h.l.map(([u, t, i, s]) => `<a class="happ" href="${u}"><span class="hai">${ic(i, 30)}</span><b>${esc(t)}</b><small>${esc(s)}</small></a>`).join("")}</div>
+      <div class="hubg${h.l.length<=3?" few":""}">${h.l.map(([u, t, i, s]) => `<a class="happ" href="${u}"><span class="hai">${ic(i, 30)}</span><b>${esc(t)}</b><small>${esc(s)}</small></a>`).join("")}</div>
       <nav class="hubo" aria-label="الأقسام الرئيسية الأخرى">${HUBS.filter(x => x.k !== k).map(x => `<a href="#/hub/${x.k}">${ic(x.ic, 18)} ${esc(x.t)} <small>${esc(x.s)}</small></a>`).join("")}<a href="#/">${ic("house", 18)} الرئيسية</a></nav></section>`);
   }
   document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return;
