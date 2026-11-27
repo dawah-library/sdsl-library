@@ -126,7 +126,7 @@ ${b.source ? `<p>${esc(b.source)}</p>` : ""}${plain(txt).split("\n").filter(Bool
   }
   if (v === "author" && seg[1]) {
     let a = author(seg[1]); if (a.mergedInto) { a = author(a.mergedInto); r.canon = "author/" + a.id; } if (!a.name) { r.noindex = true; return r; } // المدموج يعرض المؤلف الموحَّد برابطه المعتمد
-    const books = cat().books.filter(b => b.authorId === a.id && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))), arts = aidx().filter(x => x.a === a.id);
+    const books = cat().books.filter(b => b.authorId === a.id && !(b.set && b.vol > Math.min(...cat().books.filter(y => y.set === b.set).map(y => y.vol)))), arts = aidx().filter(x => x.a === a.id || (x.co || []).includes(a.id));
     r.title = a.name + " — " + SITE; r.desc = cut(a.bio || `كتب ${a.name} ومقالاته في ${SITE}: ${books.length} كتابًا و${arts.length} مقالًا وفتوى.`, 180); r.type = "profile";
     const ph = a.photo ? base + String(a.photo).replace(/^\//, "") : undefined; if (ph) r.image = ph;
     r.ld = { "@context": "https://schema.org", "@type": "Person", name: a.name, description: a.bio || undefined, image: ph };
