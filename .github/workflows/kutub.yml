@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]   # فروع التطوير لا تستهلك حصة Gemini؛ تعمل المهمة بعد الدمج
-    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-rev.py", "tools/hadith-grades.py"]
+    paths: ["tools/kutub.py", "tools/hadith-topics.py", "tools/hadith-links.py", "tools/hadith-rev.py", "tools/hadith-grades.py", "tools/hadith-sahabi.py"]
   # الكتب المستوردة حديثًا (صحيح ابن خزيمة وابن حبان والمستدرك والمصنفات والمعاجم…) تدخل القسم آليًا بعد استيرادها
   workflow_run:
     workflows: ["استيراد كتب التراث من OpenITI", "استيراد كتب التراث المشكولة من الشاملة"]
@@ -18,6 +18,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py && python3 tools/hadith-rev.py && python3 tools/hadith-grades.py
+      - run: python3 tools/kutub.py && python3 tools/hadith-topics.py && python3 tools/hadith-links.py && python3 tools/hadith-rev.py && python3 tools/hadith-grades.py && python3 tools/hadith-sahabi.py
       - run: |
-          bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k data/hadith/topics data/hadith/links data/hadith/grades
+          bash tools/git-save.sh "قسم الحديث: كتب السنة" data/hadith/k data/hadith/topics data/hadith/sahabi data/hadith/links data/hadith/grades
