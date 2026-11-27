@@ -87,6 +87,7 @@ const HDS = (() => {
     const bar = full ? `<div class="row shbar">${NINE.includes(b) ? `<button class="btn s" data-act="shexp" data-b="${b}" data-n="${esc(String(n))}">⬇ تنزيل الشرح</button>` : ""}${canEdit() && NINE.includes(b) ? `<button class="btn s" data-act="shedit" data-b="${b}" data-n="${esc(String(n))}">${c ? "✎ تعديل الشرح" : "＋ إضافة شرح"}</button>` : ""}</div>` : "";
     el.innerHTML = (c ? sharhHtml(c, full) : NOSH) + (await dawahHtml(b, n)) + bar; }
 
+  window.HSH = { into: (el, b, n, f) => sharhInto(el, b, n, f) };
   /* ===== من شروح مشايخ الدعوة (tools/sharh-dawah.py ← data/sharh/dawah): موضع شرح الشيخ للحديث، وفوائده وترجيحاته بنص كلامه — تظهر للقراء بعد اعتماد الإدارة ===== */
   async function dawahOf(b, n) { const D_ = await sget("dawah/" + b + ".json"); return D_[String(n)] || D_[String(n).split(".")[0]] || []; }
   async function dawahHtml(b, n) {
