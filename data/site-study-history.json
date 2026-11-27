@@ -746,10 +746,10 @@
 "perf": 8.7
 },
 "m": {
-"books": 1664,
+"books": 1684,
 "dawah": 60,
-"turath": 1604,
-"authors": 435,
+"turath": 1624,
+"authors": 438,
 "topics": 123,
 "pdf": 86,
 "card": 58,
@@ -762,7 +762,7 @@
 "prep_n": 58,
 "scripts": 9,
 "deferred": 0,
-"js_kb": 625,
+"js_kb": 627,
 "app_kb": 533,
 "fonts": 6,
 "services": 112,
@@ -778,7 +778,7 @@
 "server_search": false,
 "workflows": 94,
 "api": 14,
-"sw": "sdsl-v341",
+"sw": "sdsl-v342",
 "plan_done": 5,
 "plan_n": 27,
 "search_console": false
