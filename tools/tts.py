@@ -413,7 +413,7 @@ def speak_eleven(text, voice_id, path):
     import base64, json as _j, urllib.request, urllib.error, datetime
     key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
     if not key: raise QuotaOut("لا مفتاح ElevenLabs (ELEVENLABS_API_KEY)")
-    cap = int(os.environ.get("ELEVEN_MONTHLY_CHARS", "200000") or 0); mon = datetime.date.today().strftime("%Y-%m")
+    cap = int(os.environ.get("ELEVEN_MONTHLY_CHARS", "9000") or 0); mon = datetime.date.today().strftime("%Y-%m")
     use = jload(EL_USAGE, {}); used = int(use.get(mon, {}).get("chars", 0))
     if cap and used + len(text) > cap: raise QuotaOut("بلغ استهلاك ElevenLabs السقف الشهري (%d حرف)" % cap)
     o = ELS or {}; model = o.get("model") or "eleven_multilingual_v2"
