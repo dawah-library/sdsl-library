@@ -17,6 +17,8 @@ const R = ["", "#/dawah", "#/library", "#/library?c=turath", "#/articles", "#/fa
     const t = await p.evaluate(() => (document.querySelector("#app") || document.body).innerText.trim()).catch(() => "");
     if (/^جارٍ تحميل المكتبة/.test(t) || t.length < 40) errs.push("الصفحة لم تكتمل: «" + t.slice(0, 50) + "»");
   };
+  // عامل الخدمة الجديد بعد نشر حديث يُفعَّل أولًا، فلا يعيد تحميل صفحةٍ في منتصف فحصها
+  try { await p.goto(BASE, { waitUntil: "networkidle", timeout: 45000 }); await p.waitForTimeout(6000); } catch (e) { }
   for (const h of R) {
     await check(h);
     // إعادة واحدة بعد مهلة: انقطاع التحميل بتنقل آخر أو بطء الشبكة عارض، لا خلل في الصفحة

@@ -2472,12 +2472,20 @@ const NAV=(()=>{const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getI
  openSheet=function(){const r=_os.apply(this,arguments);NAV.mopen();return r};
  closeSheet=function(){const sh=$("#sheet"),was=sh&&!sh.hidden;const r=_cs.apply(this,arguments);if(was)NAV.mclose();return r};
  const d=$("#dlg");if(d)d.addEventListener("close",()=>NAV.mclose())}
+/* تحديث الواجهة بعد نشر جديد: لا تُعاد الصفحة في منتصف القراءة أو الكتابة؛ يُطبَّق الإصدار الجديد مع أول انتقال تالٍ
+   (تحميل كامل للصفحة المطلوبة من الصفحة الثابتة / فلا تُستهلك حصة الدوال)، أو حين تُخفى النافذة ولا نص مكتوب لم يُحفظ، أو فورًا إن فُتحت الصفحة للتو. */
+const SWU={pend:false,dirty:false,t0:Date.now(),
+ hit(){if(Date.now()-SWU.t0<8000&&!SWU.dirty){location.reload();return}SWU.pend=true},
+ nav(h){if(!SWU.pend)return false;SWU.pend=false;location.href="/#"+toPath(h);return true}};
+document.addEventListener("input",e=>{if(e.target&&e.target.matches&&e.target.matches("textarea,[contenteditable],input:not([type=search]):not([type=range]):not([type=checkbox]):not([type=radio])"))SWU.dirty=true},true);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&SWU.pend&&!SWU.dirty){SWU.pend=false;location.reload()}});
 function go(h,replace){if(history.state&&history.state.m&&NAV.skip){addEventListener("popstate",()=>setTimeout(()=>go(h,replace),0),{once:true});return} // إغلاق نافذة للتو: يُنتظر رجوعها أولًا وإلا أعاد الرجوعُ الصفحةَ السابقة
+ if(SWU.nav(h))return;SWU.dirty=false;
  const sameBook=(a,b)=>{const m=x=>(String(x).match(/^\/book\/([^/?]+)/)||[])[1];return m(a)&&m(a)===m(b)};
  // تقليب صفحات الكتاب نفسه لا يضيف خطوات، فالرجوع يعود إلى ما قبل الكتاب لا إلى الصفحة السابقة
  if(sameBook(toPath(h),location.pathname))replace=true;
  if(replace)history.replaceState(null,"",toPath(h));else history.pushState(null,"",toPath(h));route();NAV.ui()}
-window.addEventListener("hashchange",()=>{if(NAV.skip&&location.hash.startsWith("#/")){const h=location.hash;addEventListener("popstate",()=>setTimeout(()=>go(h),0),{once:true});return}if(location.hash.startsWith("#/")){history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
+window.addEventListener("hashchange",()=>{if(NAV.skip&&location.hash.startsWith("#/")){const h=location.hash;addEventListener("popstate",()=>setTimeout(()=>go(h),0),{once:true});return}if(location.hash.startsWith("#/")){if(SWU.nav(location.hash))return;SWU.dirty=false;history.replaceState({i:NAV.next()},"",toPath(location.hash))}route();NAV.ui()});
 window.addEventListener("popstate",()=>{
  if(NAV.skip){NAV.skip=false;NAV.mark();return}
  // زر رجوع الجهاز مع نافذة مفتوحة: تُغلق النافذة؛ فإن كانت الخطوة خطوتها (m) انتهى الأمر، وإلا أُعيد الرابط كما كان
@@ -2609,7 +2617,7 @@ async function boot(){if(location.hash.startsWith("#/"))history.replaceState(nul
  merge();
  if(S.seen&&CAT.version&&S.seen!==CAT.version){const b=$("#banner");b.hidden=false;b.textContent="تم تحديث المكتبة بمحتوى جديد."}
  S.seen=CAT.version;saveS();
- if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;location.reload()}});navigator.serviceWorker.register("sw.js").then(r=>{r.update&&r.update();
+ if("serviceWorker"in navigator&&/^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.host)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;SWU.hit()}});navigator.serviceWorker.register("sw.js").then(r=>{r.update&&r.update();
   // التطبيق المثبت على الهاتف يعود من الخلفية دون إعادة تحميل: يُفحص وجود إصدار جديد عند كل عودة (مرة كل ١٠ دقائق على الأكثر)
   let last=Date.now();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-last>600e3){last=Date.now();try{r.update()}catch(e){}}})}).catch(()=>{})}
  renderTicker();await Auth.init();route();if(window.MODS)setTimeout(MODS.start,300);setTimeout(loginNudge,2500)}
