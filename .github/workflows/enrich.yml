@@ -3,7 +3,7 @@ name: إثراء الأقسام من الكتب الجديدة
 on:
   workflow_dispatch:
   schedule:
-    - cron: "13 */6 * * *"   # كل ست ساعات
+    - cron: "13 2,14 * * *"   # كل ست ساعات
   push:
     branches: [main]
     paths: ["data/catalog.json", "tools/enrich-new.py", "tools/tala-stories.py"]
