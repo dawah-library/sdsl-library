@@ -24,4 +24,5 @@
 - المرحلة ٩ (منجزة): outreach.js (#/awael، #/weekly، #/masala، #/newsletter)، tools/weekly.py، tools/newsletter.py، جدول subscribers؛ docs/community.md.
 - الختام (منجز ٢٧ نوفمبر): تحديث «دراسة الموقع» بالمستجدات والمقارنات (القسم ٥ج وصفوف جديدة في جدول المقارنة) وصفحة التعريف.
 - قسم «خطب الجمعة» (منجز، طلب المدير ٢١ نوفمبر): khutab.js، tools/khutab.py، khutab.yml، data/khutab — docs/khutab.md، ق-١٣.
-- تفاسير المصحف المطولة (منجز ٢٧ نوفمبر، طلب المدير): ابن كثير والطبري والقرطبي في vols/tafsir لكل صفحة، والمختصر مقدَّم؛ التدقيق tools/tafsir-build.py — docs/mushaf-tafsir.md، ق-١٤.
+- تفاسير المصحف المطولة (منجز ٢٧ نوفمبر، طلب المدير): ابن كثير والطبري والقرطبي في vols/tafsir لكل صفحة، والمختصر مقدَّم؛ التدقيق tools/tafsir-build.py — docs/mushaf-tafsir.md، ق-١٥.
+- الموسوعة الفقهية المقارنة وسائر الموسوعات بالمنهج الموسع (منجز، طلب المدير ٢٧ نوفمبر): tools/mawsua_fiqh.py، tools/mawsua_disc.py، data/mawsua/_fiqh.json، _disc.json، ق-١٤، docs/mawsua.md؛ التحديث المحافظ (.new.json بسجل chg) لكل الموسوعات.
