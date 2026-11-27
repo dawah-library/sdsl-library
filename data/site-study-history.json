@@ -743,7 +743,7 @@
 "reliab": 6.7,
 "arch": 5.2,
 "seo": 5.0,
-"perf": 8.8
+"perf": 8.7
 },
 "m": {
 "books": 1664,
@@ -762,10 +762,10 @@
 "prep_n": 58,
 "scripts": 9,
 "deferred": 0,
-"js_kb": 622,
-"app_kb": 531,
+"js_kb": 623,
+"app_kb": 532,
 "fonts": 6,
-"services": 111,
+"services": 112,
 "seo_internal": false,
 "ai_bots_blocked": true,
 "opensearch": true,
@@ -778,7 +778,7 @@
 "server_search": false,
 "workflows": 92,
 "api": 14,
-"sw": "sdsl-v337",
+"sw": "sdsl-v338",
 "plan_done": 5,
 "plan_n": 27,
 "search_console": false
