@@ -35,5 +35,13 @@
   "p24c16cf5": {
    "front": 3
   }
+ },
+ "eleven": {
+  "model": "eleven_multilingual_v2",
+  "stability": 0.6,
+  "similarity": 0.8,
+  "style": 0.0,
+  "speed": 0.92,
+  "boost": true
  }
 }
