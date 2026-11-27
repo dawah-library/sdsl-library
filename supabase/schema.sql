@@ -1126,3 +1126,5 @@ drop policy if exists "author drafts upload" on storage.objects;
 create policy "author drafts upload" on storage.objects for insert to authenticated with check (bucket_id = 'author-drafts' and public.owns_author(split_part(name, '/', 1)));
 drop policy if exists "author drafts read" on storage.objects;
 create policy "author drafts read" on storage.objects for select to authenticated using (bucket_id = 'author-drafts' and (public.is_staff() or public.owns_author(split_part(name, '/', 1))));
+
+-- مشغّل الترحيلات من الإدارة (ترحيل 2026-11-27-admin-migrate.sql): الدالة admin_run_migration وجدول migration_log

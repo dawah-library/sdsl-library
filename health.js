@@ -24,6 +24,19 @@ const ADMH = (() => {
     }
     return { rows: out, bad: out.filter(x => x.ok === false).length };
   }
+  async function runner() {
+    const sb = typeof Auth !== "undefined" && Auth.sb; if (!sb) return "none";
+    try { const { error } = await sb.rpc("admin_run_migration", { p_name: "probe", p_sql: "" }); const m = String((error && (error.code + " " + error.message)) || ""); if (/PGRST202|schema cache|could not find/i.test(m)) return "missing"; if (/42501|admin only/i.test(m)) return "denied"; return "ready" } catch (e) { return "none" }
+  }
+  async function apply(file, btn, el) {
+    btn.disabled = true; btn.textContent = "جارٍ التطبيق…";
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${REPO}/main/supabase/migrations/${file}?t=${Date.now()}`); if (!r.ok) throw new Error("تعذر قراءة الملف من المستودع");
+      const sql = await r.text(); const { data, error } = await Auth.sb.rpc("admin_run_migration", { p_name: file, p_sql: sql });
+      if (error) throw new Error(error.message); if (data && data.ok === false) throw new Error(data.error || "فشل");
+      btn.textContent = "✅ طُبّق"; setTimeout(() => render(el), 800);
+    } catch (e) { btn.disabled = false; btn.textContent = "أعد المحاولة"; const n = document.createElement("div"); n.className = "note warn"; n.textContent = "فشل تطبيق " + file + ": " + String(e.message || e).slice(0, 200); btn.parentNode.appendChild(n); }
+  }
   async function runs() {
     try {
       const r = await fetch(`https://api.github.com/repos/${REPO}/actions/runs?per_page=100`); if (!r.ok) throw 0;
@@ -41,19 +54,20 @@ const ADMH = (() => {
   }
   async function render(el) {
     el.innerHTML = '<p class="mut">جارٍ الفحص الحي…</p>';
-    const [D, R, Q] = await Promise.all([db(), runs(), queue()]);
+    const [D, R, Q, RN] = await Promise.all([db(), runs(), queue(), runner()]);
     const badRuns = (R || []).filter(x => x.st === "bad"), attn = [];
     if (D.bad) attn.push(`${D.bad} عنصرا ناقصا في قاعدة البيانات (ترحيل لم يُطبَّق)`);
     badRuns.forEach(x => attn.push(`مهمة «${x.name}»: ${x.concl === "queued" ? "عالقة في الطابور" : "فشلت"} منذ ${ago(x.at)}`));
     if (Q && Q.wait.length) attn.push(`${Q.wait.length} كتبا في طابور الاستيراد لم تدخل بعد`);
     const head = attn.length ? `<div class="note warn" role="status"><b>يحتاج انتباهك الآن (${attn.length}):</b><ul style="margin:4px 0 0">${attn.map(a => `<li>${esc(a)}</li>`).join("")}</ul></div>` : '<div class="note" role="status">✅ لا شيء يحتاج انتباهك الآن.</div>';
     const miss = D.rows.filter(x => x.ok === false), files = [...new Set(miss.map(x => x.f))];
-    const dbh = `<h3 style="font-size:1rem">قاعدة البيانات (الترحيلات)</h3>${D.note ? `<p class="mut">${esc(D.note)}</p>` : ""}<div class="card">${D.rows.map(x => row(x.ok, x.t + (x.c !== "*" ? "." + x.c : ""), x.ok === true ? x.what : x.what + (x.why ? " (" + x.why + ")" : ""))).join("")}</div>${files.length ? `<p class="mut">الملفات الناقصة في <code>supabase/migrations</code> (أو schema.sql): ${files.map(f => `<code>${esc(f)}</code>`).join("، ")}. افتح <a href="https://github.com/${REPO}/tree/main/supabase/migrations" target="_blank" rel="noopener">المجلد</a> والصق الملف في محرر SQL بلوحة Supabase.</p>` : ""}`;
+    const dbh = `<h3 style="font-size:1rem">قاعدة البيانات (الترحيلات)</h3>${D.note ? `<p class="mut">${esc(D.note)}</p>` : ""}<div class="card">${D.rows.map(x => row(x.ok, x.t + (x.c !== "*" ? "." + x.c : ""), x.ok === true ? x.what : x.what + (x.why ? " (" + x.why + ")" : ""))).join("")}</div>${files.filter(f => f !== "schema.sql").length ? `<div class="card" id="admh-ap"><b>تطبيق بضغطة:</b> ${RN === "ready" ? files.filter(f => f !== "schema.sql").map(f => `<div class="row" style="gap:8px;align-items:center;margin-top:6px"><code style="flex:1" dir="ltr">${esc(f)}</code><button class="btn p" data-mig="${esc(f)}">طبّق</button></div>`).join("") : RN === "missing" ? `<p class="mut">المشغّل غير مفعّل بعد. الصق مرة واحدة فقط ملف <a href="https://github.com/${REPO}/blob/main/supabase/migrations/2026-11-27-admin-migrate.sql" target="_blank" rel="noopener">2026-11-27-admin-migrate.sql</a> في محرر SQL (ملفه ASCII خالص)، وبعدها تظهر أزرار «طبّق» هنا.</p>` : `<p class="mut">زر التطبيق يعمل لحساب المدير فقط (الحالة: ${esc(RN)}).</p>`}</div>` : ""}${files.length ? `<p class="mut">الملفات الناقصة في <code>supabase/migrations</code> (أو schema.sql): ${files.map(f => `<code>${esc(f)}</code>`).join("، ")}. افتح <a href="https://github.com/${REPO}/tree/main/supabase/migrations" target="_blank" rel="noopener">المجلد</a> والصق الملف في محرر SQL بلوحة Supabase.</p>` : ""}`;
     const order = { bad: 0, run: 1, warn: 2, ok: 3 }, ico = { ok: "✅", bad: "❌", warn: "⚠️", run: "⏳" };
     const rh = `<h3 style="font-size:1rem">المهام الآلية (آخر تشغيل لكل مهمة)</h3>${R ? `<div class="card">${[...R].sort((a, b) => order[a.st] - order[b.st]).map(x => `<div class="row" style="gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#ddd3)"><span aria-hidden="true">${ico[x.st]}</span><a style="flex:1" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a><span class="mut">${esc(x.concl)} · منذ ${ago(x.at)}</span></div>`).join("")}</div><p class="mut"><a href="https://github.com/${REPO}/actions" target="_blank" rel="noopener">كل المهام وتشغيلها يدويا ↗</a> (إعادة تشغيل المهمة العالقة: افتحها ثم Re-run أو ألغها ليبدأ التالي).</p>` : '<p class="mut">تعذر قراءة واجهة GitHub العامة الآن (حد الطلبات). أعد المحاولة بعد قليل.</p>'}`;
     const qh = `<h3 style="font-size:1rem">طابور استيراد الكتب</h3>${Q ? `<div class="card">${row(Q.wait.length ? null : true, `${Q.done} من ${Q.total} دخلت`, Q.wait.length ? "ينتظر: " + Q.wait.slice(0, 8).join("، ") + (Q.wait.length > 8 ? " …" : "") : "لا انتظار")}</div>` : '<p class="mut">تعذر قراءة الطابور.</p>'}`;
     el.innerHTML = head + dbh + rh + qh + '<div class="row"><button class="btn" id="admh-r">↻ إعادة الفحص</button></div>';
     const b = el.querySelector("#admh-r"); if (b) b.onclick = () => render(el);
+    el.querySelectorAll("[data-mig]").forEach(x => x.onclick = () => apply(x.dataset.mig, x, el));
   }
   return { render };
 })();
