@@ -71,6 +71,51 @@
    ],
    "auto": 1,
    "new": 1
+  },
+  {
+   "id": "irabsamin-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "irabsafi-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "irabdarwish-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "irabsafaqsi-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "irabdarsahaba-v01",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
   }
  ]
 }
