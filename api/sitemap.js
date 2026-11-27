@@ -17,10 +17,10 @@ module.exports = (req, res) => {
   const upd = cat.version ? new Date(+cat.version).toISOString() : null; // آخر تحديث للفهرس: يدعو محركات البحث لإعادة الزحف
   add("", upd, "1.0");
   ["library?c=dawah", "library?c=turath", "articles", "fatawa", "bayanat", "furqan", "ithra", "majalla", "alam", "tafrighat", "posts", "authors", "tarajim", "about", "dawah", "history", "contact", "ask", "talaea", "tashjir", "qa", "releases", "quizzes", "summary", "paths", "hifz", "audio", "radio"].forEach(p => add(p, upd, "0.8"));
-  cat.books.filter(b => !b.demo && !b.hidden).forEach(b => add("book/" + b.id + "/1", b.added, b.col === "dawah" ? "0.9" : "0.7"));
+  cat.books.filter(b => !b.demo && !b.hidden).forEach(b => add("book/" + b.id + "/1", b.added || upd, b.col === "dawah" ? "0.9" : "0.7"));
   arts.filter(a => !a.h).forEach(a => add("book/" + a.id + "/1", a.d, "0.6"));
-  cat.authors.filter(a => !a.mergedInto).forEach(a => add("author/" + a.id, null, "0.6")); // المدموج يُفهرس بالسجل الموحَّد
-  posts.filter(p => !p.demo).forEach(p => add("post/" + p.id, p.date, "0.4"));
+  cat.authors.filter(a => !a.mergedInto).forEach(a => add("author/" + a.id, upd, "0.6")); // المدموج يُفهرس بالسجل الموحَّد
+  posts.filter(p => !p.demo).forEach(p => add("post/" + p.id, p.date || upd, "0.4"));
   for (let i = 1; i <= 114; i++) add("mushaf/" + i, null, "0.7"); // سور المصحف
   try { (read("data/hadith/index.json").items || []).forEach(h => add("hadith/x/" + h[0], null, "0.5")); } catch (e) { } // الأربعون ورياض الصالحين وبلوغ المرام
   res.setHeader("content-type", "application/xml; charset=utf-8");
