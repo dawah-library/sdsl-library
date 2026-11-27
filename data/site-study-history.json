@@ -765,7 +765,7 @@
 "js_kb": 620,
 "app_kb": 529,
 "fonts": 6,
-"services": 111,
+"services": 112,
 "seo_internal": false,
 "ai_bots_blocked": true,
 "opensearch": true,
@@ -778,7 +778,7 @@
 "server_search": false,
 "workflows": 92,
 "api": 14,
-"sw": "sdsl-v335",
+"sw": "sdsl-v336",
 "plan_done": 5,
 "plan_n": 27,
 "search_console": false

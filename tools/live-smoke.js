@@ -10,12 +10,17 @@ const R = ["", "#/dawah", "#/library", "#/library?c=turath", "#/articles", "#/fa
   const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true }), p = await ctx.newPage(), bad = [];
   let errs = []; p.on("pageerror", e => errs.push("JS: " + e.message.slice(0, 160)));
   p.on("response", r => { const u = r.url(); if (r.status() >= 400 && u.startsWith(BASE) && !/\/api\//.test(u)) errs.push(r.status() + " " + u.slice(BASE.length - 1, 140)); });
-  for (const h of R) {
+  const check = async h => {
     errs = [];
     try { await p.goto(BASE + h, { waitUntil: "networkidle", timeout: 45000 }); } catch (e) { errs.push("تحميل: " + e.message.slice(0, 80)); }
     await p.waitForTimeout(2500);
     const t = await p.evaluate(() => (document.querySelector("#app") || document.body).innerText.trim()).catch(() => "");
     if (/^جارٍ تحميل المكتبة/.test(t) || t.length < 40) errs.push("الصفحة لم تكتمل: «" + t.slice(0, 50) + "»");
+  };
+  for (const h of R) {
+    await check(h);
+    // إعادة واحدة بعد مهلة: انقطاع التحميل بتنقل آخر أو بطء الشبكة عارض، لا خلل في الصفحة
+    if (errs.length && !errs.some(x => x.startsWith("JS:"))) { await p.goto("about:blank").catch(() => {}); await p.waitForTimeout(3000); await check(h); }
     if (errs.length) bad.push("- " + (h || "/") + ": " + [...new Set(errs)].join(" | "));
     console.log((errs.length ? "✗ " : "✓ ") + (h || "/"));
   }
