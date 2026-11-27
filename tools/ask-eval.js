@@ -21,13 +21,13 @@ if (process.argv.includes("--make")) {
 }
 const D = rj(path.join(SX, "_docs.json")), shards = new Map();
 const shard = t => { const n = crc(t) % (D.shards || 2048); if (!shards.has(n)) { const f = path.join(SX, n + ".json"); shards.set(n, fs.existsSync(f) ? rj(f) : {}); } return shards.get(n)[t]; };
-function run(q) {
+function run(q, relax) {
   const ts = S.terms(q); if (!ts.length) return { books: [], pages: [] };
   const N = D.n || 1, score = new Map();
   ts.forEach((t, j) => { const e = shard(t) || (P3.test(t) ? shard(t.replace(P3, "")) : null); if (!e) return; const idf = Math.log(1 + (N + 1) / (e[0] + .5));
     e[1].split(" ").forEach(x => { const [k, p, f] = x.split("."), id = D.k[k]; if (!id) return; const key = id + ":" + p, v = score.get(key) || { s: 0, m: new Set() }; v.s += idf * (1 + Math.log(+f || 1)); v.m.add(j); score.set(key, v); }); });
   let cand = [...score].map(([k, v]) => [k, v.s * Math.pow(v.m.size / ts.length, 2), v.m.size]);
-  const full = cand.filter(c => c[2] === ts.length); if (ts.length > 1 && full.length >= 4) cand = full;
+  const full = cand.filter(c => c[2] === ts.length); if (!relax && ts.length > 1 && full.length >= 4) cand = full;
   cand.sort((a, b) => b[1] - a[1]);
   const byBook = new Map(); cand.forEach(([k, v]) => { const id = k.split(":")[0], l = byBook.get(id) || []; if (l.length < 3) l.push(v); byBook.set(id, l); });
   const books = [...byBook].map(([id, l]) => [id, l.reduce((a, b) => a + b, 0) + l[0]]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
@@ -37,13 +37,13 @@ const kw = q => [...new Set(S.terms(q))].sort((a, b) => b.length - a.length).sli
 const Q = rj(path.join(OUT, "ask-questions.json")).items, res = [];
 for (const it of Q) {
   const row = { id: it.id, book: it.book, page: it.page };
-  for (const [name, q] of [["full", it.q], ["short", kw(it.q)]]) {
-    const r = run(q), bi = r.books.indexOf(it.book), pi = r.pages.findIndex(k => { const [b, p] = k.split(":"); return b === it.book && Math.abs(+p - it.page) <= 1; });
+  for (const [name, q, rx] of [["full", it.q, 0], ["short", kw(it.q), 0], ["relaxed", it.q, 1]]) {
+    const r = run(q, rx), bi = r.books.indexOf(it.book), pi = r.pages.findIndex(k => { const [b, p] = k.split(":"); return b === it.book && Math.abs(+p - it.page) <= 1; });
     row[name] = { terms: r.nt, bookRank: bi < 0 ? null : bi + 1, pageRank: pi < 0 ? null : pi + 1 };
   }
   res.push(row);
 }
 const rate = (n, f) => Math.round(100 * res.filter(f).length / res.length);
 const sm = n => ({ book_at8: rate(n, r => r[n].bookRank && r[n].bookRank <= 8), page_at10: rate(n, r => r[n].pageRank && r[n].pageRank <= 10), page_at30: rate(n, r => r[n].pageRank && r[n].pageRank <= 30), missing: rate(n, r => !r[n].pageRank) });
-const out = { at: new Date().toISOString(), n: res.length, pagesIndexed: D.n, summary: { full: sm("full"), short: sm("short") }, rows: res };
+const out = { at: new Date().toISOString(), n: res.length, pagesIndexed: D.n, summary: { full: sm("full"), short: sm("short"), relaxed: sm("relaxed") }, rows: res };
 fs.writeFileSync(path.join(OUT, "ask-eval.json"), JSON.stringify(out, null, 1)); console.log(JSON.stringify(out.summary), "pages", D.n);
