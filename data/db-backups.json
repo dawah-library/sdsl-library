@@ -37,6 +37,19 @@
     "notify_state": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.notify_state' in the schema ca",
     "subscribers": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.subscribers' in the schema cac"
    }
+  },
+  {
+   "d": "2026-11-27",
+   "key": "backups/db/2026-11-27.json.gz",
+   "kb": 205.4,
+   "rows": 4757,
+   "tables": 37,
+   "errors": {
+    "comparisons": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.comparisons' in the schema cac",
+    "member_prefs": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.member_pages'\",\"message\":\"Could not find t",
+    "notify_state": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.notify_state' in the schema ca",
+    "subscribers": "404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.subscribers' in the schema cac"
+   }
   }
  ]
 }

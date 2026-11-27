@@ -13,7 +13,18 @@ const MTN = (() => {
   const withOwn = d => Object.assign({}, d, { items: d.items.concat(own().filter(x => !d.items.some(y => y.id === x.id || (y.b && y.b === x.b && !x.from)))) });
   const load = async () => withOwn(await load0());
   const load0 = async () => { if (D) return D; for (const u of ["https://raw.githubusercontent.com/" + (CFG.repo || "dawah-library/sdsl-library") + "/main/data/mutun.json?t=" + Math.floor(Date.now() / 300e3), "data/mutun.json"]) { try { const r = await fetch(u); if (r.ok) { D = await r.json(); break; } } catch (e) { } } return (D = D || { sci: [], lv: [], items: [] }); };
-  const P = () => (S.mtn = S.mtn || {}), push = () => { saveS(); try { Prefs.push(); } catch (e) { } };
+  const P = () => (S.mtn = S.mtn || {}), push = () => { saveS(); try { Prefs.push(); } catch (e) { } try { srv(); } catch (e) { } };
+  // مزامنة الخطة إلى الخادم (جدولا hifz_plans وhifz_log، ترحيل 2026-11-27-hifz.sql) لتذكير الورد اليومي بإشعار الجهاز؛ تفشل بصمت إن لم يكن العضو داخلًا أو لم يُطبَّق الترحيل
+  let srvT = null, srvKnown = new Set();
+  const srv = () => { clearTimeout(srvT); srvT = setTimeout(async () => {
+    try { if (typeof Auth === "undefined" || !Auth.sb || !Auth.user) return; const uid = Auth.user.id, p = P(), items = ((D && D.items) || []).concat(own());
+      const ids = Object.keys(p), rows = ids.map(id => { const x = p[id] || {}, it = items.find(z => z.id === id) || {}, days = Object.keys(x.log || {}).sort(), off = new Date().getTimezoneOffset() * -1, rt = x.remind || "20:00", hh = +rt.split(":")[0] || 20;
+        return { user_id: uid, matn_id: id, title: it.t || id, daily: Math.min(50, Math.max(1, +x.pd || 1)), done: x.d || 0, total: x.n || 0, remind_at: rt, tz_offset: off, hour_utc: ((hh - Math.round(off / 60)) % 24 + 24) % 24, last_done: days.length ? days[days.length - 1] : null, active: true, updated_at: new Date().toISOString() }; });
+      if (rows.length) { const { error } = await Auth.sb.from("hifz_plans").upsert(rows, { onConflict: "user_id,matn_id" }); if (error) return; }
+      const gone = [...srvKnown].filter(id => !ids.includes(id)); srvKnown = new Set(ids);
+      if (gone.length) await Auth.sb.from("hifz_plans").update({ active: false }).eq("user_id", uid).in("matn_id", gone);
+      const lg = []; ids.forEach(id => Object.entries((p[id] || {}).log || {}).slice(-14).forEach(([d, n]) => lg.push({ user_id: uid, matn_id: id, day: d, parts: +n || 0 }))); if (lg.length) await Auth.sb.from("hifz_log").upsert(lg, { onConflict: "user_id,matn_id,day" });
+    } catch (e) { } }, 2500); };
   const nz = s => norm(String(s || "")).replace(/[^ء-ي\s]/g, " ").split(/\s+/).filter(Boolean);
   const day = () => new Date().toISOString().slice(0, 10);
 
@@ -81,21 +92,12 @@ const MTN = (() => {
         <p class="mut">الترتيب المقترح: ابدأ بالمرحلة الأولى في العلم الذي تحتاجه، ولا تنتقل إلى ما بعدها حتى تتقن ما قبلها. المتن غير المتاح بعد في المكتبة يُضاف من الإدارة.</p>
         ${d.lv.map(([lv, ln, ld]) => { const its = d.items.filter(x => !x.own && x.lv === lv && (!s0 || x.sci === s0)).sort((x, y) => d.sci.findIndex(s => s[0] === x.sci) - d.sci.findIndex(s => s[0] === y.sci) || (x.ord || 0) - (y.ord || 0)); return its.length ? `<section class="mlv"><h3>${esc(ln)} <small class="mut">— ${esc(ld)}</small></h3><div class="mgrid">${its.map(x => card(d, x)).join("")}</div></section>` : ""; }).join("")}`;
     } else if (tab === "mine") {
-      body = (mine.length ? `<div class="mgrid">${mine.map(x => card(d, x, 1)).join("")}</div><div id="mtoday"></div>` : `<p class="note">لم تبدأ حفظ متن بعد. اختر من <a href="#/hifz?t=ladder">سلّم المتون</a> ثم «ابدأ الحفظ».</p>`) + '<div id="mtrem"></div>';
-      setTimeout(() => { today(d, mine); remBox(); }, 0);
+      body = mine.length ? `<div class="mgrid">${mine.map(x => card(d, x, 1)).join("")}</div><div id="mtoday"></div>` : `<p class="note">لم تبدأ حفظ متن بعد. اختر من <a href="#/hifz?t=ladder">سلّم المتون</a> ثم «ابدأ الحفظ».</p>`;
+      setTimeout(() => today(d, mine), 0);
     } else if (tab === "cards") { setTimeout(() => cardsTab(), 0); body = '<div id="hzold"></div>'; }
     else if (tab === "add") body = ownForm(d, q);
     else if (tab === "admin" && isAdmin()) body = adminForm(d);
     view(head + tabs + `<div style="margin-top:10px">${body}</div><div id="hzbox"></div>`);
-  }
-  // تذكير الورد اليومي في الوقت الذي يختاره العضو، مع إمكان إيقافه (طلب المدير، ٢٧ نوفمبر) — يحفظه Mine.setHifzRem في حسابه، ويرسله remind.js كل ساعة
-  async function remBox() {
-    const el = $("#mtrem"); if (!el) return;
-    if (!Auth.user) { el.innerHTML = '<p class="mut mtrem">🔔 <a href="#/account?next=%23%2Fhifz%3Ft%3Dmine">سجّل الدخول</a> ليصلك تذكير بوردك اليومي في الوقت الذي تختاره، ويُحفظ وردك وجدول مراجعتك مع حسابك على كل أجهزتك.</p>'; return; }
-    let r = null; try { r = await Mine.hifzRem(); } catch (e) { }
-    el.innerHTML = `<form class="mtrem" data-form="noop"><b>🔔 تذكير الورد</b><label class="inl"><input type="checkbox" name="on"${r && r.active ? " checked" : ""}> ذكّرني بوردي يوميًّا</label><label class="inl">الساعة <input type="time" name="at" value="${esc((r && r.remind_at) || "20:00")}"></label><button class="btn s p">حفظ</button> ${typeof pushBtn === "function" ? pushBtn() : ""}<span class="mut" id="mtremst" role="status"></span></form>`;
-    el.querySelector("form").onsubmit = async e => { e.preventDefault(); const f = e.target, st = $("#mtremst"); st.textContent = "جارٍ الحفظ…";
-      try { await Mine.setHifzRem(f.on.checked, f.at.value); st.textContent = f.on.checked ? "✓ يصلك التذكير يوميًّا الساعة " + f.at.value + " ما لم تُتمّ وردك قبلها" : "✓ أُوقف التذكير"; } catch (x) { st.textContent = x.message; } };
   }
   function card(d, x, mine) {
     const s = d.sci.find(z => z[0] === x.sci) || ["", "", "📘"], p = P()[x.id], ok = x.b && B(x.b);
@@ -180,7 +182,7 @@ const MTN = (() => {
     else if (a === "rep" && SES) { SES.rep++; $("#mrc").textContent = toAr(SES.rep); if (SES.rep === 10) toast("أحسنت؛ جرّب الآن «الإخفاء التدريجي»"); }
     else if (a === "rec") { try { if (REC && REC.state === "recording") { REC.stop(); el.textContent = "🎙 سجّل تلاوتك"; return; } const st = await navigator.mediaDevices.getUserMedia({ audio: true }), ch = []; REC = new MediaRecorder(st); REC.ondataavailable = x => ch.push(x.data); REC.onstop = () => { st.getTracks().forEach(t => t.stop()); const au = $("#mrecp"); au.src = URL.createObjectURL(new Blob(ch, { type: REC.mimeType })); au.hidden = false; }; REC.start(); el.textContent = "⏹ أوقف التسجيل"; } catch (x) { toast("تعذر الوصول إلى الميكروفون"); } }
     else if (a === "ord" && SES) { const out = $("#mordout"), i = +el.dataset.i, n = out.children.length; const ok = i === n; out.insertAdjacentHTML("beforeend", `<li class="${ok ? "ok" : "no"}">${esc(strip(SES.g.u[i].t))}</li>`); el.remove(); if (!$("#mord").children.length) { const bad = out.querySelectorAll(".no").length; $("#mres").innerHTML = bad ? `<span class="warn">${toAr(bad)} في غير موضعه؛ أعد المحاولة.</span>` : "✔ الترتيب صحيح"; } }
-    else if (a === "done" && SES) { const p = P(), id = SES.x.id; p[id] = p[id] || { pd: 1, d: 0, st: day() }; if (SES.k >= (p[id].d || 0)) { p[id].d = SES.k + 1; p[id].log = p[id].log || {}; p[id].log[day()] = (p[id].log[day()] || 0) + 1; const ks = Object.keys(p[id].log); if (ks.length > 60) delete p[id].log[ks[0]]; } p[id].n = SES.ss.length; push(); try { Mine.hifzTouch(); } catch (x) { }
+    else if (a === "done" && SES) { const p = P(), id = SES.x.id; p[id] = p[id] || { pd: 1, d: 0, st: day() }; if (SES.k >= (p[id].d || 0)) { p[id].d = SES.k + 1; p[id].log = p[id].log || {}; p[id].log[day()] = (p[id].log[day()] || 0) + 1; const ks = Object.keys(p[id].log); if (ks.length > 60) delete p[id].log[ks[0]]; } p[id].n = SES.ss.length; push();
       if (typeof HZ !== "undefined") HZ.add([{ id: "m" + id + ":" + SES.k, b: SES.x.b, p: SES.g.p, cue: (SES.g.h ? SES.g.h + " — " : "") + strip(SES.g.u[0].t).split(/\s+/).slice(0, 5).join(" ") + " …", text: SES.g.u.map(u => u.t).join("\n") }]);
       toast("أحسنت! أُضيف الورد إلى المراجعة المتباعدة"); location.hash = SES.k < SES.ss.length - 1 && ((p[id].log || {})[day()] || 0) < (+p[id].pd || 1) ? "#/hifz/m/" + id + "/" + (SES.k + 1) : "#/hifz?t=mine"; }
     else if (a === "stop") { if (!confirm("إيقاف حفظ هذا المتن؟ يبقى ما حفظته في بطاقات المراجعة.")) return; delete P()[el.dataset.id]; push(); location.hash = "#/hifz?t=mine"; }

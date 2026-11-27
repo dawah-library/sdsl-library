@@ -6,6 +6,10 @@
 import glob, json, os, re, subprocess, datetime
 REPO = os.environ.get('GITHUB_REPOSITORY', 'dawah-library/sdsl-library'); ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKIP = {'watchdog.yml', 'turathio-batch.yml'}
+def manual_keys():
+    try: return set(json.load(open(os.path.join(ROOT, 'data', 'manual-only.json'), encoding='utf-8')).get('keys', []))
+    except Exception: return set()
+MANUAL = manual_keys()  # «يدوي فقط» (PR 143): لا يشغّلها الحارس بدل المجدول، فذلك يخالف قرار صاحب الموقع
 def gh(*a):
     r = subprocess.run(['gh', *a], capture_output=True, text=True); return r.stdout if r.returncode == 0 else ''
 def gap_hours(crons):
@@ -20,10 +24,25 @@ def gap_hours(crons):
         for hh in h.split(','): times.append(int(hh) + int(m) / 60)
     times.sort(); gaps = [b - a for a, b in zip(times, times[1:])] + [24 - times[-1] + times[0]]
     return max(gaps)
+def last_due(crons, now, grace_min=75):
+    """آخر موعد مجدول بسيط (دقيقة وساعة، وباقي الحقول *) مضى عليه أكثر من grace_min دقيقة؛ None إن لم يوجد أو كان الجدول معقدًا."""
+    best = None
+    for c in crons:
+        try: m, h, dom, mon, dow = c.split()
+        except ValueError: continue
+        if (dom, mon, dow) != ('*', '*', '*') or not m.isdigit(): continue
+        hs = list(range(0, 24, int(h[2:]))) if h.startswith('*/') else ([int(x) for x in h.split(',')] if all(x.isdigit() for x in h.split(',')) else None)
+        if hs is None: continue
+        for d in (0, 1):
+            for hh in hs:
+                t = (now - datetime.timedelta(days=d)).replace(hour=hh, minute=int(m), second=0, microsecond=0)
+                if t <= now - datetime.timedelta(minutes=grace_min) and (best is None or t > best): best = t
+    return best
 now = datetime.datetime.now(datetime.timezone.utc); fired = []
 for f in sorted(glob.glob(os.path.join(ROOT, '.github', 'workflows', '*.yml'))):
     name = os.path.basename(f); src = open(f, encoding='utf-8').read()
     if name in SKIP or 'workflow_dispatch' not in src: continue
+    if MANUAL & set(re.findall(r'"\$j"\s+(\w+)', src) + re.findall(r'guard\("(\w+)"', src)): continue
     crons = re.findall(r'cron:\s*"([^"]+)"', src); g = gap_hours(crons)
     if not g: continue
     j = gh('api', f'repos/{REPO}/actions/workflows/{name}/runs?per_page=1', '-q', '.workflow_runs[0] | [.created_at, .status] | @tsv').strip()
@@ -31,6 +50,8 @@ for f in sorted(glob.glob(os.path.join(ROOT, '.github', 'workflows', '*.yml'))):
     t, status = j.split('\t')
     if status in ('queued', 'in_progress', 'pending', 'waiting', 'requested'): continue
     age = (now - datetime.datetime.fromisoformat(t.replace('Z', '+00:00'))).total_seconds() / 3600
-    if age > g * 1.5 + 0.5:
-        (os.environ.get('DRY') or gh('workflow', 'run', name, '-R', REPO, '--ref', 'main')); fired.append(f'{name} (آخر تشغيل قبل {age:.1f} ساعة، والمتوقع كل {g:g})')
+    tt = datetime.datetime.fromisoformat(t.replace('Z', '+00:00')); due = last_due(crons, now)
+    missed = bool(due and tt < due - datetime.timedelta(minutes=5))  # فاتها موعد مجدول مضى عليه أكثر من ٧٥ دقيقة (جدولة GitHub قد تتأخر ساعة أو أكثر)
+    if age > g * 1.5 + 0.5 or missed:
+        (os.environ.get('DRY') or gh('workflow', 'run', name, '-R', REPO, '--ref', 'main')); fired.append(f'{name} (آخر تشغيل قبل {age:.1f} ساعة، والمتوقع كل {g:g}' + ('، فاتها موعد مجدول' if missed else '') + ')')
 print('شُغّل:' if fired else 'كل المهام في مواعيدها.', *fired, sep='\n')

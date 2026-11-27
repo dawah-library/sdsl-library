@@ -1,0 +1,24 @@
+name: قياس استرجاع المساعد العلمي
+# يبني الفهرس المقلوب (data/sx) ويشغّل tools/ask-eval.js على data/eval/ask-questions.json (100 سؤال)، ويحفظ النتيجة في data/eval/ask-eval.json. بلا نموذج ذكاء اصطناعي ولا حصص. يدوي، وعند تغيّر مجموعة الأسئلة أو محرك الترتيب.
+on:
+  push:
+    branches: [main]
+    paths: ["data/eval/ask-questions.json", "tools/ask-eval.js", "tools/build-sx.py", "search.js"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: ask-eval
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: python3 tools/build-sx.py
+      - run: node tools/ask-eval.js
+      - run: bash tools/git-save.sh "قياس استرجاع المساعد (ask-eval)" data/eval/ask-eval.json

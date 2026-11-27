@@ -2037,6 +2037,42 @@
    "title": "المقدمة الجزرية (المنظومة الجزرية)",
    "authorName": "ابن الجزري",
    "topic": "t12"
+  },
+  {
+   "id": "nahhasirab",
+   "died": 338,
+   "author": "Nahhas",
+   "book": "Quran",
+   "title": "إعراب القرآن",
+   "authorName": "أبو جعفر النحاس",
+   "topic": "t15"
+  },
+  {
+   "id": "tibyanirab",
+   "died": 616,
+   "author": "Ukbari",
+   "book": "Tibyan",
+   "title": "التبيان في إعراب القرآن",
+   "authorName": "أبو البقاء العكبري",
+   "topic": "t15"
+  },
+  {
+   "id": "durmasun",
+   "died": 756,
+   "author": "Halabi",
+   "book": "Durr",
+   "title": "الدر المصون في علوم الكتاب المكنون",
+   "authorName": "السمين الحلبي",
+   "topic": "t15"
+  },
+  {
+   "id": "mushkilirab",
+   "died": 437,
+   "author": "Makki",
+   "book": "Mushkil",
+   "title": "مشكل إعراب القرآن",
+   "authorName": "مكي بن أبي طالب القيسي",
+   "topic": "t15"
   }
  ]
 }

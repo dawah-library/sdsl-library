@@ -1,3 +1,76 @@
 {
- "items": []
+ "items": [
+  {
+   "id": "qawaidarba",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "zadmustaqni",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "nukhbatfikar",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "jazariyya",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "nahhasirab-v00",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "tibyanirab",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "durmasun-v00",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  },
+  {
+   "id": "mushkilirab",
+   "do": [
+    "quiz",
+    "summ"
+   ],
+   "auto": 1,
+   "new": 1
+  }
+ ]
 }

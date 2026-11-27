@@ -1,6 +1,28 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-26 15:52
+# مطابقة النسخ المصورة بالنصية — 2026-11-27 11:48
 
-## الرسالة (risala)
-- صفحات النص 396، المصورة 671، متوسط التطابق 4٪، إزاحة غالبة +4
-- صفحات لا تشبه صورتها: 287
-- التصحيح: خريطة صفحات (293 صفحة خارج الترتيب البسيط)؛ 287 صفحة لا تشبه صورتها ← إعادة القراءة
+## أخلاق العلماء
+- تعذر: max() iterable argument is empty
+
+## عمدة الفقه
+- تعذر: max() iterable argument is empty
+
+## صحيح البخاري
+- تعذر: max() iterable argument is empty
+
+## رياض الصالحين
+- تعذر: max() iterable argument is empty
+
+## بلوغ المرام من أدلة الأحكام
+- تعذر: max() iterable argument is empty
+
+## ألفية ابن مالك
+- تعذر: max() iterable argument is empty
+
+## الأدب المفرد
+- تعذر: max() iterable argument is empty
+
+## سنن ابن ماجه
+- تعذر: max() iterable argument is empty
+
+## جامع بيان العلم وفضله
+- تعذر: max() iterable argument is empty

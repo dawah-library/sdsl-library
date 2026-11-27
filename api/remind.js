@@ -117,11 +117,6 @@ module.exports = async (req, res) => {
     if (due.length) {
       const subs = await sb("push_subs?select=*&user_id=in." + inList([...new Set(due.map(p => p.user_id))]));
       for (const p of due) {
-        if (p.book_id === "hifz") {  // تذكير ورد «حفظ المتون» في وقت العضو (طلب المدير، ٢٧ نوفمبر)
-          const title = "وردك اليوم في حفظ المتون", body = "أتمّ وردك الجديد وراجع ما حان من محفوظك.", url = "/hifz?t=mine";
-          await sb("notifications", { method: "POST", body: JSON.stringify({ user_id: p.user_id, title, body, url: "#" + url }) }); log.notified++;
-          await pushTo((subs || []).filter(s => s.user_id === p.user_id), { title, body, url, tag: "hifz" }); continue;
-        }
         const at = p.last_page || p.start_page || 1, url = "/book/" + p.book_id + "/" + at;
         const title = "وردك اليوم من «" + (p.title || "كتابك") + "»", body = (p.daily === 1 ? "صفحة واحدة" : p.daily === 2 ? "صفحتان" : p.daily <= 10 ? p.daily + " صفحات" : p.daily + " صفحة") + " — تابع من صفحة " + at;
         await sb("notifications", { method: "POST", body: JSON.stringify({ user_id: p.user_id, title, body, url: "#" + url }) });
@@ -187,6 +182,17 @@ module.exports = async (req, res) => {
         log.groups++;
       }
     } catch (e) { if (!/remind_on|group_reads/.test(e.message)) console.error("groups", e.message); log.groups = "غير مفعّل: " + String(e.message).slice(0, 80); }
+    // تذكير ورد الحفظ اليومي (hifz_plans، ترحيل 2026-11-27-hifz.sql): مرة في اليوم لكل متن لم يُحفظ ورده اليوم، في ساعة العضو المختارة (بتوقيت UTC محسوبة عند حفظ الخطة)
+    try {
+      const todayU = now.toISOString().slice(0, 10), HU = now.getUTCHours();
+      const hp = await sb(`hifz_plans?select=*&active=eq.true&hour_utc=lte.${HU}&or=(last_sent.is.null,last_sent.lt.${todayU})&limit=500`); log.hifz = 0;
+      const byUser = {}; for (const p of hp || []) if (p.last_done !== todayU && (p.total || 0) > (p.done || 0)) (byUser[p.user_id] = byUser[p.user_id] || []).push(p);
+      for (const [u, L] of Object.entries(byUser)) {
+        const t = L.length === 1 ? "«" + (L[0].title || "متنك") + "»" : L.length + " متون";
+        await tell([u], "hifz", "📿 وردك اليومي من الحفظ", "حان موعد ورد اليوم من " + t + ". القليل الدائم خير من الكثير المنقطع.", "/hifz?t=mine", "افتح خطة الحفظ", "hifz-" + todayU); log.hifz++;
+      }
+      for (const p of hp || []) await sb(`hifz_plans?user_id=eq.${p.user_id}&matn_id=eq.${encodeURIComponent(p.matn_id)}`, { method: "PATCH", body: JSON.stringify({ last_sent: todayU }) });
+    } catch (e) { if (!/hifz_plans/.test(e.message)) console.error("hifz", e.message); log.hifz = "غير مفعّل: " + String(e.message).slice(0, 80); }
     // جديد المكتبة والصوتيات والإذاعة: إعلان يومي (الساعة ١٨ بتوقيت القاهرة) بما أُضيف منذ آخر إعلان
     if (C.hour === 18 || q.force === "new") try {
       const seen = await state("seen");

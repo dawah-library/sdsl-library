@@ -1,5 +1,5 @@
 {
-"updated": "2026-11-27T07:31:54Z",
+"updated": "2026-11-27T12:13:22Z",
 "sources": [
 {
 "name": "آخر الأنباء",
@@ -16,6 +16,17 @@
 ],
 "items": [
 {
+"title": "ترامب يلوّح باستهداف «جبل الفأس» في إيران.. ويؤكد إمكانية حضور بوتين لقمة العشرين",
+"url": "https://akheralanbaa.com/ar/508712-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%8A%D9%84%D9%88%D8%AD-%D8%A8%D8%A7%D8%B3%D8%AA%D9%87%D8%AF%D8%A7%D9%81-%D8%AC%D8%A8%D9%84-%D8%A7%D9%84%D9%81%D8%A3%D8%B3-%D9%81%D9%8A-%D8%A5%D9%8A%D8%B1%D8%A7%D9%86-%D9%88%D9%8A%D8%A4%D9%83%D8%AF-%D8%A5%D9%85%D9%83%D8%A7%D9%86%D9%8A%D8%A9-%D8%AD%D8%B6%D9%88%D8%B1-%D8%A8%D9%88%D8%AA%D9%8A%D9%86-%D9%84%D9%82%D9%85%D8%A9-%D8%A7%D9%84%D8%B9%D8%B4%D8%B1%D9%8A%D9%86",
+"date": "2026-11-27T07:01:02Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
+"cat": "region",
+"nosum": 1,
+"top": 1
+},
+{
 "title": "مصر تدين بأشد العبارات الاعتداءات التي استهدفت أراضي دولة الكويت الشقيقة",
 "url": "https://fath-news.com/ar/582207-%D9%85%D8%B5%D8%B1-%D8%AA%D8%AF%D9%8A%D9%86-%D8%A8%D8%A3%D8%B4%D8%AF-%D8%A7%D9%84%D8%B9%D8%A8%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%A7%D8%B9%D8%AA%D8%AF%D8%A7%D8%A1%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D9%8A-%D8%A7%D8%B3%D8%AA%D9%87%D8%AF%D9%81%D8%AA-%D8%A3%D8%B1%D8%A7%D8%B6%D9%8A-%D8%AF%D9%88%D9%84%D8%A9-%D8%A7%D9%84%D9%83%D9%88%D9%8A%D8%AA-%D8%A7%D9%84%D8%B4%D9%82%D9%8A%D9%82%D8%A9",
 "date": "2026-11-26T18:41:21Z",
@@ -23,8 +34,7 @@
 "src": "بوابة الفتح",
 "sid": "fath",
 "cat": "region",
-"nosum": 1,
-"top": 1
+"nosum": 1
 },
 {
 "title": "النائب محمود رشاد حبيب يواصل لقاءاته المباشرة مع أهالي أبو حمص وإدكو للاستماع إلى مطالبهم",
@@ -239,6 +249,26 @@
 "nosum": 1
 },
 {
+"title": "نتنياهو يعلن اغتيال مسؤول ملفي الاقتصاد والتعليم في \"حماس\" ويؤكد اغتيال 80 عنصراً من الحركة خلال شهر",
+"url": "https://akheralanbaa.com/ar/508684-%D9%86%D8%AA%D9%86%D9%8A%D8%A7%D9%87%D9%88-%D9%8A%D8%B9%D9%84%D9%86-%D8%A7%D8%BA%D8%AA%D9%8A%D8%A7%D9%84-%D9%85%D8%B3%D8%A4%D9%88%D9%84-%D9%85%D9%84%D9%81%D9%8A-%D8%A7%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF-%D9%88%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85-%D9%81%D9%8A-%D8%AD%D9%85%D8%A7%D8%B3-%D9%88%D9%8A%D8%A4%D9%83%D8%AF-%D8%A7%D8%BA%D8%AA%D9%8A%D8%A7%D9%84-80-%D8%B9%D9%86%D8%B5%D8%B1%D8%A7-%D9%85%D9%86-%D8%A7%D9%84%D8%AD%D8%B1%D9%83%D8%A9-%D8%AE%D9%84%D8%A7%D9%84-%D8%B4%D9%87%D8%B1",
+"date": "2026-11-26T08:13:09Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
+"cat": "region",
+"nosum": 1
+},
+{
+"title": "متحدث جيش الاحتلال الإسرائيلي: نستعد لحرب ضد إيران وجاهزون للهجوم بقوة",
+"url": "https://akheralanbaa.com/ar/508683-%D9%85%D8%AA%D8%AD%D8%AF%D8%AB-%D8%AC%D9%8A%D8%B4-%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%84%D8%A7%D9%84-%D8%A7%D9%84%D8%A5%D8%B3%D8%B1%D8%A7%D8%A6%D9%8A%D9%84%D9%8A-%D9%86%D8%B3%D8%AA%D8%B9%D8%AF-%D9%84%D8%AD%D8%B1%D8%A8-%D8%B6%D8%AF-%D8%A5%D9%8A%D8%B1%D8%A7%D9%86-%D9%88%D8%AC%D8%A7%D9%87%D8%B2%D9%88%D9%86-%D9%84%D9%84%D9%87%D8%AC%D9%88%D9%85-%D8%A8%D9%82%D9%88%D8%A9",
+"date": "2026-11-26T08:04:09Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
+"cat": "region",
+"nosum": 1
+},
+{
 "title": "استنفار ببنك الدم التابع للهلال الأحمر لدعم مصابي حريق الوراق",
 "url": "https://fath-news.com/ar/582121-%D8%A7%D8%B3%D8%AA%D9%86%D9%81%D8%A7%D8%B1-%D8%A8%D8%A8%D9%86%D9%83-%D8%A7%D9%84%D8%AF%D9%85-%D8%A7%D9%84%D8%AA%D8%A7%D8%A8%D8%B9-%D9%84%D9%84%D9%87%D9%84%D8%A7%D9%84-%D8%A7%D9%84%D8%A3%D8%AD%D9%85%D8%B1-%D9%84%D8%AF%D8%B9%D9%85-%D9%85%D8%B5%D8%A7%D8%A8%D9%8A-%D8%AD%D8%B1%D9%8A%D9%82-%D8%A7%D9%84%D9%88%D8%B1%D8%A7%D9%82",
 "date": "2026-11-26T07:25:00Z",
@@ -286,6 +316,16 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
+"cat": "egypt",
+"nosum": 1
+},
+{
+"title": "النيابة العامة: تفحم 27 سيارة ودراجة بخارية جراء حادث الطريق الدائري",
+"url": "https://akheralanbaa.com/ar/508676-%D8%A7%D9%84%D9%86%D9%8A%D8%A7%D8%A8%D8%A9-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D8%AA%D9%81%D8%AD%D9%85-27-%D8%B3%D9%8A%D8%A7%D8%B1%D8%A9-%D9%88%D8%AF%D8%B1%D8%A7%D8%AC%D8%A9-%D8%A8%D8%AE%D8%A7%D8%B1%D9%8A%D8%A9-%D8%AC%D8%B1%D8%A7%D8%A1-%D8%AD%D8%A7%D8%AF%D8%AB-%D8%A7%D9%84%D8%B7%D8%B1%D9%8A%D9%82-%D8%A7%D9%84%D8%AF%D8%A7%D8%A6%D8%B1%D9%8A",
+"date": "2026-11-25T20:19:30Z",
+"sum": "",
+"src": "آخر الأنباء",
+"sid": "akher",
 "cat": "egypt",
 "nosum": 1
 },
@@ -553,7 +593,8 @@
 "sum": "",
 "src": "آخر الأنباء",
 "sid": "akher",
-"cat": "region"
+"cat": "region",
+"nosum": 1
 },
 {
 "title": "السيسي يشكر شركة ميرسك على جهودها في إيصال المساعدات إلى غزة عبر مصر",
@@ -602,7 +643,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "muslims"
+"cat": "muslims",
+"nosum": 1
 },
 {
 "title": "رئيس الوزراء: قطاع صناعة السيارات فى مصر يشهد تطورا ويحظى باهتمام الدولة",
@@ -982,7 +1024,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt"
+"cat": "egypt",
+"nosum": 1
 },
 {
 "title": "الهشاشة النفسية.. حين يتحول الألم إلى يأس (3) (وَكَانَ اللَّهُ بِكُمْ رَحِيمًا)",
@@ -1158,7 +1201,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt"
+"cat": "egypt",
+"nosum": 1
 },
 {
 "title": "التعليم توجه المديريات بالانتهاء من الإحصاء السنوي لأعداد الطلاب بالعام 2027",
@@ -1886,7 +1930,8 @@
 "sum": "",
 "src": "بوابة الفتح",
 "sid": "fath",
-"cat": "egypt"
+"cat": "egypt",
+"nosum": 1
 },
 {
 "title": "الأمم المتحدة تحذر من تفاقم الأزمة الإنسانية في تعز والغذاء لا يغطي سوى 10% من الاحتياجات والأسعار تقفز",
@@ -3015,46 +3060,6 @@
 "src": "آخر الأنباء",
 "sid": "akher",
 "cat": "egypt",
-"nosum": 1
-},
-{
-"title": "موعد امتحانات نصف العام 2027 لصفوف النقل والشهادة الإعدادية وإجازة المدارس",
-"url": "https://news.google.com/rss/articles/CBMiugRBVV95cUxOQUhKUzBNMmw4Sy12LWxOMHI1YllwS1ozYjRvV2d0UkpYR2pCc1B3MUY1dEx3SDdOOUtVODZBT1pLMGNNbDl6MG9FTV9GSS13RjBLU1lYXzVIZTNwckVXMHhqaTBHVkxBR29tZE1CUV9MclVtby00aXRRVm5FeF9VeThzb2k4VkdIcDM0WF9hVHduTS1pV1VXMXI0T3lTSDBTby1aa3FsS0RVbThVUmZUYWNZejNXN21JX3A0cUxRcGczRkJ5ZXJpU3JZRW43bFNRMVhUa3RCYkZvZGhmN3BBNHdzSUR4NXFGdlVPSjNmNzROUzRlNlVJS1pNOXNCdXNCODJXRkZSSy11c01KNGJUYlBCVXc4N0FIbzh2Z2NGTmhPRTFlNG1DcE1WdXhUOUxTWXpLeFpQdGp5aG9XU0E0N0VJQWEtV0J6Y08wdmVuaUlneEc5NFVmOC16NVZqakV6NUJaY2o1VlBNTXQwZXNPUnRwRkNMUXFpZGV5UjduSjk5R0hXOVNCT3gwM1V3WXM0aU11dDNIY2NsNE45eVBsN1lzWW0yVnVja080VWYwNmNnTkhpd0JicXRhSkZqeEthbnQ1YUc5UE1zN0p3aVBqMEhlcjZTTWp5eWp4bm9UX1phVFI5dmREaEZScVRMb2g5dkpPX2x2QkJFZjg2aDJUaUZTYUlOV2EyaWxCMTE1cnh0aVotNkoxdmhrck5PY3F1U0RDQ0w4SnhEQ1ZoWFZUUU1HX3lUX1NoZWc?oc=5",
-"date": "2026-11-17T14:44:22Z",
-"sum": "",
-"src": "بوابة الفتح",
-"sid": "fath",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "\"سليمان\" يطالب بتطوير العمليات والعناية المركزة بالتأمين الصحي بالفيوم وتسريع تطبيق التأمين الشامل",
-"url": "https://akheralanbaa.com/ar/508295-%D8%B3%D9%84%D9%8A%D9%85%D8%A7%D9%86-%D9%8A%D8%B7%D8%A7%D9%84%D8%A8-%D8%A8%D8%AA%D8%B7%D9%88%D9%8A%D8%B1-%D8%A7%D9%84%D8%B9%D9%85%D9%84%D9%8A%D8%A7%D8%AA-%D9%88%D8%A7%D9%84%D8%B9%D9%86%D8%A7%D9%8A%D8%A9-%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2%D8%A9-%D8%A8%D8%A7%D9%84%D8%AA%D8%A3%D9%85%D9%8A%D9%86-%D8%A7%D9%84%D8%B5%D8%AD%D9%8A-%D8%A8%D8%A7%D9%84%D9%81%D9%8A%D9%88%D9%85-%D9%88%D8%AA%D8%B3%D8%B1%D9%8A%D8%B9-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82-%D8%A7%D9%84%D8%AA%D8%A3%D9%85%D9%8A%D9%86-%D8%A7%D9%84%D8%B4%D8%A7%D9%85%D9%84",
-"date": "2026-11-17T14:31:03Z",
-"sum": "",
-"src": "آخر الأنباء",
-"sid": "akher",
-"cat": "egypt",
-"nosum": 1
-},
-{
-"title": "عدوان متواصل.. غارات إسرائيلية وعمليات في غزة ومقتل سيدة في الضفة",
-"url": "https://fath-news.com/ar/581397-%D8%B9%D8%AF%D9%88%D8%A7%D9%86-%D9%85%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D8%BA%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A5%D8%B3%D8%B1%D8%A7%D8%A6%D9%8A%D9%84%D9%8A%D8%A9-%D9%88%D8%B9%D9%85%D9%84%D9%8A%D8%A7%D8%AA-%D9%81%D9%8A-%D8%BA%D8%B2%D8%A9-%D9%88%D9%85%D9%82%D8%AA%D9%84-%D8%B3%D9%8A%D8%AF%D8%A9-%D9%81%D9%8A-%D8%A7%D9%84%D8%B6%D9%81%D8%A9-1",
-"date": "2026-11-17T14:24:19Z",
-"sum": "",
-"src": "بوابة الفتح",
-"sid": "fath",
-"cat": "muslims",
-"nosum": 1
-},
-{
-"title": "الخارجية القطرية: استمرار الوساطة لحل الأزمة بين واشنطن وطهران",
-"url": "https://fath-news.com/ar/581394-%D8%A7%D9%84%D8%AE%D8%A7%D8%B1%D8%AC%D9%8A%D8%A9-%D8%A7%D9%84%D9%82%D8%B7%D8%B1%D9%8A%D8%A9-%D8%A7%D8%B3%D8%AA%D9%85%D8%B1%D8%A7%D8%B1-%D8%A7%D9%84%D9%88%D8%B3%D8%A7%D8%B7%D8%A9-%D9%84%D8%AD%D9%84-%D8%A7%D9%84%D8%A3%D8%B2%D9%85%D8%A9-%D8%A8%D9%8A%D9%86-%D9%88%D8%A7%D8%B4%D9%86%D8%B7%D9%86-%D9%88%D8%B7%D9%87%D8%B1%D8%A7%D9%86-1",
-"date": "2026-11-17T14:08:02Z",
-"sum": "",
-"src": "بوابة الفتح",
-"sid": "fath",
-"cat": "region",
 "nosum": 1
 }
 ]

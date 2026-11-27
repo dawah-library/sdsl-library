@@ -1487,6 +1487,9 @@ const AISVC=[
  ["plan","منهج تعلّم","خطة قراءة متدرجة من كتب المكتبة حسب مستواك ووقتك.","ضع لي منهجًا لدراسة ",'<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'],
  ["quiz","اختبر فهمك","أسئلة متنوعة من كتاب أو موضوع مع الإجابات وتعليلها.","اختبرني في ",'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8h3M14 14h3"/>'],
  ["lugha","تحليل لغوي وإعراب","معاني المفردات من المعاجم، والإعراب، والصرف، والبلاغة.","أعرب وحلّل لغويًّا: ",'<path d="M4 7h16M4 12h10M4 17h7"/><path d="M17 14l3 6M17 14l-3 6M15 18h4"/>'],
+ ["irab","أعرب أي كلمة أو نص","إعراب آية أو حديث أو جملة كلمةً كلمةً بوجهه وعلامته وسببه، مؤصَّلًا بقواعد كتب النحو في المكتبة.","أعرب: ",'<path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/>'],
+ ["balagha","فوائد بلاغية","الفوائد البلاغية لآية أو حديث (المعاني والبيان والبديع) منقولة من كلام أهل العلم بعزوها.","اذكر الفوائد البلاغية في: ",'<path d="M5 19c3-1 4-4 4-7s2-6 6-8M9 12h8M14 20l5-5"/>'],
+ ["hidayat","هدايات الآيات","مقاصد الآية وهداياتها وفوائدها العقدية والفقهية والتربوية والدعوية من كتب التفسير، موثقة.","اذكر هدايات وفوائد ومقاصد: ",'<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3.5"/>'],
  ["alam","التعريف بعَلَم","ترجمة العالم أو الراوي وأقوال الأئمة فيه من كتب التراجم والجرح والتعديل.","عرّف بـ: ",'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
  ["solve","حلول عملية","يعرض مشكلتك على توجيهات العلماء ويقترح خطوات عملية (ليست فتوى).","عندي مشكلة: ",'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>']];
 const AISHORT=["ask","fatwa","hadith","tafsir","research","summarize","explain"];
@@ -2116,13 +2119,7 @@ const Mine={uid:null,marks:null,notes:{},plans:null,
   delete this.notes[n.book_id];return n},
  async delNote(n){if(this.cloud()){const {error}=await Auth.sb.from("notes").delete().eq("id",n.id);if(error)throw this.err(error)}else ls.set(this.k("notes"),ls.get(this.k("notes"),[]).filter(x=>x.id!==n.id));delete this.notes[n.book_id]},
  async loadPlans(){this.reset();if(!Auth.user)return[];if(this.plans)return this.plans;let l=[];
-  if(this.cloud()){const {data,error}=await Auth.sb.from("reading_plans").select("*").eq("user_id",Auth.user.id).order("created_at");if(error)throw this.err(error);l=data||[]}else l=ls.get(this.k("plans"),[]);this.hz=l.find(x=>x.book_id==="hifz")||null;return this.plans=l.filter(x=>x.book_id!=="hifz")},
- /* تذكير ورد «حفظ المتون» في الوقت الذي يختاره العضو (طلب المدير، ٢٧ نوفمبر): صف واحد في reading_plans بالمعرّف hifz يقرؤه remind.js كل ساعة؛ يُوقف بإلغاء التفعيل */
- async hifzRem(){await this.loadPlans();return this.hz},
- async setHifzRem(on,at){if(!Auth.user||!this.cloud())throw new Error("التذكير يحتاج تسجيل الدخول");const [h,m]=String(at||"20:00").split(":").map(Number),off=-new Date().getTimezoneOffset();
-  const p={user_id:Auth.user.id,book_id:"hifz",title:"حفظ المتون",daily:1,remind_at:at||"20:00",tz_offset:off,hour_utc:((h*60+(m||0)-off)/60%24+24|0)%24,active:!!on};
-  const {error}=await Auth.sb.from("reading_plans").upsert(p);if(error)throw this.err(error);this.hz=Object.assign(this.hz||{},p);return this.hz},
- async hifzTouch(){try{if(!Auth.user||!this.cloud())return;await this.loadPlans();if(!this.hz||!this.hz.active)return;const t=new Date().toISOString();if(this.hz.last_read&&new Date(this.hz.last_read).toDateString()===new Date().toDateString())return;this.hz.last_read=t;await Auth.sb.from("reading_plans").update({last_read:t}).eq("user_id",Auth.user.id).eq("book_id","hifz")}catch(e){}},
+  if(this.cloud()){const {data,error}=await Auth.sb.from("reading_plans").select("*").eq("user_id",Auth.user.id).order("created_at");if(error)throw this.err(error);l=data||[]}else l=ls.get(this.k("plans"),[]);return this.plans=l},
  async savePlan(p){await this.loadPlans();const [h,m]=String(p.remind_at||"20:00").split(":").map(Number),off=-new Date().getTimezoneOffset();p.tz_offset=off;p.hour_utc=((h*60+(m||0)-off)/60%24+24|0)%24;
   if(this.cloud()){const {error}=await Auth.sb.from("reading_plans").upsert(Object.assign({user_id:Auth.user.id},p));if(error)throw this.err(error)}
   const i=this.plans.findIndex(x=>x.book_id===p.book_id);if(i>=0)this.plans[i]=Object.assign(this.plans[i],p);else this.plans.push(Object.assign({start_date:today(),created_at:new Date().toISOString()},p));if(!this.cloud())ls.set(this.k("plans"),this.plans)},
@@ -2450,7 +2447,8 @@ const SECS=[
  {h:"#/library?c=turath",n:"العامة",i:'<path d="M6 3h10l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',is:(p,q)=>p[0]==="library"&&q.c==="turath"},
  {h:"#/posts",n:"منشورات",i:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',is:(p)=>p[0]==="posts"},
  {h:"#/community",n:"المجتمع",i:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 14.3c3.2-.5 6.5 1.6 6.5 5.7"/>',is:(p)=>p[0]==="community"},
- {h:"#/ask",n:"المساعد",i:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',is:(p)=>p[0]==="ask"||p[0]==="ai"}];
+ {h:"#/ask",n:"المساعد",i:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',is:(p)=>p[0]==="ask"||p[0]==="ai"},
+ {h:"#/radio",n:"الراديو",i:'<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M7 8l10-5"/><circle cx="15.5" cy="14.5" r="3"/><path d="M6.5 12.5h4M6.5 16.5h4"/>',is:(p)=>p[0]==="radio"}];
 const Pager={idx:-1,dir:0,t:null,
  reduce:()=>matchMedia("(prefers-reduced-motion: reduce)").matches,
  at(){const{p,q}=parse();return SECS.findIndex(x=>x.is(p,q))},

@@ -67,9 +67,7 @@ const HDS = (() => {
   const refLink = r => { const [v, p] = r.split(":"), bk = B(v); return `<a class="cite" href="#/book/${esc(v)}/${p}">(${esc(bk ? (bk.setTitle || bk.title).replace(/ — .*$/, "") : v)}${bk && bk.vol ? "، ج" + toAr(bk.vol) : ""}، ص ${toAr(p)})</a>`; };
   const refBox = r => typeof citeBox === "function" ? citeBox(refLink(r)) : refLink(r);  // صندوق صغير ينبثق بجوار النص (أو العزو داخل النص بحسب إعداد القارئ)
   const sx = t => esc(t || "").replace(/\[\[([^\]\s]+?:\d+)\]\]/g, (m, r) => refBox(r)).replace(/\n+/g, "</p><p>");
-  // ترتيب ثابت للفوائد الخمس (طلب المدير، ٢٧ نوفمبر)
-  const FW = [["aqida", "فوائد عقدية"], ["fiqh", "فوائد فقهية وعملية"], ["adab", "فوائد تربوية وسلوكية"], ["ilm", "فوائد علمية ومنهجية"], ["lugha", "فوائد لغوية وبلاغية"]];
-  const LG = [["irab", "الإعراب"], ["sarf", "الصرف"], ["balagha", "البلاغة"]];
+  const FW = [["aqida", "فوائد عقدية"], ["fiqh", "فوائد فقهية"], ["adab", "فوائد تربوية وأدبية"], ["ilm", "فوائد علمية"], ["lugha", "فوائد لغوية"], ["balagha", "فوائد بلاغية"]];
   function sharhHtml(c, full) {
     const S_ = c.s || {}, li = a => (a || []).filter(Boolean).map(x => `<li>${sx(x)}</li>`).join("");
     const riw = (c.riw || []).map(([b2, n2]) => `<a class="chip" href="#/hadith/k/${b2}/${encodeURIComponent(n2)}">${esc(bname(b2))} (${toAr(n2)})</a>`).join("");
@@ -77,10 +75,8 @@ const HDS = (() => {
       (S_.gharib || []).length ? `<h4>غريب الحديث</h4><dl class="shg">${S_.gharib.map(g => `<dt>${esc(g.w || "")}</dt><dd>${sx(g.m)}</dd>`).join("")}</dl>` : "",
       S_.ijmali || S_.murad ? `<h4>الشرح الإجمالي</h4><p>${sx([S_.murad, S_.ijmali, S_.usul].filter(Boolean).join("\n"))}</p>${(S_.mubhamat || []).length ? `<ul>${li(S_.mubhamat)}</ul>` : ""}` : "",
       S_.riwayat ? `<h4>ما تزيده الروايات الأخرى</h4><p>${sx(S_.riwayat)}</p>` : "",
-      FW.some(([k]) => (S_.fawaid || {})[k] && S_.fawaid[k].length) ? `<h4>الفوائد المستنبطة</h4>${FW.map(([k, n]) => ((S_.fawaid || {})[k] || []).length ? `<h5>${n}</h5><ul>${li(S_.fawaid[k])}</ul>` : "").join("")}` : "",
-      // الدراسة اللغوية: الإعراب والصرف والبلاغة (والغريب في أول الشرح)
-      LG.some(([k]) => ((S_.lugha || {})[k] || []).length) ? `<h4>الدراسة اللغوية</h4>${LG.map(([k, n]) => ((S_.lugha || {})[k] || []).length ? `<h5>${n}</h5><ul>${li(S_.lugha[k])}</ul>` : "").join("")}` : ""];
-    return `<div class="shbox">${full ? parts.join("") : [parts[0], parts[1], parts[3]].join("")}${!full && c.s ? '<p class="mut shn">شرح موجز: غريب الحديث، والشرح الإجمالي، والفوائد.</p>' : ""}
+      FW.some(([k]) => (S_.fawaid || {})[k] && S_.fawaid[k].length) ? `<h4>الفوائد المستنبطة</h4>${FW.map(([k, n]) => ((S_.fawaid || {})[k] || []).length ? `<h5>${n}</h5><ul>${li(S_.fawaid[k])}</ul>` : "").join("")}` : ""];
+    return `<div class="shbox">${full ? parts.join("") : [parts[0], parts[1], parts[3]].join("")}
       ${riw ? `<p class="mut shr"><b>الروايات المشروحة معه:</b> ${riw}</p>` : ""}
       <p class="mut shn">شرح مجموع من الشروح المعتمدة في المكتبة بعزو كل نقطة إلى موضعها، أُعدّ آليًّا (${esc(c.at || "")}) وهو قيد المراجعة العلمية.</p></div>`;
   }
@@ -148,7 +144,6 @@ const HDS = (() => {
       { const ij = [S_.murad, S_.ijmali, S_.usul].filter(Boolean).concat(S_.mubhamat || []).join("\n"); if (ij) out.push("## الشرح الإجمالي", ...mark(ij).split("\n").filter(Boolean)); }
       if (parts.has("riwayat") && S_.riwayat) out.push("## ما تزيده الروايات الأخرى", mark(S_.riwayat));
       if (parts.has("fawaid")) FW.forEach(([k2, l2]) => { const a = (S_.fawaid || {})[k2] || []; if (a.length) out.push("## " + l2, ...a.map((v, i) => toAr(i + 1) + ". " + mark(v))); });
-      if (parts.has("fawaid")) LG.forEach(([k2, l2]) => { const a = (S_.lugha || {})[k2] || []; if (a.length) out.push("## الدراسة اللغوية: " + l2, ...a.map((v, i) => toAr(i + 1) + ". " + mark(v))); });
       if (parts.has("riw") && (c.riw || []).length > 1) out.push("## مواضع الروايات", c.riw.map(([b2, n2]) => bname(b2) + " (" + toAr(n2) + ")").join("، "));
       if (fn.length) out.push("______", ...fn);
       pages.push({ i: pages.length + 1, t: out.join("\n"), l: "" }); done++;
@@ -192,12 +187,11 @@ const HDS = (() => {
       ${ta("ijmali", "الشرح الإجمالي (جمع الشروح بترتيب جمل الحديث، ويدخل فيه المبهم والنسخ والتخصيص إن وردت في الشروح)", [S_.murad, S_.ijmali, S_.usul].filter(Boolean).concat(S_.mubhamat || []).join("\n"), 8)}
       ${ta("riwayat", "ما تزيده الروايات الأخرى", S_.riwayat)}
       ${FW.map(([k, l]) => ta("f_" + k, l + " (سطر لكل فائدة)", lines(F_[k]))).join("")}
-      ${LG.map(([k, l]) => ta("l_" + k, "الدراسة اللغوية — " + l + " (سطر لكل مسألة)", lines((S_.lugha || {})[k]))).join("")}
       <div class="savebar"><button class="btn p">حفظ الشرح</button> <span id="shst" class="mut" role="status"></span></div></form>`);
     $("#shf").onsubmit = async e => { e.preventDefault(); const f = e.target, st = $("#shst"), fd = new FormData(f);
       const sv = { gharib: unlines(fd.get("gharib")).map(l => { const i = l.indexOf(":"); return i > 0 ? { w: l.slice(0, i).trim(), m: l.slice(i + 1).trim() } : { w: l, m: "" }; }),
         riwayat: String(fd.get("riwayat") || "").trim(),
-        ijmali: String(fd.get("ijmali") || "").trim(), fawaid: Object.fromEntries(FW.map(([k]) => [k, unlines(fd.get("f_" + k))])), lugha: Object.fromEntries(LG.map(([k]) => [k, unlines(fd.get("l_" + k))])) };
+        ijmali: String(fd.get("ijmali") || "").trim(), fawaid: Object.fromEntries(FW.map(([k]) => [k, unlines(fd.get("f_" + k))])) };
       if (!sv.ijmali) { st.textContent = "الشرح الإجمالي مطلوب."; return; }
       st.textContent = "جارٍ الحفظ…"; const who = (Auth.user && Auth.user.name) || "الإدارة";
       try {
@@ -401,7 +395,7 @@ const HDS = (() => {
     <section class="stsec" id="hdlk"><p class="mut">…</p></section>
     <section class="stsec"><h3>شرح الحديث</h3><div id="hdds"><p class="mut">…</p></div></section>
     <section class="stsec"><h3>أحكام المحدثين وتخريجه</h3><div id="hddr"><button class="btn p s" data-act="hddorar" data-q="${esc(m.split(/\s+/).slice(0, 7).join(" "))}">اعرض أحكام المحدثين من الموسوعة الحديثية</button></div></section>
-    <div class="row">${txtBtn()}${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a></div>
+    <div class="row">${txtBtn()}${typeof hadithSheet === "function" ? `<button class="btn" data-act="hksharh" data-m="${esc(m.slice(0, 400))}">شروح الحديث في المكتبة</button>` : ""}<button class="btn" data-act="hkcopy" data-t="${esc((x[5] ? "عن " + x[5] + ": " : "") + "«" + m + "» — " + D.t + " (" + x[0] + ")")}">نسخ</button><a class="btn" href="#/ask?m=hadith&q=${encodeURIComponent("خرّج حديث: «" + m.slice(0, 250) + "»")}">التخريج والفوائد (المساعد)</a><a class="btn" href="#/ask?m=balagha&q=${encodeURIComponent("اذكر الفوائد البلاغية في حديث: «" + m.slice(0, 250) + "»")}">فوائد بلاغية</a></div>
     <div class="mnav mnb">${next ? `<a class="btn s" href="#/hadith/k/${b}/${next[0]}">‹ التالي</a>` : "<span></span>"}${prev ? `<a class="btn s" href="#/hadith/k/${b}/${prev[0]}">السابق ›</a>` : ""}</div>`);
     linksBox(b, x[0]); gradesBox(b, x[0]); sharhInto($("#hdds"), b, x[0], true); isnOpenAll();
     swipeNav(document.querySelector("article.hdone"), prev ? "#/hadith/k/" + b + "/" + prev[0] : null, next ? "#/hadith/k/" + b + "/" + next[0] : null);

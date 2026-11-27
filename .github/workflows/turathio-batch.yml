@@ -11,6 +11,9 @@ on:
         description: "أقصى عدد كتب في التشغيل"
         required: false
         default: ""
+  push:
+    branches: [main]
+    paths: ["data/turathio-queue.json"]   # إضافة كتب للطابور تبدأ الاستيراد فور الدمج (ما يحفظه المهمة نفسها بـGITHUB_TOKEN لا يعيد التشغيل)
   schedule:
     - cron: "23 23 * * *"
     - cron: "47 4 * * *"    # كتب الأدباء والعلماء ومقالاتهم (data/adab-queue.json)
@@ -65,7 +68,7 @@ jobs:
           TIO_MINUTES: "170"
           TIO_CONC: "3"
           TIO_QUEUE: ${{ github.event.inputs.queue || ((github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') && 'data/adab-queue.json' || 'data/turathio-queue.json') }}
-          TIO_MAX_BOOKS: ${{ github.event.inputs.max || ((github.event.inputs.queue == 'data/adab-queue.json' || github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') && '8' || '2') }}
+          TIO_MAX_BOOKS: ${{ github.event.inputs.max || (github.event_name == 'push' && '6') || ((github.event.inputs.queue == 'data/adab-queue.json' || github.event.schedule == '47 4 * * *' || github.event.schedule == '47 15 * * *') && '8' || '2') }}
         run: python3 tools/turathio-batch.py
       - name: حفظ ما جُلب للاستئناف
         if: always()
