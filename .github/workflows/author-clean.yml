@@ -1,0 +1,18 @@
+name: تنقية أسماء المؤلفين دوريًا
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 4 * * *"   # يوميًا بعد استيرادات الليل: إعادة تسمية فقط مع حفظ الاسم الأصلي في aliases، والمشتبه يُكتب للمراجعة
+permissions:
+  contents: write
+concurrency:
+  group: author-clean
+  cancel-in-progress: false
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/author-clean.py --apply
+      - run: bash tools/git-save.sh "تنقية أسماء المؤلفين (تلقائي)" data/catalog.json data/author-review.json
