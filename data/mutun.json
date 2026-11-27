@@ -87,7 +87,8 @@
    "lv": 1,
    "ord": 2,
    "kind": "nathr",
-   "au": "محمد بن عبد الوهاب"
+   "au": "محمد بن عبد الوهاب",
+   "b": "qawaidarba"
   },
   {
    "id": "kashfshubuhat",
@@ -114,7 +115,9 @@
    "sci": "aqeeda",
    "lv": 2,
    "ord": 3,
-   "kind": "nathr"
+   "kind": "nathr",
+   "from": 1,
+   "to": 59
   },
   {
    "id": "wasitiyya",
@@ -150,7 +153,9 @@
    "sci": "hadith",
    "lv": 2,
    "ord": 1,
-   "kind": "nathr"
+   "kind": "nathr",
+   "from": 5,
+   "to": 181
   },
   {
    "id": "bulugh",
@@ -159,7 +164,9 @@
    "sci": "hadith",
    "lv": 3,
    "ord": 1,
-   "kind": "nathr"
+   "kind": "nathr",
+   "from": 3,
+   "to": 152
   },
   {
    "id": "bayquniyya",
@@ -177,7 +184,8 @@
    "lv": 2,
    "ord": 1,
    "kind": "nathr",
-   "au": "ابن حجر"
+   "au": "ابن حجر",
+   "b": "nukhbatfikar"
   },
   {
    "id": "umdafiqh",
@@ -186,7 +194,9 @@
    "sci": "fiqh",
    "lv": 2,
    "ord": 1,
-   "kind": "nathr"
+   "kind": "nathr",
+   "from": 3,
+   "to": 40
   },
   {
    "id": "zad",
@@ -195,7 +205,8 @@
    "lv": 3,
    "ord": 1,
    "kind": "nathr",
-   "au": "الحجاوي"
+   "au": "الحجاوي",
+   "b": "zadmustaqni"
   },
   {
    "id": "waraqat",
@@ -240,7 +251,9 @@
    "sci": "nahw",
    "lv": 3,
    "ord": 1,
-   "kind": "nazm"
+   "kind": "nazm",
+   "from": 1,
+   "to": 45
   },
   {
    "id": "tuhfatatfal",
@@ -258,7 +271,8 @@
    "lv": 2,
    "ord": 1,
    "kind": "nazm",
-   "au": "ابن الجزري"
+   "au": "ابن الجزري",
+   "b": "jazariyya"
   },
   {
    "id": "rahbiyya",
@@ -271,11 +285,13 @@
   },
   {
    "id": "mmvyyoemr",
-   "t": "منة",
+   "t": "منة الرحمن في نصيحة الإخوان",
    "sci": "aqeeda",
    "lv": 1,
    "ord": 1,
-   "kind": "nathr"
+   "kind": "nathr",
+   "b": "pc490e52b",
+   "au": "ياسر برهامي"
   }
  ]
 }
