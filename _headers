@@ -91,6 +91,9 @@
 /fbin.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/fmt.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /groups.js
   Cache-Control: public, max-age=60, must-revalidate
 
