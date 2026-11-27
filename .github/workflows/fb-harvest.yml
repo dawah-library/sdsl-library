@@ -52,5 +52,5 @@ jobs:
             node tools/source-import.js fb || true
             bash tools/git-save.sh "منشورات فيسبوك - جولة الزائر بلا حساب" data/fb-inbox.json data/sources.json data/import-review.json data/posts.json || true
             echo "::endgroup::"
-            [ "$r" -lt "$ROUNDS" ] && sleep 3300
+            if [ "$r" -lt "$ROUNDS" ]; then sleep 3300; fi
           done
