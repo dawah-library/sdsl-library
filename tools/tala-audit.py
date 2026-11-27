@@ -78,6 +78,19 @@ def main():
                 if t in pool: pool[t].append({"q": x["q"], "k": "mcq", "a": 0, "o": [x["a"]] + (x.get("o") or []), "src": (x.get("src") or {}).get("u"), "st": (x.get("src") or {}).get("t"), "s": subj(x.get("q")), "d": 2, "w": x.get("why") or ""})
         for tr in (x.get("k") or ["t2"])[:1]:
             rows.append(("bank", "bank:" + x["id"], tr, subj(x.get("q"), (x.get("src") or {}).get("t")), diff(x.get("t"), x.get("q"), tr), bool(x.get("ok")), bool(x.get("a")), bool(x.get("src")), norm(x.get("q"))))
+    # أسئلة دروس «البداية» المعتمدة (st=ok) ← مرحلة ١٥–٢٠ (tools/bidaya.py)
+    import glob as _g
+    for f in sorted(_g.glob(os.path.join(ROOT, "data", "bidaya", "l", "*.json"))):
+        L = J(os.path.relpath(f, ROOT))
+        if L.get("st") != "ok": continue
+        for i, x in enumerate(L.get("qs") or []):
+            if x.get("k") not in ("tf", "mcq") or x.get("a") is None: continue
+            sb = {"aqida": "aqida", "tafsir": "quran", "hadith": "hadith", "alam": "sira", "fiqh": "fiqh", "adab": "adab", "manhaj": "other"}.get(L.get("u"), "other")
+            rows.append(("bidaya", "bd:%s:%d" % (L["id"], i), "t4", sb, diff(x["k"], x["q"], "t4"), True, True, True, norm(x["q"])))
+            it = {"q": x["q"], "k": x["k"], "a": x["a"], "l": L["t"], "s": sb, "d": rows[-1][4], "src": "#/talaea/bidaya?l=" + L["id"], "st": "البداية: " + L["t"]}
+            if x.get("o"): it["o"] = x["o"]
+            if x.get("w"): it["w"] = re.sub(r"\[\[[^\]]+\]\]", "", x["w"]).strip()
+            pool["t4"].append(it)
     for x in J("data/tala-riddles.json")["items"]:
         rows.append(("riddle", "rd:" + x["id"], (x.get("k") or ["t1"])[0], "riddle", 1 if len(x.get("q", "")) < 60 else 2, True, bool(x.get("a")), False, norm(x.get("q"))))
 
@@ -93,7 +106,14 @@ def main():
     out = {"note": "tools/tala-audit.py — تصنيف أسئلة الطلائع بالمرحلة والباب والصعوبة (آلي بقواعد صريحة؛ لا يعدّل المصادر)", "m": M,
            "keys": {"tr": TRN, "sub": dict(SN, riddle="ألغاز", other="غير مصنف")}, "c": {r[1]: [r[2], r[3], r[4]] for r in rows}}
     json.dump(out, open(os.path.join(ROOT, "data", "tala-audit.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    for t in lessons: lessons[t].sort(key=lambda k: (k[0] != "asas", k[1], k[3]))
+    for t in lessons: lessons[t].sort(key=lambda k: ({"asas": 0, "bunyan": 1}.get(k[0], 2), k[1], k[3]))
+    for t in pool:  # بلا تكرار: السؤال نفسه من مصدرين (تمارين الكتاب الرسمي ودروس البداية المولَّدة أو البنك) يبقى مرة
+        seenq, keep = set(), []
+        for it in pool[t]:
+            k = norm(it["q"])
+            if k in seenq: continue
+            seenq.add(k); keep.append(it)
+        pool[t] = keep
     json.dump({"note": "tools/tala-audit.py — مجمع «سؤال اليوم» (المعتمد ذو الإجابة) ودروس «القادم لك» لكل مرحلة، لواجهة الطلائع (talahome.js)", "at": M["at"],
                "sub": dict(SN, riddle="ألغاز", other="متنوع"), "pool": pool, "lessons": {t: [{"s": k[0], "v": k[1], "b": k[2], "p": k[3], "l": k[4]} for k in L_] for t, L_ in lessons.items()}},
               open(os.path.join(ROOT, "data", "tala-home.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))

@@ -17,7 +17,10 @@ def series():
         st = b.get("setTitle") or ""
         if st.startswith("الأساس") or st.startswith("البنيان"):
             out.append((b["id"], "asas" if st.startswith("الأساس") else "bunyan", int(b.get("vol") or 1)))
-    return sorted(out, key=lambda x: (x[1] != "asas", x[2]))
+        # «البداية لمن سلك طريق الهداية» (المرحلة الثانوية) إذا رُفعت؛ لا «البداية والنهاية» لابن كثير
+        elif (st or b.get("title") or "").startswith("البداية") and "النهاية" not in (st or b.get("title") or "") and b.get("type") != "article" and ("الهداية" in (st or b.get("title") or "") or b.get("authorId") == "w5"):
+            out.append((b["id"], "bidaya", int(b.get("vol") or 1)))
+    return sorted(out, key=lambda x: ({"asas": 0, "bunyan": 1}.get(x[1], 2), x[2]))
 # ما لا يصلح اسمًا للدرس: تعليمات التمارين والعناوين الفرعية وأسطر التحويل المشوهة
 NOTL = re.compile(r"[:：…]\s*$|\.\.|^[\(\-–•⊙▪◦*»«]|^(?:الأساس|البنيان|المستوى|الأهداف|المناقشة|التفسير|المفردات|معاني|صل |لون|مرر|ارسم|اكتب|اقرأ|قال |أخي|أختي|تابع|نشاط|تدريب|التقويم|الواجب|تمرين|فوائد|الفوائد|من فوائد|ما يستفاد)|\.\s*\S")
 def clt(t):  # تنظيف عنوان الدرس من رموز التحويل ولصق الكلمات
