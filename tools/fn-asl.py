@@ -14,6 +14,10 @@
 لا يُغيَّر حرف من نص الكتاب: المخرج حقل fna في ملف الكتاب = {"<صفحة>": ["أول ٦٠ حرفًا من السطر بعد التشذيب", …]}،
 وfnaSrc اسم الأصل. يقرؤه القارئ (app.js: «أسانيد الأحاديث من …» منفصلة عن تعليق الشيخ)، وsharh.js (المقطع)، وsharh-dawah.py
 (لا تُستخرج فوائد الشيخ من الإسناد). بلا نموذج؛ يُعاد بعد كل تصحيح للكتاب (sharh.yml).
+المجلدات اللاحقة (تنبيه المدير: «نفس المشكلة ستكون في باقي ملفات شرح صحيح مسلم التي سترفع»): الكتاب الجديد بلا sharh
+يرث sharh وfnLabel من مجلد سابق للمؤلف نفسه بعنوانه نفسه (بعد نزع «— ج ٢»، «الجزء الثاني»، الأرقام)، ويُضاف إلى مجلدات عمله في
+مشروع الشرح (data/shp/<مشروع>.json، works[].vols) فيعالجه «استكمال المعالجة» دون إدخال يدوي؛ ثم تُميَّز حواشيه. يعمل في enrich.yml
+(عند كل كتاب جديد) وفي sharh.yml (جولتان يوميًّا، فيلحق ما اكتمل تحويله من المصورة بعد رفعه).
 الاستعمال: python3 tools/fn-asl.py [معرف الكتاب…]   (بلا معرف: كل كتاب له sharh وأصله موجود)
 """
 import json, os, re, sys
@@ -72,13 +76,55 @@ def classify(pages, G):
     return out
 
 
+VOLW = re.compile(r"(?:\s*[-—–:،(]\s*)?(?:الجزء|المجلد|الجز|ج|مج|المجموعة|الشريط|الدرس|المحاضرة)?\s*(?:[\d٠-٩]+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|الحادي عشر|الثاني عشر)\s*\)?\s*$")
+
+
+def base(t):
+    t = DI.sub("", t or "").strip()
+    for _ in range(3): t = VOLW.sub("", t).strip(" -—–:،()")
+    t = re.sub("[أإآٱ]", "ا", t).replace("ى", "ي").replace("ة", "ه")
+    return re.sub(r"\s+", " ", t)
+
+
+def inherit(cat):
+    """المجلدات الجديدة لشرح قائم: ترث sharh وfnLabel وتُسجَّل في مشروع الشرح. يعيد عدد ما تغيّر."""
+    books = cat["books"]; src = [b for b in books if b.get("sharh")]; ch = 0
+    for b in books:
+        if b.get("sharh") or not b.get("authorId") or b.get("type") not in (None, "book"): continue
+        sib = next((x for x in src if x.get("authorId") == b["authorId"] and x.get("col") == b.get("col") and base(x.get("title")) == base(b.get("title"))), None)
+        if not sib: continue
+        b["sharh"] = sib["sharh"]
+        if sib.get("fnLabel") and not b.get("fnLabel"): b["fnLabel"] = sib["fnLabel"]
+        ch += 1; print("%s «%s»: مجلد من «%s» (%s) — ورث الأصل %s" % (b["id"], b.get("title"), sib.get("title"), sib["id"], sib["sharh"]))
+        sd = os.path.join(D, "shp")
+        for f in sorted(os.listdir(sd)) if os.path.isdir(sd) else []:
+            if not f.endswith(".json") or f.startswith("_"): continue
+            P = json.load(open(os.path.join(sd, f), encoding="utf-8")); dirty = False
+            for w in P.get("works") or []:
+                vs = w.get("vols") or []
+                if any(v.get("b") == sib["id"] for v in vs) and not any(v.get("b") == b["id"] for v in vs):
+                    vs.append({"b": b["id"], "m": None}); w["vols"] = vs; dirty = True
+                    print("  أُضيف إلى مجلدات «%s» في مشروع %s (يعالَج بـ«استكمال المعالجة»)" % (w.get("t"), f[:-5]))
+            if dirty: json.dump(P, open(os.path.join(sd, f), "w", encoding="utf-8"), ensure_ascii=False, indent=1)  # بتنسيق sharh-align.py
+    return ch
+
+
+def bpath(bid):
+    for p in (os.path.join(D, "books", bid + ".json"), os.path.join(ROOT, "vols", bid + ".json")):
+        if os.path.exists(p): return p
+    return None
+
+
 def main():
     cat = json.load(open(os.path.join(D, "catalog.json"), encoding="utf-8"))
+    if inherit(cat):
+        import time; cat["version"] = int(time.time() * 1000)
+        json.dump(cat, open(os.path.join(D, "catalog.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     ids = sys.argv[1:] or [b["id"] for b in cat["books"] if b.get("sharh")]
     by = {b["id"]: b for b in cat["books"]}; cache = {}
     for bid in ids:
-        b = by.get(bid) or {}; src = b.get("sharh"); f = os.path.join(D, "books", bid + ".json"); sf = os.path.join(D, "books", "%s.json" % src)
-        if not src or not os.path.exists(f) or not os.path.exists(sf): continue
+        b = by.get(bid) or {}; src = b.get("sharh"); f = bpath(bid); sf = bpath(src) if src else None
+        if not src or not f or not sf: continue
         if src not in cache:
             G = set()
             for p in json.load(open(sf, encoding="utf-8")).get("pages") or []: G |= grams(words(p))
