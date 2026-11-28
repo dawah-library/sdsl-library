@@ -106,6 +106,7 @@ const TLH = (() => {
       ${L.qissa ? `<h3>🐪 من سير السلف</h3><p>${cite(L.qissa, L)}</p>` : ""}
       ${(L.fawaid || []).length ? `<h3>💡 الفوائد</h3><ol>${L.fawaid.map(f => `<li>${cite(f, L)}</li>`).join("")}</ol>` : ""}
       ${L.nashat ? `<h3>🛠️ نشاط عملي</h3><p>${esc(L.nashat)}</p>` : ""}
+      ${(L.bina || []).length ? `<h3>🌱 أثر الدرس في بناء الجيل</h3><ul class="bdbina">${L.bina.map(f => `<li>${cite(f, L)}</li>`).join("")}</ul>` : ""}
       ${qs ? `<h3>📝 التقويم</h3>${qs}` : ""}
       <h3>📚 مصادر الدرس</h3><ul class="mut">${(L.src || []).map(x => `<li>${esc(x.src)}</li>`).join("")}</ul>
       <div class="row"><button class="btn p" data-tlh="done" data-k="t4" data-id="bd:${esc(id)}">✓ أتممت الدرس</button>${nx ? `<a class="btn" href="#/talaea/bidaya?l=${nx.id}">الدرس التالي ←</a>` : ""}<a class="btn s" href="#/talaea/bidaya">فهرس البداية</a></div></article></div>`);
