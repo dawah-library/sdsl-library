@@ -235,12 +235,28 @@ const MUS = (() => {
     const g = await tfa(k, s, a); el = $("#musmk"); if (!el || showTf.k !== k) return;
     el.innerHTML = g.t ? grpLbl(g, s) + tfHtml(g.t) + (BIG[k] ? `<p class="mut tfsrc">${esc(BIG[k])} — نسخة مدققة على آيات مصحف المدينة (المصدر: QUL/tarteel).</p>` : "") : '<p class="mut">غير متاح لهذه الآية بعد.</p>';
     if (BIG[k]) el.scrollTop = 0; }
+  // هدايات وفوائد الآيات (tools/hidayat.py ← data/hidayat/<سورة>.json): نقاط قصيرة معزوة، مع تنزيل آية أو سورة بصيغ txt وmd وjson
+  const HD = {}, hdS = s => HD[s] || (HD[s] = fetch("data/hidayat/" + s + ".json").then(r => r.ok ? r.json() : { a: {} }).catch(() => ({ a: {} })));
+  const HDN = { saddi: "تفسير السعدي", mokhtasar: "المختصر في التفسير", muyassar: "التفسير الميسر", siraj: "السراج" };
+  const hdText = (s, d, only) => { const L = []; Object.keys(d.a).map(Number).sort((x, y) => x - y).filter(a => !only || a === only).forEach(a => { L.push(`﴿${ayah(s, a)}﴾ [${nmP(s)}: ${AR(a)}]`); d.a[a].forEach(x => L.push(`- ${x.t} (${HDN[x.s] || x.s})`)); L.push(""); }); return L.join("\n"); };
+  async function hidayat(s, a) {
+    const el = $("#mushd"); if (!el) return; const d = await hdS(s), L = d.a[a] || [];
+    const has = Object.keys(d.a).length;
+    el.innerHTML = (L.length ? `<ul class="mwlist">${L.map(x => `<li>${esc(x.t)} <small class="mut">— ${esc(HDN[x.s] || x.s)}</small></li>`).join("")}</ul>` : '<span class="mut">لم تُستخرج هدايات لهذه الآية بعد، وتُضاف تباعًا.</span>') +
+      (has ? `<div class="row"><button class="btn s" data-act="mushdl" data-s="${s}" data-a="${a}" data-f="txt">⬇ نص</button><button class="btn s" data-act="mushdl" data-s="${s}" data-a="${a}" data-f="md">⬇ Markdown</button><button class="btn s" data-act="mushdl" data-s="${s}" data-a="${a}" data-f="json">⬇ JSON</button><button class="btn s" data-act="mushdl" data-s="${s}" data-a="0" data-f="txt">⬇ هدايات السورة</button></div>` : "");
+  }
+  async function hdDown(s, a, f) {
+    const d = await hdS(s), only = a || 0, dd = only ? { a: { [only]: d.a[only] || [] } } : d, nm = `hidayat-${s}${only ? "-" + only : ""}`;
+    const body = f === "json" ? JSON.stringify(dd, null, 1) : f === "md" ? `# هدايات ${nmP(s)}\n\n` + hdText(s, dd, 0).replace(/^﴿(.*)$/gm, "## ﴿$1") : hdText(s, dd, 0);
+    const u = URL.createObjectURL(new Blob([body], { type: "text/plain;charset=utf-8" })), l = document.createElement("a"); l.href = u; l.download = nm + "." + f; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+  }
   async function sheet(s, a) {
     const k = s + ":" + a, t = ayah(s, a), inSel = SEL().includes(k);
     const inMus = /^#\/mushaf/.test(location.hash), until = +(sheet.to || 0) > a ? +sheet.to : 0; sheet.to = 0;
     openSheet(`${nmP(s)}: ${AR(a)}${until ? "–" + AR(until) : ""}`, `<p class="mqt big">${words(t, s, a)} ﴿${AR(a)}﴾${until ? Array.from({ length: Math.min(until, Q.suras[s - 1].ayat.length) - a }, (_, i) => " " + words(ayah(s, a + i + 1), s, a + i + 1) + ` ﴿${AR(a + i + 1)}﴾`).join("") : ""}</p>
     <p class="mut" style="font-size:.82rem;margin-top:-4px">اضغط أي كلمة لمعناها وغريبها في كتب الغريب والمعاجم.</p>
     <div class="row">${inMus ? "" : `<a class="btn s p" href="#/mushaf/${s}?a=${a}" data-act="closeSheet">📖 موضعها في المصحف</a>`}<button class="btn s" data-act="musone" data-s="${s}" data-a="${a}">▶ استمع</button><a class="btn s" href="#/ask?m=irab&q=${encodeURIComponent("أعرب قوله تعالى: ﴿" + t + "﴾ [" + nmP(s) + ": " + a + "]")}" data-act="closeSheet">✍ إعراب الآية</a><button class="btn s${inSel ? "" : " p"}" data-act="musadd" data-k="${k}">${inSel ? "✓ في التصدير (إزالة)" : "＋ أضفها إلى التصدير"}</button><button class="btn s" data-act="muscopy" data-k="${k}">نسخ</button>${t.split(/\s+/).length >= 3 && typeof tafsirSheet === "function" ? `<button class="btn s" data-act="mustaf" data-k="${k}">اقرأ التفسير هنا</button>` : ""}</div>
+    <h4>هدايات وفوائد <small class="mut">(من التفاسير، بتحقق آلي من النص)</small></h4><div id="mushd" class="mut">…</div>
     <h4>غريب الآية <small class="mut">(السراج في بيان غريب القرآن)</small></h4><div id="musgr" class="mut">…</div>
     <div class="chips" id="mustk">${TFS.map(([k, n]) => `<button class="chip${k === tfk() ? " on" : ""}" data-act="mustk" data-k="${k}" data-s="${s}" data-a="${a}">${n}</button>`).join("")}</div><div id="musmk" class="mut tfbox">…</div>
     <h4>مواضع تفسيرها في التفاسير</h4><div id="mustf" class="mut">…</div>
@@ -249,6 +265,7 @@ const MUS = (() => {
       $("#musn").addEventListener("input", e => { setNote(k, e.target.value.trim()); const b = document.querySelector(`#ay${a} .mno`); if (b) b.classList.toggle("hasn", !!e.target.value.trim()); });
     });
     showTf(tfk(), s, a);
+    hidayat(s, a);
     gharibHtml(s, a, until).then(h => { const el = $("#musgr"); if (el) el.innerHTML = h; });
     taf(s).then(ix => { const el = $("#mustf"); if (!el) return; const L = (ix && ix[a]) || [];
       el.innerHTML = L.length ? L.map(e => `<a class="chip" href="#/book/${esc(e[0])}/${e[1]}" data-act="closeSheet">${esc(e[0].startsWith("ibnkathir") ? "تفسير ابن كثير" : e[0].startsWith("baghawi") ? "تفسير البغوي" : (B(e[0]) || {}).title || e[0])}${e[2] ? "" : " (تقريبي)"}</a>`).join(" ") : "لم تُفهرس بعد."; });
@@ -307,7 +324,7 @@ const MUS = (() => {
     else if (a === "musone") { stopAu(); playList([[+el.dataset.s, +el.dataset.a]], 0); }
     else if (a === "musfull") { const on = !document.body.classList.contains("mfull"); try { localStorage.setItem("mus_full", on ? "1" : ""); } catch (x) { } applyFull(true); }
     else if (a === "muszoom") { const z = Math.max(1, Math.min(3, (+localStorage.getItem("mus_zoom") || 1) + 0.25 * +el.dataset.d)); try { localStorage.setItem("mus_zoom", z); } catch (x) { } applyFull(); }
-    else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a);
+    else if (a === "musay") sheet(+el.dataset.s, +el.dataset.a); else if (a === "mushdl") hdDown(+el.dataset.s, +el.dataset.a, el.dataset.f);
     else if (a === "musix" || a === "musixc") { const o = ixo(); o[el.dataset.k] = a === "musixc" ? (el.checked ? 1 : 0) : el.dataset.v; ixs(o); const r = $("#musres"); if (r) { const box = document.createElement("div"); box.innerHTML = ixHtml(); [...document.querySelectorAll(".mixc, .msuras")].forEach(x => x.remove()); r.after(...box.children); } }
     else if (a === "musretry") { Object.keys(FONTS).forEach(k => delete FONTS[k]); QERR.length = 0; const m = location.hash.match(/p\/(\d+)/); if (m) mpage(+m[1]); }
     else if (a === "musw") wsheet(el.dataset.t || el.textContent, +el.dataset.s, +el.dataset.a);
