@@ -23,6 +23,7 @@ jobs:
           while read -r cmd arg; do
             case "$cmd" in
               cancel) [[ "$arg" =~ ^[0-9]+$ ]] && gh run cancel "$arg" -R "$GITHUB_REPOSITORY" && echo "ألغي $arg" ;;
+              import) IFS='|' read -r ib iid iaid iauth itopic ititle <<< "$arg"; [[ "$ib" =~ ^[0-9]+$ && "$iid" =~ ^[a-z0-9_]+$ ]] && gh workflow run import-turathio.yml -R "$GITHUB_REPOSITORY" --ref main -f book="$ib" -f id="$iid" -f author_id="$iaid" -f author="$iauth" -f topic="$itopic" -f title="$ititle" && echo "استيراد $ib" ;;
               run) [[ "$arg" =~ ^[a-z0-9-]+\.yml$ ]] && gh workflow run "$arg" -R "$GITHUB_REPOSITORY" --ref main && echo "أُطلق $arg" ;;
             esac
           done < data/ops/commands.txt
