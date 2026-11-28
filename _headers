@@ -79,6 +79,9 @@
 /docx.js
   Cache-Control: public, max-age=60, must-revalidate
 
+/early.js
+  Cache-Control: public, max-age=60, must-revalidate
+
 /eds.js
   Cache-Control: public, max-age=60, must-revalidate
 
