@@ -1,0 +1,1 @@
+{"workflow": "مقاطع السور وأقسامها", "run": "46135163203", "at": "2026-11-28T10:35Z", "total": 103, "ok": 1, "by_model_status": {"gemini-3.7-flash|429": 17, "gemini-3.8-flash|429": 17, "gemini-3.5-flash|429": 17, "gemini-3.6-flash|429": 17, "gemini-flash-latest|429": 17, "gemini-3-flash-preview|429": 16, "gemini-3.7-flash|err": 1, "gemini-3-flash-preview|200": 1}}
