@@ -1,0 +1,1 @@
+{"workflow": "تدقيق الكتب النصية (اقتراحات تصحيح)", "run": "46118501459", "at": "2026-11-28T07:06Z", "total": 66, "ok": 60, "by_model_status": {"gemini-flash-latest|429": 1, "gemini-3.7-flash|429": 1, "gemini-3.6-flash|429": 1, "gemini-3.8-flash|429": 1, "gemini-3.5-flash|429": 1, "gemini-3-flash-preview|429": 1, "gemini-flash-lite-latest|200": 60}}
