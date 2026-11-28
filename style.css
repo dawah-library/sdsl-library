@@ -2165,3 +2165,4 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 @media (max-width:560px){.top{flex-wrap:wrap}.top .hsearch{flex:1 1 100%;order:20;max-width:none;margin:0;min-width:0}.top .tools{flex:1 1 0;min-width:0;overflow:hidden;justify-content:flex-start}.top .tools .clk .clkz{display:none}.top .tools .ic{flex:0 1 auto;min-width:0}}
 @media (max-width:380px){.top .tools .clk{overflow:visible!important;text-overflow:clip!important;flex:0 0 auto}.top .tools #acctbtn{max-width:44px}.top .tools{gap:3px}.top .tools .clk{padding:4px 6px;font-size:.72rem}.top .brand img{width:36px;height:36px}}
 @media (max-width:340px){.top .tools [data-act=rlang]{display:none}}
+.hdsub{margin:16px 0 4px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--ac,#0b4f43) 18%,transparent);font-size:1rem;color:var(--ac,#0b4f43)}.hdtier{display:block;font-size:.72rem;margin:4px 6px 0}
