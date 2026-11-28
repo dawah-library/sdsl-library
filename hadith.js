@@ -271,7 +271,7 @@ const HDS = (() => {
   async function kutub(q) {
     const L = await klist(), b = q.kb, qq = (q.q || "").trim(), pg = Math.max(1, +q.pg || 1), u = o => "#/hadith?" + new URLSearchParams(Object.assign({ t: "kutub" }, b ? { kb: b } : {}, o)).toString();
     let body = "";
-    if (!b) body = `<div class="hshelf">${Object.entries(L).map(([k, v], i) => `<a class="hbook hb${i % 9}" href="#/hadith?t=kutub&kb=${k}"><b>${esc(v.t.replace(/^(صحيح|سنن|جامع|موطأ|مسند)\s+/, m => m.trim() + "\n"))}</b><span>${esc(v.t)} • ${toAr(v.n)} حديثًا</span></a>`).join("") || '<p class="mut">جارٍ التحميل…</p>'}</div>`;
+    if (!b) body = `<div class="hshelf">${Object.entries(L).map(([k, v], i) => `<a class="hbook hb${i % 9}" href="#/hadith?t=kutub&kb=${k}"><b>${esc(v.t.replace(/^(صحيح|سنن|جامع|موطأ|مسند)\s+/, m => m.trim() + "\n"))}</b><span>${esc(v.t)} • ${toAr(v.n)} حديثًا</span></a>`).join("") || '<p class="mut">جارٍ التحميل…</p>'}</div><h3>مراجع علمية مهمة</h3><div class="grid">${Object.entries(BK).map(([bk, nm]) => `<a class="card" href="#/hadith?t=book&b=${encodeURIComponent(bk)}"><b>${esc(nm)}</b><span>${toAr((IX || []).filter(r => r[1] === bk).length)} حديثًا</span></a>`).join("")}</div>`;
     else if (!qq) body = await kread(b, q);
     else { const D = await kidx(b); let it = D.items || [];
       { const w = norm(qq).split(/\s+/).filter(Boolean); it = it.filter(x => { const t = norm(x[6] + " " + x[5] + " " + x[4] + " " + x[3]); return w.every(k => t.includes(k)); }); }
@@ -447,9 +447,9 @@ const HDS = (() => {
     <details class="hfold"><summary>🔎 ابحث عن أي حديث وحكمه في كتب السنة (الموسوعة الحديثية)</summary><div><form class="sbox" data-form="noop" id="hddq"><input name="q" type="search" placeholder="اكتب جزءًا من متن الحديث" aria-label="بحث في الموسوعة الحديثية"><button class="btn p">ابحث</button></form><div id="hddr"></div></div></details>
     <div class="row"><button class="btn s" data-act="hdoff">${offState("hadith", "قسم الحديث")}</button></div>
     <form class="sbox" data-form="noop" id="hdq"><input name="q" type="search" value="${esc(qq)}" placeholder="ابحث بطرف الحديث أو الصحابي أو الباب" aria-label="بحث في الأحاديث"><button class="btn p">بحث</button></form>
-    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["book", "بحسب المصدر"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"], ["fav", "⭐ مجلداتي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>`;
+    <div class="tabs" role="tablist">${[["kutub", "كتب السنة"], ["topic", "موضوعي"], ["atraf", "الأطراف (معجمي)"], ["sahabi", "بحسب الصحابي"], ["fav", "⭐ مجلداتي"]].map(([k, n]) => `<a role="tab" aria-selected="${k === t}" href="#/hadith?t=${k}">${n}</a>`).join("")}</div>`;
     view(HERO + (reading ? "" : TOOLS) + `
-    ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "المصادر" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
+    ${((q.g && t !== "topic") || q.b || q.s) ? `<p><a href="#/hadith?t=${t === "book" ? "kutub" : t}">← ${t === "topic" ? "الأبواب" : t === "book" ? "كتب السنة" : "الصحابة"}</a> <b>${esc(q.g ? q.g.split(" › ").slice(-1)[0] : q.b ? BK[q.b] : q.s)}</b></p>` : ""}
     ${side}${reading ? `<section class="hdtoolsb"><h3 class="mut">أدوات قسم الحديث</h3>${TOOLS}</section>` : ""}${showList ? `<p class="mut">${toAr(L.length)} حديثًا</p>${L.slice((pg - 1) * PER, pg * PER).map(card).join("")}${np > 1 ? `<div class="pgn">${pg > 1 ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg - 1 }))}">السابقة</a>` : ""}<span class="mut">${toAr(pg)} من ${toAr(np)}</span>${pg < np ? `<a class="btn s" href="${u(Object.assign({}, q, { pg: pg + 1 }))}">التالية</a>` : ""}</div>` : ""}` : ""}`);
     $("#hdq").addEventListener("submit", e => { e.preventDefault(); location.hash = u({ q: e.target.q.value.trim() }); });
     if (qq && t !== "kutub") kutubSearch(qq);
