@@ -1,28 +1,6 @@
-# مطابقة النسخ المصورة بالنصية — 2026-11-27 13:07
+# مطابقة النسخ المصورة بالنصية — 2026-11-28 07:16
 
-## أخلاق العلماء
-- تعذر: max() iterable argument is empty
-
-## عمدة الفقه
-- تعذر: max() iterable argument is empty
-
-## صحيح البخاري
-- تعذر: max() iterable argument is empty
-
-## رياض الصالحين
-- تعذر: max() iterable argument is empty
-
-## بلوغ المرام من أدلة الأحكام
-- تعذر: max() iterable argument is empty
-
-## ألفية ابن مالك
-- تعذر: max() iterable argument is empty
-
-## الأدب المفرد
-- تعذر: max() iterable argument is empty
-
-## سنن ابن ماجه
-- تعذر: max() iterable argument is empty
-
-## جامع بيان العلم وفضله
-- تعذر: max() iterable argument is empty
+## أدب الكاتب (adabkatib)
+- صفحات النص 621، المصورة 790، متوسط التطابق 44٪، إزاحة غالبة +3
+- صفحات لا تشبه صورتها: 0
+- التصحيح: خريطة صفحات (375 صفحة خارج الترتيب البسيط)
