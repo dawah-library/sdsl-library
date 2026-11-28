@@ -135,7 +135,9 @@ def _install_usage_counter():
             print("USAGE " + json.dumps(rec, ensure_ascii=False))
             d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "usage")
             os.makedirs(d, exist_ok=True)
-            fn = "%s-%s-%s.json" % (time.strftime("%Y%m%d", time.gmtime()), "".join(c if c.isalnum() else "_" for c in wf)[:30], rec["run"] or "x")
+            # اسم فريد لكل جهاز: أجهزة المصفوفة المتوازية (٢٤ جهاز مراجعة في ocr.yml) كانت تكتب الملف نفسه فيتعارض الحفظ (add/add) في كل جولة (٢٨ نوفمبر)
+            tag = "".join(c if c.isalnum() else "_" for c in (os.environ.get("OCR_ONLY") or os.environ.get("GITHUB_JOB") or ""))[-24:]
+            fn = "%s-%s-%s%s-%d.json" % (time.strftime("%Y%m%d", time.gmtime()), "".join(c if c.isalnum() else "_" for c in wf)[:30], rec["run"] or "x", ("-" + tag) if tag else "", os.getpid())
             json.dump(rec, open(os.path.join(d, fn), "w", encoding="utf-8"), ensure_ascii=False)
         except Exception:
             pass
