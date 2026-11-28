@@ -2,6 +2,9 @@ name: فحص مفتاح ElevenLabs وقائمة الأصوات (بلا استه�
 # يدوي فقط: GET /v1/voices لا يستهلك أحرفًا؛ يقرأ ELEVENLABS_API_KEY_2 ثم ELEVENLABS_API_KEY ولا يطبع المفتاح.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["data/audio/_eleven-check.trigger"]
 permissions:
   contents: write
 concurrency:
