@@ -1,0 +1,1 @@
+{"workflow": "بطاقات التعريف بالكتب", "run": "46107803424", "at": "2026-11-28T04:32Z", "total": 7, "ok": 1, "by_model_status": {"gemini-flash-latest|429": 1, "gemini-3.7-flash|429": 1, "gemini-3.6-flash|429": 1, "gemini-3.8-flash|429": 1, "gemini-3.5-flash|429": 1, "gemini-3-flash-preview|429": 1, "gemini-flash-lite-latest|200": 1}}
