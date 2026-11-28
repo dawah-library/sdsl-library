@@ -805,7 +805,7 @@
 "books": 1730,
 "dawah": 60,
 "turath": 1670,
-"authors": 445,
+"authors": 446,
 "topics": 123,
 "pdf": 88,
 "card": 59,
@@ -834,7 +834,7 @@
 "server_search": false,
 "workflows": 99,
 "api": 14,
-"sw": "sdsl-v380",
+"sw": "sdsl-v381",
 "plan_done": 5,
 "plan_n": 27,
 "search_console": false
