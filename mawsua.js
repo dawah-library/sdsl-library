@@ -2,8 +2,8 @@
    الآداب والأخلاق، التربية، الأسرة، السياسة الشرعية؛ على نمط الموسوعات المحكمة: أبواب ← فصول ← مسائل، وكل مسألة مادة محررة بأقسام ثابتة
    عمادها كلام مشايخ الدعوة السلفية في كتبهم ومقالاتهم وفتاواهم، وتكميلها من المراجع المتخصصة، وكل فقرة معزوة إلى موضعها (tools/mawsua.py).
    المسودات للإدارة حتى تعتمدها؛ ومنها: اعتماد المادة، وطابور التحرير، وإعادة المخطط. */
-const MW_ICONS = { athar: "scroll-text", aqeeda: "shield-check", fiqh: "scale", tafsir: "book-open-text", quran: "book-marked", fikr: "compass", dawa: "megaphone", lugha: "type", tarikh: "history", adab: "heart-handshake", tarbiya: "sprout", usra: "house", siyasa: "landmark" },
-  MW_HUE = { athar: 35, aqeeda: 160, fiqh: 200, tafsir: 145, quran: 120, fikr: 260, dawa: 15, lugha: 225, tarikh: 30, adab: 330, tarbiya: 95, usra: 0, siyasa: 185 };
+const MW_ICONS = { athar: "scroll-text", aqeeda: "shield-check", fiqh: "scale", tafsir: "book-open-text", quran: "book-marked", fikr: "compass", dawa: "megaphone", lugha: "type", tarikh: "history", adab: "heart-handshake", tarbiya: "sprout", usra: "house", siyasa: "landmark", talaea: "sprout" },
+  MW_HUE = { athar: 35, aqeeda: 160, fiqh: 200, tafsir: 145, quran: 120, fikr: 260, dawa: 15, lugha: 225, tarikh: 30, adab: 330, tarbiya: 95, usra: 0, siyasa: 185, talaea: 28 };
 const MAWS = (() => {
   const R = "data/mawsua/", TR = {}, EN = {};
   // أيقونات معيارية (Lucide، icons.js) لكل موسوعة بدل الصور المصغرة والرموز التعبيرية، ولون مميز لكل منها
@@ -224,7 +224,7 @@ const MAWS = (() => {
   document.addEventListener("click", e => { const p = document.getElementById("mwpop"); if (!p) return; if (e.target.closest("[data-mwpx]") || (!p.contains(e.target) && !e.target.closest('[data-mw="fn"]'))) closePop(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
   addEventListener("hashchange", closePop);
-  function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id), q); }
+  function show(q, k, id, l) { q = q || {}; if (!k) return home(q); if (k === "talaea" && !id && typeof TLE !== "undefined") return TLE.show(q); if (id === "test" && typeof MSB !== "undefined") return MSB.show(q, k, l); if (!id) return enc(k, q); return art(k, decodeURIComponent(id), q); }
 
   document.addEventListener("submit", e => { const f = e.target.closest('[data-form="mwq"]'); if (!f) return; e.preventDefault(); location.hash = "#/mawsua?q=" + encodeURIComponent(f.q.value.trim()); }, true);
   document.addEventListener("click", async e => {
