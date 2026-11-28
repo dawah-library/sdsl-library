@@ -12,6 +12,14 @@ const SHRH = (() => {
   const body = pg => String(pg || "").split(/^\s*_{4,}\s*$/m)[0];
   // مطابقة تمامًا لـunits_of وparas_of في tools/sharh-align.py
   function unitsOf(pages) { const out = []; pages.forEach((pg, i) => { let k = 0; body(pg).split("\n").map(l => l.trim()).filter(Boolean).forEach(para => { (para.length <= 420 ? [para] : para.split(/(?<=[.؟!:])\s+/).map(x => x.trim()).filter(Boolean)).forEach(t => { out.push([(i + 1) + "." + k, t.replace(/^#+\s*/, "")]); k++; }); }); }); return out; }
+  // نص المقطع منسوبًا: أسانيد «الأصل» التي وُضعت في حاشية الشرح (tools/fn-asl.py → b.fna) تُحذف من المقطع (هي في متن الكتاب المشروح)؛
+  // وفي الكتب التي تعليق الشارح فيها هو الحواشي (fnLabel، مثل تعليق الشيخ ياسر برهامي على شرح النووي) يُعلَّم ما في صلب الصفحة بـ«§ » = من أصل الكتاب
+  function fnKeys(cb) { if (cb._fnK) return cb._fnK; const A = new Set([].concat(...Object.values(cb.fna || {}))), F = new Set();
+    if (cb.fnLabel) (cb.pages || []).forEach(pg => { const i = String(pg || "").search(/^\s*_{4,}\s*$/m); if (i >= 0) String(pg).slice(i).split("\n").forEach(l => { if (l.trim()) F.add(l.trim().slice(0, 60)); }); });
+    return (cb._fnK = { A, F }); }
+  function segText(cb, pr, s) { if (!cb || (!cb.fna && !cb.fnLabel)) return pr.slice(s.a, s.z + 1).map(x => x[1]).join("\n"); const { A, F } = fnKeys(cb);
+    return pr.slice(s.a, s.z + 1).filter(x => !A.has(x[1].slice(0, 60))).map(x => cb.fnLabel && !x[1].startsWith("%% ") && !/^#/.test(x[1]) && !F.has(x[1].slice(0, 60)) ? "§ " + x[1] : x[1]).join("\n"); }
+  const shLine = l => l.startsWith("§ ") ? `<p class="shasl"><span class="tag">من أصل الكتاب</span> ${esc(l.slice(2))}</p>` : `<p>${esc(l)}</p>`;
   function parasOf(pages) { const out = []; pages.forEach((pg, i) => String(pg || "").split("\n").forEach(l => { if (l.trim() && !/^\s*_{4,}\s*$/.test(l)) out.push([i + 1, l.trim()]); })); return out; }
   let LIST = null; const PJ = new Map(), AN = new Map();
   const list = async () => LIST || (LIST = (await getJ("_list.json")) || {});
@@ -106,7 +114,7 @@ const SHRH = (() => {
     for (const w of on) { const A_ = await anchors(pid, w.w); if (!A_) continue;
       for (const [cv, d] of Object.entries(A_.vols || {})) { const segs = d.segs.filter(s => s.m === b.id && s.u && +s.u.split(".")[0] === p && (s.st === "ok" || s.st === "moved" || s.st === "auto" || admin())); if (!segs.length) continue;
         let cb; try { cb = await loadBook(cv); } catch (e) { continue; } const pr = parasOf(cb.pages);
-        segs.forEach(s => items.push({ w, s, u: s.u, text: pr.slice(s.a, s.z + 1).map(x => x[1]).join("\n"), cv })); } }
+        segs.forEach(s => items.push({ w, s, u: s.u, text: segText(cb, pr, s), cv })); } }
     if (!items.length || document.getElementById("rb") !== rb) return;
     const units = unitsOf(b.pages).filter(([u]) => +u.split(".")[0] === p), nz = t => norm(t).replace(/\s+/g, "");
     const blocks = [...rb.querySelectorAll("p,h1,h2,h3,h4,li,blockquote,div.verse")];
@@ -121,7 +129,7 @@ const SHRH = (() => {
           const rest = nd.splitText(i), span = document.createElement("span"); span.innerHTML = html; rest.parentNode.insertBefore(span, rest); return; } } }
       el.insertAdjacentHTML("beforeend", html); };
     const mode = pf.mode, fn = []; let n = 0;
-    const html = (it) => `<div class="shx" style="--c:${esc(it.w.col)}"><b class="shxn">${esc(it.w.t)}</b>${it.s.st === "review" ? ' <em class="tag">موضع غير مؤكد</em>' : ""}${it.text.split("\n").map(l => `<p>${esc(l)}</p>`).join("")}</div>`;
+    const html = (it) => `<div class="shx" style="--c:${esc(it.w.col)}"><b class="shxn">${esc(it.w.t)}</b>${it.s.st === "review" ? ' <em class="tag">موضع غير مؤكد</em>' : ""}${it.text.split("\n").map(shLine).join("")}</div>`;
     if (mode === "side") {
       document.body.classList.add("shside"); let side = document.getElementById("shxside"); if (!side) { document.body.insertAdjacentHTML("beforeend", '<aside id="shxside" class="shxside" aria-label="الشروح"></aside>'); side = document.getElementById("shxside"); }
       side.innerHTML = `<h3>الشروح على ص ${toAr(p)}</h3>` + items.map(it => `<section data-u="${esc(it.u)}">${html(it)}</section>`).join("");
@@ -141,12 +149,12 @@ const SHRH = (() => {
     const ws = P.works.filter(w => !pf.off.includes(w.w)); toast("جارٍ إعداد النسخة المشروحة…");
     const by = {}; // matnVol|unit → [{w,text}]
     for (const w of ws) { const A_ = await anchors(pid, w.w); if (!A_) continue; for (const [cv, d] of Object.entries(A_.vols || {})) { let cb; try { cb = await loadBook(cv); } catch (e) { continue; } const pr = parasOf(cb.pages);
-      d.segs.filter(s => s.u && (s.st === "ok" || s.st === "moved" || s.st === "auto")).forEach(s => (by[s.m + "|" + s.u] = by[s.m + "|" + s.u] || []).push({ w, text: pr.slice(s.a, s.z + 1).map(x => x[1]).join("\n") })); } }
+      d.segs.filter(s => s.u && (s.st === "ok" || s.st === "moved" || s.st === "auto")).forEach(s => (by[s.m + "|" + s.u] = by[s.m + "|" + s.u] || []).push({ w, text: segText(cb, pr, s) })); } }
     const vols = []; for (const v of P.matn) { try { const mb = await loadBook(v); vols.push({ v, b: mb, units: unitsOf(mb.pages) }); } catch (e) { } }
     const name = P.t + " — مع " + ws.map(w => w.t).join(" و"), legend = ws.map(w => `${w.t} (${KINDS[w.kind] || ""})`).join("، ");
     if (kind === "docx") {
       const pages = []; let k = 0;
-      vols.forEach(V => { const pg = {}; V.units.forEach(([u, t]) => { const p = +u.split(".")[0]; const c = by[V.v + "|" + u] || []; (pg[p] = pg[p] || { t: [], f: [] }); let line = t; c.forEach(x => { pg[p].f.push("[" + x.w.t + "] " + x.text.replace(/\n/g, " ")); line += "(" + pg[p].f.length + ")"; }); pg[p].t.push(line); });
+      vols.forEach(V => { const pg = {}; V.units.forEach(([u, t]) => { const p = +u.split(".")[0]; const c = by[V.v + "|" + u] || []; (pg[p] = pg[p] || { t: [], f: [] }); let line = t; c.forEach(x => { pg[p].f.push("[" + x.w.t + "] " + x.text.replace(/^§ /gm, "[من أصل الكتاب] ").replace(/\n/g, " ")); line += "(" + pg[p].f.length + ")"; }); pg[p].t.push(line); });
         Object.keys(pg).sort((a, b) => a - b).forEach((p, i) => pages.push({ i: ++k, t: (i === 0 && vols.length > 1 ? "# " + title(V.b) + (V.b.vol != null ? " — ج" + V.b.vol : "") + "\n" : "") + pg[p].t.join("\n") + (pg[p].f.length ? "\n_____\n" + pg[p].f.map((f, j) => "(" + (j + 1) + ") " + f).join("\n") : ""), l: PL(V.b, p - 1) || "" })); });
       const blob = await DOCX.build({ fmt: { cover: 1 }, title: name, author: A(B(P.matn[0]).authorId).name, pages, toc: [], opt: { fn: true, toc: false, pl: false }, url: siteLink("#/book/" + P.matn[0]), src: "المتن بنص مؤلفه، والشروح في الحواشي بأسماء أصحابها: " + legend, who: "", site: SITENAME, siteUrl: (CFG.siteUrl || "https://dawahlibrary.org").replace(/^https?:\/\//, "").replace(/\/+$/, "") });
       return dl(name.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) + ".docx", blob, blob.type);

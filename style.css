@@ -2140,3 +2140,10 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .rd.fmtd h1,.rd.fmtd h2,.rd.fmtd h3,.rd.fmtd .h1,.rd.fmtd .h2,.rd.fmtd .h3{color:var(--green,#0f5d46);font-family:Amiri,serif}
 .rd.fmtd h1,.rd.fmtd h2{border-bottom:2px solid var(--gold,#b8892b);padding-bottom:.2em;margin-top:1.4em}
 .rd.fmtd h3{border-inline-start:4px solid var(--gold,#b8892b);padding-inline-start:.6em;margin-top:1.2em}
+
+/* حواشي «الأصل» في كتب الشروح (tools/fn-asl.py): أسانيد أحاديث الكتاب المشروح مفصولة عن تعليق الشارح وبلون المتن */
+.fnb h5.fnah{margin:.6em 0 .3em;font-size:.82em;font-weight:700;color:var(--mut,#666);border-bottom:1px solid var(--line,#ddd);padding-bottom:.2em}
+.fnb h5.fnah:first-child{margin-top:0}
+.fnb p.fna{font-weight:600;color:var(--ink,inherit);border-inline-start:3px solid var(--ac,#2e7d5b);padding-inline-start:.5em}
+.fnasl .cbn,.fnasl .fnr{opacity:.75}
+.shx p.shasl{opacity:.72;font-size:.94em}.shx p.shasl .tag{font-size:.75em;margin-inline-end:.3em}

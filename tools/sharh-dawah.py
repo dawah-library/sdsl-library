@@ -23,6 +23,23 @@ NUM = re.compile(r"^\s*[\d٠-٩]+\s*[-–]\s*\(([\d٠-٩]+)\)")
 jl, js = SA.jl, SA.js
 
 
+OWN = {}; OWNT = {}
+
+
+def own_lines(sb):
+    """كلام الشيخ وحده في كتاب شرحه (طلب المدير، ٢٨ نوفمبر): لا تُستخرج فوائده من أسانيد «الأصل» التي وُضعت في الحاشية
+    (fna من tools/fn-asl.py)؛ وإن كان تعليقه هو الحواشي (fnLabel في الفهرس، مثل تعليق الشيخ ياسر برهامي على شرح النووي)
+    فصلب الصفحة من أصل الكتاب لا من كلامه."""
+    B = SA.shard(sb) or {}; A = {k for v in (B.get("fna") or {}).values() for k in v}
+    cat = jl(os.path.join(D, "catalog.json")); lab = next((b.get("fnLabel") for b in cat["books"] if b["id"] == sb), None)
+    F = set()
+    if lab:
+        for pg in B.get("pages") or []:
+            m = re.search(r"^\s*_{4,}\s*$", pg or "", re.M)
+            if m: F |= {l.strip()[:60] for l in pg[m.end():].split("\n") if l.strip()}
+    return lambda t: t[:60] not in A and (not lab or t[:60] in F)
+
+
 def hadith_index():
     """(كتاب المكتبة، الصفحة) ← [(كتاب قسم الحديث، الرقم)]، ومجموعة الأرقام لكل كتاب."""
     pg, nums = {}, {}
@@ -133,11 +150,22 @@ def main():
             for (wid, sb), r in H_[n].items():
                 segs = sorted(r["segs"]); prev = next((o for o in old.get(n, []) if o.get("w") == wid and o.get("sb") == sb), {})
                 e = {"w": wid, "pj": r["pj"], "a": r["a"], "an": r["an"], "t": r["t"], "sb": sb, "p": segs[0][2], "pz": max(x[2] for x in segs), "segs": [x[:2] for x in segs]}
-                for k in ("f", "fst", "at", "fby"):
+                for k in ("f", "fst", "at", "fby", "fx"):
                     if k in prev: e[k] = prev[k]
+                if e.get("f"):  # تدقيق النسبة: ما نُقل من أصل الكتاب (شرح النووي أو أسانيد مسلم) لا من كلام الشيخ يُنقل إلى fx بسببه، ولا يُحذف
+                    if sb not in OWNT:
+                        if sb not in PAGES: PAGES[sb] = SA.paras_of(SA.shard(sb)["pages"]); OWN[sb] = own_lines(sb)
+                        OWN.setdefault(sb, own_lines(sb)); OWNT[sb] = nz("\n".join(t for _, t in PAGES[sb] if OWN[sb](t)))
+                    ok_ = [x for x in e["f"] if nz(x.get("q", "")) in OWNT[sb]]
+                    if len(ok_) < len(e["f"]):
+                        e.setdefault("fx", []).extend(dict(x, why="من أصل الكتاب لا من كلام الشيخ") for x in e["f"] if x not in ok_)
+                        rep.append("- %s:%s: نُقلت %d فائدة من أصل الكتاب إلى المستبعد" % (hb, n, len(e["f"]) - len(ok_)))
+                        if ok_: e["f"] = ok_
+                        elif e.get("fst") != "ok": [e.pop(k, None) for k in ("f", "fst", "at")]  # تُستخرج من جديد من كلام الشيخ وحده
                 if AI and "f" not in e and made < MAX and not (T.KEYS and len(T.EXH) >= max(1, len(T.KEYS) // 2)) and time.time() < T.DEADLINE[0]:
-                    if sb not in PAGES: PAGES[sb] = SA.paras_of(SA.shard(sb)["pages"])
-                    text = "\n".join(PAGES[sb][i][1] for a, z in e["segs"] for i in range(a, min(z + 1, len(PAGES[sb]))))
+                    if sb not in PAGES: PAGES[sb] = SA.paras_of(SA.shard(sb)["pages"]); OWN[sb] = own_lines(sb)
+                    text = "\n".join(PAGES[sb][i][1] for a, z in e["segs"] for i in range(a, min(z + 1, len(PAGES[sb]))) if OWN[sb](PAGES[sb][i][1]))
+                    if len(nz(text)) < 40: continue  # لا كلام للشيخ في المقطع (أصل الكتاب وحده)
                     f = extract(T, bt, n, r["an"], re.sub(r"[ً-ْٰ]", "", MT.get(n, "")), text)
                     if f is not None:
                         e.update(f=f, fst="draft", at=time.strftime("%Y-%m-%d")); made += 1

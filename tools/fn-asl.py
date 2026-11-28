@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""حواشي «الأصل» في كتب الشروح (طلب المدير، ٢٨ نوفمبر ٢٠٢٦).
+
+المشكلة: في تفريغ «شرح صحيح مسلم» للشيخ ياسر برهامي (p1f08a935) وُضعت أسانيد أحاديث صحيح مسلم في الحاشية اختصارًا
+(المتن في الصفحة بسطر «%% » ورقم الحاشية عليه، والإسناد في الحاشية)، فعُدّت هذه الحواشي من تعليق الشيخ وشرحه.
+الحل: يقارن كل سطر حاشية بنص الكتاب المشروح نفسه في المكتبة (الحقل sharh في الفهرس، مثل "muslim" ← data/books/muslim.json)
+بشنغلات الكلمات (٤ كلمات بعد نزع الحركات وتوحيد الهمزات)، ويُعدّ السطر من «الأصل» إذا:
+  - وُجد أكثر من ٦٠٪ من شنغلاته في الأصل، و
+  - بدأ بصيغة إسناد (حدثنا، أخبرنا…)، أو كان رقمه على سطر متن «%% » في الصفحة، أو كان مشكولًا كنص الأصل (والتعليق غير مشكول)؛
+  - أو بدأ بصيغة إسناد وتكررت فيه صيغ التحديث و«عن» مرتين فأكثر (إسناد شوّهه التحويل فقلّ وجوده في الأصل؛ وتعليق الشارح لا يبدأ بصيغة التحديث)؛
+  - ولا يُعدّ منه ما بدأ بكلام الشارح («وذلك من حديث…»، «قوله ﷺ…»، «أي…»، «رواية مسلم…») وإن نقل لفظ الحديث؛
+  - وسطر التتمة بلا رقم بعد سطر من الأصل يتبعه إن وُجد أكثره في الأصل.
+وما سوى ذلك تعليق الشارح (ولو نقل فيه حديثًا بلفظه: «وذلك من حديث…»، فالنقل داخل كلامه لا يُنزع).
+لا يُغيَّر حرف من نص الكتاب: المخرج حقل fna في ملف الكتاب = {"<صفحة>": ["أول ٦٠ حرفًا من السطر بعد التشذيب", …]}،
+وfnaSrc اسم الأصل. يقرؤه القارئ (app.js: «أسانيد الأحاديث من …» منفصلة عن تعليق الشيخ)، وsharh.js (المقطع)، وsharh-dawah.py
+(لا تُستخرج فوائد الشيخ من الإسناد). بلا نموذج؛ يُعاد بعد كل تصحيح للكتاب (sharh.yml).
+الاستعمال: python3 tools/fn-asl.py [معرف الكتاب…]   (بلا معرف: كل كتاب له sharh وأصله موجود)
+"""
+import json, os, re, sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); D = os.path.join(ROOT, "data")
+DI = re.compile(r"[ً-ْٰـ]"); AR = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
+# رقم الحاشية «(٣)»، وما شوّهه التحويل «3( )»
+NOTE = re.compile(r"^\s*(?:\(\s*([\d٠-٩]+)\s*\)|([\d٠-٩]+)\s*\(\s*\))"); SEP = re.compile(r"^\s*_{4,}\s*$", re.M)
+CHAIN = re.compile(r"^و?(?:حدثن[اي]ه?|اخبرن[اي]ه?|انبان[اي]ه?|ثنا|سمعت)$")
+ISN = re.compile(r"^(?:و?(?:حدثن[اي]ه?|اخبرن[اي]ه?|انبان[اي]|ثنا|سمعت)|عن)$")
+# كلام الشارح وإن نقل حديثًا بلفظه: «وذلك من حديث…»، «قوله ﷺ…»، «أي…»، «رواية مسلم…»
+TALK = re.compile(r"^(?:و?ذلك|قوله|اي|يعني|فهنا|هنا|هذا|وهذا|وهذه|هذه|رواي[هة]|والمراد|المراد|انظر|وانظر|قال\s+الشيخ|تعليق|وفيه|فيه|لان|لكن|وهو|فهو)$")
+SKIP = {"المصنف", "مسلم", "الامام"}  # «[المصنف]: وحدثنا…»
+TITLES = {"muslim": "صحيح مسلم", "bukhari": "صحيح البخاري"}
+KEY = 60
+
+
+def words(t):
+    t = DI.sub("", t or ""); t = re.sub("[أإآٱ]", "ا", t).replace("ى", "ي").replace("ة", "ه")
+    return re.findall(r"[ء-ي]+", t)
+
+
+def grams(w, n=4):
+    return {" ".join(w[i:i + n]) for i in range(len(w) - n + 1)}
+
+
+def vocal(t):
+    ar = len(re.findall(r"[ء-ي]", t)); return len(DI.findall(t)) / ar if ar else 0
+
+
+def classify(pages, G):
+    out = {}; prev = False
+    for i, p in enumerate(pages, 1):
+        m = SEP.search(p or "")
+        if not m: prev = False; continue
+        body, fn = p[:m.start()], p[m.end():]
+        mt = set()
+        for l in body.split("\n"):
+            if l.startswith("%% "): mt |= {x.translate(AR) for x in re.findall(r"\(([\d٠-٩]+)\)", l)}
+        keys = []
+        for l in [x.strip() for x in fn.split("\n") if x.strip()]:
+            mm = NOTE.match(l); k = (mm.group(1) or mm.group(2)).translate(AR) if mm else None
+            w = words(l[mm.end():] if mm else l); g = grams(w)
+            cov = len(g & G) / len(g) if g else 0
+            w0 = w[1:] if w[:1] and w[0] in SKIP and len(w) > 1 and CHAIN.match(w[1]) else w
+            ch = bool(w0) and bool(CHAIN.match(w0[0])); talk = bool(w0) and bool(TALK.match(w0[0]))
+            nisn = sum(1 for x in w0 if ISN.match(x))  # إسناد تشوّه في التحويل: صيغ التحديث و«عن» متكررة
+            if talk: asl = False
+            elif k is not None:
+                asl = (cov >= 0.6 and (ch or k in mt or (vocal(l) >= 0.3 and len(w) >= 6))) or (ch and (k in mt or nisn >= 2))
+            else:  # تتمة بلا رقم: تتبع ما قبلها إن كانت من الأصل، أو كانت إسنادًا موجودًا في الأصل
+                asl = (cov >= 0.5 and (prev or (ch and cov >= 0.6))) or (ch and nisn >= 2)
+            if asl: keys.append(l[:KEY])
+            prev = asl
+        if keys: out[str(i)] = keys
+    return out
+
+
+def main():
+    cat = json.load(open(os.path.join(D, "catalog.json"), encoding="utf-8"))
+    ids = sys.argv[1:] or [b["id"] for b in cat["books"] if b.get("sharh")]
+    by = {b["id"]: b for b in cat["books"]}; cache = {}
+    for bid in ids:
+        b = by.get(bid) or {}; src = b.get("sharh"); f = os.path.join(D, "books", bid + ".json"); sf = os.path.join(D, "books", "%s.json" % src)
+        if not src or not os.path.exists(f) or not os.path.exists(sf): continue
+        if src not in cache:
+            G = set()
+            for p in json.load(open(sf, encoding="utf-8")).get("pages") or []: G |= grams(words(p))
+            cache[src] = G
+        B = json.load(open(f, encoding="utf-8")); fna = classify(B.get("pages") or [], cache[src])
+        n = sum(len(v) for v in fna.values())
+        if B.get("fna") == fna: print("%s: بلا تغيير (%d سطر من الأصل)" % (bid, n)); continue
+        B["fna"] = fna; B["fnaSrc"] = TITLES.get(src) or (by.get(src) or {}).get("title") or src
+        json.dump(B, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        print("%s: %d سطر حاشية من «%s» في %d صفحة" % (bid, n, B["fnaSrc"], len(fna)))
+
+
+if __name__ == "__main__":
+    main()
