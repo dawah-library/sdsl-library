@@ -1,0 +1,23 @@
+name: فحص مفتاح ElevenLabs وقائمة الأصوات (بلا استهلاك)
+# يدوي فقط: GET /v1/voices لا يستهلك أحرفًا؛ يقرأ ELEVENLABS_API_KEY_2 ثم ELEVENLABS_API_KEY ولا يطبع المفتاح.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["data/audio/_eleven-check.trigger"]
+permissions:
+  contents: write
+concurrency:
+  group: eleven-check
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: فحص وحفظ
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY_2 || secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 tools/eleven-voices.py
+          bash tools/git-save.sh "قائمة أصوات ElevenLabs المتاحة" data/audio/_eleven-voices.json

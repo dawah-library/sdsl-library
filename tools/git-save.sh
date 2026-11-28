@@ -11,10 +11,13 @@ git commit -q -m "$msg"
 for i in 1 2 3 4 5 6; do
   git fetch -q origin main
   if git rebase -q origin/main; then git push -q origin HEAD:main && { echo "حُفظ"; exit 0; }; sleep 3; continue; fi
+  # أسماء الملفات العربية تُطبع مقتبسة بأرقام ثمانية ما لم يُعطَّل quotepath، فكانت git add تفشل ودارت الحلقة بلا نهاية (٢٨ نوفمبر ٢٠٢٦)؛ لذا -z وquotepath=off وسقف للمحاولات
+  n=0
   while git status | grep -q "rebase in progress"; do
-    for f in $(git diff --name-only --diff-filter=U); do
+    n=$((n+1)); [ $n -gt 40 ] && { echo "تجاوز سقف محاولات دمج التعارض"; git rebase --abort >/dev/null 2>&1; break; }
+    git -c core.quotepath=off diff -z --name-only --diff-filter=U | while IFS= read -r -d '' f; do
       case "$f" in *.json) python3 tools/merge-json.py "$f" || git checkout --theirs -- "$f" ;; *) git checkout --theirs -- "$f" ;; esac
-      git add "$f"
+      git add -- "$f"
     done
     GIT_EDITOR=true git rebase --continue >/dev/null 2>&1 || { git diff --name-only --diff-filter=U | grep -q . || { git rebase --skip >/dev/null 2>&1 || break; }; }
   done

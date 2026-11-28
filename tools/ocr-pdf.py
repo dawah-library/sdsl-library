@@ -1048,7 +1048,7 @@ def plan():
             n = pages_count(os.path.join(ROOT, f))
             if n: jobs.append((f, n))
         books = [f for f, _ in jobs]
-        if os.environ.get("OCR_REREVIEW", "") == "1" or not books:  # إكمال الصفحات التي فاتتها المراجعة (يوميًا بعد تجدد الحصة)
+        if (os.environ.get("OCR_REREVIEW", "") == "1" and not books) or not books:  # الكتب الجديدة (inbox) أولًا: لا تُضاف إليها إعادة مراجعة القديم في الجولة نفسها  # إكمال الصفحات التي فاتتها المراجعة (يوميًا بعد تجدد الحصة)
             cat = json.load(open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
             reql = (json.load(open(os.path.join(DATA, "review-requests.json"), encoding="utf-8")) if os.path.exists(os.path.join(DATA, "review-requests.json")) else {}).get("items", [])
             req = set(reql)

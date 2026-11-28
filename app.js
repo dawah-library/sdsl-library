@@ -17,10 +17,11 @@ const HERE=()=>"#"+(location.pathname.replace(/^\/index\.html$/,"/")||"/")+locat
 const S=Object.assign({theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",admin:false,favs:[],seen:0,look:false,
  fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true},ls.get("set",{}));
 const saveS=()=>ls.set("set",S);
+if(S.fontPick===undefined){S.fontPick=S.font!=="Amiri";saveS()}
 // ترحيل مرة واحدة: تلوين الآيات والأحاديث وتمييز العناوين صار افتراضيًا (ويبقى للقارئ إطفاؤه من «المظهر»)
 if(!S.lk2){S.mkq=true;S.mkh=true;S.mkt=true;S.lk2=1;saveS()}
 // إعدادات العرض الافتراضية (لزر «إعادة الإعدادات») ومفاتيح التفضيلات التي تتبع العضو في حسابه
-const LOOKDEF={theme:"auto",font:"Amiri",size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
+const LOOKDEF={theme:"auto",font:"Amiri",fontPick:false,size:1.3,lh:2.1,tash:true,pg:"paper",fmt:"print",fn:"show",fw:400,ink:"",bg:"",align:"",dir:"rtl",ps:.35,w:"m",qf:"",qs:1,qw:400,qc:"",qa:"",qm:.6,hs:1,hc:"",mkq:true,mkh:true,mkt:true,lead:true};
 const Prefs={keys:Object.keys(LOOKDEF).concat(["lk2","mode","shelves","shelfNames","rgoal","spread","mtn","mtnx","myradio","wsets","wsSig","wsTpl","prints","talaH"]),t:0,
  // حفظ في بيانات الحساب (Supabase Auth user_metadata) بعد ثانيتين من آخر تغيير، فتتبع العضو على أجهزته
  push(){clearTimeout(this.t);this.t=setTimeout(async()=>{try{if(!Auth.sb||!Auth.user)return;const v={};this.keys.forEach(k=>{if(S[k]!==undefined)v[k]=S[k]});S.prefsAt=Date.now();saveS();
@@ -33,10 +34,15 @@ const fmtDate=d=>{if(!d)return"";const x=new Date(d);return isNaN(x)?esc(d):x.to
 const today=()=>(window.MKT?MKT.day():new Date().toISOString().slice(0,10)); // تاريخ اليوم بتوقيت مكة
 
 /* ---------- الخطوط وألوان الصفحة ---------- */
-const FONTS=[["خطوط تراثية",["Amiri","Noto Naskh Arabic","Scheherazade New","Markazi Text","Lateef"]],["خطوط حديثة",["Cairo","Tajawal","Almarai","IBM Plex Sans Arabic","Noto Kufi Arabic","Readex Pro","El Messiri","Changa","Reem Kufi","Harmattan"]]];
-const FONT_AR={"Amiri":"أميري","Noto Naskh Arabic":"نوتو نسخ","Scheherazade New":"شهرزاد","Markazi Text":"المركزي","Lateef":"لطيف","Cairo":"القاهرة","Tajawal":"تجوال","Almarai":"المراعي","IBM Plex Sans Arabic":"بلكس","Noto Kufi Arabic":"نوتو كوفي","Readex Pro":"ريدكس","El Messiri":"المسيري","Changa":"تشانغا","Reem Kufi":"ريم كوفي","Harmattan":"هرمتان"};
-const fontOpts=cur=>FONTS.map(([g,fs])=>`<optgroup label="${g}">${fs.map(f=>`<option value="${f}"${f===cur?" selected":""} style="font-family:'${f}'">${FONT_AR[f]||f}</option>`).join("")}</optgroup>`).join("");
+const FONTS=[["خطوط تراثية",["Amiri","Kitab","Scheherazade New","Noto Naskh Arabic","Markazi Text","Lateef"]],["خطوط حديثة",["Cairo","Tajawal","Almarai","IBM Plex Sans Arabic","Noto Kufi Arabic","Readex Pro","El Messiri","Changa","Reem Kufi","Harmattan"]]];
+const FONT_AR={"Amiri":"أميري","Noto Naskh Arabic":"نوتو نسخ","Scheherazade New":"شهرزاد","Markazi Text":"المركزي","Lateef":"لطيف","Kitab":"كتاب (نسخ الكتب)","Cairo":"القاهرة","Tajawal":"تجوال","Almarai":"المراعي","IBM Plex Sans Arabic":"بلكس","Noto Kufi Arabic":"نوتو كوفي","Readex Pro":"ريدكس","El Messiri":"المسيري","Changa":"تشانغا","Reem Kufi":"ريم كوفي","Harmattan":"هرمتان"};
+const FLOC=new Set(["Amiri","Kitab","Scheherazade New","Noto Naskh Arabic","Markazi Text","Lateef"]);
+const ffam=f=>FLOC.has(f)?`"SDSL ${f}","${f}"`:`"${f}"`;
+let SITEF=null;
+const fontOpts=cur=>FONTS.map(([g,fs])=>`<optgroup label="${g}">${fs.map(f=>`<option value="${f}"${f===cur?" selected":""} style="font-family:${ffam(f).replace(/"/g,"'")}">${FONT_AR[f]||f}</option>`).join("")}</optgroup>`).join("");
 const loadedFonts=new Set(["Amiri","Amiri Quran","IBM Plex Sans Arabic"]);
+/* الخط الافتراضي للموقع (data/site-font.json من لوحة الإدارة): يسري على من لم يختر خطًا بنفسه، واختيار القارئ مقدَّم عليه */
+fetch("data/site-font.json").then(r=>r.ok?r.json():null).then(j=>{if(j&&FLOC.has(j.font)||j&&FONTS.some(g=>g[1].includes(j.font))){SITEF=j.font;if(!S.fontPick&&S.font!==SITEF){S.font=SITEF;applyLook()}}}).catch(()=>{});
 /* خطوط العناوين (قالب الواجهة ← خط العناوين): [المفتاح، الاسم، الخط، أوزانه في Google Fonts] */
 const HFS=[["modern","حديث","Readex Pro"],["kufi","ريم كوفي","Reem Kufi"],["classic","أميري تراثي","Amiri"],["cairo","القاهرة","Cairo"],["tajawal","تجوال","Tajawal"],["almarai","المراعي","Almarai","400;700"],["messiri","المسيري","El Messiri"],["changa","تشانغا","Changa"],["nkufi","نوتو كوفي","Noto Kufi Arabic"],["kufam","كوفام","Kufam"],["markazi","المركزي","Markazi Text"],["naskh","نوتو نسخ","Noto Naskh Arabic"],["ruqaa","عارف رقعة","Aref Ruqaa","400;700"],["lalezar","عريض","Lalezar","400"],["rakkas","زخرفي","Rakkas","400"],["marhey","مرحي","Marhey"],
  // إضافات ٧ نوفمبر (بطلب المدير): خطوط عربية أخرى من Google Fonts (الأوزان متحقق منها)
@@ -47,13 +53,13 @@ const HFS=[["modern","حديث","Readex Pro"],["kufi","ريم كوفي","Reem Ku
 const HF_GROUPS=[["خطوط حديثة",["modern","cairo","tajawal","almarai","alexandria","beiruti","zain","mada","vazir","nsans","plex","rubik","lemonada","changa","nkufi","kufam"]],["خطوط تراثية ونسخ",["classic","amiriq","naskh","scheh","lateef","markazi","harmattan","mirza","alkalami","nastaliq","gulzar"]],["كوفي ورقعة وزخرفي",["kufi","kufifun","kufiink","qahiri","ruqaa","ruqaaink","messiri","katibeh","rakkas","lalezar","jomhuria","blaka","blakaink","badeen","handjet"]],["خطوط مرحة",["marhey","ruwudu","baloo","playpen"]]];
 const hfOf=k=>HFS.find(x=>x[0]===k)||HFS[0];
 function loadHF(k){const h=hfOf(k),f=h[2];if(loadedFonts.has(f))return;loadedFonts.add(f);const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+":wght@"+(h[3]||"400;700")+"&display=swap";document.head.appendChild(l)}
-function loadFont(f){if(loadedFonts.has(f))return Promise.resolve();loadedFonts.add(f);
+function loadFont(f){if(FLOC.has(f)||loadedFonts.has(f))return Promise.resolve();loadedFonts.add(f);
  return new Promise(ok=>{const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+":wght@400;700&display=swap";
   l.onload=ok;l.onerror=()=>{l.href="https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+"&display=swap";l.onerror=ok};document.head.appendChild(l)})}
 const PAGES=[["paper","ورقي","#fbf7ee","#2a241a"],["white","أبيض","#ffffff","#1a1a1a"],["ivory","عاجي","#f7f0dc","#2b2416"],["sand","رملي","#efe2c4","#3a2e18"],["sepia","سيبيا","#f1e4cc","#5b4636"],["mint","نعناعي","#e8f2ec","#1c2a22"],["sky","سماوي","#e8f0f6","#1b2633"],["gray","رمادي","#ececec","#222222"],["night","ليلي","#18231f","#d8e3dd"],["black","أسود","#000000","#cfcfcf"]];
 function applyLook(){document.body.classList.toggle("fmtp",S.fmt!=="plain");document.body.classList.toggle("citeplain",!!S.citeplain);const r=document.documentElement;if(S.skin&&S.skin!=="base")r.dataset.skin=S.skin;else r.removeAttribute("data-skin");r.dataset.hf=S.hf||"modern";{const h=hfOf(S.hf||"modern");if(h[0]==="modern")r.style.removeProperty("--hf");else{loadHF(h[0]);r.style.setProperty("--hf",`"${h[2]}","Readex Pro","IBM Plex Sans Arabic",sans-serif`)}};if(S.theme==="auto")r.removeAttribute("data-theme");else r.dataset.theme=S.theme;
  const pg=PAGES.find(p=>p[0]===S.pg)||PAGES[0];loadFont(S.font);
- r.style.setProperty("--rf",`"${S.font}",serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
+ r.style.setProperty("--rf",`${ffam(S.font)},serif`);r.style.setProperty("--rs",S.size+"rem");r.style.setProperty("--rl",S.lh);
  const bg=S.bg||pg[2],ink=S.ink||pg[3],dark=lum(bg)<.4;
  r.style.setProperty("--pg",bg);r.style.setProperty("--pgink",ink);r.style.setProperty("--pgline",dark?"rgba(255,255,255,.14)":"rgba(0,0,0,.12)");
  // الباب ٦: الكثافة والمحاذاة والمسافات وعرض القراءة والاقتباسات والعناوين والتمييز البصري
@@ -810,7 +816,7 @@ async function ghSavePage(b,i,text){
 /* ---------- أدوات القراءة: الشريط الثابت واللوحات المنزلقة ---------- */
 const IC={toc:'<path d="M4 6h16M4 12h16M4 18h10"/>',prev:'<path d="M9 6l6 6-6 6"/>',next:'<path d="M15 6l-6 6 6 6"/>',look:'<path d="M4 18L9 6l5 12M5.8 14h6.4M15 18l3-7 3 7M16 16h4"/>',more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',exit:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',pdf:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 15l3-3 2 2 3-4"/><circle cx="9.5" cy="8" r="1.3"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط</label><select id="lf">${fontOpts(S.font)}</select></div>
+function lookHtml(){return`<div class="row"><div><label for="lf">نوع الخط</label><select id="lf"><option value="__site"${S.fontPick?"":" selected"}>افتراضي الموقع${SITEF?" ("+(FONT_AR[SITEF]||SITEF)+")":""}</option>${fontOpts(S.fontPick?S.font:"")}</select></div>
  <div><label for="lth">المظهر</label><select id="lth"><option value="auto"${S.theme==="auto"?" selected":""}>تلقائي</option><option value="light"${S.theme==="light"?" selected":""}>نهاري</option><option value="dark"${S.theme==="dark"?" selected":""}>ليلي</option></select></div></div>
  <label>حجم الخط</label><div class="stepper"><button class="btn" data-sz="-1" aria-label="تصغير الخط">أ−</button><input id="ls" type="range" min="1" max="2.4" step=".05" value="${S.size}" aria-label="حجم الخط"><button class="btn" data-sz="1" aria-label="تكبير الخط">أ+</button></div>
  <label for="ll">تباعد الأسطر</label><input id="ll" type="range" min="1.5" max="3" step=".1" value="${S.lh}">
@@ -852,7 +858,7 @@ function wireLook(){
  $$("#sheetB [data-k]").forEach(e=>{e.oninput=e.onchange=()=>{const k=e.dataset.k,t=e.dataset.t;S[k]=t==="bool"?e.checked:t==="num"?+e.value:e.value;if(t==="color"){delete e.dataset.unset;const b=$(`[data-lkclr="${k}"]`);if(b)b.textContent="افتراضي"}save()}});
  $$("#sheetB [data-lkclr]").forEach(b=>b.onclick=()=>{S[b.dataset.lkclr]="";b.textContent="(افتراضي)";save()});
  const rs=$("#sheetB [data-act=lookreset]");if(rs)rs.onclick=()=>{Object.assign(S,LOOKDEF);save();openSheet("مظهر الصفحة",lookHtml(),wireLook)};
- const up=()=>{S.font=$("#lf").value;S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.fmt=$("#lfmt")&&!$("#lfmt").checked?"plain":"print";S.theme=$("#lth").value;saveS();applyLook();refreshPage();Prefs.push()};
+ const up=()=>{{const v=$("#lf").value;if(v==="__site"){S.fontPick=false;S.font=SITEF||"Amiri"}else{S.fontPick=true;S.font=v}}S.size=+$("#ls").value;S.lh=+$("#ll").value;S.tash=$("#lt").checked;S.fn=$("#lfn")&&$("#lfn").checked?"fold":"show";S.fmt=$("#lfmt")&&!$("#lfmt").checked?"plain":"print";S.theme=$("#lth").value;saveS();applyLook();refreshPage();Prefs.push()};
  ["#lf","#ls","#ll","#lt","#lth","#lfn","#lfmt"].forEach(i=>{const e=$(i);if(e)e.oninput=e.onchange=up});
  $$("[data-sz]").forEach(b=>b.onclick=()=>{const r=$("#ls");r.value=Math.max(1,Math.min(2.4,+r.value+(+b.dataset.sz)*.1));up()});
  $$(".swc").forEach(s=>s.onclick=()=>{S.pg=s.dataset.pg;saveS();applyLook();Prefs.push();$$(".swc").forEach(x=>x.setAttribute("aria-pressed",x===s))});
@@ -2723,7 +2729,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet")&&!$("#s
 async function boot(){if(location.hash.startsWith("#/"))history.replaceState(null,"",toPath(location.hash));applyLook();const loc=await DB.get("local");if(loc&&loc.catalog)LOCAL=Object.assign(LOCAL,loc);
  const ai=fetch("data/articles/index.json",{cache:"no-cache"}).then(r=>r.ok?r.json():{items:[]}).catch(()=>window.__ARTIDX__||{items:[]});
  const covP=fetch("data/covers.json").then(r=>r.ok?r.json():{}).then(j=>{COVERS=new Map((j.ids||[]).map(i=>[i,(j.v||{})[i]||""]))}).catch(()=>{});
- try{const r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}await Promise.race([covP,new Promise(r=>setTimeout(r,800))]);await Promise.race([fetch(RAWGH+"data/author-photos.json?t="+Math.floor(Date.now()/3e5)).then(r=>r.ok?r.json():{}).then(m=>{(CAT.authors||[]).forEach(a=>{const f=m&&m[a.id];if(f&&a.photo!==f)a.photo=/^https?:/.test(f)?f:RAWGH+f.replace(/^\.?\//,"")});if(m&&typeof m==="object")window.__PHOTOS__=m}).catch(()=>{}),new Promise(r=>setTimeout(r,1200))]);
+ try{let r=window.__P&&await window.__P.cat;window.__P=null;if(!r||!r.ok)r=await fetch("data/catalog.json",{cache:"no-cache"});if(!r.ok)throw 0;CAT=await r.json()}catch(e){CAT=window.__CAT__||CAT}await Promise.race([covP,new Promise(r=>setTimeout(r,800))]);await Promise.race([fetch(RAWGH+"data/author-photos.json?t="+Math.floor(Date.now()/3e5)).then(r=>r.ok?r.json():{}).then(m=>{(CAT.authors||[]).forEach(a=>{const f=m&&m[a.id];if(f&&a.photo!==f)a.photo=/^https?:/.test(f)?f:RAWGH+f.replace(/^\.?\//,"")});if(m&&typeof m==="object")window.__PHOTOS__=m}).catch(()=>{}),new Promise(r=>setTimeout(r,1200))]);
  const homeH=!location.hash||/^#\/?(home)?$/.test(location.hash);let idxLate=false;
  if(homeH){idxLate=true;ai.then(j=>{ARTS_IDX=(j.items||[]).map(artFromIdx);merge();const h=location.hash;if(!h||/^#\/?(home)?$/.test(h))route()})}else ARTS_IDX=((await ai).items||[]).map(artFromIdx);
  try{const r=await fetch("data/tarajim.json",{cache:"no-cache"});if(r.ok)TJ=await r.json()}catch(e){}

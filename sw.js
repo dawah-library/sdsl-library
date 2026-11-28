@@ -1,4 +1,5 @@
-const V="sdsl-v370",CORE=["./","index.html","style.css","config.js","secteams.js","i18n.js","data/i18n-en.json","armorph.js","search.js","related.js","wsx.js","prt.js","claims.js","talahome.js","mods.js","app.js","askx.js","social.js","community.js","audio.js","words.js","qa.js","tashjir.js","export.js","docx.js","hifz.js","dm.js","paths.js","dawah.js","manage.js","eds.js","team.js","alam.js","ithra.js","releases.js","majalla.js","majpress/core.js","majpress/art.js","study.js","cmpai.js","sharh.js","eleven.js","outreach.js","khutab.js","story.js","mawsua.js","misbar.js","kurrasa.js","mutun.js","learn.js","tala.js","stats.js","groups.js","standards.js","guide.js","mushaf.js","hadith.js","athar.js","portal.js","saff.js","saffp.js","brain.js","tamarin.js","arabic.js","fbin.js","side.js","dev.js","icons.js","proof.js","talaplay.js","talaqasas.js","talavid.js","qfix.js","data/tala-qasas.json","data/tala-riddles.json","voice.js","video.js","about.js","tr.js","data/tr-config.json","vendor/supabase.js","manifest.webmanifest","assets/logo.jpg","assets/cal.jpg","assets/logo-sdsl.png","assets/logo-sdsl-128.png","assets/favicon-64.png"];
+const V="sdsl-v373",SHELL=["./", "index.html", "style.css", "manifest.webmanifest", "config.js","early.js", "secteams.js", "i18n.js", "armorph.js", "search.js", "related.js", "icons.js", "mods.js", "fmt.js", "app.js", "side.js", "vendor/supabase.js", "assets/fonts/fonts.css", "assets/logo.jpg", "assets/cal.jpg", "assets/logo-sdsl.png", "assets/logo-sdsl-128.png", "assets/favicon-64.png"],CORE=["data/i18n-en.json", "wsx.js", "prt.js", "claims.js", "talahome.js", "askx.js", "social.js", "community.js", "audio.js", "words.js", "qa.js", "tashjir.js", "export.js", "docx.js", "hifz.js", "dm.js", "paths.js", "dawah.js", "manage.js", "eds.js", "team.js", "alam.js", "ithra.js", "releases.js", "majalla.js", "majpress/core.js", "majpress/art.js", "study.js", "cmpai.js", "sharh.js", "eleven.js", "outreach.js", "khutab.js", "story.js", "mawsua.js", "misbar.js", "kurrasa.js", "mutun.js", "learn.js", "tala.js", "stats.js", "groups.js", "standards.js", "guide.js", "mushaf.js", "hadith.js", "athar.js", "portal.js", "saff.js", "saffp.js", "brain.js", "tamarin.js", "arabic.js", "fbin.js", "dev.js", "proof.js", "talaplay.js", "talaqasas.js", "talavid.js", "qfix.js", "data/tala-qasas.json", "data/tala-riddles.json", "voice.js", "video.js", "about.js", "tr.js", "data/tr-config.json"];
+// الأداء (٢٨ نوفمبر ٢٠٢٦): V يرتبط بقشرة الواجهة SHELL وحدها (الصفحة والأنماط وapp.js والوحدات المحمَّلة في index.html)؛ بقية الوحدات (CORE) تُخدَّم من الجهاز وتتجدد في الخلفية (stale-while-revalidate)، فلا يُرفع V ولا يُعاد تحميل عشرات الملفات مع كل تعديل.
 // خفض طلبات Vercel (حصة المليون طلب في الباقة المجانية):
 // - ملفات الواجهة (CORE وassets وvendor) تُقدَّم من الجهاز، وتتجدد فقط حين يتغير رقم الإصدار V.
 //   (يرفعه آليًا سير العمل sw-version.yml عند تغير أي ملف واجهة، فلا تبقى نسخة قديمة.)
@@ -9,14 +10,19 @@ const V="sdsl-v370",CORE=["./","index.html","style.css","config.js","secteams.js
 const DATA="sdsl-data",TTL_DEF=15*60e3,TTL={"/data/posts.json":5*60e3,"/data/fawaid.json":10*60e3};
 const isCore=p=>p==="/"||p==="/index.html"||/^\/(assets|vendor)\//.test(p)||/^\/[a-z0-9-]+\.(js|css|webmanifest)$/.test(p)&&p!=="/sw.js";
 const stamp=async(x)=>{const h=new Headers(x.headers);h.set("x-sw-at",String(Date.now()));return new Response(await x.blob(),{status:x.status,statusText:x.statusText,headers:h})};
-self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(CORE.map(u=>fetch(u,{cache:"reload"}).then(x=>x.ok&&c.put(u,x)).catch(()=>{})))));self.skipWaiting()});
+self.addEventListener("install",e=>{const got=(c,u)=>fetch(u,{cache:"no-cache"}).then(x=>x.ok&&c.put(u,x)).catch(()=>{});
+ e.waitUntil(caches.open(V).then(c=>{Promise.all(CORE.map(u=>got(c,u)));return Promise.all(SHELL.map(u=>got(c,u)))}));self.skipWaiting()});
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==DATA).map(x=>caches.delete(x)))).then(()=>clients.claim())));
 self.addEventListener("fetch",e=>{const r=e.request;if(r.method!=="GET")return;const u=new URL(r.url);
  if(u.origin===location.origin){const p=u.pathname;
   if(p.startsWith("/api/")||p==="/sw.js")return;
   // التنقل: الشبكة أولًا (لتصل نسخة index.html الجديدة) مع الرجوع إلى المحفوظ دون اتصال
   if(r.mode==="navigate"){e.respondWith(fetch(r).then(x=>{if(x.ok&&(p==="/"||p==="/index.html")){const y=x.clone();caches.open(V).then(c=>c.put("index.html",y))}return x}).catch(()=>caches.match("index.html",{ignoreSearch:true})));return}
-  if(isCore(p)){e.respondWith(caches.open(V).then(c=>c.match(r,{ignoreSearch:true}).then(m=>m||fetch(r).then(x=>{if(x.ok)c.put(r,x.clone());return x}))));return}
+  if(isCore(p)){const sh=p==="/"||p==="/index.html"||SHELL.includes(p.slice(1));
+   // القشرة: من الجهاز حتى يُرفع V. الوحدات الأخرى: من الجهاز فورًا مع تجديدها في الخلفية بالتحقق الشرطي (ETag)
+   e.respondWith(caches.open(V).then(c=>c.match(r,{ignoreSearch:true}).then(m=>{
+    const net=()=>fetch(r,sh?undefined:{cache:"no-cache"}).then(x=>{if(x.ok)c.put(r,x.clone());return x});
+    if(m){if(!sh)net().catch(()=>{});return m}return net()})));return}
   const isData=p.startsWith("/data/")||p.startsWith("/vols/");
   if(!isData)return;
   const pinned=u.searchParams.has("v")&&!u.searchParams.has("fresh");

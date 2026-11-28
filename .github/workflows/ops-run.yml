@@ -1,0 +1,28 @@
+name: عمليات تشغيل المهام (إلغاء تشغيل عالق أو إطلاق مهمة)
+# يُشغَّل بتعديل data/ops/commands.txt على main. كل سطر: «cancel <run_id>» لإلغاء تشغيل عالق، أو «run <ملف-workflow.yml>» لإطلاق مهمة يدويًا.
+# يعمل بصلاحية actions المحدودة لهذا التشغيل فقط، ولا يحذف شيئًا (الإلغاء يوقف تشغيلًا لا يتقدم).
+on:
+  push:
+    branches: [main]
+    paths: ["data/ops/commands.txt"]
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: ops-run
+jobs:
+  ops:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: تنفيذ
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          while read -r cmd arg; do
+            case "$cmd" in
+              cancel) [[ "$arg" =~ ^[0-9]+$ ]] && gh run cancel "$arg" -R "$GITHUB_REPOSITORY" && echo "ألغي $arg" ;;
+              run) [[ "$arg" =~ ^[a-z0-9-]+\.yml$ ]] && gh workflow run "$arg" -R "$GITHUB_REPOSITORY" --ref main && echo "أُطلق $arg" ;;
+            esac
+          done < data/ops/commands.txt
