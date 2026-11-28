@@ -29,7 +29,8 @@ env:
   SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}  # تنزيل الكتب المرفوعة من صندوق الرفع مباشرة
   OMP_THREAD_LIMIT: "1"  # بدونه تتزاحم خيوط Tesseract فيبطئ عشرات المرات
 concurrency:
-  group: ocr
+  # كتب جديدة (دفع إلى ocr-inbox) في مجموعة مستقلة عن إعادة مراجعة القديم: لا تنتظر ساعات خلف مراجعة جارية، ويحفظ كلٌّ نتائجه عبر git-save.sh (يدمج التعارض)
+  group: ocr-${{ github.event_name == 'push' && 'new' || 'old' }}
   cancel-in-progress: false
 jobs:
   # مفتاح الإيقاف من «الإدارة ← الخدمات والمفاتيح» (data/switches.json). الإيقاف يشمل التشغيل اليدوي والآلي؛ وتعذر القراءة لا يوقف المهمة.
