@@ -267,7 +267,7 @@ const HLAY={D:null,NAMES:{start:"ابدأ من هنا",quote:"عبارات فض�
    $("#hlsave").onclick=async()=>{const home=[...ol.children].map(li=>({k:li.dataset.k,show:li.querySelector('[data-f=show]').checked,fold:li.querySelector('[data-f=fold]').checked})),st=$("#hlst");st.textContent="جارٍ الحفظ…";
     try{await GH.editJSON("data/layout.json",o=>Object.assign(o||{},{home}),"ترتيب الرئيسية من الإدارة");this.D=Object.assign(this.D||{},{home});st.textContent="✓ حُفظ";closeSheet();vHome()}catch(e){st.textContent="تعذّر: "+(e.message||e)}}})}};
 function vHome(){const arts=ARTS().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
- view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1 class="callig" aria-label="مكتبة الدعوة السلفية الرقمية">مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةُ</h1>
+ view(`<section class="hero"><img class="emb" src="assets/logo-sdsl.png" alt="شعار المكتبة الرقمية للدعوة السلفية"><h1 class="callig" aria-label="مكتبة الدعوة السلفية الرقمية" title="اضغط مطولًا (أو انقر مرتين) للتعريف بالمكتبة"><span class="cgm" aria-hidden="true"></span><span class="sr">مَكْتَبَةُ الدَّعْوَةِ السَّلَفِيَّةِ الرَّقْمِيَّةُ</span></h1>
  <p class="ayah" lang="ar">﴿قُلْ هَٰذِهِۦ سَبِيلِىٓ أَدْعُوٓا۟ إِلَى ٱللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا۠ وَمَنِ ٱتَّبَعَنِى ۖ وَسُبْحَـٰنَ ٱللَّهِ وَمَآ أَنَا۠ مِنَ <span style="white-space:nowrap">ٱلْمُشْرِكِينَ﴾ <span class="ayref">[يوسف: ١٠٨]</span></span></p>
  <p class="gotitle">إلى أين تريد أن تذهب؟</p><form class="sbox gobox" data-form="quick"><input name="q" type="search" autocomplete="off" placeholder="اكتب أو قل: اسم كتاب، مؤلف، قسم، أو «افتح لي آخر كتاب كنت أقرأه»" aria-label="إلى أين تريد أن تذهب؟"><button class="btn p">اذهب</button></form></section>${typeof PORTAL!=="undefined"?PORTAL.home():""}
  <div data-hs="start"> <nav class="doors" aria-label="ابدأ من هنا"><a href="#/library?c=dawah"><b>أقرأ</b><span>كتب مشايخ الدعوة بالنص والمصورة، والتراث المعتمد</span></a><a href="#/search"><b>أبحث في مسألة</b><span>في نصوص الكتب والمقالات والفتاوى، أو اسأل المكتبة</span></a><a href="#/paths"><b>أتعلم بمسار</b><span>مسارات علمية متدرجة، واختبارات، وحفظ المتون</span></a></nav></div>
@@ -2022,6 +2022,13 @@ document.addEventListener("pointerdown",e=>{const el=authorLP(e);if(!el)return;l
 ["pointerup","pointercancel","pointerleave"].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpTimer),true));
 document.addEventListener("pointermove",e=>{if(Math.abs(e.movementX)+Math.abs(e.movementY)>6)clearTimeout(lpTimer)},true);
 document.addEventListener("click",e=>{if(lpFired&&e.target.closest("[data-author]")){e.preventDefault();e.stopPropagation();lpFired=false}},true);
+/* اسم المكتبة المخطوط في الرئيسية: ضغط مطوّل أو نقر مزدوج أو زر ثانوي يفتح التعريف بالمكتبة */
+(()=>{let t=null,sx=0,sy=0;const go=()=>{clearTimeout(t);location.hash="#/about"};const hit=e=>e.target&&e.target.closest&&e.target.closest("h1.callig");
+document.addEventListener("touchstart",e=>{if(!hit(e)||e.touches.length!==1)return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;t=setTimeout(go,600)},{passive:true});
+document.addEventListener("touchmove",e=>{if(t&&(Math.abs(e.touches[0].clientX-sx)>10||Math.abs(e.touches[0].clientY-sy)>10)){clearTimeout(t);t=null}},{passive:true});
+["touchend","touchcancel"].forEach(n=>document.addEventListener(n,()=>{clearTimeout(t);t=null},{passive:true}));
+document.addEventListener("contextmenu",e=>{if(hit(e)){e.preventDefault();go()}});
+document.addEventListener("dblclick",e=>{if(hit(e))go()})})();
 document.addEventListener("contextmenu",e=>{const el=authorLP(e);if(el){e.preventDefault();clearTimeout(lpTimer);authorBrief(el.dataset.author)}});
 const sheikhs=()=>Object.keys(TJ.items).filter(id=>A(id).name!=="—");
 // قسم التراجم قسمان: «مشايخ الدعوة السلفية بمصر» (التراجم المفصلة في data/tarajim.json ثم بقية مؤلفي مكتبة الدعوة من المشايخ)،
