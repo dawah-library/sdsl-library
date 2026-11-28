@@ -51,7 +51,7 @@ jobs:
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
           FAL_KEY: ${{ secrets.FAL_KEY }}   # fal.ai (Kling/Wan/Hailuo/Luma) اختياري
           GEMINI_VIDEO_KEY: ${{ secrets.GEMINI_VIDEO_KEY }}   # Veo (حساب مفعّل الدفع) اختياري
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY_2 || secrets.ELEVENLABS_API_KEY }}
           VIDEO_GEN_MAX_SECONDS: ${{ vars.VIDEO_GEN_MAX_SECONDS || '48' }}
         run: |
           python3 tools/book-video.py
