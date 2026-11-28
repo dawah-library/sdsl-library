@@ -4,7 +4,7 @@
 msg="$1"; shift
 # لا يحفظ في main إلا تشغيل على main: تشغيل فرع (طلب دمج أو فرع وكيل) كان يرفع إيداعات الفرع نفسها إلى main
 if [ -n "${GITHUB_REF:-}" ] && [ "${GITHUB_REF}" != "refs/heads/main" ] && [ "${GIT_SAVE_ANY_BRANCH:-}" != "1" ]; then echo "تشغيل على ${GITHUB_REF}: لا يُحفظ في main"; exit 0; fi
-git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"
+git config user.name "sdsl-bot"; git config user.email "sdsl-bot@users.noreply.github.com"; git config core.quotepath off
 for p in "$@" data/usage; do [ -e "$p" ] && git add -A "$p"; done
 git diff --cached --quiet && { echo "لا تغييرات"; exit 0; }
 git commit -q -m "$msg"
@@ -16,10 +16,12 @@ for i in 1 2 3 4 5 6; do
   while git status | grep -q "rebase in progress"; do
     n=$((n+1)); [ $n -gt 40 ] && { echo "تجاوز سقف محاولات دمج التعارض"; git rebase --abort >/dev/null 2>&1; break; }
     git -c core.quotepath=off diff -z --name-only --diff-filter=U | while IFS= read -r -d '' f; do
+      # تعارض حذف/تعديل: إن حذفه إيداعنا فلا «نسخة لنا» فيُحذف، وإلا تُدمج أو تؤخذ نسختنا
+      if ! git cat-file -e ":3:$f" 2>/dev/null; then git rm -q --cached -- "$f" >/dev/null 2>&1; rm -f -- "$f"; continue; fi
       case "$f" in *.json) python3 tools/merge-json.py "$f" || git checkout --theirs -- "$f" ;; *) git checkout --theirs -- "$f" ;; esac
       git add -- "$f"
     done
-    GIT_EDITOR=true git rebase --continue >/dev/null 2>&1 || { git diff --name-only --diff-filter=U | grep -q . || { git rebase --skip >/dev/null 2>&1 || break; }; }
+    GIT_EDITOR=true git rebase --continue >/dev/null 2>&1 || { git diff -z --name-only --diff-filter=U | grep -qz . || { git rebase --skip >/dev/null 2>&1 || break; }; }
   done
   git push -q origin HEAD:main && { echo "حُفظ بعد دمج التعارض"; exit 0; }
   sleep 5
