@@ -59,8 +59,8 @@ def readiness(books, out, inbox, pending, speed, prev, hist=None):
     # السعة المقترحة: ما يمكن للتدقيق إنجازه في الأفق (horizon أيام) بعد المنتظر
     cap = max(0, int((sp or 0) * cfg["horizon"] - pending)) if lv != "red" else 0
     msg = {"green": "مناسب لرفع كتب مصورة وتفريغات جديدة", "yellow": "رفع محدود: يُرفع ما لا يتجاوز السعة المقترحة، والأولوية لإكمال المرفوع",
-           "red": ("متوقف: الطابور لا ينقص، فأجّل الرفع حتى يعود التدقيق" if stalled else "الطابور كبير وبطيء: يُفضَّل تأجيل الرفع حتى ينخفض المنتظر")}[lv]
-    r = {"lv": lv, "msg": msg, "pending": pending, "speed": sp, "days": days, "core": core, "avg": avg, "ocr_books": len(ocr), "done_books": done_books,
+           "red": ("نصيحة: تدقيق القائم متوقف الآن، فيُفضَّل ألا يكثر الجديد. الرفع متاح دائمًا بمسار مستقل يأخذ الفائض ولا يزاحم خدمات الكتب القائمة" if stalled else "نصيحة: طابور تدقيق القائم كبير وبطيء. الرفع متاح دائمًا بمسار مستقل يأخذ الفائض ولا يزاحم خدمات الكتب القائمة")}[lv]
+    r = {"lv": lv, "advisory": True, "blocks_upload": False, "msg": msg, "pending": pending, "speed": sp, "days": days, "core": core, "avg": avg, "ocr_books": len(ocr), "done_books": done_books,
          "inbox": len(inbox), "tf_queue": tq, "cap_pages": cap, "cap_books": cap // 250, "stall_days": stall, "why": reasons, "since": prev.get("since") if prev.get("lv") == lv else TODAY, "cfg": cfg}
     if prev.get("lv") and prev.get("lv") != lv:  # تغيّر المستوى: إشعار للإدارة (progress.yml يرسله)
         icon = {"green": "🟢", "yellow": "🟡", "red": "🔴"}[lv]
