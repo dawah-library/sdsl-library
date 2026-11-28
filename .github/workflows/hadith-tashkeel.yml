@@ -1,5 +1,5 @@
 name: تشكيل أحاديث قسم الحديث
-# tools/hadith-tashkeel.py: تشكيل متون كتب السنة ومطالعها كلها تشكيلًا تامًّا (بلا تغيير حرف)، جزءًا بعد جزء بالأولوية (الكتب التسعة أولًا).
+# tools/hadith-tashkeel.py: تشكيل متون كتب السنة ومطالعها كلها (المتن أولًا والأسانيد المفردة آخرًا، ومختارات القسم في mv/fv — تعديل ٢٨ نوفمبر) تشكيلًا تامًّا (بلا تغيير حرف)، جزءًا بعد جزء بالأولوية (الكتب التسعة أولًا).
 # طلب المدير (٢١ نوفمبر ٢٠٢٦). مفتاح الإيقاف: hadith_tashkeel.
 on:
   schedule:
@@ -65,7 +65,7 @@ jobs:
         run: python3 tools/hadith-tashkeel.py ${{ github.event.inputs.books }}
       - name: الحفظ
         if: always()
-        run: bash tools/git-save.sh "تشكيل أحاديث قسم الحديث" data/hadith/k
+        run: bash tools/git-save.sh "تشكيل أحاديث قسم الحديث" data/hadith/k data/hadith/arbain.json data/hadith/riyad.json data/hadith/bulugh.json
       - name: إشعار
         if: always()
         run: '[ -s .ht-report.txt ] && python3 tools/notify.py "$(cat .ht-report.txt)" || true'
