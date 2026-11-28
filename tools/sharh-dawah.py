@@ -27,17 +27,11 @@ OWN = {}; OWNT = {}
 
 
 def own_lines(sb):
-    """كلام الشيخ وحده في كتاب شرحه (طلب المدير، ٢٨ نوفمبر): لا تُستخرج فوائده من أسانيد «الأصل» التي وُضعت في الحاشية
-    (fna من tools/fn-asl.py)؛ وإن كان تعليقه هو الحواشي (fnLabel في الفهرس، مثل تعليق الشيخ ياسر برهامي على شرح النووي)
-    فصلب الصفحة من أصل الكتاب لا من كلامه."""
-    B = SA.shard(sb) or {}; A = {k for v in (B.get("fna") or {}).values() for k in v}
-    cat = jl(os.path.join(D, "catalog.json")); lab = next((b.get("fnLabel") for b in cat["books"] if b["id"] == sb), None)
-    F = set()
-    if lab:
-        for pg in B.get("pages") or []:
-            m = re.search(r"^\s*_{4,}\s*$", pg or "", re.M)
-            if m: F |= {l.strip()[:60] for l in pg[m.end():].split("\n") if l.strip()}
-    return lambda t: t[:60] not in A and (not lab or t[:60] in F)
+    """كلام الشيخ وحده في كتاب شرحه (طلب المدير، ٢٨ نوفمبر): لا تُستخرج فوائده من أسانيد «الأصل» التي وُضعت في الحاشية (fna)،
+    ولا من الأصل المشروح في صلب الصفحة إن كان شرحًا على شرح (basl: الشيخ ياسر برهامي يشرح شرح النووي على صحيح مسلم)،
+    ولا من أسطر المتن «%% » — وكلها من tools/fn-asl.py."""
+    B = SA.shard(sb) or {}; A = {k for d in ("fna", "basl") for v in (B.get(d) or {}).values() for k in v}
+    return lambda t: t[:60] not in A and not t.startswith("%% ")
 
 
 def hadith_index():

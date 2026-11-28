@@ -2147,3 +2147,9 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .fnb p.fna{font-weight:600;color:var(--ink,inherit);border-inline-start:3px solid var(--ac,#2e7d5b);padding-inline-start:.5em}
 .fnasl .cbn,.fnasl .fnr{opacity:.75}
 .shx p.shasl{opacity:.72;font-size:.94em}.shx p.shasl .tag{font-size:.75em;margin-inline-end:.3em}
+/* شرحٌ على شرح (tools/fn-asl.py → basl): الأصل المشروح بلون هادئ، وكلام الشارح في الدرس بشريط جانبي */
+.rd p.basl{color:var(--mut,#555)}
+.rd p.bshk{border-inline-start:3px solid var(--gold,#b8892b);padding-inline-start:.55em}
+.rd p.blgd{display:flex;flex-wrap:wrap;gap:.4em .9em;font-size:.74em;color:var(--mut,#666);margin:0 0 .8em}
+.blgd span::before{content:"";display:inline-block;width:.75em;height:.75em;border-radius:2px;margin-inline-end:.3em;vertical-align:-.05em}
+.blgd .lgm::before{background:var(--ink,#222)}.blgd .lga::before{background:var(--mut,#888)}.blgd .lgs::before{background:var(--gold,#b8892b)}

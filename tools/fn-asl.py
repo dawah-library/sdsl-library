@@ -76,6 +76,24 @@ def classify(pages, G):
     return out
 
 
+def classify_body(pages, GN, GM):
+    """صلب الصفحة في شرحٍ على شرح (sharhOn: الشيخ ياسر برهامي يشرح شرح النووي على صحيح مسلم): سطر «من الأصل المشروح» إذا وُجد
+    ١٥٪ فأكثر من شنغلاته في شرح النووي (تختلف الطبعات فلا يُشترط أكثر)، أو أكثره في صحيح مسلم، أو كان مشكولًا كالمطبوع (والتفريغ غير مشكول)؛
+    وما سوى ذلك كلام الشيخ في الدرس (شرحه، وما ينقله من كتب أخرى). السطر القصير يتبع ما قبله. أسطر المتن «%% » والعناوين لا تُدرج (لها علاماتها)."""
+    out = {}
+    for i, p in enumerate(pages, 1):
+        m = SEP.search(p or ""); body = p[:m.start()] if m else (p or ""); keys = []; prev = True
+        for l in [x.strip() for x in body.split("\n") if x.strip()]:
+            if l.startswith(("#", "%% ", "@@ ")): continue
+            w = words(l); g = grams(w)
+            if len(g) < 3: asl = prev
+            else: asl = len(g & GN) / len(g) >= 0.15 or len(g & GM) / len(g) >= 0.5 or vocal(l) >= 0.3
+            if asl: keys.append(l[:KEY])
+            prev = asl
+        if keys: out[str(i)] = keys
+    return out
+
+
 VOLW = re.compile(r"(?:\s*[-—–:،(]\s*)?(?:الجزء|المجلد|الجز|ج|مج|المجموعة|الشريط|الدرس|المحاضرة)?\s*(?:[\d٠-٩]+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|الحادي عشر|الثاني عشر)\s*\)?\s*$")
 
 
@@ -94,7 +112,8 @@ def inherit(cat):
         sib = next((x for x in src if x.get("authorId") == b["authorId"] and x.get("col") == b.get("col") and base(x.get("title")) == base(b.get("title"))), None)
         if not sib: continue
         b["sharh"] = sib["sharh"]
-        if sib.get("fnLabel") and not b.get("fnLabel"): b["fnLabel"] = sib["fnLabel"]
+        for k in ("fnLabel", "sharhOn"):
+            if sib.get(k) and not b.get(k): b[k] = sib[k]
         ch += 1; print("%s «%s»: مجلد من «%s» (%s) — ورث الأصل %s" % (b["id"], b.get("title"), sib.get("title"), sib["id"], sib["sharh"]))
         sd = os.path.join(D, "shp")
         for f in sorted(os.listdir(sd)) if os.path.isdir(sd) else []:
@@ -129,12 +148,23 @@ def main():
             G = set()
             for p in json.load(open(sf, encoding="utf-8")).get("pages") or []: G |= grams(words(p))
             cache[src] = G
-        B = json.load(open(f, encoding="utf-8")); fna = classify(B.get("pages") or [], cache[src])
-        n = sum(len(v) for v in fna.values())
-        if B.get("fna") == fna: print("%s: بلا تغيير (%d سطر من الأصل)" % (bid, n)); continue
-        B["fna"] = fna; B["fnaSrc"] = TITLES.get(src) or (by.get(src) or {}).get("title") or src
+        B = json.load(open(f, encoding="utf-8")); old = (B.get("fna"), B.get("basl"))
+        fna = classify(B.get("pages") or [], cache[src]); B["fna"] = fna; B["fnaSrc"] = TITLES.get(src) or (by.get(src) or {}).get("title") or src
+        on = b.get("sharhOn")  # شرح على شرح: مجموعة مجلدات الشرح المشروح (nawawimuslim)
+        if on:
+            if on not in cache:
+                G = set(); vs = [x for x in cat["books"] if x.get("set") == on or x["id"] == on]
+                for v in vs:
+                    vp = bpath(v["id"])
+                    if vp:
+                        for p in json.load(open(vp, encoding="utf-8")).get("pages") or []: G |= grams(words(p))
+                cache[on] = G; cache[on + ":t"] = (vs[0].get("setTitle") or vs[0].get("title")) if vs else on
+            B["basl"] = classify_body(B.get("pages") or [], cache[on], cache[src]); B["baslSrc"] = cache[on + ":t"]
+        else: B.pop("basl", None); B.pop("baslSrc", None)
+        n = sum(len(v) for v in fna.values()); nb = sum(len(v) for v in (B.get("basl") or {}).values())
+        if old == (B.get("fna"), B.get("basl")): print("%s: بلا تغيير (%d حاشية و%d سطرًا من الأصل)" % (bid, n, nb)); continue
         json.dump(B, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-        print("%s: %d سطر حاشية من «%s» في %d صفحة" % (bid, n, B["fnaSrc"], len(fna)))
+        print("%s: %d سطر حاشية من «%s»، و%d سطرًا في الصلب من «%s»" % (bid, n, B["fnaSrc"], nb, B.get("baslSrc") or "—"))
 
 
 if __name__ == "__main__":
