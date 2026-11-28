@@ -11,10 +11,9 @@ import hashlib, json, pathlib, re, sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sw = root / "sw.js"
 src = sw.read_text(encoding="utf-8")
-core = json.loads(re.search(r"CORE=(\[[^\]]*\])", src).group(1))
-files = sorted({c for c in core if c not in ("./",)} |
-               {p.relative_to(root).as_posix() for p in root.glob("*.js") if p.name != "sw.js"} |
-               {"style.css", "index.html"})
+core = json.loads(re.search(r"SHELL=(\[[^\]]*\])", src).group(1))
+# البصمة لقشرة الواجهة فقط (SHELL)؛ تعديل الوحدات الأخرى لا يرفع V لأنها تتجدد في الخلفية
+files = sorted({c for c in core if c not in ("./",)} | {"style.css", "index.html"})
 h = hashlib.sha256()
 for f in files:
     p = root / f
