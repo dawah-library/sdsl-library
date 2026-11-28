@@ -595,7 +595,10 @@ async def tts_book(item, lst):
                     done.append((p, tx, path, sents))
                     return
                 except QuotaOut as e:
-                    STOP.append(str(e)); log("  توقف «%s»: حصة الصوت نفدت، ويكمل في الجولة التالية بالصوت نفسه (%s)" % (man["title"], str(e)[:200])); return
+                    STOP.append(str(e))
+                    why = ("مفتاح ElevenLabs بلا صلاحية تحويل النص إلى صوت (text_to_speech): تُفعَّل من إعدادات المفتاح في حساب ElevenLabs" if re.search(r"missing_permission|missing the permission", str(e))
+                           else "مفتاح ElevenLabs غير صالح" if re.search(r"ElevenLabs 401", str(e)) else "حصة الصوت نفدت")
+                    log("  توقف «%s»: %s، ويكمل في الجولة التالية بالصوت نفسه (%s)" % (man["title"], why, str(e)[:200])); return
                 except Exception as e:
                     log("  ص %d محاولة %d: %s" % (p, attempt + 1, str(e)[:120]))
                     await asyncio.sleep(3 * (attempt + 1))
