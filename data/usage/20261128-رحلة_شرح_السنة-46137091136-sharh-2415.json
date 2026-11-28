@@ -1,0 +1,1 @@
+{"workflow": "رحلة شرح السنة", "run": "46137091136", "at": "2026-11-28T11:09Z", "total": 39, "ok": 1, "by_model_status": {"gemini-3.7-flash|429": 7, "gemini-3.8-flash|429": 7, "gemini-3.5-flash|429": 6, "gemini-3.6-flash|429": 6, "gemini-flash-latest|429": 6, "gemini-3-flash-preview|429": 6, "gemini-3.5-flash|200": 1}}
