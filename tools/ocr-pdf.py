@@ -1254,9 +1254,9 @@ def main():
         if not existing:
             for k in ("source", "audio", "sharh", "matn"):
                 if cfg.get(k) and not entry.get(k): entry[k] = cfg[k]
-            if cfg.get("cont"):  # تكملة لسلسلة شرح قائمة (درس أو مجلد تالٍ)
+            if cfg.get("cont"):  # تكملة لعمل قائم (مجلد أو درس تالٍ) — من خيار «مجلد جديد لكتاب موجود» عند الرفع
                 import series as SR
-                SR.cont(cat, cfg["cont"], entry)
+                SR.cont(cat, cfg["cont"], entry, cfg.get("vol"))
         if not existing and entry.get("col") != "dawah": entry["upl"] = True  # كتاب مصور رفعته الإدارة للمكتبة العامة: يأخذ كل الخدمات (مراجعة وتشكيل وصوت وفهارس واختبارات)
         do_ocr = cfg.get("ocr", existing is None)
         if not existing and cfg.get("set"):
@@ -1270,7 +1270,7 @@ def main():
             if cfg.get("source"): entry["source"] = cfg["source"]
         if not existing and cfg.get("authorId") and any(a["id"] == cfg["authorId"] for a in cat["authors"]):
             entry["authorId"] = cfg["authorId"]
-        elif not existing:
+        elif not existing and not entry.get("authorId"):  # المجلد التالي ورث مؤلفه من العمل القائم
             # المؤلف: مطابقة مع الموجود أو إضافة جديد
             aid = None
             if author:
@@ -1282,6 +1282,13 @@ def main():
                     aid = new_author_id(cat)
                     cat["authors"].append({"id": aid, "name": author, "col": entry["col"], "bio": "", "auto": True})
             entry["authorId"] = aid or "a8"
+        if not existing and not entry.get("set") and not any(cfg.get(k) for k in ("cont", "set", "book", "ed")):
+            # لم يُختر «مجلد جديد لكتاب موجود»: يُعرف المجلد التالي آليًّا بالعنوان نفسه بعد نزع رقمه وللمؤلف نفسه (مجموعة واحدة فقط)
+            import series as SR
+            key, v = SR.guess(cat, entry.get("title") or title, entry.get("authorId"))
+            if key and v and v > 1 and SR.cont(cat, key, entry, v):
+                entry["contAuto"] = 1
+                print("  تكملة معروفة آليًّا: المجلد %d من «%s»" % (v, entry.get("setTitle")))
         if do_ocr:
             global BOOKHINT
             BOOKHINT = book_hint(cat, entry)

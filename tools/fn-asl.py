@@ -105,26 +105,27 @@ def base(t):
 
 
 def inherit(cat):
-    """المجلدات الجديدة لشرح قائم: ترث sharh وfnLabel وتُسجَّل في مشروع الشرح. يعيد عدد ما تغيّر."""
+    """المجلدات الجديدة لشرح قائم: ترث sharh وfnLabel وsharhOn من مجلد من مجموعتها (set — من خيار «مجلد جديد لكتاب موجود»
+    عند الرفع أو التعرف الآلي في ocr-pdf.py)، أو من كتاب للمؤلف نفسه بالعنوان نفسه؛ وتُسجَّل في مشروع الشرح. يعيد عدد ما تغيّر في الفهرس."""
     books = cat["books"]; src = [b for b in books if b.get("sharh")]; ch = 0
+    sd = os.path.join(D, "shp"); projs = {f: json.load(open(os.path.join(sd, f), encoding="utf-8")) for f in sorted(os.listdir(sd))
+                                          if f.endswith(".json") and not f.startswith("_")} if os.path.isdir(sd) else {}
+    dirty = set()
     for b in books:
-        if b.get("sharh") or not b.get("authorId") or b.get("type") not in (None, "book"): continue
-        sib = next((x for x in src if x.get("authorId") == b["authorId"] and x.get("col") == b.get("col") and base(x.get("title")) == base(b.get("title"))), None)
+        if not b.get("authorId") or b.get("type") not in (None, "book"): continue
+        sib = next((x for x in src if x["id"] != b["id"] and b.get("set") and x.get("set") == b["set"]), None) or \
+              (None if b.get("sharh") else next((x for x in src if x.get("authorId") == b["authorId"] and x.get("col") == b.get("col") and base(x.get("title")) == base(b.get("title"))), None))
         if not sib: continue
-        b["sharh"] = sib["sharh"]
-        for k in ("fnLabel", "sharhOn"):
-            if sib.get(k) and not b.get(k): b[k] = sib[k]
-        ch += 1; print("%s «%s»: مجلد من «%s» (%s) — ورث الأصل %s" % (b["id"], b.get("title"), sib.get("title"), sib["id"], sib["sharh"]))
-        sd = os.path.join(D, "shp")
-        for f in sorted(os.listdir(sd)) if os.path.isdir(sd) else []:
-            if not f.endswith(".json") or f.startswith("_"): continue
-            P = json.load(open(os.path.join(sd, f), encoding="utf-8")); dirty = False
+        got = [k for k in ("sharh", "fnLabel", "sharhOn") if sib.get(k) and not b.get(k)]
+        for k in got: b[k] = sib[k]
+        if got: ch += 1; print("%s «%s»: مجلد من «%s» (%s) — ورث %s" % (b["id"], b.get("title"), sib.get("title"), sib["id"], "، ".join(got)))
+        for f, P in projs.items():
             for w in P.get("works") or []:
                 vs = w.get("vols") or []
                 if any(v.get("b") == sib["id"] for v in vs) and not any(v.get("b") == b["id"] for v in vs):
-                    vs.append({"b": b["id"], "m": None}); w["vols"] = vs; dirty = True
-                    print("  أُضيف إلى مجلدات «%s» في مشروع %s (يعالَج بـ«استكمال المعالجة»)" % (w.get("t"), f[:-5]))
-            if dirty: json.dump(P, open(os.path.join(sd, f), "w", encoding="utf-8"), ensure_ascii=False, indent=1)  # بتنسيق sharh-align.py
+                    vs.append({"b": b["id"], "m": None}); w["vols"] = vs; dirty.add(f)
+                    print("  %s أُضيف إلى مجلدات «%s» في مشروع %s (يعالَج بـ«استكمال المعالجة»)" % (b["id"], w.get("t"), f[:-5]))
+    for f in dirty: json.dump(projs[f], open(os.path.join(sd, f), "w", encoding="utf-8"), ensure_ascii=False, indent=1)  # بتنسيق sharh-align.py
     return ch
 
 

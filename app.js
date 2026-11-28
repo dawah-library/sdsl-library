@@ -440,6 +440,32 @@ function serOpts(){return`<option value="">— جديد (ليس تكملة) —<
 function serCont(c,key,e){const g=c.books.filter(b=>b.set===key||(b.id===key&&!b.set));if(!g.length)return;const base=g[0];if(!base.set)Object.assign(base,{set:base.id,setTitle:base.title,vol:1});
  const vol=Math.max(...c.books.filter(b=>b.set===base.set&&b.id!==e.id).map(b=>b.vol||1))+1;Object.assign(e,{set:base.set,setTitle:base.setTitle,vol});["sharh","matn","matnA","topicId"].forEach(k=>{if(base[k]&&!e[k])e[k]=base[k]});
  if(!e.title||norm(e.title)===norm(base.setTitle))e.title=base.setTitle+" — الدرس "+vol;c.books=c.books.filter(b=>b.id!==e.id).concat([e])}  // يُضاف فورًا ليُحسب في رقم الدرس التالي من الدفعة نفسها
+/* مجلد جديد لكتاب موجود (طلب المدير، ٢٨ نوفمبر): عند الرفع يُختار العمل الأصل ورقم المجلد، أو يقترحه الموقع من العنوان أو اسم الملف
+   (العنوان نفسه بعد نزع «ج ٢»، «الجزء الثاني»، «(3)» وللمؤلف نفسه)؛ ويطبّقه الخادم في tools/series.py (ocr-pdf) أو ghSaveBook (النصي):
+   المجموعة set وsetTitle وvol، والعنوان «… — ج ٢»، ووراثة المؤلف والقسم والموضوع والكتاب المشروح (sharh/sharhOn/fnLabel). */
+const VOLORD=["الاول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون"];
+const VOLRX=new RegExp("(?:\\s*(?:ال)?(?:جزء|مجلد|جز|ج|مج|مجموعه|شريط|درس|محاضره|حلقه))?\\s*(?:رقم\\s*)?("+VOLORD.slice().reverse().join("|")+"|\\d+)\\s*$");
+function volSplit(t){let n=norm(String(t||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/_/g," ")).replace(/[^\u0621-\u064A0-9a-z\s]/gi," ").replace(/\s+/g," ").trim(),v=null;const m=VOLRX.exec(n);if(m&&n.slice(0,m.index).trim().length>=4){v=VOLORD.includes(m[1])?VOLORD.indexOf(m[1])+1:+m[1];n=n.slice(0,m.index).trim()}return[n,v]}
+function contWorks(){const m=new Map();(lib.books||[]).filter(b=>kindOf(b)==="book").forEach(b=>{const k=b.set||b.id;if(!m.has(k))m.set(k,{k,t:b.setTitle||b.title,a:b.authorId,n:0});const x=m.get(k);x.n=Math.max(x.n,b.vol||1)});return[...m.values()]}
+function contGuess(title,aid){const[b0,v]=volSplit(title);if(b0.length<6)return[null,v];const ks=new Set();(lib.books||[]).filter(b=>kindOf(b)==="book"&&(!aid||aid==="__new"||b.authorId===aid)).forEach(b=>{if(volSplit(b.setTitle||b.title)[0]===b0||volSplit(b.title)[0]===b0)ks.add(b.set||b.id)});return ks.size===1?[[...ks][0],v]:[null,v]}
+const contLabel=w=>`${w.t}${w.a&&A(w.a)?" — "+A(w.a).name:""} ⟨${w.k}⟩`;
+const contKey=fd=>((/⟨([^⟩]+)⟩\s*$/.exec(String(fd.get("contq")||""))||[])[1])||"";
+function contFields(){return`<fieldset class="secs contf"><legend>📚 مجلد جديد لكتاب موجود في الموقع؟ (اختياري)</legend><p class="note contsug" hidden></p>
+ <div class="row"><div><label>الكتاب الأصل (ابحث بعنوانه)</label><input name="contq" list="contdl" placeholder="اتركه فارغًا إن كان كتابًا جديدًا" autocomplete="off"><datalist id="contdl">${contWorks().map(w=>`<option value="${esc(contLabel(w))}">${w.n>1?toAr(w.n)+" مجلدات":"مجلد واحد"}</option>`).join("")}</datalist></div><div><label>رقم المجلد</label><input name="vol" type="number" min="1" placeholder="التالي تلقائيًا"></div></div>
+ <p class="mut" style="font-size:.8rem">يأخذ المجلد من الأصل مؤلفه وقسمه وموضوعه وصلته بالكتاب المشروح، ويُجمع معه بعنوان «… — ج ٢»؛ وعند رفع عدة ملفات تكملةً يأخذ كل ملف رقمه من اسمه (ج ٢، الجزء الثالث، 4)، أو يتتابع من الرقم المكتوب. وإن لم تختر شيئًا يقترحه الموقع إذا وجد العنوان نفسه للمؤلف نفسه، ويتعرف عليه الخادم أيضًا عند التحويل.</p></fieldset>`}
+function contSuggest(f){const box=f.querySelector(".contsug");if(!box)return;const q=f.querySelector("[name=contq]");if(q&&q.value){box.hidden=true;return}
+ const fl=f.querySelector("input[type=file][name=file]"),fn=fl&&fl.files&&fl.files[0]?fl.files[0].name.replace(/\.(pdf|txt)$/i,"").split(/\s+-\s+/)[0]:"",t=(f.querySelector("[name=title]")||{}).value||fn,au=(f.querySelector("[name=author]")||f.querySelector("[name=aid]")||{}).value||"";
+ const[k,v]=t?contGuess(t,au):[null,null],w=k&&contWorks().find(x=>x.k===k);if(!w){box.hidden=true;return}
+ box.hidden=false;box.innerHTML=`📚 يبدو أن «${esc(t)}» ${v?"هو المجلد "+toAr(v)+" من":"تكملة لـ"} «${esc(w.t)}»${w.a&&A(w.a)?" — "+esc(A(w.a).name):""} (المرفوع ${w.n>1?toAr(w.n)+" مجلدات":"مجلدًا واحدًا"}). <button type="button" class="btn s p" data-contok="${esc(contLabel(w))}" data-contv="${v||""}">نعم، اجعله تكملة له</button>`}
+document.addEventListener("input",e=>{const f=e.target.closest&&e.target.closest("form");if(f&&f.querySelector(".contf")&&["title","contq"].includes(e.target.name))contSuggest(f)});
+document.addEventListener("change",e=>{const f=e.target.closest&&e.target.closest("form");if(f&&f.querySelector(".contf")&&["file","author","aid"].includes(e.target.name))contSuggest(f)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-contok]");if(!b)return;const f=b.closest("form");f.querySelector("[name=contq]").value=b.dataset.contok;if(b.dataset.contv)f.querySelector("[name=vol]").value=b.dataset.contv;f.querySelector(".contsug").hidden=true});
+// يطبّق التكملة على الفهرس داخل GH.editJSON (الرفع النصي)، كـ series.cont في الخادم
+function volCont(c,key,e,vol){const g=c.books.filter(b=>b.set===key||(b.id===key&&!b.set));if(!g.length)return false;const base=g[0];
+ if(!base.set){let t0=base.title||base.id;if(volSplit(t0)[1]===1)t0=t0.replace(/\s*[-—–:(]?\s*(?:الجزء|المجلد|الجز|ج|مج)?\s*(?:الأول|الاول|1|١)\s*\)?\s*$/,"").trim()||t0;Object.assign(base,{set:base.id,setTitle:t0,vol:1})}
+ const v=+vol||Math.max(...c.books.filter(b=>b.set===base.set&&b.id!==e.id).map(b=>b.vol||1))+1;Object.assign(e,{set:base.set,setTitle:base.setTitle,vol:v,cont:key});
+ ["authorId","topicId","col"].forEach(k=>{if(base[k])e[k]=base[k]});["sharh","matn","matnA","sharhOn","fnLabel"].forEach(k=>{if(base[k]&&!e[k])e[k]=base[k]});
+ if(!e.title||volSplit(e.title)[0]===volSplit(base.setTitle)[0])e.title=base.setTitle+" — ج "+v;return true}
 function trForm(){return can("convert")||can("tafrigh_upload")?`<details class="hfold"><summary>🎙️ تفريغ تسجيل صوتي أو مرئي إلى كتاب (للإدارة)</summary><form id="trf" data-form="noop" style="padding-bottom:12px"><label>عنوان الدرس أو السلسلة</label><input name="t" required maxlength="160">
  <label>الشيخ</label><select name="a">${lib.authors.filter(a=>(a.col||"dawah")==="dawah").map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select>
  <label>تكملة لسلسلة شرح أو دروس سابقة (اختياري)</label><select name="ser">${serOpts()}</select>
@@ -773,7 +799,7 @@ const GH={repo:CFG.repo||"dawah-library/sdsl-library",branch:CFG.branch||"main",
    const obj=fn(JSON.parse(cur.text));try{return await this.put(path,JSON.stringify(obj,null,compact?0:1),msg,cur.sha||null)}catch(e){if(!/تعارض/.test(e.message)||t===2)throw e}}}};
 async function ghSaveBook(meta,pages,toc){const sh={id:meta.id,pages,toc:toc||[]};const s=JSON.stringify(sh);meta.n=pages.length;meta.size=s.length;meta.added=meta.added||today();
  await GH.put("data/books/"+meta.id+".json",s,"إضافة: "+meta.title);
- await GH.editJSON("data/catalog.json",c=>{c.books=c.books.filter(b=>b.id!==meta.id);c.books.push(meta);c.version=Date.now();return c},"فهرس: "+meta.title,true);
+ await GH.editJSON("data/catalog.json",c=>{c.books=c.books.filter(b=>b.id!==meta.id);if(meta.cont&&!meta.set)volCont(c,meta.cont,meta,meta.contVol);delete meta.contVol;c.books.push(meta);c.version=Date.now();return c},"فهرس: "+meta.title,true);
  SH.set(meta.id,sh);CAT.books=CAT.books.filter(b=>b.id!==meta.id).concat([meta]);merge();renderTicker()}
 async function ghSaveAuthor(a){await GH.editJSON("data/catalog.json",c=>{if(!c.authors.some(x=>x.id===a.id))c.authors.push(a);return c},"مؤلف: "+a.name,true);if(!CAT.authors.some(x=>x.id===a.id))CAT.authors.push(a);merge()}
 async function ghSavePage(b,i,text){
@@ -1698,6 +1724,7 @@ async function pdfUpload(file,base,cfg,say){say=say||(()=>{});
    else await GH.put("ocr-inbox/"+base+".pdf",bytes,"رفع كتاب مصور: "+cfg.title);
    return "repo"}
 async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(x=>x&&x.size),st=$("#pdfst");if(!files.length)return;
+ const ck=contKey(fd),v0=+fd.get("vol")||0,vN=x=>volSplit(x.name.replace(/\.pdf$/i,"").split(/\s+-\s+/)[0])[1]||0;if(ck&&files.length>1&&!v0)files.sort((a,b)=>vN(a)-vN(b));
  const big=files.filter(x=>x.size>45*1048576);if(big.length){st.textContent="ملفات أكبر من 45 ميجابايت: "+big.map(x=>x.name).join("، ")+". قسّمها أو ارفعها إلى مجلد ocr-inbox مباشرة.";return}
  const btn=f.querySelector("button");btn.disabled=true;const done=[],link=files.length===1?fd.get("book"):"";
  const tags=talaTags(fd);if(fd.get("tafrigh"))tags.push("tafrigh");if(fd.get("dwh"))tags.push("dawah-hist","dawah-intro");else if(fd.get("dwi"))tags.push("dawah-intro");fd.getAll("furqan").forEach(n=>tags.push("furqan:"+n));
@@ -1706,7 +1733,8 @@ async function ghPdf(f){const fd=new FormData(f),files=fd.getAll("file").filter(
    st.textContent=`جارٍ رفع ${files.length>1?"الكتاب "+toAr(i+1)+" من "+toAr(files.length)+": ":""}${nm}…`;
    const base="up"+Date.now().toString(36)+i,cfg={title:(files.length===1&&String(fd.get("title")||"").trim())||parts[0],author:author0||parts[1]||undefined,topic:fd.get("tid"),col:fd.get("col"),offset:+fd.get("off")||0,ocr:link?!!fd.get("ocr"):true};
    if(tags.length)cfg.tags=tags;if(link)cfg.book=link;
-   await pdfUpload(file,base,cfg,t=>st.textContent=t);done.push(cfg.title)}
+   if(ck&&!link){cfg.cont=ck;const vv=v0?v0+i:vN(file);if(vv)cfg.vol=vv;if(!String(fd.get("title")||"").trim()||files.length>1)cfg.title="";delete cfg.author}
+   await pdfUpload(file,base,cfg,t=>st.textContent=t);done.push(cfg.cont?(cfg.vol?"المجلد "+toAr(cfg.vol):"المجلد التالي")+" من «"+((contWorks().find(w=>w.k===cfg.cont)||{}).t||"")+"»":cfg.title)}
   st.innerHTML=`✓ رُفع ${toAr(done.length)} ${done.length>1?"كتب":"كتاب"}: ${done.map(esc).join("، ")}.<br>${link&&!fd.get("ocr")?"سيُربط بالكتاب خلال دقيقة.":"بدأ التحويل إلى نص على خوادم GitHub (نحو دقيقة لكل 10–15 صفحة)، ثم تظهر الكتب في أقسامها تلقائيًا. تابع التقدم من تبويب Actions في المستودع."}`;f.reset()}
  catch(e){st.textContent=(done.length?"رُفع: "+done.join("، ")+". ثم توقف: ":"")+e.message}finally{btn.disabled=false}}
 async function addPost(f){const fd=new FormData(f),st=$("#postst");const text=String(fd.get("text")||"").trim();if(!text)return;
@@ -1794,6 +1822,7 @@ function vAdmin(q){const tab=q.t||(Cloud.role==="admin"||GH.token?"health":"book
   <div class="row"><div><label>تقسيم الصفحات</label><select name="split"><option value="mark">عند السطر ----- أو فاصل الصفحة</option><option value="auto">تلقائيًا بالحجم</option></select></div><div><label>حجم الصفحة التلقائي (حرف)</label><input name="size" type="number" value="1800"></div></div>
   <label>الفهرس (سطر لكل عنوان: العنوان|رقم الصفحة)</label><textarea name="toc" style="min-height:60px"></textarea>
   <div class="row"><div><label>رابط النسخة المصورة PDF (اختياري)</label><input name="pdf" type="url" placeholder="https://archive.org/download/…/book.pdf" dir="ltr"></div><div><label>فرق ترقيم الصفحات</label><input name="off" type="number" value="0"></div></div>
+  ${contFields()}
   <fieldset class="secs"><legend>موجّه للطلائع (٥–٢٠ سنة)؟ يظهر في قسم الطلائع</legend>${[["t1","٥–٨"],["t2","٩–١٢"],["t3","١٢–١٥"],["t4","١٥–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <label class="inl"><input type="checkbox" name="tafrigh" value="1"${!isAdmin()&&!can("upload")&&can("tafrigh_upload")?" checked onclick=\"return false\"":""}> هذا تفريغ لدروس صوتية</label><label>ضمن «قضايا الفرقان» (اختياري)</label><select name="furqan"><option value="">—</option>${FURQAN.map(([n])=>`<option>${esc(n)}</option>`).join("")}</select>
   <button class="btn p" style="margin-top:10px">حفظ الكتاب</button></form>`;
@@ -1819,6 +1848,7 @@ function vAdmin(q){const tab=q.t||(Cloud.role==="admin"||GH.token?"health":"book
   <label>العنوان</label><input name="title" placeholder="عند رفع عدة ملفات يُؤخذ عنوان كل كتاب من اسم ملفه">
   <p class="mut" style="font-size:.8rem">تسمية الملف «العنوان - المؤلف.pdf» تجعل المؤلف يُعرف تلقائيًا إن لم تختره.</p>
   <div class="row"><div><label>المؤلف</label><select name="author"><option value="">—</option>${opt(lib.authors)}<option value="__new">+ مؤلف جديد</option></select><input name="authornew" placeholder="اسم المؤلف الجديد" style="margin-top:4px"></div><div><label>القسم</label><select name="col"><option value="dawah">${COL.dawah}</option><option value="turath">${COL.turath}</option></select></div><div><label>الموضوع</label><select name="tid">${opt(lib.topics.filter(t=>t.for!=="articles"))}</select></div></div>
+  ${contFields()}
   <fieldset class="secs"><legend>يظهر الكتاب أيضًا في</legend><label class="inl"><input type="checkbox" name="tafrigh" value="1"> التفريغات (دروس صوتية مفرغة)</label><label class="inl"><input type="checkbox" name="dwh" value="1"> تاريخ الدعوة والتعريف بها</label><label class="inl"><input type="checkbox" name="dwi" value="1"> التعريف بالدعوة ومنهجها</label>${FURQAN.map(([n])=>`<label class="inl"><input type="checkbox" name="furqan" value="${esc(n)}"> قضايا الفرقان: ${esc(n)}</label>`).join("")}</fieldset>
   <fieldset class="secs"><legend>كتاب تربوي للطلائع؟ (اختياري)</legend>${[["t1","٥–٨"],["t2","٩–١٢"],["t3","١٢–١٥"],["t4","١٥–٢٠"]].map(([k,l])=>`<label class="inl"><input type="checkbox" name="tala" value="${k}"> ${l}</label>`).join("")}<select name="talag" style="width:auto"><option value="">للبنين والفتيات</option><option value="b">للبنين</option><option value="g">للفتيات</option></select></fieldset>
   <p class="note">🔗 <b>تفعيل آلي:</b> يُربط الكتاب بالأقسام المتوافقة معه بحسب عنوانه وموضوعه وإن لم تختر شيئًا (تاريخ الدعوة ← قسم التعريف بالدعوة وتاريخها، والكتاب التربوي ← الطلائع، وقضايا الفرقان بمضمونه)، ثم تُفعَّل خدماته كلها بعد تحويله: التدقيق على الصور، وبطاقة التعريف والفهرس، والخريطة الذهنية، والاختصار، والاختبار، والكراسة، والصوت.</p>
@@ -1879,7 +1909,8 @@ async function addBook(f){const fd=new FormData(f);try{let text=String(fd.get("t
  const toc=String(fd.get("toc")||"").split("\n").map(l=>l.split("|")).filter(x=>x[0]&&+x[1]).map(x=>({t:x[0].trim(),p:+x[1]}));
  const tags=talaTags(fd);if(fd.get("tafrigh"))tags.push("tafrigh");if(fd.get("furqan"))tags.push("furqan:"+fd.get("furqan"));const meta={id:"u"+Date.now().toString(36),title:String(fd.get("title")).trim(),authorId:aid,topicId:fd.get("tid"),col,type:"book",source:String(fd.get("source")||"")};
  if(tags.length)meta.tags=tags;if(fd.get("pdf")){meta.pdf=String(fd.get("pdf")).trim();meta.pdfOffset=+fd.get("off")||0}
- if(!dupOk(meta.title,aid,false))return;
+ const ck=contKey(fd);if(ck){meta.cont=ck;meta.contVol=+fd.get("vol")||0}
+ if(!ck&&!dupOk(meta.title,aid,false))return;
  await saveItem(meta,pages,toc);
  alert("تم حفظ الكتاب ("+pages.length+" صفحة)");f.reset()}catch(e){alert(e.message)}}
 // منع تكرار المواد (ب2-16): العنوان نفسه للمؤلف نفسه يُنبَّه عليه، ويُقترح «طبعات الكتاب» للكتب
