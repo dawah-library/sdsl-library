@@ -1,0 +1,1 @@
+{"workflow": "تحويل الكتب المصورة إلى نص", "run": "46130700387", "at": "2026-11-28T09:48Z", "total": 3, "ok": 1, "by_model_status": {"gemini-flash-latest|503": 1, "gemini-flash-latest|err": 1, "gemini-flash-latest|200": 1}}
