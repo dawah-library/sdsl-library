@@ -396,6 +396,7 @@ function vAuthor(id,q){const mi=(CAT.authors.find(x=>x.id===id)||{}).mergedInto;
  view(`<section class="ent"><div class="ecover" style="${hue}"></div><div class="ehead">${avatar(a,"big eav")}<div class="eid"><h2>${esc(a.name)}${died(a)}</h2><span class="ebadge">${ki} ${esc(kn)}</span>${a.col&&a.col!=="dawah"?` <span class="ebadge">${esc(COL[a.col]||"")}</span>`:""}</div>
  <div class="eact">${typeof followBtn==="function"&&Cloud.on()?followBtn("a:"+id,false):""}${isAdmin()&&GH.on?`<button class="btn s nf" data-act="aphoto" data-id="${id}">📷 ${a.photo?"تغيير الصورة":"إضافة صورة"}</button> <button class="btn s nf" data-act="aedit" data-id="${id}">✏️ تعديل البيانات</button>`:""}</div></div>
  ${tt||a.bio?`<div class="abrief"><p>${esc((tt&&tt.brief)||a.bio)}</p>${tt?`<a class="btn s p" href="#/tarjama/${id}">الترجمة المفصلة</a>`:""}</div>`:""}
+ ${/^https:\/\/(www\.)?facebook\.com\//.test(a.fb||"")?`<p class="afb"><a class="btn s" href="${esc(a.fb)}" target="_blank" rel="noopener noreferrer">صفحته على فيسبوك</a></p>`:""}
  <div class="tabs etabs" role="tablist">${Object.keys(NAMES).map(tab).join("")}</div></section>
  <div id="entbox">${T_[k0]?entList(T_[k0],k0,id,NAMES,ROUTE):'<p class="mut">جارٍ التحميل…</p>'}</div>
  ${sync.length||k0!=="books"?"":`<p class="mut">لا توجد مواد منسوبة إلى ${esc(a.name)} في المكتبة بعد.</p>`}
