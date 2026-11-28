@@ -37,6 +37,18 @@ for m in ["gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview", "gemini-2.5-fl
     except urllib.error.HTTPError as e: tts[m] = "http%d %s" % (e.code, e.read()[:150].decode("utf-8", "ignore"))
     except Exception as e: tts[m] = "err " + str(e)[:100]
     print(m, tts[m])
-res = {"tts": tts, "models": [m for m in models if "gemini" in m], "at": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ"), "keys": out, "working": sum(1 for x in out if x["status"] in ("ok", "quota"))}
+# ElevenLabs: فحص بلا استهلاك أحرف (GET /v1/voices). لا يُطبع المفتاح ولا يُحفظ.
+eleven = {"status": "nokey", "voices": 0}
+ek = (os.environ.get("ELEVENLABS_API_KEY_2") or os.environ.get("ELEVENLABS_API_KEY") or "").strip()
+if ek:
+    try:
+        ej = json.load(urllib.request.urlopen(urllib.request.Request("https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": ek}), timeout=40))
+        eleven = {"status": "ok", "voices": len(ej.get("voices", []))}
+    except urllib.error.HTTPError as e:
+        body = e.read()[:300].decode("utf-8", "ignore")
+        eleven = {"status": "no_voices_read" if "voices_read" in body else "http%d" % e.code, "voices": 0}
+    except Exception as e: eleven = {"status": "err", "voices": 0}
+print("elevenlabs", eleven)
+res = {"eleven": eleven, "tts": tts, "models": [m for m in models if "gemini" in m], "at": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ"), "keys": out, "working": sum(1 for x in out if x["status"] in ("ok", "quota"))}
 json.dump(res, open(os.path.join(R, "data", "keys-status.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("العاملة:", res["working"], "من", len(out))

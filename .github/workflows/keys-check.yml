@@ -35,6 +35,8 @@ jobs:
           GEMINI_API_KEY_18: ${{ secrets.GEMINI_API_KEY_18 }}
           GEMINI_API_KEY_19: ${{ secrets.GEMINI_API_KEY_19 }}
           GEMINI_API_KEY_20: ${{ secrets.GEMINI_API_KEY_20 }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_API_KEY_2: ${{ secrets.ELEVENLABS_API_KEY_2 }}
         run: python3 tools/keys-check.py
       - name: حفظ الحالة
         run: |
