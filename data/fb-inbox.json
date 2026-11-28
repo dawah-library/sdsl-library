@@ -2,6 +2,15 @@
  "v": 1,
  "items": [
   {
+   "src": "fb-ahmdbdalslammady",
+   "k": "p21141045829841",
+   "u": "https://www.facebook.com/ahmd.bd.alslam.mady/videos/1821141045829841/",
+   "t": 1795839624,
+   "text": "#رياض_الصالحين ٩٧\nفضل البكاء من خشية الله و شوقا إليه",
+   "video": true,
+   "at": "2026-11-28T06:19:04.312Z"
+  },
+  {
    "src": "fb-bsmserver",
    "k": "p46227048834033",
    "u": "https://www.facebook.com/bsm.server/posts/pfbid0qe1bk2C8u227AjbqZfMRiyeNdjdAaKLYUPsbSWZsL3Evn2k7crcYX3hYH3yWtBkql",
@@ -1226,10 +1235,10 @@
    "wn": 0
   },
   "fb-ahmdbdalslammady": {
-   "at": "2026-11-27T04:00:43.885Z",
+   "at": "2026-11-28T06:19:04.312Z",
    "n": 1,
-   "lastNew": "2026-11-27T04:00:43.885Z",
-   "lastSeen": "2026-11-27T04:00:43.885Z",
+   "lastNew": "2026-11-28T06:19:04.312Z",
+   "lastSeen": "2026-11-28T06:19:04.312Z",
    "wn": 0
   },
   "fb-drelsayedabdelhady7": {
@@ -1287,12 +1296,12 @@
    "wn": 0
   },
   "fb-mhmwdbdalhmydalsqlany": {
-   "at": "2026-11-27T04:01:09.581Z",
+   "at": "2026-11-28T06:19:30.480Z",
    "n": 0,
    "wn": 0
   },
   "fb-ahmedalhamdon": {
-   "at": "2026-11-27T04:01:26.816Z",
+   "at": "2026-11-28T06:19:48.155Z",
    "n": 0,
    "wn": 0
   },
@@ -1300,7 +1309,7 @@
    "at": "2026-11-27T08:33:44.029Z",
    "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)",
    "n": 0,
-   "wn": 0
+   "wn": 1
   },
   "fb-saidabdelfattahkhairy": {
    "at": "2026-11-27T13:56:23.268Z",
@@ -1321,7 +1330,7 @@
    "n": 0
   }
  },
- "wall": "2026-11-28T04:01:36.955Z",
+ "wall": "2026-11-28T06:19:55.531Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -1337,6 +1346,6 @@
   "fb-saidabdelfattahkhairy",
   "fb-khaldalrhym"
  ],
- "lastRun": "2026-11-28T04:33:44.042Z",
- "lastAdded": 2
+ "lastRun": "2026-11-28T06:19:55.593Z",
+ "lastAdded": 1
 }
