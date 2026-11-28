@@ -69,6 +69,9 @@ jobs:
           SHARH_MINUTES: "90"
           TJ_MODEL: "gemini-3.7-flash"   # gemini-2.5-flash أُوقف (404)
         run: python3 tools/sharh-ai.py
+      - name: تمييز حواشي الأصل (أسانيد الكتاب المشروح) عن تعليق الشارح — بلا نموذج
+        if: always()
+        run: python3 tools/fn-asl.py
       - name: فوائد شروح مشايخ الدعوة وترجيحاتهم (مسودات للاعتماد)
         if: always()
         env:
@@ -87,7 +90,7 @@ jobs:
         run: python3 tools/sharh-dawah.py
       - name: الحفظ
         if: always()
-        run: bash tools/git-save.sh "رحلة شرح السنة" data/sharh data/hadith/links tools/sharh-report.md
+        run: bash tools/git-save.sh "رحلة شرح السنة" data/sharh data/hadith/links tools/sharh-report.md data/books data/shp data/catalog.json
       - name: إشعار
         if: always()
         run: '[ -s .sharh-report.txt ] && python3 tools/notify.py "$(cat .sharh-report.txt)" || true'

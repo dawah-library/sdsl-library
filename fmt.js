@@ -63,7 +63,7 @@
     });
   }
 
-  // لوحة جانبية بجوار الآية أو الحديث: التفسير الموجز وغريب الكلمات (الآية)، والشرح الموجز (الحديث)، مع خيار الانتقال إلى الموضع
+  // لوحة جانبية بجوار الآية أو الحديث: المختصر في التفسير والسراج في غريب القرآن (الآية)، والشرح الموجز (الحديث)، مع خيار الانتقال إلى الموضع
   const ESC = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const clean = t => String(t || "").replace(/^[\s\S]*\[التفسير\]\s*/, "").replace(/\[\[[\s\S]*?\]\]/g, "").trim();
   const TJ = {}, tj = (k, s) => TJ[k + s] || (TJ[k + s] = getJ("data/quran/tafsir/" + k + "/" + s + ".json").then(x => x || {}));
@@ -78,12 +78,12 @@
   async function openVerse(w) {
     const s = +w.dataset.vs, a = +w.dataset.va; await quranIdx(); const p = pnl();
     p.dataset.s = s; p.dataset.a = a; p.dataset.t = "v";
-    p.innerHTML = '<header><b>' + ESC(String(SNR[s - 1] || "").replace(/^سُورَةُ\s*/, "سورة ")) + " : " + a + '</b><button class="fmtx" aria-label="إغلاق">✕</button></header><nav><button data-fk="mokhtasar">المختصر في التفسير</button><button data-fk="muyassar">التفسير الميسر</button><button data-fk="siraj">غريب الكلمات</button></nav><div class="fmtb"></div><div class="fmtf"><a class="btn s p" href="#/mushaf/' + s + "?a=" + a + '">الانتقال إلى المصحف عند الآية</a></div>';
+    p.innerHTML = '<header><b>' + ESC(String(SNR[s - 1] || "").replace(/^سُورَةُ\s*/, "سورة ")) + " : " + a + '</b><button class="fmtx" aria-label="إغلاق">✕</button></header><nav><button data-fk="mokhtasar">المختصر في التفسير</button><button data-fk="siraj">السراج في غريب القرآن</button></nav><div class="fmtb"></div><div class="fmtf"><a class="btn s p" href="#/mushaf/' + s + "?a=" + a + '">فتح الآية في المصحف: مزيد من التفاسير</a></div>';
     p.classList.add("on"); verseTab(p, "mokhtasar");
   }
   async function openHadith(w) {
     const id = w.dataset.hid, b = w.dataset.hb, p = pnl(); p.dataset.t = "h"; p.dataset.s = ""; p.dataset.a = "";
-    p.innerHTML = '<header><b>شرح موجز للحديث</b><button class="fmtx" aria-label="إغلاق">✕</button></header><div class="fmtb">…</div><div class="fmtf"><a class="btn s p" href="#/hadith/x/' + ESC(id) + '">الحديث وشرحه الكامل</a></div>';
+    p.innerHTML = '<header><b>شرح موجز للحديث</b><button class="fmtx" aria-label="إغلاق">✕</button></header><div class="fmtb">…</div><div class="fmtf"><a class="btn s p" href="#/hadith/x/' + ESC(id) + '">مزيد من شرحه ومعانيه وفوائده في قسم الحديث</a></div>';
     p.classList.add("on"); const box = p.querySelector(".fmtb");
     try { if (window.HSH) await window.HSH.into(box, b, id, false); else box.textContent = ""; } catch (e) { box.innerHTML = "<p class=mut>تعذّر تحميل الشرح.</p>"; }
   }

@@ -270,7 +270,7 @@ def main():
                 "hidden": True, "unrev": len(pages), "tfauto": 1, "trsrc": srcs, "treng": sorted({W["parts"][str(n)].get("e", "gemini") for n in range(len(srcs))})}
         # الكتاب المشروح وسلسلة الشرح (تُكمَّل بدروس لاحقة): it.ser سلسلة قائمة، it.ctx الكتاب المشروح
         import series as SR
-        if it.get("ser"): SR.cont(cat, it["ser"], meta)
+        if it.get("ser"): SR.cont(cat, it["ser"], meta, unit="الدرس")
         if it.get("ctx") and not meta.get("sharh") and not meta.get("matn"):
             mid, mname = SR.matn_of(cat, it["ctx"])
             if mid: meta["sharh"] = mid

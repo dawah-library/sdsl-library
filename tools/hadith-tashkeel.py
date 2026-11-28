@@ -5,6 +5,10 @@
 - ما كان مشكولًا (نسبة الحركات إلى الحروف ≥ ٠٫٣) لا يُعاد.
 - الحالة: data/hadith/k/_tashkeel.json {"done": {"<كتاب>": [أرقام الأجزاء المكتملة]}, "n": المشكول, "upd"}.
 - المحرك: Gemini بمفاتيح المهام الكبيرة موزَّعة (gkeys.Pool). الحد: HT_MAX طلبًا في الجولة (٣٠٠)، وHT_MINUTES.
+- (تعديل ٢٨ نوفمبر بطلب المدير: «التشكيل كان للإسناد فقط لا لنص الحديث ومتنه») المتن أولًا: ما كان إسنادًا وحده
+  («وحدثني… بمثله/بنحوه/بهذا الإسناد») يؤجَّل إلى ما بعد متون الكتب كلها (HT_ISNAD=1 يقدّمه)؛ والنص الذي لم يُقبل تشكيله مرتين
+  لا يُعاد في كل جولة (كان يحبس المهمة في أجزاء مسلم نفسها فلا تبلغ بقية الكتب)؛ ومختارات القسم (الأربعون، رياض الصالحين،
+  بلوغ المرام) تُشكَّل أولًا في الحقلين mv وfv (المتن والنص كما في الكتاب) فلا يُمس m وfull اللذان تعتمد عليهما أدوات أخرى.
 الاستعمال: python3 tools/hadith-tashkeel.py [كتاب…]"""
 import datetime, json, os, re, sys, time, urllib.request, urllib.error
 
@@ -25,6 +29,18 @@ PROMPT = """أنت عالم بالعربية والحديث متقن للنحو 
 أعد JSON بالمفاتيح نفسها: {{"المفتاح": "النص مشكولًا"}}
 
 {items}"""
+
+
+ISN_ONLY = re.compile(r"^\s*(?:[\(\[]?[\d٠-٩]+[\)\]]?\s*[-–.]*\s*)*و?(?:حدثنا|حدثني|أخبرنا|أخبرني|أنبأنا|ثنا|نا|حدثناه|وحدثناه)\b")
+ISN_TAIL = re.compile(r"(?:بمثله|بنحوه|مثله|نحوه|بمعناه|بهذا الإسناد|بإسناده|بهذا الحديث|بمثل حديث|بنحو حديث|بمثل هذا|بنحو هذا)")
+ISNAD_FIRST = os.environ.get("HT_ISNAD", "") == "1"
+CUR = ["arbain", "riyad", "bulugh"]  # مختارات القسم: data/hadith/<كتاب>.json {id: {m, full, …}} ← mv وfv
+
+
+def isn_only(t):
+    """إسناد بلا متن مستقل (إحالة على متن سابق)."""
+    t = DIA.sub("", t or "")
+    return bool(ISN_ONLY.match(t)) and bool(ISN_TAIL.search(t)) and len(t) < 450
 
 
 CAP = 1500  # أقصى ما يُرسل من النص الواحد (الباقي يُلحق كما هو)، فلا يطول الرد فيُقطع
@@ -73,21 +89,15 @@ def gemini(prompt):
     return None
 
 
-def chunk(b, c, S):
-    """يشكّل جزءًا واحدًا (٥٠٠ حديث) من كتاب؛ يعيد True إن اكتمل، وNone إن نفدت الحصة."""
-    mf, lf = os.path.join(K, b, "m%d.json" % c), os.path.join(K, b, "l%d.json" % c)
-    M = json.load(open(mf, encoding="utf-8")); L = json.load(open(lf, encoding="utf-8")) if os.path.exists(lf) else {}
-    todo = [("m", k, v) for k, v in M.items() if v and ratio(v) < 0.3] + [("l", k, v) for k, v in L.items() if v and ratio(v) < 0.3]
-    if not todo: return True
-    ok = 0; i = 0
+def run(todo, apply):
+    """يرسل النصوص دفعات ويطبّق المقبول بـ apply(t, k, نص)؛ يعيد (المقبول، المرفوض) أو None إن نفدت الحصة قبل الإتمام."""
+    ok = 0; bad = []; i = 0
     while i < len(todo):
         part, size = [], 0
         while i < len(todo) and len(part) < 16 and size < 4500:  # دفعات أصغر: الرد المشكول نحو ضعف النص، والطويل كان يُقطع
             part.append(todo[i]); size += min(len(todo[i][2]), CAP); i += 1
         r = gemini(PROMPT.format(items="\n".join(json.dumps({(t + ":" + k): v[:CAP]}, ensure_ascii=False) for t, k, v in part)))
-        if r is None:
-            if ok: save(mf, M, lf, L)
-            return None
+        if r is None: return None if not ok else (ok, bad, False)
         if isinstance(r, list):  # بعض النماذج تعيد قائمة كائنات بدل كائن واحد
             rr = {}
             for o in r:
@@ -97,12 +107,56 @@ def chunk(b, c, S):
         for t, k, v in part:
             nv = r.get(t + ":" + k)
             if isinstance(nv, str) and skel(nv) == skel(v[:CAP]) and ratio(nv) >= 0.3:
-                nv = nv + v[CAP:]
-                (M if t == "m" else L)[k] = nv; ok += 1
-        if ok: save(mf, M, lf, L)  # حفظ بعد كل دفعة: لا يضيع المنجز إن توقفت المهمة
-    save(mf, M, lf, L); S["n"] = S.get("n", 0) + ok
-    print("  %s/m%d: شُكّل %d من %d" % (b, c, ok, len(todo)), flush=True)
-    return ok >= len(todo) * 0.98  # لا يُعدّ الجزء مكتملًا إلا إن شُكّل كله تقريبًا؛ وإلا أُعيد ما بقي منه في جولة قادمة
+                apply(t, k, nv + v[CAP:]); ok += 1
+            else: bad.append(t + ":" + k)
+        apply(None, None, None)  # حفظ بعد كل دفعة
+    return ok, bad, True
+
+
+def tried(S, key):
+    return S.setdefault("tries", {}).setdefault(key, {})
+
+
+def curated(S):
+    """المختارات: المتن (m ← mv) والنص كما في الكتاب (full ← fv)؛ يعيد False إن نفدت الحصة."""
+    for b in CUR:
+        f = os.path.join(ROOT, "data", "hadith", b + ".json")
+        if not os.path.exists(f) or b in S.get("cur_done", []): continue
+        D = json.load(open(f, encoding="utf-8")); T = tried(S, "cur:" + b)
+        todo = [(fld[0], k, d[fld]) for k, d in D.items() if isinstance(d, dict) for fld in ("m", "full")
+                if d.get(fld) and not d.get(fld[0] + "v") and ratio(d[fld]) < 0.3 and T.get(fld[0] + ":" + k, 0) < 2]
+        if todo:
+            def ap(t, k, nv):
+                if t is None: json.dump(D, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":")); return
+                D[k][("m" if t == "m" else "f") + "v"] = nv
+            r = run(todo, ap)
+            if r is None: return False
+            ok, bad, full = r
+            for x in bad: T[x] = T.get(x, 0) + 1
+            S["n"] = S.get("n", 0) + ok; print("  %s: شُكّل %d من %d" % (b, ok, len(todo)), flush=True)
+            if not full: return False
+        S.setdefault("cur_done", []).append(b)
+    return True
+
+
+def chunk(b, c, S, isnad=False):
+    """يشكّل جزءًا واحدًا (٥٠٠ حديث) من كتاب: المتون (أو الأسانيد المفردة إن isnad)؛ True إن اكتمل، وNone إن نفدت الحصة."""
+    mf, lf = os.path.join(K, b, "m%d.json" % c), os.path.join(K, b, "l%d.json" % c)
+    M = json.load(open(mf, encoding="utf-8")); L = json.load(open(lf, encoding="utf-8")) if os.path.exists(lf) else {}
+    T = tried(S, "%s/%d" % (b, c))
+    todo = [("m", k, v) for k, v in M.items() if v and ratio(v) < 0.3 and isn_only(v) == isnad and T.get("m:" + k, 0) < 2]
+    if not isnad: todo += [("l", k, v) for k, v in L.items() if v and ratio(v) < 0.3 and T.get("l:" + k, 0) < 2]
+    if not todo: return True
+    def ap(t, k, nv):
+        if t is None: save(mf, M, lf, L); return
+        (M if t == "m" else L)[k] = nv
+    r = run(todo, ap)
+    if r is None: return None
+    ok, bad, full = r
+    for x in bad: T[x] = T.get(x, 0) + 1
+    S["n"] = S.get("n", 0) + ok
+    print("  %s/m%d%s: شُكّل %d من %d" % (b, c, " (أسانيد)" if isnad else "", ok, len(todo)), flush=True)
+    return None if not full else True  # المرفوض يُسجَّل في tries ولا يحبس الجزء؛ فلا تتكرر المحاولة على النص نفسه في كل جولة
 
 
 def save(mf, M, lf, L):
@@ -115,21 +169,30 @@ def main():
     S = json.load(open(SP, encoding="utf-8")) if os.path.exists(SP) else {"done": {}, "n": 0}
     bs = sys.argv[1:] or (PRIO + sorted([b for b in LST if b not in PRIO], key=lambda b: LST[b].get("n", 0)))
     start = S.get("n", 0)
-    for b in bs:
-        if b not in LST: continue
-        n = (LST[b].get("n", 0) + 499) // 500; done = set(S["done"].get(b, []))
-        for c in range(n):
-            if c in done or not os.path.exists(os.path.join(K, b, "m%d.json" % c)): continue
-            r = chunk(b, c, S)
-            if r is None: break
-            if r: done.add(c); S["done"][b] = sorted(done)
-            S["upd"] = str(datetime.date.today()); json.dump(S, open(SP, "w", encoding="utf-8"), ensure_ascii=False)
-        else: continue
-        break
+    if S.get("v") != 2:  # بعد تعديل ٢٨ نوفمبر: «المكتمل» القديم كان يعني الأسانيد وحدها في أكثره، فيُعاد فحص كل جزء بالمنطق الجديد
+        S["done_v1"] = S.get("done", {}); S["done"] = {}; S["v"] = 2
+    def save_state():
+        S["upd"] = str(datetime.date.today()); json.dump(S, open(SP, "w", encoding="utf-8"), ensure_ascii=False)
+    stop = False
+    if not sys.argv[1:]:
+        stop = not curated(S); save_state()
+    for phase in ([True, False] if ISNAD_FIRST else [False, True]):
+        if stop: break
+        key = "done_isn" if phase else "done"; S.setdefault(key, {})
+        for b in bs:
+            if b not in LST: continue
+            n = (LST[b].get("n", 0) + 499) // 500; done = set(S[key].get(b, []))
+            for c in range(n):
+                if c in done or not os.path.exists(os.path.join(K, b, "m%d.json" % c)): continue
+                r = chunk(b, c, S, phase)
+                if r is None: stop = True; break
+                done.add(c); S[key][b] = sorted(done); save_state()
+            save_state()
+            if stop: break
     S["upd"] = str(datetime.date.today()); json.dump(S, open(SP, "w", encoding="utf-8"), ensure_ascii=False)
-    full = sum(len(v) for v in S["done"].values()); tot = sum((x.get("n", 0) + 499) // 500 for x in LST.values())
+    full = sum(len(v) for v in S.get("done", {}).values()); tot = sum((x.get("n", 0) + 499) // 500 for x in LST.values())
     print("الطلبات %(req)d، مرفوض بحد اليوم أو غير متاح %(day)d، بحد الدقيقة %(min)d، أخطاء خادم %(err)d، ردود غير مكتملة %(bad)d" % STAT, flush=True)
-    msg = "✍️ <b>تشكيل أحاديث قسم الحديث</b>: شُكّل في هذه الجولة %d نصًّا (متنًا أو مطلعًا). الأجزاء المكتملة %d من %d (كل جزء ٥٠٠ حديث)." % (S["n"] - start, full, tot)
+    msg = "✍️ <b>تشكيل أحاديث قسم الحديث</b>: شُكّل في هذه الجولة %d نصًّا (متون الأحاديث ومطالعها، والمختارات أولًا). الأجزاء المكتملة متونها %d من %d (كل جزء ٥٠٠ حديث)." % (S["n"] - start, full, tot)
     print(msg); open(os.path.join(ROOT, ".ht-report.txt"), "w", encoding="utf-8").write(msg)
 
 

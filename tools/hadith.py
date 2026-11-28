@@ -82,6 +82,12 @@ def main():
             tarf = " ".join((core if len(core.split()) >= 4 else nz(h["m"])).split()[:6])
             idx.append([hid, bid, h["p"], h["k"], h["bab"], h["sah"], tarf, h["t"][:90], h["h"]])
             det[hid] = {"m": h["m"], "full": h["full"], "sh": h["sh"]}
+        try: old = json.load(open(os.path.join(OUT, bid + ".json"), encoding="utf-8"))  # يُبقي تشكيل tools/hadith-tashkeel.py (mv/fv) ما لم يتغير النص
+        except Exception: old = {}
+        for k, d in det.items():
+            o = old.get(k) or {}
+            for f, v in (("m", "mv"), ("full", "fv")):
+                if o.get(v) and nz(o.get(f)) == nz(d.get(f)): d[v] = o[v]
         json.dump(det, open(os.path.join(OUT, bid + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         print(bid, len(L))
     json.dump({"note": "يولّده tools/hadith.py من نصوص الكتب: [المعرف، الكتاب، الصفحة، الكتاب الفقهي، الباب، الصحابي، الطرف، التخريج، الحكم]", "books": dict(BOOKS), "items": idx},
