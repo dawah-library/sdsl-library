@@ -2153,3 +2153,13 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .rd p.blgd{display:flex;flex-wrap:wrap;gap:.4em .9em;font-size:.74em;color:var(--mut,#666);margin:0 0 .8em}
 .blgd span::before{content:"";display:inline-block;width:.75em;height:.75em;border-radius:2px;margin-inline-end:.3em;vertical-align:-.05em}
 .blgd .lgm::before{background:var(--ink,#222)}.blgd .lga::before{background:var(--mut,#888)}.blgd .lgs::before{background:var(--gold,#b8892b)}
+
+/* اسم المكتبة مخطوطًا (مسارات SVG من خط عارف رقعة بترخيص OFL) */
+.hero h1.callig{font-size:0;line-height:0;text-shadow:none;margin:6px 0 10px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:pointer}
+.hero h1.callig .cgm{display:block;margin:0 auto;width:min(76vw,380px);aspect-ratio:557/315;background:linear-gradient(180deg,var(--ac) 0%,var(--ac) 58%,color-mix(in srgb,var(--ac) 55%,var(--gold,#b8892b)) 100%);-webkit-mask:url(assets/name-calig.svg) center/contain no-repeat;mask:url(assets/name-calig.svg) center/contain no-repeat;filter:drop-shadow(0 1px 0 rgba(184,138,46,.4))}
+.hero h1.callig .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:root[data-skin=night] .hero h1.callig .cgm,:root[data-theme=dark] .hero h1.callig .cgm{background:linear-gradient(180deg,#f3e3b4,#d9b45e)}
+.hmin .hero h1.callig .cgm{width:min(70vw,300px)}
+@media (min-width:900px){.hero h1.callig .cgm{width:460px}}
+/* ترويسة الجوال: صف واحد متناسق (الشعار والأدوات والقائمة) بلا نزول للأدوات وفراغ في الأعلى */
+@media (max-width:760px){.top .tools{flex:1 1 0;min-width:0;justify-content:flex-start;gap:4px}.top .brand{flex:0 0 auto}.top .tools .ic{padding:4px 7px;font-size:.8rem;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.top .tools .clk{max-width:none}.top .tools #acctbtn{max-width:78px}}
