@@ -187,11 +187,24 @@ const MG = (() => {
     const box = $("#mgsw"); if (!box) return;
     let o; try { o = JSON.parse((await GH.get(SW)).text) || {}; } catch (e) { o = {}; }
     const s = o.s || {};
-    box.innerHTML = `<p class="mut">أوقف أي خدمة أو مهمة آلية مؤقتًا وأعد تشغيلها متى شئت. يسري التغيير خلال دقائق دون إعادة نشر. المهمة الموقوفة تُتخطى في كل تشغيل (المجدول واليدوي) حتى تعيد تفعيلها هنا. ${o.at ? "آخر تعديل: " + new Date(o.at).toLocaleString("ar-EG") : ""}</p>
+    let sf = {}; try { sf = JSON.parse((await GH.get("data/site-font.json")).text) || {}; } catch (e) { sf = {}; }
+    const FL = [["خطوط تراثية", [["Amiri", "أميري"], ["Kitab", "كتاب (نسخ الكتب)"], ["Scheherazade New", "شهرزاد"], ["Noto Naskh Arabic", "نوتو نسخ"], ["Markazi Text", "المركزي"], ["Lateef", "لطيف"]]], ["خطوط حديثة", [["Cairo", "القاهرة"], ["Tajawal", "تجوال"], ["Almarai", "المراعي"], ["IBM Plex Sans Arabic", "بلكس"], ["Noto Kufi Arabic", "نوتو كوفي"], ["Readex Pro", "ريدكس"], ["El Messiri", "المسيري"], ["Changa", "تشانغا"], ["Reem Kufi", "ريم كوفي"], ["Harmattan", "هرمتان"]]]];
+    const fontCard = `<form data-form="mgfont" class="card"><b>🔤 الخط الافتراضي لنصوص الكتب والمقالات</b><p class="mut">يسري على كل من لم يختر خطًا بنفسه من «المظهر»؛ واختيار القارئ مقدَّم عليه، ويرى «افتراضي الموقع» في قائمة الخطوط. الخطوط التراثية مستضافة ذاتيًا برخصة OFL. الحالي: <b>${esc(sf.font || "Amiri")}</b></p><select name="font">${FL.map(([g, l]) => `<optgroup label="${g}">${l.map(([k, n]) => `<option value="${k}"${(sf.font || "Amiri") === k ? " selected" : ""}>${n}</option>`).join("")}</optgroup>`).join("")}</select> <button class="btn p">حفظ الخط الافتراضي</button> <span id="fontst" class="mut" role="status"></span></form>`;
+    box.innerHTML = fontCard + `<p class="mut">أوقف أي خدمة أو مهمة آلية مؤقتًا وأعد تشغيلها متى شئت. يسري التغيير خلال دقائق دون إعادة نشر. المهمة الموقوفة تُتخطى في كل تشغيل (المجدول واليدوي) حتى تعيد تفعيلها هنا. ${o.at ? "آخر تعديل: " + new Date(o.at).toLocaleString("ar-EG") : ""}</p>
      ${(() => { const on = s.translate !== false || s.i18n !== false; /* زر واحد لخدمة الترجمة كلها (طلب المدير ١٤ نوفمبر: موقوفة مؤقتًا حتى تكتمل أقسام الموقع) */
        return `<div class="card trsw"><b>🌐 خدمة الترجمة</b> <em class="tag ${on ? "on" : "off"}">${on ? "تعمل" : "موقوفة"}</em><p class="mut">الترجمة السياقية وترجمة الصفحات والأسماء والعناوين. تستهلك من حصة Gemini التي يحتاجها تدقيق الكتب.</p><button type="button" class="btn ${on ? "" : "p"}" data-act="mgtrsw" data-on="${on ? 0 : 1}">${on ? "إيقاف خدمة الترجمة" : "تفعيل خدمة الترجمة"}</button></div>`; })()}
      <form data-form="mgsw">${SWITCHES.map(([g, l]) => `<h3>${g}</h3>${l.map(([k, n]) => `<label class="swrow"><input type="checkbox" name="${k}"${s[k] === false ? "" : " checked"}> <span>${esc(n)}</span> <em class="tag ${s[k] === false ? "off" : "on"}">${s[k] === false ? "موقوفة" : "تعمل"}</em></label>`).join("")}`).join("")}
      <div class="savebar"><button class="btn p">حفظ المفاتيح</button> <span id="swst" class="mut" role="status"></span></div></form>`;
+  }
+  async function fontSave(f) {
+    const st = $("#fontst"), v = f.font.value;
+    if (!GH.on) { st.textContent = "يحتاج حساب مشرف."; return; }
+    st.textContent = "جارٍ الحفظ…";
+    try {
+      let before = ""; await GH.editJSON("data/site-font.json", o => { before = (o && o.font) || "Amiri"; return { v: 1, font: v, at: new Date().toISOString(), by: who().role }; }, "الخط الافتراضي للموقع: " + v);
+      await log({ op: "switch", kind: "settings", ids: ["site_font"], changes: [{ id: "site_font", kind: "settings", field: "font", from: before, to: v }], note: "الخط الافتراضي للموقع" });
+      toast("حُفظ الخط الافتراضي: يسري خلال دقائق."); swBody();
+    } catch (e) { st.textContent = e.message; }
   }
   async function swSave(f) {
     const st = $("#swst"), s = {}, all = SWITCHES.flatMap(([, l]) => l.map(([k]) => k));
@@ -748,6 +761,7 @@ const MG = (() => {
     if (f.dataset.form === "mgfilter") { const p = new URLSearchParams({ t: "items" }); new FormData(f).forEach((v, k) => v && p.set(k, v)); location.hash = "#/admin?" + p; }
     else if (f.dataset.form === "mgsave") saveForm(f);
     else if (f.dataset.form === "mgsw") swSave(f);
+    else if (f.dataset.form === "mgfont") fontSave(f);
     else if (f.dataset.form === "mgvnew") newWork(f);
     else if (f.dataset.form === "mgvadd") addVol(f);
     else if (f.dataset.form === "mgvord") saveOrd(f);

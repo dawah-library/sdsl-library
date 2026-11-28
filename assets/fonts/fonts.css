@@ -1,0 +1,11 @@
+/* خطوط القارئ التراثية مستضافة ذاتيًا (OFL). الأسماء بادئتها SDSL حتى لا تتعارض مع نسخ Google Fonts. */
+@font-face{font-family:"SDSL Amiri";font-weight:400;font-display:swap;src:url(amiri-400.woff2) format("woff2")}
+@font-face{font-family:"SDSL Amiri";font-weight:700;font-display:swap;src:url(amiri-700.woff2) format("woff2")}
+@font-face{font-family:"SDSL Kitab";font-weight:400;font-display:swap;src:url(kit-400.woff2) format("woff2")}
+@font-face{font-family:"SDSL Kitab";font-weight:700;font-display:swap;src:url(kit-700.woff2) format("woff2")}
+@font-face{font-family:"SDSL Scheherazade New";font-weight:400;font-display:swap;src:url(sch-400.woff2) format("woff2")}
+@font-face{font-family:"SDSL Scheherazade New";font-weight:700;font-display:swap;src:url(sch-700.woff2) format("woff2")}
+@font-face{font-family:"SDSL Lateef";font-weight:400;font-display:swap;src:url(lat-400.woff2) format("woff2")}
+@font-face{font-family:"SDSL Lateef";font-weight:700;font-display:swap;src:url(lat-700.woff2) format("woff2")}
+@font-face{font-family:"SDSL Noto Naskh Arabic";font-weight:400 700;font-display:swap;src:url(noto-var.woff2) format("woff2")}
+@font-face{font-family:"SDSL Markazi Text";font-weight:400 700;font-display:swap;src:url(mar-var.woff2) format("woff2")}
