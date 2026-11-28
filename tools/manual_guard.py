@@ -3,6 +3,10 @@
 import json, os, sys
 
 def guard(key):
+    # يحرس السكربت المشغَّل نفسه فقط: إن استُورد ملف محروس مكتبةً من سكربت آخر (مثل tashjir داخل sharh-ai، أو sharh-align داخل sharh-dawah)
+    # فلا يُنهي ذلك السكربت؛ وللسكربت المشغَّل حارسه بمفتاحه. (كان هذا يوقف «رحلة شرح السنة» صامتًا منذ ٢٦ نوفمبر.)
+    if sys._getframe(1).f_globals.get("__name__") != "__main__":
+        return
     ev = os.environ.get("GITHUB_EVENT_NAME", "")
     if ev == "push":
         try:

@@ -5,7 +5,7 @@
 const HDS = (() => {
   let IX = null, BK = {}; const DET = {};
   const load = async () => { if (!IX) { try { const j = await (await fetch("data/hadith/index.json")).json(); IX = j.items || []; BK = j.books || {}; } catch (e) { IX = []; } } return IX; };
-  const det = async b => DET[b] || (DET[b] = fetch("data/hadith/" + b + ".json").then(r => r.json()).catch(() => ({})));
+  const det = async b => DET[b] || (DET[b] = fetch("data/hadith/" + b + ".json").then(r => r.json()).then(D => { for (const k in D) { const d = D[k]; if (d && d.mv) d.m = d.mv; if (d && d.fv) d.full = d.fv; } return D; }).catch(() => ({})));  // mv/fv: المتن والنص مشكولين (tools/hadith-tashkeel.py)
   const F = r => ({ id: r[0], b: r[1], p: r[2], k: r[3], bab: r[4], sah: r[5], tarf: r[6], t: r[7], h: r[8] });
   const LET = "ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي".split(" ");
   const first = s => { const c = norm(s || "").replace(/^(و|ف)(?=..)/, "")[0] || ""; return c === "أ" || c === "إ" || c === "آ" ? "ا" : c; };
