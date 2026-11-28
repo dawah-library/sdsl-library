@@ -4,9 +4,9 @@
   "voices": 0
  },
  "tts": {
-  "gemini-3.8-flash-tts": "ok:398120",
-  "gemini-3.1-flash-tts-preview": "ok:194560",
-  "gemini-2.5-flash-preview-tts": "ok:200384"
+  "gemini-3.8-flash-tts": "ok:345000",
+  "gemini-3.1-flash-tts-preview": "ok:222720",
+  "gemini-2.5-flash-preview-tts": "ok:215744"
  },
  "models": [
   "gemini-2.5-flash",
@@ -61,7 +61,7 @@
   "gemini-3.5-live-translate-preview",
   "gemini-decision-1"
  ],
- "at": "2026-11-28T08:48Z",
+ "at": "2026-11-28T09:01Z",
  "keys": [
   {
    "name": "GEMINI_API_KEY",
