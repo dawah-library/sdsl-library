@@ -1,0 +1,499 @@
+{
+ "k": "talaea",
+ "n": "موسوعة الطلائع",
+ "ages": "6-20",
+ "v": 1,
+ "status": "published",
+ "note": "هيكل بلا محتوى. الدروس مسودات حتى الاعتماد. لا Gemini.",
+ "b": [
+  {
+   "t": "من 6 إلى 9 سنوات",
+   "key": "a1",
+   "age": "6-9",
+   "f": [
+    {
+     "t": "العقيدة",
+     "key": "aqeeda",
+     "m": [],
+     "cell": "a1-aqeeda",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الفقه",
+     "key": "fiqh",
+     "m": [],
+     "cell": "a1-fiqh",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "السيرة",
+     "key": "sira",
+     "m": [],
+     "cell": "a1-sira",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الحديث",
+     "key": "hadith",
+     "m": [],
+     "cell": "a1-hadith",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأخلاق",
+     "key": "akhlaq",
+     "m": [],
+     "cell": "a1-akhlaq",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التربية",
+     "key": "tarbiya",
+     "m": [],
+     "cell": "a1-tarbiya",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التراجم",
+     "key": "tarajim",
+     "m": [],
+     "cell": "a1-tarajim",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "القصص",
+     "key": "qasas",
+     "m": [],
+     "cell": "a1-qasas",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأدب",
+     "key": "adab",
+     "m": [],
+     "cell": "a1-adab",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الدعوة",
+     "key": "dawa",
+     "m": [],
+     "cell": "a1-dawa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "المنهج السلفي",
+     "key": "manhaj",
+     "m": [],
+     "cell": "a1-manhaj",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الثقافة العامة",
+     "key": "thaqafa",
+     "m": [],
+     "cell": "a1-thaqafa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التقنية",
+     "key": "tiqnia",
+     "m": [],
+     "cell": "a1-tiqnia",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الذكاء الاصطناعي",
+     "key": "ai",
+     "m": [],
+     "cell": "a1-ai",
+     "st": "planned",
+     "lessons": 0
+    }
+   ]
+  },
+  {
+   "t": "من 9 إلى 12 سنة",
+   "key": "a2",
+   "age": "9-12",
+   "f": [
+    {
+     "t": "العقيدة",
+     "key": "aqeeda",
+     "m": [],
+     "cell": "a2-aqeeda",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الفقه",
+     "key": "fiqh",
+     "m": [],
+     "cell": "a2-fiqh",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "السيرة",
+     "key": "sira",
+     "m": [],
+     "cell": "a2-sira",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الحديث",
+     "key": "hadith",
+     "m": [],
+     "cell": "a2-hadith",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأخلاق",
+     "key": "akhlaq",
+     "m": [],
+     "cell": "a2-akhlaq",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التربية",
+     "key": "tarbiya",
+     "m": [],
+     "cell": "a2-tarbiya",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التراجم",
+     "key": "tarajim",
+     "m": [],
+     "cell": "a2-tarajim",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "القصص",
+     "key": "qasas",
+     "m": [],
+     "cell": "a2-qasas",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأدب",
+     "key": "adab",
+     "m": [],
+     "cell": "a2-adab",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الدعوة",
+     "key": "dawa",
+     "m": [],
+     "cell": "a2-dawa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "المنهج السلفي",
+     "key": "manhaj",
+     "m": [],
+     "cell": "a2-manhaj",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الثقافة العامة",
+     "key": "thaqafa",
+     "m": [],
+     "cell": "a2-thaqafa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التقنية",
+     "key": "tiqnia",
+     "m": [],
+     "cell": "a2-tiqnia",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الذكاء الاصطناعي",
+     "key": "ai",
+     "m": [],
+     "cell": "a2-ai",
+     "st": "planned",
+     "lessons": 0
+    }
+   ]
+  },
+  {
+   "t": "من 12 إلى 15 سنة",
+   "key": "a3",
+   "age": "12-15",
+   "f": [
+    {
+     "t": "العقيدة",
+     "key": "aqeeda",
+     "m": [],
+     "cell": "a3-aqeeda",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الفقه",
+     "key": "fiqh",
+     "m": [],
+     "cell": "a3-fiqh",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "السيرة",
+     "key": "sira",
+     "m": [],
+     "cell": "a3-sira",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الحديث",
+     "key": "hadith",
+     "m": [],
+     "cell": "a3-hadith",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأخلاق",
+     "key": "akhlaq",
+     "m": [],
+     "cell": "a3-akhlaq",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التربية",
+     "key": "tarbiya",
+     "m": [],
+     "cell": "a3-tarbiya",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التراجم",
+     "key": "tarajim",
+     "m": [
+      {
+       "id": "talaea-a3-tarajim-01",
+       "t": "الأعمش: فقير في دنياه غني بالعلم",
+       "kw": [
+        "الأعمش",
+        "سليمان بن مهران",
+        "شرف العلم"
+       ],
+       "e": 1,
+       "ok": 1
+      }
+     ],
+     "cell": "a3-tarajim",
+     "st": "published",
+     "lessons": 1
+    },
+    {
+     "t": "القصص",
+     "key": "qasas",
+     "m": [],
+     "cell": "a3-qasas",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأدب",
+     "key": "adab",
+     "m": [],
+     "cell": "a3-adab",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الدعوة",
+     "key": "dawa",
+     "m": [],
+     "cell": "a3-dawa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "المنهج السلفي",
+     "key": "manhaj",
+     "m": [],
+     "cell": "a3-manhaj",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الثقافة العامة",
+     "key": "thaqafa",
+     "m": [],
+     "cell": "a3-thaqafa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التقنية",
+     "key": "tiqnia",
+     "m": [],
+     "cell": "a3-tiqnia",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الذكاء الاصطناعي",
+     "key": "ai",
+     "m": [],
+     "cell": "a3-ai",
+     "st": "planned",
+     "lessons": 0
+    }
+   ]
+  },
+  {
+   "t": "من 15 إلى 20 سنة",
+   "key": "a4",
+   "age": "15-20",
+   "f": [
+    {
+     "t": "العقيدة",
+     "key": "aqeeda",
+     "m": [],
+     "cell": "a4-aqeeda",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الفقه",
+     "key": "fiqh",
+     "m": [],
+     "cell": "a4-fiqh",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "السيرة",
+     "key": "sira",
+     "m": [],
+     "cell": "a4-sira",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الحديث",
+     "key": "hadith",
+     "m": [],
+     "cell": "a4-hadith",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأخلاق",
+     "key": "akhlaq",
+     "m": [],
+     "cell": "a4-akhlaq",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التربية",
+     "key": "tarbiya",
+     "m": [],
+     "cell": "a4-tarbiya",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التراجم",
+     "key": "tarajim",
+     "m": [],
+     "cell": "a4-tarajim",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "القصص",
+     "key": "qasas",
+     "m": [],
+     "cell": "a4-qasas",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الأدب",
+     "key": "adab",
+     "m": [],
+     "cell": "a4-adab",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الدعوة",
+     "key": "dawa",
+     "m": [],
+     "cell": "a4-dawa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "المنهج السلفي",
+     "key": "manhaj",
+     "m": [],
+     "cell": "a4-manhaj",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الثقافة العامة",
+     "key": "thaqafa",
+     "m": [],
+     "cell": "a4-thaqafa",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "التقنية",
+     "key": "tiqnia",
+     "m": [],
+     "cell": "a4-tiqnia",
+     "st": "planned",
+     "lessons": 0
+    },
+    {
+     "t": "الذكاء الاصطناعي",
+     "key": "ai",
+     "m": [],
+     "cell": "a4-ai",
+     "st": "planned",
+     "lessons": 0
+    }
+   ]
+  }
+ ],
+ "ok": 1
+}
