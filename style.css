@@ -2167,3 +2167,8 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 @media (min-width:900px){.hero h1.callig .cgm{width:460px}}
 /* ترويسة الجوال: صف واحد متناسق (الشعار والأدوات والقائمة) بلا نزول للأدوات وفراغ في الأعلى */
 @media (max-width:760px){.top .tools{flex:1 1 0;min-width:0;justify-content:flex-start;gap:4px}.top .brand{flex:0 0 auto}.top .tools .ic{padding:4px 7px;font-size:.8rem;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.top .tools .clk{max-width:none}.top .tools #acctbtn{max-width:78px}}
+
+/* ترويسة الجوال الضيّق: صف علوي (القائمة، الشعار، الأدوات) وصف مستقل للبحث بلا تداخل على 320 إلى 560px */
+@media (max-width:560px){.top{flex-wrap:wrap}.top .hsearch{flex:1 1 100%;order:20;max-width:none;margin:0;min-width:0}.top .tools{flex:1 1 0;min-width:0;overflow:hidden;justify-content:flex-start}.top .tools .clk .clkz{display:none}.top .tools .ic{flex:0 1 auto;min-width:0}}
+@media (max-width:380px){.top .tools .clk{overflow:visible!important;text-overflow:clip!important;flex:0 0 auto}.top .tools #acctbtn{max-width:44px}.top .tools{gap:3px}.top .tools .clk{padding:4px 6px;font-size:.72rem}.top .brand img{width:36px;height:36px}}
+@media (max-width:340px){.top .tools [data-act=rlang]{display:none}}
