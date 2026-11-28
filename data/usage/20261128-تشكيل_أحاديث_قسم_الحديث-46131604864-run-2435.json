@@ -1,0 +1,1 @@
+{"workflow": "تشكيل أحاديث قسم الحديث", "run": "46131604864", "at": "2026-11-28T10:03Z", "total": 87, "ok": 13, "by_model_status": {"gemini-3-flash-preview|200": 12, "gemini-3-flash-preview|429": 12, "gemini-flash-latest|429": 14, "gemini-3.5-flash|429": 12, "gemini-3.8-flash|429": 12, "gemini-3.7-flash|429": 12, "gemini-3.6-flash|200": 1, "gemini-3.6-flash|429": 12}}
