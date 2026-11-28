@@ -2093,8 +2093,8 @@ form:has(.gosug){position:relative}
 .rd.fmtd p{line-height:2.1;margin-bottom:.7em}
 .rd.fmtd p.fq{background:color-mix(in srgb,var(--gold,#b8892b) 12%,transparent);border-radius:10px;padding:.5em .8em;text-indent:0;font-weight:700}
 .rd.fmtd p.fa{border-top:1px dashed color-mix(in srgb,var(--gold,#b8892b) 60%,transparent);padding-top:.6em;text-indent:0;font-weight:700;color:var(--green,#0f5d46)}
-.rd.fmtd .w.vcard{color:var(--green,#0f5d46);font-weight:600;background:color-mix(in srgb,var(--green,#0f5d46) 8%,transparent)}
-.rd.fmtd .w.hcard{color:#7a4b00;background:color-mix(in srgb,var(--gold,#b8892b) 12%,transparent)}
+.rd.fmtd .w.vcard{color:var(--green,#0f5d46);font-weight:600;background:none}
+.rd.fmtd .w.hcard{color:#7a4b00;background:none}
 .rd.fmtd a.vref,.rd.fmtd a.href{display:inline-block;font-size:.72em;font-weight:700;padding:.05em .55em;margin:0 .3em;border-radius:99px;text-decoration:none;vertical-align:middle;border:1px solid currentColor;color:var(--green,#0f5d46)}
 .rd.fmtd a.href{color:#7a4b00}
 html[data-theme=dark] .rd.fmtd .w.vcard{color:#8fd0b2}html[data-theme=dark] .rd.fmtd .w.hcard{color:#e6c27a}html[data-theme=dark] .rd.fmtd a.vref{color:#8fd0b2}html[data-theme=dark] .rd.fmtd a.href{color:#e6c27a}
@@ -2124,6 +2124,10 @@ svg.pli{width:15px;height:15px;fill:currentColor;margin-inline-start:-2px;transf
 .rd .w.vcardend::after{content:"تفسير";font-size:.62em;font-weight:700;margin:0 .35em;padding:.05em .5em;border-radius:99px;border:1px solid currentColor;vertical-align:middle;cursor:pointer;font-family:var(--hf,inherit)}
 .rd .w.hcardend::after{content:"شرح";font-size:.62em;font-weight:700;margin:0 .35em;padding:.05em .5em;border-radius:99px;border:1px solid currentColor;vertical-align:middle;cursor:pointer;font-family:var(--hf,inherit)}
 .rd .w.vcard,.rd .w.hcard{cursor:pointer}
+/* تمييز هادئ للآيات والأحاديث: لون النص فقط بلا خلفية لكل كلمة، والخدمة عند المرور أو اللمس ومن زر «تفسير» الصغير */
+.rd .w.vcardend::after,.rd .w.hcardend::after{opacity:.75;border-color:color-mix(in srgb,currentColor 55%,transparent)}
+@media(hover:hover){.rd .w.vcard:hover,.rd .w.hcard:hover{text-decoration:underline dotted;text-underline-offset:5px}}
+.rd .w.vcard:active,.rd .w.hcard:active{background:color-mix(in srgb,currentColor 10%,transparent)}
 #fmtp{position:fixed;z-index:60;background:var(--sf,#fff);color:var(--tx,#222);border:1px solid var(--line,#ddd);box-shadow:0 8px 30px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;font-size:.95rem;line-height:1.9}
 #fmtp.on{display:flex}
 #fmtp header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:3px solid var(--gold,#b8892b);background:color-mix(in srgb,var(--gold,#b8892b) 10%,transparent)}
