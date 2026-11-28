@@ -1369,9 +1369,13 @@
    "n": 2,
    "lastNew": "2026-11-28T08:07:16.523Z",
    "lastSeen": "2026-11-28T08:07:16.523Z"
+  },
+  "fb-rsaa2l": {
+   "wn": 1,
+   "err": "تحويل إلى صفحة الدخول (حساب غير عام أو مقيّد)"
   }
  },
- "wall": "2026-11-28T09:54:24.021Z",
+ "wall": "2026-11-28T11:39:32.741Z",
  "stale": [
   "fb-100010404454280",
   "fb-ywnsmkhywn152345",
@@ -1385,8 +1389,10 @@
   "fb-ahmedalhamdon",
   "fb-musabamingaber",
   "fb-saidabdelfattahkhairy",
-  "fb-khaldalrhym"
+  "fb-khaldalrhym",
+  "fb-rsaa2l",
+  "fb-mohamedismailabugamil"
  ],
- "lastRun": "2026-11-28T09:54:24.085Z",
- "lastAdded": 2
+ "lastRun": "2026-11-28T11:39:32.801Z",
+ "lastAdded": 0
 }
